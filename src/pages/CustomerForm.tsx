@@ -1,6 +1,6 @@
 
 import { useNavigate, useParams } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -57,12 +57,14 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
       return data;
     },
     enabled: !!id,
-    onSuccess: (data) => {
-      if (data) {
-        setFormData(data);
-      }
-    }
   });
+
+  // Customer verisi geldiğinde form state'ini güncelle
+  useEffect(() => {
+    if (customer) {
+      setFormData(customer);
+    }
+  }, [customer]);
 
   const mutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
