@@ -23,6 +23,8 @@ export type Database = {
           office_phone: string | null
           representative: string | null
           status: Database["public"]["Enums"]["customer_status"]
+          tax_number: string | null
+          tax_office: string | null
           type: Database["public"]["Enums"]["customer_type"]
           updated_at: string | null
         }
@@ -39,6 +41,8 @@ export type Database = {
           office_phone?: string | null
           representative?: string | null
           status?: Database["public"]["Enums"]["customer_status"]
+          tax_number?: string | null
+          tax_office?: string | null
           type: Database["public"]["Enums"]["customer_type"]
           updated_at?: string | null
         }
@@ -55,6 +59,8 @@ export type Database = {
           office_phone?: string | null
           representative?: string | null
           status?: Database["public"]["Enums"]["customer_status"]
+          tax_number?: string | null
+          tax_office?: string | null
           type?: Database["public"]["Enums"]["customer_type"]
           updated_at?: string | null
         }

@@ -1,7 +1,7 @@
 
 import { useParams, Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { Mail, Phone, Building, MapPin, ArrowLeft, Pencil } from "lucide-react";
+import { Mail, Phone, Building, MapPin, ArrowLeft, Pencil, FileText } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -152,6 +152,32 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
                 )}
               </div>
             </Card>
+
+            {customer.type === 'kurumsal' && (
+              <Card className="p-6 mt-6">
+                <h2 className="text-xl font-semibold mb-4">Vergi Bilgileri</h2>
+                <div className="space-y-4">
+                  {customer.tax_number && (
+                    <div className="flex items-center space-x-3">
+                      <FileText className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <span className="text-sm text-gray-500 block">Vergi No</span>
+                        <span>{customer.tax_number}</span>
+                      </div>
+                    </div>
+                  )}
+                  {customer.tax_office && (
+                    <div className="flex items-center space-x-3">
+                      <Building className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <span className="text-sm text-gray-500 block">Vergi Dairesi</span>
+                        <span>{customer.tax_office}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            )}
 
             <Card className="p-6 mt-6">
               <h2 className="text-xl font-semibold mb-4">Finansal Bilgiler</h2>
