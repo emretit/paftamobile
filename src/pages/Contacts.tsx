@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -30,7 +29,6 @@ interface Customer {
   type: "bireysel" | "kurumsal";
   status: "aktif" | "pasif" | "potansiyel";
   representative: string | null;
-  last_interaction: string;
   balance: number;
 }
 
@@ -81,10 +79,13 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
             <h1 className="text-3xl font-bold">Müşteriler</h1>
             <p className="text-gray-600 mt-1">Müşteri listesi ve yönetimi</p>
           </div>
-          <button className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-primary/90 transition-colors">
+          <Link 
+            to="/contacts/new" 
+            className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-primary/90 transition-colors"
+          >
             <Plus className="h-5 w-5" />
             <span>Yeni Müşteri</span>
-          </button>
+          </Link>
         </div>
 
         <div className="mb-6 flex gap-4 items-center">
@@ -128,20 +129,19 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
                 <TableHead>Durum</TableHead>
                 <TableHead>Temsilci</TableHead>
                 <TableHead>Bakiye</TableHead>
-                <TableHead>Son Etkileşim</TableHead>
                 <TableHead className="text-right">İşlemler</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     Yükleniyor...
                   </TableCell>
                 </TableRow>
               ) : filteredCustomers?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     Müşteri bulunamadı
                   </TableCell>
                 </TableRow>
@@ -190,12 +190,14 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
                         {customer.balance.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
                       </span>
                     </TableCell>
-                    <TableCell>{new Date(customer.last_interaction).toLocaleDateString('tr-TR')}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button className="p-1 hover:bg-gray-100 rounded">
+                        <Link 
+                          to={`/contacts/${customer.id}/edit`}
+                          className="p-1 hover:bg-gray-100 rounded"
+                        >
                           <Edit2 className="h-4 w-4 text-gray-500" />
-                        </button>
+                        </Link>
                         <button className="p-1 hover:bg-gray-100 rounded">
                           <Trash2 className="h-4 w-4 text-gray-500" />
                         </button>
