@@ -51,7 +51,6 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
         console.error('Error fetching customer:', error);
         throw error;
       }
-      console.log('Fetched customer:', data);
       return data;
     },
     enabled: !!id,
@@ -59,7 +58,6 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
 
   useEffect(() => {
     if (customer) {
-      console.log('Setting form data with customer:', customer);
       setFormData({
         name: customer.name || "",
         email: customer.email || "",
@@ -69,7 +67,7 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
         type: customer.type,
         status: customer.status,
         representative: customer.representative || "",
-        balance: customer.balance,
+        balance: customer.balance || 0,
         address: customer.address || "",
         tax_number: customer.tax_number || "",
         tax_office: customer.tax_office || "",
@@ -79,62 +77,63 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
 
   const mutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
-      console.log('Updating customer with data:', data);
       const sanitizedData = {
-        ...data,
+        name: data.name,
         email: data.email || null,
         mobile_phone: data.mobile_phone || null,
         office_phone: data.office_phone || null,
         company: data.company || null,
+        type: data.type,
+        status: data.status,
         representative: data.representative || null,
+        balance: data.balance || 0,
         address: data.address || null,
         tax_number: data.type === 'kurumsal' ? data.tax_number || null : null,
         tax_office: data.type === 'kurumsal' ? data.tax_office || null : null,
       };
 
+      let result;
+      
       if (id) {
+        // Güncelleme işlemi
         const { data: updatedData, error } = await supabase
           .from('customers')
           .update(sanitizedData)
           .eq('id', id)
-          .select();
+          .select()
+          .single();
         
-        if (error) {
-          console.error('Error updating customer:', error);
-          throw error;
-        }
-        console.log('Customer updated:', updatedData);
-        return updatedData;
+        if (error) throw error;
+        result = updatedData;
       } else {
-        const { data: insertedData, error } = await supabase
+        // Yeni müşteri ekleme işlemi
+        const { data: newData, error } = await supabase
           .from('customers')
           .insert([sanitizedData])
-          .select();
+          .select()
+          .single();
         
-        if (error) {
-          console.error('Error inserting customer:', error);
-          throw error;
-        }
-        console.log('Customer inserted:', insertedData);
-        return insertedData;
+        if (error) throw error;
+        result = newData;
       }
+
+      return result;
     },
-    onSuccess: () => {
-      // Önce mevcut sorguları geçersiz kıl
+    onSuccess: (data) => {
+      // Sorguları geçersiz kıl
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       if (id) {
         queryClient.invalidateQueries({ queryKey: ['customer', id] });
       }
 
+      // Başarı mesajı göster
       toast({
         title: id ? "Müşteri güncellendi" : "Müşteri eklendi",
         description: id ? "Müşteri bilgileri başarıyla güncellendi." : "Yeni müşteri başarıyla eklendi.",
       });
 
-      // Kısa bir gecikme ile yönlendirme yap
-      setTimeout(() => {
-        navigate('/contacts');
-      }, 100);
+      // Ana listeye dön
+      navigate('/contacts');
     },
     onError: (error) => {
       console.error('Mutation error:', error);
@@ -148,8 +147,11 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted with data:', formData);
-    await mutation.mutateAsync(formData);
+    try {
+      await mutation.mutateAsync(formData);
+    } catch (error) {
+      console.error('Form submission error:', error);
+    }
   };
 
   return (
@@ -177,8 +179,8 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
                 >
                   İptal
                 </Button>
-                <Button type="submit">
-                  {id ? "Güncelle" : "Kaydet"}
+                <Button type="submit" disabled={mutation.isPending}>
+                  {mutation.isPending ? "Kaydediliyor..." : (id ? "Güncelle" : "Kaydet")}
                 </Button>
               </div>
             </form>
