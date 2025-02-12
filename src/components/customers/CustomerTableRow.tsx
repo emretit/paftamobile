@@ -8,12 +8,14 @@ interface CustomerTableRowProps {
     id: string;
     name: string;
     email: string | null;
-    phone: string | null;
+    mobile_phone: string | null;
+    office_phone: string | null;
     company: string | null;
     type: "bireysel" | "kurumsal";
     status: "aktif" | "pasif" | "potansiyel";
     representative: string | null;
     balance: number;
+    address: string | null;
   };
 }
 
@@ -39,10 +41,10 @@ const CustomerTableRow = ({ customer }: CustomerTableRowProps) => {
               <span className="text-sm">{customer.email}</span>
             </div>
           )}
-          {customer.phone && (
+          {customer.mobile_phone && (
             <div className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-gray-500" />
-              <span className="text-sm">{customer.phone}</span>
+              <span className="text-sm">{customer.mobile_phone}</span>
             </div>
           )}
         </div>

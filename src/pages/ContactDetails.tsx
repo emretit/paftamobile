@@ -108,10 +108,22 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
                     <span>{customer.email}</span>
                   </div>
                 )}
-                {customer.phone && (
+                {customer.mobile_phone && (
                   <div className="flex items-center space-x-3">
                     <Phone className="h-5 w-5 text-gray-400" />
-                    <span>{customer.phone}</span>
+                    <div>
+                      <span>{customer.mobile_phone}</span>
+                      <span className="text-sm text-gray-500 ml-2">(Cep)</span>
+                    </div>
+                  </div>
+                )}
+                {customer.office_phone && (
+                  <div className="flex items-center space-x-3">
+                    <Phone className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <span>{customer.office_phone}</span>
+                      <span className="text-sm text-gray-500 ml-2">(Sabit)</span>
+                    </div>
                   </div>
                 )}
                 {customer.company && (
@@ -124,6 +136,15 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
                   <div className="flex items-center space-x-3">
                     <MapPin className="h-5 w-5 text-gray-400" />
                     <span>Temsilci: {customer.representative}</span>
+                  </div>
+                )}
+                {customer.address && (
+                  <div className="flex space-x-3 items-start">
+                    <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
+                    <div className="flex-1">
+                      <span className="text-sm text-gray-500 block mb-1">Adres</span>
+                      <span className="whitespace-pre-wrap">{customer.address}</span>
+                    </div>
                   </div>
                 )}
               </div>

@@ -11,42 +11,48 @@ export type Database = {
     Tables: {
       customers: {
         Row: {
+          address: string | null
           balance: number
           company: string | null
           created_at: string | null
           email: string | null
           id: string
           last_interaction: string | null
+          mobile_phone: string | null
           name: string
-          phone: string | null
+          office_phone: string | null
           representative: string | null
           status: Database["public"]["Enums"]["customer_status"]
           type: Database["public"]["Enums"]["customer_type"]
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
           balance?: number
           company?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
           last_interaction?: string | null
+          mobile_phone?: string | null
           name: string
-          phone?: string | null
+          office_phone?: string | null
           representative?: string | null
           status?: Database["public"]["Enums"]["customer_status"]
           type: Database["public"]["Enums"]["customer_type"]
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
           balance?: number
           company?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
           last_interaction?: string | null
+          mobile_phone?: string | null
           name?: string
-          phone?: string | null
+          office_phone?: string | null
           representative?: string | null
           status?: Database["public"]["Enums"]["customer_status"]
           type?: Database["public"]["Enums"]["customer_type"]
