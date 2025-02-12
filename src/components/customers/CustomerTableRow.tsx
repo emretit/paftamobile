@@ -28,10 +28,10 @@ const CustomerTableRow = ({ customer }: CustomerTableRowProps) => {
       onClick={() => navigate(`/contacts/${customer.id}`)}
     >
       <TableCell className="font-medium">
-        <div>
-          <p>{customer.name}</p>
-          <p className="text-sm text-gray-500">{customer.company}</p>
-        </div>
+        {customer.name}
+      </TableCell>
+      <TableCell className="text-gray-500">
+        {customer.company}
       </TableCell>
       <TableCell>
         <div className="flex flex-col gap-1">

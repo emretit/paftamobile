@@ -36,6 +36,7 @@ const CustomerList = ({ customers, isLoading }: CustomerListProps) => {
         <TableHeader>
           <TableRow>
             <TableHead>Müşteri Adı</TableHead>
+            <TableHead>Şirket</TableHead>
             <TableHead>İletişim</TableHead>
             <TableHead>Tip</TableHead>
             <TableHead>Durum</TableHead>
@@ -47,13 +48,13 @@ const CustomerList = ({ customers, isLoading }: CustomerListProps) => {
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-8">
+              <TableCell colSpan={8} className="text-center py-8">
                 Yükleniyor...
               </TableCell>
             </TableRow>
           ) : customers?.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-8">
+              <TableCell colSpan={8} className="text-center py-8">
                 Müşteri bulunamadı
               </TableCell>
             </TableRow>
