@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -36,6 +37,7 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const navigate = useNavigate();
 
   const { data: customers, isLoading } = useQuery({
     queryKey: ['customers'],
@@ -147,7 +149,11 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
                 </TableRow>
               ) : (
                 filteredCustomers?.map((customer) => (
-                  <TableRow key={customer.id}>
+                  <TableRow 
+                    key={customer.id}
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => navigate(`/contacts/${customer.id}`)}
+                  >
                     <TableCell className="font-medium">
                       <div>
                         <p>{customer.name}</p>
@@ -192,16 +198,25 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Link 
-                          to={`/contacts/${customer.id}/edit`}
+                        <button 
                           className="p-1 hover:bg-gray-100 rounded"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/contacts/${customer.id}/edit`);
+                          }}
                         >
                           <Edit2 className="h-4 w-4 text-gray-500" />
-                        </Link>
-                        <button className="p-1 hover:bg-gray-100 rounded">
+                        </button>
+                        <button 
+                          className="p-1 hover:bg-gray-100 rounded"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <Trash2 className="h-4 w-4 text-gray-500" />
                         </button>
-                        <button className="p-1 hover:bg-gray-100 rounded">
+                        <button 
+                          className="p-1 hover:bg-gray-100 rounded"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <MoreHorizontal className="h-4 w-4 text-gray-500" />
                         </button>
                       </div>
