@@ -31,6 +31,7 @@ interface Customer {
   status: "aktif" | "pasif" | "potansiyel";
   representative: string | null;
   last_interaction: string;
+  balance: number;
 }
 
 const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
@@ -126,6 +127,7 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
                 <TableHead>Tip</TableHead>
                 <TableHead>Durum</TableHead>
                 <TableHead>Temsilci</TableHead>
+                <TableHead>Bakiye</TableHead>
                 <TableHead>Son Etkileşim</TableHead>
                 <TableHead className="text-right">İşlemler</TableHead>
               </TableRow>
@@ -133,13 +135,13 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     Yükleniyor...
                   </TableCell>
                 </TableRow>
               ) : filteredCustomers?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     Müşteri bulunamadı
                   </TableCell>
                 </TableRow>
@@ -183,6 +185,11 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
                       </span>
                     </TableCell>
                     <TableCell>{customer.representative}</TableCell>
+                    <TableCell>
+                      <span className={`font-medium ${customer.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {customer.balance.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
+                      </span>
+                    </TableCell>
                     <TableCell>{new Date(customer.last_interaction).toLocaleDateString('tr-TR')}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
