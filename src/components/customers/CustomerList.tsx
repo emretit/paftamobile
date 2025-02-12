@@ -35,8 +35,8 @@ const CustomerList = ({ customers, isLoading }: CustomerListProps) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Müşteri Adı</TableHead>
-            <TableHead>Şirket</TableHead>
+            <TableHead>Şirket/Müşteri</TableHead>
+            <TableHead>Yetkili Kişi</TableHead>
             <TableHead>İletişim</TableHead>
             <TableHead>Tip</TableHead>
             <TableHead>Durum</TableHead>
