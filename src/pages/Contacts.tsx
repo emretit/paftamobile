@@ -1,8 +1,17 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Plus } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Search, Plus, Phone, Mail, Edit2, Trash2, MoreHorizontal } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
 interface ContactsProps {
@@ -10,55 +19,156 @@ interface ContactsProps {
   setIsCollapsed: (value: boolean) => void;
 }
 
+interface Customer {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  type: "Bireysel" | "Kurumsal";
+  status: "Aktif" | "Pasif" | "Potansiyel";
+  representative: string;
+  lastInteraction: string;
+}
+
 const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
   const [search, setSearch] = useState("");
 
-  const mockContacts = [
-    { id: 1, name: "John Doe", email: "john@example.com", company: "Tech Corp", role: "CEO" },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", company: "Design Co", role: "Designer" },
+  const mockCustomers: Customer[] = [
+    {
+      id: 1,
+      name: "Ahmet Yılmaz",
+      email: "ahmet@firma.com",
+      phone: "+90 532 123 4567",
+      company: "Teknoloji A.Ş.",
+      type: "Kurumsal",
+      status: "Aktif",
+      representative: "Mehmet Demir",
+      lastInteraction: "2024-03-15",
+    },
+    {
+      id: 2,
+      name: "Ayşe Kaya",
+      email: "ayse@email.com",
+      phone: "+90 533 765 4321",
+      company: "-",
+      type: "Bireysel",
+      status: "Potansiyel",
+      representative: "Zeynep Yıldız",
+      lastInteraction: "2024-03-10",
+    },
   ];
 
   return (
     <div className="min-h-screen bg-white flex relative">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <main className={`flex-1 p-4 sm:p-8 transition-all duration-300 ${
-        isCollapsed ? 'ml-[60px]' : 'ml-[60px] sm:ml-64'
-      }`}>
+      <main
+        className={`flex-1 p-4 sm:p-8 transition-all duration-300 ${
+          isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
+        }`}
+      >
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Contacts</h1>
-            <p className="text-gray-600 mt-1">Manage your contacts and leads</p>
+            <h1 className="text-3xl font-bold">Müşteriler</h1>
+            <p className="text-gray-600 mt-1">Müşteri listesi ve yönetimi</p>
           </div>
           <button className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-primary/90 transition-colors">
             <Plus className="h-5 w-5" />
-            <span>Add Contact</span>
+            <span>Yeni Müşteri</span>
           </button>
         </div>
 
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-          <Input
-            placeholder="Search contacts..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
+        <div className="mb-6 flex gap-4 items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <Input
+              placeholder="Müşteri ara..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <select className="border rounded-lg px-3 py-2">
+            <option value="">Tüm Tipler</option>
+            <option value="bireysel">Bireysel</option>
+            <option value="kurumsal">Kurumsal</option>
+          </select>
+          <select className="border rounded-lg px-3 py-2">
+            <option value="">Tüm Durumlar</option>
+            <option value="aktif">Aktif</option>
+            <option value="pasif">Pasif</option>
+            <option value="potansiyel">Potansiyel</option>
+          </select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockContacts.map((contact) => (
-            <Link key={contact.id} to={`/contacts/${contact.id}`}>
-              <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
-                <h3 className="font-semibold text-lg">{contact.name}</h3>
-                <p className="text-gray-600">{contact.email}</p>
-                <div className="mt-4 flex justify-between text-sm text-gray-500">
-                  <span>{contact.company}</span>
-                  <span>{contact.role}</span>
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        <Card className="overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Müşteri Adı</TableHead>
+                <TableHead>İletişim</TableHead>
+                <TableHead>Tip</TableHead>
+                <TableHead>Durum</TableHead>
+                <TableHead>Temsilci</TableHead>
+                <TableHead>Son Etkileşim</TableHead>
+                <TableHead className="text-right">İşlemler</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {mockCustomers.map((customer) => (
+                <TableRow key={customer.id}>
+                  <TableCell className="font-medium">
+                    <div>
+                      <p>{customer.name}</p>
+                      <p className="text-sm text-gray-500">{customer.company !== "-" && customer.company}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm">{customer.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm">{customer.phone}</span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{customer.type}</TableCell>
+                  <TableCell>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        customer.status === "Aktif"
+                          ? "bg-green-100 text-green-800"
+                          : customer.status === "Pasif"
+                          ? "bg-gray-100 text-gray-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {customer.status}
+                    </span>
+                  </TableCell>
+                  <TableCell>{customer.representative}</TableCell>
+                  <TableCell>{new Date(customer.lastInteraction).toLocaleDateString('tr-TR')}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button className="p-1 hover:bg-gray-100 rounded">
+                        <Edit2 className="h-4 w-4 text-gray-500" />
+                      </button>
+                      <button className="p-1 hover:bg-gray-100 rounded">
+                        <Trash2 className="h-4 w-4 text-gray-500" />
+                      </button>
+                      <button className="p-1 hover:bg-gray-100 rounded">
+                        <MoreHorizontal className="h-4 w-4 text-gray-500" />
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       </main>
     </div>
   );
