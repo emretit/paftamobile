@@ -79,7 +79,10 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div>
-              <h1 className="text-3xl font-bold">{customer.name}</h1>
+              <h1 className="text-3xl font-bold">{customer.company || customer.name}</h1>
+              {customer.type === 'kurumsal' && customer.name && (
+                <p className="text-gray-500 mt-1">Yetkili Kişi: {customer.name}</p>
+              )}
               <div className="flex items-center gap-2 mt-1">
                 <span className={`px-2 py-1 rounded-full text-sm ${getStatusColor(customer.status)}`}>
                   {customer.status}
@@ -126,7 +129,7 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
                     </div>
                   </div>
                 )}
-                {customer.company && (
+                {customer.type === 'kurumsal' && customer.company && (
                   <div className="flex items-center space-x-3">
                     <Building className="h-5 w-5 text-gray-400" />
                     <span>{customer.company}</span>
