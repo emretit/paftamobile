@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/table";
 import { Search, Plus, Phone, Mail, Edit2, Trash2, MoreHorizontal } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ContactsProps {
   isCollapsed: boolean;
@@ -20,44 +22,50 @@ interface ContactsProps {
 }
 
 interface Customer {
-  id: number;
+  id: string;
   name: string;
-  email: string;
-  phone: string;
-  company: string;
-  type: "Bireysel" | "Kurumsal";
-  status: "Aktif" | "Pasif" | "Potansiyel";
-  representative: string;
-  lastInteraction: string;
+  email: string | null;
+  phone: string | null;
+  company: string | null;
+  type: "bireysel" | "kurumsal";
+  status: "aktif" | "pasif" | "potansiyel";
+  representative: string | null;
+  last_interaction: string;
 }
 
 const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
   const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
 
-  const mockCustomers: Customer[] = [
-    {
-      id: 1,
-      name: "Ahmet Yılmaz",
-      email: "ahmet@firma.com",
-      phone: "+90 532 123 4567",
-      company: "Teknoloji A.Ş.",
-      type: "Kurumsal",
-      status: "Aktif",
-      representative: "Mehmet Demir",
-      lastInteraction: "2024-03-15",
-    },
-    {
-      id: 2,
-      name: "Ayşe Kaya",
-      email: "ayse@email.com",
-      phone: "+90 533 765 4321",
-      company: "-",
-      type: "Bireysel",
-      status: "Potansiyel",
-      representative: "Zeynep Yıldız",
-      lastInteraction: "2024-03-10",
-    },
-  ];
+  const { data: customers, isLoading } = useQuery({
+    queryKey: ['customers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching customers:', error);
+        throw error;
+      }
+      
+      return data as Customer[];
+    }
+  });
+
+  const filteredCustomers = customers?.filter(customer => {
+    const matchesSearch = !search || 
+      customer.name.toLowerCase().includes(search.toLowerCase()) ||
+      customer.email?.toLowerCase().includes(search.toLowerCase()) ||
+      customer.company?.toLowerCase().includes(search.toLowerCase());
+
+    const matchesType = !typeFilter || customer.type === typeFilter;
+    const matchesStatus = !statusFilter || customer.status === statusFilter;
+
+    return matchesSearch && matchesType && matchesStatus;
+  });
 
   return (
     <div className="min-h-screen bg-white flex relative">
@@ -88,12 +96,20 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
               className="pl-10"
             />
           </div>
-          <select className="border rounded-lg px-3 py-2">
+          <select 
+            className="border rounded-lg px-3 py-2"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+          >
             <option value="">Tüm Tipler</option>
             <option value="bireysel">Bireysel</option>
             <option value="kurumsal">Kurumsal</option>
           </select>
-          <select className="border rounded-lg px-3 py-2">
+          <select 
+            className="border rounded-lg px-3 py-2"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
             <option value="">Tüm Durumlar</option>
             <option value="aktif">Aktif</option>
             <option value="pasif">Pasif</option>
@@ -115,57 +131,75 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockCustomers.map((customer) => (
-                <TableRow key={customer.id}>
-                  <TableCell className="font-medium">
-                    <div>
-                      <p>{customer.name}</p>
-                      <p className="text-sm text-gray-500">{customer.company !== "-" && customer.company}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm">{customer.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm">{customer.phone}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{customer.type}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        customer.status === "Aktif"
-                          ? "bg-green-100 text-green-800"
-                          : customer.status === "Pasif"
-                          ? "bg-gray-100 text-gray-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {customer.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>{customer.representative}</TableCell>
-                  <TableCell>{new Date(customer.lastInteraction).toLocaleDateString('tr-TR')}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button className="p-1 hover:bg-gray-100 rounded">
-                        <Edit2 className="h-4 w-4 text-gray-500" />
-                      </button>
-                      <button className="p-1 hover:bg-gray-100 rounded">
-                        <Trash2 className="h-4 w-4 text-gray-500" />
-                      </button>
-                      <button className="p-1 hover:bg-gray-100 rounded">
-                        <MoreHorizontal className="h-4 w-4 text-gray-500" />
-                      </button>
-                    </div>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    Yükleniyor...
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : filteredCustomers?.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    Müşteri bulunamadı
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredCustomers?.map((customer) => (
+                  <TableRow key={customer.id}>
+                    <TableCell className="font-medium">
+                      <div>
+                        <p>{customer.name}</p>
+                        <p className="text-sm text-gray-500">{customer.company}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        {customer.email && (
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm">{customer.email}</span>
+                          </div>
+                        )}
+                        {customer.phone && (
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm">{customer.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>{customer.type}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          customer.status === "aktif"
+                            ? "bg-green-100 text-green-800"
+                            : customer.status === "pasif"
+                            ? "bg-gray-100 text-gray-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {customer.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>{customer.representative}</TableCell>
+                    <TableCell>{new Date(customer.last_interaction).toLocaleDateString('tr-TR')}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button className="p-1 hover:bg-gray-100 rounded">
+                          <Edit2 className="h-4 w-4 text-gray-500" />
+                        </button>
+                        <button className="p-1 hover:bg-gray-100 rounded">
+                          <Trash2 className="h-4 w-4 text-gray-500" />
+                        </button>
+                        <button className="p-1 hover:bg-gray-100 rounded">
+                          <MoreHorizontal className="h-4 w-4 text-gray-500" />
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </Card>
