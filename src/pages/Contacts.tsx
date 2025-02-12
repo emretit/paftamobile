@@ -1,20 +1,11 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Search, Plus, Phone, Mail, Edit2, Trash2, MoreHorizontal } from "lucide-react";
-import Navbar from "@/components/Navbar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import Navbar from "@/components/Navbar";
+import CustomerListHeader from "@/components/customers/CustomerListHeader";
+import CustomerListFilters from "@/components/customers/CustomerListFilters";
+import CustomerList from "@/components/customers/CustomerList";
 
 interface ContactsProps {
   isCollapsed: boolean;
@@ -37,7 +28,6 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const navigate = useNavigate();
 
   const { data: customers, isLoading } = useQuery({
     queryKey: ['customers'],
@@ -76,157 +66,19 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}
       >
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Müşteriler</h1>
-            <p className="text-gray-600 mt-1">Müşteri listesi ve yönetimi</p>
-          </div>
-          <Link 
-            to="/contacts/new" 
-            className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="h-5 w-5" />
-            <span>Yeni Müşteri</span>
-          </Link>
-        </div>
-
-        <div className="mb-6 flex gap-4 items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-            <Input
-              placeholder="Müşteri ara..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <select 
-            className="border rounded-lg px-3 py-2"
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-          >
-            <option value="">Tüm Tipler</option>
-            <option value="bireysel">Bireysel</option>
-            <option value="kurumsal">Kurumsal</option>
-          </select>
-          <select 
-            className="border rounded-lg px-3 py-2"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">Tüm Durumlar</option>
-            <option value="aktif">Aktif</option>
-            <option value="pasif">Pasif</option>
-            <option value="potansiyel">Potansiyel</option>
-          </select>
-        </div>
-
-        <Card className="overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Müşteri Adı</TableHead>
-                <TableHead>İletişim</TableHead>
-                <TableHead>Tip</TableHead>
-                <TableHead>Durum</TableHead>
-                <TableHead>Temsilci</TableHead>
-                <TableHead>Bakiye</TableHead>
-                <TableHead className="text-right">İşlemler</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    Yükleniyor...
-                  </TableCell>
-                </TableRow>
-              ) : filteredCustomers?.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    Müşteri bulunamadı
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredCustomers?.map((customer) => (
-                  <TableRow 
-                    key={customer.id}
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => navigate(`/contacts/${customer.id}`)}
-                  >
-                    <TableCell className="font-medium">
-                      <div>
-                        <p>{customer.name}</p>
-                        <p className="text-sm text-gray-500">{customer.company}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        {customer.email && (
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm">{customer.email}</span>
-                          </div>
-                        )}
-                        {customer.phone && (
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm">{customer.phone}</span>
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{customer.type}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          customer.status === "aktif"
-                            ? "bg-green-100 text-green-800"
-                            : customer.status === "pasif"
-                            ? "bg-gray-100 text-gray-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {customer.status}
-                      </span>
-                    </TableCell>
-                    <TableCell>{customer.representative}</TableCell>
-                    <TableCell>
-                      <span className={`font-medium ${customer.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {customer.balance.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button 
-                          className="p-1 hover:bg-gray-100 rounded"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/contacts/${customer.id}/edit`);
-                          }}
-                        >
-                          <Edit2 className="h-4 w-4 text-gray-500" />
-                        </button>
-                        <button 
-                          className="p-1 hover:bg-gray-100 rounded"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Trash2 className="h-4 w-4 text-gray-500" />
-                        </button>
-                        <button 
-                          className="p-1 hover:bg-gray-100 rounded"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreHorizontal className="h-4 w-4 text-gray-500" />
-                        </button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </Card>
+        <CustomerListHeader />
+        <CustomerListFilters 
+          search={search}
+          setSearch={setSearch}
+          typeFilter={typeFilter}
+          setTypeFilter={setTypeFilter}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+        />
+        <CustomerList 
+          customers={filteredCustomers}
+          isLoading={isLoading}
+        />
       </main>
     </div>
   );
