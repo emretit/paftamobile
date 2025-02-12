@@ -47,7 +47,11 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
         .eq('id', id)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching customer:', error);
+        throw error;
+      }
+      console.log('Fetched customer:', data);
       return data;
     },
     enabled: !!id,
@@ -55,6 +59,7 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
 
   useEffect(() => {
     if (customer) {
+      console.log('Setting form data with customer:', customer);
       setFormData({
         name: customer.name || "",
         email: customer.email || "",
@@ -74,6 +79,7 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
 
   const mutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
+      console.log('Updating customer with data:', data);
       const sanitizedData = {
         ...data,
         email: data.email || null,
@@ -87,33 +93,51 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
       };
 
       if (id) {
-        const { error } = await supabase
+        const { data: updatedData, error } = await supabase
           .from('customers')
           .update(sanitizedData)
-          .eq('id', id);
+          .eq('id', id)
+          .select();
         
-        if (error) throw error;
+        if (error) {
+          console.error('Error updating customer:', error);
+          throw error;
+        }
+        console.log('Customer updated:', updatedData);
+        return updatedData;
       } else {
-        const { error } = await supabase
+        const { data: insertedData, error } = await supabase
           .from('customers')
-          .insert([sanitizedData]);
+          .insert([sanitizedData])
+          .select();
         
-        if (error) throw error;
+        if (error) {
+          console.error('Error inserting customer:', error);
+          throw error;
+        }
+        console.log('Customer inserted:', insertedData);
+        return insertedData;
       }
     },
     onSuccess: () => {
+      // Önce mevcut sorguları geçersiz kıl
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       if (id) {
         queryClient.invalidateQueries({ queryKey: ['customer', id] });
       }
+
       toast({
         title: id ? "Müşteri güncellendi" : "Müşteri eklendi",
         description: id ? "Müşteri bilgileri başarıyla güncellendi." : "Yeni müşteri başarıyla eklendi.",
       });
-      navigate('/contacts');
+
+      // Kısa bir gecikme ile yönlendirme yap
+      setTimeout(() => {
+        navigate('/contacts');
+      }, 100);
     },
     onError: (error) => {
-      console.error('Error:', error);
+      console.error('Mutation error:', error);
       toast({
         title: "Hata",
         description: "Bir hata oluştu. Lütfen tekrar deneyin.",
@@ -122,9 +146,10 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate(formData);
+    console.log('Form submitted with data:', formData);
+    await mutation.mutateAsync(formData);
   };
 
   return (
