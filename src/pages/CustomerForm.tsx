@@ -37,7 +37,7 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
     tax_office: "",
   });
 
-  const { data: customer, isLoading: isLoadingCustomer } = useQuery({
+  const { data: customer, isLoading: isLoadingCustomer, error: customerError } = useQuery({
     queryKey: ['customer', id],
     queryFn: async () => {
       if (!id) return null;
@@ -45,15 +45,21 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
         .from('customers')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error('Error fetching customer:', error);
         throw error;
       }
+
+      if (!data) {
+        throw new Error('Müşteri bulunamadı');
+      }
+
       return data;
     },
     enabled: !!id,
+    retry: false,
   });
 
   useEffect(() => {
@@ -75,6 +81,17 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
     }
   }, [customer]);
 
+  useEffect(() => {
+    if (customerError) {
+      toast({
+        title: "Hata",
+        description: "Müşteri bilgileri yüklenemedi. Lütfen tekrar deneyin.",
+        variant: "destructive",
+      });
+      navigate('/contacts');
+    }
+  }, [customerError, navigate, toast]);
+
   const mutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
       const sanitizedData = {
@@ -95,51 +112,48 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
       let result;
       
       if (id) {
-        // Güncelleme işlemi
         const { data: updatedData, error } = await supabase
           .from('customers')
           .update(sanitizedData)
           .eq('id', id)
           .select()
-          .single();
+          .maybeSingle();
         
         if (error) throw error;
+        if (!updatedData) throw new Error('Güncellenecek müşteri bulunamadı');
         result = updatedData;
       } else {
-        // Yeni müşteri ekleme işlemi
         const { data: newData, error } = await supabase
           .from('customers')
           .insert([sanitizedData])
           .select()
-          .single();
+          .maybeSingle();
         
         if (error) throw error;
+        if (!newData) throw new Error('Müşteri eklenemedi');
         result = newData;
       }
 
       return result;
     },
     onSuccess: (data) => {
-      // Sorguları geçersiz kıl
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       if (id) {
         queryClient.invalidateQueries({ queryKey: ['customer', id] });
       }
 
-      // Başarı mesajı göster
       toast({
         title: id ? "Müşteri güncellendi" : "Müşteri eklendi",
         description: id ? "Müşteri bilgileri başarıyla güncellendi." : "Yeni müşteri başarıyla eklendi.",
       });
 
-      // Ana listeye dön
       navigate('/contacts');
     },
     onError: (error) => {
       console.error('Mutation error:', error);
       toast({
         title: "Hata",
-        description: "Bir hata oluştu. Lütfen tekrar deneyin.",
+        description: error instanceof Error ? error.message : "Bir hata oluştu. Lütfen tekrar deneyin.",
         variant: "destructive",
       });
     },
@@ -153,6 +167,10 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
       console.error('Form submission error:', error);
     }
   };
+
+  if (customerError) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-white flex relative">
