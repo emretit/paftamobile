@@ -109,20 +109,28 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
         tax_office: data.type === 'kurumsal' ? data.tax_office || null : null,
       };
 
-      let result;
-      
       if (id) {
-        const { data: updatedData, error } = await supabase
+        // Güncelleme işlemi
+        const { error } = await supabase
           .from('customers')
           .update(sanitizedData)
-          .eq('id', id)
-          .select()
-          .maybeSingle();
+          .eq('id', id);
         
         if (error) throw error;
+
+        // Güncellenmiş veriyi ayrı bir sorgu ile al
+        const { data: updatedData, error: fetchError } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+        
+        if (fetchError) throw fetchError;
         if (!updatedData) throw new Error('Güncellenecek müşteri bulunamadı');
-        result = updatedData;
+        
+        return updatedData;
       } else {
+        // Yeni müşteri ekleme
         const { data: newData, error } = await supabase
           .from('customers')
           .insert([sanitizedData])
@@ -131,10 +139,9 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
         
         if (error) throw error;
         if (!newData) throw new Error('Müşteri eklenemedi');
-        result = newData;
+        
+        return newData;
       }
-
-      return result;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
