@@ -33,6 +33,8 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
     representative: "",
     balance: 0,
     address: "",
+    tax_number: "",
+    tax_office: "",
   });
 
   const { data: customer, isLoading: isLoadingCustomer } = useQuery({
@@ -53,29 +55,57 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
 
   useEffect(() => {
     if (customer) {
-      setFormData(customer as CustomerFormData);
+      setFormData({
+        name: customer.name || "",
+        email: customer.email || "",
+        mobile_phone: customer.mobile_phone || "",
+        office_phone: customer.office_phone || "",
+        company: customer.company || "",
+        type: customer.type,
+        status: customer.status,
+        representative: customer.representative || "",
+        balance: customer.balance,
+        address: customer.address || "",
+        tax_number: customer.tax_number || "",
+        tax_office: customer.tax_office || "",
+      });
     }
   }, [customer]);
 
   const mutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
+      const sanitizedData = {
+        ...data,
+        email: data.email || null,
+        mobile_phone: data.mobile_phone || null,
+        office_phone: data.office_phone || null,
+        company: data.company || null,
+        representative: data.representative || null,
+        address: data.address || null,
+        tax_number: data.type === 'kurumsal' ? data.tax_number || null : null,
+        tax_office: data.type === 'kurumsal' ? data.tax_office || null : null,
+      };
+
       if (id) {
         const { error } = await supabase
           .from('customers')
-          .update(data)
+          .update(sanitizedData)
           .eq('id', id);
         
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('customers')
-          .insert([data]);
+          .insert([sanitizedData]);
         
         if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: ['customer', id] });
+      }
       toast({
         title: id ? "Müşteri güncellendi" : "Müşteri eklendi",
         description: id ? "Müşteri bilgileri başarıyla güncellendi." : "Yeni müşteri başarıyla eklendi.",
@@ -83,12 +113,12 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
       navigate('/contacts');
     },
     onError: (error) => {
+      console.error('Error:', error);
       toast({
         title: "Hata",
         description: "Bir hata oluştu. Lütfen tekrar deneyin.",
         variant: "destructive",
       });
-      console.error('Error:', error);
     },
   });
 

@@ -93,6 +93,26 @@ const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) 
         />
       </div>
 
+      {formData.type === 'kurumsal' && (
+        <>
+          <div>
+            <label className="block text-sm font-medium mb-1">Vergi Numarası</label>
+            <Input
+              required
+              value={formData.tax_number}
+              onChange={(e) => setFormData({ ...formData, tax_number: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Vergi Dairesi</label>
+            <Input
+              value={formData.tax_office}
+              onChange={(e) => setFormData({ ...formData, tax_office: e.target.value })}
+            />
+          </div>
+        </>
+      )}
+
       <div>
         <label className="block text-sm font-medium mb-1">Bakiye</label>
         <Input

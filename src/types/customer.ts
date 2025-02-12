@@ -11,6 +11,8 @@ export interface Customer {
   representative: string | null;
   balance: number;
   address: string | null;
+  tax_number: string | null;
+  tax_office: string | null;
 }
 
 export interface CustomerFormData {
@@ -24,4 +26,6 @@ export interface CustomerFormData {
   representative: string;
   balance: number;
   address: string;
+  tax_number: string;
+  tax_office: string;
 }
