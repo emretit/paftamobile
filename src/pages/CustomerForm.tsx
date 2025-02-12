@@ -2,30 +2,18 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import CustomerFormHeader from "@/components/customers/CustomerFormHeader";
+import CustomerFormFields from "@/components/customers/CustomerFormFields";
+import { CustomerFormData } from "@/types/customer";
 
 interface CustomerFormProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
-}
-
-interface CustomerFormData {
-  name: string;
-  email: string;
-  mobile_phone: string;
-  office_phone: string;
-  company: string;
-  type: "bireysel" | "kurumsal";
-  status: "aktif" | "pasif" | "potansiyel";
-  representative: string;
-  balance: number;
-  address: string;
 }
 
 const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
@@ -117,119 +105,14 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}
       >
-        <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={() => navigate('/contacts')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold">{id ? "Müşteriyi Düzenle" : "Yeni Müşteri"}</h1>
-            <p className="text-gray-600 mt-1">
-              {id ? "Müşteri bilgilerini güncelleyin" : "Yeni müşteri ekleyin"}
-            </p>
-          </div>
-        </div>
+        <CustomerFormHeader id={id} />
 
         {isLoadingCustomer && id ? (
           <div className="text-center py-8">Yükleniyor...</div>
         ) : (
           <Card className="max-w-2xl p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Müşteri Adı</label>
-                  <Input
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">E-posta</label>
-                  <Input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Cep Telefonu</label>
-                  <Input
-                    value={formData.mobile_phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, mobile_phone: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Sabit Telefon</label>
-                  <Input
-                    value={formData.office_phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, office_phone: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Şirket</label>
-                  <Input
-                    value={formData.company}
-                    onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Tip</label>
-                  <select
-                    className="w-full border rounded-md h-10 px-3"
-                    value={formData.type}
-                    onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as "bireysel" | "kurumsal" }))}
-                  >
-                    <option value="bireysel">Bireysel</option>
-                    <option value="kurumsal">Kurumsal</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Durum</label>
-                  <select
-                    className="w-full border rounded-md h-10 px-3"
-                    value={formData.status}
-                    onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as "aktif" | "pasif" | "potansiyel" }))}
-                  >
-                    <option value="aktif">Aktif</option>
-                    <option value="pasif">Pasif</option>
-                    <option value="potansiyel">Potansiyel</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Temsilci</label>
-                  <Input
-                    value={formData.representative}
-                    onChange={(e) => setFormData(prev => ({ ...prev, representative: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Adres</label>
-                  <Input
-                    value={formData.address}
-                    onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Bakiye</label>
-                  <Input
-                    type="number"
-                    value={formData.balance}
-                    onChange={(e) => setFormData(prev => ({ ...prev, balance: parseFloat(e.target.value) }))}
-                  />
-                </div>
-              </div>
+              <CustomerFormFields formData={formData} setFormData={setFormData} />
 
               <div className="flex justify-end space-x-4">
                 <Button
