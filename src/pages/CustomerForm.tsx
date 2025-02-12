@@ -165,4 +165,71 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
                   <label className="block text-sm font-medium mb-1">Şirket</label>
                   <Input
                     value={formData.company}
-                    onChange={(e) => setFormData(prev => ({ ...prev,
+                    onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Tip</label>
+                  <select
+                    className="w-full border rounded-md h-10 px-3"
+                    value={formData.type}
+                    onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as "bireysel" | "kurumsal" }))}
+                  >
+                    <option value="bireysel">Bireysel</option>
+                    <option value="kurumsal">Kurumsal</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Durum</label>
+                  <select
+                    className="w-full border rounded-md h-10 px-3"
+                    value={formData.status}
+                    onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as "aktif" | "pasif" | "potansiyel" }))}
+                  >
+                    <option value="aktif">Aktif</option>
+                    <option value="pasif">Pasif</option>
+                    <option value="potansiyel">Potansiyel</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Temsilci</label>
+                  <Input
+                    value={formData.representative}
+                    onChange={(e) => setFormData(prev => ({ ...prev, representative: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Bakiye</label>
+                  <Input
+                    type="number"
+                    value={formData.balance}
+                    onChange={(e) => setFormData(prev => ({ ...prev, balance: parseFloat(e.target.value) }))}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate('/contacts')}
+                >
+                  İptal
+                </Button>
+                <Button type="submit">
+                  {id ? "Güncelle" : "Kaydet"}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default CustomerForm;
