@@ -18,12 +18,14 @@ interface CustomerFormProps {
 interface CustomerFormData {
   name: string;
   email: string;
-  phone: string;
+  mobile_phone: string;
+  office_phone: string;
   company: string;
   type: "bireysel" | "kurumsal";
   status: "aktif" | "pasif" | "potansiyel";
   representative: string;
   balance: number;
+  address: string;
 }
 
 const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
@@ -35,12 +37,14 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
   const [formData, setFormData] = useState<CustomerFormData>({
     name: "",
     email: "",
-    phone: "",
+    mobile_phone: "",
+    office_phone: "",
     company: "",
     type: "bireysel",
     status: "potansiyel",
     representative: "",
     balance: 0,
+    address: "",
   });
 
   const { data: customer, isLoading: isLoadingCustomer } = useQuery({
@@ -59,17 +63,15 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
     enabled: !!id,
   });
 
-  // Customer verisi geldiğinde form state'ini güncelle
   useEffect(() => {
     if (customer) {
-      setFormData(customer);
+      setFormData(customer as CustomerFormData);
     }
   }, [customer]);
 
   const mutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
       if (id) {
-        // Update existing customer
         const { error } = await supabase
           .from('customers')
           .update(data)
@@ -77,7 +79,6 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
         
         if (error) throw error;
       } else {
-        // Create new customer
         const { error } = await supabase
           .from('customers')
           .insert([data]);
@@ -156,10 +157,18 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Telefon</label>
+                  <label className="block text-sm font-medium mb-1">Cep Telefonu</label>
                   <Input
-                    value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    value={formData.mobile_phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, mobile_phone: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Sabit Telefon</label>
+                  <Input
+                    value={formData.office_phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, office_phone: e.target.value }))}
                   />
                 </div>
 
@@ -201,6 +210,14 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
                   <Input
                     value={formData.representative}
                     onChange={(e) => setFormData(prev => ({ ...prev, representative: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Adres</label>
+                  <Input
+                    value={formData.address}
+                    onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
                   />
                 </div>
 

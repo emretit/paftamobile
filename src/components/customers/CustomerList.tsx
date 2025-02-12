@@ -14,12 +14,14 @@ interface Customer {
   id: string;
   name: string;
   email: string | null;
-  phone: string | null;
+  mobile_phone: string | null;
+  office_phone: string | null;
   company: string | null;
   type: "bireysel" | "kurumsal";
   status: "aktif" | "pasif" | "potansiyel";
   representative: string | null;
   balance: number;
+  address: string | null;
 }
 
 interface CustomerListProps {
