@@ -111,23 +111,25 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
 
       if (id) {
         // Güncelleme işlemi
-        const { error } = await supabase
+        console.log('Güncellenecek veri:', sanitizedData);
+        const { data: updatedData, error } = await supabase
           .from('customers')
           .update(sanitizedData)
-          .eq('id', id);
-        
-        if (error) throw error;
-
-        // Güncellenmiş veriyi ayrı bir sorgu ile al
-        const { data: updatedData, error: fetchError } = await supabase
-          .from('customers')
-          .select('*')
           .eq('id', id)
-          .maybeSingle();
+          .select()
+          .single();
         
-        if (fetchError) throw fetchError;
-        if (!updatedData) throw new Error('Güncellenecek müşteri bulunamadı');
-        
+        if (error) {
+          console.error('Güncelleme hatası:', error);
+          throw error;
+        }
+
+        if (!updatedData) {
+          console.error('Güncellenmiş veri bulunamadı');
+          throw new Error('Müşteri güncellenemedi');
+        }
+
+        console.log('Güncellenmiş veri:', updatedData);
         return updatedData;
       } else {
         // Yeni müşteri ekleme
@@ -135,15 +137,24 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
           .from('customers')
           .insert([sanitizedData])
           .select()
-          .maybeSingle();
+          .single();
         
-        if (error) throw error;
-        if (!newData) throw new Error('Müşteri eklenemedi');
-        
+        if (error) {
+          console.error('Ekleme hatası:', error);
+          throw error;
+        }
+
+        if (!newData) {
+          console.error('Yeni eklenen veri bulunamadı');
+          throw new Error('Müşteri eklenemedi');
+        }
+
+        console.log('Yeni eklenen veri:', newData);
         return newData;
       }
     },
     onSuccess: (data) => {
+      console.log('İşlem başarılı, dönen veri:', data);
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       if (id) {
         queryClient.invalidateQueries({ queryKey: ['customer', id] });
@@ -168,6 +179,7 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form gönderiliyor:', formData);
     try {
       await mutation.mutateAsync(formData);
     } catch (error) {
