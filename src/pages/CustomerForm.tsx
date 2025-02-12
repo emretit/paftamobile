@@ -112,21 +112,31 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
       if (id) {
         // Güncelleme işlemi
         console.log('Güncellenecek veri:', sanitizedData);
-        const { data: updatedData, error } = await supabase
+        const { error: updateError } = await supabase
           .from('customers')
           .update(sanitizedData)
-          .eq('id', id)
-          .select()
-          .single();
+          .eq('id', id);
         
-        if (error) {
-          console.error('Güncelleme hatası:', error);
-          throw error;
+        if (updateError) {
+          console.error('Güncelleme hatası:', updateError);
+          throw updateError;
+        }
+
+        // Güncellenmiş veriyi ayrı bir sorgu ile al
+        const { data: updatedData, error: fetchError } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+        
+        if (fetchError) {
+          console.error('Veri getirme hatası:', fetchError);
+          throw fetchError;
         }
 
         if (!updatedData) {
           console.error('Güncellenmiş veri bulunamadı');
-          throw new Error('Müşteri güncellenemedi');
+          throw new Error('Güncellenmiş müşteri bulunamadı');
         }
 
         console.log('Güncellenmiş veri:', updatedData);
@@ -137,7 +147,7 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
           .from('customers')
           .insert([sanitizedData])
           .select()
-          .single();
+          .maybeSingle();
         
         if (error) {
           console.error('Ekleme hatası:', error);
