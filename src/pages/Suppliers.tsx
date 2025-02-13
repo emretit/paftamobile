@@ -2,6 +2,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import SupplierListHeader from "@/components/suppliers/SupplierListHeader";
 import SupplierListFilters from "@/components/suppliers/SupplierListFilters";
@@ -55,7 +58,15 @@ const Suppliers = ({ isCollapsed, setIsCollapsed }: SuppliersProps) => {
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}
       >
-        <SupplierListHeader />
+        <div className="flex justify-between items-center mb-8">
+          <SupplierListHeader />
+          <Link to="/suppliers/new">
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Yeni Tedarikçi
+            </Button>
+          </Link>
+        </div>
         <SupplierListFilters 
           search={search}
           setSearch={setSearch}
