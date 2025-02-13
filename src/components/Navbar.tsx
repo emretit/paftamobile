@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, Users, PieChart, ChevronLeft, ChevronRight } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
@@ -49,7 +50,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
             )}
           >
             <LayoutDashboard className="h-5 w-5 flex-shrink-0" />
-            {!isCollapsed && <span>Dashboard</span>}
+            {!isCollapsed && <span>Gösterge Paneli</span>}
           </Link>
           
           <Link
@@ -61,7 +62,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
             )}
           >
             <Users className="h-5 w-5 flex-shrink-0" />
-            {!isCollapsed && <span>Contacts</span>}
+            {!isCollapsed && <span>Müşteriler</span>}
           </Link>
           
           <Link
@@ -73,7 +74,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
             )}
           >
             <PieChart className="h-5 w-5 flex-shrink-0" />
-            {!isCollapsed && <span>Deals</span>}
+            {!isCollapsed && <span>Fırsatlar</span>}
           </Link>
         </div>
       </nav>
