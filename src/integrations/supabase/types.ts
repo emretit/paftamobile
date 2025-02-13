@@ -66,6 +66,60 @@ export type Database = {
         }
         Relationships: []
       }
+      suppliers: {
+        Row: {
+          address: string | null
+          balance: number
+          company: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          mobile_phone: string | null
+          name: string
+          office_phone: string | null
+          representative: string | null
+          status: Database["public"]["Enums"]["supplier_status"]
+          tax_number: string | null
+          tax_office: string | null
+          type: Database["public"]["Enums"]["supplier_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          balance?: number
+          company?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          mobile_phone?: string | null
+          name: string
+          office_phone?: string | null
+          representative?: string | null
+          status?: Database["public"]["Enums"]["supplier_status"]
+          tax_number?: string | null
+          tax_office?: string | null
+          type: Database["public"]["Enums"]["supplier_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          balance?: number
+          company?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          mobile_phone?: string | null
+          name?: string
+          office_phone?: string | null
+          representative?: string | null
+          status?: Database["public"]["Enums"]["supplier_status"]
+          tax_number?: string | null
+          tax_office?: string | null
+          type?: Database["public"]["Enums"]["supplier_type"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -76,6 +130,8 @@ export type Database = {
     Enums: {
       customer_status: "aktif" | "pasif" | "potansiyel"
       customer_type: "bireysel" | "kurumsal"
+      supplier_status: "aktif" | "pasif" | "potansiyel"
+      supplier_type: "bireysel" | "kurumsal"
     }
     CompositeTypes: {
       [_ in never]: never
