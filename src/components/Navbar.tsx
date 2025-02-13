@@ -9,7 +9,7 @@ import {
   Truck,
   HardHat,
   Wallet,
-  WrenchScrewdriver,
+  Wrench,
   FileDown,
   FileUp
 } from "lucide-react";
@@ -133,7 +133,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
               isActive("/service") ? "bg-gray-100 text-gray-900" : "hover:bg-gray-50"
             )}
           >
-            <WrenchScrewdriver className="h-5 w-5 flex-shrink-0" />
+            <Wrench className="h-5 w-5 flex-shrink-0" />
             {!isCollapsed && <span>Servis</span>}
           </Link>
 
