@@ -13,6 +13,11 @@ import Deals from "./pages/Deals";
 import Suppliers from "./pages/Suppliers";
 import SupplierDetails from "./pages/SupplierDetails";
 import SupplierForm from "./pages/SupplierForm";
+import Employees from "./pages/Employees";
+import Finance from "./pages/Finance";
+import Service from "./pages/Service";
+import PurchaseInvoices from "./pages/PurchaseInvoices";
+import SalesInvoices from "./pages/SalesInvoices";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +41,11 @@ const App = () => {
             <Route path="/suppliers/:id" element={<SupplierDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
             <Route path="/suppliers/:id/edit" element={<SupplierForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
             <Route path="/deals" element={<Deals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+            <Route path="/employees" element={<Employees isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+            <Route path="/finance" element={<Finance isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+            <Route path="/service" element={<Service isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+            <Route path="/purchase-invoices" element={<PurchaseInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+            <Route path="/sales-invoices" element={<SalesInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

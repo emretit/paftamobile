@@ -1,6 +1,18 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, PieChart, ChevronLeft, ChevronRight, Truck } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  Users, 
+  PieChart, 
+  ChevronLeft, 
+  ChevronRight, 
+  Truck,
+  HardHat,
+  Wallet,
+  WrenchScrewdriver,
+  FileDown,
+  FileUp
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -87,6 +99,66 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
           >
             <PieChart className="h-5 w-5 flex-shrink-0" />
             {!isCollapsed && <span>Fırsatlar</span>}
+          </Link>
+
+          <Link
+            to="/employees"
+            className={cn(
+              "flex items-center p-3 rounded-lg transition-colors",
+              isCollapsed ? "justify-center" : "space-x-3",
+              isActive("/employees") ? "bg-gray-100 text-gray-900" : "hover:bg-gray-50"
+            )}
+          >
+            <HardHat className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span>Çalışanlar</span>}
+          </Link>
+
+          <Link
+            to="/finance"
+            className={cn(
+              "flex items-center p-3 rounded-lg transition-colors",
+              isCollapsed ? "justify-center" : "space-x-3",
+              isActive("/finance") ? "bg-gray-100 text-gray-900" : "hover:bg-gray-50"
+            )}
+          >
+            <Wallet className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span>Finans</span>}
+          </Link>
+
+          <Link
+            to="/service"
+            className={cn(
+              "flex items-center p-3 rounded-lg transition-colors",
+              isCollapsed ? "justify-center" : "space-x-3",
+              isActive("/service") ? "bg-gray-100 text-gray-900" : "hover:bg-gray-50"
+            )}
+          >
+            <WrenchScrewdriver className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span>Servis</span>}
+          </Link>
+
+          <Link
+            to="/purchase-invoices"
+            className={cn(
+              "flex items-center p-3 rounded-lg transition-colors",
+              isCollapsed ? "justify-center" : "space-x-3",
+              isActive("/purchase-invoices") ? "bg-gray-100 text-gray-900" : "hover:bg-gray-50"
+            )}
+          >
+            <FileDown className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span>Alış Faturaları</span>}
+          </Link>
+
+          <Link
+            to="/sales-invoices"
+            className={cn(
+              "flex items-center p-3 rounded-lg transition-colors",
+              isCollapsed ? "justify-center" : "space-x-3",
+              isActive("/sales-invoices") ? "bg-gray-100 text-gray-900" : "hover:bg-gray-50"
+            )}
+          >
+            <FileUp className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span>Satış Faturaları</span>}
           </Link>
         </div>
       </nav>
