@@ -277,3 +277,4 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
 };
 
 export default ContactDetails;
+
