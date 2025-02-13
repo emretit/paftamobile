@@ -1,4 +1,3 @@
-
 import Navbar from "@/components/Navbar";
 import { 
   Card, 
@@ -14,7 +13,15 @@ import {
   BarChart3,
   Search,
   PlusCircle,
-  Bell
+  Bell,
+  LayoutGrid,
+  Table as TableIcon,
+  Phone,
+  Mail,
+  Calendar,
+  Building2,
+  BadgeCheck,
+  MoreHorizontal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +35,22 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Employee {
+  id: string;
+  first_name: string;
+  last_name: string;
+  position: string;
+  department: string;
+  hire_date: string;
+  status: 'aktif' | 'pasif' | 'izinli' | 'ayrıldı';
+  email: string;
+  phone: string | null;
+  avatar_url: string | null;
+}
 
 interface EmployeesProps {
   isCollapsed: boolean;
@@ -61,13 +84,15 @@ const TopBar = () => {
 };
 
 const FilterBar = () => {
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+
   return (
     <div className="flex flex-col sm:flex-row gap-4 mb-6">
       <div className="flex-1 flex gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
           <Input
-            placeholder="Çalışan ara..."
+            placeholder="Ad, e-posta veya telefon ile ara..."
             className="pl-10"
           />
         </div>
@@ -77,10 +102,10 @@ const FilterBar = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tüm Departmanlar</SelectItem>
-            <SelectItem value="it">Bilgi Teknolojileri</SelectItem>
-            <SelectItem value="hr">İnsan Kaynakları</SelectItem>
-            <SelectItem value="finance">Finans</SelectItem>
             <SelectItem value="sales">Satış</SelectItem>
+            <SelectItem value="tech">Teknik Destek</SelectItem>
+            <SelectItem value="finance">Muhasebe</SelectItem>
+            <SelectItem value="logistics">Lojistik</SelectItem>
           </SelectContent>
         </Select>
         <Select>
@@ -89,110 +114,187 @@ const FilterBar = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tüm Durumlar</SelectItem>
-            <SelectItem value="active">Aktif</SelectItem>
-            <SelectItem value="onleave">İzinde</SelectItem>
-            <SelectItem value="inactive">Pasif</SelectItem>
+            <SelectItem value="aktif">Aktif</SelectItem>
+            <SelectItem value="izinli">İzinli</SelectItem>
+            <SelectItem value="pasif">Pasif</SelectItem>
+            <SelectItem value="ayrıldı">Ayrıldı</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      <Button className="shrink-0">
-        <PlusCircle className="h-5 w-5 mr-2" />
-        Yeni Çalışan
-      </Button>
+      <div className="flex gap-2">
+        <div className="flex rounded-md border">
+          <Button
+            variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+            size="icon"
+            onClick={() => setViewMode('table')}
+            className="rounded-r-none"
+          >
+            <TableIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+            size="icon"
+            onClick={() => setViewMode('grid')}
+            className="rounded-l-none"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+        </div>
+        <Button>
+          <PlusCircle className="h-5 w-5 mr-2" />
+          Yeni Çalışan
+        </Button>
+      </div>
     </div>
   );
 };
 
-const EmployeeTable = () => {
-  const employees = [
-    {
-      id: 1,
-      name: "Ali Yılmaz",
-      position: "Yazılım Geliştirici",
-      department: "Bilgi Teknolojileri",
-      email: "ali.yilmaz@firma.com",
-      status: "Aktif",
-      imageUrl: "https://i.pravatar.cc/150?img=1"
-    },
-    {
-      id: 2,
-      name: "Ayşe Demir",
-      position: "İK Uzmanı",
-      department: "İnsan Kaynakları",
-      email: "ayse.demir@firma.com",
-      status: "İzinde",
-      imageUrl: "https://i.pravatar.cc/150?img=2"
-    },
-    {
-      id: 3,
-      name: "Mehmet Kaya",
-      position: "Satış Müdürü",
-      department: "Satış",
-      email: "mehmet.kaya@firma.com",
-      status: "Aktif",
-      imageUrl: "https://i.pravatar.cc/150?img=3"
-    },
-    {
-      id: 4,
-      name: "Zeynep Şahin",
-      position: "Finans Analisti",
-      department: "Finans",
-      email: "zeynep.sahin@firma.com",
-      status: "Aktif",
-      imageUrl: "https://i.pravatar.cc/150?img=4"
-    },
-  ];
+const StatusBadge = ({ status }: { status: Employee['status'] }) => {
+  const styles = {
+    aktif: 'bg-green-100 text-green-800',
+    pasif: 'bg-gray-100 text-gray-800',
+    izinli: 'bg-yellow-100 text-yellow-800',
+    ayrıldı: 'bg-red-100 text-red-800',
+  };
 
   return (
-    <div className="bg-white rounded-lg border">
-      <div className="min-w-full divide-y">
-        <div className="bg-gray-50 px-6 py-3">
-          <div className="grid grid-cols-6 gap-4">
-            <div className="col-span-2 text-sm font-medium text-gray-500">ÇALIŞAN</div>
-            <div className="text-sm font-medium text-gray-500">DEPARTMAN</div>
-            <div className="text-sm font-medium text-gray-500">E-POSTA</div>
-            <div className="text-sm font-medium text-gray-500">DURUM</div>
-            <div className="text-sm font-medium text-gray-500">İŞLEMLER</div>
-          </div>
-        </div>
-        <div className="divide-y">
-          {employees.map((employee) => (
-            <div key={employee.id} className="px-6 py-4 transition-colors hover:bg-gray-50">
-              <div className="grid grid-cols-6 gap-4 items-center">
-                <div className="col-span-2">
-                  <div className="flex items-center">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={employee.imageUrl} />
-                      <AvatarFallback>{employee.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <div className="ml-4">
-                      <div className="font-medium text-gray-900">{employee.name}</div>
-                      <div className="text-sm text-gray-500">{employee.position}</div>
-                    </div>
-                  </div>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}>
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  );
+};
+
+const EmployeeGrid = ({ employees }: { employees: Employee[] }) => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {employees.map((employee) => (
+        <Card key={employee.id}>
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center text-center mb-4">
+              <Avatar className="h-20 w-20 mb-4">
+                <AvatarImage src={employee.avatar_url || undefined} />
+                <AvatarFallback>{employee.first_name[0]}{employee.last_name[0]}</AvatarFallback>
+              </Avatar>
+              <h3 className="font-semibold">{employee.first_name} {employee.last_name}</h3>
+              <p className="text-sm text-gray-500">{employee.position}</p>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center text-sm">
+                <Building2 className="h-4 w-4 mr-2 text-gray-500" />
+                {employee.department}
+              </div>
+              <div className="flex items-center text-sm">
+                <Mail className="h-4 w-4 mr-2 text-gray-500" />
+                {employee.email}
+              </div>
+              {employee.phone && (
+                <div className="flex items-center text-sm">
+                  <Phone className="h-4 w-4 mr-2 text-gray-500" />
+                  {employee.phone}
                 </div>
-                <div className="text-sm text-gray-900">{employee.department}</div>
-                <div className="text-sm text-gray-900">{employee.email}</div>
-                <div>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    employee.status === 'Aktif' ? 'bg-green-100 text-green-800' :
-                    employee.status === 'İzinde' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {employee.status}
-                  </span>
-                </div>
-                <div>
-                  <Button variant="outline" size="sm">
-                    Detaylar
-                  </Button>
-                </div>
+              )}
+              <div className="flex items-center text-sm">
+                <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                {new Date(employee.hire_date).toLocaleDateString('tr-TR')}
+              </div>
+              <div className="flex items-center text-sm">
+                <BadgeCheck className="h-4 w-4 mr-2 text-gray-500" />
+                <StatusBadge status={employee.status} />
+              </div>
+              <div className="pt-4 flex justify-center gap-2">
+                <Button variant="outline" size="sm">Detaylar</Button>
+                <Button variant="outline" size="sm">Düzenle</Button>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
+  );
+};
+
+const EmployeeTable = ({ employees }: { employees: Employee[] }) => {
+  return (
+    <div className="bg-white rounded-lg border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[300px]">ÇALIŞAN</TableHead>
+            <TableHead>DEPARTMAN</TableHead>
+            <TableHead>İŞE BAŞLAMA</TableHead>
+            <TableHead>E-POSTA</TableHead>
+            <TableHead>TELEFON</TableHead>
+            <TableHead>DURUM</TableHead>
+            <TableHead className="text-right">İŞLEMLER</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {employees.map((employee) => (
+            <TableRow key={employee.id}>
+              <TableCell>
+                <div className="flex items-center">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={employee.avatar_url || undefined} />
+                    <AvatarFallback>{employee.first_name[0]}{employee.last_name[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="ml-4">
+                    <div className="font-medium">{employee.first_name} {employee.last_name}</div>
+                    <div className="text-sm text-gray-500">{employee.position}</div>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>{employee.department}</TableCell>
+              <TableCell>{new Date(employee.hire_date).toLocaleDateString('tr-TR')}</TableCell>
+              <TableCell>{employee.email}</TableCell>
+              <TableCell>{employee.phone || '-'}</TableCell>
+              <TableCell>
+                <StatusBadge status={employee.status} />
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" size="sm">Detaylar</Button>
+                  <Button variant="outline" size="sm">Düzenle</Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
+
+const EmployeeList = () => {
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [employees, setEmployees] = useState<Employee[]>([]);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching employees:', error);
+        return;
+      }
+
+      setEmployees(data);
+    };
+
+    fetchEmployees();
+  }, []);
+
+  return (
+    <>
+      <FilterBar />
+      {viewMode === 'table' ? (
+        <EmployeeTable employees={employees} />
+      ) : (
+        <EmployeeGrid employees={employees} />
+      )}
+    </>
   );
 };
 
@@ -274,8 +376,7 @@ const Employees = ({ isCollapsed, setIsCollapsed }: EmployeesProps) => {
                   </Card>
                 </div>
               </div>
-              <FilterBar />
-              <EmployeeTable />
+              <EmployeeList />
             </main>
           </TabsContent>
 
