@@ -13,6 +13,8 @@ export interface Customer {
   address: string | null;
   tax_number: string | null;
   tax_office: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CustomerFormData {
