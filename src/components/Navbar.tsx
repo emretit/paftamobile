@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, PieChart, ChevronLeft, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Users, PieChart, ChevronLeft, ChevronRight, Truck } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -63,6 +63,18 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
           >
             <Users className="h-5 w-5 flex-shrink-0" />
             {!isCollapsed && <span>Müşteriler</span>}
+          </Link>
+
+          <Link
+            to="/suppliers"
+            className={cn(
+              "flex items-center p-3 rounded-lg transition-colors",
+              isCollapsed ? "justify-center" : "space-x-3",
+              isActive("/suppliers") ? "bg-gray-100 text-gray-900" : "hover:bg-gray-50"
+            )}
+          >
+            <Truck className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span>Tedarikçiler</span>}
           </Link>
           
           <Link
