@@ -66,6 +66,75 @@ export type Database = {
         }
         Relationships: []
       }
+      deals: {
+        Row: {
+          created_at: string | null
+          customer_id: string | null
+          description: string | null
+          employee_id: string | null
+          expected_close_date: string | null
+          id: string
+          internal_comments: string | null
+          last_contact_date: string | null
+          notes: string | null
+          priority: Database["public"]["Enums"]["deal_priority"]
+          proposal_date: string | null
+          status: Database["public"]["Enums"]["deal_status"]
+          title: string
+          updated_at: string | null
+          value: number
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id?: string | null
+          description?: string | null
+          employee_id?: string | null
+          expected_close_date?: string | null
+          id?: string
+          internal_comments?: string | null
+          last_contact_date?: string | null
+          notes?: string | null
+          priority?: Database["public"]["Enums"]["deal_priority"]
+          proposal_date?: string | null
+          status?: Database["public"]["Enums"]["deal_status"]
+          title: string
+          updated_at?: string | null
+          value?: number
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string | null
+          description?: string | null
+          employee_id?: string | null
+          expected_close_date?: string | null
+          id?: string
+          internal_comments?: string | null
+          last_contact_date?: string | null
+          notes?: string | null
+          priority?: Database["public"]["Enums"]["deal_priority"]
+          proposal_date?: string | null
+          status?: Database["public"]["Enums"]["deal_status"]
+          title?: string
+          updated_at?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           avatar_url: string | null
@@ -175,6 +244,8 @@ export type Database = {
     Enums: {
       customer_status: "aktif" | "pasif" | "potansiyel"
       customer_type: "bireysel" | "kurumsal"
+      deal_priority: "low" | "medium" | "high"
+      deal_status: "new" | "negotiation" | "follow_up" | "won" | "lost"
       supplier_status: "aktif" | "pasif" | "potansiyel"
       supplier_type: "bireysel" | "kurumsal"
     }
