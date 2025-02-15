@@ -32,6 +32,13 @@ interface Deal {
   lastContactDate: Date;
   notes?: string;
   internalComments?: string;
+  department?: string;
+  contactHistory?: any[];
+  proposalFiles?: any[];
+  nextSteps?: any[];
+  productServices?: any[];
+  validityPeriod?: any;
+  reminders?: any[];
 }
 
 interface DealsState {
@@ -62,6 +69,17 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
         lastContactDate: new Date(),
         expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         description: "Complete enterprise software solution including implementation and training.",
+        department: "Enterprise Sales",
+        contactHistory: [],
+        proposalFiles: [],
+        nextSteps: [
+          { id: 1, action: "Schedule technical review", dueDate: "2024-03-20" }
+        ],
+        productServices: [
+          { id: 1, name: "Enterprise License", quantity: 1, price: 35000 },
+          { id: 2, name: "Implementation Service", quantity: 1, price: 15000 }
+        ],
+        reminders: []
       },
       {
         id: "2",
@@ -73,6 +91,12 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
         status: "new",
         proposalDate: new Date(),
         lastContactDate: new Date(),
+        department: "Cloud Solutions",
+        contactHistory: [],
+        proposalFiles: [],
+        nextSteps: [],
+        productServices: [],
+        reminders: []
       },
     ],
     negotiation: [],
@@ -299,3 +323,4 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
 };
 
 export default Deals;
+

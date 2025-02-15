@@ -18,6 +18,13 @@ interface Deal {
   lastContactDate: Date;
   notes?: string;
   internalComments?: string;
+  department?: string;
+  contactHistory?: any[];
+  proposalFiles?: any[];
+  nextSteps?: any[];
+  productServices?: any[];
+  validityPeriod?: any;
+  reminders?: any[];
 }
 
 interface DealDetailsModalProps {
@@ -65,6 +72,9 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">{deal.title}</h2>
                 <p className="text-gray-600">{deal.customerName}</p>
+                {deal.department && (
+                  <p className="text-sm text-gray-500 mt-1">Department: {deal.department}</p>
+                )}
               </div>
               <div className="flex gap-2">
                 <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(deal.status)}`}>
@@ -111,6 +121,34 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
               </div>
             )}
 
+            {deal.productServices && deal.productServices.length > 0 && (
+              <div>
+                <h3 className="font-medium text-gray-600 mb-2">Products & Services</h3>
+                <div className="space-y-2">
+                  {deal.productServices.map((item: any) => (
+                    <div key={item.id} className="flex justify-between items-center">
+                      <span>{item.name}</span>
+                      <span>${item.price.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {deal.nextSteps && deal.nextSteps.length > 0 && (
+              <div>
+                <h3 className="font-medium text-gray-600 mb-2">Next Steps</h3>
+                <div className="space-y-2">
+                  {deal.nextSteps.map((step: any) => (
+                    <div key={step.id} className="flex justify-between items-center">
+                      <span>{step.action}</span>
+                      <span className="text-sm text-gray-500">{step.dueDate}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {deal.notes && (
               <div>
                 <h3 className="font-medium text-gray-600 mb-2">Notes</h3>
@@ -122,6 +160,26 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
               <div>
                 <h3 className="font-medium text-gray-600 mb-2">Internal Comments</h3>
                 <p className="text-gray-700 whitespace-pre-line">{deal.internalComments}</p>
+              </div>
+            )}
+
+            {deal.proposalFiles && deal.proposalFiles.length > 0 && (
+              <div>
+                <h3 className="font-medium text-gray-600 mb-2">Proposal Files</h3>
+                <div className="space-y-2">
+                  {deal.proposalFiles.map((file: any) => (
+                    <div key={file.id} className="flex items-center gap-2">
+                      <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {file.name}
+                      </a>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
