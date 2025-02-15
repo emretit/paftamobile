@@ -1,10 +1,12 @@
 
 import { useState } from "react";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { Card } from "@/components/ui/card";
+import { DragDropContext } from "@hello-pangea/dnd";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import DealDetailsModal from "@/components/deals/DealDetailsModal";
+import DealStats from "@/components/deals/DealStats";
+import DealColumn from "@/components/deals/DealColumn";
+import { Deal } from "@/types/deal";
 import {
   Filter,
   Plus,
@@ -13,33 +15,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  BarChart3,
-  ArrowUpRight,
-  ArrowDownRight,
 } from "lucide-react";
-
-interface Deal {
-  id: string;
-  title: string;
-  description?: string;
-  value: number;
-  status: "new" | "negotiation" | "follow_up" | "won" | "lost";
-  priority: "low" | "medium" | "high";
-  customerName: string;
-  employeeName: string;
-  expectedCloseDate?: Date;
-  proposalDate: Date;
-  lastContactDate: Date;
-  notes?: string;
-  internalComments?: string;
-  department?: string;
-  contactHistory?: any[];
-  proposalFiles?: any[];
-  nextSteps?: any[];
-  productServices?: any[];
-  validityPeriod?: any;
-  reminders?: any[];
-}
 
 interface DealsState {
   new: Deal[];
@@ -141,19 +117,6 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
     { id: "lost", title: "Lost", icon: XCircle },
   ];
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-100 text-red-700";
-      case "medium":
-        return "bg-yellow-100 text-yellow-700";
-      case "low":
-        return "bg-green-100 text-green-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  };
-
   const handleDealClick = (deal: Deal) => {
     setSelectedDeal(deal);
     setIsModalOpen(true);
@@ -186,127 +149,21 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
             </div>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <Card className="p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Pipeline</p>
-                  <p className="text-2xl font-bold mt-1">$240,000</p>
-                </div>
-                <div className="bg-green-100 p-2 rounded-lg">
-                  <ArrowUpRight className="h-5 w-5 text-green-600" />
-                </div>
-              </div>
-              <p className="text-sm text-green-600 mt-2 flex items-center">
-                <ArrowUpRight className="h-4 w-4 mr-1" />
-                12% from last month
-              </p>
-            </Card>
-            <Card className="p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Won Deals</p>
-                  <p className="text-2xl font-bold mt-1">$120,000</p>
-                </div>
-                <div className="bg-green-100 p-2 rounded-lg">
-                  <BarChart3 className="h-5 w-5 text-green-600" />
-                </div>
-              </div>
-              <p className="text-sm text-green-600 mt-2 flex items-center">
-                <ArrowUpRight className="h-4 w-4 mr-1" />
-                8% from last month
-              </p>
-            </Card>
-            <Card className="p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Lost Deals</p>
-                  <p className="text-2xl font-bold mt-1">$35,000</p>
-                </div>
-                <div className="bg-red-100 p-2 rounded-lg">
-                  <ArrowDownRight className="h-5 w-5 text-red-600" />
-                </div>
-              </div>
-              <p className="text-sm text-red-600 mt-2 flex items-center">
-                <ArrowDownRight className="h-4 w-4 mr-1" />
-                5% from last month
-              </p>
-            </Card>
-            <Card className="p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Win Rate</p>
-                  <p className="text-2xl font-bold mt-1">67%</p>
-                </div>
-                <div className="bg-blue-100 p-2 rounded-lg">
-                  <CheckCircle2 className="h-5 w-5 text-blue-600" />
-                </div>
-              </div>
-              <p className="text-sm text-blue-600 mt-2 flex items-center">
-                <ArrowUpRight className="h-4 w-4 mr-1" />
-                2% from last month
-              </p>
-            </Card>
-          </div>
+          {/* Stats */}
+          <DealStats />
 
           {/* Kanban Board */}
           <DragDropContext onDragEnd={onDragEnd}>
             <div className="flex flex-col lg:flex-row gap-6">
               {columns.map((column) => (
-                <div key={column.id} className="flex-1 min-w-[300px]">
-                  <div className="flex items-center gap-2 mb-4">
-                    <column.icon className="h-5 w-5 text-gray-500" />
-                    <h2 className="font-semibold text-gray-900">
-                      {column.title} ({deals[column.id as keyof DealsState].length})
-                    </h2>
-                  </div>
-                  <Droppable droppableId={column.id}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={`space-y-4 min-h-[500px] p-4 rounded-lg ${
-                          snapshot.isDraggingOver ? "bg-gray-100" : "bg-gray-50"
-                        }`}
-                      >
-                        {deals[column.id as keyof DealsState].map((deal, index) => (
-                          <Draggable key={deal.id} draggableId={deal.id} index={index}>
-                            {(provided, snapshot) => (
-                              <Card
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className={`p-4 cursor-move bg-white ${
-                                  snapshot.isDragging ? "shadow-lg" : "hover:shadow-md"
-                                } transition-shadow`}
-                                onClick={() => handleDealClick(deal)}
-                              >
-                                <div className="flex justify-between items-start mb-2">
-                                  <h3 className="font-medium text-gray-900">{deal.title}</h3>
-                                  <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(deal.priority)}`}>
-                                    {deal.priority}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-gray-600 mb-2">{deal.customerName}</p>
-                                <div className="text-xs text-gray-500 mb-2">{deal.employeeName}</div>
-                                <div className="flex justify-between items-center mt-2">
-                                  <p className="text-lg font-semibold text-gray-900">
-                                    ${deal.value.toLocaleString()}
-                                  </p>
-                                  <span className="text-xs text-gray-500">
-                                    {new Date(deal.lastContactDate).toLocaleDateString()}
-                                  </span>
-                                </div>
-                              </Card>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </div>
+                <DealColumn
+                  key={column.id}
+                  id={column.id}
+                  title={column.title}
+                  icon={column.icon}
+                  deals={deals[column.id as keyof DealsState]}
+                  onDealClick={handleDealClick}
+                />
               ))}
             </div>
           </DragDropContext>
@@ -323,4 +180,3 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
 };
 
 export default Deals;
-
