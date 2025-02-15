@@ -68,54 +68,75 @@ export type Database = {
       }
       deals: {
         Row: {
+          contact_history: Json | null
           created_at: string | null
           customer_id: string | null
+          department: string | null
           description: string | null
           employee_id: string | null
           expected_close_date: string | null
           id: string
           internal_comments: string | null
           last_contact_date: string | null
+          next_steps: Json | null
           notes: string | null
           priority: Database["public"]["Enums"]["deal_priority"]
+          product_services: Json | null
           proposal_date: string | null
+          proposal_files: Json | null
+          reminders: Json | null
           status: Database["public"]["Enums"]["deal_status"]
           title: string
           updated_at: string | null
+          validity_period: unknown | null
           value: number
         }
         Insert: {
+          contact_history?: Json | null
           created_at?: string | null
           customer_id?: string | null
+          department?: string | null
           description?: string | null
           employee_id?: string | null
           expected_close_date?: string | null
           id?: string
           internal_comments?: string | null
           last_contact_date?: string | null
+          next_steps?: Json | null
           notes?: string | null
           priority?: Database["public"]["Enums"]["deal_priority"]
+          product_services?: Json | null
           proposal_date?: string | null
+          proposal_files?: Json | null
+          reminders?: Json | null
           status?: Database["public"]["Enums"]["deal_status"]
           title: string
           updated_at?: string | null
+          validity_period?: unknown | null
           value?: number
         }
         Update: {
+          contact_history?: Json | null
           created_at?: string | null
           customer_id?: string | null
+          department?: string | null
           description?: string | null
           employee_id?: string | null
           expected_close_date?: string | null
           id?: string
           internal_comments?: string | null
           last_contact_date?: string | null
+          next_steps?: Json | null
           notes?: string | null
           priority?: Database["public"]["Enums"]["deal_priority"]
+          product_services?: Json | null
           proposal_date?: string | null
+          proposal_files?: Json | null
+          reminders?: Json | null
           status?: Database["public"]["Enums"]["deal_status"]
           title?: string
           updated_at?: string | null
+          validity_period?: unknown | null
           value?: number
         }
         Relationships: [
