@@ -11,7 +11,8 @@ import {
   Wallet,
   Wrench,
   FileDown,
-  FileUp
+  FileUp,
+  FileText
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,18 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
           >
             <PieChart className="h-5 w-5 flex-shrink-0" />
             {!isCollapsed && <span>Fırsatlar</span>}
+          </Link>
+
+          <Link
+            to="/proposals"
+            className={cn(
+              "flex items-center p-3 rounded-lg transition-colors",
+              isCollapsed ? "justify-center" : "space-x-3",
+              isActive("/proposals") ? "bg-gray-100 text-gray-900" : "hover:bg-gray-50"
+            )}
+          >
+            <FileText className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span>Teklifler</span>}
           </Link>
 
           <Link
