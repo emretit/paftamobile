@@ -5,9 +5,13 @@ import { Card } from "@/components/ui/card";
 import { useProposals } from "@/hooks/useProposals";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Proposal } from "@/types/proposal";
+import { Proposal, ProposalStatus } from "@/types/proposal";
 
-const columns = [
+const columns: {
+  id: ProposalStatus;
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+}[] = [
   { id: "new", title: "Yeni Teklifler", icon: FileText },
   { id: "review", title: "İncelemede", icon: Users },
   { id: "negotiation", title: "Görüşme Aşamasında", icon: Clock },
@@ -18,7 +22,7 @@ const columns = [
 const ProposalKanban = () => {
   const { data: proposals, isLoading } = useProposals();
 
-  const getProposalsByStatus = (status: string) => {
+  const getProposalsByStatus = (status: ProposalStatus) => {
     return proposals?.filter((proposal) => proposal.status === status) || [];
   };
 
