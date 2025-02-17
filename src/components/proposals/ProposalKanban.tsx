@@ -1,11 +1,14 @@
 
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { FileText, Users, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useProposals } from "@/hooks/useProposals";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Proposal, ProposalStatus } from "@/types/proposal";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const columns: {
   id: ProposalStatus;
@@ -21,14 +24,69 @@ const columns: {
 
 const ProposalKanban = () => {
   const { data: proposals, isLoading } = useProposals();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const getProposalsByStatus = (status: ProposalStatus) => {
     return proposals?.filter((proposal) => proposal.status === status) || [];
   };
 
-  const onDragEnd = (result: any) => {
-    // TODO: Implement drag and drop functionality
-    console.log("Drag ended:", result);
+  const updateProposalStatus = async (proposalId: string, newStatus: ProposalStatus) => {
+    const { error } = await supabase
+      .from('proposals')
+      .update({ status: newStatus })
+      .eq('id', proposalId);
+
+    if (error) {
+      throw error;
+    }
+  };
+
+  const onDragEnd = async (result: DropResult) => {
+    const { destination, source, draggableId } = result;
+
+    // If dropped outside a droppable area
+    if (!destination) return;
+
+    // If dropped in the same position
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    // Update the proposal status
+    const newStatus = destination.droppableId as ProposalStatus;
+    
+    try {
+      await updateProposalStatus(draggableId, newStatus);
+      
+      // Optimistically update the local cache
+      queryClient.setQueryData(['proposals'], (oldData: Proposal[] | undefined) => {
+        if (!oldData) return [];
+        return oldData.map(proposal => 
+          proposal.id === draggableId 
+            ? { ...proposal, status: newStatus }
+            : proposal
+        );
+      });
+
+      toast({
+        title: "Durum güncellendi",
+        description: "Teklif durumu başarıyla güncellendi.",
+      });
+    } catch (error) {
+      console.error('Error updating proposal status:', error);
+      toast({
+        title: "Hata",
+        description: "Teklif durumu güncellenirken bir hata oluştu.",
+        variant: "destructive",
+      });
+      
+      // Refresh the proposals data
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+    }
   };
 
   if (isLoading) {
@@ -79,12 +137,14 @@ const ProposalKanban = () => {
                       draggableId={proposal.id}
                       index={index}
                     >
-                      {(provided) => (
+                      {(provided, snapshot) => (
                         <Card
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          className="p-4 mb-4 bg-white hover:shadow-md transition-shadow"
+                          className={`p-4 mb-4 bg-white hover:shadow-md transition-shadow ${
+                            snapshot.isDragging ? "shadow-lg" : ""
+                          }`}
                         >
                           <div className="space-y-2">
                             <div className="flex justify-between items-start">
