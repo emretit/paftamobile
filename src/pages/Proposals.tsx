@@ -19,8 +19,11 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileText, Plus, Search, Filter } from "lucide-react";
-import { ProposalStatus } from "@/types/proposal";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileText, Plus, Search, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { ProposalStatus, Proposal } from "@/types/proposal";
+import ProposalTable from "@/components/proposals/ProposalTable";
+import ProposalKanban from "@/components/proposals/ProposalKanban";
 
 interface ProposalsProps {
   isCollapsed: boolean;
@@ -38,6 +41,7 @@ const statusOptions: { value: ProposalStatus; label: string }[] = [
 const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<ProposalStatus | "">("");
+  const [viewType, setViewType] = useState<"table" | "kanban">("table");
   const { data: salesPerformance, isLoading } = useSalesPerformance();
 
   return (
@@ -60,60 +64,56 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
             </Button>
           </div>
 
-          {/* Filters and Search */}
-          <div className="mb-6 flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 flex gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Teklif ara..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          {/* View Switcher and Filters */}
+          <div className="mb-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <Tabs value={viewType} onValueChange={(value) => setViewType(value as "table" | "kanban")}>
+                <TabsList>
+                  <TabsTrigger value="table" className="flex items-center gap-2">
+                    <TableIcon className="h-4 w-4" />
+                    <span>Tablo Görünümü</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="kanban" className="flex items-center gap-2">
+                    <LayoutGrid className="h-4 w-4" />
+                    <span>Kanban Görünümü</span>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 flex gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Teklif ara..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ProposalStatus)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Durum Filtrele" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Tümü</SelectItem>
+                    {statusOptions.map((status) => (
+                      <SelectItem key={status.value} value={status.value}>
+                        {status.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ProposalStatus)}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Durum Filtrele" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Tümü</SelectItem>
-                  {statusOptions.map((status) => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </div>
 
-          {/* Proposals Table */}
-          {isLoading ? (
-            <div className="text-center py-8">Yükleniyor...</div>
+          {/* Views */}
+          {viewType === "table" ? (
+            <ProposalTable />
           ) : (
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Başlık</TableHead>
-                    <TableHead>Müşteri</TableHead>
-                    <TableHead>Toplam Değer</TableHead>
-                    <TableHead>Durum</TableHead>
-                    <TableHead>Oluşturma Tarihi</TableHead>
-                    <TableHead>Son Geçerlilik</TableHead>
-                    <TableHead className="text-right">İşlemler</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                      Henüz teklif bulunmuyor. Yeni bir teklif oluşturmak için "Yeni Teklif" butonuna tıklayın.
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
+            <ProposalKanban />
           )}
 
           {/* Analytics Section */}
@@ -169,3 +169,4 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
 };
 
 export default Proposals;
+
