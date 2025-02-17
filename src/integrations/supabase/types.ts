@@ -68,12 +68,14 @@ export type Database = {
       }
       deals: {
         Row: {
+          actual_value: number | null
           contact_history: Json | null
           created_at: string | null
           customer_id: string | null
           department: string | null
           description: string | null
           employee_id: string | null
+          estimated_value: number | null
           expected_close_date: string | null
           id: string
           internal_comments: string | null
@@ -92,12 +94,14 @@ export type Database = {
           value: number
         }
         Insert: {
+          actual_value?: number | null
           contact_history?: Json | null
           created_at?: string | null
           customer_id?: string | null
           department?: string | null
           description?: string | null
           employee_id?: string | null
+          estimated_value?: number | null
           expected_close_date?: string | null
           id?: string
           internal_comments?: string | null
@@ -116,12 +120,14 @@ export type Database = {
           value?: number
         }
         Update: {
+          actual_value?: number | null
           contact_history?: Json | null
           created_at?: string | null
           customer_id?: string | null
           department?: string | null
           description?: string | null
           employee_id?: string | null
+          estimated_value?: number | null
           expected_close_date?: string | null
           id?: string
           internal_comments?: string | null
@@ -201,6 +207,73 @@ export type Database = {
         }
         Relationships: []
       }
+      proposals: {
+        Row: {
+          created_at: string | null
+          customer_id: string | null
+          customer_segment: string | null
+          deal_id: string | null
+          employee_id: string | null
+          id: string
+          sent_date: string | null
+          status: Database["public"]["Enums"]["proposal_status"] | null
+          title: string
+          total_value: number
+          updated_at: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id?: string | null
+          customer_segment?: string | null
+          deal_id?: string | null
+          employee_id?: string | null
+          id?: string
+          sent_date?: string | null
+          status?: Database["public"]["Enums"]["proposal_status"] | null
+          title: string
+          total_value?: number
+          updated_at?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string | null
+          customer_segment?: string | null
+          deal_id?: string | null
+          employee_id?: string | null
+          id?: string
+          sent_date?: string | null
+          status?: Database["public"]["Enums"]["proposal_status"] | null
+          title?: string
+          total_value?: number
+          updated_at?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address: string | null
@@ -257,7 +330,26 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      sales_performance: {
+        Row: {
+          accepted_proposals: number | null
+          employee_id: string | null
+          employee_name: string | null
+          month: string | null
+          success_rate: number | null
+          total_proposals: number | null
+          total_value: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never
@@ -267,6 +359,7 @@ export type Database = {
       customer_type: "bireysel" | "kurumsal"
       deal_priority: "low" | "medium" | "high"
       deal_status: "new" | "negotiation" | "follow_up" | "won" | "lost"
+      proposal_status: "draft" | "sent" | "accepted" | "rejected" | "expired"
       supplier_status: "aktif" | "pasif" | "potansiyel"
       supplier_type: "bireysel" | "kurumsal"
     }

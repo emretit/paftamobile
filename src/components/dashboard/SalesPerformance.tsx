@@ -1,4 +1,5 @@
 
+import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import {
   Bar,
@@ -15,25 +16,58 @@ import {
   Cell,
   Legend,
 } from "recharts";
-
-const mockProposalData = [
-  { month: "Jan", total: 24, accepted: 15, value: 125000 },
-  { month: "Feb", total: 18, accepted: 12, value: 98000 },
-  { month: "Mar", total: 30, accepted: 22, value: 156000 },
-  { month: "Apr", total: 22, accepted: 16, value: 134000 },
-  { month: "May", total: 28, accepted: 20, value: 167000 },
-  { month: "Jun", total: 32, accepted: 25, value: 189000 },
-];
-
-const mockSegmentData = [
-  { name: "Enterprise", value: 45 },
-  { name: "Mid-Market", value: 30 },
-  { name: "SMB", value: 25 },
-];
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import { useSalesPerformance } from "@/hooks/useSalesPerformance";
 
 const COLORS = ["#000000", "#666666", "#999999"];
 
 const SalesPerformance = () => {
+  const { data: salesData, isLoading } = useSalesPerformance();
+
+  const monthlyData = useMemo(() => {
+    if (!salesData) return [];
+    return salesData.map(item => ({
+      month: format(new Date(item.month), 'MMM', { locale: tr }),
+      total: item.total_proposals,
+      accepted: item.accepted_proposals,
+      value: item.total_value
+    }));
+  }, [salesData]);
+
+  const salesRepData = useMemo(() => {
+    if (!salesData) return [];
+    return Object.values(
+      salesData.reduce<{ [key: string]: { name: string; rate: number; total: number } }>(
+        (acc, item) => {
+          if (!acc[item.employee_id]) {
+            acc[item.employee_id] = {
+              name: item.employee_name,
+              rate: 0,
+              total: 0
+            };
+          }
+          acc[item.employee_id].rate = item.success_rate;
+          acc[item.employee_id].total += item.total_value;
+          return acc;
+        },
+        {}
+      )
+    ).sort((a, b) => b.rate - a.rate);
+  }, [salesData]);
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i} className="p-6">
+            <div className="h-[300px] animate-pulse bg-gray-100 rounded" />
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Monthly Proposals & Success Rate */}
@@ -41,7 +75,7 @@ const SalesPerformance = () => {
         <h3 className="text-lg font-medium mb-4">Aylık Teklifler ve Başarı Oranı</h3>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={mockProposalData}>
+            <BarChart data={monthlyData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" />
               <YAxis yAxisId="left" />
@@ -72,7 +106,7 @@ const SalesPerformance = () => {
         <h3 className="text-lg font-medium mb-4">Gelir Büyümesi</h3>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={mockProposalData}>
+            <LineChart data={monthlyData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" />
               <YAxis />
@@ -90,44 +124,13 @@ const SalesPerformance = () => {
         </div>
       </Card>
 
-      {/* Customer Segment Distribution */}
-      <Card className="p-6">
-        <h3 className="text-lg font-medium mb-4">Müşteri Segment Dağılımı</h3>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={mockSegmentData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                label
-              >
-                {mockSegmentData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
-
       {/* Success Rate by Sales Rep */}
       <Card className="p-6">
         <h3 className="text-lg font-medium mb-4">Satış Temsilcisi Başarı Oranları</h3>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={[
-                { name: "Ahmet Y.", rate: 75 },
-                { name: "Zeynep K.", rate: 82 },
-                { name: "Mehmet A.", rate: 68 },
-                { name: "Ayşe B.", rate: 71 },
-              ]}
+              data={salesRepData}
               layout="vertical"
             >
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
@@ -138,9 +141,35 @@ const SalesPerformance = () => {
                 dataKey="rate"
                 fill="#000000"
                 radius={[0, 4, 4, 0]}
-                label={{ position: "right", formatter: (value) => `${value}%` }}
+                label={{ position: "right", formatter: (value: number) => `${value.toFixed(1)}%` }}
               />
             </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </Card>
+
+      {/* Sales Rep Performance */}
+      <Card className="p-6">
+        <h3 className="text-lg font-medium mb-4">Satış Temsilcisi Performansı</h3>
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={salesRepData}
+                dataKey="total"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+              >
+                {salesRepData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
           </ResponsiveContainer>
         </div>
       </Card>
