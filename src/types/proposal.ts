@@ -1,5 +1,5 @@
 
-export type ProposalStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+export type ProposalStatus = 'new' | 'review' | 'negotiation' | 'accepted' | 'rejected';
 
 export interface Proposal {
   id: string;
@@ -14,6 +14,14 @@ export interface Proposal {
   customer_segment: string | null;
   created_at: string;
   updated_at: string;
+  proposal_number: number;
+  customer?: {
+    name: string;
+  };
+  employee?: {
+    first_name: string;
+    last_name: string;
+  };
 }
 
 export interface SalesPerformanceData {

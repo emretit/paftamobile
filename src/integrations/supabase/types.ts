@@ -215,8 +215,9 @@ export type Database = {
           deal_id: string | null
           employee_id: string | null
           id: string
+          proposal_number: number
           sent_date: string | null
-          status: Database["public"]["Enums"]["proposal_status"] | null
+          status: string | null
           title: string
           total_value: number
           updated_at: string | null
@@ -229,8 +230,9 @@ export type Database = {
           deal_id?: string | null
           employee_id?: string | null
           id?: string
+          proposal_number?: number
           sent_date?: string | null
-          status?: Database["public"]["Enums"]["proposal_status"] | null
+          status?: string | null
           title: string
           total_value?: number
           updated_at?: string | null
@@ -243,8 +245,9 @@ export type Database = {
           deal_id?: string | null
           employee_id?: string | null
           id?: string
+          proposal_number?: number
           sent_date?: string | null
-          status?: Database["public"]["Enums"]["proposal_status"] | null
+          status?: string | null
           title?: string
           total_value?: number
           updated_at?: string | null
@@ -359,7 +362,14 @@ export type Database = {
       customer_type: "bireysel" | "kurumsal"
       deal_priority: "low" | "medium" | "high"
       deal_status: "new" | "negotiation" | "follow_up" | "won" | "lost"
-      proposal_status: "draft" | "sent" | "accepted" | "rejected" | "expired"
+      proposal_status:
+        | "draft"
+        | "sent"
+        | "accepted"
+        | "rejected"
+        | "expired"
+        | "review"
+        | "negotiation"
       supplier_status: "aktif" | "pasif" | "potansiyel"
       supplier_type: "bireysel" | "kurumsal"
     }
