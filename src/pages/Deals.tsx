@@ -35,39 +35,39 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
     new: [
       {
         id: "1",
-        title: "Enterprise Software Solution",
+        title: "Kurumsal Yazılım Çözümü",
         value: 50000,
         customerName: "Tech Corp",
-        employeeName: "John Smith",
+        employeeName: "Ahmet Yılmaz",
         priority: "high",
         status: "new",
         proposalDate: new Date(),
         lastContactDate: new Date(),
         expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        description: "Complete enterprise software solution including implementation and training.",
-        department: "Enterprise Sales",
+        description: "Kurumsal yazılım çözümü, uygulama ve eğitim dahil.",
+        department: "Kurumsal Satış",
         contactHistory: [],
         proposalFiles: [],
         nextSteps: [
-          { id: 1, action: "Schedule technical review", dueDate: "2024-03-20" }
+          { id: 1, action: "Teknik inceleme planla", dueDate: "2024-03-20" }
         ],
         productServices: [
-          { id: 1, name: "Enterprise License", quantity: 1, price: 35000 },
-          { id: 2, name: "Implementation Service", quantity: 1, price: 15000 }
+          { id: 1, name: "Kurumsal Lisans", quantity: 1, price: 35000 },
+          { id: 2, name: "Uygulama Hizmeti", quantity: 1, price: 15000 }
         ],
         reminders: []
       },
       {
         id: "2",
-        title: "Cloud Migration Project",
+        title: "Bulut Göç Projesi",
         value: 25000,
-        customerName: "StartUp Inc",
-        employeeName: "Sarah Johnson",
+        customerName: "StartUp A.Ş.",
+        employeeName: "Zeynep Kaya",
         priority: "medium",
         status: "new",
         proposalDate: new Date(),
         lastContactDate: new Date(),
-        department: "Cloud Solutions",
+        department: "Bulut Çözümleri",
         contactHistory: [],
         proposalFiles: [],
         nextSteps: [],
@@ -110,11 +110,11 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
   };
 
   const columns = [
-    { id: "new", title: "New Proposals", icon: AlertCircle },
-    { id: "negotiation", title: "In Negotiation", icon: Users },
-    { id: "follow_up", title: "Follow Up", icon: Clock },
-    { id: "won", title: "Won", icon: CheckCircle2 },
-    { id: "lost", title: "Lost", icon: XCircle },
+    { id: "new", title: "Yeni Teklifler", icon: AlertCircle },
+    { id: "negotiation", title: "Görüşmede", icon: Users },
+    { id: "follow_up", title: "Takipte", icon: Clock },
+    { id: "won", title: "Kazanıldı", icon: CheckCircle2 },
+    { id: "lost", title: "Kaybedildi", icon: XCircle },
   ];
 
   const handleDealClick = (deal: Deal) => {
@@ -134,17 +134,17 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Deals Pipeline</h1>
-              <p className="text-gray-600 mt-1">Track and manage your opportunities</p>
+              <h1 className="text-3xl font-bold text-gray-900">Fırsatlar Sayfası</h1>
+              <p className="text-gray-600 mt-1">Fırsatlarınızı takip edin ve yönetin</p>
             </div>
             <div className="flex gap-3">
               <Button variant="outline" size="sm">
                 <Filter className="h-4 w-4 mr-2" />
-                Filter
+                Filtrele
               </Button>
               <Button size="sm">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Deal
+                Fırsat Ekle
               </Button>
             </div>
           </div>
