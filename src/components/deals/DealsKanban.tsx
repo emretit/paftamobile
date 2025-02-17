@@ -21,8 +21,8 @@ interface DealsKanbanProps {
 }
 
 const columns = [
-  { id: "new", title: "Yeni Teklifler", icon: AlertCircle },
   { id: "negotiation", title: "Görüşmede", icon: Users },
+  { id: "new", title: "Yeni Teklifler", icon: AlertCircle },
   { id: "follow_up", title: "Takipte", icon: Clock },
   { id: "won", title: "Kazanıldı", icon: CheckCircle2 },
   { id: "lost", title: "Kaybedildi", icon: XCircle },
