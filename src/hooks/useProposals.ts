@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Proposal } from "@/types/proposal";
+import { Proposal, ProposalStatus } from "@/types/proposal";
 
 export const useProposals = () => {
   return useQuery({
@@ -20,7 +20,11 @@ export const useProposals = () => {
         throw error;
       }
 
-      return data;
+      // Type cast the status to ensure it matches ProposalStatus type
+      return data.map(item => ({
+        ...item,
+        status: item.status as ProposalStatus
+      }));
     },
   });
 };

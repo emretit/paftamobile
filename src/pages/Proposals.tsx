@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { useSalesPerformance } from "@/hooks/useSalesPerformance";
@@ -31,11 +30,11 @@ interface ProposalsProps {
 }
 
 const statusOptions: { value: ProposalStatus; label: string }[] = [
-  { value: "draft", label: "Taslak" },
-  { value: "sent", label: "Gönderildi" },
+  { value: "new", label: "Yeni" },
+  { value: "review", label: "İncelemede" },
+  { value: "negotiation", label: "Görüşmede" },
   { value: "accepted", label: "Kabul Edildi" },
   { value: "rejected", label: "Reddedildi" },
-  { value: "expired", label: "Süresi Doldu" },
 ];
 
 const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
@@ -169,4 +168,3 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
 };
 
 export default Proposals;
-
