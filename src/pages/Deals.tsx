@@ -134,21 +134,13 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
     });
   };
 
-  const handleBulkStatusUpdate = (deals: Deal[], newStatus: Deal["status"]) => {
+  const handleBulkStatusUpdate = (selectedDeals: Deal[], newStatus: Deal["status"]) => {
     const updatedDeals = { ...deals };
-    deals.forEach(deal => {
+    
+    selectedDeals.forEach(deal => {
       const oldStatus = deal.status;
-      const oldStatusArray = updatedDeals[oldStatus as keyof DealsState];
-      const newStatusArray = updatedDeals[newStatus as keyof DealsState];
-      
-      // Remove from old status array
-      updatedDeals[oldStatus as keyof DealsState] = oldStatusArray.filter(d => d.id !== deal.id);
-      
-      // Add to new status array
-      updatedDeals[newStatus as keyof DealsState] = [
-        ...newStatusArray,
-        { ...deal, status: newStatus }
-      ];
+      updatedDeals[oldStatus] = updatedDeals[oldStatus].filter(d => d.id !== deal.id);
+      updatedDeals[newStatus] = [...updatedDeals[newStatus], { ...deal, status: newStatus }];
     });
     
     setDeals(updatedDeals);

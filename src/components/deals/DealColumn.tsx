@@ -10,9 +10,11 @@ interface DealColumnProps {
   icon: LucideIcon;
   deals: Deal[];
   onDealClick: (deal: Deal) => void;
+  onDealSelect?: (deal: Deal) => void;
+  selectedDeals?: Deal[];
 }
 
-const DealColumn = ({ id, title, icon: Icon, deals, onDealClick }: DealColumnProps) => {
+const DealColumn = ({ id, title, icon: Icon, deals, onDealClick, onDealSelect, selectedDeals = [] }: DealColumnProps) => {
   return (
     <div className="flex-1 min-w-[300px]">
       <div className="flex items-center gap-2 mb-4">
@@ -39,7 +41,12 @@ const DealColumn = ({ id, title, icon: Icon, deals, onDealClick }: DealColumnPro
                     {...provided.dragHandleProps}
                     className={snapshot.isDragging ? "shadow-lg" : ""}
                   >
-                    <DealCard deal={deal} onClick={onDealClick} />
+                    <DealCard
+                      deal={deal}
+                      onClick={onDealClick}
+                      onSelect={onDealSelect}
+                      isSelected={selectedDeals.some(d => d.id === deal.id)}
+                    />
                   </div>
                 )}
               </Draggable>
