@@ -18,8 +18,9 @@ import { Button } from "@/components/ui/button";
 import { useProposals } from "@/hooks/useProposals";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { ProposalStatus } from "@/types/proposal";
 
-const statusLabels = {
+const statusLabels: Record<ProposalStatus, string> = {
   new: "Yeni",
   review: "İncelemede",
   negotiation: "Görüşmede",
@@ -27,7 +28,7 @@ const statusLabels = {
   rejected: "Reddedildi",
 };
 
-const statusColors = {
+const statusColors: Record<ProposalStatus, string> = {
   new: "bg-blue-100 text-blue-800",
   review: "bg-yellow-100 text-yellow-800",
   negotiation: "bg-purple-100 text-purple-800",

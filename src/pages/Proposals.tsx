@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { useSalesPerformance } from "@/hooks/useSalesPerformance";
@@ -20,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Plus, Search, LayoutGrid, Table as TableIcon } from "lucide-react";
-import { ProposalStatus, Proposal } from "@/types/proposal";
+import { ProposalStatus } from "@/types/proposal";
 import ProposalTable from "@/components/proposals/ProposalTable";
 import ProposalKanban from "@/components/proposals/ProposalKanban";
 
@@ -63,7 +64,6 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
             </Button>
           </div>
 
-          {/* View Switcher and Filters */}
           <div className="mb-6 space-y-4">
             <div className="flex justify-between items-center">
               <Tabs value={viewType} onValueChange={(value) => setViewType(value as "table" | "kanban")}>
@@ -108,7 +108,6 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
             </div>
           </div>
 
-          {/* Views */}
           {viewType === "table" ? (
             <ProposalTable />
           ) : (
