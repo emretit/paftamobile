@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import DealDetailsModal from "@/components/deals/DealDetailsModal";
 import DealStats from "@/components/deals/DealStats";
 import DealColumn from "@/components/deals/DealColumn";
+import DealBulkActions from "@/components/deals/DealBulkActions";
 import { Deal } from "@/types/deal";
 import {
   Filter,
@@ -83,6 +84,7 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
 
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDeals, setSelectedDeals] = useState<Deal[]>([]);
 
   const onDragEnd = (result: any) => {
     const { source, destination } = result;
@@ -120,6 +122,37 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
   const handleDealClick = (deal: Deal) => {
     setSelectedDeal(deal);
     setIsModalOpen(true);
+  };
+
+  const handleDealSelect = (deal: Deal) => {
+    setSelectedDeals(prev => {
+      const isSelected = prev.some(d => d.id === deal.id);
+      if (isSelected) {
+        return prev.filter(d => d.id !== deal.id);
+      }
+      return [...prev, deal];
+    });
+  };
+
+  const handleBulkStatusUpdate = (deals: Deal[], newStatus: Deal["status"]) => {
+    const updatedDeals = { ...deals };
+    deals.forEach(deal => {
+      const oldStatus = deal.status;
+      const oldStatusArray = updatedDeals[oldStatus as keyof DealsState];
+      const newStatusArray = updatedDeals[newStatus as keyof DealsState];
+      
+      // Remove from old status array
+      updatedDeals[oldStatus as keyof DealsState] = oldStatusArray.filter(d => d.id !== deal.id);
+      
+      // Add to new status array
+      updatedDeals[newStatus as keyof DealsState] = [
+        ...newStatusArray,
+        { ...deal, status: newStatus }
+      ];
+    });
+    
+    setDeals(updatedDeals);
+    setSelectedDeals([]);
   };
 
   return (
@@ -163,6 +196,8 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
                   icon={column.icon}
                   deals={deals[column.id as keyof DealsState]}
                   onDealClick={handleDealClick}
+                  onDealSelect={handleDealSelect}
+                  selectedDeals={selectedDeals}
                 />
               ))}
             </div>
@@ -172,6 +207,12 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
             deal={selectedDeal}
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
+          />
+
+          <DealBulkActions
+            selectedDeals={selectedDeals}
+            onUpdateStatus={handleBulkStatusUpdate}
+            onClearSelection={() => setSelectedDeals([])}
           />
         </div>
       </main>
