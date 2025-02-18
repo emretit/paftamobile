@@ -1,0 +1,115 @@
+
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { ProposalFormData, ProposalItem } from "@/types/proposal-form";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+
+export const useProposalForm = () => {
+  const navigate = useNavigate();
+
+  // Query to fetch customers for the dropdown
+  const { data: customers } = useQuery({
+    queryKey: ["customers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, name")
+        .order("name");
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Mutation to create a new proposal
+  const createProposal = useMutation({
+    mutationFn: async (data: ProposalFormData) => {
+      // First, create the proposal
+      const { data: proposal, error: proposalError } = await supabase
+        .from("proposals")
+        .insert({
+          title: data.title,
+          customer_id: data.customer_id,
+          status: data.status,
+          total_value: calculateTotalValue(data),
+          valid_until: data.validUntil,
+        })
+        .select()
+        .single();
+
+      if (proposalError) throw proposalError;
+
+      // Handle file uploads if any
+      if (data.files.length > 0) {
+        const uploadPromises = data.files.map(async (file) => {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${proposal.id}/${Date.now()}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase
+            .storage
+            .from('proposal-files')
+            .upload(fileName, file);
+
+          if (uploadError) throw uploadError;
+          return fileName;
+        });
+
+        const uploadedFiles = await Promise.all(uploadPromises);
+        
+        // Update proposal with file references
+        const { error: updateError } = await supabase
+          .from("proposals")
+          .update({ files: uploadedFiles })
+          .eq("id", proposal.id);
+
+        if (updateError) throw updateError;
+      }
+
+      return proposal;
+    },
+    onSuccess: () => {
+      toast.success("Teklif başarıyla oluşturuldu");
+      navigate("/proposals");
+    },
+    onError: (error) => {
+      console.error("Error creating proposal:", error);
+      toast.error("Teklif oluşturulurken bir hata oluştu");
+    },
+  });
+
+  // Mutation to save draft
+  const saveDraft = useMutation({
+    mutationFn: async (data: ProposalFormData) => {
+      const { error } = await supabase
+        .from("proposals")
+        .insert({
+          title: data.title,
+          customer_id: data.customer_id,
+          status: "draft",
+          total_value: calculateTotalValue(data),
+          valid_until: data.validUntil,
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Taslak başarıyla kaydedildi");
+    },
+    onError: (error) => {
+      console.error("Error saving draft:", error);
+      toast.error("Taslak kaydedilirken bir hata oluştu");
+    },
+  });
+
+  return {
+    customers,
+    createProposal,
+    saveDraft,
+  };
+};
+
+const calculateTotalValue = (data: ProposalFormData): number => {
+  const itemsTotal = data.items.reduce((sum, item) => sum + item.totalPrice, 0);
+  return itemsTotal + data.additionalCharges - data.discounts;
+};

@@ -1,11 +1,8 @@
-
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Plus, Trash2, Save, FileText, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { v4 as uuidv4 } from "uuid";
-import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -25,11 +22,7 @@ import {
 } from "@/components/ui/popover";
 import { ProposalFormData, ProposalItem, PaymentTerm } from "@/types/proposal-form";
 import Navbar from "@/components/Navbar";
-
-interface ProposalFormProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
-}
+import { useProposalForm } from "@/hooks/useProposalForm";
 
 const paymentTerms: { value: PaymentTerm; label: string }[] = [
   { value: "prepaid", label: "Peşin Ödeme" },
@@ -39,9 +32,9 @@ const paymentTerms: { value: PaymentTerm; label: string }[] = [
 ];
 
 const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
-  const navigate = useNavigate();
   const [files, setFiles] = useState<File[]>([]);
   const [items, setItems] = useState<ProposalItem[]>([]);
+  const { customers, createProposal, saveDraft } = useProposalForm();
 
   const {
     register,
@@ -60,6 +53,7 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
       paymentTerm: "prepaid",
       internalNotes: "",
       status: "draft",
+      files: [],
     },
   });
 
@@ -83,7 +77,6 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
     const updatedItems = items.map(item => {
       if (item.id === id) {
         const updatedItem = { ...item, [field]: value };
-        // Recalculate total price
         if (field === "quantity" || field === "unitPrice" || field === "taxRate") {
           const quantity = field === "quantity" ? Number(value) : item.quantity;
           const unitPrice = field === "unitPrice" ? Number(value) : item.unitPrice;
@@ -109,22 +102,23 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
   };
 
   const onSubmit = async (data: ProposalFormData) => {
-    try {
-      // TODO: Implement API call to save proposal
-      toast.success("Teklif başarıyla kaydedildi");
-      navigate("/proposals");
-    } catch (error) {
-      toast.error("Teklif kaydedilirken bir hata oluştu");
-    }
+    const formData = {
+      ...data,
+      items,
+      files,
+      status: "new",
+    };
+    createProposal.mutate(formData);
   };
 
-  const saveDraft = async () => {
-    try {
-      // TODO: Implement API call to save draft
-      toast.success("Taslak başarıyla kaydedildi");
-    } catch (error) {
-      toast.error("Taslak kaydedilirken bir hata oluştu");
-    }
+  const handleSaveDraft = async () => {
+    const formData = {
+      ...watch(),
+      items,
+      files,
+      status: "draft",
+    };
+    saveDraft.mutate(formData);
   };
 
   return (
@@ -140,11 +134,18 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
               <p className="text-gray-600 mt-1">Yeni bir teklif oluştur</p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={saveDraft}>
+              <Button 
+                variant="outline" 
+                onClick={handleSaveDraft}
+                disabled={createProposal.isPending || saveDraft.isPending}
+              >
                 <Save className="w-4 h-4 mr-2" />
                 Taslak Kaydet
               </Button>
-              <Button onClick={handleSubmit(onSubmit)}>
+              <Button 
+                onClick={handleSubmit(onSubmit)}
+                disabled={createProposal.isPending || saveDraft.isPending}
+              >
                 <FileText className="w-4 h-4 mr-2" />
                 Teklif Oluştur
               </Button>
@@ -162,6 +163,9 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
                     placeholder="Teklif başlığı girin"
                     className="mt-1"
                   />
+                  {errors.title && (
+                    <span className="text-sm text-red-500">Bu alan zorunludur</span>
+                  )}
                 </div>
 
                 <div>
@@ -171,9 +175,11 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
                       <SelectValue placeholder="Müşteri seçin" />
                     </SelectTrigger>
                     <SelectContent>
-                      {/* TODO: Add customer list */}
-                      <SelectItem value="1">Örnek Müşteri 1</SelectItem>
-                      <SelectItem value="2">Örnek Müşteri 2</SelectItem>
+                      {customers?.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
