@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
@@ -19,8 +18,9 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
   const [files, setFiles] = useState<File[]>([]);
   const [items, setItems] = useState<ProposalItem[]>([]);
   const [isCustomerOpen, setIsCustomerOpen] = useState(false);
+  const [partnerType, setPartnerType] = useState<"customer" | "supplier">("customer");
   const { createProposal, saveDraft } = useProposalForm();
-  const { data: customerOptions } = useCustomerSelect();
+  const { customers, suppliers } = useCustomerSelect();
 
   const {
     register,
@@ -106,8 +106,12 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
     saveDraft.mutate(formData);
   };
 
-  const selectedCustomer = customerOptions?.find(
+  const selectedCustomer = customers?.find(
     customer => customer.id === watch("customer_id")
+  );
+
+  const selectedSupplier = suppliers?.find(
+    supplier => supplier.id === watch("supplier_id")
   );
 
   return (
@@ -141,8 +145,19 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
               isOpen={isCustomerOpen}
               onOpenChange={setIsCustomerOpen}
               selectedCustomer={selectedCustomer}
-              customers={customerOptions}
-              onSelect={(id) => setValue("customer_id", id)}
+              selectedSupplier={selectedSupplier}
+              customers={customers}
+              suppliers={suppliers}
+              onSelectCustomer={(id) => {
+                setValue("customer_id", id);
+                setValue("supplier_id", null);
+              }}
+              onSelectSupplier={(id) => {
+                setValue("supplier_id", id);
+                setValue("customer_id", null);
+              }}
+              type={partnerType}
+              onTypeChange={setPartnerType}
             />
 
             <PaymentTermsSelect
