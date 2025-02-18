@@ -21,7 +21,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   const [viewType, setViewType] = useState<"table" | "grid">("table");
   const [filters, setFilters] = useState({
     search: "",
-    category: "",
+    category: "all",
     type: "all",
     status: "all"
   });
@@ -43,7 +43,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
         query = query.ilike("name", `%${filters.search}%`);
       }
 
-      if (filters.category) {
+      if (filters.category !== "all") {
         query = query.eq("category_id", filters.category);
       }
 
