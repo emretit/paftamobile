@@ -8,34 +8,6 @@ import { toast } from "sonner";
 export const useProposalForm = () => {
   const navigate = useNavigate();
 
-  // Query to fetch customers for the dropdown
-  const { data: customers } = useQuery({
-    queryKey: ["customers"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("customers")
-        .select("id, name, company, email, mobile_phone, office_phone, address, tax_number, tax_office")
-        .order("name");
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Query to fetch suppliers
-  const { data: suppliers } = useQuery({
-    queryKey: ["suppliers"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("suppliers")
-        .select("id, name, company, email, mobile_phone, office_phone, address, tax_number, tax_office")
-        .order("name");
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
   // Mutation to create a new proposal
   const createProposal = useMutation({
     mutationFn: async (data: ProposalFormData) => {
@@ -45,11 +17,15 @@ export const useProposalForm = () => {
         .insert({
           title: data.title,
           customer_id: data.customer_id,
+          supplier_id: data.supplier_id,
           status: data.status,
           total_value: calculateTotalValue(data),
           valid_until: data.validUntil?.toISOString(),
           payment_term: data.paymentTerm,
           internal_notes: data.internalNotes,
+          items: data.items,
+          discounts: data.discounts,
+          additional_charges: data.additionalCharges,
           files: []  // Initialize empty array for files
         })
         .select()
@@ -103,11 +79,15 @@ export const useProposalForm = () => {
         .insert({
           title: data.title,
           customer_id: data.customer_id,
+          supplier_id: data.supplier_id,
           status: "draft" as const,
           total_value: calculateTotalValue(data),
           valid_until: data.validUntil?.toISOString(),
           payment_term: data.paymentTerm,
           internal_notes: data.internalNotes,
+          items: data.items,
+          discounts: data.discounts,
+          additional_charges: data.additionalCharges,
           files: []
         });
 
@@ -123,8 +103,6 @@ export const useProposalForm = () => {
   });
 
   return {
-    customers,
-    suppliers,
     createProposal,
     saveDraft,
   };

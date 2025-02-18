@@ -13,6 +13,7 @@ export interface ProposalItem {
 export interface ProposalFormData {
   title: string;
   customer_id: string | null;
+  supplier_id: string | null;
   items: ProposalItem[];
   discounts: number;
   additionalCharges: number;

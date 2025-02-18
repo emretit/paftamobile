@@ -207,50 +207,155 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          status: string
+          tax_rate: number
+          unit_price: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          status?: string
+          tax_rate?: number
+          unit_price?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          status?: string
+          tax_rate?: number
+          unit_price?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      proposal_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          product_id: string | null
+          proposal_id: string | null
+          quantity: number
+          tax_rate: number
+          total_price: number
+          unit_price: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          product_id?: string | null
+          proposal_id?: string | null
+          quantity?: number
+          tax_rate?: number
+          total_price?: number
+          unit_price?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          product_id?: string | null
+          proposal_id?: string | null
+          quantity?: number
+          tax_rate?: number
+          total_price?: number
+          unit_price?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposal_items_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposals: {
         Row: {
+          additional_charges: number | null
           created_at: string | null
           customer_id: string | null
           customer_segment: string | null
           deal_id: string | null
+          discounts: number | null
           employee_id: string | null
           files: Json | null
           id: string
+          internal_notes: string | null
+          items: Json | null
+          payment_term: string | null
           proposal_number: number
           sent_date: string | null
           status: string | null
+          supplier_id: string | null
           title: string
           total_value: number
           updated_at: string | null
           valid_until: string | null
         }
         Insert: {
+          additional_charges?: number | null
           created_at?: string | null
           customer_id?: string | null
           customer_segment?: string | null
           deal_id?: string | null
+          discounts?: number | null
           employee_id?: string | null
           files?: Json | null
           id?: string
+          internal_notes?: string | null
+          items?: Json | null
+          payment_term?: string | null
           proposal_number?: number
           sent_date?: string | null
           status?: string | null
+          supplier_id?: string | null
           title: string
           total_value?: number
           updated_at?: string | null
           valid_until?: string | null
         }
         Update: {
+          additional_charges?: number | null
           created_at?: string | null
           customer_id?: string | null
           customer_segment?: string | null
           deal_id?: string | null
+          discounts?: number | null
           employee_id?: string | null
           files?: Json | null
           id?: string
+          internal_notes?: string | null
+          items?: Json | null
+          payment_term?: string | null
           proposal_number?: number
           sent_date?: string | null
           status?: string | null
+          supplier_id?: string | null
           title?: string
           total_value?: number
           updated_at?: string | null
@@ -276,6 +381,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
         ]
