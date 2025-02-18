@@ -1,6 +1,8 @@
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState } from "react";
 import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
 import Contacts from "@/pages/Contacts";
@@ -20,31 +22,43 @@ import SalesInvoices from "@/pages/SalesInvoices";
 import PurchaseInvoices from "@/pages/PurchaseInvoices";
 
 function App() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: 1,
+      },
+    },
+  });
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/contacts" element={<Contacts />} />
-        <Route path="/contacts/:id" element={<ContactDetails />} />
-        <Route path="/customer-form" element={<CustomerForm />} />
-        <Route path="/customer-form/:id" element={<CustomerForm />} />
-        <Route path="/suppliers" element={<Suppliers />} />
-        <Route path="/supplier-form" element={<SupplierForm />} />
-        <Route path="/supplier-form/:id" element={<SupplierForm />} />
-        <Route path="/suppliers/:id" element={<SupplierDetails />} />
-        <Route path="/proposals" element={<Proposals />} />
-        <Route path="/proposal-form" element={<ProposalForm />} />
-        <Route path="/deals" element={<Deals />} />
-        <Route path="/deals-table" element={<DealsTable />} />
-        <Route path="/employees" element={<Employees />} />
-        <Route path="/finance" element={<Finance />} />
-        <Route path="/service" element={<Service />} />
-        <Route path="/sales-invoices" element={<SalesInvoices />} />
-        <Route path="/purchase-invoices" element={<PurchaseInvoices />} />
-      </Routes>
-      <Toaster />
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Index isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/contacts" element={<Contacts isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/contacts/:id" element={<ContactDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/customer-form" element={<CustomerForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/customer-form/:id" element={<CustomerForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/suppliers" element={<Suppliers isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/supplier-form" element={<SupplierForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/supplier-form/:id" element={<SupplierForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/suppliers/:id" element={<SupplierDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/proposals" element={<Proposals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/proposal-form" element={<ProposalForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/deals" element={<Deals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/deals-table" element={<DealsTable isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/employees" element={<Employees isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/finance" element={<Finance isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/service" element={<Service isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/sales-invoices" element={<SalesInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/purchase-invoices" element={<PurchaseInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+        </Routes>
+        <Toaster />
+      </Router>
+    </QueryClientProvider>
   );
 }
 
