@@ -7,19 +7,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Eye, Edit, Trash2, MoreHorizontal } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { useProposals } from "@/hooks/useProposals";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { ProposalStatus } from "@/types/proposal";
 import type { ProposalFilters } from "./ProposalFilters";
+import { ProposalActions } from "./ProposalActions";
 
 const statusLabels: Record<ProposalStatus, string> = {
   new: "Yeni",
@@ -43,6 +36,16 @@ interface ProposalTableProps {
 
 const ProposalTable = ({ filters }: ProposalTableProps) => {
   const { data: proposals, isLoading } = useProposals(filters);
+
+  const handleEdit = (proposal: any) => {
+    // Navigation to edit page will be implemented
+    console.log("Edit proposal:", proposal);
+  };
+
+  const handleComment = (proposal: any) => {
+    // Comment dialog will be implemented
+    console.log("Comment on proposal:", proposal);
+  };
 
   if (isLoading) {
     return (
@@ -110,27 +113,11 @@ const ProposalTable = ({ filters }: ProposalTableProps) => {
                   {format(new Date(proposal.updated_at), 'dd MMM yyyy', { locale: tr })}
                 </TableCell>
                 <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem className="cursor-pointer">
-                        <Eye className="mr-2 h-4 w-4" />
-                        <span>Görüntüle</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">
-                        <Edit className="mr-2 h-4 w-4" />
-                        <span>Düzenle</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer text-red-600">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Sil</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <ProposalActions
+                    proposal={proposal}
+                    onEdit={handleEdit}
+                    onComment={handleComment}
+                  />
                 </TableCell>
               </TableRow>
             ))
