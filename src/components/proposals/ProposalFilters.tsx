@@ -31,24 +31,16 @@ export interface ProposalFilters {
     from: Date | null;
     to: Date | null;
   };
-  amountRange: {
-    min: number | null;
-    max: number | null;
-  };
   employeeId: string | null;
 }
 
 export const ProposalFilters = ({ onFilterChange }: ProposalFiltersProps) => {
   const [filters, setFilters] = useState<ProposalFilters>({
     search: "",
-    status: "all", // Changed default value to "all" instead of empty string
+    status: "all",
     dateRange: {
       from: null,
       to: null,
-    },
-    amountRange: {
-      min: null,
-      max: null,
     },
     employeeId: null,
   });
@@ -141,34 +133,6 @@ export const ProposalFilters = ({ onFilterChange }: ProposalFiltersProps) => {
                 />
               </PopoverContent>
             </Popover>
-          </div>
-        </div>
-
-        <div className="flex-1 space-y-2">
-          <Label>Tutar Aralığı (TL)</Label>
-          <div className="flex gap-2">
-            <Input
-              type="number"
-              placeholder="Min"
-              value={filters.amountRange.min || ""}
-              onChange={(e) =>
-                handleFilterChange("amountRange", {
-                  ...filters.amountRange,
-                  min: e.target.value ? Number(e.target.value) : null,
-                })
-              }
-            />
-            <Input
-              type="number"
-              placeholder="Max"
-              value={filters.amountRange.max || ""}
-              onChange={(e) =>
-                handleFilterChange("amountRange", {
-                  ...filters.amountRange,
-                  max: e.target.value ? Number(e.target.value) : null,
-                })
-              }
-            />
           </div>
         </div>
       </div>
