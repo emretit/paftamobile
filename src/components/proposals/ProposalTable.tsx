@@ -19,6 +19,7 @@ import { useProposals } from "@/hooks/useProposals";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { ProposalStatus } from "@/types/proposal";
+import type { ProposalFilters } from "./ProposalFilters";
 
 const statusLabels: Record<ProposalStatus, string> = {
   new: "Yeni",
@@ -36,8 +37,12 @@ const statusColors: Record<ProposalStatus, string> = {
   rejected: "bg-red-100 text-red-800",
 };
 
-const ProposalTable = () => {
-  const { data: proposals, isLoading } = useProposals();
+interface ProposalTableProps {
+  filters?: ProposalFilters;
+}
+
+const ProposalTable = ({ filters }: ProposalTableProps) => {
+  const { data: proposals, isLoading } = useProposals(filters);
 
   if (isLoading) {
     return (

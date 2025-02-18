@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { useSalesPerformance } from "@/hooks/useSalesPerformance";
@@ -10,38 +9,34 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Plus, Search, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { Plus, LayoutGrid, Table as TableIcon } from "lucide-react";
 import { ProposalStatus } from "@/types/proposal";
 import ProposalTable from "@/components/proposals/ProposalTable";
 import ProposalKanban from "@/components/proposals/ProposalKanban";
+import { ProposalFilters } from "@/components/proposals/ProposalFilters";
+import type { ProposalFilters as ProposalFiltersType } from "@/components/proposals/ProposalFilters";
 
 interface ProposalsProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
 }
 
-const statusOptions: { value: ProposalStatus | "all"; label: string }[] = [
-  { value: "all", label: "Tümü" },
-  { value: "new", label: "Yeni" },
-  { value: "review", label: "İncelemede" },
-  { value: "negotiation", label: "Görüşmede" },
-  { value: "accepted", label: "Kabul Edildi" },
-  { value: "rejected", label: "Reddedildi" },
-];
-
 const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ProposalStatus | "all">("all");
+  const [filters, setFilters] = useState<ProposalFiltersType>({
+    search: "",
+    status: "",
+    dateRange: {
+      from: null,
+      to: null,
+    },
+    amountRange: {
+      min: null,
+      max: null,
+    },
+    employeeId: null,
+  });
   const [viewType, setViewType] = useState<"table" | "kanban">("table");
   const { data: salesPerformance, isLoading } = useSalesPerformance();
 
@@ -81,35 +76,11 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
               </Tabs>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 flex gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Teklif ara..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ProposalStatus | "all")}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Durum Filtrele" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map((status) => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <ProposalFilters onFilterChange={setFilters} />
           </div>
 
           {viewType === "table" ? (
-            <ProposalTable />
+            <ProposalTable filters={filters} />
           ) : (
             <ProposalKanban />
           )}
