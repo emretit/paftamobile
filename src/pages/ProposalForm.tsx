@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Plus, Trash2, Save, FileText, Upload } from "lucide-react";
+import { Plus, Trash2, Save, FileText, Upload, User } from "lucide-react";
 import { format } from "date-fns";
 import { v4 as uuidv4 } from "uuid";
 import { Input } from "@/components/ui/input";
@@ -21,9 +21,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { 
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
 import { ProposalFormData, ProposalItem, PaymentTerm, ProposalFormProps } from "@/types/proposal-form";
 import Navbar from "@/components/Navbar";
 import { useProposalForm } from "@/hooks/useProposalForm";
+import { useCustomerSelect } from "@/hooks/useCustomerSelect";
 
 const paymentTerms: { value: PaymentTerm; label: string }[] = [
   { value: "prepaid", label: "Peşin Ödeme" },
@@ -35,7 +43,9 @@ const paymentTerms: { value: PaymentTerm; label: string }[] = [
 const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
   const [files, setFiles] = useState<File[]>([]);
   const [items, setItems] = useState<ProposalItem[]>([]);
+  const [isCustomerOpen, setIsCustomerOpen] = useState(false);
   const { customers, createProposal, saveDraft } = useProposalForm();
+  const { data: customerOptions, isLoading: isLoadingCustomers } = useCustomerSelect();
 
   const {
     register,
@@ -122,16 +132,24 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
     saveDraft.mutate(formData);
   };
 
+  const selectedCustomer = customerOptions?.find(
+    customer => customer.id === watch("customer_id")
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <main className={`flex-1 transition-all duration-300 ${
-        isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
-      }`}>
+      <main
+        className={`flex-1 transition-all duration-300 ${
+          isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
+        }`}
+      >
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Yeni Teklif</h1>
+              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
+                Yeni Teklif
+              </h1>
               <p className="text-gray-600 mt-1">Yeni bir teklif oluştur</p>
             </div>
             <div className="flex gap-2">
@@ -169,20 +187,45 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
                   )}
                 </div>
 
-                <div>
-                  <Label htmlFor="customer">Müşteri</Label>
-                  <Select onValueChange={(value) => setValue("customer_id", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Müşteri seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers?.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-2">
+                  <Label>Müşteri</Label>
+                  <Popover open={isCustomerOpen} onOpenChange={setIsCustomerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={isCustomerOpen}
+                        className="w-full justify-between"
+                      >
+                        {selectedCustomer ? selectedCustomer.name : "Müşteri seçin..."}
+                        <User className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Müşteri ara..." />
+                        <CommandEmpty>Müşteri bulunamadı.</CommandEmpty>
+                        <CommandGroup>
+                          {customerOptions?.map((customer) => (
+                            <CommandItem
+                              key={customer.id}
+                              onSelect={() => {
+                                setValue("customer_id", customer.id);
+                                setIsCustomerOpen(false);
+                              }}
+                            >
+                              <span>{customer.name}</span>
+                              {customer.company && (
+                                <span className="ml-2 text-gray-500">
+                                  ({customer.company})
+                                </span>
+                              )}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div>
@@ -365,3 +408,4 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
 };
 
 export default ProposalForm;
+
