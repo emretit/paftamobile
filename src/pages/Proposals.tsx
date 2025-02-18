@@ -7,7 +7,6 @@ import { Plus, LayoutGrid, Table as TableIcon } from "lucide-react";
 import ProposalTable from "@/components/proposals/ProposalTable";
 import ProposalKanban from "@/components/proposals/ProposalKanban";
 import { ProposalFilters } from "@/components/proposals/ProposalFilters";
-import { ProposalAnalytics } from "@/components/proposals/ProposalAnalytics";
 import type { ProposalFilters as ProposalFiltersType } from "@/components/proposals/ProposalFilters";
 
 interface ProposalsProps {
@@ -50,8 +49,6 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
               <span>Yeni Teklif</span>
             </Button>
           </div>
-
-          <ProposalAnalytics />
 
           <div className="mt-8 mb-6 space-y-4">
             <div className="flex justify-between items-center">
