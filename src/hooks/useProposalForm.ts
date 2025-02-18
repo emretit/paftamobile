@@ -15,7 +15,7 @@ export const useProposalForm = () => {
       // First, create the proposal
       const { data: proposal, error: proposalError } = await supabase
         .from("proposals")
-        .insert({
+        .insert([{
           title: data.title,
           customer_id: data.customer_id,
           supplier_id: data.supplier_id,
@@ -28,7 +28,7 @@ export const useProposalForm = () => {
           discounts: data.discounts,
           additional_charges: data.additionalCharges,
           files: []
-        })
+        }])
         .select()
         .single();
 
@@ -77,7 +77,7 @@ export const useProposalForm = () => {
     mutationFn: async (data: ProposalFormData) => {
       const { error } = await supabase
         .from("proposals")
-        .insert({
+        .insert([{
           title: data.title,
           customer_id: data.customer_id,
           supplier_id: data.supplier_id,
@@ -90,7 +90,7 @@ export const useProposalForm = () => {
           discounts: data.discounts,
           additional_charges: data.additionalCharges,
           files: []
-        });
+        }]);
 
       if (error) throw error;
     },
