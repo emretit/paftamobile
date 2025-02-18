@@ -11,7 +11,7 @@ interface Product {
   description: string | null;
   unit_price: number;
   tax_rate: number;
-  product_type: "physical" | "service";
+  product_type: string;
   sku: string | null;
   stock_quantity: number;
   unit: string;
@@ -41,7 +41,7 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
           <div className="flex flex-col h-full">
             <div className="flex justify-between items-start mb-2">
               <h3 className="font-medium text-lg">{product.name}</h3>
-              <Badge variant={product.is_active ? "success" : "secondary"}>
+              <Badge variant={product.is_active ? "default" : "secondary"}>
                 {product.is_active ? "Aktif" : "Pasif"}
               </Badge>
             </div>

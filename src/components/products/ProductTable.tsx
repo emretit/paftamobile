@@ -11,7 +11,7 @@ interface Product {
   description: string | null;
   unit_price: number;
   tax_rate: number;
-  product_type: "physical" | "service";
+  product_type: string;
   sku: string | null;
   stock_quantity: number;
   unit: string;
@@ -63,7 +63,7 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
                   : "-"}
               </TableCell>
               <TableCell>
-                <Badge variant={product.is_active ? "success" : "secondary"}>
+                <Badge variant={product.is_active ? "default" : "secondary"}>
                   {product.is_active ? "Aktif" : "Pasif"}
                 </Badge>
               </TableCell>
