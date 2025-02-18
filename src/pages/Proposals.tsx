@@ -30,7 +30,8 @@ interface ProposalsProps {
   setIsCollapsed: (value: boolean) => void;
 }
 
-const statusOptions: { value: ProposalStatus; label: string }[] = [
+const statusOptions: { value: ProposalStatus | "all"; label: string }[] = [
+  { value: "all", label: "Tümü" },
   { value: "new", label: "Yeni" },
   { value: "review", label: "İncelemede" },
   { value: "negotiation", label: "Görüşmede" },
@@ -40,7 +41,7 @@ const statusOptions: { value: ProposalStatus; label: string }[] = [
 
 const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ProposalStatus | "">("");
+  const [statusFilter, setStatusFilter] = useState<ProposalStatus | "all">("all");
   const [viewType, setViewType] = useState<"table" | "kanban">("table");
   const { data: salesPerformance, isLoading } = useSalesPerformance();
 
@@ -91,12 +92,11 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
                     className="pl-10"
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ProposalStatus)}>
+                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ProposalStatus | "all")}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Durum Filtrele" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tümü</SelectItem>
                     {statusOptions.map((status) => (
                       <SelectItem key={status.value} value={status.value}>
                         {status.label}
