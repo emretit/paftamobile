@@ -1,21 +1,13 @@
+
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import { useSalesPerformance } from "@/hooks/useSalesPerformance";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, LayoutGrid, Table as TableIcon } from "lucide-react";
-import { ProposalStatus } from "@/types/proposal";
 import ProposalTable from "@/components/proposals/ProposalTable";
 import ProposalKanban from "@/components/proposals/ProposalKanban";
 import { ProposalFilters } from "@/components/proposals/ProposalFilters";
+import { ProposalAnalytics } from "@/components/proposals/ProposalAnalytics";
 import type { ProposalFilters as ProposalFiltersType } from "@/components/proposals/ProposalFilters";
 
 interface ProposalsProps {
@@ -26,7 +18,7 @@ interface ProposalsProps {
 const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
   const [filters, setFilters] = useState<ProposalFiltersType>({
     search: "",
-    status: "",
+    status: "all",
     dateRange: {
       from: null,
       to: null,
@@ -38,7 +30,6 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
     employeeId: null,
   });
   const [viewType, setViewType] = useState<"table" | "kanban">("table");
-  const { data: salesPerformance, isLoading } = useSalesPerformance();
 
   return (
     <div className="min-h-screen bg-gray-50 flex relative">
@@ -60,7 +51,9 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
             </Button>
           </div>
 
-          <div className="mb-6 space-y-4">
+          <ProposalAnalytics />
+
+          <div className="mt-8 mb-6 space-y-4">
             <div className="flex justify-between items-center">
               <Tabs value={viewType} onValueChange={(value) => setViewType(value as "table" | "kanban")}>
                 <TabsList>
@@ -84,53 +77,6 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
           ) : (
             <ProposalKanban />
           )}
-
-          {/* Analytics Section */}
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-4">Teklif Performansı</h2>
-            <div className="bg-white rounded-lg shadow">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tarih</TableHead>
-                    <TableHead>Toplam Teklif</TableHead>
-                    <TableHead>Kabul Edilen</TableHead>
-                    <TableHead>Toplam Değer</TableHead>
-                    <TableHead>Çalışan</TableHead>
-                    <TableHead>Başarı Oranı</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {salesPerformance?.map((performance) => (
-                    <TableRow key={`${performance.employee_id}-${performance.month}`}>
-                      <TableCell>
-                        {new Date(performance.month).toLocaleDateString("tr-TR", {
-                          year: "numeric",
-                          month: "long",
-                        })}
-                      </TableCell>
-                      <TableCell>{performance.total_proposals}</TableCell>
-                      <TableCell>{performance.accepted_proposals}</TableCell>
-                      <TableCell>
-                        {new Intl.NumberFormat("tr-TR", {
-                          style: "currency",
-                          currency: "TRY",
-                        }).format(performance.total_value)}
-                      </TableCell>
-                      <TableCell>{performance.employee_name}</TableCell>
-                      <TableCell>
-                        {new Intl.NumberFormat("tr-TR", {
-                          style: "percent",
-                          minimumFractionDigits: 1,
-                          maximumFractionDigits: 1,
-                        }).format(performance.success_rate / 100)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
         </div>
       </main>
     </div>
