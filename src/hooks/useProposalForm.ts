@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProposalFormData, ProposalItem } from "@/types/proposal-form";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Json } from "@/integrations/supabase/types";
 
 export const useProposalForm = () => {
   const navigate = useNavigate();
@@ -23,10 +24,10 @@ export const useProposalForm = () => {
           valid_until: data.validUntil?.toISOString(),
           payment_term: data.paymentTerm,
           internal_notes: data.internalNotes,
-          items: data.items,
+          items: data.items as unknown as Json[],
           discounts: data.discounts,
           additional_charges: data.additionalCharges,
-          files: []  // Initialize empty array for files
+          files: []
         })
         .select()
         .single();
@@ -85,7 +86,7 @@ export const useProposalForm = () => {
           valid_until: data.validUntil?.toISOString(),
           payment_term: data.paymentTerm,
           internal_notes: data.internalNotes,
-          items: data.items,
+          items: data.items as unknown as Json[],
           discounts: data.discounts,
           additional_charges: data.additionalCharges,
           files: []
