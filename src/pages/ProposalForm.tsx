@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Plus, Trash2, Save, FileText, Upload } from "lucide-react";
@@ -20,7 +21,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ProposalFormData, ProposalItem, PaymentTerm } from "@/types/proposal-form";
+import { ProposalFormData, ProposalItem, PaymentTerm, ProposalFormProps } from "@/types/proposal-form";
 import Navbar from "@/components/Navbar";
 import { useProposalForm } from "@/hooks/useProposalForm";
 
@@ -102,21 +103,21 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
   };
 
   const onSubmit = async (data: ProposalFormData) => {
-    const formData = {
+    const formData: ProposalFormData = {
       ...data,
       items,
       files,
-      status: "new",
+      status: "new" as const,
     };
     createProposal.mutate(formData);
   };
 
   const handleSaveDraft = async () => {
-    const formData = {
+    const formData: ProposalFormData = {
       ...watch(),
       items,
       files,
-      status: "draft",
+      status: "draft" as const,
     };
     saveDraft.mutate(formData);
   };

@@ -59,10 +59,10 @@ export const useProposalForm = () => {
 
         const uploadedFiles = await Promise.all(uploadPromises);
         
-        // Update proposal with file references
+        // Update proposal with file references as JSONB array
         const { error: updateError } = await supabase
           .from("proposals")
-          .update({ files: uploadedFiles })
+          .update({ files: JSON.stringify(uploadedFiles) })
           .eq("id", proposal.id);
 
         if (updateError) throw updateError;
