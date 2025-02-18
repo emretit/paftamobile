@@ -31,29 +31,37 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
   const [viewType, setViewType] = useState<"table" | "kanban">("table");
 
   return (
-    <div className="min-h-screen bg-gray-50 flex relative">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex relative">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main
         className={`flex-1 transition-all duration-300 ${
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}
       >
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Teklifler</h1>
-              <p className="text-gray-600 mt-1">Tüm teklifleri görüntüle ve yönet</p>
+        <div className="p-6 lg:p-8 max-w-[1600px] mx-auto">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
+                Teklifler
+              </h1>
+              <p className="text-gray-600">
+                Tüm teklifleri görüntüle ve yönet
+              </p>
             </div>
-            <Button className="flex items-center gap-2">
+            <Button className="flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200 bg-gradient-to-r from-primary to-primary/90">
               <Plus className="h-4 w-4" />
               <span>Yeni Teklif</span>
             </Button>
           </div>
 
-          <div className="mt-8 mb-6 space-y-4">
-            <div className="flex justify-between items-center">
-              <Tabs value={viewType} onValueChange={(value) => setViewType(value as "table" | "kanban")}>
-                <TabsList>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <Tabs 
+                value={viewType} 
+                onValueChange={(value) => setViewType(value as "table" | "kanban")}
+                className="w-full sm:w-auto"
+              >
+                <TabsList className="grid w-full sm:w-auto grid-cols-2">
                   <TabsTrigger value="table" className="flex items-center gap-2">
                     <TableIcon className="h-4 w-4" />
                     <span>Tablo Görünümü</span>
@@ -66,14 +74,18 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
               </Tabs>
             </div>
 
-            <ProposalFilters onFilterChange={setFilters} />
+            <div className="bg-gray-50/50 rounded-lg p-4">
+              <ProposalFilters onFilterChange={setFilters} />
+            </div>
           </div>
 
-          {viewType === "table" ? (
-            <ProposalTable filters={filters} />
-          ) : (
-            <ProposalKanban />
-          )}
+          <div className="animate-fade-in">
+            {viewType === "table" ? (
+              <ProposalTable filters={filters} />
+            ) : (
+              <ProposalKanban />
+            )}
+          </div>
         </div>
       </main>
     </div>
