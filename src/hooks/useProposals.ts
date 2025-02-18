@@ -31,14 +31,6 @@ export const useProposals = (filters?: ProposalFilters) => {
           query = query.lte('created_at', filters.dateRange.to.toISOString());
         }
 
-        // Amount range filter
-        if (filters.amountRange.min !== null) {
-          query = query.gte('total_value', filters.amountRange.min);
-        }
-        if (filters.amountRange.max !== null) {
-          query = query.lte('total_value', filters.amountRange.max);
-        }
-
         // Employee filter
         if (filters.employeeId) {
           query = query.eq('employee_id', filters.employeeId);

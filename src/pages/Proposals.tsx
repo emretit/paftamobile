@@ -22,10 +22,6 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
       from: null,
       to: null,
     },
-    amountRange: {
-      min: null,
-      max: null,
-    },
     employeeId: null,
   });
   const [viewType, setViewType] = useState<"table" | "kanban">("table");
