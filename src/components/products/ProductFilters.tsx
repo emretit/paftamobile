@@ -17,7 +17,7 @@ interface ProductFiltersProps {
 
 const ProductFilters = ({ onFilterChange }: ProductFiltersProps) => {
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState("all");
   const [type, setType] = useState("all");
   const [status, setStatus] = useState("all");
 
@@ -55,7 +55,7 @@ const ProductFilters = ({ onFilterChange }: ProductFiltersProps) => {
             <SelectValue placeholder="Kategori" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tüm Kategoriler</SelectItem>
+            <SelectItem value="all">Tüm Kategoriler</SelectItem>
             {categories?.map((cat) => (
               <SelectItem key={cat.id} value={cat.id}>
                 {cat.name}
