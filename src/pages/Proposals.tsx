@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +16,7 @@ interface ProposalsProps {
 }
 
 const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<ProposalFiltersType>({
     search: "",
     status: "all",
@@ -44,7 +46,10 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
                 Tüm teklifleri görüntüle ve yönet
               </p>
             </div>
-            <Button className="flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200 bg-gradient-to-r from-primary to-primary/90">
+            <Button 
+              onClick={() => navigate("/proposal-form")}
+              className="flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200 bg-gradient-to-r from-primary to-primary/90"
+            >
               <Plus className="h-4 w-4" />
               <span>Yeni Teklif</span>
             </Button>
