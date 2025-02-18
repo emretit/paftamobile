@@ -22,3 +22,8 @@ export interface ProposalFormData {
   files: File[];
   status: "draft" | "new" | "review" | "negotiation" | "accepted" | "rejected";
 }
+
+export interface ProposalFormProps {
+  isCollapsed: boolean;
+  setIsCollapsed: (value: boolean) => void;
+}

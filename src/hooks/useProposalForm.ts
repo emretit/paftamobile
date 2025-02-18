@@ -33,7 +33,9 @@ export const useProposalForm = () => {
           customer_id: data.customer_id,
           status: data.status,
           total_value: calculateTotalValue(data),
-          valid_until: data.validUntil,
+          valid_until: data.validUntil?.toISOString(),
+          payment_term: data.paymentTerm,
+          internal_notes: data.internalNotes
         })
         .select()
         .single();
@@ -86,9 +88,11 @@ export const useProposalForm = () => {
         .insert({
           title: data.title,
           customer_id: data.customer_id,
-          status: "draft",
+          status: "draft" as const,
           total_value: calculateTotalValue(data),
-          valid_until: data.validUntil,
+          valid_until: data.validUntil?.toISOString(),
+          payment_term: data.paymentTerm,
+          internal_notes: data.internalNotes
         });
 
       if (error) throw error;
