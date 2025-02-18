@@ -14,7 +14,21 @@ export const useProposalForm = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("customers")
-        .select("id, name")
+        .select("id, name, company, email, mobile_phone, office_phone, address, tax_number, tax_office")
+        .order("name");
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Query to fetch suppliers
+  const { data: suppliers } = useQuery({
+    queryKey: ["suppliers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("suppliers")
+        .select("id, name, company, email, mobile_phone, office_phone, address, tax_number, tax_office")
         .order("name");
 
       if (error) throw error;
@@ -110,12 +124,17 @@ export const useProposalForm = () => {
 
   return {
     customers,
+    suppliers,
     createProposal,
     saveDraft,
   };
 };
 
 const calculateTotalValue = (data: ProposalFormData): number => {
-  const itemsTotal = data.items.reduce((sum, item) => sum + item.totalPrice, 0);
+  const itemsTotal = data.items.reduce((sum, item) => {
+    const subtotal = item.quantity * item.unitPrice;
+    const tax = subtotal * (item.taxRate / 100);
+    return sum + subtotal + tax;
+  }, 0);
   return itemsTotal + data.additionalCharges - data.discounts;
 };
