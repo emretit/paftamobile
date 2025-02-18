@@ -1,26 +1,8 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { format } from "date-fns";
 import { v4 as uuidv4 } from "uuid";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { ProposalFormData, ProposalItem, PaymentTerm, ProposalFormProps } from "@/types/proposal-form";
+import { ProposalFormData, ProposalItem, ProposalFormProps } from "@/types/proposal-form";
 import Navbar from "@/components/Navbar";
 import { useProposalForm } from "@/hooks/useProposalForm";
 import { useCustomerSelect } from "@/hooks/useCustomerSelect";
@@ -29,27 +11,22 @@ import CustomerSelect from "@/components/proposals/form/CustomerSelect";
 import ProposalItems from "@/components/proposals/form/ProposalItems";
 import FileUpload from "@/components/proposals/form/FileUpload";
 import ProposalDetails from "@/components/proposals/form/ProposalDetails";
-
-const paymentTerms: { value: PaymentTerm; label: string }[] = [
-  { value: "prepaid", label: "Peşin Ödeme" },
-  { value: "net30", label: "30 Gün Vade" },
-  { value: "net60", label: "60 Gün Vade" },
-  { value: "custom", label: "Özel Vade" },
-];
+import PaymentTermsSelect from "@/components/proposals/form/PaymentTermsSelect";
+import InternalNotes from "@/components/proposals/form/InternalNotes";
+import AdditionalCharges from "@/components/proposals/form/AdditionalCharges";
 
 const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
   const [files, setFiles] = useState<File[]>([]);
   const [items, setItems] = useState<ProposalItem[]>([]);
   const [isCustomerOpen, setIsCustomerOpen] = useState(false);
-  const { customers, createProposal, saveDraft } = useProposalForm();
-  const { data: customerOptions, isLoading: isLoadingCustomers } = useCustomerSelect();
+  const { createProposal, saveDraft } = useProposalForm();
+  const { data: customerOptions } = useCustomerSelect();
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
-    formState: { errors },
   } = useForm<ProposalFormData>({
     defaultValues: {
       title: "",
@@ -153,7 +130,7 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
               title={watch("title")}
               onTitleChange={(value) => setValue("title", value)}
               proposalDate={new Date()}
-              onProposalDateChange={() => {}} // Proposal date is auto-filled and read-only
+              onProposalDateChange={() => {}}
               expirationDate={watch("validUntil")}
               onExpirationDateChange={(date) => setValue("validUntil", date)}
               status={watch("status")}
@@ -168,34 +145,15 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
               onSelect={(id) => setValue("customer_id", id)}
             />
 
-            <div>
-              <Label htmlFor="paymentTerm">Ödeme Koşulları</Label>
-              <Select
-                value={watch("paymentTerm")}
-                onValueChange={(value) => setValue("paymentTerm", value as PaymentTerm)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Ödeme koşulu seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  {paymentTerms.map((term) => (
-                    <SelectItem key={term.value} value={term.value}>
-                      {term.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <PaymentTermsSelect
+              value={watch("paymentTerm")}
+              onChange={(value) => setValue("paymentTerm", value)}
+            />
 
-            <div>
-              <Label htmlFor="internalNotes">İç Notlar</Label>
-              <Textarea
-                id="internalNotes"
-                {...register("internalNotes")}
-                placeholder="Satış ekibine özel notlar..."
-                className="mt-1"
-              />
-            </div>
+            <InternalNotes
+              value={watch("internalNotes")}
+              onChange={(e) => setValue("internalNotes", e.target.value)}
+            />
 
             <ProposalItems
               items={items}
@@ -204,28 +162,12 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
               onUpdateItem={updateItem}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label htmlFor="discounts">İndirimler</Label>
-                <Input
-                  id="discounts"
-                  type="number"
-                  {...register("discounts")}
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-              <div>
-                <Label htmlFor="additionalCharges">Ek Ücretler</Label>
-                <Input
-                  id="additionalCharges"
-                  type="number"
-                  {...register("additionalCharges")}
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-            </div>
+            <AdditionalCharges
+              discounts={watch("discounts")}
+              onDiscountsChange={(e) => setValue("discounts", Number(e.target.value))}
+              additionalCharges={watch("additionalCharges")}
+              onAdditionalChargesChange={(e) => setValue("additionalCharges", Number(e.target.value))}
+            />
 
             <FileUpload
               files={files}
