@@ -1,62 +1,51 @@
 
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useState } from "react";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Contacts from "./pages/Contacts";
-import ContactDetails from "./pages/ContactDetails";
-import CustomerForm from "./pages/CustomerForm";
-import Deals from "./pages/Deals";
-import Suppliers from "./pages/Suppliers";
-import SupplierDetails from "./pages/SupplierDetails";
-import SupplierForm from "./pages/SupplierForm";
-import Employees from "./pages/Employees";
-import Finance from "./pages/Finance";
-import Service from "./pages/Service";
-import PurchaseInvoices from "./pages/PurchaseInvoices";
-import SalesInvoices from "./pages/SalesInvoices";
-import Proposals from "./pages/Proposals";
-import ProposalForm from "./pages/ProposalForm";
+import Index from "@/pages/Index";
+import Auth from "@/pages/Auth";
+import Contacts from "@/pages/Contacts";
+import ContactDetails from "@/pages/ContactDetails";
+import CustomerForm from "@/pages/CustomerForm";
+import Suppliers from "@/pages/Suppliers";
+import SupplierForm from "@/pages/SupplierForm";
+import SupplierDetails from "@/pages/SupplierDetails";
+import Proposals from "@/pages/Proposals";
+import ProposalForm from "@/pages/ProposalForm";
+import Deals from "@/pages/Deals";
+import DealsTable from "@/pages/DealsTable";
+import Employees from "@/pages/Employees";
+import Finance from "@/pages/Finance";
+import Service from "@/pages/Service";
+import SalesInvoices from "@/pages/SalesInvoices";
+import PurchaseInvoices from "@/pages/PurchaseInvoices";
 
-const queryClient = new QueryClient();
-
-const App = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
+function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<Index isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/contacts" element={<Contacts isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/contacts/new" element={<CustomerForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/contacts/:id" element={<ContactDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/contacts/:id/edit" element={<CustomerForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/suppliers" element={<Suppliers isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/suppliers/new" element={<SupplierForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/suppliers/:id" element={<SupplierDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/suppliers/:id/edit" element={<SupplierForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/deals" element={<Deals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/proposals" element={<Proposals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/proposals/new" element={<ProposalForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/employees" element={<Employees isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/finance" element={<Finance isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/service" element={<Service isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/purchase-invoices" element={<PurchaseInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-            <Route path="/sales-invoices" element={<SalesInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/contacts" element={<Contacts />} />
+        <Route path="/contacts/:id" element={<ContactDetails />} />
+        <Route path="/customer-form" element={<CustomerForm />} />
+        <Route path="/customer-form/:id" element={<CustomerForm />} />
+        <Route path="/suppliers" element={<Suppliers />} />
+        <Route path="/supplier-form" element={<SupplierForm />} />
+        <Route path="/supplier-form/:id" element={<SupplierForm />} />
+        <Route path="/suppliers/:id" element={<SupplierDetails />} />
+        <Route path="/proposals" element={<Proposals />} />
+        <Route path="/proposal-form" element={<ProposalForm />} />
+        <Route path="/deals" element={<Deals />} />
+        <Route path="/deals-table" element={<DealsTable />} />
+        <Route path="/employees" element={<Employees />} />
+        <Route path="/finance" element={<Finance />} />
+        <Route path="/service" element={<Service />} />
+        <Route path="/sales-invoices" element={<SalesInvoices />} />
+        <Route path="/purchase-invoices" element={<PurchaseInvoices />} />
+      </Routes>
+      <Toaster />
+    </Router>
   );
-};
+}
 
 export default App;
