@@ -214,6 +214,7 @@ export type Database = {
           customer_segment: string | null
           deal_id: string | null
           employee_id: string | null
+          files: Json | null
           id: string
           proposal_number: number
           sent_date: string | null
@@ -229,6 +230,7 @@ export type Database = {
           customer_segment?: string | null
           deal_id?: string | null
           employee_id?: string | null
+          files?: Json | null
           id?: string
           proposal_number?: number
           sent_date?: string | null
@@ -244,6 +246,7 @@ export type Database = {
           customer_segment?: string | null
           deal_id?: string | null
           employee_id?: string | null
+          files?: Json | null
           id?: string
           proposal_number?: number
           sent_date?: string | null

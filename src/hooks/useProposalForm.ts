@@ -35,7 +35,8 @@ export const useProposalForm = () => {
           total_value: calculateTotalValue(data),
           valid_until: data.validUntil?.toISOString(),
           payment_term: data.paymentTerm,
-          internal_notes: data.internalNotes
+          internal_notes: data.internalNotes,
+          files: []  // Initialize empty array for files
         })
         .select()
         .single();
@@ -59,10 +60,10 @@ export const useProposalForm = () => {
 
         const uploadedFiles = await Promise.all(uploadPromises);
         
-        // Update proposal with file references as JSONB array
+        // Update proposal with file references
         const { error: updateError } = await supabase
           .from("proposals")
-          .update({ files: JSON.stringify(uploadedFiles) })
+          .update({ files: uploadedFiles })
           .eq("id", proposal.id);
 
         if (updateError) throw updateError;
@@ -92,7 +93,8 @@ export const useProposalForm = () => {
           total_value: calculateTotalValue(data),
           valid_until: data.validUntil?.toISOString(),
           payment_term: data.paymentTerm,
-          internal_notes: data.internalNotes
+          internal_notes: data.internalNotes,
+          files: []
         });
 
       if (error) throw error;
