@@ -1,8 +1,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/integrations/supabase/types";
 
-type UserRole = 'admin' | 'sales' | 'manager' | 'viewer';
+type UserRole = Database["public"]["Enums"]["user_role"];
 
 interface UserRoleResponse {
   role: UserRole;
