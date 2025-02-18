@@ -28,6 +28,7 @@ import ProposalFormHeader from "@/components/proposals/form/ProposalFormHeader";
 import CustomerSelect from "@/components/proposals/form/CustomerSelect";
 import ProposalItems from "@/components/proposals/form/ProposalItems";
 import FileUpload from "@/components/proposals/form/FileUpload";
+import ProposalDetails from "@/components/proposals/form/ProposalDetails";
 
 const paymentTerms: { value: PaymentTerm; label: string }[] = [
   { value: "prepaid", label: "Peşin Ödeme" },
@@ -148,80 +149,52 @@ const ProposalForm = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
           />
 
           <form className="space-y-6 max-w-4xl">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Teklif Başlığı</Label>
-                  <Input
-                    id="title"
-                    {...register("title", { required: true })}
-                    placeholder="Teklif başlığı girin"
-                    className="mt-1"
-                  />
-                  {errors.title && (
-                    <span className="text-sm text-red-500">Bu alan zorunludur</span>
-                  )}
-                </div>
+            <ProposalDetails
+              title={watch("title")}
+              onTitleChange={(value) => setValue("title", value)}
+              proposalDate={new Date()}
+              onProposalDateChange={() => {}} // Proposal date is auto-filled and read-only
+              expirationDate={watch("validUntil")}
+              onExpirationDateChange={(date) => setValue("validUntil", date)}
+              status={watch("status")}
+              onStatusChange={(value) => setValue("status", value as ProposalFormData["status"])}
+            />
 
-                <CustomerSelect
-                  isOpen={isCustomerOpen}
-                  onOpenChange={setIsCustomerOpen}
-                  selectedCustomer={selectedCustomer}
-                  customers={customerOptions}
-                  onSelect={(id) => setValue("customer_id", id)}
-                />
+            <CustomerSelect
+              isOpen={isCustomerOpen}
+              onOpenChange={setIsCustomerOpen}
+              selectedCustomer={selectedCustomer}
+              customers={customerOptions}
+              onSelect={(id) => setValue("customer_id", id)}
+            />
 
-                <div>
-                  <Label htmlFor="validUntil">Geçerlilik Tarihi</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-normal">
-                        {watch("validUntil") ? (
-                          format(watch("validUntil"), "PPP")
-                        ) : (
-                          <span>Tarih seçin</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={watch("validUntil")}
-                        onSelect={(date) => setValue("validUntil", date)}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+            <div>
+              <Label htmlFor="paymentTerm">Ödeme Koşulları</Label>
+              <Select
+                value={watch("paymentTerm")}
+                onValueChange={(value) => setValue("paymentTerm", value as PaymentTerm)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Ödeme koşulu seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {paymentTerms.map((term) => (
+                    <SelectItem key={term.value} value={term.value}>
+                      {term.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-                <div>
-                  <Label htmlFor="paymentTerm">Ödeme Koşulları</Label>
-                  <Select
-                    value={watch("paymentTerm")}
-                    onValueChange={(value) => setValue("paymentTerm", value as PaymentTerm)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Ödeme koşulu seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {paymentTerms.map((term) => (
-                        <SelectItem key={term.value} value={term.value}>
-                          {term.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="internalNotes">İç Notlar</Label>
-                <Textarea
-                  id="internalNotes"
-                  {...register("internalNotes")}
-                  placeholder="Satış ekibine özel notlar..."
-                  className="mt-1 h-[calc(100%-1.5rem)]"
-                />
-              </div>
+            <div>
+              <Label htmlFor="internalNotes">İç Notlar</Label>
+              <Textarea
+                id="internalNotes"
+                {...register("internalNotes")}
+                placeholder="Satış ekibine özel notlar..."
+                className="mt-1"
+              />
             </div>
 
             <ProposalItems
