@@ -207,15 +207,12 @@ export type Database = {
         }
         Relationships: []
       }
-      products: {
+      product_categories: {
         Row: {
           created_at: string | null
           description: string | null
           id: string
           name: string
-          status: string
-          tax_rate: number
-          unit_price: number
           updated_at: string | null
         }
         Insert: {
@@ -223,9 +220,6 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
-          status?: string
-          tax_rate?: number
-          unit_price?: number
           updated_at?: string | null
         }
         Update: {
@@ -233,12 +227,68 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
-          status?: string
-          tax_rate?: number
-          unit_price?: number
           updated_at?: string | null
         }
         Relationships: []
+      }
+      products: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          product_type: string
+          sku: string | null
+          status: string
+          stock_quantity: number | null
+          tax_rate: number
+          unit: string | null
+          unit_price: number
+          updated_at: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          product_type?: string
+          sku?: string | null
+          status?: string
+          stock_quantity?: number | null
+          tax_rate?: number
+          unit?: string | null
+          unit_price?: number
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          product_type?: string
+          sku?: string | null
+          status?: string
+          stock_quantity?: number | null
+          tax_rate?: number
+          unit?: string | null
+          unit_price?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "product_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       proposal_items: {
         Row: {

@@ -20,6 +20,7 @@ import Finance from "@/pages/Finance";
 import Service from "@/pages/Service";
 import SalesInvoices from "@/pages/SalesInvoices";
 import PurchaseInvoices from "@/pages/PurchaseInvoices";
+import Products from "@/pages/Products";
 
 function App() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -55,6 +56,7 @@ function App() {
           <Route path="/service" element={<Service isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/sales-invoices" element={<SalesInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/purchase-invoices" element={<PurchaseInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/products" element={<Products isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
         </Routes>
         <Toaster />
       </Router>
