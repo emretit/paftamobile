@@ -19,7 +19,7 @@ export const useProposals = (filters?: ProposalFilters) => {
       // Apply filters
       if (filters) {
         // Status filter
-        if (filters.status) {
+        if (filters.status && filters.status !== 'all') {
           query = query.eq('status', filters.status);
         }
 

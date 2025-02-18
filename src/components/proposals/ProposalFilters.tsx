@@ -41,7 +41,7 @@ export interface ProposalFilters {
 export const ProposalFilters = ({ onFilterChange }: ProposalFiltersProps) => {
   const [filters, setFilters] = useState<ProposalFilters>({
     search: "",
-    status: "",
+    status: "all", // Changed default value to "all" instead of empty string
     dateRange: {
       from: null,
       to: null,
@@ -79,7 +79,7 @@ export const ProposalFilters = ({ onFilterChange }: ProposalFiltersProps) => {
             <SelectValue placeholder="Durum" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tümü</SelectItem>
+            <SelectItem value="all">Tümü</SelectItem>
             <SelectItem value="new">Yeni</SelectItem>
             <SelectItem value="review">İncelemede</SelectItem>
             <SelectItem value="negotiation">Görüşmede</SelectItem>
