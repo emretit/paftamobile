@@ -18,10 +18,12 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
     queryKey: ['customer', id],
     queryFn: async () => {
       if (!id) return null;
+      
+      // Using proper Supabase filter with the UUID
       const { data, error } = await supabase
         .from('customers')
-        .select('*')
-        .eq('id', id)
+        .select()
+        .match({ id })
         .maybeSingle();
       
       if (error) {
