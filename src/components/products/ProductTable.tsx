@@ -60,7 +60,34 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
   };
 
   if (isLoading) {
-    return <div>Yükleniyor...</div>;
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Ürün Adı</TableHead>
+              <TableHead>Kategori</TableHead>
+              <TableHead>Tür</TableHead>
+              <TableHead>Fiyat</TableHead>
+              <TableHead>Stok Durumu</TableHead>
+              <TableHead>Durum</TableHead>
+              <TableHead className="text-right">İşlemler</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {[...Array(5)].map((_, index) => (
+              <TableRow key={index}>
+                {[...Array(7)].map((_, cellIndex) => (
+                  <TableCell key={cellIndex}>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
   }
 
   const getStockStatusBadge = (status: string, quantity: number, threshold: number) => {
@@ -78,10 +105,10 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-gray-50/50">
             <TableHead>Ürün Adı</TableHead>
             <TableHead>Kategori</TableHead>
             <TableHead>Tür</TableHead>
@@ -93,25 +120,54 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
         </TableHeader>
         <TableBody>
           {products.map((product) => (
-            <TableRow key={product.id}>
-              <TableCell className="font-medium">{product.name}</TableCell>
-              <TableCell>{product.product_categories?.name || "-"}</TableCell>
+            <TableRow 
+              key={product.id}
+              className="group hover:bg-gray-50/50 transition-colors"
+            >
+              <TableCell>
+                <div className="flex items-center gap-3">
+                  {product.image_url ? (
+                    <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100">
+                      <img 
+                        src={product.image_url} 
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200" />
+                  )}
+                  <div>
+                    <div className="font-medium">{product.name}</div>
+                    <div className="text-sm text-gray-500">
+                      {product.sku || 'SKU yok'}
+                    </div>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                {product.product_categories?.name || "Kategorisiz"}
+              </TableCell>
               <TableCell>
                 {product.category_type === "product" ? "Ürün" : 
                  product.category_type === "service" ? "Hizmet" : "Abonelik"}
               </TableCell>
               <TableCell>
                 <div className="space-y-1">
-                  <div>₺{product.unit_price.toFixed(2)}</div>
+                  <div className="font-medium">₺{product.unit_price.toFixed(2)}</div>
                   {product.discount_rate > 0 && (
-                    <Badge variant="secondary">%{product.discount_rate} İndirim</Badge>
+                    <Badge variant="secondary" className="font-normal">
+                      %{product.discount_rate} İndirim
+                    </Badge>
                   )}
                 </div>
               </TableCell>
               <TableCell>
-                {product.product_type === "physical" 
-                  ? getStockStatusBadge(product.status, product.stock_quantity, product.stock_threshold)
-                  : "-"}
+                {product.product_type === "physical" ? (
+                  getStockStatusBadge(product.status, product.stock_quantity, product.stock_threshold)
+                ) : (
+                  <span className="text-gray-500">-</span>
+                )}
               </TableCell>
               <TableCell>
                 <Badge variant={product.is_active ? "default" : "secondary"}>
@@ -119,18 +175,19 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => navigate(`/product-form/${product.id}`)}
+                    className="hover:bg-gray-100"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-red-500 hover:text-red-600"
+                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
                     onClick={() => handleDelete(product.id)}
                   >
                     <Trash className="h-4 w-4" />
@@ -146,4 +203,3 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
 };
 
 export default ProductTable;
-
