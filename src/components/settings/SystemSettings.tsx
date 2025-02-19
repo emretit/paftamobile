@@ -17,19 +17,26 @@ import {
 } from "@/components/ui/table";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { Json } from "@/integrations/supabase/types";
 
 type CompanySettings = {
   id: string;
-  company_name: string;
-  address: string;
-  phone: string;
-  email: string;
-  tax_number: string;
-  logo_url: string;
+  company_name: string | null;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  tax_number: string | null;
+  logo_url: string | null;
   default_currency: string;
   email_settings: {
     notifications_enabled: boolean;
   };
+  updated_at?: string | null;
+  updated_by?: string | null;
+};
+
+type SupabaseCompanySettings = Omit<CompanySettings, 'email_settings'> & {
+  email_settings: Json;
 };
 
 type AuditLog = {
@@ -38,7 +45,7 @@ type AuditLog = {
   action: string;
   entity_type: string;
   entity_id: string;
-  changes: any;
+  changes: Json;
   created_at: string;
 };
 
@@ -56,7 +63,17 @@ export const SystemSettings = () => {
         .single();
 
       if (error) throw error;
-      return data as CompanySettings;
+
+      // Safely convert the Supabase response to our CompanySettings type
+      const supabaseData = data as SupabaseCompanySettings;
+      const parsedSettings: CompanySettings = {
+        ...supabaseData,
+        email_settings: typeof supabaseData.email_settings === 'object' ? 
+          supabaseData.email_settings as { notifications_enabled: boolean } :
+          { notifications_enabled: false }
+      };
+
+      return parsedSettings;
     }
   });
 
