@@ -670,6 +670,13 @@ export type Database = {
       }
     }
     Functions: {
+      assign_role: {
+        Args: {
+          target_user_id: string
+          new_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: undefined
+      }
       check_stock_status: {
         Args: {
           current_quantity: number
