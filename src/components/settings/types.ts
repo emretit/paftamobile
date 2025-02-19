@@ -14,7 +14,7 @@ export type UserProfile = {
   avatar_url: string | null;
   created_at: string | null;
   updated_at: string | null;
-  is_active?: boolean;
+  is_active: boolean;
 };
 
 export type UserWithRoles = UserProfile & { user_roles: UserRole[] };
