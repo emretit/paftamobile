@@ -1,7 +1,5 @@
 
-import { UserWithRoles, UserRole, UserProfile } from "./types";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { UserWithRoles } from "./types";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -11,111 +9,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
-import { Database } from "@/integrations/supabase/types";
+import { useUserMutations } from "./hooks/useUserMutations";
+import { UserAvatar } from "./components/UserAvatar";
+import { UserRoleSelect } from "./components/UserRoleSelect";
+import { UserActions } from "./components/UserActions";
 
 type UserListProps = {
   users: UserWithRoles[];
 };
 
 export const UserList = ({ users }: UserListProps) => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const assignRoleMutation = useMutation({
-    mutationFn: async ({ userId, role }: { userId: string, role: UserRole['role'] }) => {
-      const { error } = await supabase.rpc('assign_role', {
-        target_user_id: userId,
-        new_role: role
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast({
-        title: "Başarılı",
-        description: "Kullanıcı rolü güncellendi",
-      });
-    },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Rol güncellenirken bir hata oluştu: " + error.message,
-      });
-    },
-  });
-
-  const resetPasswordMutation = useMutation({
-    mutationFn: async (email: string) => {
-      const { error } = await supabase.rpc('request_password_reset', {
-        email: email
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Başarılı",
-        description: "Şifre sıfırlama bağlantısı gönderildi",
-      });
-    },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Şifre sıfırlama işlemi başarısız: " + error.message,
-      });
-    },
-  });
-
-  const deactivateUserMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      const updateData: Database['public']['Tables']['profiles']['Update'] = {
-        is_active: false
-      };
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', userId);
-      
-      if (updateError) throw updateError;
-
-      const { error: logError } = await supabase
-        .from('audit_logs')
-        .insert({
-          action: 'user_deactivated',
-          entity_type: 'user',
-          entity_id: userId,
-          changes: { is_active: false }
-        });
-
-      if (logError) throw logError;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast({
-        title: "Başarılı",
-        description: "Kullanıcı devre dışı bırakıldı",
-      });
-    },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Kullanıcı devre dışı bırakılırken bir hata oluştu: " + error.message,
-      });
-    },
-  });
+  const { assignRoleMutation, resetPasswordMutation, deactivateUserMutation } = useUserMutations();
 
   return (
     <Table>
@@ -132,44 +36,13 @@ export const UserList = ({ users }: UserListProps) => {
         {users.map((user) => (
           <TableRow key={user.id}>
             <TableCell>
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage src={user.avatar_url || ''} />
-                  <AvatarFallback>
-                    {user.first_name?.[0]}{user.last_name?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-medium">
-                    {user.first_name} {user.last_name}
-                  </div>
-                </div>
-              </div>
+              <UserAvatar user={user} />
             </TableCell>
             <TableCell>
-              <Select
-                value={user.user_roles?.[0]?.role || "viewer"}
-                onValueChange={(role: UserRole['role']) => 
-                  assignRoleMutation.mutate({ userId: user.id, role })}
-              >
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue>
-                    {user.user_roles?.[0]?.role ? (
-                      <Badge variant="secondary">
-                        {user.user_roles[0].role}
-                      </Badge>
-                    ) : (
-                      "Rol seç"
-                    )}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="sales">Satış</SelectItem>
-                  <SelectItem value="manager">Yönetici</SelectItem>
-                  <SelectItem value="viewer">Görüntüleyici</SelectItem>
-                </SelectContent>
-              </Select>
+              <UserRoleSelect 
+                user={user}
+                onRoleChange={(role) => assignRoleMutation.mutate({ userId: user.id, role })}
+              />
             </TableCell>
             <TableCell>
               <Badge>{user.is_active !== false ? "Aktif" : "Devre Dışı"}</Badge>
@@ -177,26 +50,12 @@ export const UserList = ({ users }: UserListProps) => {
             <TableCell>
               {user.created_at && new Date(user.created_at).toLocaleDateString('tr-TR')}
             </TableCell>
-            <TableCell className="text-right space-x-2">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => resetPasswordMutation.mutate(user.email || '')}
-              >
-                Şifre Sıfırla
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-red-600 hover:text-red-700"
-                onClick={() => {
-                  if (window.confirm('Bu kullanıcıyı devre dışı bırakmak istediğinizden emin misiniz?')) {
-                    deactivateUserMutation.mutate(user.id);
-                  }
-                }}
-              >
-                Devre Dışı Bırak
-              </Button>
+            <TableCell className="text-right">
+              <UserActions 
+                user={user}
+                onResetPassword={() => resetPasswordMutation.mutate(user.email || '')}
+                onDeactivate={() => deactivateUserMutation.mutate(user.id)}
+              />
             </TableCell>
           </TableRow>
         ))}
