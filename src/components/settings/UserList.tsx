@@ -80,7 +80,7 @@ export const UserList = ({ users }: UserListProps) => {
     mutationFn: async (userId: string) => {
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ is_active: false })
+        .update({ is_active: false } as { is_active: boolean })
         .eq('id', userId);
       
       if (updateError) throw updateError;

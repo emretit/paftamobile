@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { supabase } from "@/integrations/supabase/client";
 
 export const CompanyInfoTab = () => {
   const { settings, updateSettings } = useCompanySettings();
