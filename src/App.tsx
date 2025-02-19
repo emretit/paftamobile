@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -23,6 +22,7 @@ import PurchaseInvoices from "@/pages/PurchaseInvoices";
 import Products from "@/pages/Products";
 import ProductForm from "@/pages/ProductForm";
 import ProductDetails from "@/pages/ProductDetails";
+import Settings from "@/pages/Settings";
 
 function App() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -62,6 +62,7 @@ function App() {
           <Route path="/product-form" element={<ProductForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/product-form/:id" element={<ProductForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/product-details/:id" element={<ProductDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/settings" element={<Settings isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
         </Routes>
         <Toaster />
       </Router>
