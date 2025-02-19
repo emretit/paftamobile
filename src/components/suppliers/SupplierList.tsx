@@ -8,15 +8,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ArrowUpDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import SupplierTableRow from "./SupplierTableRow";
 import { Supplier } from "@/types/supplier";
 
 interface SupplierListProps {
   suppliers: Supplier[] | undefined;
   isLoading: boolean;
+  sortDirection: "asc" | "desc";
+  onSortDirectionChange: (direction: "asc" | "desc") => void;
 }
 
-const SupplierList = ({ suppliers, isLoading }: SupplierListProps) => {
+const SupplierList = ({ suppliers, isLoading, sortDirection, onSortDirectionChange }: SupplierListProps) => {
+  const toggleSort = () => {
+    onSortDirectionChange(sortDirection === "asc" ? "desc" : "asc");
+  };
+
   return (
     <Card className="overflow-hidden">
       <Table>
@@ -28,7 +36,17 @@ const SupplierList = ({ suppliers, isLoading }: SupplierListProps) => {
             <TableHead>Tip</TableHead>
             <TableHead>Durum</TableHead>
             <TableHead>Temsilci</TableHead>
-            <TableHead>Bakiye</TableHead>
+            <TableHead>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 flex items-center gap-1 -ml-3 hover:bg-gray-100"
+                onClick={toggleSort}
+              >
+                Bakiye
+                <ArrowUpDown className="h-4 w-4" />
+              </Button>
+            </TableHead>
             <TableHead className="text-right">İşlemler</TableHead>
           </TableRow>
         </TableHeader>

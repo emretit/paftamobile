@@ -20,6 +20,7 @@ const Suppliers = ({ isCollapsed, setIsCollapsed }: SuppliersProps) => {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   const { data: suppliers, isLoading } = useQuery({
     queryKey: ['suppliers'],
@@ -50,6 +51,14 @@ const Suppliers = ({ isCollapsed, setIsCollapsed }: SuppliersProps) => {
     return matchesSearch && matchesType && matchesStatus;
   });
 
+  const sortedSuppliers = filteredSuppliers?.sort((a, b) => {
+    if (sortDirection === "asc") {
+      return a.balance - b.balance;
+    } else {
+      return b.balance - a.balance;
+    }
+  });
+
   return (
     <div className="min-h-screen bg-white flex relative">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
@@ -76,8 +85,10 @@ const Suppliers = ({ isCollapsed, setIsCollapsed }: SuppliersProps) => {
           setStatusFilter={setStatusFilter}
         />
         <SupplierList 
-          suppliers={filteredSuppliers}
+          suppliers={sortedSuppliers}
           isLoading={isLoading}
+          sortDirection={sortDirection}
+          onSortDirectionChange={setSortDirection}
         />
       </main>
     </div>
