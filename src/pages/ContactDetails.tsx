@@ -24,7 +24,11 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
         .eq('id', id)
         .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching customer:', error);
+        throw error;
+      }
+      
       return data;
     },
     enabled: !!id,
