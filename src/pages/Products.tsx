@@ -19,9 +19,24 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   const navigate = useNavigate();
   const [view, setView] = useState<"grid" | "table">("table");
   const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
 
+  // Kategorileri getiren sorgu
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_categories")
+        .select("id, name");
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Ürünleri getiren sorgu
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products", searchQuery],
+    queryKey: ["products", searchQuery, categoryFilter],
     queryFn: async () => {
       let query = supabase
         .from("products")
@@ -35,6 +50,10 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
 
       if (searchQuery) {
         query = query.ilike("name", `%${searchQuery}%`);
+      }
+
+      if (categoryFilter) {
+        query = query.eq("category_id", categoryFilter);
       }
 
       const { data, error } = await query;
@@ -80,6 +99,9 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
 
           <ProductFilters
             setSearchQuery={setSearchQuery}
+            categoryFilter={categoryFilter}
+            setCategoryFilter={setCategoryFilter}
+            categories={categories}
           />
 
           {view === "grid" ? (
