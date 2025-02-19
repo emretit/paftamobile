@@ -1,10 +1,11 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Table as TableIcon, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import ProductTable from "@/components/products/ProductTable";
 import ProductGrid from "@/components/products/ProductGrid";
@@ -18,6 +19,7 @@ interface ProductsProps {
 
 const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [viewType, setViewType] = useState<"table" | "grid">("table");
   const [filters, setFilters] = useState({
     search: "",
@@ -61,6 +63,51 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
       return data;
     }
   });
+
+  useEffect(() => {
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('products_changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'products' 
+        }, 
+        (payload) => {
+          // Invalidate and refetch products query
+          queryClient.invalidateQueries({ queryKey: ["products"] });
+
+          // Show notification based on the event type
+          if (payload.eventType === 'INSERT') {
+            toast.success('Yeni ürün eklendi');
+          } else if (payload.eventType === 'UPDATE') {
+            toast.info('Ürün güncellendi');
+          } else if (payload.eventType === 'DELETE') {
+            toast.warning('Ürün silindi');
+          }
+        }
+      )
+      .subscribe();
+
+    // Listen for low stock notifications
+    const lowStockChannel = supabase
+      .channel('low_stock_alerts')
+      .on('broadcast', 
+        { event: 'low_stock_alert' }, 
+        (payload) => {
+          toast.warning(`Düşük Stok Uyarısı: ${payload.payload.product_name} ürününün stok seviyesi kritik seviyenin altına düştü.`, {
+            duration: 5000
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+      lowStockChannel.unsubscribe();
+    };
+  }, [queryClient]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex relative">
