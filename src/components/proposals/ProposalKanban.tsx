@@ -14,12 +14,38 @@ const columns: {
   id: ProposalStatus;
   title: string;
   icon: React.ComponentType<{ className?: string }>;
+  allowedSourceStatuses?: ProposalStatus[];
 }[] = [
-  { id: "new", title: "Yeni Teklifler", icon: FileText },
-  { id: "review", title: "İncelemede", icon: Users },
-  { id: "negotiation", title: "Görüşme Aşamasında", icon: Clock },
-  { id: "accepted", title: "Kabul Edildi", icon: CheckCircle2 },
-  { id: "rejected", title: "Reddedildi", icon: XCircle },
+  { 
+    id: "new", 
+    title: "Yeni Teklifler", 
+    icon: FileText,
+    allowedSourceStatuses: ["review"] // New proposals can only come back from review
+  },
+  { 
+    id: "review", 
+    title: "İncelemede", 
+    icon: Users,
+    allowedSourceStatuses: ["new", "negotiation"] // Can receive from new or negotiation
+  },
+  { 
+    id: "negotiation", 
+    title: "Görüşme Aşamasında", 
+    icon: Clock,
+    allowedSourceStatuses: ["review"] // Can only come from review
+  },
+  { 
+    id: "accepted", 
+    title: "Kabul Edildi", 
+    icon: CheckCircle2,
+    allowedSourceStatuses: ["negotiation", "review"] // Can be accepted from negotiation or review
+  },
+  { 
+    id: "rejected", 
+    title: "Reddedildi", 
+    icon: XCircle,
+    allowedSourceStatuses: ["negotiation", "review"] // Can be rejected from negotiation or review
+  },
 ];
 
 const ProposalKanban = () => {
@@ -29,6 +55,12 @@ const ProposalKanban = () => {
 
   const getProposalsByStatus = (status: ProposalStatus) => {
     return proposals?.filter((proposal) => proposal.status === status) || [];
+  };
+
+  const isMovementAllowed = (sourceStatus: ProposalStatus, destinationStatus: ProposalStatus) => {
+    const destinationColumn = columns.find(col => col.id === destinationStatus);
+    if (!destinationColumn?.allowedSourceStatuses) return false;
+    return destinationColumn.allowedSourceStatuses.includes(sourceStatus);
   };
 
   const updateProposalStatus = async (proposalId: string, newStatus: ProposalStatus) => {
@@ -53,6 +85,20 @@ const ProposalKanban = () => {
       destination.droppableId === source.droppableId &&
       destination.index === source.index
     ) {
+      return;
+    }
+
+    // Get the proposal being moved
+    const proposal = proposals?.find(p => p.id === draggableId);
+    if (!proposal) return;
+
+    // Check if the movement is allowed
+    if (!isMovementAllowed(proposal.status, destination.droppableId as ProposalStatus)) {
+      toast({
+        title: "İzin verilmeyen hareket",
+        description: "Bu durum değişikliğine izin verilmiyor.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -127,8 +173,10 @@ const ProposalKanban = () => {
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`min-h-[500px] p-4 rounded-lg ${
-                    snapshot.isDraggingOver ? "bg-gray-100" : "bg-gray-50"
+                  className={`min-h-[500px] p-4 rounded-lg transition-colors duration-200 ${
+                    snapshot.isDraggingOver 
+                      ? "bg-gray-100 ring-2 ring-primary/20" 
+                      : "bg-gray-50"
                   }`}
                 >
                   {getProposalsByStatus(column.id).map((proposal, index) => (
@@ -142,8 +190,10 @@ const ProposalKanban = () => {
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          className={`p-4 mb-4 bg-white hover:shadow-md transition-shadow ${
-                            snapshot.isDragging ? "shadow-lg" : ""
+                          className={`p-4 mb-4 bg-white transition-all duration-200 ${
+                            snapshot.isDragging 
+                              ? "shadow-lg scale-[1.02] ring-2 ring-primary/20" 
+                              : "hover:shadow-md"
                           }`}
                         >
                           <div className="space-y-2">
