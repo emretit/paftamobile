@@ -1,5 +1,4 @@
-
-import { UserWithRoles, UserRole } from "./types";
+import { UserWithRoles, UserRole, UserProfile } from "./types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -78,12 +77,9 @@ export const UserList = ({ users }: UserListProps) => {
 
   const deactivateUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      type ProfileUpdate = Pick<UserProfile, 'is_active'>;
-      const updateData: ProfileUpdate = { is_active: false };
-
       const { error: updateError } = await supabase
         .from('profiles')
-        .update(updateData)
+        .update({ is_active: false })
         .eq('id', userId);
       
       if (updateError) throw updateError;
