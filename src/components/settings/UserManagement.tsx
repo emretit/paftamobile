@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -13,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -55,6 +54,50 @@ export const UserManagement = () => {
   const [roleFilter, setRoleFilter] = useState<string | undefined>();
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [newUserEmail, setNewUserEmail] = useState("");
+
+  useEffect(() => {
+    const profilesChannel = supabase
+      .channel('public:profiles')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['users'] });
+        }
+      )
+      .subscribe();
+
+    const rolesChannel = supabase
+      .channel('public:user_roles')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_roles'
+        },
+        (payload) => {
+          queryClient.invalidateQueries({ queryKey: ['users'] });
+          
+          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+            toast({
+              title: "Rol Değişikliği",
+              description: "Kullanıcı rolleri güncellendi",
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profilesChannel);
+      supabase.removeChannel(rolesChannel);
+    };
+  }, [queryClient, toast]);
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
@@ -166,7 +209,6 @@ export const UserManagement = () => {
 
   const deactivateUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      // First update the profile
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ is_active: false } as Partial<UserProfile>)
@@ -174,7 +216,6 @@ export const UserManagement = () => {
       
       if (updateError) throw updateError;
 
-      // Then log the action
       const { error: logError } = await supabase
         .from('audit_logs')
         .insert({
