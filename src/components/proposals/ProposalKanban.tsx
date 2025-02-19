@@ -77,10 +77,8 @@ const ProposalKanban = () => {
   const onDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
 
-    // If dropped outside a droppable area
     if (!destination) return;
 
-    // If dropped in the same position
     if (
       destination.droppableId === source.droppableId &&
       destination.index === source.index
@@ -88,11 +86,9 @@ const ProposalKanban = () => {
       return;
     }
 
-    // Get the proposal being moved
     const proposal = proposals?.find(p => p.id === draggableId);
     if (!proposal) return;
 
-    // Check if the movement is allowed
     if (!isMovementAllowed(proposal.status, destination.droppableId as ProposalStatus)) {
       toast({
         title: "İzin verilmeyen hareket",
@@ -102,13 +98,13 @@ const ProposalKanban = () => {
       return;
     }
 
-    // Update the proposal status
     const newStatus = destination.droppableId as ProposalStatus;
+    const sourceColumn = columns.find(col => col.id === source.droppableId);
+    const destinationColumn = columns.find(col => col.id === destination.droppableId);
     
     try {
       await updateProposalStatus(draggableId, newStatus);
       
-      // Optimistically update the local cache
       queryClient.setQueryData(['proposals'], (oldData: Proposal[] | undefined) => {
         if (!oldData) return [];
         return oldData.map(proposal => 
@@ -119,8 +115,9 @@ const ProposalKanban = () => {
       });
 
       toast({
-        title: "Durum güncellendi",
+        title: `${sourceColumn?.title} → ${destinationColumn?.title}`,
         description: "Teklif durumu başarıyla güncellendi.",
+        className: "bg-green-50 border-green-200",
       });
     } catch (error) {
       console.error('Error updating proposal status:', error);
@@ -130,22 +127,21 @@ const ProposalKanban = () => {
         variant: "destructive",
       });
       
-      // Refresh the proposals data
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="flex gap-6 overflow-x-auto pb-4">
         {columns.map((column) => (
-          <div key={column.id} className="flex-1 min-w-[300px]">
+          <div key={column.id} className="flex-1 min-w-[320px]">
             <div className="animate-pulse">
               <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
               <div className="bg-gray-50 p-4 rounded-lg min-h-[500px]">
                 <div className="space-y-4">
                   {[...Array(3)].map((_, index) => (
-                    <div key={index} className="h-24 bg-gray-200 rounded"></div>
+                    <div key={index} className="h-24 bg-gray-200 rounded-lg"></div>
                   ))}
                 </div>
               </div>
@@ -158,13 +154,13 @@ const ProposalKanban = () => {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="flex gap-6 overflow-x-auto pb-4">
         {columns.map((column) => (
-          <div key={column.id} className="flex-1 min-w-[300px]">
+          <div key={column.id} className="flex-1 min-w-[320px]">
             <div className="flex items-center gap-2 mb-4">
               <column.icon className="h-5 w-5 text-gray-500" />
               <h3 className="font-semibold text-gray-900">{column.title}</h3>
-              <span className="ml-auto bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-sm">
+              <span className="ml-auto bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full text-sm font-medium">
                 {getProposalsByStatus(column.id).length}
               </span>
             </div>
@@ -175,8 +171,8 @@ const ProposalKanban = () => {
                   {...provided.droppableProps}
                   className={`min-h-[500px] p-4 rounded-lg transition-colors duration-200 ${
                     snapshot.isDraggingOver 
-                      ? "bg-gray-100 ring-2 ring-primary/20" 
-                      : "bg-gray-50"
+                      ? "bg-gray-100/80 ring-2 ring-primary/20" 
+                      : "bg-gray-50/80"
                   }`}
                 >
                   {getProposalsByStatus(column.id).map((proposal, index) => (
@@ -190,29 +186,33 @@ const ProposalKanban = () => {
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          className={`p-4 mb-4 bg-white transition-all duration-200 ${
+                          className={`group p-4 mb-3 bg-white rounded-lg border-border/50 transition-all duration-200 ${
                             snapshot.isDragging 
-                              ? "shadow-lg scale-[1.02] ring-2 ring-primary/20" 
-                              : "hover:shadow-md"
+                              ? "shadow-lg scale-[1.02] ring-2 ring-primary/20 rotate-1" 
+                              : "hover:shadow-md hover:border-border"
                           }`}
                         >
-                          <div className="space-y-2">
+                          <div className="space-y-2.5">
                             <div className="flex justify-between items-start">
-                              <h4 className="font-medium">#{proposal.proposal_number}</h4>
-                              <span className="text-sm text-gray-500">
+                              <h4 className="font-medium text-gray-900 group-hover:text-primary transition-colors">
+                                #{proposal.proposal_number}
+                              </h4>
+                              <span className="text-sm text-gray-500 tabular-nums">
                                 {format(new Date(proposal.created_at), 'dd MMM', { locale: tr })}
                               </span>
                             </div>
-                            <p className="text-sm text-gray-600">{proposal.customer?.name}</p>
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm font-medium">
+                            <p className="text-sm text-gray-600 line-clamp-1">{proposal.customer?.name}</p>
+                            <div className="flex justify-between items-center pt-0.5">
+                              <span className="text-sm font-medium tabular-nums">
                                 {new Intl.NumberFormat('tr-TR', {
                                   style: 'currency',
-                                  currency: 'TRY'
+                                  currency: 'TRY',
+                                  minimumFractionDigits: 0,
+                                  maximumFractionDigits: 0
                                 }).format(proposal.total_value)}
                               </span>
                               {proposal.employee && (
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-gray-500 truncate max-w-[120px]">
                                   {`${proposal.employee.first_name} ${proposal.employee.last_name}`}
                                 </span>
                               )}
@@ -223,11 +223,11 @@ const ProposalKanban = () => {
                     </Draggable>
                   ))}
                   {getProposalsByStatus(column.id).length === 0 && (
-                    <Card className="p-4 mb-4 bg-white">
-                      <p className="text-gray-500 text-center text-sm">
+                    <div className="flex items-center justify-center h-24 border border-dashed border-gray-200 rounded-lg">
+                      <p className="text-gray-500 text-sm">
                         Bu durumda teklif bulunmuyor
                       </p>
-                    </Card>
+                    </div>
                   )}
                   {provided.placeholder}
                 </div>
