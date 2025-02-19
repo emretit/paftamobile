@@ -1,7 +1,6 @@
 
 import Navbar from "@/components/Navbar";
 import TopBar from "@/components/TopBar";
-import ProposalTable from "@/components/proposals/ProposalTable";
 import { ProposalAnalytics } from "@/components/proposals/ProposalAnalytics";
 import { ProposalFilters } from "@/components/proposals/ProposalFilters";
 import { ProposalActions } from "@/components/proposals/ProposalActions";
@@ -26,21 +25,32 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex relative">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <div className={`transition-all duration-300 ${
-        isCollapsed ? 'ml-[60px]' : 'ml-64'
-      }`}>
-        <TopBar />
-        <main className="p-6">
-          <ProposalActions proposal={null} />
-          <ProposalAnalytics />
-          <ProposalFilters onFilterChange={setFilters} />
-          <div className="mt-6 bg-white p-4 rounded-lg shadow-sm">
-            <ProposalKanban />
+      <main 
+        className={`flex-1 transition-all duration-300 ${
+          isCollapsed ? 'ml-[60px]' : 'ml-[60px] sm:ml-64'
+        }`}
+      >
+        <div className="p-6">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900">Teklifler</h1>
+            <p className="text-gray-600 mt-1">Tüm teklifleri görüntüleyin ve yönetin</p>
           </div>
-        </main>
-      </div>
+
+          <div className="space-y-6">
+            <ProposalActions proposal={null} />
+            <ProposalAnalytics />
+            <ProposalFilters onFilterChange={setFilters} />
+            
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-4">
+                <ProposalKanban />
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
