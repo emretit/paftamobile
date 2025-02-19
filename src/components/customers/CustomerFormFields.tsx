@@ -1,5 +1,13 @@
 
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CustomerFormData } from "@/types/customer";
 
 interface CustomerFormFieldsProps {
@@ -10,84 +18,103 @@ interface CustomerFormFieldsProps {
 const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) => {
   return (
     <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium mb-1">Müşteri Adı</label>
+      <div className="space-y-2">
+        <Label htmlFor="name">Müşteri Adı</Label>
         <Input
+          id="name"
           required
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">E-posta</label>
+      <div className="space-y-2">
+        <Label htmlFor="email">E-posta</Label>
         <Input
+          id="email"
           type="email"
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Cep Telefonu</label>
+      <div className="space-y-2">
+        <Label htmlFor="mobile_phone">Cep Telefonu</Label>
         <Input
+          id="mobile_phone"
           value={formData.mobile_phone}
           onChange={(e) => setFormData({ ...formData, mobile_phone: e.target.value })}
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Sabit Telefon</label>
+      <div className="space-y-2">
+        <Label htmlFor="office_phone">Sabit Telefon</Label>
         <Input
+          id="office_phone"
           value={formData.office_phone}
           onChange={(e) => setFormData({ ...formData, office_phone: e.target.value })}
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Şirket</label>
+      <div className="space-y-2">
+        <Label htmlFor="company">Şirket</Label>
         <Input
+          id="company"
           value={formData.company}
           onChange={(e) => setFormData({ ...formData, company: e.target.value })}
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Tip</label>
-        <select
-          className="w-full border rounded-md h-10 px-3"
+      <div className="space-y-2">
+        <Label htmlFor="type">Tip</Label>
+        <Select
           value={formData.type}
-          onChange={(e) => setFormData({ ...formData, type: e.target.value as "bireysel" | "kurumsal" })}
+          onValueChange={(value: "bireysel" | "kurumsal") =>
+            setFormData({ ...formData, type: value })
+          }
         >
-          <option value="bireysel">Bireysel</option>
-          <option value="kurumsal">Kurumsal</option>
-        </select>
+          <SelectTrigger id="type">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="bireysel">Bireysel</SelectItem>
+            <SelectItem value="kurumsal">Kurumsal</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Durum</label>
-        <select
-          className="w-full border rounded-md h-10 px-3"
+      <div className="space-y-2">
+        <Label htmlFor="status">Durum</Label>
+        <Select
           value={formData.status}
-          onChange={(e) => setFormData({ ...formData, status: e.target.value as "aktif" | "pasif" | "potansiyel" })}
+          onValueChange={(value: "aktif" | "pasif" | "potansiyel") =>
+            setFormData({ ...formData, status: value })
+          }
         >
-          <option value="aktif">Aktif</option>
-          <option value="pasif">Pasif</option>
-          <option value="potansiyel">Potansiyel</option>
-        </select>
+          <SelectTrigger id="status">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="aktif">Aktif</SelectItem>
+            <SelectItem value="pasif">Pasif</SelectItem>
+            <SelectItem value="potansiyel">Potansiyel</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Temsilci</label>
+      <div className="space-y-2">
+        <Label htmlFor="representative">Temsilci</Label>
         <Input
+          id="representative"
           value={formData.representative}
           onChange={(e) => setFormData({ ...formData, representative: e.target.value })}
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Adres</label>
+      <div className="space-y-2">
+        <Label htmlFor="address">Adres</Label>
         <Input
+          id="address"
           value={formData.address}
           onChange={(e) => setFormData({ ...formData, address: e.target.value })}
         />
@@ -95,17 +122,19 @@ const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) 
 
       {formData.type === 'kurumsal' && (
         <>
-          <div>
-            <label className="block text-sm font-medium mb-1">Vergi Numarası</label>
+          <div className="space-y-2">
+            <Label htmlFor="tax_number">Vergi Numarası</Label>
             <Input
+              id="tax_number"
               required
               value={formData.tax_number}
               onChange={(e) => setFormData({ ...formData, tax_number: e.target.value })}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Vergi Dairesi</label>
+          <div className="space-y-2">
+            <Label htmlFor="tax_office">Vergi Dairesi</Label>
             <Input
+              id="tax_office"
               value={formData.tax_office}
               onChange={(e) => setFormData({ ...formData, tax_office: e.target.value })}
             />
@@ -113,9 +142,10 @@ const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) 
         </>
       )}
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Bakiye</label>
+      <div className="space-y-2">
+        <Label htmlFor="balance">Bakiye</Label>
         <Input
+          id="balance"
           type="number"
           value={formData.balance}
           onChange={(e) => setFormData({ ...formData, balance: parseFloat(e.target.value) })}
