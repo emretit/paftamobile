@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Table as TableIcon, LayoutGrid, Filter } from "lucide-react";
+import { Plus, Table as TableIcon, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/Navbar";
@@ -48,7 +48,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
       }
 
       if (filters.type !== "all") {
-        query = query.eq("product_type", filters.type);
+        query = query.eq("category_type", filters.type);
       }
 
       if (filters.status !== "all") {
