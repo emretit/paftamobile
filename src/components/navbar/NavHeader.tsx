@@ -11,25 +11,31 @@ interface NavHeaderProps {
 const NavHeader = ({ isCollapsed, setIsCollapsed }: NavHeaderProps) => {
   return (
     <div className={cn(
-      "flex h-16 items-center border-b bg-[#221F26] px-4",
+      "flex h-20 items-center border-b border-white/10 bg-[#221F26] px-6 transition-all duration-300",
       isCollapsed ? "justify-center" : "justify-between"
     )}>
       {!isCollapsed && (
-        <div className="flex items-center space-x-2">
-          <img 
-            src="/logo.png" 
-            alt="NGS Logo" 
-            className="h-8 w-8"
-          />
+        <div className="flex items-center space-x-3">
+          <div className="relative group">
+            <div className="absolute -inset-1 rounded-full bg-[#ea384c]/20 blur-sm group-hover:blur-md transition-all duration-300 opacity-75"></div>
+            <img 
+              src="/logo.png" 
+              alt="NGS Logo" 
+              className="relative h-10 w-10 transition-transform duration-300 group-hover:scale-105"
+            />
+          </div>
           <span className="text-lg font-semibold tracking-tight text-white">NGS</span>
         </div>
       )}
       {isCollapsed && (
-        <img 
-          src="/logo.png" 
-          alt="NGS Logo" 
-          className="h-8 w-8"
-        />
+        <div className="relative group">
+          <div className="absolute -inset-1 rounded-full bg-[#ea384c]/20 blur-sm group-hover:blur-md transition-all duration-300 opacity-75"></div>
+          <img 
+            src="/logo.png" 
+            alt="NGS Logo" 
+            className="relative h-9 w-9 transition-transform duration-300 group-hover:scale-105"
+          />
+        </div>
       )}
       <Button
         variant="ghost"
