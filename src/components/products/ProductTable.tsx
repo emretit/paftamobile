@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash, AlertTriangle } from "lucide-react";
@@ -57,6 +56,10 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
       console.error('Error deleting product:', error);
       toast.error('Ürün silinirken bir hata oluştu');
     }
+  };
+
+  const handleRowClick = (id: string) => {
+    navigate(`/product-details/${id}`);
   };
 
   if (isLoading) {
@@ -122,7 +125,8 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
           {products.map((product) => (
             <TableRow 
               key={product.id}
-              className="group hover:bg-gray-50/50 transition-colors"
+              className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
+              onClick={() => handleRowClick(product.id)}
             >
               <TableCell>
                 <div className="flex items-center gap-3">

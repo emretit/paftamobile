@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,6 +58,10 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
     }
   };
 
+  const handleCardClick = (id: string) => {
+    navigate(`/product-details/${id}`);
+  };
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -94,7 +97,11 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {products.map((product) => (
-        <Card key={product.id} className="group relative p-4 hover:shadow-lg transition-all duration-200">
+        <Card 
+          key={product.id} 
+          className="group relative p-4 hover:shadow-lg transition-all duration-200 cursor-pointer"
+          onClick={() => handleCardClick(product.id)}
+        >
           <div className="flex flex-col h-full">
             <div className="relative">
               {product.image_url ? (
