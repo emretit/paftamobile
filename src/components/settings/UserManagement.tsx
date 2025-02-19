@@ -13,6 +13,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
+type UserProfile = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+  user_roles: { role: 'admin' | 'manager' | 'employee' }[];
+};
+
 export const UserManagement = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
@@ -27,7 +35,7 @@ export const UserManagement = () => {
         `);
       
       if (error) throw error;
-      return profiles;
+      return profiles as UserProfile[];
     }
   });
 
