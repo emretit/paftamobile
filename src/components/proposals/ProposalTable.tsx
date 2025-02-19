@@ -76,29 +76,57 @@ const ProposalTable = () => {
     }).format(amount);
   };
 
+  if (isLoading) {
+    return (
+      <div className="w-full overflow-x-auto">
+        <div className="animate-pulse space-y-4">
+          <div className="h-16 bg-gray-100 rounded"></div>
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-16 bg-gray-50 rounded"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-md border">
+    <div className="w-full overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="border-b bg-gray-50/50">
             {columns.filter(col => col.visible).map((column) => (
-              <TableHead key={column.id}>{column.label}</TableHead>
+              <TableHead 
+                key={column.id}
+                className="h-12 px-4 text-left align-middle font-medium text-gray-500 [&:has([role=checkbox])]:pr-0 whitespace-nowrap"
+              >
+                {column.label}
+              </TableHead>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {proposals?.map((proposal) => (
-            <TableRow key={proposal.id} className="h-16">
-              <TableCell>#{proposal.proposal_number}</TableCell>
-              <TableCell>{proposal.customer?.name}</TableCell>
-              <TableCell>
+          {proposals?.map((proposal, index) => (
+            <TableRow 
+              key={proposal.id} 
+              className={`
+                h-16 transition-colors hover:bg-gray-50/80
+                ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}
+              `}
+            >
+              <TableCell className="p-4 align-middle font-medium">
+                #{proposal.proposal_number}
+              </TableCell>
+              <TableCell className="p-4 align-middle max-w-[200px] truncate">
+                {proposal.customer?.name}
+              </TableCell>
+              <TableCell className="p-4 align-middle">
                 <Select
                   value={proposal.status}
                   onValueChange={(value: ProposalStatus) => 
                     updateProposalStatus(proposal.id, value)
                   }
                 >
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="h-9 w-[180px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -110,43 +138,43 @@ const ProposalTable = () => {
                   </SelectContent>
                 </Select>
               </TableCell>
-              <TableCell>
+              <TableCell className="p-4 align-middle max-w-[180px] truncate">
                 {proposal.employee && 
                   `${proposal.employee.first_name} ${proposal.employee.last_name}`
                 }
               </TableCell>
-              <TableCell className="font-medium">
+              <TableCell className="p-4 align-middle font-medium tabular-nums">
                 {formatMoney(proposal.total_value)}
               </TableCell>
-              <TableCell>
+              <TableCell className="p-4 align-middle whitespace-nowrap">
                 {format(new Date(proposal.created_at), 'dd MMM yyyy', { locale: tr })}
               </TableCell>
-              <TableCell>
+              <TableCell className="p-4 align-middle whitespace-nowrap">
                 {proposal.valid_until ? 
                   format(new Date(proposal.valid_until), 'dd MMM yyyy', { locale: tr }) 
                   : '-'
                 }
               </TableCell>
-              <TableCell>
+              <TableCell className="p-4 align-middle">
                 <div className="flex items-center justify-end gap-2">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-8 w-8 text-gray-500 hover:text-gray-900 hover:bg-gray-100"
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-8 w-8 text-gray-500 hover:text-gray-900 hover:bg-gray-100"
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                    className="h-8 w-8 text-gray-500 hover:text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
