@@ -135,7 +135,7 @@ const ProposalKanban = () => {
     return (
       <div className="flex gap-6 overflow-x-auto pb-4">
         {columns.map((column) => (
-          <div key={column.id} className="flex-1 min-w-[320px]">
+          <div key={column.id} className="flex-1 min-w-[300px]">
             <div className="animate-pulse">
               <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
               <div className="bg-gray-50 p-4 rounded-lg min-h-[500px]">
@@ -156,7 +156,7 @@ const ProposalKanban = () => {
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="flex gap-6 overflow-x-auto pb-4">
         {columns.map((column) => (
-          <div key={column.id} className="flex-1 min-w-[320px]">
+          <div key={column.id} className="flex-1 min-w-[300px]">
             <div className="flex items-center gap-2 mb-4">
               <column.icon className="h-5 w-5 text-gray-500" />
               <h3 className="font-semibold text-gray-900">{column.title}</h3>
