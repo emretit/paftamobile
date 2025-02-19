@@ -27,24 +27,21 @@ const DealCard = ({ deal, onClick, onSelect, isSelected, ...dragHandleProps }: D
   };
 
   const handleAddNote = (note: string) => {
-    // TODO: Implement note adding functionality
     console.log("Adding note:", note);
   };
 
   const handleAddReminder = (reminder: { date: Date; note: string }) => {
-    // TODO: Implement reminder adding functionality
     console.log("Adding reminder:", reminder);
   };
 
   const handleSendEmail = (subject: string, message: string) => {
-    // TODO: Implement email sending functionality
     console.log("Sending email:", { subject, message });
   };
 
   return (
     <Card
       {...dragHandleProps}
-      className="p-4 cursor-move bg-white hover:shadow-md transition-shadow"
+      className="p-4 cursor-move bg-white hover:shadow-md transition-all duration-200 border border-border/50 hover:border-border group"
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-start gap-2">
@@ -56,8 +53,10 @@ const DealCard = ({ deal, onClick, onSelect, isSelected, ...dragHandleProps }: D
               className="mt-1"
             />
           )}
-          <div onClick={() => onClick(deal)}>
-            <h3 className="font-medium text-gray-900">{deal.title}</h3>
+          <div onClick={() => onClick(deal)} className="cursor-pointer">
+            <h3 className="font-medium text-gray-900 group-hover:text-primary transition-colors">
+              {deal.title}
+            </h3>
             <p className="text-sm text-gray-600 mb-2">{deal.customerName}</p>
           </div>
         </div>
@@ -74,7 +73,7 @@ const DealCard = ({ deal, onClick, onSelect, isSelected, ...dragHandleProps }: D
           {new Date(deal.lastContactDate).toLocaleDateString('tr-TR')}
         </span>
       </div>
-      <div className="mt-3">
+      <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
         <DealActionSheet
           deal={deal}
           onAddNote={handleAddNote}

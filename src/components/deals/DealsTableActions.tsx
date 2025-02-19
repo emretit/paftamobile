@@ -17,11 +17,12 @@ const DealsTableActions = ({
   onDeleteDeal,
 }: DealsTableActionsProps) => {
   return (
-    <div className="flex gap-2">
+    <div className="flex items-center justify-end gap-2">
       <Button
         variant="ghost"
         size="icon"
         onClick={() => onViewDeal(deal)}
+        className="h-8 w-8"
       >
         <Eye className="h-4 w-4" />
       </Button>
@@ -29,6 +30,7 @@ const DealsTableActions = ({
         variant="ghost"
         size="icon"
         onClick={() => onEditDeal(deal)}
+        className="h-8 w-8"
       >
         <Pencil className="h-4 w-4" />
       </Button>
@@ -36,6 +38,7 @@ const DealsTableActions = ({
         variant="ghost"
         size="icon"
         onClick={() => onDeleteDeal(deal)}
+        className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
       >
         <Trash2 className="h-4 w-4" />
       </Button>
