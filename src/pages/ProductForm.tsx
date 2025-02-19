@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -17,8 +18,8 @@ interface ProductFormProps {
 const productSchema = z.object({
   name: z.string().min(1, "Ürün adı zorunludur"),
   description: z.string().optional(),
-  price: z.string().min(1, "Fiyat zorunludur"),
-  stock: z.string().min(1, "Stok zorunludur"),
+  unit_price: z.string().min(1, "Fiyat zorunludur"),
+  stock_quantity: z.string().min(1, "Stok zorunludur"),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -34,8 +35,8 @@ const ProductForm = ({ isCollapsed, setIsCollapsed }: ProductFormProps) => {
     defaultValues: {
       name: "",
       description: "",
-      price: "",
-      stock: "",
+      unit_price: "",
+      stock_quantity: "",
     },
   });
 
@@ -56,8 +57,8 @@ const ProductForm = ({ isCollapsed, setIsCollapsed }: ProductFormProps) => {
           form.reset({
             name: data.name,
             description: data.description || "",
-            price: data.price.toString(),
-            stock: data.stock.toString(),
+            unit_price: data.unit_price.toString(),
+            stock_quantity: data.stock_quantity.toString(),
           });
         }
       } catch (error) {
@@ -79,8 +80,8 @@ const ProductForm = ({ isCollapsed, setIsCollapsed }: ProductFormProps) => {
       const productData = {
         name: values.name,
         description: values.description,
-        price: parseFloat(values.price),
-        stock: parseInt(values.stock),
+        unit_price: parseFloat(values.unit_price),
+        stock_quantity: parseInt(values.stock_quantity),
       };
 
       if (id) {
@@ -142,20 +143,20 @@ const ProductForm = ({ isCollapsed, setIsCollapsed }: ProductFormProps) => {
 
         <div>
           <label className="block text-sm font-medium mb-1">Fiyat</label>
-          <Input type="number" step="0.01" {...form.register("price")} />
-          {form.formState.errors.price && (
+          <Input type="number" step="0.01" {...form.register("unit_price")} />
+          {form.formState.errors.unit_price && (
             <p className="text-sm text-red-500 mt-1">
-              {form.formState.errors.price.message}
+              {form.formState.errors.unit_price.message}
             </p>
           )}
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">Stok</label>
-          <Input type="number" {...form.register("stock")} />
-          {form.formState.errors.stock && (
+          <Input type="number" {...form.register("stock_quantity")} />
+          {form.formState.errors.stock_quantity && (
             <p className="text-sm text-red-500 mt-1">
-              {form.formState.errors.stock.message}
+              {form.formState.errors.stock_quantity.message}
             </p>
           )}
         </div>

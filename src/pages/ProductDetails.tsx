@@ -1,3 +1,4 @@
+
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,17 +54,17 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
           </div>
           <div>
             <h2 className="font-medium">Price</h2>
-            <p>{product.price}</p>
+            <p>{product.unit_price}</p>
           </div>
           <div>
             <h2 className="font-medium">Stock</h2>
-            <p>{product.stock}</p>
+            <p>{product.stock_quantity}</p>
           </div>
         </div>
-        {product.image && (
+        {product.image_url && (
           <div>
             <img
-              src={product.image}
+              src={product.image_url}
               alt={product.name}
               className="w-full h-auto rounded-lg"
             />
