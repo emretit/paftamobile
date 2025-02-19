@@ -33,7 +33,7 @@ import { useToast } from "@/components/ui/use-toast";
 type UserRole = {
   id: string;
   user_id: string;
-  role: 'admin' | 'sales_rep' | 'finance' | 'support';
+  role: 'admin' | 'sales' | 'manager' | 'viewer';
   created_at: string;
 };
 
@@ -53,17 +53,11 @@ export const UserManagement = () => {
   const [filter, setFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState<string | undefined>();
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [newUserEmail, setNewUserEmail] = useState("");
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // Fetch users from Supabase Auth
-      const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) throw authError;
-
       // Fetch profiles and roles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -74,7 +68,6 @@ export const UserManagement = () => {
 
       const usersWithRoles = await Promise.all(
         (profiles || []).map(async (profile) => {
-          const authUser = authUsers?.find(u => u.id === profile.id);
           const { data: roles, error: rolesError } = await supabase
             .from('user_roles')
             .select('*')
@@ -82,18 +75,17 @@ export const UserManagement = () => {
           
           if (rolesError) {
             console.error('Error fetching roles:', rolesError);
-            return { ...profile, email: authUser?.email, user_roles: [] };
+            return { ...profile, user_roles: [] };
           }
 
           return {
             ...profile,
-            email: authUser?.email,
             user_roles: roles || []
           };
         })
       );
 
-      return usersWithRoles as (UserProfile & { user_roles: UserRole[], email?: string })[];
+      return usersWithRoles as (UserProfile & { user_roles: UserRole[] })[];
     }
   });
 
@@ -124,7 +116,13 @@ export const UserManagement = () => {
 
   const inviteUserMutation = useMutation({
     mutationFn: async (email: string) => {
-      const { data, error } = await supabase.auth.admin.inviteUserByEmail(email);
+      // Instead of using admin functions, we'll use the magic link feature
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: window.location.origin,
+        }
+      });
       if (error) throw error;
       return data;
     },
@@ -132,7 +130,7 @@ export const UserManagement = () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast({
         title: "Başarılı",
-        description: "Kullanıcı davet edildi",
+        description: "Kullanıcıya davet e-postası gönderildi",
       });
       setNewUserEmail("");
     },
@@ -140,15 +138,14 @@ export const UserManagement = () => {
       toast({
         variant: "destructive",
         title: "Hata",
-        description: "Kullanıcı davet edilirken bir hata oluştu: " + error.message,
+        description: "Davet gönderilirken bir hata oluştu: " + error.message,
       });
     },
   });
 
   const filteredUsers = users?.filter(user => {
     const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
-    const matchesSearch = fullName.includes(filter.toLowerCase()) || 
-                         user.email?.toLowerCase().includes(filter.toLowerCase());
+    const matchesSearch = fullName.includes(filter.toLowerCase());
     const matchesRole = !roleFilter || user.user_roles?.some(r => r.role === roleFilter);
     return matchesSearch && matchesRole;
   });
@@ -203,11 +200,11 @@ export const UserManagement = () => {
               <SelectValue placeholder="Rol seç" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tüm Roller</SelectItem>
+              <SelectItem value="all">Tüm Roller</SelectItem>
               <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="sales_rep">Satış Temsilcisi</SelectItem>
-              <SelectItem value="finance">Finans</SelectItem>
-              <SelectItem value="support">Destek</SelectItem>
+              <SelectItem value="sales">Satış</SelectItem>
+              <SelectItem value="manager">Yönetici</SelectItem>
+              <SelectItem value="viewer">Görüntüleyici</SelectItem>
             </SelectContent>
           </Select>
           <Select
@@ -229,7 +226,6 @@ export const UserManagement = () => {
         <TableHeader>
           <TableRow>
             <TableHead>Kullanıcı</TableHead>
-            <TableHead>E-posta</TableHead>
             <TableHead>Rol</TableHead>
             <TableHead>Durum</TableHead>
             <TableHead>Kayıt Tarihi</TableHead>
@@ -254,10 +250,9 @@ export const UserManagement = () => {
                   </div>
                 </div>
               </TableCell>
-              <TableCell>{user.email}</TableCell>
               <TableCell>
                 <Select
-                  value={user.user_roles?.[0]?.role || ""}
+                  value={user.user_roles?.[0]?.role || "viewer"}
                   onValueChange={(role: UserRole['role']) => 
                     assignRoleMutation.mutate({ userId: user.id, role })}
                 >
@@ -274,9 +269,9 @@ export const UserManagement = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="sales_rep">Satış Temsilcisi</SelectItem>
-                    <SelectItem value="finance">Finans</SelectItem>
-                    <SelectItem value="support">Destek</SelectItem>
+                    <SelectItem value="sales">Satış</SelectItem>
+                    <SelectItem value="manager">Yönetici</SelectItem>
+                    <SelectItem value="viewer">Görüntüleyici</SelectItem>
                   </SelectContent>
                 </Select>
               </TableCell>
