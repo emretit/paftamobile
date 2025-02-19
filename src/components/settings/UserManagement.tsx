@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -45,6 +44,7 @@ type UserProfile = {
   avatar_url: string | null;
   created_at: string | null;
   updated_at: string | null;
+  is_active: boolean;
 };
 
 export const UserManagement = () => {
@@ -58,7 +58,6 @@ export const UserManagement = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // Fetch profiles and roles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -116,7 +115,6 @@ export const UserManagement = () => {
 
   const inviteUserMutation = useMutation({
     mutationFn: async (email: string) => {
-      // Instead of using admin functions, we'll use the magic link feature
       const { data, error } = await supabase.auth.signInWithOtp({
         email,
         options: {
@@ -167,7 +165,6 @@ export const UserManagement = () => {
 
   const deactivateUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      // Update profile status
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ is_active: false })
@@ -175,7 +172,6 @@ export const UserManagement = () => {
       
       if (updateError) throw updateError;
 
-      // Log the deactivation
       await supabase.from('audit_logs').insert({
         action: 'user_deactivated',
         entity_type: 'user',
