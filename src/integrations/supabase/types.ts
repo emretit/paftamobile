@@ -9,6 +9,78 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          changes: Json | null
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changes?: Json | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changes?: Json | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      company_settings: {
+        Row: {
+          address: string | null
+          company_name: string | null
+          default_currency: string | null
+          email: string | null
+          email_settings: Json | null
+          id: string
+          logo_url: string | null
+          phone: string | null
+          tax_number: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          address?: string | null
+          company_name?: string | null
+          default_currency?: string | null
+          email?: string | null
+          email_settings?: Json | null
+          id?: string
+          logo_url?: string | null
+          phone?: string | null
+          tax_number?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          address?: string | null
+          company_name?: string | null
+          default_currency?: string | null
+          email?: string | null
+          email_settings?: Json | null
+          id?: string
+          logo_url?: string | null
+          phone?: string | null
+          tax_number?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
@@ -610,6 +682,21 @@ export type Database = {
           required_role: Database["public"]["Enums"]["user_role"]
         }
         Returns: boolean
+      }
+      record_audit_log: {
+        Args: {
+          action: string
+          entity_type: string
+          entity_id: string
+          changes: Json
+        }
+        Returns: undefined
+      }
+      request_password_reset: {
+        Args: {
+          email: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
