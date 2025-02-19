@@ -9,7 +9,12 @@ import ProductGrid from "@/components/products/ProductGrid";
 import ProductTable from "@/components/products/ProductTable";
 import { supabase } from "@/integrations/supabase/client";
 
-const Products = () => {
+interface ProductsProps {
+  isCollapsed: boolean;
+  setIsCollapsed: (value: boolean) => void;
+}
+
+const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   const navigate = useNavigate();
   const [view, setView] = useState<"grid" | "table">("table");
   const [searchQuery, setSearchQuery] = useState("");
