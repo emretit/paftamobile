@@ -143,6 +143,62 @@ export const UserManagement = () => {
     },
   });
 
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const { error } = await supabase.rpc('request_password_reset', {
+        email: email
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Başarılı",
+        description: "Şifre sıfırlama bağlantısı gönderildi",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Şifre sıfırlama işlemi başarısız: " + error.message,
+      });
+    },
+  });
+
+  const deactivateUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      // Update profile status
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ is_active: false })
+        .eq('id', userId);
+      
+      if (updateError) throw updateError;
+
+      // Log the deactivation
+      await supabase.from('audit_logs').insert({
+        action: 'user_deactivated',
+        entity_type: 'user',
+        entity_id: userId,
+        changes: { is_active: false }
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast({
+        title: "Başarılı",
+        description: "Kullanıcı devre dışı bırakıldı",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Kullanıcı devre dışı bırakılırken bir hata oluştu: " + error.message,
+      });
+    },
+  });
+
   const filteredUsers = users?.filter(user => {
     const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
     const matchesSearch = fullName.includes(filter.toLowerCase());
@@ -276,16 +332,29 @@ export const UserManagement = () => {
                 </Select>
               </TableCell>
               <TableCell>
-                <Badge>Aktif</Badge>
+                <Badge>{user.is_active !== false ? "Aktif" : "Devre Dışı"}</Badge>
               </TableCell>
               <TableCell>
                 {user.created_at && new Date(user.created_at).toLocaleDateString('tr-TR')}
               </TableCell>
               <TableCell className="text-right space-x-2">
-                <Button variant="ghost" size="sm">
-                  Düzenle
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => resetPasswordMutation.mutate(user.email || '')}
+                >
+                  Şifre Sıfırla
                 </Button>
-                <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-red-600 hover:text-red-700"
+                  onClick={() => {
+                    if (window.confirm('Bu kullanıcıyı devre dışı bırakmak istediğinizden emin misiniz?')) {
+                      deactivateUserMutation.mutate(user.id);
+                    }
+                  }}
+                >
                   Devre Dışı Bırak
                 </Button>
               </TableCell>
