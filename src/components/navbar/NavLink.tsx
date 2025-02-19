@@ -20,7 +20,7 @@ const NavLink = ({ to, icon: Icon, label, isActive, isCollapsed }: NavLinkProps)
         isCollapsed ? "justify-center px-3" : "px-3 space-x-3",
         isActive 
           ? "bg-primary/5 text-primary hover:bg-primary/10" 
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          : "text-[#403E43] hover:bg-muted hover:text-foreground dark:text-gray-200"
       )}
     >
       <Icon className="h-5 w-5 flex-shrink-0" />
