@@ -1,35 +1,22 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Table as TableIcon, LayoutGrid } from "lucide-react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import Navbar from "@/components/Navbar";
-import ProductTable from "@/components/products/ProductTable";
-import ProductGrid from "@/components/products/ProductGrid";
+import { Plus, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import ProductFilters from "@/components/products/ProductFilters";
+import ProductGrid from "@/components/products/ProductGrid";
+import ProductTable from "@/components/products/ProductTable";
 import { supabase } from "@/integrations/supabase/client";
 
-interface ProductsProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
-}
-
-const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
+const Products = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [viewType, setViewType] = useState<"table" | "grid">("table");
-  const [filters, setFilters] = useState({
-    search: "",
-    category: "all",
-    type: "all",
-    status: "all"
-  });
+  const [view, setView] = useState<"grid" | "table">("table");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products", filters],
+    queryKey: ["products", searchQuery],
     queryFn: async () => {
       let query = supabase
         .from("products")
@@ -41,133 +28,78 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
           )
         `);
 
-      if (filters.search) {
-        query = query.ilike("name", `%${filters.search}%`);
-      }
-
-      if (filters.category !== "all") {
-        query = query.eq("category_id", filters.category);
-      }
-
-      if (filters.type !== "all") {
-        query = query.eq("category_type", filters.type);
-      }
-
-      if (filters.status !== "all") {
-        query = query.eq("is_active", filters.status === "active");
+      if (searchQuery) {
+        query = query.ilike("name", `%${searchQuery}%`);
       }
 
       const { data, error } = await query;
-      
       if (error) throw error;
       return data;
-    }
+    },
   });
 
-  useEffect(() => {
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel('products_changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'products' 
-        }, 
-        (payload) => {
-          // Invalidate and refetch products query
-          queryClient.invalidateQueries({ queryKey: ["products"] });
+  const handleSelectProduct = (id: string) => {
+    setSelectedProducts(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(p => p !== id);
+      }
+      return [...prev, id];
+    });
+  };
 
-          // Show notification based on the event type
-          if (payload.eventType === 'INSERT') {
-            toast.success('Yeni ürün eklendi');
-          } else if (payload.eventType === 'UPDATE') {
-            toast.info('Ürün güncellendi');
-          } else if (payload.eventType === 'DELETE') {
-            toast.warning('Ürün silindi');
-          }
-        }
-      )
-      .subscribe();
+  const handleSelectAllProducts = (ids: string[]) => {
+    setSelectedProducts(ids);
+  };
 
-    // Listen for low stock notifications
-    const lowStockChannel = supabase
-      .channel('low_stock_alerts')
-      .on('broadcast', 
-        { event: 'low_stock_alert' }, 
-        (payload) => {
-          toast.warning(`Düşük Stok Uyarısı: ${payload.payload.product_name} ürününün stok seviyesi kritik seviyenin altına düştü.`, {
-            duration: 5000
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-      lowStockChannel.unsubscribe();
-    };
-  }, [queryClient]);
+  const resetSelection = () => {
+    setSelectedProducts([]);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex relative">
-      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <main className={`flex-1 transition-all duration-300 ${
-        isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
-      }`}>
-        <div className="p-6 lg:p-8 max-w-[1600px] mx-auto">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            <div className="space-y-1">
-              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
-                Ürünler & Hizmetler
-              </h1>
-              <p className="text-gray-600">
-                Tüm ürün ve hizmetleri yönetin
-              </p>
-            </div>
-            <Button 
-              onClick={() => navigate("/product-form")}
-              className="flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200 bg-gradient-to-r from-primary to-primary/90"
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Ürünler</h1>
+        <div className="flex items-center gap-2">
+          <div className="border rounded-lg p-1">
+            <Button
+              variant={view === "grid" ? "default" : "ghost"}
+              size="icon"
+              onClick={() => setView("grid")}
             >
-              <Plus className="h-4 w-4" />
-              <span>Yeni Ekle</span>
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={view === "table" ? "default" : "ghost"}
+              size="icon"
+              onClick={() => setView("table")}
+            >
+              <TableIcon className="h-4 w-4" />
             </Button>
           </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <Tabs 
-                value={viewType} 
-                onValueChange={(value) => setViewType(value as "table" | "grid")}
-                className="w-full sm:w-auto"
-              >
-                <TabsList className="grid w-full sm:w-auto grid-cols-2">
-                  <TabsTrigger value="table" className="flex items-center gap-2">
-                    <TableIcon className="h-4 w-4" />
-                    <span>Tablo Görünümü</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="grid" className="flex items-center gap-2">
-                    <LayoutGrid className="h-4 w-4" />
-                    <span>Grid Görünümü</span>
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            <div className="bg-gray-50/50 rounded-lg p-4">
-              <ProductFilters onFilterChange={setFilters} />
-            </div>
-          </div>
-
-          <div className="animate-fade-in">
-            {viewType === "table" ? (
-              <ProductTable products={products || []} isLoading={isLoading} />
-            ) : (
-              <ProductGrid products={products || []} isLoading={isLoading} />
-            )}
-          </div>
+          <Button onClick={() => navigate("/product-form")} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Yeni Ürün
+          </Button>
         </div>
-      </main>
+      </div>
+
+      <ProductFilters
+        selectedProducts={selectedProducts}
+        setSearchQuery={setSearchQuery}
+        resetSelection={resetSelection}
+      />
+
+      {view === "grid" ? (
+        <ProductGrid products={products || []} isLoading={isLoading} />
+      ) : (
+        <ProductTable
+          products={products || []}
+          isLoading={isLoading}
+          selectedProducts={selectedProducts}
+          onSelectProduct={handleSelectProduct}
+          onSelectAllProducts={handleSelectAllProducts}
+        />
+      )}
     </div>
   );
 };

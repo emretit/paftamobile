@@ -1,7 +1,9 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,9 +39,18 @@ interface Product {
 interface ProductTableProps {
   products: Product[];
   isLoading: boolean;
+  selectedProducts: string[];
+  onSelectProduct: (id: string) => void;
+  onSelectAllProducts: (ids: string[]) => void;
 }
 
-const ProductTable = ({ products, isLoading }: ProductTableProps) => {
+const ProductTable = ({ 
+  products, 
+  isLoading,
+  selectedProducts,
+  onSelectProduct,
+  onSelectAllProducts,
+}: ProductTableProps) => {
   const navigate = useNavigate();
 
   const handleDelete = async (id: string) => {
@@ -68,6 +79,7 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12"></TableHead>
               <TableHead>Ürün Adı</TableHead>
               <TableHead>Kategori</TableHead>
               <TableHead>Tür</TableHead>
@@ -80,7 +92,7 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
           <TableBody>
             {[...Array(5)].map((_, index) => (
               <TableRow key={index}>
-                {[...Array(7)].map((_, cellIndex) => (
+                {[...Array(8)].map((_, cellIndex) => (
                   <TableCell key={cellIndex}>
                     <div className="h-4 bg-gray-200 rounded animate-pulse" />
                   </TableCell>
@@ -107,11 +119,27 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
     return <Badge variant="default">Stokta ({quantity})</Badge>;
   };
 
+  const allSelected = products.length > 0 && selectedProducts.length === products.length;
+  const someSelected = selectedProducts.length > 0 && selectedProducts.length < products.length;
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50/50">
+            <TableHead className="w-12">
+              <Checkbox
+                checked={allSelected}
+                indeterminate={someSelected}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    onSelectAllProducts(products.map(p => p.id));
+                  } else {
+                    onSelectAllProducts([]);
+                  }
+                }}
+              />
+            </TableHead>
             <TableHead>Ürün Adı</TableHead>
             <TableHead>Kategori</TableHead>
             <TableHead>Tür</TableHead>
@@ -125,10 +153,16 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
           {products.map((product) => (
             <TableRow 
               key={product.id}
-              className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
-              onClick={() => handleRowClick(product.id)}
+              className="group hover:bg-gray-50/50 transition-colors"
             >
-              <TableCell>
+              <TableCell className="w-12">
+                <Checkbox
+                  checked={selectedProducts.includes(product.id)}
+                  onCheckedChange={() => onSelectProduct(product.id)}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </TableCell>
+              <TableCell onClick={() => handleRowClick(product.id)} className="cursor-pointer">
                 <div className="flex items-center gap-3">
                   {product.image_url ? (
                     <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100">
@@ -149,14 +183,14 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
                   </div>
                 </div>
               </TableCell>
-              <TableCell>
+              <TableCell onClick={() => handleRowClick(product.id)} className="cursor-pointer">
                 {product.product_categories?.name || "Kategorisiz"}
               </TableCell>
-              <TableCell>
+              <TableCell onClick={() => handleRowClick(product.id)} className="cursor-pointer">
                 {product.category_type === "product" ? "Ürün" : 
                  product.category_type === "service" ? "Hizmet" : "Abonelik"}
               </TableCell>
-              <TableCell>
+              <TableCell onClick={() => handleRowClick(product.id)} className="cursor-pointer">
                 <div className="space-y-1">
                   <div className="font-medium">₺{product.unit_price.toFixed(2)}</div>
                   {product.discount_rate > 0 && (
@@ -166,14 +200,14 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
                   )}
                 </div>
               </TableCell>
-              <TableCell>
+              <TableCell onClick={() => handleRowClick(product.id)} className="cursor-pointer">
                 {product.product_type === "physical" ? (
                   getStockStatusBadge(product.status, product.stock_quantity, product.stock_threshold)
                 ) : (
                   <span className="text-gray-500">-</span>
                 )}
               </TableCell>
-              <TableCell>
+              <TableCell onClick={() => handleRowClick(product.id)} className="cursor-pointer">
                 <Badge variant={product.is_active ? "default" : "secondary"}>
                   {product.is_active ? "Aktif" : "Pasif"}
                 </Badge>
@@ -183,7 +217,10 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => navigate(`/product-form/${product.id}`)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/product-form/${product.id}`);
+                    }}
                     className="hover:bg-gray-100"
                   >
                     <Edit className="h-4 w-4" />
@@ -192,7 +229,10 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
                     variant="ghost"
                     size="icon"
                     className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                    onClick={() => handleDelete(product.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(product.id);
+                    }}
                   >
                     <Trash className="h-4 w-4" />
                   </Button>
