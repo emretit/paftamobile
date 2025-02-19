@@ -78,9 +78,12 @@ export const UserList = ({ users }: UserListProps) => {
 
   const deactivateUserMutation = useMutation({
     mutationFn: async (userId: string) => {
+      type ProfileUpdate = Pick<UserProfile, 'is_active'>;
+      const updateData: ProfileUpdate = { is_active: false };
+
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ is_active: false } as { is_active: boolean })
+        .update(updateData)
         .eq('id', userId);
       
       if (updateError) throw updateError;
