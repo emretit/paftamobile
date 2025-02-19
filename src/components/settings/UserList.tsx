@@ -21,6 +21,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { Database } from "@/integrations/supabase/types";
 
 type UserListProps = {
   users: UserWithRoles[];
@@ -78,10 +79,13 @@ export const UserList = ({ users }: UserListProps) => {
 
   const deactivateUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      type ProfileUpdate = { is_active: boolean };
+      const updateData: Database['public']['Tables']['profiles']['Update'] = {
+        is_active: false
+      };
+
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ is_active: false } satisfies ProfileUpdate)
+        .update(updateData)
         .eq('id', userId);
       
       if (updateError) throw updateError;
