@@ -17,10 +17,9 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
   
   return (
     <div className={cn(
-      "fixed left-0 top-0 z-50 h-full shadow-xl",
-      "bg-gradient-to-b from-[#8B0000] to-black",
+      "fixed left-0 top-0 z-50 h-full shadow-xl bg-[#1A1F2C]",
       isCollapsed ? "w-[68px]" : "w-[250px]",
-      "group transition-all duration-300 ease-in-out hover:shadow-white/5"
+      "group transition-all duration-300 ease-in-out"
     )}>
       <nav className="flex h-full w-full flex-col">
         <NavHeader isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />

@@ -11,13 +11,13 @@ interface NavHeaderProps {
 const NavHeader = ({ isCollapsed, setIsCollapsed }: NavHeaderProps) => {
   return (
     <div className={cn(
-      "flex h-20 items-center border-b border-white/10 bg-gradient-to-r from-[#8B0000] to-black px-6 transition-all duration-300",
+      "flex h-20 items-center border-b border-white/10 bg-[#222222] px-6 transition-all duration-300",
       isCollapsed ? "justify-center" : "justify-between"
     )}>
       {!isCollapsed && (
         <div className="flex items-center space-x-3">
           <div className="relative group">
-            <div className="absolute -inset-1 rounded-full bg-white/20 blur-sm group-hover:blur-md transition-all duration-300 opacity-75"></div>
+            <div className="absolute -inset-1 rounded-full bg-[#9b87f5]/20 blur-sm group-hover:blur-md transition-all duration-300 opacity-75"></div>
             <img 
               src="/logo.png" 
               alt="NGS Logo" 
@@ -29,7 +29,7 @@ const NavHeader = ({ isCollapsed, setIsCollapsed }: NavHeaderProps) => {
       )}
       {isCollapsed && (
         <div className="relative group">
-          <div className="absolute -inset-1 rounded-full bg-white/20 blur-sm group-hover:blur-md transition-all duration-300 opacity-75"></div>
+          <div className="absolute -inset-1 rounded-full bg-[#9b87f5]/20 blur-sm group-hover:blur-md transition-all duration-300 opacity-75"></div>
           <img 
             src="/logo.png" 
             alt="NGS Logo" 
