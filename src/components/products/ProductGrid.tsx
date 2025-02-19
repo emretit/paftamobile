@@ -27,7 +27,7 @@ interface Product {
   status: string;
   is_active: boolean;
   image_url: string | null;
-  warranty_period: string | null;
+  warranty_period: unknown | null;
   notes: string | null;
   product_categories: {
     id: string;
