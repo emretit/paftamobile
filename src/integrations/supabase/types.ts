@@ -233,52 +233,82 @@ export type Database = {
       }
       products: {
         Row: {
+          barcode: string | null
           category_id: string | null
+          category_type: string | null
           created_at: string | null
           description: string | null
+          discount_rate: number | null
           id: string
+          image_url: string | null
           is_active: boolean | null
+          max_order_quantity: number | null
+          min_order_quantity: number | null
           name: string
+          notes: string | null
           product_type: string
+          purchase_price: number | null
           sku: string | null
           status: string
           stock_quantity: number | null
+          stock_threshold: number | null
           tax_rate: number
           unit: string | null
           unit_price: number
           updated_at: string | null
+          warranty_period: unknown | null
         }
         Insert: {
+          barcode?: string | null
           category_id?: string | null
+          category_type?: string | null
           created_at?: string | null
           description?: string | null
+          discount_rate?: number | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
+          max_order_quantity?: number | null
+          min_order_quantity?: number | null
           name: string
+          notes?: string | null
           product_type?: string
+          purchase_price?: number | null
           sku?: string | null
           status?: string
           stock_quantity?: number | null
+          stock_threshold?: number | null
           tax_rate?: number
           unit?: string | null
           unit_price?: number
           updated_at?: string | null
+          warranty_period?: unknown | null
         }
         Update: {
+          barcode?: string | null
           category_id?: string | null
+          category_type?: string | null
           created_at?: string | null
           description?: string | null
+          discount_rate?: number | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
+          max_order_quantity?: number | null
+          min_order_quantity?: number | null
           name?: string
+          notes?: string | null
           product_type?: string
+          purchase_price?: number | null
           sku?: string | null
           status?: string
           stock_quantity?: number | null
+          stock_threshold?: number | null
           tax_rate?: number
           unit?: string | null
           unit_price?: number
           updated_at?: string | null
+          warranty_period?: unknown | null
         }
         Relationships: [
           {
@@ -541,6 +571,13 @@ export type Database = {
       }
     }
     Functions: {
+      check_stock_status: {
+        Args: {
+          current_quantity: number
+          threshold: number
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           required_role: Database["public"]["Enums"]["user_role"]

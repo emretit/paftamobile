@@ -70,8 +70,9 @@ const ProductFilters = ({ onFilterChange }: ProductFiltersProps) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tümü</SelectItem>
-            <SelectItem value="physical">Fiziksel Ürün</SelectItem>
+            <SelectItem value="product">Ürün</SelectItem>
             <SelectItem value="service">Hizmet</SelectItem>
+            <SelectItem value="subscription">Abonelik</SelectItem>
           </SelectContent>
         </Select>
 
@@ -91,3 +92,4 @@ const ProductFilters = ({ onFilterChange }: ProductFiltersProps) => {
 };
 
 export default ProductFilters;
+
