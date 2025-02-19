@@ -37,7 +37,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
           ))}
         </div>
 
-        <Separator className="bg-[#9b87f5]/20" />
+        <Separator className="bg-[#ea384c]/20" />
         
         <div className="p-3">
           <NavLink
