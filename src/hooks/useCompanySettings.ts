@@ -34,9 +34,26 @@ export const useCompanySettings = () => {
       const { data, error } = await supabase
         .from('company_settings')
         .select('*')
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+
+      if (!data) {
+        // Return default settings if none exist
+        return {
+          id: '',
+          company_name: '',
+          address: '',
+          phone: '',
+          email: '',
+          tax_number: '',
+          logo_url: '',
+          default_currency: 'TRY',
+          email_settings: {
+            notifications_enabled: false
+          }
+        } as CompanySettings;
+      }
 
       const supabaseData = data as SupabaseCompanySettings;
       const parsedSettings: CompanySettings = {
