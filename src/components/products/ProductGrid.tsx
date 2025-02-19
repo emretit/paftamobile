@@ -60,7 +60,21 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
   };
 
   if (isLoading) {
-    return <div>Yükleniyor...</div>;
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {[...Array(8)].map((_, index) => (
+          <Card key={index} className="p-4 animate-pulse">
+            <div className="aspect-video bg-gray-200 rounded-lg mb-4" />
+            <div className="h-6 bg-gray-200 rounded mb-2" />
+            <div className="h-4 bg-gray-200 rounded w-2/3 mb-4" />
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-200 rounded" />
+              <div className="h-4 bg-gray-200 rounded w-4/5" />
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
   }
 
   const getStockStatusBadge = (status: string, quantity: number, threshold: number) => {
@@ -80,74 +94,83 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {products.map((product) => (
-        <Card key={product.id} className="p-4">
+        <Card key={product.id} className="group relative p-4 hover:shadow-lg transition-all duration-200">
           <div className="flex flex-col h-full">
-            {product.image_url && (
-              <div className="mb-4 aspect-video rounded-lg overflow-hidden bg-gray-100">
-                <img 
-                  src={product.image_url} 
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-            
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="font-medium text-lg">{product.name}</h3>
-              <Badge variant={product.is_active ? "default" : "secondary"}>
+            <div className="relative">
+              {product.image_url ? (
+                <div className="mb-4 aspect-video rounded-lg overflow-hidden bg-gray-100">
+                  <img 
+                    src={product.image_url} 
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-200"
+                  />
+                </div>
+              ) : (
+                <div className="mb-4 aspect-video rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-400">
+                  Görsel Yok
+                </div>
+              )}
+              
+              <Badge 
+                variant={product.is_active ? "default" : "secondary"}
+                className="absolute top-2 right-2"
+              >
                 {product.is_active ? "Aktif" : "Pasif"}
               </Badge>
             </div>
             
-            <div className="text-sm text-gray-500 mb-2">
-              {product.product_categories?.name || "Kategorisiz"}
-            </div>
-            
-            <div className="flex-1 mb-4">
-              <p className="text-sm text-gray-600">
+            <div className="flex-1">
+              <h3 className="font-medium text-lg mb-1 line-clamp-2">{product.name}</h3>
+              
+              <div className="text-sm text-gray-500 mb-2">
+                {product.product_categories?.name || "Kategorisiz"}
+              </div>
+              
+              <div className="line-clamp-2 text-sm text-gray-600 mb-4">
                 {product.description || "Açıklama yok"}
-              </p>
-            </div>
-
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Fiyat:</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">₺{product.unit_price.toFixed(2)}</span>
-                  {product.discount_rate > 0 && (
-                    <Badge variant="secondary">%{product.discount_rate} İndirim</Badge>
-                  )}
-                </div>
               </div>
-              
-              {product.product_type === "physical" && (
+
+              <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm">Stok:</span>
-                  {getStockStatusBadge(product.status, product.stock_quantity, product.stock_threshold)}
+                  <span className="text-sm text-gray-500">Fiyat:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">₺{product.unit_price.toFixed(2)}</span>
+                    {product.discount_rate > 0 && (
+                      <Badge variant="secondary">%{product.discount_rate} İndirim</Badge>
+                    )}
+                  </div>
                 </div>
-              )}
-              
-              <div className="flex justify-between text-sm">
-                <span>Tür:</span>
-                <span>
-                  {product.category_type === "product" ? "Ürün" : 
-                   product.category_type === "service" ? "Hizmet" : "Abonelik"}
-                </span>
+                
+                {product.product_type === "physical" && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">Stok:</span>
+                    {getStockStatusBadge(product.status, product.stock_quantity, product.stock_threshold)}
+                  </div>
+                )}
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Tür:</span>
+                  <span>
+                    {product.category_type === "product" ? "Ürün" : 
+                     product.category_type === "service" ? "Hizmet" : "Abonelik"}
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="flex gap-2 justify-end">
+            <div className="flex gap-2 justify-end mt-4 pt-4 border-t">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate(`/product-form/${product.id}`)}
+                className="hover:bg-gray-100"
               >
                 <Edit className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-red-500 hover:text-red-600"
+                className="text-red-500 hover:text-red-600 hover:bg-red-50"
                 onClick={() => handleDelete(product.id)}
               >
                 <Trash className="h-4 w-4" />
@@ -161,4 +184,3 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
 };
 
 export default ProductGrid;
-
