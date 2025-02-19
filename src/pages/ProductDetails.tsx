@@ -7,6 +7,34 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 
+interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  unit_price: number;
+  purchase_price: number;
+  tax_rate: number;
+  discount_rate: number;
+  product_type: string;
+  category_type: string;
+  sku: string | null;
+  barcode: string | null;
+  stock_quantity: number;
+  stock_threshold: number;
+  min_order_quantity: number;
+  max_order_quantity: number | null;
+  unit: string;
+  status: string;
+  is_active: boolean;
+  image_url: string | null;
+  warranty_period: string | null;
+  notes: string | null;
+  product_categories: {
+    id: string;
+    name: string;
+  } | null;
+}
+
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -27,7 +55,7 @@ const ProductDetails = () => {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as Product;
     },
   });
 
