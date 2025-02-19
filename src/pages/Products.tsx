@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Plus, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { Plus, LayoutGrid, Table as TableIcon, FileUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProductFilters from "@/components/products/ProductFilters";
 import ProductGrid from "@/components/products/ProductGrid";
@@ -19,7 +19,6 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   const navigate = useNavigate();
   const [view, setView] = useState<"grid" | "table">("table");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["products", searchQuery],
@@ -43,23 +42,6 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
       return data;
     },
   });
-
-  const handleSelectProduct = (id: string) => {
-    setSelectedProducts(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(p => p !== id);
-      }
-      return [...prev, id];
-    });
-  };
-
-  const handleSelectAllProducts = (ids: string[]) => {
-    setSelectedProducts(ids);
-  };
-
-  const resetSelection = () => {
-    setSelectedProducts([]);
-  };
 
   return (
     <div className="flex h-screen">
@@ -89,13 +71,15 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
                 <Plus className="h-4 w-4" />
                 Yeni Ürün
               </Button>
+              <Button variant="outline" className="gap-2">
+                <FileUp className="h-4 w-4" />
+                Excel Import
+              </Button>
             </div>
           </div>
 
           <ProductFilters
-            selectedProducts={selectedProducts}
             setSearchQuery={setSearchQuery}
-            resetSelection={resetSelection}
           />
 
           {view === "grid" ? (
@@ -104,9 +88,6 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
             <ProductTable
               products={products || []}
               isLoading={isLoading}
-              selectedProducts={selectedProducts}
-              onSelectProduct={handleSelectProduct}
-              onSelectAllProducts={handleSelectAllProducts}
             />
           )}
         </div>

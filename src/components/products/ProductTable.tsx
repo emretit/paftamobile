@@ -1,9 +1,8 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash, AlertTriangle } from "lucide-react";
+import { Edit, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,17 +38,11 @@ interface Product {
 interface ProductTableProps {
   products: Product[];
   isLoading: boolean;
-  selectedProducts: string[];
-  onSelectProduct: (id: string) => void;
-  onSelectAllProducts: (ids: string[]) => void;
 }
 
 const ProductTable = ({ 
   products, 
   isLoading,
-  selectedProducts,
-  onSelectProduct,
-  onSelectAllProducts,
 }: ProductTableProps) => {
   const navigate = useNavigate();
 
@@ -79,20 +72,19 @@ const ProductTable = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12"></TableHead>
               <TableHead>Ürün Adı</TableHead>
               <TableHead>Kategori</TableHead>
               <TableHead>Tür</TableHead>
-              <TableHead>Fiyat</TableHead>
+              <TableHead>Satış Fiyatı</TableHead>
+              <TableHead>Alış Fiyatı</TableHead>
               <TableHead>Stok Durumu</TableHead>
-              <TableHead>Durum</TableHead>
               <TableHead className="text-right">İşlemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {[...Array(5)].map((_, index) => (
               <TableRow key={index}>
-                {[...Array(8)].map((_, cellIndex) => (
+                {[...Array(7)].map((_, cellIndex) => (
                   <TableCell key={cellIndex}>
                     <div className="h-4 bg-gray-200 rounded animate-pulse" />
                   </TableCell>
@@ -105,47 +97,17 @@ const ProductTable = ({
     );
   }
 
-  const getStockStatusBadge = (status: string, quantity: number, threshold: number) => {
-    if (status === 'out_of_stock') {
-      return <Badge variant="destructive">Stokta Yok</Badge>;
-    } else if (status === 'low_stock') {
-      return (
-        <div className="flex items-center gap-1">
-          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-          <Badge variant="warning">Kritik Stok ({quantity})</Badge>
-        </div>
-      );
-    }
-    return <Badge variant="default">Stokta ({quantity})</Badge>;
-  };
-
-  const allSelected = products.length > 0 && selectedProducts.length === products.length;
-  const someSelected = selectedProducts.length > 0 && selectedProducts.length < products.length;
-
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50/50">
-            <TableHead className="w-12">
-              <Checkbox
-                checked={allSelected}
-                indeterminate={someSelected}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    onSelectAllProducts(products.map(p => p.id));
-                  } else {
-                    onSelectAllProducts([]);
-                  }
-                }}
-              />
-            </TableHead>
             <TableHead>Ürün Adı</TableHead>
             <TableHead>Kategori</TableHead>
             <TableHead>Tür</TableHead>
-            <TableHead>Fiyat</TableHead>
+            <TableHead>Satış Fiyatı</TableHead>
+            <TableHead>Alış Fiyatı</TableHead>
             <TableHead>Stok Durumu</TableHead>
-            <TableHead>Durum</TableHead>
             <TableHead className="text-right">İşlemler</TableHead>
           </TableRow>
         </TableHeader>
@@ -155,13 +117,6 @@ const ProductTable = ({
               key={product.id}
               className="group hover:bg-gray-50/50 transition-colors"
             >
-              <TableCell className="w-12">
-                <Checkbox
-                  checked={selectedProducts.includes(product.id)}
-                  onCheckedChange={() => onSelectProduct(product.id)}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </TableCell>
               <TableCell onClick={() => handleRowClick(product.id)} className="cursor-pointer">
                 <div className="flex items-center gap-3">
                   {product.image_url ? (
@@ -201,16 +156,10 @@ const ProductTable = ({
                 </div>
               </TableCell>
               <TableCell onClick={() => handleRowClick(product.id)} className="cursor-pointer">
-                {product.product_type === "physical" ? (
-                  getStockStatusBadge(product.status, product.stock_quantity, product.stock_threshold)
-                ) : (
-                  <span className="text-gray-500">-</span>
-                )}
+                <div className="font-medium">₺{product.purchase_price.toFixed(2)}</div>
               </TableCell>
               <TableCell onClick={() => handleRowClick(product.id)} className="cursor-pointer">
-                <Badge variant={product.is_active ? "default" : "secondary"}>
-                  {product.is_active ? "Aktif" : "Pasif"}
-                </Badge>
+                {product.stock_quantity}
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
