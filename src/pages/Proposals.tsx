@@ -36,8 +36,9 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
           <ProposalActions proposal={null} />
           <ProposalAnalytics />
           <ProposalFilters onFilterChange={setFilters} />
-          <ProposalTable filters={filters} />
-          <ProposalKanban />
+          <div className="mt-6 bg-white p-4 rounded-lg shadow-sm">
+            <ProposalKanban />
+          </div>
         </main>
       </div>
     </div>
