@@ -13,29 +13,50 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
+type UserRole = {
+  role: 'admin' | 'manager' | 'employee';
+};
+
 type UserProfile = {
   id: string;
   first_name: string | null;
   last_name: string | null;
   avatar_url: string | null;
-  user_roles: { role: 'admin' | 'manager' | 'employee' }[];
+  created_at: string | null;
+  updated_at: string | null;
 };
 
 export const UserManagement = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const { data: profiles, error } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles (
-            role
-          )
-        `);
+        .select('*');
       
-      if (error) throw error;
-      return profiles as UserProfile[];
+      if (profilesError) throw profilesError;
+
+      // Fetch roles separately for each user
+      const usersWithRoles = await Promise.all(
+        (profiles || []).map(async (profile) => {
+          const { data: roles, error: rolesError } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', profile.id);
+          
+          if (rolesError) {
+            console.error('Error fetching roles:', rolesError);
+            return { ...profile, user_roles: [] };
+          }
+
+          return {
+            ...profile,
+            user_roles: roles || []
+          };
+        })
+      );
+
+      return usersWithRoles as (UserProfile & { user_roles: UserRole[] })[];
     }
   });
 
