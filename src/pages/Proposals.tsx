@@ -4,7 +4,7 @@ import TopBar from "@/components/TopBar";
 import { ProposalAnalytics } from "@/components/proposals/ProposalAnalytics";
 import { ProposalFilters } from "@/components/proposals/ProposalFilters";
 import { ProposalActions } from "@/components/proposals/ProposalActions";
-import ProposalKanban from "@/components/proposals/ProposalKanban";
+import ProposalTable from "@/components/proposals/ProposalTable";
 import { useState } from "react";
 import { ProposalFilters as ProposalFiltersType } from "@/components/proposals/ProposalFilters";
 
@@ -45,7 +45,7 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
             
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="p-4">
-                <ProposalKanban />
+                <ProposalTable />
               </div>
             </div>
           </div>
