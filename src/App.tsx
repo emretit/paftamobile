@@ -21,6 +21,8 @@ import Service from "@/pages/Service";
 import SalesInvoices from "@/pages/SalesInvoices";
 import PurchaseInvoices from "@/pages/PurchaseInvoices";
 import Products from "@/pages/Products";
+import ProductForm from "@/pages/ProductForm";
+import ProductDetails from "@/pages/ProductDetails";
 
 function App() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -57,6 +59,9 @@ function App() {
           <Route path="/sales-invoices" element={<SalesInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/purchase-invoices" element={<PurchaseInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/products" element={<Products isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/product-form" element={<ProductForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/product-form/:id" element={<ProductForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/product-details/:id" element={<ProductDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
         </Routes>
         <Toaster />
       </Router>
