@@ -11,15 +11,17 @@ interface NavHeaderProps {
 const NavHeader = ({ isCollapsed, setIsCollapsed }: NavHeaderProps) => {
   return (
     <div className={cn(
-      "mb-8 flex items-center",
+      "flex h-16 items-center border-b bg-background px-4",
       isCollapsed ? "justify-center" : "justify-between"
     )}>
-      {!isCollapsed && <h1 className="text-2xl font-bold text-primary">CRM</h1>}
+      {!isCollapsed && (
+        <h1 className="text-lg font-semibold tracking-tight">CRM</h1>
+      )}
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8"
         onClick={() => setIsCollapsed(!isCollapsed)}
+        className="h-9 w-9"
       >
         {isCollapsed ? (
           <ChevronRight className="h-4 w-4" />

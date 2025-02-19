@@ -17,13 +17,14 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
   
   return (
     <div className={cn(
-      "fixed left-0 top-0 h-full flex transition-all duration-300 z-50",
-      isCollapsed ? "w-[60px]" : "w-full sm:w-64"
+      "fixed left-0 top-0 z-50 h-full border-r bg-background",
+      isCollapsed ? "w-[60px]" : "w-[240px]",
+      "transition-all duration-300"
     )}>
-      <nav className="w-full bg-white p-4 relative">
+      <nav className="flex h-full w-full flex-col">
         <NavHeader isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
         
-        <div className="space-y-2">
+        <div className="flex-1 space-y-1 p-2">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
@@ -34,9 +35,11 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
               isCollapsed={isCollapsed}
             />
           ))}
+        </div>
 
-          <Separator className="my-4" />
-
+        <Separator />
+        
+        <div className="p-2">
           <NavLink
             to={settingsItem.path}
             icon={settingsItem.icon}
@@ -46,7 +49,6 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
           />
         </div>
       </nav>
-      <Separator orientation="vertical" className="h-full" />
     </div>
   );
 };

@@ -16,13 +16,15 @@ const NavLink = ({ to, icon: Icon, label, isActive, isCollapsed }: NavLinkProps)
     <Link
       to={to}
       className={cn(
-        "flex items-center p-3 rounded-lg transition-colors",
-        isCollapsed ? "justify-center" : "space-x-3",
-        isActive ? "bg-gray-100 text-gray-900" : "hover:bg-gray-50"
+        "flex items-center h-11 transition-colors rounded-md",
+        isCollapsed ? "justify-center px-3" : "px-3 space-x-3",
+        isActive 
+          ? "bg-primary/5 text-primary hover:bg-primary/10" 
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
       )}
     >
       <Icon className="h-5 w-5 flex-shrink-0" />
-      {!isCollapsed && <span>{label}</span>}
+      {!isCollapsed && <span className="text-sm font-medium">{label}</span>}
     </Link>
   );
 };
