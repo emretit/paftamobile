@@ -19,7 +19,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   const navigate = useNavigate();
   const [view, setView] = useState<"grid" | "table">("table");
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
 
   // Kategorileri getiren sorgu
   const { data: categories = [] } = useQuery({
@@ -52,7 +52,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
         query = query.ilike("name", `%${searchQuery}%`);
       }
 
-      if (categoryFilter) {
+      if (categoryFilter && categoryFilter !== "all") {
         query = query.eq("category_id", categoryFilter);
       }
 

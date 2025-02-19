@@ -37,7 +37,7 @@ const ProductFilters = ({
           <SelectValue placeholder="Tüm Kategoriler" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tüm Kategoriler</SelectItem>
+          <SelectItem value="all">Tüm Kategoriler</SelectItem>
           {categories.map((category) => (
             <SelectItem key={category.id} value={category.id}>
               {category.name}
