@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -165,19 +166,25 @@ export const UserManagement = () => {
 
   const deactivateUserMutation = useMutation({
     mutationFn: async (userId: string) => {
+      // First update the profile
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ is_active: false })
+        .update({ is_active: false } as Partial<UserProfile>)
         .eq('id', userId);
       
       if (updateError) throw updateError;
 
-      await supabase.from('audit_logs').insert({
-        action: 'user_deactivated',
-        entity_type: 'user',
-        entity_id: userId,
-        changes: { is_active: false }
-      });
+      // Then log the action
+      const { error: logError } = await supabase
+        .from('audit_logs')
+        .insert({
+          action: 'user_deactivated',
+          entity_type: 'user',
+          entity_id: userId,
+          changes: { is_active: false }
+        });
+
+      if (logError) throw logError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
