@@ -17,7 +17,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
   
   return (
     <div className={cn(
-      "fixed left-0 top-0 z-50 h-full border-r bg-background",
+      "fixed left-0 top-0 z-50 h-full bg-[#221F26]",
       isCollapsed ? "w-[60px]" : "w-[240px]",
       "transition-all duration-300"
     )}>
@@ -37,7 +37,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
           ))}
         </div>
 
-        <Separator />
+        <Separator className="bg-white/10" />
         
         <div className="p-2">
           <NavLink
