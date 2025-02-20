@@ -5,6 +5,8 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import trLocale from "@fullcalendar/core/locales/tr";
+import tippy from 'tippy.js';
+import 'tippy.js/dist/tippy.css';
 import Navbar from "@/components/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -13,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 
 interface CalendarProps {
   isCollapsed: boolean;
@@ -44,6 +45,14 @@ interface EventModalData {
   assigned_to?: string;
 }
 
+type FilterType = 'all' | 'technical' | 'sales';
+type FilterStatus = 'all' | 'scheduled' | 'completed' | 'canceled';
+
+interface Filters {
+  type: FilterType;
+  status: FilterStatus;
+}
+
 const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -56,7 +65,7 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
     category: '',
     status: 'scheduled'
   });
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<Filters>({
     type: 'all',
     status: 'all'
   });
@@ -64,7 +73,7 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
   useEffect(() => {
     fetchEvents();
     subscribeToEvents();
-  }, []);
+  }, [filters]);
 
   const fetchEvents = async () => {
     try {
@@ -86,10 +95,10 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
         title: event.title,
         start: event.start_time,
         end: event.end_time,
-        description: event.description,
+        description: event.description || '',
         event_type: event.event_type,
         category: event.category,
-        status: event.status,
+        status: event.status || 'scheduled',
         assigned_to: event.assigned_to
       }));
 
@@ -278,7 +287,7 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
             <div className="flex gap-4">
               <Select
                 value={filters.type}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}
+                onValueChange={(value: FilterType) => setFilters(prev => ({ ...prev, type: value }))}
               >
                 <SelectTrigger className="w-[180px] bg-red-950/10 border-red-900/20 text-white">
                   <SelectValue placeholder="Etkinlik Tipi" />
@@ -292,7 +301,7 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
 
               <Select
                 value={filters.status}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+                onValueChange={(value: FilterStatus) => setFilters(prev => ({ ...prev, status: value }))}
               >
                 <SelectTrigger className="w-[180px] bg-red-950/10 border-red-900/20 text-white">
                   <SelectValue placeholder="Durum" />
@@ -344,12 +353,10 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
               eventClassNames="hover:bg-red-800 transition-colors"
               dayHeaderClassNames="text-gray-300"
               eventDidMount={(info) => {
-                // Add tooltip
-                new Tooltip(info.el, {
-                  title: `${info.event.title}\n${info.event.extendedProps.description || ''}`,
+                tippy(info.el, {
+                  content: `${info.event.title}\n${info.event.extendedProps.description || ''}`,
                   placement: 'top',
                   trigger: 'hover',
-                  container: 'body'
                 });
               }}
             />
