@@ -20,12 +20,12 @@ interface CalendarProps {
   setIsCollapsed: (value: boolean) => void;
 }
 
-type EventTypeOption = 'all' | 'technical' | 'sales';
-type EventStatusOption = 'all' | 'scheduled' | 'completed' | 'canceled';
+type EventTypeFilter = 'all' | 'technical' | 'sales';
+type EventStatusFilter = 'all' | 'scheduled' | 'completed' | 'canceled';
 
 interface Filters {
-  type: EventTypeOption;
-  status: EventStatusOption;
+  type: EventTypeFilter;
+  status: EventStatusFilter;
 }
 
 interface Event {
@@ -94,8 +94,12 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
     status: 'all'
   });
 
-  const updateFilter = (key: keyof Filters, value: EventTypeOption | EventStatusOption) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+  const updateTypeFilter = (value: EventTypeFilter) => {
+    setFilters(prev => ({ ...prev, type: value }));
+  };
+
+  const updateStatusFilter = (value: EventStatusFilter) => {
+    setFilters(prev => ({ ...prev, status: value }));
   };
 
   useEffect(() => {
@@ -313,7 +317,7 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
             <div className="flex gap-4">
               <Select
                 value={filters.type}
-                onValueChange={(value: EventTypeOption) => updateFilter('type', value)}
+                onValueChange={updateTypeFilter}
               >
                 <SelectTrigger className="w-[180px] bg-red-950/10 border-red-900/20 text-white">
                   <SelectValue placeholder="Etkinlik Tipi" />
@@ -327,7 +331,7 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
 
               <Select
                 value={filters.status}
-                onValueChange={(value: EventStatusOption) => updateFilter('status', value)}
+                onValueChange={updateStatusFilter}
               >
                 <SelectTrigger className="w-[180px] bg-red-950/10 border-red-900/20 text-white">
                   <SelectValue placeholder="Durum" />
