@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -45,12 +44,14 @@ interface EventModalData {
   assigned_to?: string;
 }
 
-type FilterType = 'all' | 'technical' | 'sales';
-type FilterStatus = 'all' | 'scheduled' | 'completed' | 'canceled';
+type FilterOptions = {
+  type: 'all' | 'technical' | 'sales';
+  status: 'all' | 'scheduled' | 'completed' | 'canceled';
+};
 
 interface Filters {
-  type: FilterType;
-  status: FilterStatus;
+  type: FilterOptions['type'];
+  status: FilterOptions['status'];
 }
 
 // Define the database event type to match Supabase schema
@@ -68,6 +69,16 @@ interface DbEvent {
   updated_at: string;
 }
 
+const EVENT_CATEGORIES = {
+  technical: [
+    'installation',
+    'maintenance',
+    'repair',
+    'inspection',
+    'emergency'
+  ]
+} as const;
+
 const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -76,11 +87,12 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
     start: '',
     end: '',
     description: '',
-    event_type: 'sales',
-    category: '',
+    event_type: 'technical',
+    category: EVENT_CATEGORIES.technical[0],
     status: 'scheduled'
   });
-  const [filters, setFilters] = useState<Filters>({
+
+  const [filters, setFilters] = useState<FilterOptions>({
     type: 'all',
     status: 'all'
   });
@@ -179,8 +191,8 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
       start: selectInfo.startStr,
       end: selectInfo.endStr,
       description: '',
-      event_type: 'sales',
-      category: '',
+      event_type: 'technical',
+      category: EVENT_CATEGORIES.technical[0],
       status: 'scheduled'
     });
     setIsModalOpen(true);
@@ -297,12 +309,13 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
       <div className="flex-1 overflow-auto p-8 ml-[68px] lg:ml-[250px]">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-white">Takvim</h1>
+            <h1 className="text-2xl font-bold text-white">Teknik Takvim</h1>
             
             <div className="flex gap-4">
               <Select
                 value={filters.type}
-                onValueChange={(value: FilterType) => setFilters(prev => ({ ...prev, type: value }))}
+                onValueChange={(value: FilterOptions['type']) => 
+                  setFilters(prev => ({ ...prev, type: value }))}
               >
                 <SelectTrigger className="w-[180px] bg-red-950/10 border-red-900/20 text-white">
                   <SelectValue placeholder="Etkinlik Tipi" />
@@ -316,7 +329,8 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
 
               <Select
                 value={filters.status}
-                onValueChange={(value: FilterStatus) => setFilters(prev => ({ ...prev, status: value }))}
+                onValueChange={(value: FilterOptions['status']) => 
+                  setFilters(prev => ({ ...prev, status: value }))}
               >
                 <SelectTrigger className="w-[180px] bg-red-950/10 border-red-900/20 text-white">
                   <SelectValue placeholder="Durum" />
@@ -433,7 +447,8 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
               <Label htmlFor="event_type">Etkinlik Tipi</Label>
               <Select
                 value={modalData.event_type}
-                onValueChange={(value: 'technical' | 'sales') => setModalData({ ...modalData, event_type: value })}
+                onValueChange={(value: 'technical' | 'sales') => 
+                  setModalData({ ...modalData, event_type: value })}
               >
                 <SelectTrigger className="bg-red-950/10 border-red-900/20">
                   <SelectValue />
@@ -444,6 +459,28 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
                 </SelectContent>
               </Select>
             </div>
+
+            {modalData.event_type === 'technical' && (
+              <div>
+                <Label htmlFor="category">Teknik İşlem Tipi</Label>
+                <Select
+                  value={modalData.category}
+                  onValueChange={(value: string) => 
+                    setModalData({ ...modalData, category: value })}
+                >
+                  <SelectTrigger className="bg-red-950/10 border-red-900/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="installation">Kurulum</SelectItem>
+                    <SelectItem value="maintenance">Bakım</SelectItem>
+                    <SelectItem value="repair">Onarım</SelectItem>
+                    <SelectItem value="inspection">Kontrol</SelectItem>
+                    <SelectItem value="emergency">Acil Müdahale</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="status">Durum</Label>
