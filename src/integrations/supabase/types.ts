@@ -279,6 +279,53 @@ export type Database = {
         }
         Relationships: []
       }
+      events: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string | null
+          description: string | null
+          end_time: string
+          event_type: Database["public"]["Enums"]["event_type"]
+          id: string
+          start_time: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          category: string
+          created_at?: string | null
+          description?: string | null
+          end_time: string
+          event_type: Database["public"]["Enums"]["event_type"]
+          id?: string
+          start_time: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          end_time?: string
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          start_time?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_categories: {
         Row: {
           created_at: string | null
@@ -714,6 +761,7 @@ export type Database = {
       customer_type: "bireysel" | "kurumsal"
       deal_priority: "low" | "medium" | "high"
       deal_status: "new" | "negotiation" | "follow_up" | "won" | "lost"
+      event_type: "technical" | "sales"
       proposal_status:
         | "draft"
         | "sent"
@@ -722,8 +770,14 @@ export type Database = {
         | "expired"
         | "review"
         | "negotiation"
+      sales_event_category: "proposal_deadline" | "sales_meeting" | "follow_up"
       supplier_status: "aktif" | "pasif" | "potansiyel"
       supplier_type: "bireysel" | "kurumsal"
+      technical_event_category:
+        | "installation"
+        | "maintenance"
+        | "service_call"
+        | "support_ticket"
       user_role: "admin" | "sales" | "manager" | "viewer"
     }
     CompositeTypes: {

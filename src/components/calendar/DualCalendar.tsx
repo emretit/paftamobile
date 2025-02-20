@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -72,7 +71,10 @@ const DualCalendar = () => {
 
   React.useEffect(() => {
     fetchEvents();
-    subscribeToEvents();
+    const cleanup = subscribeToEvents();
+    return () => {
+      cleanup();
+    };
   }, []);
 
   const fetchEvents = async () => {
@@ -83,7 +85,11 @@ const DualCalendar = () => {
 
       if (error) throw error;
 
-      setEvents(data || []);
+      setEvents(data.map(event => ({
+        ...event,
+        start_time: new Date(event.start_time),
+        end_time: new Date(event.end_time)
+      })));
     } catch (error) {
       console.error('Error fetching events:', error);
       toast({
@@ -130,7 +136,12 @@ const DualCalendar = () => {
 
       const { error } = await supabase
         .from('events')
-        .insert([newEvent]);
+        .insert([{
+          ...newEvent,
+          event_type: activeCalendar,
+          start_time: selectedDate,
+          end_time: selectedDate
+        }]);
 
       if (error) throw error;
 
