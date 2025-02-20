@@ -4,7 +4,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { tr } from "@fullcalendar/core/locales";
+import trLocale from "@fullcalendar/core/locales/tr";
 import Navbar from "@/components/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -123,7 +123,7 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek,timeGridDay'
               }}
-              locale={tr}
+              locale={trLocale}
               editable={true}
               droppable={true}
               events={events}
