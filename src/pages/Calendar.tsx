@@ -12,14 +12,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import EventModal from "@/components/calendar/EventModal";
 import CalendarFilters from "@/components/calendar/CalendarFilters";
-import { Event, EventModalData, DbEvent, EventTypeFilter, EventStatusFilter, EVENT_CATEGORIES } from "@/types/calendar";
+import { Event, EventModalData, DbEvent, EventTypeFilter, EventStatusFilter, EVENT_CATEGORIES } from '@/types/calendar';
 
 interface CalendarProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
 }
 
-const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
+const Calendar: React.FC<CalendarProps> = ({ isCollapsed, setIsCollapsed }) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState<EventModalData>({

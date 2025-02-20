@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EventTypeFilter, EventStatusFilter, EVENT_TYPES, EVENT_STATUSES } from '@/types/calendar';
+import { EventTypeFilter, EventStatusFilter, EVENT_TYPE_OPTIONS, EVENT_STATUS_OPTIONS } from '@/types/calendar';
 
 interface CalendarFiltersProps {
   typeFilter: EventTypeFilter;
@@ -26,9 +26,9 @@ const CalendarFilters = ({
           <SelectValue placeholder="Etkinlik Tipi" />
         </SelectTrigger>
         <SelectContent>
-          {EVENT_TYPES.map(type => (
-            <SelectItem key={type} value={type}>
-              {type === 'all' ? 'Tümü' : type === 'technical' ? 'Teknik' : 'Satış'}
+          {EVENT_TYPE_OPTIONS.map(option => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
             </SelectItem>
           ))}
         </SelectContent>
@@ -42,11 +42,9 @@ const CalendarFilters = ({
           <SelectValue placeholder="Durum" />
         </SelectTrigger>
         <SelectContent>
-          {EVENT_STATUSES.map(status => (
-            <SelectItem key={status} value={status}>
-              {status === 'all' ? 'Tümü' : 
-               status === 'scheduled' ? 'Planlandı' : 
-               status === 'completed' ? 'Tamamlandı' : 'İptal Edildi'}
+          {EVENT_STATUS_OPTIONS.map(option => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
             </SelectItem>
           ))}
         </SelectContent>
