@@ -20,15 +20,12 @@ interface CalendarProps {
   setIsCollapsed: (value: boolean) => void;
 }
 
-const EVENT_TYPES = ['all', 'technical', 'sales'] as const;
-const EVENT_STATUSES = ['all', 'scheduled', 'completed', 'canceled'] as const;
-
-type EventType = (typeof EVENT_TYPES)[number];
-type EventStatus = (typeof EVENT_STATUSES)[number];
+type EventTypeOption = 'all' | 'technical' | 'sales';
+type EventStatusOption = 'all' | 'scheduled' | 'completed' | 'canceled';
 
 interface Filters {
-  type: EventType;
-  status: EventStatus;
+  type: EventTypeOption;
+  status: EventStatusOption;
 }
 
 interface Event {
@@ -97,9 +94,8 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
     status: 'all'
   });
 
-  const handleFilterChange = {
-    type: (value: EventType) => setFilters(prev => ({ ...prev, type: value })),
-    status: (value: EventStatus) => setFilters(prev => ({ ...prev, status: value }))
+  const updateFilter = (key: keyof Filters, value: EventTypeOption | EventStatusOption) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
   };
 
   useEffect(() => {
@@ -317,35 +313,30 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
             <div className="flex gap-4">
               <Select
                 value={filters.type}
-                onValueChange={handleFilterChange.type}
+                onValueChange={(value: EventTypeOption) => updateFilter('type', value)}
               >
                 <SelectTrigger className="w-[180px] bg-red-950/10 border-red-900/20 text-white">
                   <SelectValue placeholder="Etkinlik Tipi" />
                 </SelectTrigger>
                 <SelectContent>
-                  {EVENT_TYPES.map(type => (
-                    <SelectItem key={type} value={type}>
-                      {type === 'all' ? 'Tümü' : type === 'technical' ? 'Teknik' : 'Satış'}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="all">Tümü</SelectItem>
+                  <SelectItem value="technical">Teknik</SelectItem>
+                  <SelectItem value="sales">Satış</SelectItem>
                 </SelectContent>
               </Select>
 
               <Select
                 value={filters.status}
-                onValueChange={handleFilterChange.status}
+                onValueChange={(value: EventStatusOption) => updateFilter('status', value)}
               >
                 <SelectTrigger className="w-[180px] bg-red-950/10 border-red-900/20 text-white">
                   <SelectValue placeholder="Durum" />
                 </SelectTrigger>
                 <SelectContent>
-                  {EVENT_STATUSES.map(status => (
-                    <SelectItem key={status} value={status}>
-                      {status === 'all' ? 'Tümü' : 
-                       status === 'scheduled' ? 'Planlandı' : 
-                       status === 'completed' ? 'Tamamlandı' : 'İptal Edildi'}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="all">Tümü</SelectItem>
+                  <SelectItem value="scheduled">Planlandı</SelectItem>
+                  <SelectItem value="completed">Tamamlandı</SelectItem>
+                  <SelectItem value="canceled">İptal Edildi</SelectItem>
                 </SelectContent>
               </Select>
             </div>
