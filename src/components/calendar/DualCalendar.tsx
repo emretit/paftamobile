@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
@@ -30,7 +31,7 @@ interface Employee {
   department: "technical" | "sales";
 }
 
-const DualCalendar: React.FC = () => {
+function DualCalendar(): JSX.Element {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [activeCalendar, setActiveCalendar] = useState<"technical" | "sales">("technical");
@@ -214,6 +215,6 @@ const DualCalendar: React.FC = () => {
       </Tabs>
     </div>
   );
-};
+}
 
 export default DualCalendar;
