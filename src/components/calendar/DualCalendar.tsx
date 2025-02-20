@@ -7,23 +7,34 @@ import { TabsList, TabsTrigger, Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CalendarCheck, CalendarClock, Filter, Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CalendarCheck, CalendarClock, Filter, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Event {
   id: string;
   title: string;
-  date: Date;
-  type: "technical" | "sales";
-  category: string;
   description?: string;
-  assignedTo?: string;
+  start_time: Date;
+  end_time: Date;
+  event_type: "technical" | "sales";
+  category: string;
+  assigned_to?: string;
 }
 
 interface Employee {
@@ -32,12 +43,25 @@ interface Employee {
   department: "technical" | "sales";
 }
 
-const DualCalendar: React.FC = () => {
+const DualCalendar = () => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date());
   const [activeCalendar, setActiveCalendar] = React.useState<"technical" | "sales">("technical");
   const [categoryFilter, setCategoryFilter] = React.useState<string>("all");
   const [employeeFilter, setEmployeeFilter] = React.useState<string>("all");
+  const [events, setEvents] = React.useState<Event[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [isAddEventOpen, setIsAddEventOpen] = React.useState(false);
+  const [newEvent, setNewEvent] = React.useState<Partial<Event>>({
+    event_type: "technical",
+    start_time: new Date(),
+    end_time: new Date(),
+  });
+
+  const categories = {
+    technical: ["installation", "maintenance", "service_call", "support_ticket"],
+    sales: ["proposal_deadline", "sales_meeting", "follow_up"]
+  };
 
   const employees: Employee[] = [
     { id: "1", name: "Ahmet Yılmaz", department: "technical" },
@@ -46,52 +70,127 @@ const DualCalendar: React.FC = () => {
     { id: "4", name: "Fatma Şahin", department: "sales" }
   ];
 
-  const categories = {
-    technical: ["Bakım", "Onarım", "Kurulum", "Güncelleme"],
-    sales: ["Toplantı", "Teklif Sunumu", "Müşteri Görüşmesi", "Sözleşme İmzalama"]
+  React.useEffect(() => {
+    fetchEvents();
+    subscribeToEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*');
+
+      if (error) throw error;
+
+      setEvents(data || []);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch events",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const events: Event[] = [
-    {
-      id: "1",
-      title: "Sistem Bakımı",
-      date: new Date(),
-      type: "technical",
-      category: "Bakım",
-      description: "Rutin sistem bakımı",
-      assignedTo: "1"
-    },
-    {
-      id: "2",
-      title: "Satış Toplantısı",
-      date: new Date(),
-      type: "sales",
-      category: "Toplantı",
-      description: "Potansiyel müşteri ile görüşme",
-      assignedTo: "3"
+  const subscribeToEvents = () => {
+    const channel = supabase
+      .channel('events-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'events'
+        },
+        () => {
+          fetchEvents();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
+  const handleAddEvent = async () => {
+    try {
+      if (!newEvent.title || !newEvent.category) {
+        toast({
+          title: "Error",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('events')
+        .insert([newEvent]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Event added successfully",
+      });
+
+      setIsAddEventOpen(false);
+      setNewEvent({
+        event_type: activeCalendar,
+        start_time: new Date(),
+        end_time: new Date(),
+      });
+    } catch (error) {
+      console.error('Error adding event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add event",
+        variant: "destructive",
+      });
     }
-  ];
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Event deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete event",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getFilteredEvents = () => {
     return events.filter(event => {
-      const matchesType = event.type === activeCalendar;
+      const matchesType = event.event_type === activeCalendar;
       const matchesCategory = categoryFilter === "all" || event.category === categoryFilter;
-      const matchesEmployee = employeeFilter === "all" || event.assignedTo === employeeFilter;
+      const matchesEmployee = employeeFilter === "all" || event.assigned_to === employeeFilter;
       return matchesType && matchesCategory && matchesEmployee;
     });
   };
 
   const getDayEvents = (day: Date) => {
     return getFilteredEvents().filter(event => 
-      event.date.toDateString() === day.toDateString()
+      new Date(event.start_time).toDateString() === day.toDateString()
     );
-  };
-
-  const handleAddEvent = () => {
-    toast({
-      title: "Yeni Etkinlik",
-      description: "Yeni etkinlik ekleme özelliği yakında eklenecektir.",
-    });
   };
 
   return (
@@ -173,37 +272,130 @@ const DualCalendar: React.FC = () => {
                     year: 'numeric' 
                   })} Etkinlikleri
                 </h3>
-                <Button 
-                  onClick={handleAddEvent}
-                  className="bg-red-900 hover:bg-red-800"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Yeni Etkinlik Ekle
-                </Button>
+                <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-red-900 hover:bg-red-800">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Yeni Etkinlik Ekle
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px] bg-[#1A1F2C] text-white">
+                    <DialogHeader>
+                      <DialogTitle>Yeni Etkinlik Ekle</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="title">Başlık</Label>
+                        <Input
+                          id="title"
+                          value={newEvent.title || ''}
+                          onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                          className="bg-red-950/10 border-red-900/20"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="description">Açıklama</Label>
+                        <Input
+                          id="description"
+                          value={newEvent.description || ''}
+                          onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                          className="bg-red-950/10 border-red-900/20"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="category">Kategori</Label>
+                        <Select
+                          value={newEvent.category}
+                          onValueChange={(value) => setNewEvent({ ...newEvent, category: value })}
+                        >
+                          <SelectTrigger className="bg-red-950/10 border-red-900/20">
+                            <SelectValue placeholder="Kategori seçin" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories[activeCalendar].map((category) => (
+                              <SelectItem key={category} value={category}>
+                                {category}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="assigned">Atanan Kişi</Label>
+                        <Select
+                          value={newEvent.assigned_to}
+                          onValueChange={(value) => setNewEvent({ ...newEvent, assigned_to: value })}
+                        >
+                          <SelectTrigger className="bg-red-950/10 border-red-900/20">
+                            <SelectValue placeholder="Çalışan seçin" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {employees
+                              .filter(emp => emp.department === activeCalendar)
+                              .map((employee) => (
+                                <SelectItem key={employee.id} value={employee.id}>
+                                  {employee.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-4">
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsAddEventOpen(false)}
+                        className="bg-red-950/10 border-red-900/20 hover:bg-red-900/20"
+                      >
+                        İptal
+                      </Button>
+                      <Button
+                        onClick={handleAddEvent}
+                        className="bg-red-900 hover:bg-red-800"
+                      >
+                        Ekle
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
               <div className="space-y-2">
-                {getDayEvents(selectedDate || new Date()).map((event) => (
-                  <div 
-                    key={event.id}
-                    className={cn(
-                      "p-4 rounded-lg border transition-colors",
-                      event.type === "technical" ? "bg-red-950/20 border-red-900/20" : "bg-red-950/10 border-red-900/20"
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-white">{event.title}</h4>
-                      <span className="text-sm px-2 py-1 rounded-full bg-red-900/30 text-white">
-                        {event.category}
-                      </span>
+                {isLoading ? (
+                  <div className="text-center text-white">Loading...</div>
+                ) : (
+                  getDayEvents(selectedDate || new Date()).map((event) => (
+                    <div 
+                      key={event.id}
+                      className={cn(
+                        "p-4 rounded-lg border transition-colors",
+                        event.event_type === "technical" ? "bg-red-950/20 border-red-900/20" : "bg-red-950/10 border-red-900/20"
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-white">{event.title}</h4>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm px-2 py-1 rounded-full bg-red-900/30 text-white">
+                            {event.category}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteEvent(event.id)}
+                            className="hover:bg-red-900/20"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
+                      {event.description && (
+                        <p className="text-sm text-gray-300 mt-1">{event.description}</p>
+                      )}
+                      <div className="mt-2 text-sm text-gray-400">
+                        Atanan: {employees.find(emp => emp.id === event.assigned_to)?.name}
+                      </div>
                     </div>
-                    {event.description && (
-                      <p className="text-sm text-gray-300 mt-1">{event.description}</p>
-                    )}
-                    <div className="mt-2 text-sm text-gray-400">
-                      Atanan: {employees.find(emp => emp.id === event.assignedTo)?.name}
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
