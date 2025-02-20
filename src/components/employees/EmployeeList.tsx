@@ -5,28 +5,56 @@ import { FilterBar } from "./FilterBar";
 import { EmployeeTable } from "./EmployeeTable";
 import { EmployeeGrid } from "./EmployeeGrid";
 import type { Employee } from "./types";
+import { useToast } from "@/components/ui/use-toast";
 
 export const EmployeeList = () => {
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchEmployees = async () => {
-      const { data, error } = await supabase
-        .from('employees')
-        .select('*')
-        .order('created_at', { ascending: false });
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('employees')
+          .select()
+          .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching employees:', error);
-        return;
+        if (error) {
+          toast({
+            title: "Hata",
+            description: "Çalışan listesi alınamadı.",
+            variant: "destructive",
+          });
+          console.error('Error fetching employees:', error);
+          return;
+        }
+
+        setEmployees(data || []);
+      } catch (error) {
+        console.error('Error:', error);
+        toast({
+          title: "Hata",
+          description: "Bir hata oluştu.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
-
-      setEmployees(data as Employee[]);
     };
 
     fetchEmployees();
-  }, []);
+  }, [toast]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <div className="text-gray-500">Yükleniyor...</div>
+      </div>
+    );
+  }
 
   return (
     <>
