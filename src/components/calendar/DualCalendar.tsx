@@ -32,7 +32,7 @@ interface Employee {
   department: "technical" | "sales";
 }
 
-export default function DualCalendar(): JSX.Element {
+const DualCalendar = (): JSX.Element => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date());
   const [activeCalendar, setActiveCalendar] = React.useState<"technical" | "sales">("technical");
@@ -211,4 +211,6 @@ export default function DualCalendar(): JSX.Element {
       </Tabs>
     </div>
   );
-}
+};
+
+export default DualCalendar;
