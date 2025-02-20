@@ -20,13 +20,11 @@ interface CalendarProps {
   setIsCollapsed: (value: boolean) => void;
 }
 
-type EventTypeFilter = 'all' | 'technical' | 'sales';
-type EventStatusFilter = 'all' | 'scheduled' | 'completed' | 'canceled';
+const EVENT_TYPES = ['all', 'technical', 'sales'] as const;
+const EVENT_STATUSES = ['all', 'scheduled', 'completed', 'canceled'] as const;
 
-interface Filters {
-  type: EventTypeFilter;
-  status: EventStatusFilter;
-}
+type EventTypeFilter = typeof EVENT_TYPES[number];
+type EventStatusFilter = typeof EVENT_STATUSES[number];
 
 interface Event {
   id: string;
@@ -89,33 +87,22 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
     status: 'scheduled'
   });
 
-  const [filters, setFilters] = useState<Filters>({
-    type: 'all',
-    status: 'all'
-  });
-
-  const updateTypeFilter = (value: EventTypeFilter) => {
-    setFilters(prev => ({ ...prev, type: value }));
-  };
-
-  const updateStatusFilter = (value: EventStatusFilter) => {
-    setFilters(prev => ({ ...prev, status: value }));
-  };
+  const [typeFilter, setTypeFilter] = useState<EventTypeFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<EventStatusFilter>('all');
 
   useEffect(() => {
     fetchEvents();
-    subscribeToEvents();
-  }, [filters]);
+  }, [typeFilter, statusFilter]);
 
   const fetchEvents = async () => {
     try {
       let query = supabase.from('events').select('*');
       
-      if (filters.type !== 'all') {
-        query = query.eq('event_type', filters.type);
+      if (typeFilter !== 'all') {
+        query = query.eq('event_type', typeFilter);
       }
-      if (filters.status !== 'all') {
-        query = query.eq('status', filters.status);
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
       }
 
       const { data, error } = await query;
@@ -143,23 +130,6 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
         description: "Etkinlikler yüklenirken bir hata oluştu."
       });
     }
-  };
-
-  const subscribeToEvents = () => {
-    const channel = supabase
-      .channel('events-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'events' },
-        (payload) => {
-          fetchEvents();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   };
 
   const handleEventDrop = async (info: any) => {
@@ -316,31 +286,36 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
             
             <div className="flex gap-4">
               <Select
-                value={filters.type}
-                onValueChange={updateTypeFilter}
+                value={typeFilter}
+                onValueChange={setTypeFilter}
               >
                 <SelectTrigger className="w-[180px] bg-red-950/10 border-red-900/20 text-white">
                   <SelectValue placeholder="Etkinlik Tipi" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tümü</SelectItem>
-                  <SelectItem value="technical">Teknik</SelectItem>
-                  <SelectItem value="sales">Satış</SelectItem>
+                  {EVENT_TYPES.map(type => (
+                    <SelectItem key={type} value={type}>
+                      {type === 'all' ? 'Tümü' : type === 'technical' ? 'Teknik' : 'Satış'}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
               <Select
-                value={filters.status}
-                onValueChange={updateStatusFilter}
+                value={statusFilter}
+                onValueChange={setStatusFilter}
               >
                 <SelectTrigger className="w-[180px] bg-red-950/10 border-red-900/20 text-white">
                   <SelectValue placeholder="Durum" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tümü</SelectItem>
-                  <SelectItem value="scheduled">Planlandı</SelectItem>
-                  <SelectItem value="completed">Tamamlandı</SelectItem>
-                  <SelectItem value="canceled">İptal Edildi</SelectItem>
+                  {EVENT_STATUSES.map(status => (
+                    <SelectItem key={status} value={status}>
+                      {status === 'all' ? 'Tümü' : 
+                       status === 'scheduled' ? 'Planlandı' : 
+                       status === 'completed' ? 'Tamamlandı' : 'İptal Edildi'}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
