@@ -22,7 +22,7 @@ interface Event {
   description?: string;
 }
 
-const DualCalendar: React.FC = () => {
+const DualCalendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [activeCalendar, setActiveCalendar] = useState<"technical" | "sales">("technical");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -108,7 +108,7 @@ const DualCalendar: React.FC = () => {
               onSelect={setSelectedDate}
               className="rounded-md border shadow-sm"
               modifiers={{
-                hasEvent: (date) => getDayEvents(date).length > 0,
+                hasEvent: (date: Date) => getDayEvents(date).length > 0
               }}
               modifiersStyles={{
                 hasEvent: { backgroundColor: "rgb(243 244 246)", fontWeight: "bold" }
