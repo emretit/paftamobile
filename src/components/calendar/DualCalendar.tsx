@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { TabsList, TabsTrigger, Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ interface Event {
   description?: string;
 }
 
-const DualCalendar = () => {
+const DualCalendar: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [activeCalendar, setActiveCalendar] = useState<"technical" | "sales">("technical");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -71,7 +71,7 @@ const DualCalendar = () => {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border">
-      <Tabs value={activeCalendar} onValueChange={(value: "technical" | "sales") => setActiveCalendar(value)}>
+      <Tabs defaultValue={activeCalendar} onValueChange={(value: "technical" | "sales") => setActiveCalendar(value)}>
         <div className="flex items-center justify-between mb-6">
           <TabsList className="grid w-[400px] grid-cols-2">
             <TabsTrigger value="technical" className="flex items-center gap-2">
@@ -100,54 +100,56 @@ const DualCalendar = () => {
           </Select>
         </div>
 
-        <div className="grid grid-cols-[300px_1fr] gap-8">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            className="rounded-md border shadow-sm"
-            modifiers={{
-              hasEvent: (date) => getDayEvents(date).length > 0,
-            }}
-            modifiersStyles={{
-              hasEvent: { backgroundColor: "rgb(243 244 246)", fontWeight: "bold" }
-            }}
-          />
+        <TabsContent value={activeCalendar}>
+          <div className="grid grid-cols-[300px_1fr] gap-8">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              className="rounded-md border shadow-sm"
+              modifiers={{
+                hasEvent: (date) => getDayEvents(date).length > 0,
+              }}
+              modifiersStyles={{
+                hasEvent: { backgroundColor: "rgb(243 244 246)", fontWeight: "bold" }
+              }}
+            />
 
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">
-              {selectedDate ? selectedDate.toLocaleDateString('tr-TR', { 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric' 
-              })} Etkinlikleri
-            </h3>
-            <div className="space-y-2">
-              {getDayEvents(selectedDate || new Date()).map(event => (
-                <div 
-                  key={event.id}
-                  className={cn(
-                    "p-4 rounded-lg border",
-                    event.type === "technical" ? "bg-blue-50" : "bg-green-50"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">{event.title}</h4>
-                    <span className="text-sm px-2 py-1 rounded-full bg-white">
-                      {event.category}
-                    </span>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">
+                {selectedDate ? selectedDate.toLocaleDateString('tr-TR', { 
+                  day: 'numeric', 
+                  month: 'long', 
+                  year: 'numeric' 
+                })} Etkinlikleri
+              </h3>
+              <div className="space-y-2">
+                {getDayEvents(selectedDate || new Date()).map(event => (
+                  <div 
+                    key={event.id}
+                    className={cn(
+                      "p-4 rounded-lg border",
+                      event.type === "technical" ? "bg-blue-50" : "bg-green-50"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">{event.title}</h4>
+                      <span className="text-sm px-2 py-1 rounded-full bg-white">
+                        {event.category}
+                      </span>
+                    </div>
+                    {event.description && (
+                      <p className="text-sm text-gray-600 mt-1">{event.description}</p>
+                    )}
                   </div>
-                  {event.description && (
-                    <p className="text-sm text-gray-600 mt-1">{event.description}</p>
-                  )}
-                </div>
-              ))}
-              <Button className="w-full mt-4">
-                + Yeni Etkinlik Ekle
-              </Button>
+                ))}
+                <Button className="w-full mt-4">
+                  + Yeni Etkinlik Ekle
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
