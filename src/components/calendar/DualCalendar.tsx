@@ -38,7 +38,6 @@ const DualCalendar = (): JSX.Element => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [employeeFilter, setEmployeeFilter] = useState<string>("all");
 
-  // Örnek çalışanlar
   const employees: Employee[] = [
     { id: "1", name: "Ahmet Yılmaz", department: "technical" },
     { id: "2", name: "Mehmet Demir", department: "technical" },
@@ -46,13 +45,11 @@ const DualCalendar = (): JSX.Element => {
     { id: "4", name: "Fatma Şahin", department: "sales" }
   ];
 
-  // Örnek kategoriler
   const categories = {
     technical: ["Bakım", "Onarım", "Kurulum", "Güncelleme"],
     sales: ["Toplantı", "Teklif Sunumu", "Müşteri Görüşmesi", "Sözleşme İmzalama"]
   };
 
-  // Örnek etkinlikler
   const events: Event[] = [
     {
       id: "1",
@@ -74,7 +71,6 @@ const DualCalendar = (): JSX.Element => {
     }
   ];
 
-  // Filtrelenmiş etkinlikleri getir
   const getFilteredEvents = () => {
     return events.filter(event => {
       const matchesType = event.type === activeCalendar;
@@ -84,7 +80,6 @@ const DualCalendar = (): JSX.Element => {
     });
   };
 
-  // Seçili güne ait etkinlikleri getir
   const getDayEvents = (day: Date) => {
     return getFilteredEvents().filter(event => 
       event.date.toDateString() === day.toDateString()
@@ -186,7 +181,7 @@ const DualCalendar = (): JSX.Element => {
                 </Button>
               </div>
               <div className="space-y-2">
-                {getDayEvents(selectedDate || new Date()).map(event => (
+                {getDayEvents(selectedDate || new Date()).map((event: Event) => (
                   <div 
                     key={event.id}
                     className={cn(
