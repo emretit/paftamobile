@@ -44,10 +44,10 @@ export const EmployeeList = () => {
     const fetchEmployees = async () => {
       try {
         setIsLoading(true);
+        // Simplify the query to avoid DataCloneError
         const { data, error } = await supabase
           .from('employees')
-          .select()
-          .order('created_at', { ascending: false });
+          .select('id, first_name, last_name, email, phone, position, department, hire_date, status, avatar_url');
 
         if (error) {
           toast({
@@ -59,7 +59,7 @@ export const EmployeeList = () => {
           return;
         }
 
-        // Transform the data to match Employee type
+        console.log('Fetched employees:', data); // Debug log
         const transformedEmployees = (data || []).map(transformToEmployee);
         setEmployees(transformedEmployees);
       } catch (error) {
