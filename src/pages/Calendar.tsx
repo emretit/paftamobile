@@ -53,6 +53,21 @@ interface Filters {
   status: FilterStatus;
 }
 
+// Define the database event type to match Supabase schema
+interface DbEvent {
+  id: string;
+  title: string;
+  start_time: string;
+  end_time: string;
+  description: string | null;
+  event_type: 'technical' | 'sales';
+  category: string;
+  status: 'scheduled' | 'completed' | 'canceled';
+  assigned_to: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -90,7 +105,7 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
 
       if (error) throw error;
 
-      const formattedEvents = data.map(event => ({
+      const formattedEvents = (data as DbEvent[]).map(event => ({
         id: event.id,
         title: event.title,
         start: event.start_time,
@@ -98,8 +113,8 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
         description: event.description || '',
         event_type: event.event_type,
         category: event.category,
-        status: event.status || 'scheduled',
-        assigned_to: event.assigned_to
+        status: event.status,
+        assigned_to: event.assigned_to || undefined
       }));
 
       setEvents(formattedEvents);
