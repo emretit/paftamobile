@@ -138,7 +138,7 @@ const DualCalendar = (): JSX.Element => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tüm Kategoriler</SelectItem>
-                {categories[activeCalendar].map((category) => (
+                {categories[activeCalendar].map((category: string) => (
                   <SelectItem key={category} value={category}>
                     {category}
                   </SelectItem>
