@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -42,7 +43,7 @@ interface Employee {
   department: "technical" | "sales";
 }
 
-const DualCalendar = () => {
+const DualCalendar: React.FC = () => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date());
   const [activeCalendar, setActiveCalendar] = React.useState<"technical" | "sales">("technical");
