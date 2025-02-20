@@ -7,10 +7,11 @@ import interactionPlugin from "@fullcalendar/interaction";
 import trLocale from "@fullcalendar/core/locales/tr";
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
-import { Event } from '@/types/calendar';
+import { Event, Technician, getTechnicianColor } from '@/types/calendar';
 
 interface CalendarContentProps {
   events: Event[];
+  technicians: Technician[];
   onEventDrop: (info: any) => void;
   onDateSelect: (selectInfo: any) => void;
   onEventClick: (clickInfo: any) => void;
@@ -18,10 +19,16 @@ interface CalendarContentProps {
 
 const CalendarContent: React.FC<CalendarContentProps> = ({
   events,
+  technicians,
   onEventDrop,
   onDateSelect,
   onEventClick
 }) => {
+  const coloredEvents = events.map(event => ({
+    ...event,
+    color: getTechnicianColor(event.assigned_to, technicians)
+  }));
+
   return (
     <div className="bg-red-950/10 p-6 rounded-lg border border-red-900/20">
       <FullCalendar
@@ -36,7 +43,7 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
         editable={true}
         droppable={true}
         selectable={true}
-        events={events}
+        events={coloredEvents}
         eventDrop={onEventDrop}
         select={onDateSelect}
         eventClick={onEventClick}
@@ -51,13 +58,12 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
         slotMinTime="07:00:00"
         slotMaxTime="19:00:00"
         slotDuration="00:30:00"
-        eventColor="#991B1B"
         eventTextColor="#ffffff"
         viewClassNames="bg-red-950/10 text-white"
         dayCellClassNames="text-gray-300 hover:bg-red-900/20"
         slotLabelClassNames="text-gray-400"
         nowIndicatorClassNames="bg-red-500"
-        eventClassNames="hover:bg-red-800 transition-colors"
+        eventClassNames="hover:opacity-90 transition-colors"
         dayHeaderClassNames="text-gray-300"
         eventDidMount={(info) => {
           tippy(info.el, {

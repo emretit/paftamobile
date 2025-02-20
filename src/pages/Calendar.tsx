@@ -6,7 +6,7 @@ import CalendarFilters from "@/components/calendar/CalendarFilters";
 import CalendarContent from "@/components/calendar/CalendarContent";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { useEventManagement } from "@/hooks/useEventManagement";
-import { EventTypeFilter, EventStatusFilter } from '@/types/calendar';
+import { EventTypeFilter, EventStatusFilter, Technician, TECHNICIAN_COLORS } from '@/types/calendar';
 
 interface CalendarProps {
   isCollapsed: boolean;
@@ -16,6 +16,8 @@ interface CalendarProps {
 const Calendar: React.FC<CalendarProps> = ({ isCollapsed, setIsCollapsed }) => {
   const [typeFilter, setTypeFilter] = useState<EventTypeFilter>('all');
   const [statusFilter, setStatusFilter] = useState<EventStatusFilter>('all');
+  const [technicianFilter, setTechnicianFilter] = useState<string>('all');
+  const [technicians, setTechnicians] = useState<Technician[]>([]);
 
   const { events, fetchEvents, handleEventDrop } = useCalendarEvents();
   const {
@@ -30,8 +32,32 @@ const Calendar: React.FC<CalendarProps> = ({ isCollapsed, setIsCollapsed }) => {
   } = useEventManagement();
 
   useEffect(() => {
+    const fetchTechnicians = async () => {
+      const { data: employees } = await supabase
+        .from('employees')
+        .select('id, first_name, last_name')
+        .eq('department', 'technical');
+
+      if (employees) {
+        const formattedTechnicians: Technician[] = employees.map((emp, index) => ({
+          id: emp.id,
+          name: `${emp.first_name} ${emp.last_name}`,
+          color: TECHNICIAN_COLORS.colors[index % TECHNICIAN_COLORS.colors.length]
+        }));
+        setTechnicians(formattedTechnicians);
+      }
+    };
+
+    fetchTechnicians();
+  }, []);
+
+  useEffect(() => {
+    const filteredEvents = technicianFilter === 'all' 
+      ? events 
+      : events.filter(event => event.assigned_to === technicianFilter);
+    
     fetchEvents(typeFilter, statusFilter);
-  }, [typeFilter, statusFilter]);
+  }, [typeFilter, statusFilter, technicianFilter]);
 
   const onEventClick = (clickInfo: any) => {
     handleEventClick(clickInfo, events);
@@ -62,13 +88,17 @@ const Calendar: React.FC<CalendarProps> = ({ isCollapsed, setIsCollapsed }) => {
             <CalendarFilters
               typeFilter={typeFilter}
               statusFilter={statusFilter}
+              technicianFilter={technicianFilter}
+              technicians={technicians}
               onTypeFilterChange={setTypeFilter}
               onStatusFilterChange={setStatusFilter}
+              onTechnicianFilterChange={setTechnicianFilter}
             />
           </div>
           
           <CalendarContent
             events={events}
+            technicians={technicians}
             onEventDrop={handleEventDrop}
             onDateSelect={handleDateSelect}
             onEventClick={onEventClick}
