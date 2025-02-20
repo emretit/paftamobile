@@ -2,6 +2,7 @@
 "use client";
 
 import * as React from "react";
+import { type useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { TabsList, TabsTrigger, Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,7 @@ interface Employee {
   department: "technical" | "sales";
 }
 
-function DualCalendar() {
+const DualCalendar = () => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date());
   const [activeCalendar, setActiveCalendar] = React.useState<"technical" | "sales">("technical");
@@ -211,6 +212,6 @@ function DualCalendar() {
       </Tabs>
     </div>
   );
-}
+};
 
 export default DualCalendar;
