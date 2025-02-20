@@ -11,7 +11,8 @@ import {
   FileUp,
   FileText,
   Package,
-  Settings
+  Settings,
+  Calendar
 } from "lucide-react";
 
 export const navItems = [
@@ -24,6 +25,7 @@ export const navItems = [
   { path: "/employees", icon: HardHat, label: "Çalışanlar" },
   { path: "/finance", icon: Wallet, label: "Finans" },
   { path: "/service", icon: Wrench, label: "Servis" },
+  { path: "/calendar", icon: Calendar, label: "Takvim" },
   { path: "/purchase-invoices", icon: FileDown, label: "Alış Faturaları" },
   { path: "/sales-invoices", icon: FileUp, label: "Satış Faturaları" }
 ];
