@@ -20,6 +20,17 @@ interface CalendarProps {
   setIsCollapsed: (value: boolean) => void;
 }
 
+const EVENT_TYPES = ['all', 'technical', 'sales'] as const;
+const EVENT_STATUSES = ['all', 'scheduled', 'completed', 'canceled'] as const;
+
+type EventType = typeof EVENT_TYPES[number];
+type EventStatus = typeof EVENT_STATUSES[number];
+
+interface Filters {
+  type: EventType;
+  status: EventStatus;
+}
+
 interface Event {
   id: string;
   title: string;
@@ -44,12 +55,18 @@ interface EventModalData {
   assigned_to?: string;
 }
 
-type EventType = 'all' | 'technical' | 'sales';
-type EventStatus = 'all' | 'scheduled' | 'completed' | 'canceled';
-
-interface Filters {
-  type: EventType;
-  status: EventStatus;
+interface DbEvent {
+  id: string;
+  title: string;
+  start_time: string;
+  end_time: string;
+  description: string | null;
+  event_type: 'technical' | 'sales';
+  category: string;
+  status: 'scheduled' | 'completed' | 'canceled';
+  assigned_to: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 const EVENT_CATEGORIES = {
@@ -302,9 +319,11 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
                   <SelectValue placeholder="Etkinlik Tipi" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tümü</SelectItem>
-                  <SelectItem value="technical">Teknik</SelectItem>
-                  <SelectItem value="sales">Satış</SelectItem>
+                  {EVENT_TYPES.map(type => (
+                    <SelectItem key={type} value={type}>
+                      {type === 'all' ? 'Tümü' : type === 'technical' ? 'Teknik' : 'Satış'}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
@@ -317,10 +336,13 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
                   <SelectValue placeholder="Durum" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tümü</SelectItem>
-                  <SelectItem value="scheduled">Planlandı</SelectItem>
-                  <SelectItem value="completed">Tamamlandı</SelectItem>
-                  <SelectItem value="canceled">İptal Edildi</SelectItem>
+                  {EVENT_STATUSES.map(status => (
+                    <SelectItem key={status} value={status}>
+                      {status === 'all' ? 'Tümü' : 
+                       status === 'scheduled' ? 'Planlandı' : 
+                       status === 'completed' ? 'Tamamlandı' : 'İptal Edildi'}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
