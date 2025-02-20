@@ -157,7 +157,7 @@ export default function DualCalendar(): JSX.Element {
               onSelect={setSelectedDate}
               className="rounded-md border border-red-900/20 bg-red-950/10"
               modifiers={{
-                hasEvent: (date: Date): boolean => getDayEvents(date).length > 0
+                hasEvent: (date: Date) => getDayEvents(date).length > 0
               }}
               modifiersStyles={{
                 hasEvent: { backgroundColor: "rgb(127 29 29 / 0.1)", fontWeight: "bold" }
