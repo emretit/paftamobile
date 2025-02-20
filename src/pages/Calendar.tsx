@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -9,70 +10,14 @@ import 'tippy.js/dist/tippy.css';
 import Navbar from "@/components/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import EventModal from "@/components/calendar/EventModal";
+import CalendarFilters from "@/components/calendar/CalendarFilters";
+import { Event, EventModalData, DbEvent, EventTypeFilter, EventStatusFilter, EVENT_CATEGORIES } from "@/types/calendar";
 
 interface CalendarProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
 }
-
-const EVENT_TYPES = ['all', 'technical', 'sales'] as const;
-const EVENT_STATUSES = ['all', 'scheduled', 'completed', 'canceled'] as const;
-
-type EventTypeFilter = typeof EVENT_TYPES[number];
-type EventStatusFilter = typeof EVENT_STATUSES[number];
-
-interface Event {
-  id: string;
-  title: string;
-  start: string;
-  end: string;
-  description?: string;
-  event_type: 'technical' | 'sales';
-  category: string;
-  status: 'scheduled' | 'completed' | 'canceled';
-  assigned_to?: string;
-}
-
-interface EventModalData {
-  id?: string;
-  title: string;
-  start: string;
-  end: string;
-  description: string;
-  event_type: 'technical' | 'sales';
-  category: string;
-  status: 'scheduled' | 'completed' | 'canceled';
-  assigned_to?: string;
-}
-
-interface DbEvent {
-  id: string;
-  title: string;
-  start_time: string;
-  end_time: string;
-  description: string | null;
-  event_type: 'technical' | 'sales';
-  category: string;
-  status: 'scheduled' | 'completed' | 'canceled';
-  assigned_to: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-const EVENT_CATEGORIES = {
-  technical: [
-    'installation',
-    'maintenance',
-    'repair',
-    'inspection',
-    'emergency'
-  ]
-} as const;
 
 const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -283,42 +228,12 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-white">Teknik Takvim</h1>
-            
-            <div className="flex gap-4">
-              <Select
-                value={typeFilter}
-                onValueChange={setTypeFilter}
-              >
-                <SelectTrigger className="w-[180px] bg-red-950/10 border-red-900/20 text-white">
-                  <SelectValue placeholder="Etkinlik Tipi" />
-                </SelectTrigger>
-                <SelectContent>
-                  {EVENT_TYPES.map(type => (
-                    <SelectItem key={type} value={type}>
-                      {type === 'all' ? 'Tümü' : type === 'technical' ? 'Teknik' : 'Satış'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={statusFilter}
-                onValueChange={setStatusFilter}
-              >
-                <SelectTrigger className="w-[180px] bg-red-950/10 border-red-900/20 text-white">
-                  <SelectValue placeholder="Durum" />
-                </SelectTrigger>
-                <SelectContent>
-                  {EVENT_STATUSES.map(status => (
-                    <SelectItem key={status} value={status}>
-                      {status === 'all' ? 'Tümü' : 
-                       status === 'scheduled' ? 'Planlandı' : 
-                       status === 'completed' ? 'Tamamlandı' : 'İptal Edildi'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <CalendarFilters
+              typeFilter={typeFilter}
+              statusFilter={statusFilter}
+              onTypeFilterChange={setTypeFilter}
+              onStatusFilterChange={setStatusFilter}
+            />
           </div>
           
           <div className="bg-red-950/10 p-6 rounded-lg border border-red-900/20">
@@ -366,145 +281,17 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
               }}
             />
           </div>
+
+          <EventModal
+            isOpen={isModalOpen}
+            onOpenChange={setIsModalOpen}
+            modalData={modalData}
+            setModalData={setModalData}
+            onSave={handleSaveEvent}
+            onDelete={handleDeleteEvent}
+          />
         </div>
       </div>
-
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="bg-[#1A1F2C] text-white border-red-900/20">
-          <DialogHeader>
-            <DialogTitle>{modalData.id ? 'Etkinliği Düzenle' : 'Yeni Etkinlik'}</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="title">Başlık</Label>
-              <Input
-                id="title"
-                value={modalData.title}
-                onChange={(e) => setModalData({ ...modalData, title: e.target.value })}
-                className="bg-red-950/10 border-red-900/20"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="start">Başlangıç</Label>
-                <Input
-                  id="start"
-                  type="datetime-local"
-                  value={modalData.start}
-                  onChange={(e) => setModalData({ ...modalData, start: e.target.value })}
-                  className="bg-red-950/10 border-red-900/20"
-                />
-              </div>
-              <div>
-                <Label htmlFor="end">Bitiş</Label>
-                <Input
-                  id="end"
-                  type="datetime-local"
-                  value={modalData.end}
-                  onChange={(e) => setModalData({ ...modalData, end: e.target.value })}
-                  className="bg-red-950/10 border-red-900/20"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="description">Açıklama</Label>
-              <Input
-                id="description"
-                value={modalData.description}
-                onChange={(e) => setModalData({ ...modalData, description: e.target.value })}
-                className="bg-red-950/10 border-red-900/20"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="event_type">Etkinlik Tipi</Label>
-              <Select
-                value={modalData.event_type}
-                onValueChange={(value: 'technical' | 'sales') => 
-                  setModalData({ ...modalData, event_type: value })}
-              >
-                <SelectTrigger className="bg-red-950/10 border-red-900/20">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="technical">Teknik</SelectItem>
-                  <SelectItem value="sales">Satış</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {modalData.event_type === 'technical' && (
-              <div>
-                <Label htmlFor="category">Teknik İşlem Tipi</Label>
-                <Select
-                  value={modalData.category}
-                  onValueChange={(value: string) => 
-                    setModalData({ ...modalData, category: value })}
-                >
-                  <SelectTrigger className="bg-red-950/10 border-red-900/20">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="installation">Kurulum</SelectItem>
-                    <SelectItem value="maintenance">Bakım</SelectItem>
-                    <SelectItem value="repair">Onarım</SelectItem>
-                    <SelectItem value="inspection">Kontrol</SelectItem>
-                    <SelectItem value="emergency">Acil Müdahale</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <div>
-              <Label htmlFor="status">Durum</Label>
-              <Select
-                value={modalData.status}
-                onValueChange={(value: 'scheduled' | 'completed' | 'canceled') => 
-                  setModalData({ ...modalData, status: value })}
-              >
-                <SelectTrigger className="bg-red-950/10 border-red-900/20">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="scheduled">Planlandı</SelectItem>
-                  <SelectItem value="completed">Tamamlandı</SelectItem>
-                  <SelectItem value="canceled">İptal Edildi</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <DialogFooter className="flex justify-between">
-            {modalData.id && (
-              <Button
-                variant="destructive"
-                onClick={handleDeleteEvent}
-                className="bg-red-700 hover:bg-red-800"
-              >
-                Sil
-              </Button>
-            )}
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsModalOpen(false)}
-                className="border-red-900/20 text-white hover:bg-red-900/20"
-              >
-                İptal
-              </Button>
-              <Button
-                onClick={handleSaveEvent}
-                className="bg-red-900 hover:bg-red-800"
-              >
-                Kaydet
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
