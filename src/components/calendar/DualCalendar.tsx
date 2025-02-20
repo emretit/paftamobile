@@ -1,6 +1,7 @@
 
+"use client";
+
 import * as React from "react";
-import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { TabsList, TabsTrigger, Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -31,12 +32,12 @@ interface Employee {
   department: "technical" | "sales";
 }
 
-const DualCalendar = (): JSX.Element => {
+export default function DualCalendar(): JSX.Element {
   const { toast } = useToast();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [activeCalendar, setActiveCalendar] = useState<"technical" | "sales">("technical");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [employeeFilter, setEmployeeFilter] = useState<string>("all");
+  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date());
+  const [activeCalendar, setActiveCalendar] = React.useState<"technical" | "sales">("technical");
+  const [categoryFilter, setCategoryFilter] = React.useState<string>("all");
+  const [employeeFilter, setEmployeeFilter] = React.useState<string>("all");
 
   const employees: Employee[] = [
     { id: "1", name: "Ahmet Yılmaz", department: "technical" },
@@ -138,7 +139,7 @@ const DualCalendar = (): JSX.Element => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tüm Kategoriler</SelectItem>
-                {categories[activeCalendar].map((category: string) => (
+                {categories[activeCalendar].map((category) => (
                   <SelectItem key={category} value={category}>
                     {category}
                   </SelectItem>
@@ -181,7 +182,7 @@ const DualCalendar = (): JSX.Element => {
                 </Button>
               </div>
               <div className="space-y-2">
-                {getDayEvents(selectedDate || new Date()).map((event: Event) => (
+                {getDayEvents(selectedDate || new Date()).map((event) => (
                   <div 
                     key={event.id}
                     className={cn(
@@ -210,6 +211,4 @@ const DualCalendar = (): JSX.Element => {
       </Tabs>
     </div>
   );
-};
-
-export default DualCalendar;
+}
