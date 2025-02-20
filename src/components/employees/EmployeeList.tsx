@@ -7,6 +7,33 @@ import { EmployeeGrid } from "./EmployeeGrid";
 import type { Employee } from "./types";
 import { useToast } from "@/components/ui/use-toast";
 
+// Type guard to check if status is valid
+const isValidStatus = (status: string): status is Employee['status'] => {
+  return ['aktif', 'pasif', 'izinli', 'ayrıldı'].includes(status);
+};
+
+// Function to transform database row to Employee type
+const transformToEmployee = (row: any): Employee => {
+  if (!isValidStatus(row.status)) {
+    // Default to 'aktif' if status is invalid
+    console.warn(`Invalid status: ${row.status}, defaulting to 'aktif'`);
+    row.status = 'aktif';
+  }
+  
+  return {
+    id: row.id,
+    first_name: row.first_name,
+    last_name: row.last_name,
+    email: row.email,
+    phone: row.phone,
+    position: row.position,
+    department: row.department,
+    hire_date: row.hire_date,
+    status: row.status,
+    avatar_url: row.avatar_url
+  };
+};
+
 export const EmployeeList = () => {
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -32,7 +59,9 @@ export const EmployeeList = () => {
           return;
         }
 
-        setEmployees(data || []);
+        // Transform the data to match Employee type
+        const transformedEmployees = (data || []).map(transformToEmployee);
+        setEmployees(transformedEmployees);
       } catch (error) {
         console.error('Error:', error);
         toast({
