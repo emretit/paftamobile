@@ -44,29 +44,12 @@ interface EventModalData {
   assigned_to?: string;
 }
 
-type FilterOptions = {
-  type: 'all' | 'technical' | 'sales';
-  status: 'all' | 'scheduled' | 'completed' | 'canceled';
-};
+type EventType = 'all' | 'technical' | 'sales';
+type EventStatus = 'all' | 'scheduled' | 'completed' | 'canceled';
 
 interface Filters {
-  type: FilterOptions['type'];
-  status: FilterOptions['status'];
-}
-
-// Define the database event type to match Supabase schema
-interface DbEvent {
-  id: string;
-  title: string;
-  start_time: string;
-  end_time: string;
-  description: string | null;
-  event_type: 'technical' | 'sales';
-  category: string;
-  status: 'scheduled' | 'completed' | 'canceled';
-  assigned_to: string | null;
-  created_at: string;
-  updated_at: string;
+  type: EventType;
+  status: EventStatus;
 }
 
 const EVENT_CATEGORIES = {
@@ -92,7 +75,7 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
     status: 'scheduled'
   });
 
-  const [filters, setFilters] = useState<FilterOptions>({
+  const [filters, setFilters] = useState<Filters>({
     type: 'all',
     status: 'all'
   });
@@ -219,7 +202,6 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
   const handleSaveEvent = async () => {
     try {
       if (modalData.id) {
-        // Update existing event
         const { error } = await supabase
           .from('events')
           .update({
@@ -241,7 +223,6 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
           description: "Etkinlik güncellendi."
         });
       } else {
-        // Create new event
         const { error } = await supabase
           .from('events')
           .insert([{
@@ -314,7 +295,7 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
             <div className="flex gap-4">
               <Select
                 value={filters.type}
-                onValueChange={(value: FilterOptions['type']) => 
+                onValueChange={(value: EventType) => 
                   setFilters(prev => ({ ...prev, type: value }))}
               >
                 <SelectTrigger className="w-[180px] bg-red-950/10 border-red-900/20 text-white">
@@ -329,7 +310,7 @@ const Calendar = ({ isCollapsed, setIsCollapsed }: CalendarProps) => {
 
               <Select
                 value={filters.status}
-                onValueChange={(value: FilterOptions['status']) => 
+                onValueChange={(value: EventStatus) => 
                   setFilters(prev => ({ ...prev, status: value }))}
               >
                 <SelectTrigger className="w-[180px] bg-red-950/10 border-red-900/20 text-white">
