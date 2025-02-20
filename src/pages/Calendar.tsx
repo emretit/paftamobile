@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import EventModal from "@/components/calendar/EventModal";
 import CalendarFilters from "@/components/calendar/CalendarFilters";
