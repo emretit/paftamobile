@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Upload } from "lucide-react";
 
 interface EmployeeFormData {
   first_name: string;
@@ -23,7 +23,8 @@ interface EmployeeFormData {
   position: string;
   department: string;
   hire_date: string;
-  status: 'aktif' | 'pasif' | 'izinli' | 'ayrıldı';
+  status: 'aktif' | 'pasif';
+  avatar_url?: string;
 }
 
 const initialFormData: EmployeeFormData = {
@@ -37,20 +38,103 @@ const initialFormData: EmployeeFormData = {
   status: "aktif"
 };
 
+const DEPARTMENTS = ['Teknik', 'Satış', 'Finans', 'İnsan Kaynakları', 'Müşteri Hizmetleri'];
+const POSITIONS = ['Yönetici', 'Teknisyen', 'Satış Temsilcisi', 'Destek Uzmanı', 'Analist'];
+
 export const EmployeeForm = () => {
   const [formData, setFormData] = useState<EmployeeFormData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const validatePhoneNumber = (phone: string) => {
+    const phoneRegex = /^[\d\s+()-]{10,}$/;
+    return phoneRegex.test(phone);
+  };
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "Hata",
+          description: "Dosya boyutu 5MB'dan küçük olmalıdır.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const uploadAvatar = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('employee_avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('employee_avatars')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Avatar yükleme hatası:', error);
+      return null;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
+    // Form validasyonu
+    if (!validateEmail(formData.email)) {
+      toast({
+        title: "Hata",
+        description: "Geçerli bir e-posta adresi giriniz.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.phone && !validatePhoneNumber(formData.phone)) {
+      toast({
+        title: "Hata",
+        description: "Geçerli bir telefon numarası giriniz.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
     try {
+      let avatarUrl = null;
+      if (selectedFile) {
+        avatarUrl = await uploadAvatar(selectedFile);
+      }
+
+      const employeeData = {
+        ...formData,
+        avatar_url: avatarUrl,
+      };
+
       const { error } = await supabase
         .from('employees')
-        .insert([formData]);
+        .insert([employeeData]);
 
       if (error) throw error;
 
@@ -127,28 +211,47 @@ export const EmployeeForm = () => {
               id="phone"
               value={formData.phone}
               onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
+              placeholder="0555 555 55 55"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="position">Pozisyon</Label>
-              <Input
-                id="position"
+              <Select
                 value={formData.position}
-                onChange={(e) => setFormData(prev => ({...prev, position: e.target.value}))}
-                required
-              />
+                onValueChange={(value) => setFormData(prev => ({...prev, position: value}))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pozisyon seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {POSITIONS.map((position) => (
+                    <SelectItem key={position} value={position}>
+                      {position}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="department">Departman</Label>
-              <Input
-                id="department"
+              <Select
                 value={formData.department}
-                onChange={(e) => setFormData(prev => ({...prev, department: e.target.value}))}
-                required
-              />
+                onValueChange={(value) => setFormData(prev => ({...prev, department: value}))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Departman seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DEPARTMENTS.map((department) => (
+                    <SelectItem key={department} value={department}>
+                      {department}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -168,7 +271,7 @@ export const EmployeeForm = () => {
               <Label htmlFor="status">Durum</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value: any) => setFormData(prev => ({...prev, status: value}))}
+                onValueChange={(value: 'aktif' | 'pasif') => setFormData(prev => ({...prev, status: value}))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Durum seçin" />
@@ -176,10 +279,26 @@ export const EmployeeForm = () => {
                 <SelectContent>
                   <SelectItem value="aktif">Aktif</SelectItem>
                   <SelectItem value="pasif">Pasif</SelectItem>
-                  <SelectItem value="izinli">İzinli</SelectItem>
-                  <SelectItem value="ayrıldı">Ayrıldı</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="avatar">Profil Fotoğrafı</Label>
+            <div className="flex items-center space-x-4">
+              <Input
+                id="avatar"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="flex-1"
+              />
+              {selectedFile && (
+                <div className="text-sm text-gray-500">
+                  {selectedFile.name}
+                </div>
+              )}
             </div>
           </div>
 
