@@ -15,8 +15,8 @@ interface FilterBarProps {
   onDepartmentChange: (departments: string[]) => void;
 }
 
-const DEPARTMENTS = ['Technical', 'Sales', 'Finance', 'Human Resources', 'Customer Support'];
-const STATUSES = ['Active', 'Inactive'];
+const DEPARTMENTS = ['Teknik', 'Satış', 'Finans', 'İnsan Kaynakları', 'Müşteri Desteği'];
+const STATUSES = ['Aktif', 'Pasif'];
 
 export const FilterBar = ({ 
   viewMode, 
@@ -36,7 +36,7 @@ export const FilterBar = ({
             variant={viewMode === 'table' ? 'default' : 'outline'}
             onClick={() => setViewMode('table')}
             size="icon"
-            title="Table View"
+            title="Tablo Görünümü"
             className="w-9 h-9"
           >
             <Table className="h-4 w-4" />
@@ -45,7 +45,7 @@ export const FilterBar = ({
             variant={viewMode === 'grid' ? 'default' : 'outline'}
             onClick={() => setViewMode('grid')}
             size="icon"
-            title="Grid View"
+            title="Kart Görünümü"
             className="w-9 h-9"
           >
             <LayoutGrid className="h-4 w-4" />
@@ -56,7 +56,7 @@ export const FilterBar = ({
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search employees..."
+              placeholder="Çalışan ara..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-10"
@@ -74,7 +74,7 @@ export const FilterBar = ({
             }}
           >
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select department" />
+              <SelectValue placeholder="Departman seç" />
             </SelectTrigger>
             <SelectContent>
               {DEPARTMENTS.map((department) => (
@@ -87,7 +87,7 @@ export const FilterBar = ({
 
           <Select>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select status" />
+              <SelectValue placeholder="Durum seç" />
             </SelectTrigger>
             <SelectContent>
               {STATUSES.map((status) => (
@@ -100,7 +100,7 @@ export const FilterBar = ({
 
           <Button onClick={() => navigate('/employees/new')} className="hidden sm:flex items-center gap-2 whitespace-nowrap">
             <UserPlus className="h-4 w-4" />
-            New Employee
+            Yeni Çalışan
           </Button>
         </div>
       </div>
@@ -110,7 +110,7 @@ export const FilterBar = ({
         className="w-full sm:hidden flex items-center gap-2 justify-center mt-4"
       >
         <UserPlus className="h-4 w-4" />
-        New Employee
+        Yeni Çalışan
       </Button>
     </div>
   );
