@@ -49,12 +49,10 @@ export const FilterBar = ({ viewMode, setViewMode, searchQuery, onSearchChange }
           />
         </div>
         
-        {isAdmin && (
-          <Button onClick={() => navigate('/employees/new')} className="flex items-center gap-2 whitespace-nowrap">
-            <UserPlus className="h-4 w-4" />
-            New Employee
-          </Button>
-        )}
+        <Button onClick={() => navigate('/employees/new')} className="flex items-center gap-2 whitespace-nowrap">
+          <UserPlus className="h-4 w-4" />
+          New Employee
+        </Button>
       </div>
     </div>
   );
