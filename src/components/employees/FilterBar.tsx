@@ -2,19 +2,9 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { UserPlus, Search, Table, LayoutGrid, Filter, X } from "lucide-react";
+import { UserPlus, Search, Table, LayoutGrid } from "lucide-react";
 import type { ViewMode } from "./types";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface FilterBarProps {
   viewMode: ViewMode;
@@ -37,18 +27,6 @@ export const FilterBar = ({
   onDepartmentChange
 }: FilterBarProps) => {
   const navigate = useNavigate();
-
-  const clearFilters = () => {
-    onDepartmentChange([]);
-    onSearchChange("");
-  };
-
-  const getActiveFilterCount = () => {
-    let count = 0;
-    if (searchQuery) count++;
-    if (selectedDepartments.length > 0) count++;
-    return count;
-  };
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm border mb-6">
@@ -74,7 +52,7 @@ export const FilterBar = ({
           </Button>
         </div>
 
-        <div className="flex flex-1 items-center gap-2 max-w-xl">
+        <div className="flex flex-1 items-center gap-4 max-w-4xl">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
@@ -85,74 +63,40 @@ export const FilterBar = ({
             />
           </div>
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-10">
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-                {getActiveFilterCount() > 0 && (
-                  <Badge variant="secondary" className="ml-2">
-                    {getActiveFilterCount()}
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Department</Label>
-                  <Select
-                    value={selectedDepartments[0] || ""}
-                    onValueChange={(value) => {
-                      if (value) {
-                        onDepartmentChange([value]);
-                      } else {
-                        onDepartmentChange([]);
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DEPARTMENTS.map((department) => (
-                        <SelectItem key={department} value={department}>
-                          {department}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+          <Select
+            value={selectedDepartments[0] || ""}
+            onValueChange={(value) => {
+              if (value) {
+                onDepartmentChange([value]);
+              } else {
+                onDepartmentChange([]);
+              }
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select department" />
+            </SelectTrigger>
+            <SelectContent>
+              {DEPARTMENTS.map((department) => (
+                <SelectItem key={department} value={department}>
+                  {department}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUSES.map((status) => (
-                        <SelectItem key={status} value={status.toLowerCase()}>
-                          {status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Separator />
-
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={clearFilters}
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Clear Filters
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <Select>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUSES.map((status) => (
+                <SelectItem key={status} value={status.toLowerCase()}>
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           <Button onClick={() => navigate('/employees/new')} className="hidden sm:flex items-center gap-2 whitespace-nowrap">
             <UserPlus className="h-4 w-4" />
