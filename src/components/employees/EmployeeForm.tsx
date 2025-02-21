@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,14 +53,13 @@ export const EmployeeForm = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
 
-  // Fetch departments
+  // Fetch departments using type assertion
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
         const { data, error } = await supabase
           .from('departments')
-          .select('id, name')
-          .order('name');
+          .select('*') as { data: Department[] | null; error: Error | null };
 
         if (error) {
           throw error;
@@ -94,8 +92,7 @@ export const EmployeeForm = () => {
           // Refresh departments when changes occur
           const { data } = await supabase
             .from('departments')
-            .select('id, name')
-            .order('name');
+            .select('*') as { data: Department[] | null };
           setDepartments(data || []);
         }
       )
@@ -283,7 +280,6 @@ export const EmployeeForm = () => {
                   setFormData(prev => ({
                     ...prev, 
                     position: value,
-                    // Eğer Admin seçildiyse department'ı temizle
                     department: value === 'Admin' ? '' : prev.department
                   }));
                 }}
