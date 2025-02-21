@@ -9,15 +9,15 @@ import { useToast } from "@/components/ui/use-toast";
 
 // Type guard to check if status is valid
 const isValidStatus = (status: string): status is Employee['status'] => {
-  return ['aktif', 'pasif', 'izinli', 'ayrıldı'].includes(status);
+  return ['active', 'inactive'].includes(status);
 };
 
 // Function to transform database row to Employee type
 const transformToEmployee = (row: any): Employee => {
   if (!isValidStatus(row.status)) {
-    // Default to 'aktif' if status is invalid
-    console.warn(`Invalid status: ${row.status}, defaulting to 'aktif'`);
-    row.status = 'aktif';
+    // Default to 'active' if status is invalid
+    console.warn(`Invalid status: ${row.status}, defaulting to 'active'`);
+    row.status = 'active';
   }
   
   return {
@@ -75,6 +75,55 @@ export const EmployeeList = () => {
     };
 
     fetchEmployees();
+
+    // Set up realtime subscription
+    const channel = supabase
+      .channel('employees-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'employees'
+        },
+        async (payload) => {
+          console.log('Realtime update received:', payload);
+          
+          // Refetch the entire list to ensure consistency
+          const { data: updatedData } = await supabase
+            .from('employees')
+            .select('id, first_name, last_name, email, phone, position, department, hire_date, status, avatar_url');
+            
+          if (updatedData) {
+            const transformedEmployees = updatedData.map(transformToEmployee);
+            setEmployees(transformedEmployees);
+            
+            // Show notification for changes
+            let message = '';
+            switch (payload.eventType) {
+              case 'INSERT':
+                message = 'New employee added';
+                break;
+              case 'UPDATE':
+                message = 'Employee information updated';
+                break;
+              case 'DELETE':
+                message = 'Employee removed';
+                break;
+            }
+            
+            toast({
+              title: "Update",
+              description: message,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [toast]);
 
   if (isLoading) {
