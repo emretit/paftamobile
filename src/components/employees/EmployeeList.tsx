@@ -6,6 +6,7 @@ import { EmployeeTable } from "./EmployeeTable";
 import { EmployeeGrid } from "./EmployeeGrid";
 import type { Employee } from "./types";
 import { useToast } from "@/components/ui/use-toast";
+import { useDebounce } from "@/hooks/useDebounce";
 
 // Type guard to check if status is valid
 const isValidStatus = (status: string): status is Employee['status'] => {
@@ -15,7 +16,6 @@ const isValidStatus = (status: string): status is Employee['status'] => {
 // Function to transform database row to Employee type
 const transformToEmployee = (row: any): Employee => {
   if (!isValidStatus(row.status)) {
-    // Default to 'active' if status is invalid
     console.warn(`Invalid status: ${row.status}, defaulting to 'active'`);
     row.status = 'active';
   }
@@ -38,45 +38,54 @@ export const EmployeeList = () => {
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        setIsLoading(true);
-        // Simplify the query to avoid DataCloneError
-        const { data, error } = await supabase
-          .from('employees')
-          .select('id, first_name, last_name, email, phone, position, department, hire_date, status, avatar_url');
+  const fetchEmployees = async (search?: string) => {
+    try {
+      setIsLoading(true);
+      let query = supabase
+        .from('employees')
+        .select('id, first_name, last_name, email, phone, position, department, hire_date, status, avatar_url');
 
-        if (error) {
-          toast({
-            title: "Hata",
-            description: "Çalışan listesi alınamadı.",
-            variant: "destructive",
-          });
-          console.error('Error fetching employees:', error);
-          return;
-        }
+      if (search) {
+        query = query.rpc('search_employees', { search_query: search });
+      }
 
-        console.log('Fetched employees:', data); // Debug log
-        const transformedEmployees = (data || []).map(transformToEmployee);
-        setEmployees(transformedEmployees);
-      } catch (error) {
-        console.error('Error:', error);
+      const { data, error } = await query;
+
+      if (error) {
         toast({
-          title: "Hata",
-          description: "Bir hata oluştu.",
+          title: "Error",
+          description: "Failed to fetch employees",
           variant: "destructive",
         });
-      } finally {
-        setIsLoading(false);
+        console.error('Error fetching employees:', error);
+        return;
       }
-    };
 
-    fetchEmployees();
+      const transformedEmployees = (data || []).map(transformToEmployee);
+      setEmployees(transformedEmployees);
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    // Set up realtime subscription
+  // Effect for search
+  useEffect(() => {
+    fetchEmployees(debouncedSearch);
+  }, [debouncedSearch]);
+
+  // Effect for realtime updates
+  useEffect(() => {
     const channel = supabase
       .channel('employees-changes')
       .on(
@@ -88,35 +97,25 @@ export const EmployeeList = () => {
         },
         async (payload) => {
           console.log('Realtime update received:', payload);
+          await fetchEmployees(debouncedSearch);
           
-          // Refetch the entire list to ensure consistency
-          const { data: updatedData } = await supabase
-            .from('employees')
-            .select('id, first_name, last_name, email, phone, position, department, hire_date, status, avatar_url');
-            
-          if (updatedData) {
-            const transformedEmployees = updatedData.map(transformToEmployee);
-            setEmployees(transformedEmployees);
-            
-            // Show notification for changes
-            let message = '';
-            switch (payload.eventType) {
-              case 'INSERT':
-                message = 'New employee added';
-                break;
-              case 'UPDATE':
-                message = 'Employee information updated';
-                break;
-              case 'DELETE':
-                message = 'Employee removed';
-                break;
-            }
-            
-            toast({
-              title: "Update",
-              description: message,
-            });
+          let message = '';
+          switch (payload.eventType) {
+            case 'INSERT':
+              message = 'New employee added';
+              break;
+            case 'UPDATE':
+              message = 'Employee information updated';
+              break;
+            case 'DELETE':
+              message = 'Employee removed';
+              break;
           }
+          
+          toast({
+            title: "Update",
+            description: message,
+          });
         }
       )
       .subscribe();
@@ -124,19 +123,24 @@ export const EmployeeList = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [toast]);
+  }, [debouncedSearch, toast]);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
-        <div className="text-gray-500">Yükleniyor...</div>
+        <div className="text-gray-500">Loading...</div>
       </div>
     );
   }
 
   return (
     <>
-      <FilterBar viewMode={viewMode} setViewMode={setViewMode} />
+      <FilterBar 
+        viewMode={viewMode} 
+        setViewMode={setViewMode}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
       {viewMode === 'table' ? (
         <EmployeeTable employees={employees} />
       ) : (

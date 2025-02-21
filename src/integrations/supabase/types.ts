@@ -734,6 +734,36 @@ export type Database = {
         }
         Returns: string
       }
+      gtrgm_compress: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      gtrgm_decompress: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      gtrgm_in: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: {
+          "": unknown
+        }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
       has_role: {
         Args: {
           required_role: Database["public"]["Enums"]["user_role"]
@@ -754,6 +784,41 @@ export type Database = {
           email: string
         }
         Returns: undefined
+      }
+      search_employees: {
+        Args: {
+          search_query: string
+        }
+        Returns: {
+          avatar_url: string | null
+          created_at: string | null
+          department: string
+          email: string
+          first_name: string
+          hire_date: string
+          id: string
+          last_name: string
+          phone: string | null
+          position: string
+          status: string
+          updated_at: string | null
+        }[]
+      }
+      set_limit: {
+        Args: {
+          "": number
+        }
+        Returns: number
+      }
+      show_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      show_trgm: {
+        Args: {
+          "": string
+        }
+        Returns: string[]
       }
     }
     Enums: {
