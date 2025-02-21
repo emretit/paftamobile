@@ -1,154 +1,31 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft } from "lucide-react";
-
-interface Department {
-  id: string;
-  name: string;
-}
-
-interface EmployeeFormData {
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  position: string;
-  department: string;
-  hire_date: string;
-  status: 'active' | 'inactive';
-  avatar_url?: string;
-}
-
-const initialFormData: EmployeeFormData = {
-  first_name: "",
-  last_name: "",
-  email: "",
-  phone: "",
-  position: "",
-  department: "",
-  hire_date: new Date().toISOString().split('T')[0],
-  status: "active"
-};
-
-const POSITIONS = ['Admin', 'Technician', 'Sales Rep', 'Support'];
+import { PersonalInfo } from "./form/PersonalInfo";
+import { RoleInfo } from "./form/RoleInfo";
+import { StatusInfo } from "./form/StatusInfo";
+import { ImageUpload } from "./form/ImageUpload";
+import { useEmployeeDepartments } from "./form/useEmployeeDepartments";
+import { useImageUpload } from "./form/useImageUpload";
+import { useFormValidation } from "./form/useFormValidation";
+import { initialFormData, type EmployeeFormData } from "./form/types";
 
 export const EmployeeForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const departments = useEmployeeDepartments();
+  const { selectedFile, handleFileChange, uploadAvatar } = useImageUpload();
+  const { validateEmail, validatePhoneNumber } = useFormValidation();
   
   const [formData, setFormData] = useState<EmployeeFormData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [departments, setDepartments] = useState<Department[]>([]);
 
-  // Fetch departments using type assertion
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('departments')
-          .select('*') as { data: Department[] | null; error: Error | null };
-
-        if (error) {
-          throw error;
-        }
-
-        setDepartments(data || []);
-      } catch (error) {
-        console.error('Error fetching departments:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load departments",
-          variant: "destructive",
-        });
-      }
-    };
-
-    fetchDepartments();
-
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel('departments-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'departments'
-        },
-        async () => {
-          // Refresh departments when changes occur
-          const { data } = await supabase
-            .from('departments')
-            .select('*') as { data: Department[] | null };
-          setDepartments(data || []);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [toast]);
-
-  const validatePhoneNumber = (phone: string) => {
-    const phoneRegex = /^[\d\s+()-]{10,}$/;
-    return phoneRegex.test(phone);
-  };
-
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast({
-          title: "Error",
-          description: "File size must be less than 5MB",
-          variant: "destructive",
-        });
-        return;
-      }
-      setSelectedFile(file);
-    }
-  };
-
-  const uploadAvatar = async (file: File): Promise<string | null> => {
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('employee_avatars')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('employee_avatars')
-        .getPublicUrl(filePath);
-
-      return publicUrl;
-    } catch (error) {
-      console.error('Avatar upload error:', error);
-      return null;
-    }
+  const handleFormChange = (field: keyof EmployeeFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -210,8 +87,6 @@ export const EmployeeForm = () => {
     }
   };
 
-  const shouldShowDepartment = formData.position !== 'Admin';
-
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
@@ -228,143 +103,26 @@ export const EmployeeForm = () => {
         <h1 className="text-2xl font-bold mb-6">Add New Employee</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="first_name">First Name</Label>
-              <Input
-                id="first_name"
-                value={formData.first_name}
-                onChange={(e) => setFormData(prev => ({...prev, first_name: e.target.value}))}
-                required
-              />
-            </div>
+          <PersonalInfo
+            formData={formData}
+            onFormChange={handleFormChange}
+          />
 
-            <div className="space-y-2">
-              <Label htmlFor="last_name">Last Name</Label>
-              <Input
-                id="last_name"
-                value={formData.last_name}
-                onChange={(e) => setFormData(prev => ({...prev, last_name: e.target.value}))}
-                required
-              />
-            </div>
-          </div>
+          <RoleInfo
+            formData={formData}
+            departments={departments}
+            onFormChange={handleFormChange}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
-              required
-            />
-          </div>
+          <StatusInfo
+            formData={formData}
+            onFormChange={handleFormChange}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone</Label>
-            <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
-              placeholder="+1 234 567 8900"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="position">Role</Label>
-              <Select
-                value={formData.position}
-                onValueChange={(value) => {
-                  setFormData(prev => ({
-                    ...prev, 
-                    position: value,
-                    department: value === 'Admin' ? '' : prev.department
-                  }));
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  {POSITIONS.map((position) => (
-                    <SelectItem key={position} value={position}>
-                      {position}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {shouldShowDepartment && (
-              <div className="space-y-2">
-                <Label htmlFor="department">Department</Label>
-                <Select
-                  value={formData.department}
-                  onValueChange={(value) => setFormData(prev => ({...prev, department: value}))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map((department) => (
-                      <SelectItem key={department.id} value={department.name}>
-                        {department.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="hire_date">Start Date</Label>
-              <Input
-                id="hire_date"
-                type="date"
-                value={formData.hire_date}
-                onChange={(e) => setFormData(prev => ({...prev, hire_date: e.target.value}))}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value: 'active' | 'inactive') => setFormData(prev => ({...prev, status: value}))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="avatar">Profile Picture</Label>
-            <div className="flex items-center space-x-4">
-              <Input
-                id="avatar"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="flex-1"
-              />
-              {selectedFile && (
-                <div className="text-sm text-gray-500">
-                  {selectedFile.name}
-                </div>
-              )}
-            </div>
-          </div>
+          <ImageUpload
+            onFileChange={handleFileChange}
+            selectedFile={selectedFile}
+          />
 
           <div className="flex justify-end space-x-4">
             <Button
