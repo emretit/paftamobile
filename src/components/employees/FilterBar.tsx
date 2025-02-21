@@ -19,7 +19,7 @@ export const FilterBar = ({ viewMode, setViewMode, searchQuery, onSearchChange }
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-      <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+      <div className="w-full sm:w-auto flex items-center gap-4">
         <div className="flex items-center gap-2">
           <Button
             variant={viewMode === 'table' ? 'default' : 'outline'}
@@ -39,23 +39,22 @@ export const FilterBar = ({ viewMode, setViewMode, searchQuery, onSearchChange }
           </Button>
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="relative w-full sm:w-[300px]">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Search employees..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          {isAdmin && (
-            <Button onClick={() => navigate('/employees/new')} className="flex items-center gap-2 whitespace-nowrap">
-              <UserPlus className="h-4 w-4" />
-              New Employee
-            </Button>
-          )}
+        <div className="relative w-[300px]">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+          <Input
+            placeholder="Search employees..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-9"
+          />
         </div>
+        
+        {isAdmin && (
+          <Button onClick={() => navigate('/employees/new')} className="flex items-center gap-2 whitespace-nowrap">
+            <UserPlus className="h-4 w-4" />
+            New Employee
+          </Button>
+        )}
       </div>
     </div>
   );
