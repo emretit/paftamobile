@@ -6,8 +6,10 @@ export interface Employee {
   position: string;
   department: string;
   hire_date: string;
-  status: 'aktif' | 'pasif' | 'izinli' | 'ayrıldı';
+  status: 'active' | 'inactive';
   email: string;
   phone: string | null;
   avatar_url: string | null;
 }
+
+export type ViewMode = 'table' | 'grid';

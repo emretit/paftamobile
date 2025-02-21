@@ -23,7 +23,7 @@ interface EmployeeFormData {
   position: string;
   department: string;
   hire_date: string;
-  status: 'aktif' | 'pasif';
+  status: 'active' | 'inactive';
   avatar_url?: string;
 }
 
@@ -35,11 +35,11 @@ const initialFormData: EmployeeFormData = {
   position: "",
   department: "",
   hire_date: new Date().toISOString().split('T')[0],
-  status: "aktif"
+  status: "active"
 };
 
-const DEPARTMENTS = ['Teknik', 'Satış', 'Finans', 'İnsan Kaynakları', 'Müşteri Hizmetleri'];
-const POSITIONS = ['Yönetici', 'Teknisyen', 'Satış Temsilcisi', 'Destek Uzmanı', 'Analist'];
+const DEPARTMENTS = ['Technical', 'Sales', 'Finance', 'Human Resources', 'Customer Support'];
+const POSITIONS = ['Admin', 'Technician', 'Sales Rep', 'Support'];
 
 export const EmployeeForm = () => {
   const [formData, setFormData] = useState<EmployeeFormData>(initialFormData);
@@ -63,8 +63,8 @@ export const EmployeeForm = () => {
       const file = e.target.files[0];
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
         toast({
-          title: "Hata",
-          description: "Dosya boyutu 5MB'dan küçük olmalıdır.",
+          title: "Error",
+          description: "File size must be less than 5MB",
           variant: "destructive",
         });
         return;
@@ -91,7 +91,7 @@ export const EmployeeForm = () => {
 
       return publicUrl;
     } catch (error) {
-      console.error('Avatar yükleme hatası:', error);
+      console.error('Avatar upload error:', error);
       return null;
     }
   };
@@ -100,11 +100,11 @@ export const EmployeeForm = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Form validasyonu
+    // Form validation
     if (!validateEmail(formData.email)) {
       toast({
-        title: "Hata",
-        description: "Geçerli bir e-posta adresi giriniz.",
+        title: "Error",
+        description: "Please enter a valid email address",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -113,8 +113,8 @@ export const EmployeeForm = () => {
 
     if (formData.phone && !validatePhoneNumber(formData.phone)) {
       toast({
-        title: "Hata",
-        description: "Geçerli bir telefon numarası giriniz.",
+        title: "Error",
+        description: "Please enter a valid phone number",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -139,16 +139,16 @@ export const EmployeeForm = () => {
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Çalışan başarıyla eklendi.",
+        title: "Success",
+        description: "Employee added successfully",
       });
       
       navigate("/employees");
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Hata",
-        description: "Çalışan eklenirken bir hata oluştu.",
+        title: "Error",
+        description: "Failed to add employee",
         variant: "destructive",
       });
     } finally {
@@ -164,17 +164,17 @@ export const EmployeeForm = () => {
           className="flex items-center text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Geri Dön
+          Go Back
         </button>
       </div>
 
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Yeni Çalışan Ekle</h1>
+        <h1 className="text-2xl font-bold mb-6">Add New Employee</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="first_name">Ad</Label>
+              <Label htmlFor="first_name">First Name</Label>
               <Input
                 id="first_name"
                 value={formData.first_name}
@@ -184,7 +184,7 @@ export const EmployeeForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="last_name">Soyad</Label>
+              <Label htmlFor="last_name">Last Name</Label>
               <Input
                 id="last_name"
                 value={formData.last_name}
@@ -195,7 +195,7 @@ export const EmployeeForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">E-posta</Label>
+            <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
@@ -206,24 +206,24 @@ export const EmployeeForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Telefon</Label>
+            <Label htmlFor="phone">Phone</Label>
             <Input
               id="phone"
               value={formData.phone}
               onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
-              placeholder="0555 555 55 55"
+              placeholder="+1 234 567 8900"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="position">Pozisyon</Label>
+              <Label htmlFor="position">Role</Label>
               <Select
                 value={formData.position}
                 onValueChange={(value) => setFormData(prev => ({...prev, position: value}))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Pozisyon seçin" />
+                  <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
                   {POSITIONS.map((position) => (
@@ -236,13 +236,13 @@ export const EmployeeForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="department">Departman</Label>
+              <Label htmlFor="department">Department</Label>
               <Select
                 value={formData.department}
                 onValueChange={(value) => setFormData(prev => ({...prev, department: value}))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Departman seçin" />
+                  <SelectValue placeholder="Select department" />
                 </SelectTrigger>
                 <SelectContent>
                   {DEPARTMENTS.map((department) => (
@@ -257,7 +257,7 @@ export const EmployeeForm = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="hire_date">İşe Başlama Tarihi</Label>
+              <Label htmlFor="hire_date">Start Date</Label>
               <Input
                 id="hire_date"
                 type="date"
@@ -268,24 +268,24 @@ export const EmployeeForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status">Durum</Label>
+              <Label htmlFor="status">Status</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value: 'aktif' | 'pasif') => setFormData(prev => ({...prev, status: value}))}
+                onValueChange={(value: 'active' | 'inactive') => setFormData(prev => ({...prev, status: value}))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Durum seçin" />
+                  <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="aktif">Aktif</SelectItem>
-                  <SelectItem value="pasif">Pasif</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="avatar">Profil Fotoğrafı</Label>
+            <Label htmlFor="avatar">Profile Picture</Label>
             <div className="flex items-center space-x-4">
               <Input
                 id="avatar"
@@ -308,10 +308,10 @@ export const EmployeeForm = () => {
               variant="outline"
               onClick={() => navigate("/employees")}
             >
-              İptal
+              Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Ekleniyor..." : "Çalışan Ekle"}
+              {isLoading ? "Adding..." : "Add Employee"}
             </Button>
           </div>
         </form>
