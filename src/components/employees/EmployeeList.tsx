@@ -50,7 +50,7 @@ export const EmployeeList = () => {
         .select('id, first_name, last_name, email, phone, position, department, hire_date, status, avatar_url');
 
       if (search) {
-        query = query.rpc('search_employees', { search_query: search });
+        query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%,department.ilike.%${search}%,position.ilike.%${search}%`);
       }
 
       const { data, error } = await query;
