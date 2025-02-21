@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { UserPlus, Search } from "lucide-react";
+import { UserPlus, Search, Table, LayoutGrid } from "lucide-react";
 import type { ViewMode } from "./types";
 import { useRoleCheck } from "@/hooks/useRoleCheck";
 import { Input } from "@/components/ui/input";
@@ -24,14 +24,18 @@ export const FilterBar = ({ viewMode, setViewMode, searchQuery, onSearchChange }
           <Button
             variant={viewMode === 'table' ? 'default' : 'outline'}
             onClick={() => setViewMode('table')}
+            size="icon"
+            title="Table View"
           >
-            Table View
+            <Table className="h-4 w-4" />
           </Button>
           <Button
             variant={viewMode === 'grid' ? 'default' : 'outline'}
             onClick={() => setViewMode('grid')}
+            size="icon"
+            title="Grid View"
           >
-            Grid View
+            <LayoutGrid className="h-4 w-4" />
           </Button>
         </div>
         
