@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft } from "lucide-react";
 import { PersonalInfo } from "./form/PersonalInfo";
 import { RoleInfo } from "./form/RoleInfo";
 import { StatusInfo } from "./form/StatusInfo";
@@ -13,15 +12,22 @@ import { useEmployeeDepartments } from "./form/useEmployeeDepartments";
 import { useImageUpload } from "./form/useImageUpload";
 import { useFormValidation } from "./form/useFormValidation";
 import { initialFormData, type EmployeeFormData } from "./form/types";
+import type { Employee } from "./types";
 
-export const EmployeeForm = () => {
+interface EmployeeFormProps {
+  initialData?: Employee;
+}
+
+export const EmployeeForm = ({ initialData }: EmployeeFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const departments = useEmployeeDepartments();
   const { selectedFile, handleFileChange, uploadAvatar } = useImageUpload();
   const { validateEmail, validatePhoneNumber } = useFormValidation();
   
-  const [formData, setFormData] = useState<EmployeeFormData>(initialFormData);
+  const [formData, setFormData] = useState<EmployeeFormData>(
+    initialData || initialFormData
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFormChange = (field: keyof EmployeeFormData, value: string) => {
@@ -34,8 +40,8 @@ export const EmployeeForm = () => {
 
     if (!validateEmail(formData.email)) {
       toast({
-        title: "Error",
-        description: "Please enter a valid email address",
+        title: "Hata",
+        description: "Geçerli bir e-posta adresi giriniz",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -44,8 +50,8 @@ export const EmployeeForm = () => {
 
     if (formData.phone && !validatePhoneNumber(formData.phone)) {
       toast({
-        title: "Error",
-        description: "Please enter a valid phone number",
+        title: "Hata",
+        description: "Geçerli bir telefon numarası giriniz",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -53,7 +59,7 @@ export const EmployeeForm = () => {
     }
 
     try {
-      let avatarUrl = null;
+      let avatarUrl = formData.avatar_url;
       if (selectedFile) {
         avatarUrl = await uploadAvatar(selectedFile);
       }
@@ -63,23 +69,41 @@ export const EmployeeForm = () => {
         avatar_url: avatarUrl,
       };
 
-      const { error } = await supabase
-        .from('employees')
-        .insert([employeeData]);
+      if (initialData) {
+        // Update existing employee
+        const { error } = await supabase
+          .from('employees')
+          .update(employeeData)
+          .eq('id', initialData.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Employee added successfully",
-      });
+        toast({
+          title: "Başarılı",
+          description: "Çalışan bilgileri güncellendi",
+        });
+      } else {
+        // Add new employee
+        const { error } = await supabase
+          .from('employees')
+          .insert([employeeData]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Başarılı",
+          description: "Çalışan eklendi",
+        });
+      }
       
       navigate("/employees");
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Error",
-        description: "Failed to add employee",
+        title: "Hata",
+        description: initialData 
+          ? "Çalışan güncellenirken bir hata oluştu"
+          : "Çalışan eklenirken bir hata oluştu",
         variant: "destructive",
       });
     } finally {
@@ -89,18 +113,10 @@ export const EmployeeForm = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <button
-          onClick={() => navigate("/employees")}
-          className="flex items-center text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Go Back
-        </button>
-      </div>
-
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Add New Employee</h1>
+        <h1 className="text-2xl font-bold mb-6">
+          {initialData ? 'Çalışan Düzenle' : 'Yeni Çalışan Ekle'}
+        </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <PersonalInfo
@@ -128,12 +144,12 @@ export const EmployeeForm = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate("/employees")}
+              onClick={() => navigate(initialData ? `/employees/details/${initialData.id}` : "/employees")}
             >
-              Cancel
+              İptal
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Adding..." : "Add Employee"}
+              {isLoading ? "Kaydediliyor..." : (initialData ? "Güncelle" : "Ekle")}
             </Button>
           </div>
         </form>
