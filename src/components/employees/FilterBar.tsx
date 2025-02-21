@@ -4,16 +4,42 @@ import { useNavigate } from "react-router-dom";
 import { UserPlus, Search, Table, LayoutGrid } from "lucide-react";
 import type { ViewMode } from "./types";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface FilterBarProps {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  selectedDepartments: string[];
+  onDepartmentChange: (departments: string[]) => void;
 }
 
-export const FilterBar = ({ viewMode, setViewMode, searchQuery, onSearchChange }: FilterBarProps) => {
+const DEPARTMENTS = ['Technical', 'Sales', 'Finance', 'Human Resources', 'Customer Support'];
+
+export const FilterBar = ({ 
+  viewMode, 
+  setViewMode, 
+  searchQuery, 
+  onSearchChange,
+  selectedDepartments,
+  onDepartmentChange
+}: FilterBarProps) => {
   const navigate = useNavigate();
+
+  const handleDepartmentClick = (department: string) => {
+    if (selectedDepartments.includes(department)) {
+      onDepartmentChange(selectedDepartments.filter(d => d !== department));
+    } else {
+      onDepartmentChange([...selectedDepartments, department]);
+    }
+  };
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -45,6 +71,19 @@ export const FilterBar = ({ viewMode, setViewMode, searchQuery, onSearchChange }
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-9"
           />
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
+          {DEPARTMENTS.map((department) => (
+            <Button
+              key={department}
+              variant={selectedDepartments.includes(department) ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleDepartmentClick(department)}
+            >
+              {department}
+            </Button>
+          ))}
         </div>
         
         <Button onClick={() => navigate('/employees/new')} className="flex items-center gap-2 whitespace-nowrap">

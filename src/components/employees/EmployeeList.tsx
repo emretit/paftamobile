@@ -39,6 +39,7 @@ export const EmployeeList = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const debouncedSearch = useDebounce(searchQuery, 300);
   const { toast } = useToast();
 
@@ -51,6 +52,10 @@ export const EmployeeList = () => {
 
       if (search) {
         query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%,department.ilike.%${search}%,position.ilike.%${search}%`);
+      }
+
+      if (selectedDepartments.length > 0) {
+        query = query.in('department', selectedDepartments);
       }
 
       const { data, error } = await query;
@@ -79,10 +84,10 @@ export const EmployeeList = () => {
     }
   };
 
-  // Effect for search
+  // Effect for search and department filters
   useEffect(() => {
     fetchEmployees(debouncedSearch);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, selectedDepartments]);
 
   // Effect for realtime updates
   useEffect(() => {
@@ -123,7 +128,7 @@ export const EmployeeList = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [debouncedSearch, toast]);
+  }, [debouncedSearch, selectedDepartments, toast]);
 
   if (isLoading) {
     return (
@@ -140,6 +145,8 @@ export const EmployeeList = () => {
         setViewMode={setViewMode}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        selectedDepartments={selectedDepartments}
+        onDepartmentChange={setSelectedDepartments}
       />
       {viewMode === 'table' ? (
         <EmployeeTable employees={employees} />
