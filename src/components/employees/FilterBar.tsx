@@ -1,8 +1,8 @@
 
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ViewMode } from "./EmployeeList";
 import { UserPlus } from "lucide-react";
+import type { ViewMode } from "./types";
 
 interface FilterBarProps {
   viewMode: ViewMode;
@@ -19,19 +19,19 @@ export const FilterBar = ({ viewMode, setViewMode }: FilterBarProps) => {
           variant={viewMode === 'table' ? 'default' : 'outline'}
           onClick={() => setViewMode('table')}
         >
-          Tablo Görünümü
+          Table View
         </Button>
         <Button
           variant={viewMode === 'grid' ? 'default' : 'outline'}
           onClick={() => setViewMode('grid')}
         >
-          Kart Görünümü
+          Grid View
         </Button>
       </div>
 
       <Button onClick={() => navigate('/employees/new')} className="flex items-center gap-2">
         <UserPlus className="h-4 w-4" />
-        Yeni Çalışan
+        New Employee
       </Button>
     </div>
   );

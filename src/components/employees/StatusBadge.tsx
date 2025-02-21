@@ -1,5 +1,5 @@
 
-export type EmployeeStatus = 'aktif' | 'pasif' | 'izinli' | 'ayrıldı';
+type EmployeeStatus = 'active' | 'inactive';
 
 interface StatusBadgeProps {
   status: EmployeeStatus;
@@ -7,10 +7,8 @@ interface StatusBadgeProps {
 
 export const StatusBadge = ({ status }: StatusBadgeProps) => {
   const styles = {
-    aktif: 'bg-green-100 text-green-800',
-    pasif: 'bg-gray-100 text-gray-800',
-    izinli: 'bg-yellow-100 text-yellow-800',
-    ayrıldı: 'bg-red-100 text-red-800',
+    active: 'bg-green-100 text-green-800',
+    inactive: 'bg-gray-100 text-gray-800'
   };
 
   return (
