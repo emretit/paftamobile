@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,8 +14,6 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Upload } from "lucide-react";
-import { useRoleCheck } from "@/hooks/useRoleCheck";
-import { useEffect } from "react";
 
 interface EmployeeFormData {
   first_name: string;
@@ -43,24 +42,12 @@ const DEPARTMENTS = ['Technical', 'Sales', 'Finance', 'Human Resources', 'Custom
 const POSITIONS = ['Admin', 'Technician', 'Sales Rep', 'Support'];
 
 export const EmployeeForm = () => {
-  const { isAdmin, userRole } = useRoleCheck();
   const navigate = useNavigate();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState<EmployeeFormData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  useEffect(() => {
-    if (!isAdmin) {
-      toast({
-        title: "Access Denied",
-        description: "Only administrators can add or edit employees.",
-        variant: "destructive",
-      });
-      navigate("/employees");
-    }
-  }, [isAdmin, navigate, toast]);
 
   const validatePhoneNumber = (phone: string) => {
     const phoneRegex = /^[\d\s+()-]{10,}$/;
@@ -112,16 +99,6 @@ export const EmployeeForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!isAdmin) {
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to perform this action.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
 
     if (!validateEmail(formData.email)) {
@@ -178,10 +155,6 @@ export const EmployeeForm = () => {
       setIsLoading(false);
     }
   };
-
-  if (!isAdmin) {
-    return null;
-  }
 
   return (
     <div className="container mx-auto p-6">

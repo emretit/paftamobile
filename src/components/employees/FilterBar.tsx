@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { UserPlus, Search, Table, LayoutGrid } from "lucide-react";
 import type { ViewMode } from "./types";
-import { useRoleCheck } from "@/hooks/useRoleCheck";
 import { Input } from "@/components/ui/input";
 
 interface FilterBarProps {
@@ -15,7 +14,6 @@ interface FilterBarProps {
 
 export const FilterBar = ({ viewMode, setViewMode, searchQuery, onSearchChange }: FilterBarProps) => {
   const navigate = useNavigate();
-  const { isAdmin } = useRoleCheck();
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
