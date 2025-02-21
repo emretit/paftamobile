@@ -39,23 +39,24 @@ export const FilterBar = ({ viewMode, setViewMode, searchQuery, onSearchChange }
           </Button>
         </div>
         
-        <div className="relative w-full sm:w-[300px]">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-          <Input
-            placeholder="Search employees..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-9"
-          />
+        <div className="flex items-center gap-4">
+          <div className="relative w-full sm:w-[300px]">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <Input
+              placeholder="Search employees..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          {isAdmin && (
+            <Button onClick={() => navigate('/employees/new')} className="flex items-center gap-2 whitespace-nowrap">
+              <UserPlus className="h-4 w-4" />
+              New Employee
+            </Button>
+          )}
         </div>
       </div>
-
-      {isAdmin && (
-        <Button onClick={() => navigate('/employees/new')} className="flex items-center gap-2 whitespace-nowrap ml-auto">
-          <UserPlus className="h-4 w-4" />
-          New Employee
-        </Button>
-      )}
     </div>
   );
 };
