@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Upload } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+
+interface Department {
+  id: string;
+  name: string;
+}
 
 interface EmployeeFormData {
   first_name: string;
@@ -38,7 +43,6 @@ const initialFormData: EmployeeFormData = {
   status: "active"
 };
 
-const DEPARTMENTS = ['Technical', 'Sales', 'Finance', 'Human Resources', 'Customer Support'];
 const POSITIONS = ['Admin', 'Technician', 'Sales Rep', 'Support'];
 
 export const EmployeeForm = () => {
@@ -48,6 +52,59 @@ export const EmployeeForm = () => {
   const [formData, setFormData] = useState<EmployeeFormData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [departments, setDepartments] = useState<Department[]>([]);
+
+  // Fetch departments
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('departments')
+          .select('id, name')
+          .order('name');
+
+        if (error) {
+          throw error;
+        }
+
+        setDepartments(data || []);
+      } catch (error) {
+        console.error('Error fetching departments:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load departments",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchDepartments();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('departments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'departments'
+        },
+        async () => {
+          // Refresh departments when changes occur
+          const { data } = await supabase
+            .from('departments')
+            .select('id, name')
+            .order('name');
+          setDepartments(data || []);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [toast]);
 
   const validatePhoneNumber = (phone: string) => {
     const phoneRegex = /^[\d\s+()-]{10,}$/;
@@ -156,6 +213,8 @@ export const EmployeeForm = () => {
     }
   };
 
+  const shouldShowDepartment = formData.position !== 'Admin';
+
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
@@ -220,7 +279,14 @@ export const EmployeeForm = () => {
               <Label htmlFor="position">Role</Label>
               <Select
                 value={formData.position}
-                onValueChange={(value) => setFormData(prev => ({...prev, position: value}))}
+                onValueChange={(value) => {
+                  setFormData(prev => ({
+                    ...prev, 
+                    position: value,
+                    // Eğer Admin seçildiyse department'ı temizle
+                    department: value === 'Admin' ? '' : prev.department
+                  }));
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select role" />
@@ -235,24 +301,26 @@ export const EmployeeForm = () => {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="department">Department</Label>
-              <Select
-                value={formData.department}
-                onValueChange={(value) => setFormData(prev => ({...prev, department: value}))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select department" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DEPARTMENTS.map((department) => (
-                    <SelectItem key={department} value={department}>
-                      {department}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {shouldShowDepartment && (
+              <div className="space-y-2">
+                <Label htmlFor="department">Department</Label>
+                <Select
+                  value={formData.department}
+                  onValueChange={(value) => setFormData(prev => ({...prev, department: value}))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments.map((department) => (
+                      <SelectItem key={department.id} value={department.name}>
+                        {department.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
