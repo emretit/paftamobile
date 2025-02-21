@@ -31,7 +31,14 @@ const EmployeeEdit = ({ isCollapsed, setIsCollapsed }: EmployeeEditPageProps) =>
           .single();
 
         if (error) throw error;
-        setEmployee(data);
+        
+        // Veriyi Employee tipine dönüştür
+        const employeeData: Employee = {
+          ...data,
+          status: data.status === 'active' ? 'active' : 'inactive'
+        };
+        
+        setEmployee(employeeData);
       } catch (error) {
         console.error('Error:', error);
         toast({
