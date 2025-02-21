@@ -26,6 +26,8 @@ import ProductForm from "@/pages/ProductForm";
 import ProductDetails from "@/pages/ProductDetails";
 import Settings from "@/pages/Settings";
 import EmployeeFormPage from "./pages/EmployeeForm";
+import EmployeeDetails from "./pages/EmployeeDetails";
+import EmployeeEdit from "./pages/EmployeeEdit";
 
 function App() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -56,11 +58,10 @@ function App() {
           <Route path="/proposal-form" element={<ProposalForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/deals" element={<Deals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/deals-table" element={<DealsTable isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-          <Route
-            path="/employees/new"
-            element={<EmployeeFormPage isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />}
-          />
+          <Route path="/employees/new" element={<EmployeeFormPage isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/employees" element={<Employees isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/employees/details/:id" element={<EmployeeDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/employees/edit/:id" element={<EmployeeEdit isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/finance" element={<Finance isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/service" element={<Service isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/calendar" element={<Calendar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
