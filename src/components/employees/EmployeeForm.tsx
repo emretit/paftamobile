@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,23 @@ export const EmployeeForm = ({ initialData }: EmployeeFormProps) => {
   );
   const [isLoading, setIsLoading] = useState(false);
 
+  // Oturum durumunu kontrol et
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Hata",
+          description: "Bu işlemi gerçekleştirmek için giriş yapmalısınız",
+          variant: "destructive",
+        });
+        navigate("/auth");
+      }
+    };
+
+    checkSession();
+  }, [navigate, toast]);
+
   const handleFormChange = (field: keyof EmployeeFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -37,6 +54,19 @@ export const EmployeeForm = ({ initialData }: EmployeeFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    // Önce oturum durumunu kontrol et
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({
+        title: "Hata",
+        description: "Bu işlemi gerçekleştirmek için giriş yapmalısınız",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      navigate("/auth");
+      return;
+    }
 
     if (!validateEmail(formData.email)) {
       toast({
