@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -25,6 +24,7 @@ import Products from "@/pages/Products";
 import ProductForm from "@/pages/ProductForm";
 import ProductDetails from "@/pages/ProductDetails";
 import Settings from "@/pages/Settings";
+import EmployeeFormPage from "./pages/EmployeeForm";
 
 function App() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -55,6 +55,10 @@ function App() {
           <Route path="/proposal-form" element={<ProposalForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/deals" element={<Deals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/deals-table" element={<DealsTable isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route
+            path="/employees/new"
+            element={<EmployeeFormPage isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />}
+          />
           <Route path="/employees" element={<Employees isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/finance" element={<Finance isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/service" element={<Service isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
