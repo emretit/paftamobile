@@ -1,25 +1,37 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types";
 
-type UserRole = Database["public"]["Enums"]["user_role"];
-
-interface UserRoleResponse {
-  role: UserRole;
-}
+type UserRole = 'admin' | 'sales_rep' | 'technician' | 'support';
 
 export const useRoleCheck = () => {
-  return useQuery({
-    queryKey: ["user-roles"],
+  const { data: userRoles } = useQuery({
+    queryKey: ['userRoles'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .maybeSingle();
+      const { data: roles, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .single();
 
-      if (error) throw error;
-      return data as UserRoleResponse;
-    },
+      if (error) {
+        console.error('Error fetching user roles:', error);
+        return null;
+      }
+
+      return roles as { role: UserRole } | null;
+    }
   });
+
+  const isAdmin = userRoles?.role === 'admin';
+  const isSalesRep = userRoles?.role === 'sales_rep';
+  const isTechnician = userRoles?.role === 'technician';
+  const isSupport = userRoles?.role === 'support';
+
+  return {
+    isAdmin,
+    isSalesRep,
+    isTechnician,
+    isSupport,
+    userRole: userRoles?.role
+  };
 };
