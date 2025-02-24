@@ -653,6 +653,56 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          bank_account_id: string
+          created_at: string | null
+          created_by: string | null
+          currency: Database["public"]["Enums"]["currency_type"]
+          id: string
+          payment_date: string
+          recipient_name: string
+          reference_note: string | null
+          status: Database["public"]["Enums"]["payment_status"]
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          bank_account_id: string
+          created_at?: string | null
+          created_by?: string | null
+          currency: Database["public"]["Enums"]["currency_type"]
+          id?: string
+          payment_date?: string
+          recipient_name: string
+          reference_note?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          currency?: Database["public"]["Enums"]["currency_type"]
+          id?: string
+          payment_date?: string
+          recipient_name?: string
+          reference_note?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_categories: {
         Row: {
           created_at: string | null
@@ -1158,6 +1208,7 @@ export type Database = {
       deal_priority: "low" | "medium" | "high"
       deal_status: "new" | "negotiation" | "follow_up" | "won" | "lost"
       event_type: "technical" | "sales"
+      payment_status: "pending" | "completed" | "failed"
       proposal_status:
         | "draft"
         | "sent"
