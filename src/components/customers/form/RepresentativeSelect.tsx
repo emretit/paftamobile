@@ -30,9 +30,10 @@ interface RepresentativeSelectProps {
 const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectProps) => {
   const [open, setOpen] = useState(false);
 
-  const { data: employees, isLoading } = useQuery({
+  const { data: employees, isLoading, error } = useQuery({
     queryKey: ['employees'],
     queryFn: async () => {
+      console.log('Çalışanlar verisi çekiliyor...');
       const { data, error } = await supabase
         .from('employees')
         .select('*')
@@ -40,12 +41,18 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
         .order('first_name');
 
       if (error) {
+        console.error('Supabase error:', error);
         throw error;
       }
 
+      console.log('Çekilen çalışanlar:', data);
       return data as Employee[];
     }
   });
+
+  if (error) {
+    console.error('Query error:', error);
+  }
 
   return (
     <div className="space-y-2">
@@ -101,3 +108,4 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
 };
 
 export default RepresentativeSelect;
+
