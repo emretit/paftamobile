@@ -29,9 +29,10 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  const { data: employees = [], isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['employees-select'],
     queryFn: async () => {
+      console.log('Fetching employees...');
       const { data, error } = await supabase
         .from('employees')
         .select('id, first_name, last_name, department, status')
@@ -42,22 +43,31 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
         throw error;
       }
 
-      return data || [];
+      console.log('Employees data:', data);
+      return data;
     }
   });
 
-  const activeEmployees = employees.filter(emp => emp.status === 'active');
+  const employees = data || [];
+  console.log('Current employees state:', employees);
+
+  const activeEmployees = employees.filter(emp => emp?.status === 'active') || [];
+  console.log('Active employees:', activeEmployees);
 
   const filteredEmployees = search === "" 
     ? activeEmployees 
     : activeEmployees.filter((employee) => {
+        if (!employee) return false;
         const fullName = `${employee.first_name} ${employee.last_name}`.toLowerCase();
-        const department = employee.department.toLowerCase();
+        const department = (employee.department || '').toLowerCase();
         const searchTerm = search.toLowerCase();
         return fullName.includes(searchTerm) || department.includes(searchTerm);
       });
 
+  console.log('Filtered employees:', filteredEmployees);
+
   if (error) {
+    console.error('Representative select error:', error);
     return (
       <div className="space-y-2">
         <Label htmlFor="representative">Temsilci</Label>
@@ -99,31 +109,35 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
             <CommandEmpty className="py-6 text-center text-sm">
               {isLoading ? "Yükleniyor..." : "Temsilci bulunamadı"}
             </CommandEmpty>
-            <CommandGroup className="max-h-[300px] overflow-y-auto p-1">
-              {filteredEmployees.map((employee) => {
-                const fullName = `${employee.first_name} ${employee.last_name}`;
-                return (
-                  <CommandItem
-                    key={employee.id}
-                    onSelect={() => {
-                      setFormData({ ...formData, representative: fullName });
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        formData.representative === fullName ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <div className="flex flex-col">
-                      <span>{fullName}</span>
-                      <span className="text-xs text-gray-500">{employee.department}</span>
-                    </div>
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
+            {filteredEmployees.length > 0 && (
+              <CommandGroup className="max-h-[300px] overflow-y-auto p-1">
+                {filteredEmployees.map((employee) => {
+                  if (!employee) return null;
+                  const fullName = `${employee.first_name} ${employee.last_name}`;
+                  return (
+                    <CommandItem
+                      key={employee.id}
+                      onSelect={() => {
+                        setFormData({ ...formData, representative: fullName });
+                        setOpen(false);
+                      }}
+                      value={fullName}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          formData.representative === fullName ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <div className="flex flex-col">
+                        <span>{fullName}</span>
+                        <span className="text-xs text-gray-500">{employee.department}</span>
+                      </div>
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            )}
           </Command>
         </PopoverContent>
       </Popover>
