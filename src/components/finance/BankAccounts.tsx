@@ -7,10 +7,10 @@ import TransactionHistory from "./bank-accounts/TransactionHistory";
 const BankAccounts = () => {
   return (
     <div className="grid gap-4">
-      <QuickActions />
-      <PendingTransactions />
       <AccountList />
+      <PendingTransactions />
       <TransactionHistory />
+      <QuickActions />
     </div>
   );
 };
