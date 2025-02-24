@@ -31,7 +31,7 @@ const Finance = ({ isCollapsed, setIsCollapsed }: FinanceProps) => {
         <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6 animate-fade-in">
           <FinanceHeader />
 
-          {/* Main Content Tabs */}
+          {/* Ana İçerik Sekmeleri */}
           <Tabs defaultValue="bank-accounts" className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2">
               <TabsList className="w-full h-auto flex flex-wrap gap-2 bg-transparent">
