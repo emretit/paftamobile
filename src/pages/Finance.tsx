@@ -32,11 +32,7 @@ const Finance = ({ isCollapsed, setIsCollapsed }: FinanceProps) => {
           <FinanceHeader />
           
           {/* Financial Overview Section */}
-          <div className="space-y-2">
-            <h2 className="text-lg font-semibold text-gray-800">Finansal Genel Bakış</h2>
-            <p className="text-sm text-gray-500">Tüm hesaplarınızın güncel durumu ve özeti</p>
-            <AccountSummary />
-          </div>
+          <AccountSummary />
 
           {/* Main Content Tabs */}
           <Tabs defaultValue="bank-accounts" className="space-y-6">
