@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -27,6 +28,7 @@ import Settings from "@/pages/Settings";
 import EmployeeFormPage from "./pages/EmployeeForm";
 import EmployeeDetails from "./pages/EmployeeDetails";
 import EmployeeEdit from "./pages/EmployeeEdit";
+import AccountDetails from "@/components/finance/bank-accounts/AccountDetails";
 
 function App() {
   const [isCollapsed, setIsCollapsed] = useState(false);
