@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,11 +60,19 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0">
+        <PopoverContent className="w-[300px] p-0">
           <Command>
-            <CommandInput placeholder="Temsilci ara..." />
-            <CommandEmpty>Temsilci bulunamadı.</CommandEmpty>
-            <CommandGroup>
+            <div className="flex items-center border-b px-3">
+              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+              <CommandInput 
+                placeholder="Temsilci ara..." 
+                className="h-9 flex-1"
+              />
+            </div>
+            <CommandEmpty className="py-6 text-center text-sm">
+              Temsilci bulunamadı.
+            </CommandEmpty>
+            <CommandGroup className="max-h-[300px] overflow-y-auto p-1">
               {!isLoading && activeEmployees.map((employee) => {
                 const fullName = `${employee.first_name} ${employee.last_name}`;
                 return (
@@ -75,6 +83,7 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
                       setFormData({ ...formData, representative: fullName });
                       setOpen(false);
                     }}
+                    className="cursor-pointer"
                   >
                     <Check
                       className={cn(
@@ -82,7 +91,10 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
                         formData.representative === fullName ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    {fullName}
+                    <div className="flex flex-col">
+                      <span>{fullName}</span>
+                      <span className="text-xs text-gray-500">{employee.department}</span>
+                    </div>
                   </CommandItem>
                 );
               })}
