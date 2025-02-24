@@ -1,4 +1,3 @@
-
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,14 +17,12 @@ interface CustomerFormFieldsProps {
 }
 
 const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) => {
-  // Çalışanları getir
   const { data: employees } = useQuery({
     queryKey: ['employees'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('employees')
         .select('*')
-        .eq('status', 'active')
         .order('first_name');
       
       if (error) throw error;
@@ -135,7 +132,7 @@ const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) 
             <SelectValue placeholder="Temsilci seçin" />
           </SelectTrigger>
           <SelectContent>
-            {employees?.map((employee) => (
+            {employees?.filter(emp => emp.status === 'aktif').map((employee) => (
               <SelectItem 
                 key={employee.id} 
                 value={`${employee.first_name} ${employee.last_name}`}
