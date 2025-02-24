@@ -157,11 +157,14 @@ const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) 
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-full p-0">
-            <Command defaultValue={formData.representative?.toLowerCase() || ""}>
+            <Command 
+              value={formData.representative?.toLowerCase() || ""}
+              defaultValue=""
+            >
               <CommandInput placeholder="Temsilci ara..." />
               <CommandEmpty>Temsilci bulunamadı.</CommandEmpty>
               <CommandGroup>
-                {employees?.filter(emp => emp.status === 'aktif').map((employee) => {
+                {employees?.filter(emp => emp.status === 'active').map((employee) => {
                   const fullName = `${employee.first_name} ${employee.last_name}`;
                   return (
                     <CommandItem
