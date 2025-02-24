@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { BankAccount } from "@/hooks/useBankAccounts";
 import TransactionHistory from "./TransactionHistory";
-import PendingTransactions from "./PendingTransactions";
 import QuickActions from "./QuickActions";
 
 const AccountDetails = () => {
@@ -64,17 +63,10 @@ const AccountDetails = () => {
           {/* Quick Actions */}
           <QuickActions account={account} />
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-semibold mb-4">İşlem Geçmişi</h2>
-              <TransactionHistory accountId={account.id} />
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-lg font-semibold mb-4">Bekleyen İşlemler</h2>
-              <PendingTransactions accountId={account.id} />
-            </div>
+          {/* Main Content */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h2 className="text-lg font-semibold mb-4">İşlem Geçmişi</h2>
+            <TransactionHistory accountId={account.id} />
           </div>
         </div>
       </main>
@@ -83,3 +75,4 @@ const AccountDetails = () => {
 };
 
 export default AccountDetails;
+
