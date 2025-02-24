@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -66,6 +67,8 @@ export function NewBankAccountForm({ onSuccess }: NewBankAccountFormProps) {
       credit_limit: 0,
       account_type: "vadesiz",
       currency: "TRY",
+      bank_name: "",
+      account_name: "",
     },
   });
 
@@ -99,12 +102,21 @@ export function NewBankAccountForm({ onSuccess }: NewBankAccountFormProps) {
   });
 
   function onSubmit(values: FormValues) {
+    // Zorunlu alanları içeren bir BankAccountInsert nesnesi oluştur
     const submitData: BankAccountInsert = {
-      ...values,
+      bank_name: values.bank_name,
+      account_name: values.account_name,
       account_type: values.account_type,
       currency: values.currency,
-      current_balance: values.current_balance || 0,
-      credit_limit: values.credit_limit || 0,
+      current_balance: values.current_balance,
+      credit_limit: values.credit_limit,
+      // Opsiyonel alanları koşullu olarak ekle
+      ...(values.account_number && { account_number: values.account_number }),
+      ...(values.branch_name && { branch_name: values.branch_name }),
+      ...(values.iban && { iban: values.iban }),
+      ...(values.swift_code && { swift_code: values.swift_code }),
+      ...(values.interest_rate && { interest_rate: values.interest_rate }),
+      ...(values.notes && { notes: values.notes }),
     };
     createAccount(submitData);
   }
