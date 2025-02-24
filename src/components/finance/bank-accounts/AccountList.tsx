@@ -1,4 +1,5 @@
 
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -12,6 +13,7 @@ import { Link, Plus } from "lucide-react";
 import { useBankAccounts } from "@/hooks/useBankAccounts";
 
 const AccountList = () => {
+  const navigate = useNavigate();
   const { data: accounts, isLoading, error } = useBankAccounts();
 
   return (
@@ -50,7 +52,11 @@ const AccountList = () => {
           </TableHeader>
           <TableBody>
             {accounts?.map((account) => (
-              <TableRow key={account.id}>
+              <TableRow 
+                key={account.id} 
+                className="cursor-pointer hover:bg-gray-50"
+                onClick={() => navigate(`/finance/accounts/${account.id}`)}
+              >
                 <TableCell>{account.bank_name}</TableCell>
                 <TableCell>{account.account_name}</TableCell>
                 <TableCell>{account.account_number}</TableCell>

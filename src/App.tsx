@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -63,6 +62,7 @@ function App() {
           <Route path="/employees/details/:id" element={<EmployeeDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/employees/edit/:id" element={<EmployeeEdit isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/finance" element={<Finance isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/finance/accounts/:id" element={<AccountDetails />} />
           <Route path="/service" element={<Service isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/calendar" element={<Calendar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/sales-invoices" element={<SalesInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
