@@ -27,6 +27,7 @@ interface RepresentativeSelectProps {
 
 const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectProps) => {
   const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(formData.representative || "");
 
   const { data: employees, isLoading } = useQuery({
     queryKey: ['employees'],
@@ -54,14 +55,12 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
             aria-expanded={open}
             className="w-full justify-between"
           >
-            {formData.representative
-              ? formData.representative
-              : "Temsilci seçin..."}
+            {value || "Temsilci seçin..."}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[300px] p-0">
-          <Command>
+          <Command value={value} onValueChange={setValue}>
             <div className="flex items-center border-b px-3">
               <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
               <CommandInput 
@@ -79,8 +78,9 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
                   <CommandItem
                     key={employee.id}
                     value={fullName}
-                    onSelect={() => {
-                      setFormData({ ...formData, representative: fullName });
+                    onSelect={(currentValue) => {
+                      setFormData({ ...formData, representative: currentValue });
+                      setValue(currentValue);
                       setOpen(false);
                     }}
                     className="cursor-pointer"
@@ -88,7 +88,7 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        formData.representative === fullName ? "opacity-100" : "opacity-0"
+                        value === fullName ? "opacity-100" : "opacity-0"
                       )}
                     />
                     <div className="flex flex-col">
