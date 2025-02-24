@@ -1278,7 +1278,9 @@ export type Database = {
       event_type: "technical" | "sales"
       financial_instrument_status: "pending" | "cleared" | "bounced"
       financial_instrument_type: "check" | "promissory_note"
+      payment_direction: "incoming" | "outgoing"
       payment_status: "pending" | "completed" | "failed"
+      payment_type: "havale" | "eft" | "kredi_karti" | "nakit"
       proposal_status:
         | "draft"
         | "sent"
