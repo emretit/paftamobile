@@ -24,6 +24,7 @@ interface Payment {
   description: string | null;
   bank_account_id: string;
   currency: "TRY" | "USD" | "EUR" | "GBP";
+  payment_direction: "incoming" | "outgoing";
   bank_accounts?: {
     bank_name: string;
     account_name: string;
@@ -88,7 +89,7 @@ export function PaymentsList({ customer }: PaymentsListProps) {
               <TableCell>
                 {format(new Date(payment.payment_date), "dd.MM.yyyy")}
               </TableCell>
-              <TableCell className="font-medium">
+              <TableCell className={payment.payment_direction === 'incoming' ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
                 {payment.amount.toLocaleString("tr-TR", {
                   style: "currency",
                   currency: payment.currency,
