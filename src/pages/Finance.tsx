@@ -12,6 +12,7 @@ import GeneralLedger from "@/components/finance/GeneralLedger";
 import BankAccounts from "@/components/finance/BankAccounts";
 import CashFlow from "@/components/finance/CashFlow";
 import Reports from "@/components/finance/Reports";
+import FinancialInstruments from "@/components/finance/FinancialInstruments";
 
 interface FinanceProps {
   isCollapsed: boolean;
@@ -35,6 +36,7 @@ const Finance = ({ isCollapsed, setIsCollapsed }: FinanceProps) => {
             <TabsList className="bg-white border border-gray-100">
               <TabsTrigger value="general-ledger">Genel Muhasebe</TabsTrigger>
               <TabsTrigger value="bank-accounts">Banka Hesapları</TabsTrigger>
+              <TabsTrigger value="financial-instruments">Çek/Senet</TabsTrigger>
               <TabsTrigger value="cash-flow">Nakit Akışı</TabsTrigger>
               <TabsTrigger value="reports">Raporlar</TabsTrigger>
             </TabsList>
@@ -45,6 +47,10 @@ const Finance = ({ isCollapsed, setIsCollapsed }: FinanceProps) => {
 
             <TabsContent value="bank-accounts">
               <BankAccounts />
+            </TabsContent>
+
+            <TabsContent value="financial-instruments">
+              <FinancialInstruments />
             </TabsContent>
 
             <TabsContent value="cash-flow">
