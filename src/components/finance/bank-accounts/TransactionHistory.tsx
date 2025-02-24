@@ -41,7 +41,6 @@ const TransactionHistory = ({ accountId }: TransactionHistoryProps) => {
   const { data: transactions, isLoading } = useQuery({
     queryKey: ["transactions", accountId],
     queryFn: async () => {
-      // Banka işlemleri ve ödemeleri birleştirip getir
       const [bankTransactions, payments] = await Promise.all([
         supabase
           .from("bank_transactions")
@@ -63,7 +62,6 @@ const TransactionHistory = ({ accountId }: TransactionHistoryProps) => {
       if (bankTransactions.error) throw bankTransactions.error;
       if (payments.error) throw payments.error;
 
-      // Ödemeleri işlem formatına dönüştür
       const formattedPayments = payments.data.map((payment) => ({
         id: payment.id,
         amount: payment.amount,
@@ -77,7 +75,6 @@ const TransactionHistory = ({ accountId }: TransactionHistoryProps) => {
         payment_direction: payment.payment_direction
       }));
 
-      // Banka işlemleri ve ödemeleri birleştir
       const allTransactions = [
         ...bankTransactions.data,
         ...formattedPayments
@@ -127,16 +124,20 @@ const TransactionHistory = ({ accountId }: TransactionHistoryProps) => {
   };
 
   const getDescription = (transaction: any) => {
-    // Eğer müşteri ödemesi ise
     if (transaction.customer_name) {
       return `${transaction.payment_direction === 'incoming' ? 'Müşteri Ödemesi' : 'Müşteri İadesi'}: ${transaction.customer_name}`;
     }
-    // Eğer tedarikçi ödemesi ise
     if (transaction.supplier_name) {
       return `${transaction.payment_direction === 'outgoing' ? 'Tedarikçi Ödemesi' : 'Tedarikçi İadesi'}: ${transaction.supplier_name}`;
     }
-    // Normal banka işlemi ise
     return transaction.description || "-";
+  };
+
+  const isPositiveAmount = (transaction: any) => {
+    if (transaction.payment_direction) {
+      return transaction.payment_direction === 'incoming';
+    }
+    return transaction.amount >= 0;
   };
 
   return (
@@ -192,7 +193,7 @@ const TransactionHistory = ({ accountId }: TransactionHistoryProps) => {
               <TableCell>{formatTransactionType(transaction)}</TableCell>
               <TableCell>{getDescription(transaction)}</TableCell>
               <TableCell className="text-right">
-                <span className={transaction.amount >= 0 ? "text-green-600" : "text-red-600"}>
+                <span className={isPositiveAmount(transaction) ? "text-green-600" : "text-red-600"}>
                   {transaction.amount.toLocaleString("tr-TR", {
                     style: "currency",
                     currency: transaction.currency,
