@@ -1,3 +1,4 @@
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -34,6 +35,7 @@ interface CustomerFormFieldsProps {
 
 const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) => {
   const [open, setOpen] = useState(false);
+  const [inputValue, setInputValue] = useState("");
 
   const { data: employees } = useQuery({
     queryKey: ['employees'],
@@ -158,8 +160,8 @@ const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) 
           </PopoverTrigger>
           <PopoverContent className="w-full p-0">
             <Command 
-              value={formData.representative?.toLowerCase() || ""}
-              defaultValue=""
+              value={inputValue}
+              onValueChange={setInputValue}
             >
               <CommandInput placeholder="Temsilci ara..." />
               <CommandEmpty>Temsilci bulunamadı.</CommandEmpty>
@@ -169,7 +171,7 @@ const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) 
                   return (
                     <CommandItem
                       key={employee.id}
-                      value={fullName.toLowerCase()}
+                      value={fullName}
                       onSelect={() => {
                         setFormData({ ...formData, representative: fullName });
                         setOpen(false);
