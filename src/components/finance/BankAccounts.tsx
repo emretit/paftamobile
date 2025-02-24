@@ -1,7 +1,6 @@
 
 import { useEffect, useState } from "react";
 import QuickActions from "./bank-accounts/QuickActions";
-import PendingTransactions from "./bank-accounts/PendingTransactions";
 import AccountList from "./bank-accounts/AccountList";
 import TransactionHistory from "./bank-accounts/TransactionHistory";
 import { useBankAccounts } from "@/hooks/useBankAccounts";
@@ -28,7 +27,6 @@ const BankAccounts = () => {
       <AccountList />
       {selectedAccountId && (
         <>
-          <PendingTransactions accountId={selectedAccountId} />
           <TransactionHistory accountId={selectedAccountId} />
           {selectedAccount && <QuickActions account={selectedAccount} />}
         </>
