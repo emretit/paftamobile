@@ -30,7 +30,11 @@ type BankAccount = {
   credit_limit: number;
   interest_rate?: number;
   notes?: string;
+  created_at?: string;
+  updated_at?: string;
 };
+
+type BankAccountInsert = Omit<BankAccount, 'id' | 'created_at' | 'updated_at'>;
 
 const formSchema = z.object({
   bank_name: z.string().min(1, "Banka adı zorunludur"),
@@ -65,8 +69,8 @@ export function NewBankAccountForm({ onSuccess }: NewBankAccountFormProps) {
     },
   });
 
-  const { mutate: createAccount, isPending } = useMutation<BankAccount, Error, FormValues>({
-    mutationFn: async (values: FormValues) => {
+  const { mutate: createAccount, isPending } = useMutation<BankAccount, Error, BankAccountInsert>({
+    mutationFn: async (values: BankAccountInsert) => {
       const { data, error } = await supabase
         .from('bank_accounts')
         .insert(values)
@@ -95,7 +99,14 @@ export function NewBankAccountForm({ onSuccess }: NewBankAccountFormProps) {
   });
 
   function onSubmit(values: FormValues) {
-    createAccount(values);
+    const submitData: BankAccountInsert = {
+      ...values,
+      account_type: values.account_type,
+      currency: values.currency,
+      current_balance: values.current_balance || 0,
+      credit_limit: values.credit_limit || 0,
+    };
+    createAccount(submitData);
   }
 
   return (
