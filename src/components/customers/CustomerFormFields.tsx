@@ -1,3 +1,4 @@
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -157,7 +158,7 @@ const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) 
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-full p-0">
-            <Command>
+            <Command defaultValue={formData.representative || ""}>
               <CommandInput placeholder="Temsilci ara..." />
               <CommandEmpty>Temsilci bulunamadı.</CommandEmpty>
               <CommandGroup>
@@ -166,9 +167,9 @@ const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) 
                   return (
                     <CommandItem
                       key={employee.id}
-                      value={fullName}
+                      value={fullName.toLowerCase()}
                       onSelect={(currentValue) => {
-                        setFormData({ ...formData, representative: currentValue });
+                        setFormData({ ...formData, representative: fullName });
                         setOpen(false);
                       }}
                     >
