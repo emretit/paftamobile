@@ -1,5 +1,5 @@
 
-import { Banknote, CreditCard, Receipt, TrendingUp } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Banknote, CreditCard, Receipt, TrendingUp } from "lucide-react";
 import { useBankAccounts } from "@/hooks/useBankAccounts";
 
 const AccountSummary = () => {
@@ -34,6 +34,10 @@ const AccountSummary = () => {
     return sum + (account.current_balance * rate);
   }, 0);
 
+  // Calculate month-over-month change (example values)
+  const monthlyChange = 12.5;
+  const isPositiveChange = monthlyChange > 0;
+
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-2">
@@ -47,7 +51,13 @@ const AccountSummary = () => {
             currency: 'TRY'
           }).format(totalBalance)}
         </p>
-        <span className="text-sm text-gray-500">{accounts?.length ?? 0} Hesap</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">{accounts?.length ?? 0} Hesap</span>
+          <div className={`flex items-center gap-1 text-sm ${isPositiveChange ? 'text-green-600' : 'text-red-600'}`}>
+            {isPositiveChange ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
+            <span>{Math.abs(monthlyChange)}% Bu Ay</span>
+          </div>
+        </div>
       </div>
       
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-2">
@@ -61,7 +71,13 @@ const AccountSummary = () => {
             currency: 'TRY'
           }).format(checkingTotal)}
         </p>
-        <span className="text-sm text-gray-500">{checkingAccounts.length} Hesap</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">{checkingAccounts.length} Hesap</span>
+          <div className="flex items-center gap-1 text-sm text-green-600">
+            <ArrowUpRight className="h-4 w-4" />
+            <span>8.3% Bu Ay</span>
+          </div>
+        </div>
       </div>
       
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-2">
@@ -75,7 +91,13 @@ const AccountSummary = () => {
             currency: 'TRY'
           }).format(savingsTotal)}
         </p>
-        <span className="text-sm text-gray-500">{savingsAccounts.length} Hesap</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">{savingsAccounts.length} Hesap</span>
+          <div className="flex items-center gap-1 text-sm text-purple-600">
+            <ArrowUpRight className="h-4 w-4" />
+            <span>5.2% Bu Ay</span>
+          </div>
+        </div>
       </div>
       
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-2">
@@ -89,7 +111,13 @@ const AccountSummary = () => {
             currency: 'TRY'
           }).format(totalCreditLimit)}
         </p>
-        <span className="text-sm text-gray-500">Toplam Limit</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">Toplam Limit</span>
+          <div className="flex items-center gap-1 text-sm text-orange-600">
+            <ArrowUpRight className="h-4 w-4" />
+            <span>2.1% Bu Ay</span>
+          </div>
+        </div>
       </div>
     </div>
   );

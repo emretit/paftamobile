@@ -28,33 +28,33 @@ const Finance = ({ isCollapsed, setIsCollapsed }: FinanceProps) => {
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}
       >
-        <div className="p-6 lg:p-8 max-w-[1600px] mx-auto">
+        <div className="p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6">
           <FinanceHeader />
-          <FinanceSummaryCards />
+          <AccountSummary /> {/* Replace FinanceSummaryCards with AccountSummary */}
 
-          <Tabs defaultValue="general-ledger" className="space-y-4">
+          <Tabs defaultValue="bank-accounts" className="space-y-4">
             <TabsList className="bg-white border border-gray-100">
-              <TabsTrigger value="general-ledger">Genel Muhasebe</TabsTrigger>
               <TabsTrigger value="bank-accounts">Banka Hesapları</TabsTrigger>
-              <TabsTrigger value="financial-instruments">Çek/Senet</TabsTrigger>
               <TabsTrigger value="cash-flow">Nakit Akışı</TabsTrigger>
+              <TabsTrigger value="financial-instruments">Çek/Senet</TabsTrigger>
+              <TabsTrigger value="general-ledger">Genel Muhasebe</TabsTrigger>
               <TabsTrigger value="reports">Raporlar</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="general-ledger">
-              <GeneralLedger />
-            </TabsContent>
-
             <TabsContent value="bank-accounts">
               <BankAccounts />
+            </TabsContent>
+
+            <TabsContent value="cash-flow">
+              <CashFlow />
             </TabsContent>
 
             <TabsContent value="financial-instruments">
               <FinancialInstruments />
             </TabsContent>
 
-            <TabsContent value="cash-flow">
-              <CashFlow />
+            <TabsContent value="general-ledger">
+              <GeneralLedger />
             </TabsContent>
 
             <TabsContent value="reports">
