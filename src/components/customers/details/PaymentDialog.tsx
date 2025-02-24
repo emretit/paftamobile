@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Customer } from "@/types/customer";
@@ -37,6 +37,7 @@ interface PaymentDialogProps {
 
 export function PaymentDialog({ open, onOpenChange, customer }: PaymentDialogProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const form = useForm<PaymentFormData>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
@@ -65,7 +66,8 @@ export function PaymentDialog({ open, onOpenChange, customer }: PaymentDialogPro
 
   async function onSubmit(data: PaymentFormData) {
     try {
-      const { error } = await supabase.from("payments").insert({
+      // 1. Yeni ödemeyi ekle
+      const { error: paymentError } = await supabase.from("payments").insert({
         amount: data.amount,
         payment_type: data.payment_type,
         bank_account_id: data.bank_account_id,
@@ -75,14 +77,39 @@ export function PaymentDialog({ open, onOpenChange, customer }: PaymentDialogPro
         payment_direction: "incoming",
         status: "pending",
         recipient_name: customer.name,
-        currency: "TRY", // Default to TRY
+        currency: "TRY",
       });
 
-      if (error) throw error;
+      if (paymentError) throw paymentError;
+
+      // 2. Banka hesabı bakiyesini güncelle
+      const { error: bankUpdateError } = await supabase
+        .from("bank_accounts")
+        .update({
+          current_balance: supabase.sql`current_balance + ${data.amount}`,
+          available_balance: supabase.sql`available_balance + ${data.amount}`,
+        })
+        .eq("id", data.bank_account_id);
+
+      if (bankUpdateError) throw bankUpdateError;
+
+      // 3. Müşteri bakiyesini güncelle
+      const { error: customerUpdateError } = await supabase
+        .from("customers")
+        .update({
+          balance: supabase.sql`balance - ${data.amount}`,
+        })
+        .eq("id", customer.id);
+
+      if (customerUpdateError) throw customerUpdateError;
+
+      // Cache'i güncelle
+      queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
 
       toast({
         title: "Ödeme başarıyla oluşturuldu",
-        description: "Ödeme kaydedildi ve müşteri bakiyesi güncellendi.",
+        description: "Ödeme kaydedildi ve bakiyeler güncellendi.",
       });
 
       onOpenChange(false);
@@ -239,3 +266,4 @@ export function PaymentDialog({ open, onOpenChange, customer }: PaymentDialogPro
     </Dialog>
   );
 }
+
