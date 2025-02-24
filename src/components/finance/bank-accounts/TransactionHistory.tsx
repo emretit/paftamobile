@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -52,7 +51,11 @@ const TransactionHistory = ({ accountId }: TransactionHistoryProps) => {
         
         supabase
           .from("payments")
-          .select("*")
+          .select(`
+            *,
+            customer:customers(name),
+            supplier:suppliers(name)
+          `)
           .eq("bank_account_id", accountId)
           .order("payment_date", { ascending: false })
       ]);
@@ -68,7 +71,10 @@ const TransactionHistory = ({ accountId }: TransactionHistoryProps) => {
         transaction_date: payment.payment_date,
         status: "completed",
         payment_type: payment.payment_type,
-        currency: payment.currency
+        currency: payment.currency,
+        customer_name: payment.customer?.name,
+        supplier_name: payment.supplier?.name,
+        payment_direction: payment.payment_direction
       }));
 
       // Banka işlemleri ve ödemeleri birleştir
@@ -79,7 +85,7 @@ const TransactionHistory = ({ accountId }: TransactionHistoryProps) => {
         new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime()
       );
 
-      return allTransactions as Transaction[];
+      return allTransactions;
     },
   });
 
@@ -118,6 +124,19 @@ const TransactionHistory = ({ accountId }: TransactionHistoryProps) => {
       }
     }
     return "Diğer";
+  };
+
+  const getDescription = (transaction: any) => {
+    // Eğer müşteri ödemesi ise
+    if (transaction.customer_name) {
+      return `${transaction.payment_direction === 'incoming' ? 'Müşteri Ödemesi' : 'Müşteri İadesi'}: ${transaction.customer_name}`;
+    }
+    // Eğer tedarikçi ödemesi ise
+    if (transaction.supplier_name) {
+      return `${transaction.payment_direction === 'outgoing' ? 'Tedarikçi Ödemesi' : 'Tedarikçi İadesi'}: ${transaction.supplier_name}`;
+    }
+    // Normal banka işlemi ise
+    return transaction.description || "-";
   };
 
   return (
@@ -171,7 +190,7 @@ const TransactionHistory = ({ accountId }: TransactionHistoryProps) => {
                 {format(new Date(transaction.transaction_date), "dd.MM.yyyy")}
               </TableCell>
               <TableCell>{formatTransactionType(transaction)}</TableCell>
-              <TableCell>{transaction.description || "-"}</TableCell>
+              <TableCell>{getDescription(transaction)}</TableCell>
               <TableCell className="text-right">
                 <span className={transaction.amount >= 0 ? "text-green-600" : "text-red-600"}>
                   {transaction.amount.toLocaleString("tr-TR", {
