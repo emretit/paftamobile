@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ContactInfo } from "./ContactInfo";
 import { FinancialInfo } from "./FinancialInfo";
 import { HistoryCard } from "./HistoryCard";
+import { PaymentsTab } from "./PaymentsTab";
 import { Customer } from "@/types/customer";
 
 interface ContactTabsProps {
@@ -16,6 +17,10 @@ export const ContactTabs = ({ customer }: ContactTabsProps) => {
     <Tabs defaultValue="overview" className="space-y-4">
       <TabsList className="bg-white border">
         <TabsTrigger value="overview">Genel Bilgiler</TabsTrigger>
+        <TabsTrigger value="payments" className="flex items-center gap-1">
+          <CreditCard className="h-4 w-4" />
+          Cari Hareketler
+        </TabsTrigger>
         <TabsTrigger value="activities" className="flex items-center gap-1">
           <Activity className="h-4 w-4" />
           Aktiviteler
@@ -31,10 +36,6 @@ export const ContactTabs = ({ customer }: ContactTabsProps) => {
         <TabsTrigger value="invoices" className="flex items-center gap-1">
           <Receipt className="h-4 w-4" />
           Faturalar
-        </TabsTrigger>
-        <TabsTrigger value="transactions" className="flex items-center gap-1">
-          <CreditCard className="h-4 w-4" />
-          Cari Hareketler
         </TabsTrigger>
         <TabsTrigger value="contracts" className="flex items-center gap-1">
           <FileStack className="h-4 w-4" />
@@ -52,6 +53,10 @@ export const ContactTabs = ({ customer }: ContactTabsProps) => {
             <HistoryCard customer={customer} />
           </div>
         </div>
+      </TabsContent>
+
+      <TabsContent value="payments">
+        <PaymentsTab customer={customer} />
       </TabsContent>
 
       <TabsContent value="activities">
@@ -75,12 +80,6 @@ export const ContactTabs = ({ customer }: ContactTabsProps) => {
       <TabsContent value="invoices">
         <Card className="p-6">
           <p className="text-gray-500">Faturalar yakında eklenecek.</p>
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="transactions">
-        <Card className="p-6">
-          <p className="text-gray-500">Cari hareketler yakında eklenecek.</p>
         </Card>
       </TabsContent>
 
