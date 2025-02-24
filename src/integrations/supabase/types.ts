@@ -721,6 +721,44 @@ export type Database = {
           },
         ]
       }
+      payment_notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          notification_type: string
+          payment_id: string | null
+          recipient_email: string
+          sent_at: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notification_type: string
+          payment_id?: string | null
+          recipient_email: string
+          sent_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notification_type?: string
+          payment_id?: string | null
+          recipient_email?: string
+          sent_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_notifications_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
