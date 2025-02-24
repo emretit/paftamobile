@@ -75,7 +75,7 @@ export function PaymentsList({ customer }: PaymentsListProps) {
       case "completed":
         return "Tamamlandı";
       case "pending":
-        return "Bekliyor";
+        return "Beklemede";
       case "cancelled":
         return "İptal Edildi";
       case "refunded":
