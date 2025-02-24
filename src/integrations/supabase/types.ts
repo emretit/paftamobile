@@ -653,6 +653,74 @@ export type Database = {
           },
         ]
       }
+      financial_instruments: {
+        Row: {
+          amount: number
+          bank_account_id: string | null
+          bank_name: string | null
+          branch_name: string | null
+          created_at: string | null
+          created_by: string | null
+          currency: Database["public"]["Enums"]["currency_type"]
+          due_date: string
+          id: string
+          instrument_number: string
+          instrument_type: Database["public"]["Enums"]["financial_instrument_type"]
+          issue_date: string
+          issuer_name: string
+          notes: string | null
+          recipient_name: string
+          status: Database["public"]["Enums"]["financial_instrument_status"]
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          bank_account_id?: string | null
+          bank_name?: string | null
+          branch_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          currency: Database["public"]["Enums"]["currency_type"]
+          due_date: string
+          id?: string
+          instrument_number: string
+          instrument_type: Database["public"]["Enums"]["financial_instrument_type"]
+          issue_date?: string
+          issuer_name: string
+          notes?: string | null
+          recipient_name: string
+          status?: Database["public"]["Enums"]["financial_instrument_status"]
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string | null
+          bank_name?: string | null
+          branch_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: Database["public"]["Enums"]["currency_type"]
+          due_date?: string
+          id?: string
+          instrument_number?: string
+          instrument_type?: Database["public"]["Enums"]["financial_instrument_type"]
+          issue_date?: string
+          issuer_name?: string
+          notes?: string | null
+          recipient_name?: string
+          status?: Database["public"]["Enums"]["financial_instrument_status"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_instruments_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -1208,6 +1276,8 @@ export type Database = {
       deal_priority: "low" | "medium" | "high"
       deal_status: "new" | "negotiation" | "follow_up" | "won" | "lost"
       event_type: "technical" | "sales"
+      financial_instrument_status: "pending" | "cleared" | "bounced"
+      financial_instrument_type: "check" | "promissory_note"
       payment_status: "pending" | "completed" | "failed"
       proposal_status:
         | "draft"
