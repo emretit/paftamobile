@@ -30,9 +30,6 @@ const Finance = ({ isCollapsed, setIsCollapsed }: FinanceProps) => {
       >
         <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6 animate-fade-in">
           <FinanceHeader />
-          
-          {/* Financial Overview Section */}
-          <AccountSummary />
 
           {/* Main Content Tabs */}
           <Tabs defaultValue="bank-accounts" className="space-y-6">
@@ -72,7 +69,10 @@ const Finance = ({ isCollapsed, setIsCollapsed }: FinanceProps) => {
             </div>
 
             <TabsContent value="bank-accounts" className="mt-6 animate-fade-in">
-              <BankAccounts />
+              <AccountSummary />
+              <div className="mt-6">
+                <BankAccounts />
+              </div>
             </TabsContent>
 
             <TabsContent value="cash-flow" className="mt-6 animate-fade-in">
