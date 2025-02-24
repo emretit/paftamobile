@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Check, ChevronsUpDown, Search } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +29,7 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  const { data: employees, isLoading } = useQuery({
+  const { data: employees = [], isLoading, error } = useQuery({
     queryKey: ['employees-select'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -37,12 +37,16 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
         .select('id, first_name, last_name, department, status')
         .order('first_name');
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching employees:', error);
+        throw error;
+      }
+
+      return data || [];
     }
   });
 
-  const activeEmployees = employees?.filter(emp => emp.status === 'active') || [];
+  const activeEmployees = employees.filter(emp => emp.status === 'active');
 
   const filteredEmployees = search === "" 
     ? activeEmployees 
@@ -52,6 +56,15 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
         const searchTerm = search.toLowerCase();
         return fullName.includes(searchTerm) || department.includes(searchTerm);
       });
+
+  if (error) {
+    return (
+      <div className="space-y-2">
+        <Label htmlFor="representative">Temsilci</Label>
+        <div className="text-sm text-red-500">Çalışan listesi yüklenirken bir hata oluştu.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">
@@ -63,9 +76,16 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
             role="combobox"
             aria-expanded={open}
             className="w-full justify-between"
+            disabled={isLoading}
           >
-            {formData.representative || "Temsilci seçin..."}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                {formData.representative || "Temsilci seçin..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </>
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[300px] p-0">
@@ -77,10 +97,10 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
               className="h-9"
             />
             <CommandEmpty className="py-6 text-center text-sm">
-              Temsilci bulunamadı
+              {isLoading ? "Yükleniyor..." : "Temsilci bulunamadı"}
             </CommandEmpty>
             <CommandGroup className="max-h-[300px] overflow-y-auto p-1">
-              {!isLoading && filteredEmployees.map((employee) => {
+              {filteredEmployees.map((employee) => {
                 const fullName = `${employee.first_name} ${employee.last_name}`;
                 return (
                   <CommandItem
