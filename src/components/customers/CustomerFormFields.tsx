@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 import { CustomerFormData } from "@/types/customer";
 import BasicInformation from "./form/BasicInformation";
 import CustomerTypeAndStatus from "./form/CustomerTypeAndStatus";
-import RepresentativeSelect from "./form/RepresentativeSelect";
 import CompanyInformation from "./form/CompanyInformation";
 
 interface CustomerFormFieldsProps {
@@ -17,7 +16,15 @@ const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) 
     <div className="space-y-4">
       <BasicInformation formData={formData} setFormData={setFormData} />
       <CustomerTypeAndStatus formData={formData} setFormData={setFormData} />
-      <RepresentativeSelect formData={formData} setFormData={setFormData} />
+
+      <div className="space-y-2">
+        <Label htmlFor="representative">Temsilci</Label>
+        <Input
+          id="representative"
+          value={formData.representative}
+          onChange={(e) => setFormData({ ...formData, representative: e.target.value })}
+        />
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="address">Adres</Label>
