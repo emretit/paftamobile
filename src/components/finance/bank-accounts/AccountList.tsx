@@ -11,10 +11,14 @@ import {
 } from "@/components/ui/table";
 import { Link, Plus } from "lucide-react";
 import { useBankAccounts } from "@/hooks/useBankAccounts";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useState } from "react";
+import { NewBankAccountForm } from "./NewBankAccountForm";
 
 const AccountList = () => {
   const navigate = useNavigate();
   const { data: accounts, isLoading, error } = useBankAccounts();
+  const [isNewAccountSheetOpen, setIsNewAccountSheetOpen] = useState(false);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -25,10 +29,21 @@ const AccountList = () => {
             <Link className="h-4 w-4" />
             <span>Hesap Bağla</span>
           </Button>
-          <Button size="sm" className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            <span>Yeni Hesap</span>
-          </Button>
+          
+          <Sheet open={isNewAccountSheetOpen} onOpenChange={setIsNewAccountSheetOpen}>
+            <SheetTrigger asChild>
+              <Button size="sm" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                <span>Yeni Hesap</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="w-full sm:max-w-xl">
+              <SheetHeader>
+                <SheetTitle>Yeni Banka Hesabı</SheetTitle>
+              </SheetHeader>
+              <NewBankAccountForm onSuccess={() => setIsNewAccountSheetOpen(false)} />
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
       
