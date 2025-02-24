@@ -8,6 +8,7 @@ import Auth from "@/pages/Auth";
 import Contacts from "@/pages/Contacts";
 import ContactDetails from "@/pages/ContactDetails";
 import CustomerForm from "@/pages/CustomerForm";
+import CustomerNew from "@/pages/CustomerNew";
 import Suppliers from "@/pages/Suppliers";
 import SupplierForm from "@/pages/SupplierForm";
 import SupplierDetails from "@/pages/SupplierDetails";
@@ -48,6 +49,7 @@ function App() {
           <Route path="/" element={<Index isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/contacts" element={<Contacts isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/contacts/new" element={<CustomerNew isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/contacts/:id" element={<ContactDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/customer-form" element={<CustomerForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/customer-form/:id" element={<CustomerForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
