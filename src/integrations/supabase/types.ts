@@ -766,11 +766,16 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           currency: Database["public"]["Enums"]["currency_type"]
+          customer_id: string | null
+          description: string | null
           id: string
           payment_date: string
+          payment_direction: string | null
+          payment_type: string | null
           recipient_name: string
           reference_note: string | null
           status: Database["public"]["Enums"]["payment_status"]
+          supplier_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -779,11 +784,16 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           currency: Database["public"]["Enums"]["currency_type"]
+          customer_id?: string | null
+          description?: string | null
           id?: string
           payment_date?: string
+          payment_direction?: string | null
+          payment_type?: string | null
           recipient_name: string
           reference_note?: string | null
           status?: Database["public"]["Enums"]["payment_status"]
+          supplier_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -792,11 +802,16 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           currency?: Database["public"]["Enums"]["currency_type"]
+          customer_id?: string | null
+          description?: string | null
           id?: string
           payment_date?: string
+          payment_direction?: string | null
+          payment_type?: string | null
           recipient_name?: string
           reference_note?: string | null
           status?: Database["public"]["Enums"]["payment_status"]
+          supplier_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -805,6 +820,20 @@ export type Database = {
             columns: ["bank_account_id"]
             isOneToOne: false
             referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
         ]

@@ -16,6 +16,21 @@ interface PaymentsListProps {
   customer: Customer;
 }
 
+interface Payment {
+  id: string;
+  amount: number;
+  payment_type: "havale" | "eft" | "kredi_karti" | "nakit";
+  payment_date: string;
+  description: string | null;
+  status: "pending" | "completed" | "cancelled" | "refunded";
+  bank_account_id: string;
+  currency: "TRY" | "USD" | "EUR" | "GBP";
+  bank_accounts?: {
+    bank_name: string;
+    account_name: string;
+  };
+}
+
 export function PaymentsList({ customer }: PaymentsListProps) {
   const { data: payments, isLoading } = useQuery({
     queryKey: ["customer-payments", customer.id],
@@ -33,7 +48,7 @@ export function PaymentsList({ customer }: PaymentsListProps) {
         .order("payment_date", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as Payment[];
     },
   });
 
@@ -70,6 +85,21 @@ export function PaymentsList({ customer }: PaymentsListProps) {
     }
   };
 
+  const formatPaymentType = (type: string) => {
+    switch (type) {
+      case "havale":
+        return "Havale";
+      case "eft":
+        return "EFT";
+      case "kredi_karti":
+        return "Kredi Kartı";
+      case "nakit":
+        return "Nakit";
+      default:
+        return type;
+    }
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -95,7 +125,7 @@ export function PaymentsList({ customer }: PaymentsListProps) {
                   currency: payment.currency,
                 })}
               </TableCell>
-              <TableCell className="capitalize">{payment.payment_type}</TableCell>
+              <TableCell>{formatPaymentType(payment.payment_type)}</TableCell>
               <TableCell>
                 {payment.bank_accounts?.account_name} - {payment.bank_accounts?.bank_name}
               </TableCell>

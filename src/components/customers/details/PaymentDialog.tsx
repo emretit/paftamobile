@@ -75,6 +75,7 @@ export function PaymentDialog({ open, onOpenChange, customer }: PaymentDialogPro
         payment_direction: "incoming",
         status: "pending",
         recipient_name: customer.name,
+        currency: "TRY", // Default to TRY
       });
 
       if (error) throw error;
