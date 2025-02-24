@@ -1,14 +1,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Check, ChevronsUpDown, Search } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
 } from "@/components/ui/command";
 import {
@@ -61,13 +60,6 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
         </PopoverTrigger>
         <PopoverContent className="w-[300px] p-0">
           <Command value={value} onValueChange={setValue}>
-            <div className="flex items-center border-b px-3">
-              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-              <CommandInput 
-                placeholder="Temsilci ara..." 
-                className="h-9 flex-1"
-              />
-            </div>
             <CommandEmpty className="py-6 text-center text-sm">
               Temsilci bulunamadı.
             </CommandEmpty>
