@@ -27,9 +27,8 @@ interface RepresentativeSelectProps {
 
 const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectProps) => {
   const [open, setOpen] = useState(false);
-  const [inputValue, setInputValue] = useState("");
 
-  const { data: employees } = useQuery({
+  const { data: employees, isLoading } = useQuery({
     queryKey: ['employees'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -41,6 +40,8 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
       return data;
     }
   });
+
+  const activeEmployees = employees?.filter(emp => emp.status === 'active') || [];
 
   return (
     <div className="space-y-2">
@@ -60,14 +61,11 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0">
-          <Command 
-            value={inputValue}
-            onValueChange={setInputValue}
-          >
+          <Command>
             <CommandInput placeholder="Temsilci ara..." />
             <CommandEmpty>Temsilci bulunamadı.</CommandEmpty>
             <CommandGroup>
-              {employees?.filter(emp => emp.status === 'active').map((employee) => {
+              {!isLoading && activeEmployees.map((employee) => {
                 const fullName = `${employee.first_name} ${employee.last_name}`;
                 return (
                   <CommandItem
