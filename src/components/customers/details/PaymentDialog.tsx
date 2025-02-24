@@ -83,7 +83,7 @@ export function PaymentDialog({ open, onOpenChange, customer }: PaymentDialogPro
 
       if (customerFetchError) throw customerFetchError;
 
-      // 2. Yeni ödemeyi ekle
+      // 2. Yeni ödemeyi ekle - status'u direkt "completed" olarak ayarla
       const { error: paymentError } = await supabase.from("payments").insert({
         amount: data.amount,
         payment_type: data.payment_type,
@@ -92,7 +92,7 @@ export function PaymentDialog({ open, onOpenChange, customer }: PaymentDialogPro
         payment_date: data.payment_date.toISOString(),
         customer_id: customer.id,
         payment_direction: "incoming",
-        status: "pending",
+        status: "completed", // Değişiklik burada: direkt "completed" olarak ayarlandı
         recipient_name: customer.name,
         currency: "TRY",
       });
@@ -128,6 +128,7 @@ export function PaymentDialog({ open, onOpenChange, customer }: PaymentDialogPro
       // Cache'i güncelle
       queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
       queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["customer-payments", customer.id] });
 
       toast({
         title: "Ödeme başarıyla oluşturuldu",
