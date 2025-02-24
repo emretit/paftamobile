@@ -9,7 +9,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const PendingTransactions = () => {
+interface PendingTransactionsProps {
+  accountId: string;
+}
+
+const PendingTransactions = ({ accountId }: PendingTransactionsProps) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex justify-between items-center mb-6">

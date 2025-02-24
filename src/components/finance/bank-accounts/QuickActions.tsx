@@ -9,8 +9,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ArrowUpToLine, ArrowDownToLine, Globe, CalendarClock } from "lucide-react";
+import { BankAccount } from "@/hooks/useBankAccounts";
 
-const QuickActions = () => {
+interface QuickActionsProps {
+  account: BankAccount;
+}
+
+const QuickActions = ({ account }: QuickActionsProps) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <h3 className="font-semibold mb-4">Hızlı İşlemler</h3>

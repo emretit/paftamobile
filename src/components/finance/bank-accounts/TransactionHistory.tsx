@@ -18,7 +18,11 @@ import {
 import { Filter, Download } from "lucide-react";
 import { useState } from "react";
 
-const TransactionHistory = () => {
+interface TransactionHistoryProps {
+  accountId: string;
+}
+
+const TransactionHistory = ({ accountId }: TransactionHistoryProps) => {
   const [selectedType, setSelectedType] = useState("all");
 
   return (
@@ -85,19 +89,6 @@ const TransactionHistory = () => {
             <TableCell>İş Bank - 7654</TableCell>
             <TableCell className="text-right text-red-600">-$5,000</TableCell>
             <TableCell>$75,000</TableCell>
-            <TableCell>
-              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                Tamamlandı
-              </span>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>28.02.2024</TableCell>
-            <TableCell>Swift Gelen</TableCell>
-            <TableCell>İhracat Bedeli</TableCell>
-            <TableCell>Garanti - 9876</TableCell>
-            <TableCell className="text-right text-green-600">+€10,000</TableCell>
-            <TableCell>€40,000</TableCell>
             <TableCell>
               <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
                 Tamamlandı
