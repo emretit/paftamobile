@@ -34,10 +34,10 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
     queryKey: ['employees'],
     queryFn: async () => {
       console.log('Çalışanlar verisi çekiliyor...');
+      // Status filtresini kaldırıp tüm çalışanları çekelim
       const { data, error } = await supabase
         .from('employees')
         .select('*')
-        .eq('status', 'active')
         .order('first_name');
 
       if (error) {
@@ -45,8 +45,19 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
         throw error;
       }
 
-      console.log('Çekilen çalışanlar:', data);
-      return data as Employee[];
+      console.log('Çekilen çalışanlar ve durumları:', data?.map(emp => ({
+        name: `${emp.first_name} ${emp.last_name}`,
+        status: emp.status
+      })));
+      
+      // Aktif çalışanları filtreleyelim ('aktif' veya diğer olası değerler)
+      const activeEmployees = data?.filter(emp => 
+        emp.status?.toLowerCase() === 'aktif' || 
+        emp.status?.toLowerCase() === 'active'
+      );
+
+      console.log('Aktif çalışanlar:', activeEmployees);
+      return activeEmployees as Employee[];
     }
   });
 
