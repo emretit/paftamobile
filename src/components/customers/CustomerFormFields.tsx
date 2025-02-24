@@ -5,6 +5,7 @@ import { CustomerFormData } from "@/types/customer";
 import BasicInformation from "./form/BasicInformation";
 import CustomerTypeAndStatus from "./form/CustomerTypeAndStatus";
 import CompanyInformation from "./form/CompanyInformation";
+import RepresentativeSelect from "./form/RepresentativeSelect";
 
 interface CustomerFormFieldsProps {
   formData: CustomerFormData;
@@ -16,6 +17,7 @@ const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) 
     <div className="space-y-4">
       <BasicInformation formData={formData} setFormData={setFormData} />
       <CustomerTypeAndStatus formData={formData} setFormData={setFormData} />
+      <RepresentativeSelect formData={formData} setFormData={setFormData} />
 
       <div className="space-y-2">
         <Label htmlFor="address">Adres</Label>
