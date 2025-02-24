@@ -18,6 +18,7 @@ export type BankAccount = {
   notes?: string;
   created_at?: string;
   updated_at?: string;
+  last_transaction_date?: string;
 };
 
 export const useBankAccounts = () => {
