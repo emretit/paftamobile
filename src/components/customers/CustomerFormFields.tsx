@@ -10,6 +10,22 @@ import {
 import { CustomerFormData } from "@/types/customer";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useState } from "react";
 
 interface CustomerFormFieldsProps {
   formData: CustomerFormData;
@@ -17,6 +33,8 @@ interface CustomerFormFieldsProps {
 }
 
 const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) => {
+  const [open, setOpen] = useState(false);
+
   const { data: employees } = useQuery({
     queryKey: ['employees'],
     queryFn: async () => {
@@ -124,24 +142,50 @@ const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) 
 
       <div className="space-y-2">
         <Label htmlFor="representative">Temsilci</Label>
-        <Select
-          value={formData.representative || ""}
-          onValueChange={(value) => setFormData({ ...formData, representative: value })}
-        >
-          <SelectTrigger id="representative">
-            <SelectValue placeholder="Temsilci seçin" />
-          </SelectTrigger>
-          <SelectContent>
-            {employees?.filter(emp => emp.status === 'aktif').map((employee) => (
-              <SelectItem 
-                key={employee.id} 
-                value={`${employee.first_name} ${employee.last_name}`}
-              >
-                {employee.first_name} {employee.last_name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between"
+            >
+              {formData.representative
+                ? formData.representative
+                : "Temsilci seçin..."}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0">
+            <Command>
+              <CommandInput placeholder="Temsilci ara..." />
+              <CommandEmpty>Temsilci bulunamadı.</CommandEmpty>
+              <CommandGroup>
+                {employees?.filter(emp => emp.status === 'aktif').map((employee) => {
+                  const fullName = `${employee.first_name} ${employee.last_name}`;
+                  return (
+                    <CommandItem
+                      key={employee.id}
+                      value={fullName}
+                      onSelect={(currentValue) => {
+                        setFormData({ ...formData, representative: currentValue });
+                        setOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          formData.representative === fullName ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {fullName}
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div className="space-y-2">
