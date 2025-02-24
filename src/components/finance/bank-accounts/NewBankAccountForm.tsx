@@ -1,4 +1,3 @@
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -16,6 +15,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+
+type BankAccount = {
+  id: string;
+  bank_name: string;
+  account_name: string;
+  account_number?: string;
+  branch_name?: string;
+  iban?: string;
+  swift_code?: string;
+  account_type: "vadesiz" | "vadeli" | "kredi" | "pos";
+  currency: "TRY" | "USD" | "EUR" | "GBP";
+  current_balance: number;
+  credit_limit: number;
+  interest_rate?: number;
+  notes?: string;
+};
 
 const formSchema = z.object({
   bank_name: z.string().min(1, "Banka adı zorunludur"),
@@ -50,11 +65,11 @@ export function NewBankAccountForm({ onSuccess }: NewBankAccountFormProps) {
     },
   });
 
-  const { mutate: createAccount, isLoading } = useMutation({
+  const { mutate: createAccount, isPending } = useMutation<BankAccount, Error, FormValues>({
     mutationFn: async (values: FormValues) => {
       const { data, error } = await supabase
         .from('bank_accounts')
-        .insert([values])
+        .insert(values)
         .select()
         .single();
 
@@ -288,8 +303,8 @@ export function NewBankAccountForm({ onSuccess }: NewBankAccountFormProps) {
           <Button variant="outline" type="button" onClick={() => onSuccess()}>
             İptal
           </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Kaydediliyor..." : "Kaydet"}
+          <Button type="submit" disabled={isPending}>
+            {isPending ? "Kaydediliyor..." : "Kaydet"}
           </Button>
         </div>
       </form>
