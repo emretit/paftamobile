@@ -66,7 +66,24 @@ export function PaymentDialog({ open, onOpenChange, customer }: PaymentDialogPro
 
   async function onSubmit(data: PaymentFormData) {
     try {
-      // 1. Yeni ödemeyi ekle
+      // 1. Önce mevcut bakiyeleri al
+      const { data: bankAccount, error: bankFetchError } = await supabase
+        .from("bank_accounts")
+        .select("current_balance, available_balance")
+        .eq("id", data.bank_account_id)
+        .single();
+
+      if (bankFetchError) throw bankFetchError;
+
+      const { data: customerData, error: customerFetchError } = await supabase
+        .from("customers")
+        .select("balance")
+        .eq("id", customer.id)
+        .single();
+
+      if (customerFetchError) throw customerFetchError;
+
+      // 2. Yeni ödemeyi ekle
       const { error: paymentError } = await supabase.from("payments").insert({
         amount: data.amount,
         payment_type: data.payment_type,
@@ -82,22 +99,27 @@ export function PaymentDialog({ open, onOpenChange, customer }: PaymentDialogPro
 
       if (paymentError) throw paymentError;
 
-      // 2. Banka hesabı bakiyesini güncelle
+      // 3. Banka hesabı bakiyesini güncelle
+      const newCurrentBalance = bankAccount.current_balance + data.amount;
+      const newAvailableBalance = bankAccount.available_balance + data.amount;
+
       const { error: bankUpdateError } = await supabase
         .from("bank_accounts")
         .update({
-          current_balance: supabase.sql`current_balance + ${data.amount}`,
-          available_balance: supabase.sql`available_balance + ${data.amount}`,
+          current_balance: newCurrentBalance,
+          available_balance: newAvailableBalance,
         })
         .eq("id", data.bank_account_id);
 
       if (bankUpdateError) throw bankUpdateError;
 
-      // 3. Müşteri bakiyesini güncelle
+      // 4. Müşteri bakiyesini güncelle
+      const newCustomerBalance = customerData.balance - data.amount;
+
       const { error: customerUpdateError } = await supabase
         .from("customers")
         .update({
-          balance: supabase.sql`balance - ${data.amount}`,
+          balance: newCustomerBalance,
         })
         .eq("id", customer.id);
 
@@ -266,4 +288,3 @@ export function PaymentDialog({ open, onOpenChange, customer }: PaymentDialogPro
     </Dialog>
   );
 }
-
