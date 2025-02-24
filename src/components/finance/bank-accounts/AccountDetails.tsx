@@ -1,171 +1,83 @@
 
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { 
-  Building2, 
-  CreditCard, 
-  Calendar,
-  Hash,
-  BadgeEuro,
-  Wallet,
-  ArrowUpDown
-} from "lucide-react";
-import type { BankAccount } from "@/hooks/useBankAccounts";
+import Navbar from "@/components/Navbar";
+import { BankAccount } from "@/hooks/useBankAccounts";
+import TransactionHistory from "./TransactionHistory";
+import PendingTransactions from "./PendingTransactions";
+import QuickActions from "./QuickActions";
 
 const AccountDetails = () => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { id } = useParams();
 
   const { data: account, isLoading } = useQuery({
-    queryKey: ['bankAccount', id],
+    queryKey: ["bank-account", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('bank_accounts')
-        .select('*')
-        .eq('id', id)
+        .from("bank_accounts")
+        .select("*")
+        .eq("id", id)
         .single();
 
       if (error) throw error;
       return data as BankAccount;
-    }
+    },
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p>Yükleniyor...</p>
-      </div>
-    );
+    return <div>Yükleniyor...</div>;
   }
 
   if (!account) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p>Hesap bulunamadı.</p>
-      </div>
-    );
+    return <div>Hesap bulunamadı</div>;
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-gray-500" />
-            {account.bank_name} - {account.account_name}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="space-y-1">
-              <p className="text-sm text-gray-500 flex items-center gap-2">
-                <Hash className="h-4 w-4" />
-                Hesap Numarası
-              </p>
-              <p className="font-medium">{account.account_number || "-"}</p>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex relative">
+      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <main className={`flex-1 transition-all duration-300 ${
+        isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
+      }`}>
+        <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6">
+          {/* Header */}
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                {account.account_name}
+              </h1>
+              <p className="text-sm text-gray-500">{account.bank_name}</p>
             </div>
-
-            <div className="space-y-1">
-              <p className="text-sm text-gray-500 flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                Şube
-              </p>
-              <p className="font-medium">{account.branch_name || "-"}</p>
-            </div>
-
-            <div className="space-y-1">
-              <p className="text-sm text-gray-500 flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                IBAN
-              </p>
-              <p className="font-medium">{account.iban || "-"}</p>
-            </div>
-
-            <div className="space-y-1">
-              <p className="text-sm text-gray-500 flex items-center gap-2">
-                <Wallet className="h-4 w-4" />
-                Hesap Türü
-              </p>
-              <p className="font-medium">{account.account_type}</p>
-            </div>
-
-            <div className="space-y-1">
-              <p className="text-sm text-gray-500 flex items-center gap-2">
-                <BadgeEuro className="h-4 w-4" />
-                Para Birimi
-              </p>
-              <p className="font-medium">{account.currency}</p>
-            </div>
-
-            <div className="space-y-1">
-              <p className="text-sm text-gray-500 flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Açılış Tarihi
-              </p>
-              <p className="font-medium">
-                {new Date(account.start_date).toLocaleDateString('tr-TR')}
-              </p>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-gray-900">
+                {account.current_balance.toLocaleString('tr-TR', {
+                  style: 'currency',
+                  currency: account.currency
+                })}
+              </div>
+              <p className="text-sm text-gray-500">Mevcut Bakiye</p>
             </div>
           </div>
 
-          <Separator className="my-6" />
+          {/* Quick Actions */}
+          <QuickActions account={account} />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-500 flex items-center gap-2">
-                    <ArrowUpDown className="h-4 w-4" />
-                    Mevcut Bakiye
-                  </p>
-                  <p className="text-2xl font-semibold">
-                    {new Intl.NumberFormat('tr-TR', {
-                      style: 'currency',
-                      currency: account.currency
-                    }).format(account.current_balance)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-lg font-semibold mb-4">İşlem Geçmişi</h2>
+              <TransactionHistory accountId={account.id} />
+            </div>
 
-            <Card>
-              <CardContent className="pt-6">
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-500 flex items-center gap-2">
-                    <Wallet className="h-4 w-4" />
-                    Kullanılabilir Bakiye
-                  </p>
-                  <p className="text-2xl font-semibold">
-                    {new Intl.NumberFormat('tr-TR', {
-                      style: 'currency',
-                      currency: account.currency
-                    }).format(account.available_balance)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-500 flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    Kredi Limiti
-                  </p>
-                  <p className="text-2xl font-semibold">
-                    {new Intl.NumberFormat('tr-TR', {
-                      style: 'currency',
-                      currency: account.currency
-                    }).format(account.credit_limit)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-lg font-semibold mb-4">Bekleyen İşlemler</h2>
+              <PendingTransactions accountId={account.id} />
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </main>
     </div>
   );
 };
