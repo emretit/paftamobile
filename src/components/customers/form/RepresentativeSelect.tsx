@@ -27,7 +27,7 @@ interface RepresentativeSelectProps {
 
 const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectProps) => {
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState(formData.representative || "");
+  const [value, setValue] = useState("");
 
   const { data: employees, isLoading } = useQuery({
     queryKey: ['employees'],
@@ -55,7 +55,7 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
             aria-expanded={open}
             className="w-full justify-between"
           >
-            {value || "Temsilci seçin..."}
+            {formData.representative || "Temsilci seçin..."}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -77,18 +77,23 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
                 return (
                   <CommandItem
                     key={employee.id}
-                    value={fullName}
+                    value={fullName.toLowerCase()}
                     onSelect={(currentValue) => {
-                      setFormData({ ...formData, representative: currentValue });
-                      setValue(currentValue);
-                      setOpen(false);
+                      const selectedEmployee = activeEmployees.find(
+                        emp => `${emp.first_name} ${emp.last_name}`.toLowerCase() === currentValue
+                      );
+                      if (selectedEmployee) {
+                        const fullName = `${selectedEmployee.first_name} ${selectedEmployee.last_name}`;
+                        setFormData({ ...formData, representative: fullName });
+                        setOpen(false);
+                      }
                     }}
                     className="cursor-pointer"
                   >
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        value === fullName ? "opacity-100" : "opacity-0"
+                        formData.representative === fullName ? "opacity-100" : "opacity-0"
                       )}
                     />
                     <div className="flex flex-col">
