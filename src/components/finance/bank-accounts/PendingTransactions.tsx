@@ -80,3 +80,4 @@ const PendingTransactions = ({ accountId }: PendingTransactionsProps) => {
 };
 
 export default PendingTransactions;
+

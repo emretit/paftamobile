@@ -93,3 +93,4 @@ const QuickActions = ({ account }: QuickActionsProps) => {
 };
 
 export default QuickActions;
+
