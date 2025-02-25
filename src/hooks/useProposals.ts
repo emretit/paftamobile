@@ -62,7 +62,8 @@ export const useProposals = (filters?: ProposalFilters) => {
 
       return data.map(item => ({
         ...item,
-        status: item.status as ProposalStatus
+        status: item.status as ProposalStatus,
+        items: item.items ? JSON.parse(item.items as string) : []
       }));
     },
   });
