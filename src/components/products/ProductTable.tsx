@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Edit as Edit2, Trash as Trash2, MoreHorizontal } from "lucide-react";
@@ -97,7 +98,7 @@ const ProductTable = ({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50/50">
@@ -114,7 +115,7 @@ const ProductTable = ({
           {products.map((product) => (
             <TableRow 
               key={product.id}
-              className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
+              className="cursor-pointer hover:bg-gray-50"
             >
               <TableCell onClick={() => handleRowClick(product.id)}>
                 <div className="flex items-center gap-3">
@@ -160,7 +161,7 @@ const ProductTable = ({
               <TableCell onClick={() => handleRowClick(product.id)}>
                 {product.stock_quantity}
               </TableCell>
-              <TableCell>
+              <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-2">
                   <button 
                     className="p-1 hover:bg-gray-100 rounded"
