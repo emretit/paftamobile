@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -20,30 +19,7 @@ import {
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
-// Ürün formunun veri tipini Supabase şemasına uygun olarak tanımlıyoruz
-interface ProductFormData {
-  name: string;
-  description: string | null;
-  sku: string | null;
-  barcode: string | null;
-  price: number;
-  stock_quantity: number;
-  min_stock_level: number;
-  tax_rate: number;
-  unit: string;
-  is_active: boolean;
-  currency: string;
-  category_type: string;
-  product_type: string;
-  unit_price: number;
-  status: string;
-  image_url: string | null;
-  category_id: string | null;
-  supplier_id: string | null;
-  discount_price: number | null;
-  discount_rate: number | null;
-}
-
+// ProductFormData tipini doğrudan Zod şemasından türetelim
 const productSchema = z.object({
   name: z.string().min(1, "Ürün adı zorunludur"),
   description: z.string().nullable(),
@@ -65,16 +41,16 @@ const productSchema = z.object({
   supplier_id: z.string().nullable(),
   discount_price: z.number().nullable(),
   discount_rate: z.number().nullable()
-}) satisfies z.ZodType<ProductFormData>;
+});
 
-type ProductFormValues = z.infer<typeof productSchema>;
+type ProductFormData = z.infer<typeof productSchema>;
 
 const ProductForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditing = Boolean(id);
 
-  const form = useForm<ProductFormValues>({
+  const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
@@ -114,7 +90,7 @@ const ProductForm = () => {
         if (error) throw error;
 
         if (data) {
-          form.reset(data as ProductFormValues);
+          form.reset(data);
         }
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -125,12 +101,12 @@ const ProductForm = () => {
     fetchProduct();
   }, [id, form]);
 
-  const onSubmit = async (values: ProductFormValues) => {
+  const onSubmit = async (values: ProductFormData) => {
     try {
       if (isEditing) {
         const { error } = await supabase
           .from("products")
-          .update(values as ProductFormData)
+          .update(values)
           .eq("id", id);
 
         if (error) throw error;
@@ -140,7 +116,7 @@ const ProductForm = () => {
       } else {
         const { error, data } = await supabase
           .from("products")
-          .insert(values as ProductFormData)
+          .insert(values)
           .select()
           .single();
 
