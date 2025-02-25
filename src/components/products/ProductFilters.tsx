@@ -23,15 +23,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
 
 interface ProductFiltersProps {
   setSearchQuery: (query: string) => void;
   categoryFilter: string;
   setCategoryFilter: (category: string) => void;
+  stockFilter: string;
+  setStockFilter: (status: string) => void;
   categories: { id: string; name: string }[];
   totalProducts: number;
   onBulkAction?: (action: string) => void;
@@ -41,13 +40,12 @@ const ProductFilters = ({
   setSearchQuery,
   categoryFilter,
   setCategoryFilter,
+  stockFilter,
+  setStockFilter,
   categories,
   totalProducts,
   onBulkAction
 }: ProductFiltersProps) => {
-  const [priceRange, setPriceRange] = useState([0, 1000]);
-  const [stockStatus, setStockStatus] = useState("all");
-
   return (
     <div className="space-y-6">
       {/* Modern Header Section */}
@@ -95,8 +93,6 @@ const ProductFilters = ({
         </div>
       </div>
 
-      <Separator />
-
       {/* Search & Filters Bar */}
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1 relative">
@@ -123,72 +119,17 @@ const ProductFilters = ({
             </SelectContent>
           </Select>
 
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="h-11 w-11">
-                <SlidersHorizontal className="h-4 w-4" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Gelişmiş Filtreler</SheetTitle>
-                <SheetDescription>
-                  Ürünleri detaylı filtrelemek için ayarları kullanın.
-                </SheetDescription>
-              </SheetHeader>
-
-              <div className="mt-6 space-y-6">
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Fiyat Aralığı</h3>
-                  <Slider 
-                    defaultValue={[0, 1000]} 
-                    max={1000} 
-                    step={10}
-                    value={priceRange}
-                    onValueChange={setPriceRange}
-                  />
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>{priceRange[0]} TL</span>
-                    <span>{priceRange[1]} TL</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Stok Durumu</h3>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge 
-                      variant={stockStatus === "all" ? "default" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() => setStockStatus("all")}
-                    >
-                      Tümü
-                    </Badge>
-                    <Badge 
-                      variant={stockStatus === "in_stock" ? "default" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() => setStockStatus("in_stock")}
-                    >
-                      Stokta
-                    </Badge>
-                    <Badge 
-                      variant={stockStatus === "low_stock" ? "warning" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() => setStockStatus("low_stock")}
-                    >
-                      Az Stok
-                    </Badge>
-                    <Badge 
-                      variant={stockStatus === "out_of_stock" ? "destructive" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() => setStockStatus("out_of_stock")}
-                    >
-                      Stok Yok
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+          <Select value={stockFilter} onValueChange={setStockFilter}>
+            <SelectTrigger className="w-[180px] h-11">
+              <SelectValue placeholder="Stok Durumu" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Stoklar</SelectItem>
+              <SelectItem value="in_stock">Stokta</SelectItem>
+              <SelectItem value="low_stock">Az Stok</SelectItem>
+              <SelectItem value="out_of_stock">Stok Yok</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>

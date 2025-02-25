@@ -20,6 +20,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   const [view, setView] = useState<"grid" | "table">("table");
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [stockFilter, setStockFilter] = useState("all");
 
   // Kategorileri getiren sorgu
   const { data: categories = [] } = useQuery({
@@ -36,7 +37,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
 
   // Ürünleri getiren sorgu
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ["products", searchQuery, categoryFilter],
+    queryKey: ["products", searchQuery, categoryFilter, stockFilter],
     queryFn: async () => {
       let query = supabase
         .from("products")
@@ -56,6 +57,21 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
         query = query.eq("category_id", categoryFilter);
       }
 
+      // Stok durumu filtrelemesi
+      if (stockFilter !== "all") {
+        switch (stockFilter) {
+          case "out_of_stock":
+            query = query.eq("stock_quantity", 0);
+            break;
+          case "low_stock":
+            query = query.gt("stock_quantity", 0).lte("stock_quantity", 5);
+            break;
+          case "in_stock":
+            query = query.gt("stock_quantity", 5);
+            break;
+        }
+      }
+
       const { data, error } = await query.order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -63,7 +79,6 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   });
 
   const handleBulkAction = async (action: string) => {
-    // Implement bulk actions here
     console.log('Bulk action:', action);
   };
 
@@ -78,6 +93,8 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
             setSearchQuery={setSearchQuery}
             categoryFilter={categoryFilter}
             setCategoryFilter={setCategoryFilter}
+            stockFilter={stockFilter}
+            setStockFilter={setStockFilter}
             categories={categories}
             totalProducts={products.length}
             onBulkAction={handleBulkAction}
