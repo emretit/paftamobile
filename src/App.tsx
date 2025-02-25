@@ -43,7 +43,7 @@ const App = () => {
           <Route path="/products" element={<Products isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/product-form" element={<ProductForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/product-form/:id" element={<ProductForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-          <Route path="/product-details/:id" element={<ProductDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/product-details/:id" element={<ProductDetails />} />
           <Route path="/contacts" element={<Contacts isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/contacts/new" element={<CustomerForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/contacts/:id" element={<ContactDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
