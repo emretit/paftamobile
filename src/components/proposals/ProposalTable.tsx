@@ -18,12 +18,22 @@ import { Proposal, ProposalStatus } from "@/types/proposal";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
 
 interface Column {
   id: keyof Proposal | 'actions';
   label: string;
   visible: boolean;
+  sortable?: boolean;
 }
+
+const statusStyles: Record<ProposalStatus, { bg: string; text: string }> = {
+  draft: { bg: "bg-gray-100", text: "text-gray-800" },
+  sent: { bg: "bg-blue-100", text: "text-blue-800" },
+  approved: { bg: "bg-green-100", text: "text-green-800" },
+  rejected: { bg: "bg-red-100", text: "text-red-800" },
+  expired: { bg: "bg-yellow-100", text: "text-yellow-800" }
+};
 
 const ProposalTable = () => {
   const { data: proposals, isLoading } = useProposals();
@@ -31,12 +41,12 @@ const ProposalTable = () => {
   const queryClient = useQueryClient();
   
   const [columns] = useState<Column[]>([
-    { id: "proposal_number", label: "Teklif No", visible: true },
+    { id: "proposal_number", label: "Teklif No", visible: true, sortable: true },
     { id: "customer_id", label: "Müşteri", visible: true },
     { id: "status", label: "Durum", visible: true },
     { id: "employee_id", label: "Satış Temsilcisi", visible: true },
-    { id: "total_value", label: "Toplam Tutar", visible: true },
-    { id: "created_at", label: "Oluşturma Tarihi", visible: true },
+    { id: "total_value", label: "Toplam Tutar", visible: true, sortable: true },
+    { id: "created_at", label: "Oluşturma Tarihi", visible: true, sortable: true },
     { id: "valid_until", label: "Geçerlilik", visible: true },
     { id: "actions", label: "İşlemler", visible: true },
   ]);
@@ -120,23 +130,16 @@ const ProposalTable = () => {
                 {proposal.customer?.name}
               </TableCell>
               <TableCell className="p-4 align-middle">
-                <Select
-                  value={proposal.status}
-                  onValueChange={(value: ProposalStatus) => 
-                    updateProposalStatus(proposal.id, value)
-                  }
+                <Badge 
+                  className={`${statusStyles[proposal.status as ProposalStatus].bg} ${
+                    statusStyles[proposal.status as ProposalStatus].text
+                  }`}
                 >
-                  <SelectTrigger className="h-9 w-[180px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="new">Yeni Teklif</SelectItem>
-                    <SelectItem value="review">İncelemede</SelectItem>
-                    <SelectItem value="negotiation">Görüşmede</SelectItem>
-                    <SelectItem value="accepted">Kabul Edildi</SelectItem>
-                    <SelectItem value="rejected">Reddedildi</SelectItem>
-                  </SelectContent>
-                </Select>
+                  {proposal.status === 'draft' ? 'Taslak' :
+                   proposal.status === 'sent' ? 'Gönderildi' :
+                   proposal.status === 'approved' ? 'Onaylandı' :
+                   proposal.status === 'rejected' ? 'Reddedildi' : 'Süresi Doldu'}
+                </Badge>
               </TableCell>
               <TableCell className="p-4 align-middle max-w-[180px] truncate">
                 {proposal.employee && 

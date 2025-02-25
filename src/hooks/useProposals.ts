@@ -47,7 +47,12 @@ export const useProposals = (filters?: ProposalFilters) => {
         }
       }
 
-      query = query.order('created_at', { ascending: false });
+      // Apply sorting
+      if (filters?.sortBy) {
+        query = query.order(filters.sortBy.field, { ascending: filters.sortBy.direction === 'asc' });
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
 
       const { data, error } = await query;
 

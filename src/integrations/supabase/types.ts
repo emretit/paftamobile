@@ -1048,6 +1048,8 @@ export type Database = {
           id: string
           internal_notes: string | null
           items: Json | null
+          last_modified_at: string | null
+          last_modified_by: string | null
           payment_term: string | null
           proposal_number: number
           sent_date: string | null
@@ -1070,6 +1072,8 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           items?: Json | null
+          last_modified_at?: string | null
+          last_modified_by?: string | null
           payment_term?: string | null
           proposal_number?: number
           sent_date?: string | null
@@ -1092,6 +1096,8 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           items?: Json | null
+          last_modified_at?: string | null
+          last_modified_by?: string | null
           payment_term?: string | null
           proposal_number?: number
           sent_date?: string | null

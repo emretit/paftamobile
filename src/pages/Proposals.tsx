@@ -1,6 +1,5 @@
 
 import Navbar from "@/components/Navbar";
-import TopBar from "@/components/TopBar";
 import { ProposalAnalytics } from "@/components/proposals/ProposalAnalytics";
 import { ProposalFilters } from "@/components/proposals/ProposalFilters";
 import { ProposalActions } from "@/components/proposals/ProposalActions";
@@ -45,7 +44,7 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
             
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="p-4">
-                <ProposalTable />
+                <ProposalTable filters={filters} />
               </div>
             </div>
           </div>

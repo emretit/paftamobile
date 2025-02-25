@@ -32,6 +32,10 @@ export interface ProposalFilters {
     to: Date | null;
   };
   employeeId: string | null;
+  sortBy?: {
+    field: string;
+    direction: 'asc' | 'desc';
+  };
 }
 
 export const ProposalFilters = ({ onFilterChange }: ProposalFiltersProps) => {
@@ -72,11 +76,11 @@ export const ProposalFilters = ({ onFilterChange }: ProposalFiltersProps) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tümü</SelectItem>
-            <SelectItem value="new">Yeni</SelectItem>
-            <SelectItem value="review">İncelemede</SelectItem>
-            <SelectItem value="negotiation">Görüşmede</SelectItem>
-            <SelectItem value="accepted">Kabul Edildi</SelectItem>
+            <SelectItem value="draft">Taslak</SelectItem>
+            <SelectItem value="sent">Gönderildi</SelectItem>
+            <SelectItem value="approved">Onaylandı</SelectItem>
             <SelectItem value="rejected">Reddedildi</SelectItem>
+            <SelectItem value="expired">Süresi Doldu</SelectItem>
           </SelectContent>
         </Select>
       </div>
