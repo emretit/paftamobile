@@ -198,7 +198,9 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
               <div className="space-y-4">
                 <div>
                   <label className="text-sm text-gray-500">Garanti Süresi</label>
-                  <p className="mt-1">{product.warranty_period || "Garanti süresi belirtilmemiş"}</p>
+                  <p className="mt-1">
+                    {product.warranty_period ? String(product.warranty_period) : "Garanti süresi belirtilmemiş"}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm text-gray-500">Notlar</label>
