@@ -11,24 +11,21 @@ interface Product {
   id: string;
   name: string;
   description: string | null;
-  unit_price: number;
-  purchase_price: number;
-  tax_rate: number;
-  discount_rate: number;
-  product_type: string;
-  category_type: string;
   sku: string | null;
   barcode: string | null;
+  price: number;
+  discount_price: number | null;
+  currency: string;
+  tax_rate: number;
   stock_quantity: number;
-  stock_threshold: number;
-  min_order_quantity: number;
-  max_order_quantity: number | null;
+  min_stock_level: number;
+  supplier_id: string | null;
+  category_type: string;
+  product_type: string;
   unit: string;
   status: string;
   is_active: boolean;
   image_url: string | null;
-  warranty_period: unknown | null;
-  notes: string | null;
   product_categories: {
     id: string;
     name: string;
@@ -40,10 +37,7 @@ interface ProductTableProps {
   isLoading: boolean;
 }
 
-const ProductTable = ({ 
-  products, 
-  isLoading,
-}: ProductTableProps) => {
+const ProductTable = ({ products, isLoading }: ProductTableProps) => {
   const navigate = useNavigate();
 
   const handleDelete = async (id: string) => {
@@ -73,18 +67,17 @@ const ProductTable = ({
           <TableHeader>
             <TableRow>
               <TableHead>Ürün Adı</TableHead>
+              <TableHead>SKU/Barkod</TableHead>
               <TableHead>Kategori</TableHead>
-              <TableHead>Tür</TableHead>
-              <TableHead>Satış Fiyatı</TableHead>
-              <TableHead>Alış Fiyatı</TableHead>
-              <TableHead>Stok Durumu</TableHead>
+              <TableHead>Fiyat</TableHead>
+              <TableHead>Stok</TableHead>
               <TableHead className="text-right">İşlemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {[...Array(5)].map((_, index) => (
               <TableRow key={index}>
-                {[...Array(7)].map((_, cellIndex) => (
+                {[...Array(6)].map((_, cellIndex) => (
                   <TableCell key={cellIndex}>
                     <div className="h-4 bg-gray-200 rounded animate-pulse" />
                   </TableCell>
@@ -97,17 +90,23 @@ const ProductTable = ({
     );
   }
 
+  const formatPrice = (price: number, currency: string) => {
+    return new Intl.NumberFormat('tr-TR', { 
+      style: 'currency', 
+      currency: currency 
+    }).format(price);
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100">
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50/50">
             <TableHead>Ürün Adı</TableHead>
+            <TableHead>SKU/Barkod</TableHead>
             <TableHead>Kategori</TableHead>
-            <TableHead>Tür</TableHead>
-            <TableHead>Satış Fiyatı</TableHead>
-            <TableHead>Alış Fiyatı</TableHead>
-            <TableHead>Stok Durumu</TableHead>
+            <TableHead>Fiyat</TableHead>
+            <TableHead>Stok</TableHead>
             <TableHead className="text-right">İşlemler</TableHead>
           </TableRow>
         </TableHeader>
@@ -133,33 +132,49 @@ const ProductTable = ({
                   <div>
                     <div className="font-medium">{product.name}</div>
                     <div className="text-sm text-gray-500">
-                      {product.sku || 'SKU yok'}
+                      {product.description || 'Açıklama yok'}
                     </div>
                   </div>
+                </div>
+              </TableCell>
+              <TableCell onClick={() => handleRowClick(product.id)}>
+                <div className="space-y-1">
+                  {product.sku && (
+                    <div className="text-sm">
+                      <span className="text-gray-500">SKU:</span> {product.sku}
+                    </div>
+                  )}
+                  {product.barcode && (
+                    <div className="text-sm">
+                      <span className="text-gray-500">Barkod:</span> {product.barcode}
+                    </div>
+                  )}
                 </div>
               </TableCell>
               <TableCell onClick={() => handleRowClick(product.id)}>
                 {product.product_categories?.name || "Kategorisiz"}
               </TableCell>
               <TableCell onClick={() => handleRowClick(product.id)}>
-                {product.category_type === "product" ? "Ürün" : 
-                 product.category_type === "service" ? "Hizmet" : "Abonelik"}
-              </TableCell>
-              <TableCell onClick={() => handleRowClick(product.id)}>
                 <div className="space-y-1">
-                  <div className="font-medium">₺{product.unit_price.toFixed(2)}</div>
-                  {product.discount_rate > 0 && (
+                  <div className="font-medium">
+                    {formatPrice(product.price, product.currency)}
+                  </div>
+                  {product.discount_price && (
                     <Badge variant="secondary" className="font-normal">
-                      %{product.discount_rate} İndirim
+                      İndirimli: {formatPrice(product.discount_price, product.currency)}
                     </Badge>
                   )}
                 </div>
               </TableCell>
               <TableCell onClick={() => handleRowClick(product.id)}>
-                <div className="font-medium">₺{product.purchase_price.toFixed(2)}</div>
-              </TableCell>
-              <TableCell onClick={() => handleRowClick(product.id)}>
-                {product.stock_quantity}
+                <div className="space-y-1">
+                  <div className="font-medium">{product.stock_quantity}</div>
+                  {product.stock_quantity <= product.min_stock_level && (
+                    <Badge variant="destructive" className="font-normal">
+                      Kritik Stok
+                    </Badge>
+                  )}
+                </div>
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-2">
