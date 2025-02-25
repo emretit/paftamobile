@@ -54,7 +54,7 @@ const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="company">Şirket</Label>
+        <Label htmlFor="company">Yetkili Kişi</Label>
         <Input
           id="company"
           value={formData.company}
