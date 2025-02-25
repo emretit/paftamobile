@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -18,8 +19,8 @@ import {
 } from "@/components/ui/form";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Product } from "@/types/product";
 
-// ProductFormData tipini doğrudan Zod şemasından türetelim
 const productSchema = z.object({
   name: z.string().min(1, "Ürün adı zorunludur"),
   description: z.string().nullable(),
@@ -106,7 +107,10 @@ const ProductForm = () => {
       if (isEditing) {
         const { error } = await supabase
           .from("products")
-          .update(values)
+          .update({
+            ...values,
+            updated_at: new Date().toISOString()
+          } as Partial<Product>)
           .eq("id", id);
 
         if (error) throw error;
@@ -116,7 +120,11 @@ const ProductForm = () => {
       } else {
         const { error, data } = await supabase
           .from("products")
-          .insert(values)
+          .insert([{
+            ...values,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }])
           .select()
           .single();
 
