@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,7 +34,6 @@ const ProductDetails = () => {
 
       if (error) throw error;
 
-      // Transform the data to match the Product interface
       const transformedData: Product = {
         ...productData,
         formatted_description: {},
@@ -148,93 +146,70 @@ const ProductDetails = () => {
 
       {/* Main Content */}
       <div className="container py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Product Image */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24">
-              <div className="aspect-square rounded-lg overflow-hidden bg-white dark:bg-gray-800">
-                {product.image_url ? (
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    Görsel Yok
-                  </div>
-                )}
-              </div>
-              <div className="mt-4 flex items-center justify-between">
-                <div>
-                  <Badge variant={product.is_active ? "default" : "secondary"}>
-                    {product.is_active ? "Aktif" : "Pasif"}
-                  </Badge>
-                  <span className="ml-2 text-sm text-muted-foreground">
-                    SKU: {product.sku || "N/A"}
-                  </span>
-                </div>
-                <Badge variant={
-                  product.stock_quantity <= 0 ? "destructive" : 
-                  product.stock_quantity <= product.min_stock_level ? "warning" : 
-                  "default"
-                }>
-                  {product.stock_quantity <= 0 ? "Stokta Yok" : 
-                   product.stock_quantity <= product.min_stock_level ? "Düşük Stok" : 
-                   "Stokta"}
-                </Badge>
-              </div>
-            </div>
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2 mb-4">
+            <Badge variant={product.is_active ? "default" : "secondary"}>
+              {product.is_active ? "Aktif" : "Pasif"}
+            </Badge>
+            <Badge variant={
+              product.stock_quantity <= 0 ? "destructive" : 
+              product.stock_quantity <= product.min_stock_level ? "warning" : 
+              "default"
+            }>
+              {product.stock_quantity <= 0 ? "Stokta Yok" : 
+               product.stock_quantity <= product.min_stock_level ? "Düşük Stok" : 
+               "Stokta"}
+            </Badge>
+            <span className="text-sm text-muted-foreground">
+              SKU: {product.sku || "N/A"}
+            </span>
           </div>
 
-          {/* Right Column - Product Details */}
-          <div className="lg:col-span-2">
-            <Tabs defaultValue="general" className="w-full">
-              <TabsList className="w-full grid grid-cols-4">
-                <TabsTrigger value="general">Genel</TabsTrigger>
-                <TabsTrigger value="pricing">Fiyatlandırma</TabsTrigger>
-                <TabsTrigger value="stock">Stok</TabsTrigger>
-                <TabsTrigger value="related">Benzer Ürünler</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="general" className="mt-6">
-                <ProductGeneralInfo
-                  product={product}
-                  onUpdate={updateProductMutation.mutate}
-                />
-              </TabsContent>
-              
-              <TabsContent value="pricing" className="mt-6">
-                <ProductPricing
-                  price={product.price}
-                  discountPrice={product.discount_price}
-                  currency={product.currency}
-                  taxRate={product.tax_rate}
-                  onUpdate={updateProductMutation.mutate}
-                />
-              </TabsContent>
-              
-              <TabsContent value="stock" className="mt-6">
-                <ProductInventory
-                  stockQuantity={product.stock_quantity}
-                  minStockLevel={product.min_stock_level}
-                  unit={product.unit}
-                  supplier={product.suppliers}
-                  lastPurchaseDate={product.last_purchase_date}
-                  onUpdate={updateProductMutation.mutate}
-                />
-              </TabsContent>
-              
-              <TabsContent value="related" className="mt-6">
-                <ProductRelated 
-                  categoryId={product.category_id} 
-                  currentProductId={product.id}
-                  relatedProducts={product.related_products}
-                  onUpdate={updateProductMutation.mutate}
-                />
-              </TabsContent>
-            </Tabs>
-          </div>
+          <Tabs defaultValue="general" className="w-full">
+            <TabsList className="w-full grid grid-cols-4">
+              <TabsTrigger value="general">Genel</TabsTrigger>
+              <TabsTrigger value="pricing">Fiyatlandırma</TabsTrigger>
+              <TabsTrigger value="stock">Stok</TabsTrigger>
+              <TabsTrigger value="related">Benzer Ürünler</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="general" className="mt-6">
+              <ProductGeneralInfo
+                product={product}
+                onUpdate={updateProductMutation.mutate}
+              />
+            </TabsContent>
+            
+            <TabsContent value="pricing" className="mt-6">
+              <ProductPricing
+                price={product.price}
+                discountPrice={product.discount_price}
+                currency={product.currency}
+                taxRate={product.tax_rate}
+                onUpdate={updateProductMutation.mutate}
+              />
+            </TabsContent>
+            
+            <TabsContent value="stock" className="mt-6">
+              <ProductInventory
+                stockQuantity={product.stock_quantity}
+                minStockLevel={product.min_stock_level}
+                unit={product.unit}
+                supplier={product.suppliers}
+                lastPurchaseDate={product.last_purchase_date}
+                onUpdate={updateProductMutation.mutate}
+              />
+            </TabsContent>
+            
+            <TabsContent value="related" className="mt-6">
+              <ProductRelated 
+                categoryId={product.category_id} 
+                currentProductId={product.id}
+                relatedProducts={product.related_products}
+                onUpdate={updateProductMutation.mutate}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
