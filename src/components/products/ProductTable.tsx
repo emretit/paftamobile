@@ -1,7 +1,6 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash } from "lucide-react";
+import { Edit as Edit2, Trash as Trash2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -115,9 +114,9 @@ const ProductTable = ({
           {products.map((product) => (
             <TableRow 
               key={product.id}
-              className="group hover:bg-gray-50/50 transition-colors"
+              className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
             >
-              <TableCell onClick={() => handleRowClick(product.id)} className="cursor-pointer">
+              <TableCell onClick={() => handleRowClick(product.id)}>
                 <div className="flex items-center gap-3">
                   {product.image_url ? (
                     <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100">
@@ -138,14 +137,14 @@ const ProductTable = ({
                   </div>
                 </div>
               </TableCell>
-              <TableCell onClick={() => handleRowClick(product.id)} className="cursor-pointer">
+              <TableCell onClick={() => handleRowClick(product.id)}>
                 {product.product_categories?.name || "Kategorisiz"}
               </TableCell>
-              <TableCell onClick={() => handleRowClick(product.id)} className="cursor-pointer">
+              <TableCell onClick={() => handleRowClick(product.id)}>
                 {product.category_type === "product" ? "Ürün" : 
                  product.category_type === "service" ? "Hizmet" : "Abonelik"}
               </TableCell>
-              <TableCell onClick={() => handleRowClick(product.id)} className="cursor-pointer">
+              <TableCell onClick={() => handleRowClick(product.id)}>
                 <div className="space-y-1">
                   <div className="font-medium">₺{product.unit_price.toFixed(2)}</div>
                   {product.discount_rate > 0 && (
@@ -155,36 +154,38 @@ const ProductTable = ({
                   )}
                 </div>
               </TableCell>
-              <TableCell onClick={() => handleRowClick(product.id)} className="cursor-pointer">
+              <TableCell onClick={() => handleRowClick(product.id)}>
                 <div className="font-medium">₺{product.purchase_price.toFixed(2)}</div>
               </TableCell>
-              <TableCell onClick={() => handleRowClick(product.id)} className="cursor-pointer">
+              <TableCell onClick={() => handleRowClick(product.id)}>
                 {product.stock_quantity}
               </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    variant="ghost"
-                    size="icon"
+              <TableCell>
+                <div className="flex items-center justify-end gap-2">
+                  <button 
+                    className="p-1 hover:bg-gray-100 rounded"
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/product-form/${product.id}`);
                     }}
-                    className="hover:bg-gray-100"
                   >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                    <Edit2 className="h-4 w-4 text-gray-500" />
+                  </button>
+                  <button 
+                    className="p-1 hover:bg-gray-100 rounded"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete(product.id);
                     }}
                   >
-                    <Trash className="h-4 w-4" />
-                  </Button>
+                    <Trash2 className="h-4 w-4 text-gray-500" />
+                  </button>
+                  <button 
+                    className="p-1 hover:bg-gray-100 rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreHorizontal className="h-4 w-4 text-gray-500" />
+                  </button>
                 </div>
               </TableCell>
             </TableRow>
