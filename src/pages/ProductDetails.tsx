@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,35 +30,10 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
       const { data: productData, error } = await supabase
         .from("products")
         .select(`
-          id,
-          name,
-          description,
-          sku,
-          barcode,
-          price,
-          discount_price,
-          currency,
-          tax_rate,
-          stock_quantity,
-          min_stock_level,
-          unit,
-          category_id,
-          category_type,
-          product_type,
-          status,
-          is_active,
-          image_url,
-          created_at,
-          updated_at,
-          product_categories:product_categories (
+          *,
+          product_categories (
             id,
             name
-          ),
-          suppliers (
-            id,
-            name,
-            email,
-            phone
           )
         `)
         .eq("id", id)
@@ -74,7 +48,7 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
         last_purchase_date: null,
         related_products: [],
         product_categories: productData.product_categories || null,
-        suppliers: productData.suppliers as any || null
+        suppliers: null
       };
 
       return transformedData;
