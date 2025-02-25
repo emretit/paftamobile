@@ -40,29 +40,34 @@ const ProductFilters = ({
   const [stockStatus, setStockStatus] = useState("all");
 
   return (
-    <div className="space-y-4">
-      {/* Header with Stats */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Ürünler</h1>
-          <p className="text-muted-foreground">Toplam {totalProducts} ürün</p>
+    <div className="space-y-6 w-full">
+      {/* Modern Header Section */}
+      <div>
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-3xl font-bold tracking-tight">Ürünler</h1>
+          <Badge variant="secondary" className="rounded-md">
+            {totalProducts} ürün
+          </Badge>
         </div>
+        <p className="mt-2 text-muted-foreground">
+          Tüm ürünlerinizi buradan yönetebilir ve düzenleyebilirsiniz.
+        </p>
       </div>
 
       {/* Search & Filters Bar */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Ürün ara..."
-            className="pl-10"
+            placeholder="Ürün adı, SKU veya barkod ile arayın..."
+            className="pl-10 h-11"
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         
         <div className="flex gap-2">
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-[200px] h-11">
               <SelectValue placeholder="Tüm Kategoriler" />
             </SelectTrigger>
             <SelectContent>
@@ -77,7 +82,7 @@ const ProductFilters = ({
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" className="h-11 w-11">
                 <SlidersHorizontal className="h-4 w-4" />
               </Button>
             </SheetTrigger>
