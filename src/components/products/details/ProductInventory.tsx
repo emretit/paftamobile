@@ -1,33 +1,26 @@
 
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Boxes } from "lucide-react";
 
 interface ProductInventoryProps {
   stockQuantity: number;
-  stockThreshold: number;
-  minOrderQuantity: number;
-  maxOrderQuantity: number | null;
+  minStockLevel: number;
   unit: string;
 }
 
 const ProductInventory = ({ 
   stockQuantity, 
-  stockThreshold, 
-  minOrderQuantity, 
-  maxOrderQuantity, 
-  unit 
+  minStockLevel,
+  unit
 }: ProductInventoryProps) => {
-  const stockStatus = stockQuantity <= 0 
-    ? "Stokta Yok" 
-    : stockQuantity <= stockThreshold 
-    ? "Kritik Stok" 
-    : "Stokta";
+  const getStockStatus = () => {
+    if (stockQuantity <= 0) return { label: "Stokta Yok", color: "destructive" };
+    if (stockQuantity <= minStockLevel) return { label: "Kritik Stok", color: "warning" };
+    return { label: "Stokta", color: "default" };
+  };
 
-  const stockStatusColor = stockQuantity <= 0 
-    ? "text-red-500" 
-    : stockQuantity <= stockThreshold 
-    ? "text-yellow-500" 
-    : "text-green-500";
+  const status = getStockStatus();
 
   return (
     <Card>
@@ -36,24 +29,27 @@ const ProductInventory = ({
           <Boxes className="h-5 w-5" />
           Stok Bilgileri
         </h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm text-gray-500">Stok Miktarı</label>
-            <p className={`mt-1 text-lg font-medium ${stockStatusColor}`}>
-              {stockQuantity} {unit}
-            </p>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-500">Stok Miktarı</span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-medium">
+                {stockQuantity} {unit}
+              </span>
+              <Badge variant={status.color as "default" | "destructive" | "warning"}>
+                {status.label}
+              </Badge>
+            </div>
           </div>
-          <div>
-            <label className="text-sm text-gray-500">Stok Durumu</label>
-            <p className={`mt-1 ${stockStatusColor}`}>{stockStatus}</p>
+
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-500">Minimum Stok Seviyesi</span>
+            <span>{minStockLevel} {unit}</span>
           </div>
-          <div>
-            <label className="text-sm text-gray-500">Minimum Sipariş</label>
-            <p className="mt-1">{minOrderQuantity || 1} {unit}</p>
-          </div>
-          <div>
-            <label className="text-sm text-gray-500">Maksimum Sipariş</label>
-            <p className="mt-1">{maxOrderQuantity || "Limit yok"}</p>
+
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-500">Birim</span>
+            <span className="capitalize">{unit}</span>
           </div>
         </div>
       </CardContent>

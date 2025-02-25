@@ -83,17 +83,15 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
           />
 
           <ProductPricing
-            unitPrice={product.unit_price}
-            purchasePrice={product.purchase_price}
+            price={product.price}
+            discountPrice={product.discount_price}
+            currency={product.currency}
             taxRate={product.tax_rate}
-            discountRate={product.discount_rate}
           />
 
           <ProductInventory
             stockQuantity={product.stock_quantity}
-            stockThreshold={product.stock_threshold}
-            minOrderQuantity={product.min_order_quantity}
-            maxOrderQuantity={product.max_order_quantity}
+            minStockLevel={product.min_stock_level}
             unit={product.unit}
           />
         </div>
@@ -105,10 +103,9 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
           />
 
           <ProductMeta
-            warrantyPeriod={product.warranty_period}
-            notes={product.notes}
             createdAt={product.created_at}
             updatedAt={product.updated_at}
+            isActive={product.is_active}
           />
         </div>
       </div>

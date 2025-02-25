@@ -1,20 +1,33 @@
 
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { DollarSign } from "lucide-react";
 
 interface ProductPricingProps {
-  unitPrice: number;
-  purchasePrice: number;
+  price: number;
+  discountPrice: number | null;
+  currency: string;
   taxRate: number;
-  discountRate: number;
 }
 
 const ProductPricing = ({ 
-  unitPrice, 
-  purchasePrice, 
-  taxRate, 
-  discountRate 
+  price, 
+  discountPrice, 
+  currency,
+  taxRate
 }: ProductPricingProps) => {
+  const formatPrice = (amount: number) => {
+    return new Intl.NumberFormat('tr-TR', { 
+      style: 'currency', 
+      currency: currency 
+    }).format(amount);
+  };
+
+  const calculateDiscount = () => {
+    if (!discountPrice || price === 0) return 0;
+    return ((price - discountPrice) / price) * 100;
+  };
+
   return (
     <Card>
       <CardContent className="p-6">
@@ -22,22 +35,34 @@ const ProductPricing = ({
           <DollarSign className="h-5 w-5" />
           Fiyat Bilgileri
         </h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm text-gray-500">Satış Fiyatı</label>
-            <p className="mt-1 text-lg font-medium">{unitPrice} TL</p>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-500">Satış Fiyatı</span>
+            <span className="text-lg font-medium">{formatPrice(price)}</span>
           </div>
-          <div>
-            <label className="text-sm text-gray-500">Alış Fiyatı</label>
-            <p className="mt-1 text-lg font-medium">{purchasePrice || 0} TL</p>
+
+          {discountPrice && (
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">İndirimli Fiyat</span>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-medium text-green-600">
+                  {formatPrice(discountPrice)}
+                </span>
+                <Badge variant="secondary">
+                  %{Math.round(calculateDiscount())} İndirim
+                </Badge>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-500">KDV Oranı</span>
+            <span>%{taxRate}</span>
           </div>
-          <div>
-            <label className="text-sm text-gray-500">KDV Oranı</label>
-            <p className="mt-1">%{taxRate}</p>
-          </div>
-          <div>
-            <label className="text-sm text-gray-500">İndirim Oranı</label>
-            <p className="mt-1">%{discountRate || 0}</p>
+
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-500">Para Birimi</span>
+            <span>{currency}</span>
           </div>
         </div>
       </CardContent>

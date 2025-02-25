@@ -2,19 +2,18 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Tag } from "lucide-react";
 import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 
 interface ProductMetaProps {
-  warrantyPeriod: unknown | null;
-  notes: string | null;
   createdAt: string;
   updatedAt: string;
+  isActive: boolean;
 }
 
 const ProductMeta = ({ 
-  warrantyPeriod, 
-  notes, 
   createdAt, 
-  updatedAt 
+  updatedAt,
+  isActive
 }: ProductMetaProps) => {
   return (
     <Card>
@@ -25,19 +24,19 @@ const ProductMeta = ({
         </h2>
         <div className="space-y-4">
           <div>
-            <label className="text-sm text-gray-500">Garanti Süresi</label>
+            <label className="text-sm text-gray-500">Durum</label>
             <p className="mt-1">
-              {warrantyPeriod ? String(warrantyPeriod) : "Garanti süresi belirtilmemiş"}
+              <Badge variant={isActive ? "default" : "secondary"}>
+                {isActive ? "Aktif" : "Pasif"}
+              </Badge>
             </p>
           </div>
-          <div>
-            <label className="text-sm text-gray-500">Notlar</label>
-            <p className="mt-1">{notes || "Not bulunmuyor"}</p>
-          </div>
+          
           <div>
             <label className="text-sm text-gray-500">Oluşturulma Tarihi</label>
             <p className="mt-1">{format(new Date(createdAt), 'dd.MM.yyyy HH:mm')}</p>
           </div>
+
           <div>
             <label className="text-sm text-gray-500">Son Güncelleme</label>
             <p className="mt-1">{format(new Date(updatedAt), 'dd.MM.yyyy HH:mm')}</p>
