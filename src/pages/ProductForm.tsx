@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -21,29 +20,7 @@ import { ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Product } from "@/types/product";
 
-// Ürün formunun tip tanımı
-type ProductFormInput = Pick<Product, 
-  | 'name'
-  | 'description'
-  | 'sku'
-  | 'barcode'
-  | 'price'
-  | 'stock_quantity'
-  | 'min_stock_level'
-  | 'tax_rate'
-  | 'unit'
-  | 'is_active'
-  | 'currency'
-  | 'category_type'
-  | 'product_type'
-  | 'unit_price'
-  | 'status'
-  | 'image_url'
-  | 'category_id'
-  | 'supplier_id'
-  | 'discount_price'
-  | 'discount_rate'
->;
+type DBProduct = Omit<Product, 'id' | 'created_at' | 'updated_at' | 'formatted_description' | 'last_purchase_date' | 'related_products' | 'product_categories' | 'suppliers'>;
 
 const productSchema = z.object({
   name: z.string().min(1, "Ürün adı zorunludur"),
@@ -59,21 +36,22 @@ const productSchema = z.object({
   currency: z.string(),
   category_type: z.string(),
   product_type: z.string(),
-  unit_price: z.number().min(0),
   status: z.string(),
   image_url: z.string().nullable(),
   category_id: z.string().nullable(),
   supplier_id: z.string().nullable(),
   discount_price: z.number().nullable(),
   discount_rate: z.number().nullable()
-}) as z.ZodType<ProductFormInput>;
+});
+
+type ProductFormData = z.infer<typeof productSchema>;
 
 const ProductForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditing = Boolean(id);
 
-  const form = useForm<ProductFormInput>({
+  const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
@@ -89,7 +67,6 @@ const ProductForm = () => {
       currency: "TRY",
       category_type: "product",
       product_type: "physical",
-      unit_price: 0,
       status: "active",
       image_url: null,
       category_id: null,
@@ -113,7 +90,18 @@ const ProductForm = () => {
         if (error) throw error;
 
         if (data) {
-          form.reset(data as ProductFormInput);
+          const formData = {
+            ...data,
+            description: data.description || null,
+            sku: data.sku || null,
+            barcode: data.barcode || null,
+            image_url: data.image_url || null,
+            category_id: data.category_id || null,
+            supplier_id: data.supplier_id || null,
+            discount_price: data.discount_price || null,
+            discount_rate: data.discount_rate || null
+          };
+          form.reset(formData);
         }
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -124,19 +112,15 @@ const ProductForm = () => {
     fetchProduct();
   }, [id, form]);
 
-  const onSubmit = async (values: ProductFormInput) => {
+  const onSubmit = async (values: ProductFormData) => {
     try {
-      const now = new Date().toISOString();
-      
       if (isEditing) {
-        const updateData: Partial<Product> = {
-          ...values,
-          updated_at: now
-        };
-
         const { error } = await supabase
           .from("products")
-          .update(updateData)
+          .update({
+            ...values,
+            updated_at: new Date().toISOString()
+          })
           .eq("id", id);
 
         if (error) throw error;
@@ -144,15 +128,15 @@ const ProductForm = () => {
         toast.success("Ürün başarıyla güncellendi");
         navigate(`/product-details/${id}`);
       } else {
-        const insertData: Partial<Product> = {
+        const newProduct = {
           ...values,
-          created_at: now,
-          updated_at: now
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         };
 
         const { error, data } = await supabase
           .from("products")
-          .insert([insertData])
+          .insert([newProduct])
           .select()
           .single();
 
