@@ -3,9 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Edit, ArrowLeft, Package2, DollarSign, Boxes, Tag, Calendar } from "lucide-react";
-import { format } from "date-fns";
+import { Edit, ArrowLeft } from "lucide-react";
+import ProductBasicInfo from "@/components/products/details/ProductBasicInfo";
+import ProductPricing from "@/components/products/details/ProductPricing";
+import ProductInventory from "@/components/products/details/ProductInventory";
+import ProductImage from "@/components/products/details/ProductImage";
+import ProductMeta from "@/components/products/details/ProductMeta";
 
 interface ProductDetailsProps {
   isCollapsed: boolean;
@@ -53,18 +56,6 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
     );
   }
 
-  const stockStatus = product.stock_quantity <= 0 
-    ? "Stokta Yok" 
-    : product.stock_quantity <= product.stock_threshold 
-    ? "Kritik Stok" 
-    : "Stokta";
-
-  const stockStatusColor = product.stock_quantity <= 0 
-    ? "text-red-500" 
-    : product.stock_quantity <= product.stock_threshold 
-    ? "text-yellow-500" 
-    : "text-green-500";
-
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -82,141 +73,43 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6">
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Package2 className="h-5 w-5" />
-                Ürün Bilgileri
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm text-gray-500">Açıklama</label>
-                  <p className="mt-1">{product.description || "Açıklama bulunmuyor"}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500">Kategori</label>
-                  <p className="mt-1">{product.product_categories?.name || "Kategorisiz"}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500">Ürün Tipi</label>
-                  <p className="mt-1 capitalize">{product.product_type}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500">Barkod</label>
-                  <p className="mt-1">{product.barcode || "Barkod girilmemiş"}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500">SKU</label>
-                  <p className="mt-1">{product.sku || "SKU girilmemiş"}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ProductBasicInfo
+            name={product.name}
+            description={product.description}
+            category={product.product_categories?.name}
+            productType={product.product_type}
+            barcode={product.barcode}
+            sku={product.sku}
+          />
 
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                Fiyat Bilgileri
-              </h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-gray-500">Satış Fiyatı</label>
-                  <p className="mt-1 text-lg font-medium">{product.unit_price} TL</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500">Alış Fiyatı</label>
-                  <p className="mt-1 text-lg font-medium">{product.purchase_price || 0} TL</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500">KDV Oranı</label>
-                  <p className="mt-1">%{product.tax_rate}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500">İndirim Oranı</label>
-                  <p className="mt-1">%{product.discount_rate || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ProductPricing
+            unitPrice={product.unit_price}
+            purchasePrice={product.purchase_price}
+            taxRate={product.tax_rate}
+            discountRate={product.discount_rate}
+          />
 
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Boxes className="h-5 w-5" />
-                Stok Bilgileri
-              </h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-gray-500">Stok Miktarı</label>
-                  <p className={`mt-1 text-lg font-medium ${stockStatusColor}`}>
-                    {product.stock_quantity} {product.unit}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500">Stok Durumu</label>
-                  <p className={`mt-1 ${stockStatusColor}`}>{stockStatus}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500">Minimum Sipariş</label>
-                  <p className="mt-1">{product.min_order_quantity || 1} {product.unit}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500">Maksimum Sipariş</label>
-                  <p className="mt-1">{product.max_order_quantity || "Limit yok"}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ProductInventory
+            stockQuantity={product.stock_quantity}
+            stockThreshold={product.stock_threshold}
+            minOrderQuantity={product.min_order_quantity}
+            maxOrderQuantity={product.max_order_quantity}
+            unit={product.unit}
+          />
         </div>
 
         <div className="space-y-6">
-          {product.image_url ? (
-            <Card>
-              <CardContent className="p-6">
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="w-full h-auto rounded-lg"
-                />
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="p-6 flex items-center justify-center h-48 bg-gray-100 rounded-lg">
-                <p className="text-gray-500">Ürün görseli bulunmuyor</p>
-              </CardContent>
-            </Card>
-          )}
+          <ProductImage
+            imageUrl={product.image_url}
+            productName={product.name}
+          />
 
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Tag className="h-5 w-5" />
-                Diğer Bilgiler
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm text-gray-500">Garanti Süresi</label>
-                  <p className="mt-1">
-                    {product.warranty_period ? String(product.warranty_period) : "Garanti süresi belirtilmemiş"}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500">Notlar</label>
-                  <p className="mt-1">{product.notes || "Not bulunmuyor"}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500">Oluşturulma Tarihi</label>
-                  <p className="mt-1">{format(new Date(product.created_at), 'dd.MM.yyyy HH:mm')}</p>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-500">Son Güncelleme</label>
-                  <p className="mt-1">{format(new Date(product.updated_at), 'dd.MM.yyyy HH:mm')}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ProductMeta
+            warrantyPeriod={product.warranty_period}
+            notes={product.notes}
+            createdAt={product.created_at}
+            updatedAt={product.updated_at}
+          />
         </div>
       </div>
     </div>
