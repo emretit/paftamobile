@@ -3,6 +3,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { format } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Deal {
   id: string;
@@ -36,6 +41,9 @@ interface DealDetailsModalProps {
 const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
   if (!deal) return null;
 
+  const [isEditing, setIsEditing] = useState<{ [key: string]: boolean }>({});
+  const [editValues, setEditValues] = useState(deal);
+
   const formatDate = (date: Date) => {
     return format(new Date(date), 'PP');
   };
@@ -60,20 +68,111 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
     return colors[priority as keyof typeof colors] || "bg-gray-100 text-gray-700";
   };
 
+  const handleEdit = (field: string) => {
+    setIsEditing(prev => ({ ...prev, [field]: true }));
+  };
+
+  const handleSave = async (field: string) => {
+    try {
+      const { error } = await supabase
+        .from('deals')
+        .update({ [field]: editValues[field as keyof Deal] })
+        .eq('id', deal.id);
+
+      if (error) throw error;
+
+      setIsEditing(prev => ({ ...prev, [field]: false }));
+      toast.success('Değişiklikler kaydedildi');
+    } catch (error) {
+      console.error('Error updating deal:', error);
+      toast.error('Değişiklikler kaydedilirken bir hata oluştu');
+    }
+  };
+
+  const renderEditableField = (
+    field: keyof Deal,
+    label: string,
+    value: string | number
+  ) => {
+    return (
+      <div className="flex justify-between items-center gap-2">
+        <span className="text-sm text-gray-500">{label}</span>
+        <div className="flex items-center gap-2">
+          {isEditing[field] ? (
+            <>
+              <Input
+                type={typeof value === 'number' ? 'number' : 'text'}
+                value={editValues[field]}
+                onChange={(e) => setEditValues(prev => ({
+                  ...prev,
+                  [field]: e.target.value
+                }))}
+                className="w-48"
+              />
+              <Button 
+                onClick={() => handleSave(field)}
+                size="sm"
+                variant="default"
+              >
+                Kaydet
+              </Button>
+            </>
+          ) : (
+            <>
+              <span>{value}</span>
+              <Button 
+                onClick={() => handleEdit(field)}
+                size="sm"
+                variant="ghost"
+              >
+                Düzenle
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Deal Details</DialogTitle>
+          <DialogTitle>Detaylar</DialogTitle>
         </DialogHeader>
         <ScrollArea className="max-h-[80vh] pr-4">
           <div className="space-y-6">
             <div className="flex justify-between items-start">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">{deal.title}</h2>
-                <p className="text-gray-600">{deal.customerName}</p>
+                {isEditing.title ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={editValues.title}
+                      onChange={(e) => setEditValues(prev => ({
+                        ...prev,
+                        title: e.target.value
+                      }))}
+                      className="text-2xl font-bold"
+                    />
+                    <Button onClick={() => handleSave('title')}>
+                      Kaydet
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-gray-900">{deal.title}</h2>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleEdit('title')}
+                    >
+                      Düzenle
+                    </Button>
+                  </div>
+                )}
+                {renderEditableField('customerName', 'Müşteri', deal.customerName)}
                 {deal.department && (
-                  <p className="text-sm text-gray-500 mt-1">Department: {deal.department}</p>
+                  renderEditableField('department', 'Departman', deal.department)
                 )}
               </div>
               <div className="flex gap-2">
@@ -88,27 +187,25 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
 
             <div className="grid grid-cols-2 gap-4">
               <Card className="p-4">
-                <h3 className="font-medium text-gray-600 mb-1">Deal Value</h3>
-                <p className="text-xl font-bold">${deal.value.toLocaleString()}</p>
+                {renderEditableField('value', 'Fırsat Değeri', `$${deal.value.toLocaleString()}`)}
               </Card>
               <Card className="p-4">
-                <h3 className="font-medium text-gray-600 mb-1">Sales Rep</h3>
-                <p className="text-xl">{deal.employeeName}</p>
+                {renderEditableField('employeeName', 'Satış Temsilcisi', deal.employeeName)}
               </Card>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <h3 className="font-medium text-gray-600 mb-1">Proposal Date</h3>
+                <h3 className="font-medium text-gray-600 mb-1">Teklif Tarihi</h3>
                 <p>{formatDate(deal.proposalDate)}</p>
               </div>
               <div>
-                <h3 className="font-medium text-gray-600 mb-1">Last Contact</h3>
+                <h3 className="font-medium text-gray-600 mb-1">Son İletişim</h3>
                 <p>{formatDate(deal.lastContactDate)}</p>
               </div>
               {deal.expectedCloseDate && (
                 <div>
-                  <h3 className="font-medium text-gray-600 mb-1">Expected Close</h3>
+                  <h3 className="font-medium text-gray-600 mb-1">Tahmini Kapanış</h3>
                   <p>{formatDate(deal.expectedCloseDate)}</p>
                 </div>
               )}
@@ -116,14 +213,13 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
 
             {deal.description && (
               <div>
-                <h3 className="font-medium text-gray-600 mb-2">Description</h3>
-                <p className="text-gray-700">{deal.description}</p>
+                {renderEditableField('description', 'Açıklama', deal.description)}
               </div>
             )}
 
             {deal.productServices && deal.productServices.length > 0 && (
               <div>
-                <h3 className="font-medium text-gray-600 mb-2">Products & Services</h3>
+                <h3 className="font-medium text-gray-600 mb-2">Ürünler & Hizmetler</h3>
                 <div className="space-y-2">
                   {deal.productServices.map((item: any) => (
                     <div key={item.id} className="flex justify-between items-center">
@@ -137,7 +233,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
 
             {deal.nextSteps && deal.nextSteps.length > 0 && (
               <div>
-                <h3 className="font-medium text-gray-600 mb-2">Next Steps</h3>
+                <h3 className="font-medium text-gray-600 mb-2">Sonraki Adımlar</h3>
                 <div className="space-y-2">
                   {deal.nextSteps.map((step: any) => (
                     <div key={step.id} className="flex justify-between items-center">
@@ -151,21 +247,19 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
 
             {deal.notes && (
               <div>
-                <h3 className="font-medium text-gray-600 mb-2">Notes</h3>
-                <p className="text-gray-700 whitespace-pre-line">{deal.notes}</p>
+                {renderEditableField('notes', 'Notlar', deal.notes)}
               </div>
             )}
 
             {deal.internalComments && (
               <div>
-                <h3 className="font-medium text-gray-600 mb-2">Internal Comments</h3>
-                <p className="text-gray-700 whitespace-pre-line">{deal.internalComments}</p>
+                {renderEditableField('internalComments', 'İç Notlar', deal.internalComments)}
               </div>
             )}
 
             {deal.proposalFiles && deal.proposalFiles.length > 0 && (
               <div>
-                <h3 className="font-medium text-gray-600 mb-2">Proposal Files</h3>
+                <h3 className="font-medium text-gray-600 mb-2">Teklif Dosyaları</h3>
                 <div className="space-y-2">
                   {deal.proposalFiles.map((file: any) => (
                     <div key={file.id} className="flex items-center gap-2">
