@@ -68,10 +68,12 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex min-h-screen">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <div className="flex-1 overflow-auto">
-        <div className="p-8 space-y-8">
+      <main className={`flex-1 transition-all duration-300 ease-in-out ${
+        isCollapsed ? "ml-[68px]" : "ml-[250px]"
+      }`}>
+        <div className="container mx-auto p-8 max-w-7xl">
           <ProductFilters
             setSearchQuery={setSearchQuery}
             categoryFilter={categoryFilter}
@@ -81,7 +83,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
             onBulkAction={handleBulkAction}
           />
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-6">
             <div className="flex items-center space-x-2">
               <div className="border rounded-lg p-1">
                 <Button
@@ -107,7 +109,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
             </Button>
           </div>
 
-          <div className="rounded-lg border bg-card">
+          <div className="mt-6 rounded-lg border bg-card">
             {view === "grid" ? (
               <ProductGrid products={products || []} isLoading={isLoading} />
             ) : (
@@ -115,7 +117,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
             )}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
