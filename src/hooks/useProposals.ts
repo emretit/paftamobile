@@ -57,14 +57,29 @@ export const useProposals = (filters?: ProposalFilters) => {
       const { data, error } = await query;
 
       if (error) {
+        console.error("Supabase error:", error);
         throw error;
       }
 
-      return data.map(item => ({
-        ...item,
-        status: item.status as ProposalStatus,
-        items: item.items ? JSON.parse(item.items as string) : []
-      }));
+      console.log("Raw data from Supabase:", data);
+
+      return (data || []).map(item => {
+        let parsedItems = [];
+        if (item.items) {
+          try {
+            parsedItems = typeof item.items === 'string' ? JSON.parse(item.items) : item.items;
+          } catch (e) {
+            console.error("Error parsing items:", e);
+            parsedItems = [];
+          }
+        }
+
+        return {
+          ...item,
+          status: (item.status || 'new') as ProposalStatus,
+          items: parsedItems
+        };
+      });
     },
   });
 };
