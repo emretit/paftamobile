@@ -10,6 +10,15 @@ export type ProposalStatus =
   | 'negotiation'
   | 'accepted';
 
+export interface ProposalItem {
+  id: string;
+  name: string;
+  quantity: number;
+  unit_price: number;
+  tax_rate: number;
+  total_price: number;
+}
+
 export interface Proposal {
   id: string;
   title: string;
@@ -31,6 +40,7 @@ export interface Proposal {
     first_name: string;
     last_name: string;
   };
+  items?: ProposalItem[];
 }
 
 export interface SalesPerformanceData {
