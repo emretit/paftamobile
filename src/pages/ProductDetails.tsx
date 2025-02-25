@@ -3,15 +3,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Edit, ArrowLeft, Copy } from "lucide-react";
+import { Edit, ArrowLeft, Copy, Download } from "lucide-react";
 import { toast } from "sonner";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductGeneralInfo from "@/components/products/details/ProductGeneralInfo";
 import ProductPricing from "@/components/products/details/ProductPricing";
 import ProductInventory from "@/components/products/details/ProductInventory";
 import ProductRelated from "@/components/products/details/ProductRelated";
 import { useState } from "react";
 import { Product } from "@/types/product";
+import { Badge } from "@/components/ui/badge";
 
 interface ProductDetailsProps {
   isCollapsed: boolean;
@@ -27,7 +28,7 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: productData, error } = await supabase
         .from("products")
         .select(`
           id,
@@ -50,7 +51,7 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
           image_url,
           created_at,
           updated_at,
-          product_categories (
+          product_categories:product_categories (
             id,
             name
           ),
@@ -68,17 +69,23 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
 
       // Transform the data to match the Product interface
       const transformedData: Product = {
-        ...data,
-        formatted_description: data.formatted_description || {},
-        last_purchase_date: data.last_purchase_date || null,
-        related_products: data.related_products || [],
-        product_categories: data.product_categories || null,
-        suppliers: data.suppliers || null
+        ...productData,
+        formatted_description: {},
+        last_purchase_date: null,
+        related_products: [],
+        product_categories: productData.product_categories || null,
+        suppliers: productData.suppliers as any || null
       };
 
       return transformedData;
     },
   });
+
+  const getStockStatusBadge = (quantity: number, minLevel: number) => {
+    if (quantity <= 0) return <Badge variant="destructive">Stokta Yok</Badge>;
+    if (quantity <= minLevel) return <Badge variant="warning">Düşük Stok</Badge>;
+    return <Badge variant="default">Stokta</Badge>;
+  };
 
   const updateProductMutation = useMutation({
     mutationFn: async (updates: Partial<Product>) => {
@@ -134,7 +141,7 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100" />
       </div>
     );
   }
@@ -149,69 +156,121 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => navigate("/products")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-semibold">{product.name}</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            onClick={() => duplicateProductMutation.mutate()}
-            className="gap-2"
-          >
-            <Copy className="h-4 w-4" />
-            Ürünü Kopyala
-          </Button>
-          <Sheet open={isEditing} onOpenChange={setIsEditing}>
-            <SheetTrigger asChild>
-              <Button className="gap-2">
-                <Edit className="h-4 w-4" />
-                Düzenle
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:w-[540px]">
-              {/* Editing form will be implemented here */}
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
+    <div className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-b from-gray-50 to-background dark:from-gray-900 dark:to-background">
+        <div className="p-8 max-w-7xl mx-auto">
+          <div className="flex items-center gap-4 mb-6">
+            <Button variant="outline" size="icon" onClick={() => navigate("/products")}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <ProductGeneralInfo
-            product={product}
-            onUpdate={updateProductMutation.mutate}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            {/* Product Image */}
+            <div className="relative group">
+              {product.image_url ? (
+                <div className="relative overflow-hidden rounded-lg aspect-square bg-white dark:bg-gray-800">
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-300"
+                  />
+                </div>
+              ) : (
+                <div className="rounded-lg aspect-square bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <span className="text-gray-400">Görsel Yok</span>
+                </div>
+              )}
+            </div>
 
-          <ProductPricing
-            price={product.price}
-            discountPrice={product.discount_price}
-            currency={product.currency}
-            taxRate={product.tax_rate}
-            onUpdate={updateProductMutation.mutate}
-          />
+            {/* Product Info */}
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-muted-foreground">SKU: {product.sku || "N/A"}</span>
+                  {getStockStatusBadge(product.stock_quantity, product.min_stock_level)}
+                </div>
+              </div>
 
-          <ProductInventory
-            stockQuantity={product.stock_quantity}
-            minStockLevel={product.min_stock_level}
-            unit={product.unit}
-            supplier={product.suppliers}
-            lastPurchaseDate={product.last_purchase_date}
-            onUpdate={updateProductMutation.mutate}
-          />
-        </div>
+              <div className="flex items-center gap-4">
+                <span className="text-2xl font-semibold">
+                  {new Intl.NumberFormat('tr-TR', {
+                    style: 'currency',
+                    currency: product.currency
+                  }).format(product.price)}
+                </span>
+                {product.discount_price && (
+                  <span className="text-lg text-muted-foreground line-through">
+                    {new Intl.NumberFormat('tr-TR', {
+                      style: 'currency',
+                      currency: product.currency
+                    }).format(product.discount_price)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
 
-        <div className="space-y-6">
-          <ProductRelated 
-            categoryId={product.category_id} 
-            currentProductId={product.id}
-            relatedProducts={product.related_products}
-            onUpdate={updateProductMutation.mutate}
-          />
+          {/* Floating Action Bar */}
+          <div className="fixed bottom-6 right-6 flex gap-2 z-50">
+            <Button variant="outline" onClick={() => duplicateProductMutation.mutate()}>
+              <Copy className="h-4 w-4 mr-2" />
+              Kopyala
+            </Button>
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              PDF
+            </Button>
+            <Button>
+              <Edit className="h-4 w-4 mr-2" />
+              Düzenle
+            </Button>
+          </div>
+
+          {/* Tabbed Content */}
+          <Tabs defaultValue="general" className="mt-8">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="general">Genel Bilgiler</TabsTrigger>
+              <TabsTrigger value="pricing">Fiyatlandırma & Stok</TabsTrigger>
+              <TabsTrigger value="related">Benzer Ürünler</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="general">
+              <ProductGeneralInfo
+                product={product}
+                onUpdate={updateProductMutation.mutate}
+              />
+            </TabsContent>
+            
+            <TabsContent value="pricing" className="space-y-6">
+              <ProductPricing
+                price={product.price}
+                discountPrice={product.discount_price}
+                currency={product.currency}
+                taxRate={product.tax_rate}
+                onUpdate={updateProductMutation.mutate}
+              />
+              <ProductInventory
+                stockQuantity={product.stock_quantity}
+                minStockLevel={product.min_stock_level}
+                unit={product.unit}
+                supplier={product.suppliers}
+                lastPurchaseDate={product.last_purchase_date}
+                onUpdate={updateProductMutation.mutate}
+              />
+            </TabsContent>
+            
+            <TabsContent value="related">
+              <ProductRelated 
+                categoryId={product.category_id} 
+                currentProductId={product.id}
+                relatedProducts={product.related_products}
+                onUpdate={updateProductMutation.mutate}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
