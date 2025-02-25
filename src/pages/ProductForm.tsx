@@ -21,6 +21,30 @@ import { ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Product } from "@/types/product";
 
+// Ürün formunun tip tanımı
+type ProductFormInput = Pick<Product, 
+  | 'name'
+  | 'description'
+  | 'sku'
+  | 'barcode'
+  | 'price'
+  | 'stock_quantity'
+  | 'min_stock_level'
+  | 'tax_rate'
+  | 'unit'
+  | 'is_active'
+  | 'currency'
+  | 'category_type'
+  | 'product_type'
+  | 'unit_price'
+  | 'status'
+  | 'image_url'
+  | 'category_id'
+  | 'supplier_id'
+  | 'discount_price'
+  | 'discount_rate'
+>;
+
 const productSchema = z.object({
   name: z.string().min(1, "Ürün adı zorunludur"),
   description: z.string().nullable(),
@@ -42,16 +66,14 @@ const productSchema = z.object({
   supplier_id: z.string().nullable(),
   discount_price: z.number().nullable(),
   discount_rate: z.number().nullable()
-});
-
-type ProductFormData = z.infer<typeof productSchema>;
+}) as z.ZodType<ProductFormInput>;
 
 const ProductForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditing = Boolean(id);
 
-  const form = useForm<ProductFormData>({
+  const form = useForm<ProductFormInput>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
@@ -91,7 +113,7 @@ const ProductForm = () => {
         if (error) throw error;
 
         if (data) {
-          form.reset(data);
+          form.reset(data as ProductFormInput);
         }
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -102,15 +124,19 @@ const ProductForm = () => {
     fetchProduct();
   }, [id, form]);
 
-  const onSubmit = async (values: ProductFormData) => {
+  const onSubmit = async (values: ProductFormInput) => {
     try {
+      const now = new Date().toISOString();
+      
       if (isEditing) {
+        const updateData: Partial<Product> = {
+          ...values,
+          updated_at: now
+        };
+
         const { error } = await supabase
           .from("products")
-          .update({
-            ...values,
-            updated_at: new Date().toISOString()
-          } as Partial<Product>)
+          .update(updateData)
           .eq("id", id);
 
         if (error) throw error;
@@ -118,13 +144,15 @@ const ProductForm = () => {
         toast.success("Ürün başarıyla güncellendi");
         navigate(`/product-details/${id}`);
       } else {
+        const insertData: Partial<Product> = {
+          ...values,
+          created_at: now,
+          updated_at: now
+        };
+
         const { error, data } = await supabase
           .from("products")
-          .insert([{
-            ...values,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }])
+          .insert([insertData])
           .select()
           .single();
 
