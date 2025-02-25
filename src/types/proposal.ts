@@ -1,5 +1,14 @@
 
-export type ProposalStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';
+export type ProposalStatus = 
+  | 'draft' 
+  | 'sent' 
+  | 'approved' 
+  | 'rejected' 
+  | 'expired'
+  | 'new'
+  | 'review'
+  | 'negotiation'
+  | 'accepted';
 
 export interface Proposal {
   id: string;
