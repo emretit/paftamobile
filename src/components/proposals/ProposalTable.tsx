@@ -8,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { useProposals } from "@/hooks/useProposals";
@@ -19,6 +18,11 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { ProposalFilters } from "./ProposalFilters";
+
+interface ProposalTableProps {
+  filters: ProposalFilters;
+}
 
 interface Column {
   id: keyof Proposal | 'actions';
@@ -35,8 +39,16 @@ const statusStyles: Record<ProposalStatus, { bg: string; text: string }> = {
   expired: { bg: "bg-yellow-100", text: "text-yellow-800" }
 };
 
-const ProposalTable = () => {
-  const { data: proposals, isLoading } = useProposals();
+const statusLabels: Record<ProposalStatus, string> = {
+  draft: 'Taslak',
+  sent: 'Gönderildi',
+  approved: 'Onaylandı',
+  rejected: 'Reddedildi',
+  expired: 'Süresi Doldu'
+};
+
+const ProposalTable = ({ filters }: ProposalTableProps) => {
+  const { data: proposals, isLoading } = useProposals(filters);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -131,14 +143,11 @@ const ProposalTable = () => {
               </TableCell>
               <TableCell className="p-4 align-middle">
                 <Badge 
-                  className={`${statusStyles[proposal.status as ProposalStatus].bg} ${
-                    statusStyles[proposal.status as ProposalStatus].text
+                  className={`${statusStyles[proposal.status].bg} ${
+                    statusStyles[proposal.status].text
                   }`}
                 >
-                  {proposal.status === 'draft' ? 'Taslak' :
-                   proposal.status === 'sent' ? 'Gönderildi' :
-                   proposal.status === 'approved' ? 'Onaylandı' :
-                   proposal.status === 'rejected' ? 'Reddedildi' : 'Süresi Doldu'}
+                  {statusLabels[proposal.status]}
                 </Badge>
               </TableCell>
               <TableCell className="p-4 align-middle max-w-[180px] truncate">
