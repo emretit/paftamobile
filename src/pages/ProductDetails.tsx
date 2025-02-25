@@ -30,7 +30,26 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
       const { data, error } = await supabase
         .from("products")
         .select(`
-          *,
+          id,
+          name,
+          description,
+          sku,
+          barcode,
+          price,
+          discount_price,
+          currency,
+          tax_rate,
+          stock_quantity,
+          min_stock_level,
+          unit,
+          category_id,
+          category_type,
+          product_type,
+          status,
+          is_active,
+          image_url,
+          created_at,
+          updated_at,
           product_categories (
             id,
             name
