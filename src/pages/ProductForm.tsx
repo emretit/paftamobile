@@ -20,22 +20,40 @@ import {
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
+interface ProductInput {
+  name: string;
+  description?: string | null;
+  sku?: string | null;
+  barcode?: string | null;
+  price: number;
+  stock_quantity: number;
+  min_stock_level: number;
+  tax_rate: number;
+  unit: string;
+  is_active: boolean;
+  currency: string;
+  category_type: string;
+  product_type: string;
+  unit_price: number;
+  status: string;
+}
+
 const productSchema = z.object({
   name: z.string().min(1, "Ürün adı zorunludur"),
-  description: z.string().optional(),
-  sku: z.string().optional(),
-  barcode: z.string().optional(),
+  description: z.string().optional().nullable(),
+  sku: z.string().optional().nullable(),
+  barcode: z.string().optional().nullable(),
   price: z.number().min(0, "Fiyat 0'dan küçük olamaz"),
   stock_quantity: z.number().min(0, "Stok miktarı 0'dan küçük olamaz"),
   min_stock_level: z.number().min(0, "Minimum stok seviyesi 0'dan küçük olamaz"),
   tax_rate: z.number().min(0, "Vergi oranı 0'dan küçük olamaz").max(100, "Vergi oranı 100'den büyük olamaz"),
-  unit: z.string().optional(),
-  is_active: z.boolean().default(true),
-  currency: z.string().default("TRY"),
-  category_type: z.string().default("product"),
-  product_type: z.string().default("physical"),
-  unit_price: z.number().min(0).default(0),
-  status: z.string().default("active")
+  unit: z.string(),
+  is_active: z.boolean(),
+  currency: z.string(),
+  category_type: z.string(),
+  product_type: z.string(),
+  unit_price: z.number().min(0),
+  status: z.string()
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -82,14 +100,14 @@ const ProductForm = () => {
         if (data) {
           form.reset({
             name: data.name,
-            description: data.description || "",
-            sku: data.sku || "",
-            barcode: data.barcode || "",
+            description: data.description,
+            sku: data.sku,
+            barcode: data.barcode,
             price: data.price,
             stock_quantity: data.stock_quantity,
             min_stock_level: data.min_stock_level,
             tax_rate: data.tax_rate,
-            unit: data.unit,
+            unit: data.unit || "piece",
             is_active: data.is_active,
             currency: data.currency,
             category_type: data.category_type,
@@ -112,7 +130,10 @@ const ProductForm = () => {
       if (isEditing) {
         const { error } = await supabase
           .from("products")
-          .update(values)
+          .update({
+            ...values,
+            updated_at: new Date().toISOString()
+          })
           .eq("id", id);
 
         if (error) throw error;
@@ -122,7 +143,11 @@ const ProductForm = () => {
       } else {
         const { error, data } = await supabase
           .from("products")
-          .insert(values)
+          .insert({
+            ...values,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
           .select()
           .single();
 
