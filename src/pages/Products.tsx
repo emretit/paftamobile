@@ -35,7 +35,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   });
 
   // Ürünleri getiren sorgu - yeni şemaya göre güncellendi
-  const { data: products, isLoading } = useQuery({
+  const { data: products = [], isLoading } = useQuery({
     queryKey: ["products", searchQuery, categoryFilter],
     queryFn: async () => {
       let query = supabase
@@ -67,9 +67,16 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <div className="flex-1 p-8 ml-[60px] sm:ml-64">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">Ürünler</h1>
-            <div className="flex items-center gap-2">
+          {/* Header Section */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <ProductFilters
+              setSearchQuery={setSearchQuery}
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+              categories={categories}
+              totalProducts={products.length}
+            />
+            <div className="flex items-center gap-2 self-end">
               <div className="border rounded-lg p-1">
                 <Button
                   variant={view === "grid" ? "default" : "ghost"}
@@ -97,20 +104,10 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
             </div>
           </div>
 
-          <ProductFilters
-            setSearchQuery={setSearchQuery}
-            categoryFilter={categoryFilter}
-            setCategoryFilter={setCategoryFilter}
-            categories={categories}
-          />
-
           {view === "grid" ? (
             <ProductGrid products={products || []} isLoading={isLoading} />
           ) : (
-            <ProductTable
-              products={products || []}
-              isLoading={isLoading}
-            />
+            <ProductTable products={products || []} isLoading={isLoading} />
           )}
         </div>
       </div>
