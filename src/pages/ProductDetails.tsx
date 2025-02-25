@@ -1,14 +1,16 @@
 
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Edit, ArrowLeft } from "lucide-react";
-import ProductBasicInfo from "@/components/products/details/ProductBasicInfo";
+import { Edit, ArrowLeft, Copy } from "lucide-react";
+import { toast } from "sonner";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import ProductGeneralInfo from "@/components/products/details/ProductGeneralInfo";
 import ProductPricing from "@/components/products/details/ProductPricing";
 import ProductInventory from "@/components/products/details/ProductInventory";
-import ProductImage from "@/components/products/details/ProductImage";
-import ProductMeta from "@/components/products/details/ProductMeta";
+import ProductRelated from "@/components/products/details/ProductRelated";
+import { useState } from "react";
 
 interface ProductDetailsProps {
   isCollapsed: boolean;
@@ -18,6 +20,8 @@ interface ProductDetailsProps {
 const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = useState(false);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
@@ -29,6 +33,12 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
           product_categories (
             id,
             name
+          ),
+          suppliers (
+            id,
+            name,
+            email,
+            phone
           )
         `)
         .eq("id", id)
@@ -36,6 +46,57 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
 
       if (error) throw error;
       return data;
+    },
+  });
+
+  const updateProductMutation = useMutation({
+    mutationFn: async (updates: Partial<typeof product>) => {
+      const { error } = await supabase
+        .from("products")
+        .update(updates)
+        .eq("id", id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
+      toast.success("Ürün başarıyla güncellendi");
+    },
+    onError: () => {
+      toast.error("Ürün güncellenirken bir hata oluştu");
+    },
+  });
+
+  const duplicateProductMutation = useMutation({
+    mutationFn: async () => {
+      if (!product) return;
+      
+      const newProduct = {
+        ...product,
+        name: `${product.name} (Kopya)`,
+        sku: `${product.sku}-copy`,
+        barcode: null,
+      };
+      
+      delete newProduct.id;
+      delete newProduct.created_at;
+      delete newProduct.updated_at;
+
+      const { data, error } = await supabase
+        .from("products")
+        .insert([newProduct])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (newProduct) => {
+      toast.success("Ürün başarıyla kopyalandı");
+      navigate(`/product-details/${newProduct.id}`);
+    },
+    onError: () => {
+      toast.error("Ürün kopyalanırken bir hata oluştu");
     },
   });
 
@@ -56,6 +117,10 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
     );
   }
 
+  const handleUpdateProduct = async (updates: Partial<typeof product>) => {
+    updateProductMutation.mutate(updates);
+  };
+
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -65,21 +130,34 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
           </Button>
           <h1 className="text-2xl font-semibold">{product.name}</h1>
         </div>
-        <Button onClick={() => navigate(`/product-form/${id}`)} className="gap-2">
-          <Edit className="h-4 w-4" />
-          Düzenle
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => duplicateProductMutation.mutate()}
+            className="gap-2"
+          >
+            <Copy className="h-4 w-4" />
+            Ürünü Kopyala
+          </Button>
+          <Sheet open={isEditing} onOpenChange={setIsEditing}>
+            <SheetTrigger asChild>
+              <Button className="gap-2">
+                <Edit className="h-4 w-4" />
+                Düzenle
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:w-[540px]">
+              {/* Editing form will be implemented here */}
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <ProductBasicInfo
-            name={product.name}
-            description={product.description}
-            category={product.product_categories?.name}
-            productType={product.product_type}
-            barcode={product.barcode}
-            sku={product.sku}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          <ProductGeneralInfo
+            product={product}
+            onUpdate={handleUpdateProduct}
           />
 
           <ProductPricing
@@ -87,25 +165,25 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
             discountPrice={product.discount_price}
             currency={product.currency}
             taxRate={product.tax_rate}
+            onUpdate={handleUpdateProduct}
           />
 
           <ProductInventory
             stockQuantity={product.stock_quantity}
             minStockLevel={product.min_stock_level}
             unit={product.unit}
+            supplier={product.suppliers}
+            lastPurchaseDate={product.last_purchase_date}
+            onUpdate={handleUpdateProduct}
           />
         </div>
 
         <div className="space-y-6">
-          <ProductImage
-            imageUrl={product.image_url}
-            productName={product.name}
-          />
-
-          <ProductMeta
-            createdAt={product.created_at}
-            updatedAt={product.updated_at}
-            isActive={product.is_active}
+          <ProductRelated 
+            categoryId={product.category_id} 
+            currentProductId={product.id}
+            relatedProducts={product.related_products}
+            onUpdate={handleUpdateProduct}
           />
         </div>
       </div>
