@@ -868,21 +868,26 @@ export type Database = {
           category_id: string | null
           category_type: string | null
           created_at: string | null
+          currency: string
           description: string | null
+          discount_price: number | null
           discount_rate: number | null
           id: string
           image_url: string | null
           is_active: boolean | null
           max_order_quantity: number | null
           min_order_quantity: number | null
+          min_stock_level: number
           name: string
           notes: string | null
+          price: number
           product_type: string
           purchase_price: number | null
           sku: string | null
           status: string
           stock_quantity: number | null
           stock_threshold: number | null
+          supplier_id: string | null
           tax_rate: number
           unit: string | null
           unit_price: number
@@ -894,21 +899,26 @@ export type Database = {
           category_id?: string | null
           category_type?: string | null
           created_at?: string | null
+          currency?: string
           description?: string | null
+          discount_price?: number | null
           discount_rate?: number | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           max_order_quantity?: number | null
           min_order_quantity?: number | null
+          min_stock_level?: number
           name: string
           notes?: string | null
+          price?: number
           product_type?: string
           purchase_price?: number | null
           sku?: string | null
           status?: string
           stock_quantity?: number | null
           stock_threshold?: number | null
+          supplier_id?: string | null
           tax_rate?: number
           unit?: string | null
           unit_price?: number
@@ -920,21 +930,26 @@ export type Database = {
           category_id?: string | null
           category_type?: string | null
           created_at?: string | null
+          currency?: string
           description?: string | null
+          discount_price?: number | null
           discount_rate?: number | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
           max_order_quantity?: number | null
           min_order_quantity?: number | null
+          min_stock_level?: number
           name?: string
           notes?: string | null
+          price?: number
           product_type?: string
           purchase_price?: number | null
           sku?: string | null
           status?: string
           stock_quantity?: number | null
           stock_threshold?: number | null
+          supplier_id?: string | null
           tax_rate?: number
           unit?: string | null
           unit_price?: number

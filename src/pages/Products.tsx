@@ -34,7 +34,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
     },
   });
 
-  // Ürünleri getiren sorgu
+  // Ürünleri getiren sorgu - yeni şemaya göre güncellendi
   const { data: products, isLoading } = useQuery({
     queryKey: ["products", searchQuery, categoryFilter],
     queryFn: async () => {
@@ -56,7 +56,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
         query = query.eq("category_id", categoryFilter);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query.order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
