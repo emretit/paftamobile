@@ -36,7 +36,12 @@ const productSchema = z.object({
   category_type: z.string(),
   product_type: z.string(),
   unit_price: z.number().min(0),
-  status: z.string()
+  status: z.string(),
+  image_url: z.string().optional().nullable(),
+  category_id: z.string().optional().nullable(),
+  supplier_id: z.string().optional().nullable(),
+  discount_price: z.number().optional().nullable(),
+  discount_rate: z.number().optional().nullable()
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -63,7 +68,12 @@ const ProductForm = () => {
       category_type: "product",
       product_type: "physical",
       unit_price: 0,
-      status: "active"
+      status: "active",
+      image_url: null,
+      category_id: null,
+      supplier_id: null,
+      discount_price: null,
+      discount_rate: null
     },
   });
 
@@ -107,7 +117,7 @@ const ProductForm = () => {
       } else {
         const { error, data } = await supabase
           .from("products")
-          .insert(values)
+          .insert([values]) // Array içinde gönderiyoruz
           .select()
           .single();
 
