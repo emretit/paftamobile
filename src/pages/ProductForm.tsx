@@ -66,7 +66,7 @@ const productSchema = z.object({
   supplier_id: z.string().nullable(),
   discount_price: z.number().nullable(),
   discount_rate: z.number().nullable()
-}) satisfies z.ZodType<Omit<DBProductInsert, 'created_at' | 'updated_at'>>;
+});
 
 type ProductFormData = z.infer<typeof productSchema>;
 
@@ -154,12 +154,30 @@ const ProductForm = () => {
         toast.success("Ürün başarıyla güncellendi");
         navigate(`/product-details/${id}`);
       } else {
-        // Tüm zorunlu alanların mevcut olduğundan emin olarak tip dönüşümü yapıyoruz
+        // Form değerlerini doğrudan DBProductInsert tipine dönüştürüyoruz
         const insertData = {
-          ...values,
+          name: values.name,
+          description: values.description,
+          sku: values.sku,
+          barcode: values.barcode,
+          price: values.price,
+          stock_quantity: values.stock_quantity,
+          min_stock_level: values.min_stock_level,
+          tax_rate: values.tax_rate,
+          unit: values.unit,
+          is_active: values.is_active,
+          currency: values.currency,
+          category_type: values.category_type,
+          product_type: values.product_type,
+          status: values.status,
+          image_url: values.image_url,
+          category_id: values.category_id,
+          supplier_id: values.supplier_id,
+          discount_price: values.discount_price,
+          discount_rate: values.discount_rate,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        } satisfies DBProductInsert;
+        } as const;
 
         const { error, data } = await supabase
           .from("products")
