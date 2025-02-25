@@ -41,6 +41,7 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
     queryKey: ['customer', id],
     queryFn: async () => {
       if (!id) return null;
+      console.log('Fetching customer data for ID:', id);
       const { data, error } = await supabase
         .from('customers')
         .select('*')
@@ -53,9 +54,11 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
       }
 
       if (!data) {
+        console.error('No customer found with ID:', id);
         throw new Error('Müşteri bulunamadı');
       }
 
+      console.log('Retrieved customer data:', data);
       return data;
     },
     enabled: !!id,
@@ -64,6 +67,7 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
 
   useEffect(() => {
     if (customer) {
+      console.log('Setting form data with customer:', customer);
       setFormData({
         name: customer.name || "",
         email: customer.email || "",
