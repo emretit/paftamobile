@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -20,7 +21,30 @@ import { ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Product } from "@/types/product";
 
-type DBProduct = Omit<Product, 'id' | 'created_at' | 'updated_at' | 'formatted_description' | 'last_purchase_date' | 'related_products' | 'product_categories' | 'suppliers'>;
+// Sadece veritabanı işlemleri için gerekli alanları içeren tip
+type DBProductInsert = {
+  name: string;
+  description: string | null;
+  sku: string | null;
+  barcode: string | null;
+  price: number;
+  stock_quantity: number;
+  min_stock_level: number;
+  tax_rate: number;
+  unit: string;
+  is_active: boolean;
+  currency: string;
+  category_type: string;
+  product_type: string;
+  status: string;
+  image_url: string | null;
+  category_id: string | null;
+  supplier_id: string | null;
+  discount_price: number | null;
+  discount_rate: number | null;
+  created_at?: string;
+  updated_at?: string;
+};
 
 const productSchema = z.object({
   name: z.string().min(1, "Ürün adı zorunludur"),
@@ -90,7 +114,7 @@ const ProductForm = () => {
         if (error) throw error;
 
         if (data) {
-          const formData = {
+          const formData: ProductFormData = {
             ...data,
             description: data.description || null,
             sku: data.sku || null,
@@ -115,12 +139,14 @@ const ProductForm = () => {
   const onSubmit = async (values: ProductFormData) => {
     try {
       if (isEditing) {
+        const updateData: Partial<DBProductInsert> = {
+          ...values,
+          updated_at: new Date().toISOString()
+        };
+
         const { error } = await supabase
           .from("products")
-          .update({
-            ...values,
-            updated_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq("id", id);
 
         if (error) throw error;
@@ -128,7 +154,7 @@ const ProductForm = () => {
         toast.success("Ürün başarıyla güncellendi");
         navigate(`/product-details/${id}`);
       } else {
-        const newProduct = {
+        const insertData: DBProductInsert = {
           ...values,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -136,7 +162,7 @@ const ProductForm = () => {
 
         const { error, data } = await supabase
           .from("products")
-          .insert([newProduct])
+          .insert([insertData])
           .select()
           .single();
 
