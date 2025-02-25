@@ -1,28 +1,22 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Edit, ArrowLeft, Copy, Download } from "lucide-react";
+import { Edit, ArrowLeft, Copy, Download, Package2 } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductGeneralInfo from "@/components/products/details/ProductGeneralInfo";
 import ProductPricing from "@/components/products/details/ProductPricing";
 import ProductInventory from "@/components/products/details/ProductInventory";
 import ProductRelated from "@/components/products/details/ProductRelated";
-import { useState } from "react";
 import { Product } from "@/types/product";
 import { Badge } from "@/components/ui/badge";
 
-interface ProductDetailsProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
-}
-
-const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) => {
+const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [isEditing, setIsEditing] = useState(false);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
@@ -54,12 +48,6 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
       return transformedData;
     },
   });
-
-  const getStockStatusBadge = (quantity: number, minLevel: number) => {
-    if (quantity <= 0) return <Badge variant="destructive">Stokta Yok</Badge>;
-    if (quantity <= minLevel) return <Badge variant="warning">Düşük Stok</Badge>;
-    return <Badge variant="default">Stokta</Badge>;
-  };
 
   const updateProductMutation = useMutation({
     mutationFn: async (updates: Partial<Product>) => {
@@ -131,64 +119,17 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-b from-gray-50 to-background dark:from-gray-900 dark:to-background">
-        <div className="p-8 max-w-7xl mx-auto">
-          <div className="flex items-center gap-4 mb-6">
-            <Button variant="outline" size="icon" onClick={() => navigate("/products")}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
+      {/* Header */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        <div className="container flex h-16 items-center">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/products")}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center gap-2 ml-4">
+            <Package2 className="h-5 w-5" />
+            <h1 className="text-lg font-semibold">{product.name}</h1>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            {/* Product Image */}
-            <div className="relative group">
-              {product.image_url ? (
-                <div className="relative overflow-hidden rounded-lg aspect-square bg-white dark:bg-gray-800">
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-300"
-                  />
-                </div>
-              ) : (
-                <div className="rounded-lg aspect-square bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                  <span className="text-gray-400">Görsel Yok</span>
-                </div>
-              )}
-            </div>
-
-            {/* Product Info */}
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground">SKU: {product.sku || "N/A"}</span>
-                  {getStockStatusBadge(product.stock_quantity, product.min_stock_level)}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <span className="text-2xl font-semibold">
-                  {new Intl.NumberFormat('tr-TR', {
-                    style: 'currency',
-                    currency: product.currency
-                  }).format(product.price)}
-                </span>
-                {product.discount_price && (
-                  <span className="text-lg text-muted-foreground line-through">
-                    {new Intl.NumberFormat('tr-TR', {
-                      style: 'currency',
-                      currency: product.currency
-                    }).format(product.discount_price)}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Floating Action Bar */}
-          <div className="fixed bottom-6 right-6 flex gap-2 z-50">
+          <div className="ml-auto flex items-center gap-2">
             <Button variant="outline" onClick={() => duplicateProductMutation.mutate()}>
               <Copy className="h-4 w-4 mr-2" />
               Kopyala
@@ -202,49 +143,98 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
               Düzenle
             </Button>
           </div>
+        </div>
+      </div>
 
-          {/* Tabbed Content */}
-          <Tabs defaultValue="general" className="mt-8">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="general">Genel Bilgiler</TabsTrigger>
-              <TabsTrigger value="pricing">Fiyatlandırma & Stok</TabsTrigger>
-              <TabsTrigger value="related">Benzer Ürünler</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="general">
-              <ProductGeneralInfo
-                product={product}
-                onUpdate={updateProductMutation.mutate}
-              />
-            </TabsContent>
-            
-            <TabsContent value="pricing" className="space-y-6">
-              <ProductPricing
-                price={product.price}
-                discountPrice={product.discount_price}
-                currency={product.currency}
-                taxRate={product.tax_rate}
-                onUpdate={updateProductMutation.mutate}
-              />
-              <ProductInventory
-                stockQuantity={product.stock_quantity}
-                minStockLevel={product.min_stock_level}
-                unit={product.unit}
-                supplier={product.suppliers}
-                lastPurchaseDate={product.last_purchase_date}
-                onUpdate={updateProductMutation.mutate}
-              />
-            </TabsContent>
-            
-            <TabsContent value="related">
-              <ProductRelated 
-                categoryId={product.category_id} 
-                currentProductId={product.id}
-                relatedProducts={product.related_products}
-                onUpdate={updateProductMutation.mutate}
-              />
-            </TabsContent>
-          </Tabs>
+      {/* Main Content */}
+      <div className="container py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Product Image */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-24">
+              <div className="aspect-square rounded-lg overflow-hidden bg-white dark:bg-gray-800">
+                {product.image_url ? (
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    Görsel Yok
+                  </div>
+                )}
+              </div>
+              <div className="mt-4 flex items-center justify-between">
+                <div>
+                  <Badge variant={product.is_active ? "default" : "secondary"}>
+                    {product.is_active ? "Aktif" : "Pasif"}
+                  </Badge>
+                  <span className="ml-2 text-sm text-muted-foreground">
+                    SKU: {product.sku || "N/A"}
+                  </span>
+                </div>
+                <Badge variant={
+                  product.stock_quantity <= 0 ? "destructive" : 
+                  product.stock_quantity <= product.min_stock_level ? "warning" : 
+                  "default"
+                }>
+                  {product.stock_quantity <= 0 ? "Stokta Yok" : 
+                   product.stock_quantity <= product.min_stock_level ? "Düşük Stok" : 
+                   "Stokta"}
+                </Badge>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Product Details */}
+          <div className="lg:col-span-2">
+            <Tabs defaultValue="general" className="w-full">
+              <TabsList className="w-full grid grid-cols-4">
+                <TabsTrigger value="general">Genel</TabsTrigger>
+                <TabsTrigger value="pricing">Fiyatlandırma</TabsTrigger>
+                <TabsTrigger value="stock">Stok</TabsTrigger>
+                <TabsTrigger value="related">Benzer Ürünler</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="general" className="mt-6">
+                <ProductGeneralInfo
+                  product={product}
+                  onUpdate={updateProductMutation.mutate}
+                />
+              </TabsContent>
+              
+              <TabsContent value="pricing" className="mt-6">
+                <ProductPricing
+                  price={product.price}
+                  discountPrice={product.discount_price}
+                  currency={product.currency}
+                  taxRate={product.tax_rate}
+                  onUpdate={updateProductMutation.mutate}
+                />
+              </TabsContent>
+              
+              <TabsContent value="stock" className="mt-6">
+                <ProductInventory
+                  stockQuantity={product.stock_quantity}
+                  minStockLevel={product.min_stock_level}
+                  unit={product.unit}
+                  supplier={product.suppliers}
+                  lastPurchaseDate={product.last_purchase_date}
+                  onUpdate={updateProductMutation.mutate}
+                />
+              </TabsContent>
+              
+              <TabsContent value="related" className="mt-6">
+                <ProductRelated 
+                  categoryId={product.category_id} 
+                  currentProductId={product.id}
+                  relatedProducts={product.related_products}
+                  onUpdate={updateProductMutation.mutate}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
       </div>
     </div>
