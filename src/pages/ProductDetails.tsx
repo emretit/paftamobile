@@ -98,6 +98,10 @@ const ProductDetails = () => {
     },
   });
 
+  const handleEdit = () => {
+    navigate(`/product-form/${id}`);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -136,7 +140,7 @@ const ProductDetails = () => {
               <Download className="h-4 w-4 mr-2" />
               PDF
             </Button>
-            <Button>
+            <Button onClick={handleEdit}>
               <Edit className="h-4 w-4 mr-2" />
               Düzenle
             </Button>

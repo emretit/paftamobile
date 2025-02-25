@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,36 +7,52 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-
-interface ProductFormProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
-}
+import { 
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage, 
+} from "@/components/ui/form";
+import { ArrowLeft } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 const productSchema = z.object({
   name: z.string().min(1, "Ürün adı zorunludur"),
   description: z.string().optional(),
-  unit_price: z.string().min(1, "Fiyat zorunludur"),
-  stock_quantity: z.string().min(1, "Stok zorunludur"),
+  sku: z.string().optional(),
+  barcode: z.string().optional(),
+  price: z.number().min(0, "Fiyat 0'dan küçük olamaz"),
+  stock_quantity: z.number().min(0, "Stok miktarı 0'dan küçük olamaz"),
+  min_stock_level: z.number().min(0, "Minimum stok seviyesi 0'dan küçük olamaz"),
+  tax_rate: z.number().min(0, "Vergi oranı 0'dan küçük olamaz").max(100, "Vergi oranı 100'den büyük olamaz"),
+  unit: z.string().optional(),
+  is_active: z.boolean().default(true),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
-const ProductForm = ({ isCollapsed, setIsCollapsed }: ProductFormProps) => {
+const ProductForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const isEditing = Boolean(id);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
       description: "",
-      unit_price: "",
-      stock_quantity: "",
+      sku: "",
+      barcode: "",
+      price: 0,
+      stock_quantity: 0,
+      min_stock_level: 0,
+      tax_rate: 18,
+      unit: "piece",
+      is_active: true,
     },
   });
 
@@ -57,123 +73,236 @@ const ProductForm = ({ isCollapsed, setIsCollapsed }: ProductFormProps) => {
           form.reset({
             name: data.name,
             description: data.description || "",
-            unit_price: data.unit_price.toString(),
-            stock_quantity: data.stock_quantity.toString(),
+            sku: data.sku || "",
+            barcode: data.barcode || "",
+            price: data.price,
+            stock_quantity: data.stock_quantity,
+            min_stock_level: data.min_stock_level,
+            tax_rate: data.tax_rate,
+            unit: data.unit,
+            is_active: data.is_active,
           });
         }
       } catch (error) {
         console.error("Error fetching product:", error);
-        toast({
-          variant: "destructive",
-          title: "Hata",
-          description: "Ürün bilgileri yüklenirken bir hata oluştu.",
-        });
+        toast.error("Ürün bilgileri yüklenirken bir hata oluştu.");
       }
     };
 
     fetchProduct();
-  }, [id, form, toast]);
+  }, [id, form]);
 
   const onSubmit = async (values: ProductFormValues) => {
-    setIsLoading(true);
     try {
-      const productData = {
-        name: values.name,
-        description: values.description,
-        unit_price: parseFloat(values.unit_price),
-        stock_quantity: parseInt(values.stock_quantity),
-      };
-
-      if (id) {
+      if (isEditing) {
         const { error } = await supabase
           .from("products")
-          .update(productData)
+          .update(values)
           .eq("id", id);
 
         if (error) throw error;
 
-        toast({
-          title: "Başarılı",
-          description: "Ürün başarıyla güncellendi.",
-        });
+        toast.success("Ürün başarıyla güncellendi");
+        navigate(`/product-details/${id}`);
       } else {
-        const { error } = await supabase.from("products").insert(productData);
+        const { error, data } = await supabase
+          .from("products")
+          .insert([values])
+          .select()
+          .single();
 
         if (error) throw error;
 
-        toast({
-          title: "Başarılı",
-          description: "Ürün başarıyla oluşturuldu.",
-        });
+        toast.success("Ürün başarıyla oluşturuldu");
+        navigate(`/product-details/${data.id}`);
       }
-
-      navigate("/products");
     } catch (error) {
       console.error("Error saving product:", error);
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Ürün kaydedilirken bir hata oluştu.",
-      });
-    } finally {
-      setIsLoading(false);
+      toast.error("Ürün kaydedilirken bir hata oluştu");
     }
   };
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-6">
-        {id ? "Ürün Düzenle" : "Yeni Ürün"}
-      </h1>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Ürün Adı</label>
-          <Input {...form.register("name")} />
-          {form.formState.errors.name && (
-            <p className="text-sm text-red-500 mt-1">
-              {form.formState.errors.name.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Açıklama</label>
-          <Textarea {...form.register("description")} />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Fiyat</label>
-          <Input type="number" step="0.01" {...form.register("unit_price")} />
-          {form.formState.errors.unit_price && (
-            <p className="text-sm text-red-500 mt-1">
-              {form.formState.errors.unit_price.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Stok</label>
-          <Input type="number" {...form.register("stock_quantity")} />
-          {form.formState.errors.stock_quantity && (
-            <p className="text-sm text-red-500 mt-1">
-              {form.formState.errors.stock_quantity.message}
-            </p>
-          )}
-        </div>
-
-        <div className="flex gap-4">
-          <Button type="submit" disabled={isLoading}>
-            {id ? "Güncelle" : "Oluştur"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate("/products")}
+    <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
+        <div className="flex items-center gap-4 mb-6">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => navigate(id ? `/product-details/${id}` : "/products")}
           >
-            İptal
+            <ArrowLeft className="h-4 w-4" />
           </Button>
+          <h1 className="text-2xl font-semibold">
+            {isEditing ? "Ürünü Düzenle" : "Yeni Ürün"}
+          </h1>
         </div>
-      </form>
+
+        <Card>
+          <CardContent className="p-6">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ürün Adı</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Açıklama</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="sku"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>SKU</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="barcode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Barkod</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Fiyat</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            {...field} 
+                            onChange={e => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="tax_rate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Vergi Oranı (%)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            {...field} 
+                            onChange={e => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="stock_quantity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Stok Miktarı</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            {...field} 
+                            onChange={e => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="min_stock_level"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Minimum Stok Seviyesi</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            {...field} 
+                            onChange={e => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="unit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Birim</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="flex justify-end gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate(id ? `/product-details/${id}` : "/products")}
+                  >
+                    İptal
+                  </Button>
+                  <Button type="submit">
+                    {isEditing ? "Güncelle" : "Oluştur"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
