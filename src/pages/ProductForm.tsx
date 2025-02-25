@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -143,11 +142,7 @@ const ProductForm = () => {
       } else {
         const { error, data } = await supabase
           .from("products")
-          .insert({
-            ...values,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
+          .insert([values])
           .select()
           .single();
 
