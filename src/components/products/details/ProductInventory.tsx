@@ -1,6 +1,5 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Boxes, Edit2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
@@ -37,14 +36,6 @@ const ProductInventory = ({
     stockQuantity,
     minStockLevel
   });
-
-  const getStockStatus = () => {
-    if (stockQuantity <= 0) return { label: "Stokta Yok", color: "destructive" };
-    if (stockQuantity <= minStockLevel) return { label: "Kritik Stok", color: "warning" };
-    return { label: "Stokta", color: "default" };
-  };
-
-  const status = getStockStatus();
 
   const handleSave = () => {
     onUpdate({
@@ -86,14 +77,9 @@ const ProductInventory = ({
                   className="w-32 text-right"
                 />
               ) : (
-                <>
-                  <span className="text-lg font-medium">
-                    {stockQuantity} {unit}
-                  </span>
-                  <Badge variant={status.color as "default" | "destructive" | "warning"}>
-                    {status.label}
-                  </Badge>
-                </>
+                <span className="text-lg font-medium">
+                  {stockQuantity} {unit}
+                </span>
               )}
             </div>
           </div>

@@ -11,7 +11,7 @@ interface ProductPricingProps {
   discountPrice: number | null;
   currency: string;
   taxRate: number;
-  onUpdate: (updates: { 
+  onUpdate: (updates: {
     price?: number;
     discount_price?: number | null;
     tax_rate?: number;
