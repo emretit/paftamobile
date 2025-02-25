@@ -41,8 +41,8 @@ const App = () => {
           <Route path="/" element={<Index isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/products" element={<Products isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-          <Route path="/product-form" element={<ProductForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
-          <Route path="/product-form/:id" element={<ProductForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/product-form" element={<ProductForm />} />
+          <Route path="/product-form/:id" element={<ProductForm />} />
           <Route path="/product-details/:id" element={<ProductDetails />} />
           <Route path="/contacts" element={<Contacts isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/contacts/new" element={<CustomerForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />

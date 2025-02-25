@@ -31,6 +31,11 @@ const productSchema = z.object({
   tax_rate: z.number().min(0, "Vergi oranı 0'dan küçük olamaz").max(100, "Vergi oranı 100'den büyük olamaz"),
   unit: z.string().optional(),
   is_active: z.boolean().default(true),
+  currency: z.string().default("TRY"),
+  category_type: z.string().default("product"),
+  product_type: z.string().default("physical"),
+  unit_price: z.number().min(0).default(0),
+  status: z.string().default("active")
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -53,6 +58,11 @@ const ProductForm = () => {
       tax_rate: 18,
       unit: "piece",
       is_active: true,
+      currency: "TRY",
+      category_type: "product",
+      product_type: "physical",
+      unit_price: 0,
+      status: "active"
     },
   });
 
@@ -81,6 +91,11 @@ const ProductForm = () => {
             tax_rate: data.tax_rate,
             unit: data.unit,
             is_active: data.is_active,
+            currency: data.currency,
+            category_type: data.category_type,
+            product_type: data.product_type,
+            unit_price: data.unit_price,
+            status: data.status
           });
         }
       } catch (error) {
@@ -107,7 +122,7 @@ const ProductForm = () => {
       } else {
         const { error, data } = await supabase
           .from("products")
-          .insert([values])
+          .insert(values)
           .select()
           .single();
 
