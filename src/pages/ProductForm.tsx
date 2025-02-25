@@ -19,13 +19,36 @@ import {
 } from "@/components/ui/form";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Product } from "@/types/product";
+
+// Ürün formunun veri tipini Supabase şemasına uygun olarak tanımlıyoruz
+interface ProductFormData {
+  name: string;
+  description: string | null;
+  sku: string | null;
+  barcode: string | null;
+  price: number;
+  stock_quantity: number;
+  min_stock_level: number;
+  tax_rate: number;
+  unit: string;
+  is_active: boolean;
+  currency: string;
+  category_type: string;
+  product_type: string;
+  unit_price: number;
+  status: string;
+  image_url: string | null;
+  category_id: string | null;
+  supplier_id: string | null;
+  discount_price: number | null;
+  discount_rate: number | null;
+}
 
 const productSchema = z.object({
   name: z.string().min(1, "Ürün adı zorunludur"),
-  description: z.string().optional().nullable(),
-  sku: z.string().optional().nullable(),
-  barcode: z.string().optional().nullable(),
+  description: z.string().nullable(),
+  sku: z.string().nullable(),
+  barcode: z.string().nullable(),
   price: z.number().min(0, "Fiyat 0'dan küçük olamaz"),
   stock_quantity: z.number().min(0, "Stok miktarı 0'dan küçük olamaz"),
   min_stock_level: z.number().min(0, "Minimum stok seviyesi 0'dan küçük olamaz"),
@@ -37,12 +60,12 @@ const productSchema = z.object({
   product_type: z.string(),
   unit_price: z.number().min(0),
   status: z.string(),
-  image_url: z.string().optional().nullable(),
-  category_id: z.string().optional().nullable(),
-  supplier_id: z.string().optional().nullable(),
-  discount_price: z.number().optional().nullable(),
-  discount_rate: z.number().optional().nullable()
-});
+  image_url: z.string().nullable(),
+  category_id: z.string().nullable(),
+  supplier_id: z.string().nullable(),
+  discount_price: z.number().nullable(),
+  discount_rate: z.number().nullable()
+}) satisfies z.ZodType<ProductFormData>;
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
@@ -55,9 +78,9 @@ const ProductForm = () => {
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
-      description: "",
-      sku: "",
-      barcode: "",
+      description: null,
+      sku: null,
+      barcode: null,
       price: 0,
       stock_quantity: 0,
       min_stock_level: 0,
@@ -91,7 +114,7 @@ const ProductForm = () => {
         if (error) throw error;
 
         if (data) {
-          form.reset(data);
+          form.reset(data as ProductFormValues);
         }
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -107,7 +130,7 @@ const ProductForm = () => {
       if (isEditing) {
         const { error } = await supabase
           .from("products")
-          .update(values)
+          .update(values as ProductFormData)
           .eq("id", id);
 
         if (error) throw error;
@@ -117,7 +140,7 @@ const ProductForm = () => {
       } else {
         const { error, data } = await supabase
           .from("products")
-          .insert([values]) // Array içinde gönderiyoruz
+          .insert(values as ProductFormData)
           .select()
           .single();
 
