@@ -46,7 +46,18 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
         .single();
 
       if (error) throw error;
-      return data as Product;
+
+      // Transform the data to match the Product interface
+      const transformedData: Product = {
+        ...data,
+        formatted_description: data.formatted_description || {},
+        last_purchase_date: data.last_purchase_date || null,
+        related_products: data.related_products || [],
+        product_categories: data.product_categories || null,
+        suppliers: data.suppliers || null
+      };
+
+      return transformedData;
     },
   });
 
