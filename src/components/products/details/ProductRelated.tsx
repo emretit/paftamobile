@@ -4,12 +4,13 @@ import { Link2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import { Product } from "@/types/product";
 
 interface ProductRelatedProps {
   categoryId: string;
   currentProductId: string;
   relatedProducts: string[];
-  onUpdate: (updates: { related_products: string[] }) => void;
+  onUpdate: (updates: Partial<Product>) => void;
 }
 
 const ProductRelated = ({ 

@@ -11,6 +11,7 @@ import ProductPricing from "@/components/products/details/ProductPricing";
 import ProductInventory from "@/components/products/details/ProductInventory";
 import ProductRelated from "@/components/products/details/ProductRelated";
 import { useState } from "react";
+import { Product } from "@/types/product";
 
 interface ProductDetailsProps {
   isCollapsed: boolean;
@@ -45,12 +46,12 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
         .single();
 
       if (error) throw error;
-      return data;
+      return data as Product;
     },
   });
 
   const updateProductMutation = useMutation({
-    mutationFn: async (updates: Partial<typeof product>) => {
+    mutationFn: async (updates: Partial<Product>) => {
       const { error } = await supabase
         .from("products")
         .update(updates)
@@ -117,10 +118,6 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
     );
   }
 
-  const handleUpdateProduct = async (updates: Partial<typeof product>) => {
-    updateProductMutation.mutate(updates);
-  };
-
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -157,7 +154,7 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
         <div className="lg:col-span-2 space-y-6">
           <ProductGeneralInfo
             product={product}
-            onUpdate={handleUpdateProduct}
+            onUpdate={updateProductMutation.mutate}
           />
 
           <ProductPricing
@@ -165,7 +162,7 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
             discountPrice={product.discount_price}
             currency={product.currency}
             taxRate={product.tax_rate}
-            onUpdate={handleUpdateProduct}
+            onUpdate={updateProductMutation.mutate}
           />
 
           <ProductInventory
@@ -174,7 +171,7 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
             unit={product.unit}
             supplier={product.suppliers}
             lastPurchaseDate={product.last_purchase_date}
-            onUpdate={handleUpdateProduct}
+            onUpdate={updateProductMutation.mutate}
           />
         </div>
 
@@ -183,7 +180,7 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
             categoryId={product.category_id} 
             currentProductId={product.id}
             relatedProducts={product.related_products}
-            onUpdate={handleUpdateProduct}
+            onUpdate={updateProductMutation.mutate}
           />
         </div>
       </div>

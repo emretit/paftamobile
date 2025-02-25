@@ -8,21 +8,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useState } from "react";
+import { Product } from "@/types/product";
 
 interface ProductGeneralInfoProps {
-  product: {
-    name: string;
-    description: string | null;
-    formatted_description: any;
-    sku: string | null;
-    barcode: string | null;
-    image_url: string | null;
-    product_categories: {
-      id: string;
-      name: string;
-    } | null;
-  };
-  onUpdate: (updates: Partial<typeof product>) => void;
+  product: Pick<Product, 
+    "name" | 
+    "description" | 
+    "formatted_description" | 
+    "sku" | 
+    "barcode" | 
+    "image_url" | 
+    "product_categories"
+  >;
+  onUpdate: (updates: Partial<Product>) => void;
 }
 
 const ProductGeneralInfo = ({ product, onUpdate }: ProductGeneralInfoProps) => {
