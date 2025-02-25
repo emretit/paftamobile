@@ -1,6 +1,6 @@
 
 import { Input } from "@/components/ui/input";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, FileDown, FileUp, MoreVertical } from "lucide-react";
 import { 
   Select,
   SelectContent,
@@ -16,9 +16,16 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 
 interface ProductFiltersProps {
@@ -27,6 +34,7 @@ interface ProductFiltersProps {
   setCategoryFilter: (category: string) => void;
   categories: { id: string; name: string }[];
   totalProducts: number;
+  onBulkAction?: (action: string) => void;
 }
 
 const ProductFilters = ({
@@ -35,27 +43,62 @@ const ProductFilters = ({
   setCategoryFilter,
   categories,
   totalProducts,
+  onBulkAction
 }: ProductFiltersProps) => {
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [stockStatus, setStockStatus] = useState("all");
 
   return (
-    <div className="space-y-6 w-full">
+    <div className="space-y-6">
       {/* Modern Header Section */}
-      <div>
-        <div className="flex items-baseline gap-3">
-          <h1 className="text-3xl font-bold tracking-tight">Ürünler</h1>
-          <Badge variant="secondary" className="rounded-md">
-            {totalProducts} ürün
-          </Badge>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-baseline gap-3">
+            <h1 className="text-3xl font-bold tracking-tight">Ürünler</h1>
+            <Badge variant="secondary" className="rounded-md">
+              {totalProducts} ürün
+            </Badge>
+          </div>
+          <p className="mt-2 text-muted-foreground">
+            Tüm ürünlerinizi buradan yönetebilir ve düzenleyebilirsiniz.
+          </p>
         </div>
-        <p className="mt-2 text-muted-foreground">
-          Tüm ürünlerinizi buradan yönetebilir ve düzenleyebilirsiniz.
-        </p>
+
+        {/* Quick Actions */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" className="h-9">
+            <FileDown className="w-4 h-4 mr-2" />
+            Dışa Aktar
+          </Button>
+          <Button variant="outline" size="sm" className="h-9">
+            <FileUp className="w-4 h-4 mr-2" />
+            İçe Aktar
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onBulkAction?.("activate")}>
+                Seçilenleri Aktifleştir
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onBulkAction?.("deactivate")}>
+                Seçilenleri Pasifleştir
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onBulkAction?.("delete")}>
+                Seçilenleri Sil
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
+      <Separator />
+
       {/* Search & Filters Bar */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -67,7 +110,7 @@ const ProductFilters = ({
         
         <div className="flex gap-2">
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[200px] h-11">
+            <SelectTrigger className="w-[180px] h-11">
               <SelectValue placeholder="Tüm Kategoriler" />
             </SelectTrigger>
             <SelectContent>

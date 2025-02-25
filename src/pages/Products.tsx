@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Plus, LayoutGrid, Table as TableIcon, FileUp } from "lucide-react";
+import { Plus, LayoutGrid, Table as TableIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProductFilters from "@/components/products/ProductFilters";
 import ProductGrid from "@/components/products/ProductGrid";
@@ -34,7 +34,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
     },
   });
 
-  // Ürünleri getiren sorgu - yeni şemaya göre güncellendi
+  // Ürünleri getiren sorgu
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["products", searchQuery, categoryFilter],
     queryFn: async () => {
@@ -62,21 +62,27 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
     },
   });
 
+  const handleBulkAction = async (action: string) => {
+    // Implement bulk actions here
+    console.log('Bulk action:', action);
+  };
+
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-background">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <div className="flex-1 p-8 ml-[60px] sm:ml-64">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header Section */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <ProductFilters
-              setSearchQuery={setSearchQuery}
-              categoryFilter={categoryFilter}
-              setCategoryFilter={setCategoryFilter}
-              categories={categories}
-              totalProducts={products.length}
-            />
-            <div className="flex items-center gap-2 self-end">
+      <div className="flex-1 overflow-auto">
+        <div className="p-8 space-y-8">
+          <ProductFilters
+            setSearchQuery={setSearchQuery}
+            categoryFilter={categoryFilter}
+            setCategoryFilter={setCategoryFilter}
+            categories={categories}
+            totalProducts={products.length}
+            onBulkAction={handleBulkAction}
+          />
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
               <div className="border rounded-lg p-1">
                 <Button
                   variant={view === "grid" ? "default" : "ghost"}
@@ -93,22 +99,21 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
                   <TableIcon className="h-4 w-4" />
                 </Button>
               </div>
-              <Button onClick={() => navigate("/product-form")} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Yeni Ürün
-              </Button>
-              <Button variant="outline" className="gap-2">
-                <FileUp className="h-4 w-4" />
-                Excel Import
-              </Button>
             </div>
+
+            <Button onClick={() => navigate("/product-form")} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Yeni Ürün
+            </Button>
           </div>
 
-          {view === "grid" ? (
-            <ProductGrid products={products || []} isLoading={isLoading} />
-          ) : (
-            <ProductTable products={products || []} isLoading={isLoading} />
-          )}
+          <div className="rounded-lg border bg-card">
+            {view === "grid" ? (
+              <ProductGrid products={products || []} isLoading={isLoading} />
+            ) : (
+              <ProductTable products={products || []} isLoading={isLoading} />
+            )}
+          </div>
         </div>
       </div>
     </div>
