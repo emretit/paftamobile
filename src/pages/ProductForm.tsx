@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -18,24 +19,7 @@ import {
 } from "@/components/ui/form";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-
-interface ProductInput {
-  name: string;
-  description?: string | null;
-  sku?: string | null;
-  barcode?: string | null;
-  price: number;
-  stock_quantity: number;
-  min_stock_level: number;
-  tax_rate: number;
-  unit: string;
-  is_active: boolean;
-  currency: string;
-  category_type: string;
-  product_type: string;
-  unit_price: number;
-  status: string;
-}
+import { Product } from "@/types/product";
 
 const productSchema = z.object({
   name: z.string().min(1, "Ürün adı zorunludur"),
@@ -97,23 +81,7 @@ const ProductForm = () => {
         if (error) throw error;
 
         if (data) {
-          form.reset({
-            name: data.name,
-            description: data.description,
-            sku: data.sku,
-            barcode: data.barcode,
-            price: data.price,
-            stock_quantity: data.stock_quantity,
-            min_stock_level: data.min_stock_level,
-            tax_rate: data.tax_rate,
-            unit: data.unit || "piece",
-            is_active: data.is_active,
-            currency: data.currency,
-            category_type: data.category_type,
-            product_type: data.product_type,
-            unit_price: data.unit_price,
-            status: data.status
-          });
+          form.reset(data);
         }
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -129,10 +97,7 @@ const ProductForm = () => {
       if (isEditing) {
         const { error } = await supabase
           .from("products")
-          .update({
-            ...values,
-            updated_at: new Date().toISOString()
-          })
+          .update(values)
           .eq("id", id);
 
         if (error) throw error;
@@ -142,14 +107,16 @@ const ProductForm = () => {
       } else {
         const { error, data } = await supabase
           .from("products")
-          .insert([values])
+          .insert(values)
           .select()
           .single();
 
         if (error) throw error;
 
         toast.success("Ürün başarıyla oluşturuldu");
-        navigate(`/product-details/${data.id}`);
+        if (data) {
+          navigate(`/product-details/${data.id}`);
+        }
       }
     } catch (error) {
       console.error("Error saving product:", error);
@@ -198,7 +165,7 @@ const ProductForm = () => {
                     <FormItem>
                       <FormLabel>Açıklama</FormLabel>
                       <FormControl>
-                        <Textarea {...field} />
+                        <Textarea {...field} value={field.value || ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -213,7 +180,7 @@ const ProductForm = () => {
                       <FormItem>
                         <FormLabel>SKU</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input {...field} value={field.value || ''} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -227,7 +194,7 @@ const ProductForm = () => {
                       <FormItem>
                         <FormLabel>Barkod</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input {...field} value={field.value || ''} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
