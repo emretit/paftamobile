@@ -20,7 +20,60 @@ import { ServiceActivityForm } from "./ServiceActivityForm";
 import { ServiceActivitiesList } from "./ServiceActivitiesList";
 import { WarrantyInfo } from "./WarrantyInfo";
 import { format } from "date-fns";
-import { MessageSquare, Plus } from "lucide-react";
+import { MessageSquare, Plus, AlertCircle, Clock, CheckCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
+const getPriorityColor = (priority: string) => {
+  switch (priority) {
+    case 'high':
+      return 'bg-red-100 text-red-800 border-red-200';
+    case 'medium':
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 'low':
+      return 'bg-blue-100 text-blue-800 border-blue-200';
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+};
+
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return <CheckCircle className="w-4 h-4 text-green-600" />;
+    case 'in_progress':
+      return <Clock className="w-4 h-4 text-blue-600" />;
+    case 'new':
+      return <AlertCircle className="w-4 h-4 text-purple-600" />;
+    default:
+      return null;
+  }
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return 'bg-green-100 text-green-800 border-green-200';
+    case 'in_progress':
+      return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'new':
+      return 'bg-purple-100 text-purple-800 border-purple-200';
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+};
+
+const getStatusText = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return 'Tamamlandı';
+    case 'in_progress':
+      return 'Devam Ediyor';
+    case 'new':
+      return 'Yeni';
+    default:
+      return status;
+  }
+};
 
 export function ServiceRequestTable() {
   const { data: serviceRequests, refetch } = useServiceRequests();
@@ -37,7 +90,7 @@ export function ServiceRequestTable() {
         <TableHeader>
           <TableRow>
             <TableHead>Başlık</TableHead>
-            <TableHead>Müşteri</TableHead>
+            <TableHead>Tür</TableHead>
             <TableHead>Öncelik</TableHead>
             <TableHead>Durum</TableHead>
             <TableHead>Oluşturma Tarihi</TableHead>
@@ -46,16 +99,33 @@ export function ServiceRequestTable() {
         </TableHeader>
         <TableBody>
           {serviceRequests?.map((request) => (
-            <TableRow key={request.id}>
-              <TableCell>{request.title}</TableCell>
-              <TableCell>{request.customer_id}</TableCell>
-              <TableCell>{request.priority}</TableCell>
-              <TableCell>{request.status}</TableCell>
+            <TableRow key={request.id} className="group hover:bg-gray-50">
+              <TableCell className="font-medium">{request.title}</TableCell>
+              <TableCell>{request.service_type}</TableCell>
+              <TableCell>
+                <Badge 
+                  variant="secondary" 
+                  className={`${getPriorityColor(request.priority)} border`}
+                >
+                  {request.priority}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(request.status)}
+                  <Badge 
+                    variant="secondary" 
+                    className={`${getStatusColor(request.status)} border`}
+                  >
+                    {getStatusText(request.status)}
+                  </Badge>
+                </div>
+              </TableCell>
               <TableCell>
                 {request.created_at && format(new Date(request.created_at), 'dd.MM.yyyy')}
               </TableCell>
               <TableCell>
-                <div className="flex gap-2">
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button
                     variant="outline"
                     size="sm"
