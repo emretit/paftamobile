@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { Card } from "@/components/ui/card";
@@ -17,11 +18,13 @@ interface DealDetailsModalProps {
   onClose: () => void;
 }
 
+type EditableFields = { [K in keyof Deal]?: boolean };
+
 const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
   if (!deal) return null;
 
-  const [isEditing, setIsEditing] = useState<{ [key: string]: boolean }>({});
-  const [editValues, setEditValues] = useState(deal);
+  const [isEditing, setIsEditing] = useState<EditableFields>({});
+  const [editValues, setEditValues] = useState<Deal>(deal);
 
   const formatDate = (date: Date) => {
     return format(new Date(date), 'PP');
@@ -47,15 +50,15 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
     return colors[priority as keyof typeof colors] || "bg-gray-100 text-gray-700";
   };
 
-  const handleEdit = (field: string) => {
+  const handleEdit = (field: keyof Deal) => {
     setIsEditing(prev => ({ ...prev, [field]: true }));
   };
 
-  const handleSave = async (field: string) => {
+  const handleSave = async (field: keyof Deal) => {
     try {
       const { error } = await supabase
         .from('deals')
-        .update({ [field]: editValues[field as keyof Deal] })
+        .update({ [field]: editValues[field] })
         .eq('id', deal.id);
 
       if (error) throw error;
@@ -81,7 +84,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
             <>
               <Input
                 type={typeof value === 'number' ? 'number' : 'text'}
-                value={editValues[field]}
+                value={editValues[field]?.toString() || ''}
                 onChange={(e) => setEditValues(prev => ({
                   ...prev,
                   [field]: e.target.value
