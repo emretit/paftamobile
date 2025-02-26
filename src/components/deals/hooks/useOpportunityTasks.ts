@@ -2,42 +2,42 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-// Flat, non-recursive type definitions
+// Simple, flat type definitions without any nesting
 type TaskStatus = 'todo' | 'in_progress' | 'completed';
 type TaskPriority = 'low' | 'medium' | 'high';
 type TaskType = 'opportunity' | 'proposal' | 'general';
 
-interface DatabaseTask {
+// Simplified database interfaces
+interface RawTask {
   id: string;
   title: string;
   description: string;
   status: TaskStatus;
-  assignee_id?: string | null;
-  due_date?: string | null;
+  assignee_id: string | null;
+  due_date: string | null;
   priority: TaskPriority;
   type: TaskType;
-  opportunity_id?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
+  opportunity_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
-interface DatabaseEmployee {
+interface RawEmployee {
   id: string;
   first_name: string;
   last_name: string;
   avatar_url: string | null;
 }
 
-interface TaskWithAssignee extends DatabaseTask {
-  assignee?: {
-    id: string;
-    name: string;
-    avatar: string | null;
-  };
-  item_type: 'task';
+// Simple assignee object
+interface SimpleAssignee {
+  id: string;
+  name: string;
+  avatar: string | null;
 }
 
-const fetchAssignee = async (assigneeId: string | null) => {
+// Fetch assignee data
+const fetchAssignee = async (assigneeId: string | null): Promise<SimpleAssignee | undefined> => {
   if (!assigneeId) return undefined;
   
   const { data } = await supabase
@@ -48,15 +48,15 @@ const fetchAssignee = async (assigneeId: string | null) => {
 
   if (!data) return undefined;
 
-  const employee = data as DatabaseEmployee;
   return {
-    id: employee.id,
-    name: `${employee.first_name} ${employee.last_name}`,
-    avatar: employee.avatar_url
+    id: data.id,
+    name: `${data.first_name} ${data.last_name}`,
+    avatar: data.avatar_url
   };
 };
 
-const fetchTasks = async (opportunityId: string): Promise<TaskWithAssignee[]> => {
+// Fetch tasks
+const fetchTasks = async (opportunityId: string) => {
   const { data, error } = await supabase
     .from('tasks')
     .select('*')
@@ -66,25 +66,26 @@ const fetchTasks = async (opportunityId: string): Promise<TaskWithAssignee[]> =>
   if (error) throw error;
   if (!data) return [];
 
-  const tasks = await Promise.all(
-    data.map(async (dbTask: DatabaseTask) => {
-      const assignee = await fetchAssignee(dbTask.assignee_id);
+  // Process tasks
+  const processedTasks = await Promise.all(
+    data.map(async (task: RawTask) => {
       return {
-        ...dbTask,
-        assignee,
+        ...task,
+        assignee: await fetchAssignee(task.assignee_id),
         item_type: 'task' as const
       };
     })
   );
 
-  return tasks;
+  return processedTasks;
 };
 
+// Hook
 export const useOpportunityTasks = (opportunityId: string | undefined) => {
   return useQuery({
     queryKey: ['opportunity-tasks', opportunityId],
     queryFn: async () => {
-      if (!opportunityId) return [] as TaskWithAssignee[];
+      if (!opportunityId) return [];
       return fetchTasks(opportunityId);
     },
     enabled: !!opportunityId
