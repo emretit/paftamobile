@@ -81,14 +81,14 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
                 className="flex-1"
               />
               <Select
-                value={selectedEmployee || ""}
-                onValueChange={(value) => setSelectedEmployee(value)}
+                value={selectedEmployee || "all"}
+                onValueChange={(value) => setSelectedEmployee(value === "all" ? null : value)}
               >
                 <SelectTrigger className="w-[200px]">
                   <SelectValue placeholder="Çalışan seç" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tümü</SelectItem>
+                  <SelectItem value="all">Tümü</SelectItem>
                   {employees?.map((employee) => (
                     <SelectItem key={employee.id} value={employee.id}>
                       {employee.first_name} {employee.last_name}
@@ -97,14 +97,14 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
                 </SelectContent>
               </Select>
               <Select
-                value={selectedType || ""}
-                onValueChange={(value) => setSelectedType(value)}
+                value={selectedType || "all"}
+                onValueChange={(value) => setSelectedType(value === "all" ? null : value)}
               >
                 <SelectTrigger className="w-[200px]">
                   <SelectValue placeholder="Görev tipi" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tümü</SelectItem>
+                  <SelectItem value="all">Tümü</SelectItem>
                   <SelectItem value="opportunity">Fırsat</SelectItem>
                   <SelectItem value="proposal">Teklif</SelectItem>
                   <SelectItem value="general">Genel</SelectItem>
