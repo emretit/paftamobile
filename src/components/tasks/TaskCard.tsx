@@ -1,31 +1,58 @@
 
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Link as LinkIcon } from "lucide-react";
-import { format } from "date-fns";
+import { Calendar, Link as LinkIcon, Trash2 } from "lucide-react";
+import { format, isPast } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Task {
   id: string;
   title: string;
   description: string;
   status: "todo" | "in_progress" | "completed";
+  assignee_id?: string;
   assignee?: {
     id: string;
     name: string;
     avatar?: string;
   };
-  dueDate?: string;
+  due_date?: string;
   priority: "low" | "medium" | "high";
   type: "opportunity" | "proposal" | "general";
-  relatedItemId?: string;
-  relatedItemTitle?: string;
+  related_item_id?: string;
+  related_item_title?: string;
 }
 
 interface TaskCardProps {
   task: Task;
+  onEdit?: (task: Task) => void;
 }
 
-const TaskCard = ({ task }: TaskCardProps) => {
+const TaskCard = ({ task, onEdit }: TaskCardProps) => {
+  const queryClient = useQueryClient();
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: string) => {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Task deleted successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete task');
+      console.error('Error deleting task:', error);
+    }
+  });
+
   const getPriorityColor = (priority: string) => {
     const colors = {
       high: "bg-red-100 text-red-700",
@@ -44,14 +71,43 @@ const TaskCard = ({ task }: TaskCardProps) => {
     return labels[type as keyof typeof labels] || type;
   };
 
+  const isOverdue = task.due_date && isPast(new Date(task.due_date)) && task.status !== "completed";
+
   return (
-    <Card className="p-4 hover:shadow-md transition-shadow">
+    <Card className={cn(
+      "p-4 hover:shadow-md transition-shadow",
+      isOverdue && "border-red-500"
+    )}>
       <div className="space-y-3">
         <div className="flex justify-between items-start">
           <h3 className="font-medium text-gray-900">{task.title}</h3>
-          <span className={`px-2 py-1 rounded-full text-xs ${getPriorityColor(task.priority)}`}>
-            {task.priority}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={`px-2 py-1 rounded-full text-xs ${getPriorityColor(task.priority)}`}>
+              {task.priority}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => onEdit?.(task)}
+            >
+              <span className="sr-only">Edit</span>
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+              onClick={() => {
+                if (confirm('Are you sure you want to delete this task?')) {
+                  deleteTaskMutation.mutate(task.id);
+                }
+              }}
+            >
+              <span className="sr-only">Delete</span>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         
         <p className="text-sm text-gray-600">{task.description}</p>
@@ -71,17 +127,21 @@ const TaskCard = ({ task }: TaskCardProps) => {
           </span>
         </div>
 
-        {task.dueDate && (
-          <div className="flex items-center gap-1 text-xs text-gray-500">
+        {task.due_date && (
+          <div className={cn(
+            "flex items-center gap-1 text-xs",
+            isOverdue ? "text-red-600 font-medium" : "text-gray-500"
+          )}>
             <Calendar className="h-3 w-3" />
-            <span>{format(new Date(task.dueDate), 'dd MMM yyyy')}</span>
+            <span>{format(new Date(task.due_date), 'dd MMM yyyy')}</span>
+            {isOverdue && <span className="text-red-600 ml-1">(Overdue)</span>}
           </div>
         )}
 
-        {task.relatedItemId && (
+        {task.related_item_id && (
           <div className="flex items-center gap-1 text-xs text-blue-600">
             <LinkIcon className="h-3 w-3" />
-            <span>{task.relatedItemTitle}</span>
+            <span>{task.related_item_title}</span>
           </div>
         )}
       </div>

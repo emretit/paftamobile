@@ -8,6 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Filter, Plus } from "lucide-react";
 import TasksKanban from "@/components/tasks/TasksKanban";
+import TaskForm from "@/components/tasks/TaskForm";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TasksProps {
   isCollapsed: boolean;
@@ -18,6 +22,25 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+
+  const { data: employees } = useQuery({
+    queryKey: ['employees'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('id, first_name, last_name')
+        .eq('status', 'active');
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const handleEditTask = (task: Task) => {
+    setTaskToEdit(task);
+    setIsTaskFormOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -36,7 +59,13 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
                 <Filter className="h-4 w-4 mr-2" />
                 Filtrele
               </Button>
-              <Button size="sm">
+              <Button 
+                size="sm"
+                onClick={() => {
+                  setTaskToEdit(null);
+                  setIsTaskFormOpen(true);
+                }}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Görev Ekle
               </Button>
@@ -60,8 +89,11 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Tümü</SelectItem>
-                  <SelectItem value="1">Ahmet Yılmaz</SelectItem>
-                  <SelectItem value="2">Ayşe Demir</SelectItem>
+                  {employees?.map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.first_name} {employee.last_name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Select
@@ -86,9 +118,19 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
               searchQuery={searchQuery}
               selectedEmployee={selectedEmployee}
               selectedType={selectedType}
+              onEditTask={handleEditTask}
             />
           </ScrollArea>
         </div>
+
+        <TaskForm
+          isOpen={isTaskFormOpen}
+          onClose={() => {
+            setIsTaskFormOpen(false);
+            setTaskToEdit(null);
+          }}
+          taskToEdit={taskToEdit}
+        />
       </main>
     </div>
   );

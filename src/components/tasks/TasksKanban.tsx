@@ -1,29 +1,23 @@
 
-import { DragDropContext, Droppable } from "@hello-pangea/dnd";
+import { useEffect, useState } from "react";
+import { DragDropContext } from "@hello-pangea/dnd";
 import { Clock, CheckCircle2, ListTodo } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import TaskColumn from "./TaskColumn";
+import { toast } from "sonner";
 
 interface Task {
   id: string;
   title: string;
   description: string;
   status: "todo" | "in_progress" | "completed";
-  assignee?: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-  dueDate?: string;
+  assignee_id?: string;
+  due_date?: string;
   priority: "low" | "medium" | "high";
   type: "opportunity" | "proposal" | "general";
-  relatedItemId?: string;
-  relatedItemTitle?: string;
-}
-
-interface TasksState {
-  todo: Task[];
-  in_progress: Task[];
-  completed: Task[];
+  related_item_id?: string;
+  related_item_title?: string;
 }
 
 interface TasksKanbanProps {
@@ -38,69 +32,105 @@ const columns = [
   { id: "completed", title: "Tamamlandı", icon: CheckCircle2 },
 ];
 
-// Dummy data for demonstration
-const initialTasks: TasksState = {
-  todo: [
-    {
-      id: "1",
-      title: "Müşteri görüşmesi",
-      description: "ABC firması ile görüşme",
-      status: "todo",
-      assignee: { id: "1", name: "Ahmet Yılmaz" },
-      priority: "high",
-      type: "opportunity",
-      dueDate: "2024-03-20",
-      relatedItemId: "opp_1",
-      relatedItemTitle: "ABC Firması Projesi"
-    }
-  ],
-  in_progress: [
-    {
-      id: "2",
-      title: "Teklif hazırlama",
-      description: "XYZ projesi için teklif hazırlanacak",
-      status: "in_progress",
-      assignee: { id: "2", name: "Ayşe Demir" },
-      priority: "medium",
-      type: "proposal",
-      dueDate: "2024-03-22",
-      relatedItemId: "prop_1",
-      relatedItemTitle: "XYZ Projesi Teklifi"
-    }
-  ],
-  completed: [
-    {
-      id: "3",
-      title: "Dosyalama",
-      description: "Geçmiş projelerin dosyalanması",
-      status: "completed",
-      assignee: { id: "1", name: "Ahmet Yılmaz" },
-      priority: "low",
-      type: "general",
-      dueDate: "2024-03-18"
-    }
-  ]
-};
-
 const TasksKanban = ({ searchQuery, selectedEmployee, selectedType }: TasksKanbanProps) => {
-  const handleDragEnd = (result: any) => {
-    // Implement drag and drop logic here
-    console.log("Drag ended:", result);
+  const queryClient = useQueryClient();
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  const { data: fetchedTasks } = useQuery({
+    queryKey: ['tasks'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as Task[];
+    }
+  });
+
+  useEffect(() => {
+    if (fetchedTasks) {
+      setTasks(fetchedTasks);
+    }
+  }, [fetchedTasks]);
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('tasks-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tasks' },
+        (payload) => {
+          queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  const updateTaskMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({ status })
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onError: (error) => {
+      toast.error('Failed to update task status');
+      console.error('Error updating task status:', error);
+    }
+  });
+
+  const handleDragEnd = async (result: any) => {
+    const { destination, source, draggableId } = result;
+
+    if (!destination) return;
+
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    // Optimistically update the UI
+    const newTasks = Array.from(tasks);
+    const task = newTasks.find(t => t.id === draggableId);
+    if (task) {
+      task.status = destination.droppableId;
+      setTasks(newTasks);
+    }
+
+    // Update in the database
+    await updateTaskMutation.mutateAsync({
+      id: draggableId,
+      status: destination.droppableId
+    });
   };
 
-  const filterTasks = (tasks: Task[]) => {
+  const filterTasks = (status: string) => {
     return tasks.filter(task => {
       const matchesSearch = !searchQuery || 
         task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         task.description.toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesEmployee = !selectedEmployee || 
-        task.assignee?.id === selectedEmployee;
+        task.assignee_id === selectedEmployee;
       
       const matchesType = !selectedType || 
         task.type === selectedType;
 
-      return matchesSearch && matchesEmployee && matchesType;
+      return task.status === status && matchesSearch && matchesEmployee && matchesType;
     });
   };
 
@@ -113,7 +143,7 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType }: TasksKanba
             id={column.id}
             title={column.title}
             icon={column.icon}
-            tasks={filterTasks(initialTasks[column.id as keyof TasksState])}
+            tasks={filterTasks(column.id)}
           />
         ))}
       </div>
