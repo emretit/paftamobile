@@ -28,10 +28,13 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
+type ServiceRequestStatus = 'cancelled' | 'new' | 'completed' | 'assigned' | 'in_progress' | 'on_hold';
+type ServiceRequestPriority = 'low' | 'medium' | 'high' | 'urgent';
+
 interface FormData {
   title: string;
   description: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  priority: ServiceRequestPriority;
   customer_id: string;
   service_type: string;
   location: string;
@@ -91,12 +94,11 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
 
   const onSubmit = async (data: FormData) => {
     try {
-      // Convert Date to ISO string for database storage
       const formattedData = {
         ...data,
         due_date: data.due_date?.toISOString(),
-        status: 'new',
-        attachments: [],
+        status: 'new' as ServiceRequestStatus,
+        attachments: [] as any[],
       };
 
       const { data: serviceRequest, error } = await supabase
