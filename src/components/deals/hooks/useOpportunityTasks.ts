@@ -53,7 +53,7 @@ const transformTask = async (rawTask: RawTask): Promise<Task> => {
   };
 };
 
-const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
+const fetchTasks = async (opportunityId: string) => {
   const { data, error } = await supabase
     .from('tasks')
     .select('*')
@@ -61,17 +61,17 @@ const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  if (!data) return [];
+  if (!data) return [] as Task[];
 
-  const transformedTasks = await Promise.all(data.map(transformTask));
-  return transformedTasks;
+  const tasks = await Promise.all(data.map(transformTask));
+  return tasks;
 };
 
 export const useOpportunityTasks = (opportunityId: string | undefined) => {
   return useQuery({
     queryKey: ['opportunity-tasks', opportunityId],
-    queryFn: () => {
-      if (!opportunityId) return Promise.resolve([] as Task[]);
+    queryFn: async () => {
+      if (!opportunityId) return [] as Task[];
       return fetchTasks(opportunityId);
     },
     enabled: !!opportunityId
