@@ -82,7 +82,7 @@ export function WarrantyInfo({ equipmentId }: WarrantyInfoProps) {
             </AlertDescription>
           </Alert>
         ) : isExpiringSoon ? (
-          <Alert variant="warning">
+          <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Garanti Süresi Yakında Dolacak</AlertTitle>
             <AlertDescription>

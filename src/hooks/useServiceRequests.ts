@@ -25,27 +25,6 @@ interface ServiceRequest {
   warranty_info?: Record<string, any>;
 }
 
-interface RawServiceRequest {
-  id: string;
-  title: string;
-  description?: string | null;
-  status: string;
-  priority: string;
-  attachments: Array<{
-    name: string;
-    path: string;
-    type: string;
-    size: number;
-  }> | null;
-  notes?: string[] | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  assigned_to?: string | null;
-  customer_id?: string | null;
-  equipment_id?: string | null;
-  warranty_info?: Record<string, any> | null;
-}
-
 export const useServiceRequests = () => {
   return useQuery({
     queryKey: ['service-requests'],
@@ -57,25 +36,18 @@ export const useServiceRequests = () => {
 
       if (error) throw error;
       
-      return (data as RawServiceRequest[] || []).map(item => ({
-        id: item.id,
-        title: item.title,
-        description: item.description || undefined,
-        status: item.status,
-        priority: item.priority,
-        attachments: item.attachments?.map(att => ({
-          name: att.name,
-          path: att.path,
-          type: att.type,
-          size: att.size
-        })) || [],
-        notes: item.notes || undefined,
-        created_at: item.created_at || undefined,
-        updated_at: item.updated_at || undefined,
-        assigned_to: item.assigned_to || undefined,
-        customer_id: item.customer_id || undefined,
-        equipment_id: item.equipment_id || undefined,
-        warranty_info: item.warranty_info || undefined
+      return (data || []).map(item => ({
+        ...item,
+        attachments: Array.isArray(item.attachments) 
+          ? item.attachments.map((att: any) => ({
+              name: String(att.name || ''),
+              path: String(att.path || ''),
+              type: String(att.type || ''),
+              size: Number(att.size || 0)
+            }))
+          : [],
+        notes: Array.isArray(item.notes) ? item.notes : undefined,
+        warranty_info: typeof item.warranty_info === 'object' ? item.warranty_info : undefined
       }));
     }
   });

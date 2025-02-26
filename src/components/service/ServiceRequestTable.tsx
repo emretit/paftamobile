@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { ServiceActivityForm } from "./ServiceActivityForm";
 import { ServiceActivitiesList } from "./ServiceActivitiesList";
+import { WarrantyInfo } from "./WarrantyInfo";
 import { format } from "date-fns";
 import { MessageSquare, Plus } from "lucide-react";
 

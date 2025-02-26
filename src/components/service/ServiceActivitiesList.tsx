@@ -10,17 +10,19 @@ import {
 import { format } from "date-fns";
 import { Wrench, Clock, MapPin, WrenchIcon } from "lucide-react";
 
+interface ServiceMaterial {
+  name: string;
+  quantity: number;
+  unit: string;
+}
+
 interface ServiceActivity {
   id: string;
   activity_type: string;
   description: string;
   location: string;
   labor_hours: number;
-  materials_used: Array<{
-    name: string;
-    quantity: number;
-    unit: string;
-  }>;
+  materials_used: ServiceMaterial[];
   start_time: string;
   status: string;
   performed_by?: string;
@@ -55,7 +57,11 @@ export function ServiceActivitiesList({ serviceRequestId }: ServiceActivitiesLis
       // Type assertion to handle the JSON column
       const typedData = (data || []).map(item => ({
         ...item,
-        materials_used: Array.isArray(item.materials_used) ? item.materials_used : []
+        materials_used: Array.isArray(item.materials_used) ? item.materials_used.map(m => ({
+          name: String(m.name || ''),
+          quantity: Number(m.quantity || 0),
+          unit: String(m.unit || 'adet')
+        })) : []
       })) as ServiceActivity[];
       
       return typedData;
