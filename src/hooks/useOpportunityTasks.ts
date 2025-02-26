@@ -13,6 +13,12 @@ interface CreateTaskInput {
   priority?: Task['priority'];
 }
 
+type AutoTaskTemplate = {
+  title: string;
+  description?: string;
+  priority?: Task['priority'];
+};
+
 export const useOpportunityTasks = () => {
   const queryClient = useQueryClient();
 
@@ -46,7 +52,7 @@ export const useOpportunityTasks = () => {
   });
 
   const createAutoTasks = async (opportunityId: string, newStatus: string) => {
-    const autoTasks: Omit<CreateTaskInput, 'opportunity_id'>[] = [];
+    const autoTasks: AutoTaskTemplate[] = [];
 
     switch (newStatus) {
       case 'negotiation':
