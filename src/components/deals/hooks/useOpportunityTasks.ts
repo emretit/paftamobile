@@ -3,37 +3,43 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Task } from "@/types/task";
 
-// Simplified assignee type
-interface Assignee {
-  id: string;
-  name: string;
-  avatar?: string | null;
-}
+// Simplified database types to avoid deep nesting
+type TaskStatus = 'todo' | 'in_progress' | 'completed';
+type TaskPriority = 'low' | 'medium' | 'high';
+type TaskType = 'opportunity' | 'proposal' | 'general';
 
-// Database task type with exact shape from database
-interface DbTask {
+interface DatabaseTask {
   id: string;
   title: string;
   description: string;
-  status: 'todo' | 'in_progress' | 'completed';
+  status: TaskStatus;
   assignee_id?: string;
   due_date?: string;
-  priority: 'low' | 'medium' | 'high';
-  type: 'opportunity' | 'proposal' | 'general';
+  priority: TaskPriority;
+  type: TaskType;
   opportunity_id?: string;
   created_at?: string;
   updated_at?: string;
 }
 
-// Helper function to fetch assignee
-const fetchAssignee = async (assigneeId: string): Promise<Assignee | undefined> => {
-  const { data: employee } = await supabase
+interface DatabaseEmployee {
+  id: string;
+  first_name: string;
+  last_name: string;
+  avatar_url: string | null;
+}
+
+// Fetch assignee details
+const fetchAssignee = async (assigneeId: string) => {
+  const { data } = await supabase
     .from('employees')
     .select('id, first_name, last_name, avatar_url')
     .eq('id', assigneeId)
     .maybeSingle();
-  
-  if (!employee) return undefined;
+
+  if (!data) return undefined;
+
+  const employee = data as DatabaseEmployee;
   
   return {
     id: employee.id,
@@ -42,7 +48,7 @@ const fetchAssignee = async (assigneeId: string): Promise<Assignee | undefined> 
   };
 };
 
-// Main fetch function with explicit typing
+// Fetch tasks for an opportunity
 const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   const { data, error } = await supabase
     .from('tasks')
@@ -53,36 +59,34 @@ const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   if (error) throw error;
   if (!data) return [];
 
-  // Map database tasks to Task type
   const tasks = await Promise.all(
-    (data as DbTask[]).map(async (dbTask) => {
+    data.map(async (dbTask: DatabaseTask) => {
       const assignee = dbTask.assignee_id 
         ? await fetchAssignee(dbTask.assignee_id)
         : undefined;
 
-      const task: Task = {
+      return {
         id: dbTask.id,
         title: dbTask.title,
         description: dbTask.description,
         status: dbTask.status,
         assignee_id: dbTask.assignee_id,
-        assignee,
+        assignee: assignee,
         due_date: dbTask.due_date,
         priority: dbTask.priority,
         type: dbTask.type,
-        item_type: 'task',
+        item_type: 'task' as const,
         opportunity_id: dbTask.opportunity_id,
         created_at: dbTask.created_at,
         updated_at: dbTask.updated_at
-      };
-
-      return task;
+      } satisfies Task;
     })
   );
 
   return tasks;
 };
 
+// Hook for fetching opportunity tasks
 export const useOpportunityTasks = (opportunityId: string | undefined) => {
   return useQuery({
     queryKey: ['opportunity-tasks', opportunityId],
