@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Clock, CheckCircle2, ListTodo } from "lucide-react";
@@ -110,14 +109,15 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask }
     const newTasks = Array.from(tasks);
     const task = newTasks.find(t => t.id === draggableId);
     if (task) {
-      task.status = destination.droppableId as Task['status'];
+      const newStatus = destination.droppableId as 'todo' | 'in_progress' | 'completed';
+      task.status = newStatus;
       setTasks(newTasks);
-    }
 
-    await updateTaskMutation.mutateAsync({
-      id: draggableId,
-      status: destination.droppableId
-    });
+      await updateTaskMutation.mutateAsync({
+        id: draggableId,
+        status: newStatus
+      });
+    }
   };
 
   const filterTasks = (status: string) => {

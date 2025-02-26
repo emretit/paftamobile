@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,6 @@ import { CalendarIcon } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
 import type { Task } from "@/types/task";
 
 interface TaskFormProps {
@@ -60,9 +60,23 @@ const TaskForm = ({ isOpen, onClose, taskToEdit }: TaskFormProps) => {
 
   const createTaskMutation = useMutation({
     mutationFn: async (newTask: Partial<Task>) => {
+      if (!newTask.title) throw new Error('Title is required');
+      
+      const taskToCreate = {
+        title: newTask.title,
+        description: newTask.description || '',
+        status: newTask.status || 'todo',
+        priority: newTask.priority || 'low',
+        type: newTask.type || 'general',
+        assignee_id: newTask.assignee_id,
+        due_date: newTask.due_date,
+        related_item_id: newTask.related_item_id,
+        related_item_title: newTask.related_item_title
+      };
+
       const { data, error } = await supabase
         .from('tasks')
-        .insert([newTask])
+        .insert(taskToCreate)
         .select(`
           *,
           assignee:assignee_id (
@@ -90,10 +104,25 @@ const TaskForm = ({ isOpen, onClose, taskToEdit }: TaskFormProps) => {
 
   const updateTaskMutation = useMutation({
     mutationFn: async (updatedTask: Partial<Task>) => {
+      if (!taskToEdit?.id) throw new Error('Task ID is required for updates');
+      if (!updatedTask.title) throw new Error('Title is required');
+
+      const taskToUpdate = {
+        title: updatedTask.title,
+        description: updatedTask.description || '',
+        status: updatedTask.status || 'todo',
+        priority: updatedTask.priority || 'low',
+        type: updatedTask.type || 'general',
+        assignee_id: updatedTask.assignee_id,
+        due_date: updatedTask.due_date,
+        related_item_id: updatedTask.related_item_id,
+        related_item_title: updatedTask.related_item_title
+      };
+
       const { data, error } = await supabase
         .from('tasks')
-        .update(updatedTask)
-        .eq('id', taskToEdit?.id)
+        .update(taskToUpdate)
+        .eq('id', taskToEdit.id)
         .select(`
           *,
           assignee:assignee_id (
@@ -121,6 +150,11 @@ const TaskForm = ({ isOpen, onClose, taskToEdit }: TaskFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!task.title) {
+      toast.error('Title is required');
+      return;
+    }
+    
     if (taskToEdit) {
       updateTaskMutation.mutate(task);
     } else {
