@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -28,6 +27,7 @@ import Employees from "@/pages/Employees";
 import EmployeeForm from "@/pages/EmployeeForm";
 import EmployeeEdit from "@/pages/EmployeeEdit";
 import EmployeeDetails from "@/pages/EmployeeDetails";
+import Tasks from "@/pages/Tasks";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +67,7 @@ const App = () => {
           <Route path="/employee-form/:id" element={<EmployeeForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/employees/:id" element={<EmployeeDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/employee/:id/edit" element={<EmployeeEdit isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/tasks" element={<Tasks isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
         </Routes>
       </Router>
     </QueryClientProvider>

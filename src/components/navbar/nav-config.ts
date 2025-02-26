@@ -12,15 +12,27 @@ import {
   FileText,
   Package,
   Settings,
-  Calendar
+  Calendar,
+  Briefcase,
+  ListTodo
 } from "lucide-react";
+
+// Define the CRM category items
+const crmItems = [
+  { path: "/deals", icon: PieChart, label: "Fırsatlar" },
+  { path: "/proposals", icon: FileText, label: "Teklifler" },
+  { path: "/tasks", icon: ListTodo, label: "Görevler" }
+];
 
 export const navItems = [
   { path: "/", icon: LayoutDashboard, label: "Gösterge Paneli" },
+  {
+    category: "CRM",
+    icon: Briefcase,
+    items: crmItems
+  },
   { path: "/contacts", icon: Users, label: "Müşteriler" },
   { path: "/suppliers", icon: Truck, label: "Tedarikçiler" },
-  { path: "/deals", icon: PieChart, label: "Fırsatlar" },
-  { path: "/proposals", icon: FileText, label: "Teklifler" },
   { path: "/products", icon: Package, label: "Ürünler & Hizmetler" },
   { path: "/employees", icon: HardHat, label: "Çalışanlar" },
   { path: "/finance", icon: Wallet, label: "Finans" },
