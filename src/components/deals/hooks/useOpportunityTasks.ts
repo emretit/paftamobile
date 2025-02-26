@@ -7,7 +7,7 @@ type TaskStatus = 'todo' | 'in_progress' | 'completed';
 type TaskPriority = 'low' | 'medium' | 'high';
 type TaskType = 'opportunity' | 'proposal' | 'general';
 
-interface DatabaseTask {
+interface RawTask {
   id: string;
   title: string;
   description: string;
@@ -23,20 +23,7 @@ interface DatabaseTask {
   updated_at?: string;
 }
 
-interface TaskAssignee {
-  id: string;
-  name: string;
-  avatar?: string | null;
-}
-
-interface Employee {
-  id: string;
-  first_name: string;
-  last_name: string;
-  avatar_url: string | null;
-}
-
-const fetchTaskAssignee = async (assigneeId: string): Promise<TaskAssignee | undefined> => {
+const fetchAssignee = async (assigneeId: string) => {
   const { data } = await supabase
     .from('employees')
     .select('id, first_name, last_name, avatar_url')
@@ -44,49 +31,45 @@ const fetchTaskAssignee = async (assigneeId: string): Promise<TaskAssignee | und
     .maybeSingle();
   
   if (!data) return undefined;
-
-  const employee = data as Employee;
   
   return {
-    id: employee.id,
-    name: `${employee.first_name} ${employee.last_name}`,
-    avatar: employee.avatar_url
+    id: data.id,
+    name: `${data.first_name} ${data.last_name}`,
+    avatar: data.avatar_url
   };
 };
 
+const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('opportunity_id', opportunityId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  if (!data) return [];
+
+  const tasks = await Promise.all(
+    data.map(async (rawTask: RawTask) => {
+      const assignee = rawTask.assignee_id 
+        ? await fetchAssignee(rawTask.assignee_id)
+        : undefined;
+
+      return {
+        ...rawTask,
+        item_type: "task" as const,
+        assignee
+      };
+    })
+  );
+
+  return tasks;
+};
+
 export const useOpportunityTasks = (opportunityId: string | undefined) => {
-  return useQuery<Task[], Error>({
+  return useQuery({
     queryKey: ['opportunity-tasks', opportunityId],
-    queryFn: async () => {
-      if (!opportunityId) {
-        return [];
-      }
-      
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('opportunity_id', opportunityId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      if (!data) return [];
-
-      const tasks: Task[] = await Promise.all(
-        data.map(async (rawTask: DatabaseTask) => {
-          const assignee = rawTask.assignee_id 
-            ? await fetchTaskAssignee(rawTask.assignee_id)
-            : undefined;
-
-          return {
-            ...rawTask,
-            item_type: "task",
-            assignee
-          };
-        })
-      );
-
-      return tasks;
-    },
+    queryFn: () => opportunityId ? fetchTasks(opportunityId) : Promise.resolve([]),
     enabled: !!opportunityId
   });
 };
