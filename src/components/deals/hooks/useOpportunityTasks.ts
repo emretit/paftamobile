@@ -3,12 +3,29 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Task } from "@/types/task";
 
+// Simplified assignee type
 interface Assignee {
   id: string;
   name: string;
   avatar?: string | null;
 }
 
+// Database task type with exact shape from database
+interface DbTask {
+  id: string;
+  title: string;
+  description: string;
+  status: 'todo' | 'in_progress' | 'completed';
+  assignee_id?: string;
+  due_date?: string;
+  priority: 'low' | 'medium' | 'high';
+  type: 'opportunity' | 'proposal' | 'general';
+  opportunity_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Helper function to fetch assignee
 const fetchAssignee = async (assigneeId: string): Promise<Assignee | undefined> => {
   const { data: employee } = await supabase
     .from('employees')
@@ -25,20 +42,7 @@ const fetchAssignee = async (assigneeId: string): Promise<Assignee | undefined> 
   };
 };
 
-interface RawTask {
-  id: string;
-  title: string;
-  description: string;
-  status: 'todo' | 'in_progress' | 'completed';
-  assignee_id?: string;
-  due_date?: string;
-  priority: 'low' | 'medium' | 'high';
-  type: 'opportunity' | 'proposal' | 'general';
-  opportunity_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
+// Main fetch function with explicit typing
 const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   const { data, error } = await supabase
     .from('tasks')
@@ -49,33 +53,34 @@ const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   if (error) throw error;
   if (!data) return [];
 
-  const enhancedTasks = await Promise.all(
-    data.map(async (rawTask: RawTask) => {
-      const assignee = rawTask.assignee_id 
-        ? await fetchAssignee(rawTask.assignee_id)
+  // Map database tasks to Task type
+  const tasks = await Promise.all(
+    (data as DbTask[]).map(async (dbTask) => {
+      const assignee = dbTask.assignee_id 
+        ? await fetchAssignee(dbTask.assignee_id)
         : undefined;
 
       const task: Task = {
-        id: rawTask.id,
-        title: rawTask.title,
-        description: rawTask.description,
-        status: rawTask.status,
-        assignee_id: rawTask.assignee_id,
+        id: dbTask.id,
+        title: dbTask.title,
+        description: dbTask.description,
+        status: dbTask.status,
+        assignee_id: dbTask.assignee_id,
         assignee,
-        due_date: rawTask.due_date,
-        priority: rawTask.priority,
-        type: rawTask.type,
+        due_date: dbTask.due_date,
+        priority: dbTask.priority,
+        type: dbTask.type,
         item_type: 'task',
-        opportunity_id: rawTask.opportunity_id,
-        created_at: rawTask.created_at,
-        updated_at: rawTask.updated_at
+        opportunity_id: dbTask.opportunity_id,
+        created_at: dbTask.created_at,
+        updated_at: dbTask.updated_at
       };
 
       return task;
     })
   );
 
-  return enhancedTasks;
+  return tasks;
 };
 
 export const useOpportunityTasks = (opportunityId: string | undefined) => {
