@@ -1,90 +1,32 @@
 
+import React from 'react';
 import Navbar from "@/components/Navbar";
+import { ServiceRequestTable } from "@/components/service/ServiceRequestTable";
 import { Button } from "@/components/ui/button";
-import { Plus, Wrench } from "lucide-react";
+import { Plus } from "lucide-react";
 
-interface ServiceProps {
+interface ServicePageProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
 }
 
-const Service = ({ isCollapsed, setIsCollapsed }: ServiceProps) => {
+const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex relative">
+    <div className="min-h-screen bg-gray-50">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <main
-        className={`flex-1 transition-all duration-300 ${
-          isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
-        }`}
-      >
-        <div className="p-6 lg:p-8 max-w-[1600px] mx-auto">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            <div className="space-y-1">
-              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
-                Servis
-              </h1>
-              <p className="text-gray-600">
-                Servis işlemleri ve takibi
-              </p>
-            </div>
-            <Button className="flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200 bg-gradient-to-r from-primary to-primary/90">
-              <Plus className="h-4 w-4" />
-              <span>Yeni Servis Kaydı</span>
+      <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
+        <div className="container mx-auto p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-semibold">Service Management</h1>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" /> New Service Request
             </Button>
           </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="p-6 bg-gray-50/50 rounded-lg space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Aktif Servisler</span>
-                  <Wrench className="h-5 w-5 text-blue-500" />
-                </div>
-                <p className="text-2xl font-bold text-blue-600">24</p>
-                <span className="text-sm text-gray-500">Bu ay</span>
-              </div>
-              
-              <div className="p-6 bg-gray-50/50 rounded-lg space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Tamamlanan</span>
-                  <Wrench className="h-5 w-5 text-green-500" />
-                </div>
-                <p className="text-2xl font-bold text-green-600">156</p>
-                <span className="text-sm text-gray-500">Bu ay</span>
-              </div>
-              
-              <div className="p-6 bg-gray-50/50 rounded-lg space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Bekleyen</span>
-                  <Wrench className="h-5 w-5 text-orange-500" />
-                </div>
-                <p className="text-2xl font-bold text-orange-600">12</p>
-                <span className="text-sm text-gray-500">Bu ay</span>
-              </div>
-              
-              <div className="p-6 bg-gray-50/50 rounded-lg space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">İptal Edilen</span>
-                  <Wrench className="h-5 w-5 text-red-500" />
-                </div>
-                <p className="text-2xl font-bold text-red-600">3</p>
-                <span className="text-sm text-gray-500">Bu ay</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold mb-4">Son Servis Kayıtları</h2>
-            <div className="bg-gray-50/50 rounded-lg p-4">
-              <p className="text-gray-500 text-center py-8">
-                Henüz servis kaydı bulunmuyor
-              </p>
-            </div>
-          </div>
+          <ServiceRequestTable />
         </div>
       </main>
     </div>
   );
 };
 
-export default Service;
+export default ServicePage;

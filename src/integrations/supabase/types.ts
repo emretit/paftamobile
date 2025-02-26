@@ -606,6 +606,62 @@ export type Database = {
         }
         Relationships: []
       }
+      equipment: {
+        Row: {
+          created_at: string | null
+          customer_id: string | null
+          id: string
+          installation_date: string | null
+          maintenance_schedule: Json | null
+          model: string | null
+          name: string
+          serial_number: string | null
+          specifications: Json | null
+          status: string | null
+          updated_at: string | null
+          warranty_end: string | null
+          warranty_start: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          installation_date?: string | null
+          maintenance_schedule?: Json | null
+          model?: string | null
+          name: string
+          serial_number?: string | null
+          specifications?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          warranty_end?: string | null
+          warranty_start?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          installation_date?: string | null
+          maintenance_schedule?: Json | null
+          model?: string | null
+          name?: string
+          serial_number?: string | null
+          specifications?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          warranty_end?: string | null
+          warranty_start?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           assigned_to: string | null
@@ -1133,6 +1189,141 @@ export type Database = {
           },
         ]
       }
+      service_activities: {
+        Row: {
+          activity_type: string
+          created_at: string | null
+          description: string | null
+          end_time: string | null
+          id: string
+          labor_hours: number | null
+          location: string | null
+          materials_used: Json | null
+          performed_by: string | null
+          service_request_id: string | null
+          start_time: string | null
+          status: Database["public"]["Enums"]["service_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string | null
+          description?: string | null
+          end_time?: string | null
+          id?: string
+          labor_hours?: number | null
+          location?: string | null
+          materials_used?: Json | null
+          performed_by?: string | null
+          service_request_id?: string | null
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["service_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string | null
+          description?: string | null
+          end_time?: string | null
+          id?: string
+          labor_hours?: number | null
+          location?: string | null
+          materials_used?: Json | null
+          performed_by?: string | null
+          service_request_id?: string | null
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["service_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_activities_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_activities_service_request_id_fkey"
+            columns: ["service_request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_requests: {
+        Row: {
+          assigned_to: string | null
+          attachments: Json | null
+          created_at: string | null
+          customer_id: string | null
+          description: string | null
+          due_date: string | null
+          equipment_id: string | null
+          id: string
+          location: string | null
+          notes: string[] | null
+          priority: Database["public"]["Enums"]["service_priority"] | null
+          service_type: string | null
+          status: Database["public"]["Enums"]["service_status"] | null
+          title: string
+          updated_at: string | null
+          warranty_info: Json | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          attachments?: Json | null
+          created_at?: string | null
+          customer_id?: string | null
+          description?: string | null
+          due_date?: string | null
+          equipment_id?: string | null
+          id?: string
+          location?: string | null
+          notes?: string[] | null
+          priority?: Database["public"]["Enums"]["service_priority"] | null
+          service_type?: string | null
+          status?: Database["public"]["Enums"]["service_status"] | null
+          title: string
+          updated_at?: string | null
+          warranty_info?: Json | null
+        }
+        Update: {
+          assigned_to?: string | null
+          attachments?: Json | null
+          created_at?: string | null
+          customer_id?: string | null
+          description?: string | null
+          due_date?: string | null
+          equipment_id?: string | null
+          id?: string
+          location?: string | null
+          notes?: string[] | null
+          priority?: Database["public"]["Enums"]["service_priority"] | null
+          service_type?: string | null
+          status?: Database["public"]["Enums"]["service_status"] | null
+          title?: string
+          updated_at?: string | null
+          warranty_info?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_requests_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address: string | null
@@ -1410,6 +1601,14 @@ export type Database = {
         | "review"
         | "negotiation"
       sales_event_category: "proposal_deadline" | "sales_meeting" | "follow_up"
+      service_priority: "low" | "medium" | "high" | "urgent"
+      service_status:
+        | "new"
+        | "assigned"
+        | "in_progress"
+        | "on_hold"
+        | "completed"
+        | "cancelled"
       supplier_status: "aktif" | "pasif" | "potansiyel"
       supplier_type: "bireysel" | "kurumsal"
       task_priority: "low" | "medium" | "high"
