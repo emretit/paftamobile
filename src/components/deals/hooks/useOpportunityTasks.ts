@@ -25,19 +25,19 @@ const fetchAssignee = async (assigneeId: string): Promise<Assignee | undefined> 
   };
 };
 
-type DatabaseTask = {
+interface RawTask {
   id: string;
   title: string;
   description: string;
-  status: Task['status'];
+  status: 'todo' | 'in_progress' | 'completed';
   assignee_id?: string;
   due_date?: string;
-  priority: Task['priority'];
-  type: Task['type'];
+  priority: 'low' | 'medium' | 'high';
+  type: 'opportunity' | 'proposal' | 'general';
   opportunity_id?: string;
   created_at?: string;
   updated_at?: string;
-};
+}
 
 const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   const { data, error } = await supabase
@@ -50,16 +50,28 @@ const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   if (!data) return [];
 
   const enhancedTasks = await Promise.all(
-    (data as DatabaseTask[]).map(async (task) => {
-      const assignee = task.assignee_id 
-        ? await fetchAssignee(task.assignee_id)
+    data.map(async (rawTask: RawTask) => {
+      const assignee = rawTask.assignee_id 
+        ? await fetchAssignee(rawTask.assignee_id)
         : undefined;
 
-      return {
-        ...task,
-        item_type: "task" as const,
-        assignee
+      const task: Task = {
+        id: rawTask.id,
+        title: rawTask.title,
+        description: rawTask.description,
+        status: rawTask.status,
+        assignee_id: rawTask.assignee_id,
+        assignee,
+        due_date: rawTask.due_date,
+        priority: rawTask.priority,
+        type: rawTask.type,
+        item_type: 'task',
+        opportunity_id: rawTask.opportunity_id,
+        created_at: rawTask.created_at,
+        updated_at: rawTask.updated_at
       };
+
+      return task;
     })
   );
 
@@ -70,7 +82,7 @@ export const useOpportunityTasks = (opportunityId: string | undefined) => {
   return useQuery({
     queryKey: ['opportunity-tasks', opportunityId],
     queryFn: async () => {
-      if (!opportunityId) return [];
+      if (!opportunityId) return [] as Task[];
       return fetchTasks(opportunityId);
     },
     enabled: !!opportunityId
