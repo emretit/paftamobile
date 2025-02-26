@@ -29,7 +29,7 @@ interface TaskQueryResponse {
     first_name: string;
     last_name: string;
     avatar_url: string | null;
-  } | null;
+  };
   due_date?: string;
   priority: 'low' | 'medium' | 'high';
   type: 'opportunity' | 'proposal' | 'general';
@@ -68,7 +68,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
 
       if (error) throw error;
       
-      return (data as TaskQueryResponse[]).map(task => ({
+      return (data as unknown as TaskQueryResponse[]).map(task => ({
         ...task,
         item_type: "task" as const,
         assignee: task.assignee ? {
