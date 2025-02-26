@@ -55,11 +55,11 @@ const fetchTaskAssignee = async (assigneeId: string): Promise<TaskAssignee | und
 };
 
 export const useOpportunityTasks = (opportunityId: string | undefined) => {
-  return useQuery({
+  return useQuery<Task[], Error>({
     queryKey: ['opportunity-tasks', opportunityId],
     queryFn: async () => {
       if (!opportunityId) {
-        return [] as Task[];
+        return [];
       }
       
       const { data, error } = await supabase
@@ -69,23 +69,19 @@ export const useOpportunityTasks = (opportunityId: string | undefined) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      if (!data) return [] as Task[];
+      if (!data) return [];
 
-      const dbTasks = data as DatabaseTask[];
-      
-      const tasks = await Promise.all(
-        dbTasks.map(async (task) => {
-          const assignee = task.assignee_id 
-            ? await fetchTaskAssignee(task.assignee_id)
+      const tasks: Task[] = await Promise.all(
+        data.map(async (rawTask: DatabaseTask) => {
+          const assignee = rawTask.assignee_id 
+            ? await fetchTaskAssignee(rawTask.assignee_id)
             : undefined;
 
-          const processedTask: Task = {
-            ...task,
+          return {
+            ...rawTask,
             item_type: "task",
             assignee
           };
-
-          return processedTask;
         })
       );
 
