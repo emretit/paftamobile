@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useOpportunityTasks } from "@/hooks/useOpportunityTasks";
+import { supabase } from "@/integrations/supabase/client";
 import TaskCard from "../tasks/TaskCard";
 import type { Task } from "@/types/task";
 import type { Deal } from "@/types/deal";
@@ -29,22 +29,33 @@ const OpportunityTasks = ({ opportunity, tasks, onEditTask, onSelectTask }: Oppo
     due_date: "",
   });
 
-  const { createTask } = useOpportunityTasks();
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTask.title.trim()) {
       toast.error('Görev başlığı gerekli');
       return;
     }
 
-    createTask({
-      ...newTask,
-      opportunity_id: opportunity.id,
-    });
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .insert([{
+          ...newTask,
+          opportunity_id: opportunity.id,
+          status: 'todo',
+          type: 'opportunity',
+          item_type: 'task',
+        }]);
 
-    setNewTask({ title: "", description: "", due_date: "" });
-    setIsAdding(false);
+      if (error) throw error;
+
+      toast.success('Görev başarıyla oluşturuldu');
+      setNewTask({ title: "", description: "", due_date: "" });
+      setIsAdding(false);
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast.error('Görev oluşturulurken bir hata oluştu');
+    }
   };
 
   return (
