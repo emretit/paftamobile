@@ -8,7 +8,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { format } from "date-fns";
-import { Wrench, Clock, MapPin, WrenchIcon } from "lucide-react";
+import { 
+  Wrench, 
+  Clock, 
+  MapPin, 
+  WrenchIcon, 
+  UserCircle2, 
+  Tag,  
+  CheckCircle2,
+  AlertCircle
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface ServiceMaterial {
   name: string;
@@ -36,6 +46,32 @@ interface ServiceActivitiesListProps {
   serviceRequestId: string;
 }
 
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return 'bg-green-100 text-green-800';
+    case 'in_progress':
+      return 'bg-blue-100 text-blue-800';
+    case 'new':
+      return 'bg-purple-100 text-purple-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return <CheckCircle2 className="w-4 h-4" />;
+    case 'in_progress':
+      return <WrenchIcon className="w-4 h-4" />;
+    case 'new':
+      return <AlertCircle className="w-4 h-4" />;
+    default:
+      return null;
+  }
+};
+
 export function ServiceActivitiesList({ serviceRequestId }: ServiceActivitiesListProps) {
   const { data: activities, isLoading } = useQuery({
     queryKey: ['service-activities', serviceRequestId],
@@ -54,7 +90,6 @@ export function ServiceActivitiesList({ serviceRequestId }: ServiceActivitiesLis
 
       if (error) throw error;
       
-      // Type assertion to handle the JSON column
       const typedData = (data || []).map(item => ({
         ...item,
         materials_used: Array.isArray(item.materials_used) ? item.materials_used.map((m: any) => ({
@@ -69,47 +104,80 @@ export function ServiceActivitiesList({ serviceRequestId }: ServiceActivitiesLis
   });
 
   if (isLoading) {
-    return <div>Yükleniyor...</div>;
+    return (
+      <div className="flex items-center justify-center h-32">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   if (!activities?.length) {
-    return <div>Henüz servis aktivitesi kaydedilmemiş.</div>;
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <WrenchIcon className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+        <p>Henüz servis aktivitesi kaydedilmemiş.</p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-4">
       {activities.map((activity) => (
-        <Card key={activity.id}>
+        <Card key={activity.id} className="hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle className="flex items-center text-lg">
-              <Wrench className="w-5 h-5 mr-2" />
-              {activity.activity_type}
-            </CardTitle>
+            <div className="flex justify-between items-start">
+              <div className="flex items-center space-x-2">
+                <Wrench className="w-5 h-5 text-primary" />
+                <CardTitle className="text-lg">
+                  {activity.activity_type}
+                </CardTitle>
+              </div>
+              <Badge 
+                variant="secondary" 
+                className={`${getStatusColor(activity.status)} flex items-center gap-1`}
+              >
+                {getStatusIcon(activity.status)}
+                {activity.status === 'completed' ? 'Tamamlandı' : 
+                 activity.status === 'in_progress' ? 'Devam Ediyor' : 
+                 activity.status === 'new' ? 'Yeni' : activity.status}
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-gray-600">{activity.description}</p>
+            <p className="text-gray-600 whitespace-pre-wrap">{activity.description}</p>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div className="flex items-center">
-                <Clock className="w-4 h-4 mr-2" />
+              <div className="flex items-center text-gray-600">
+                <Clock className="w-4 h-4 mr-2 text-gray-400" />
                 {format(new Date(activity.start_time), 'dd.MM.yyyy HH:mm')}
               </div>
-              <div className="flex items-center">
-                <WrenchIcon className="w-4 h-4 mr-2" />
+              <div className="flex items-center text-gray-600">
+                <WrenchIcon className="w-4 h-4 mr-2 text-gray-400" />
                 {activity.labor_hours} saat
               </div>
-              <div className="flex items-center">
-                <MapPin className="w-4 h-4 mr-2" />
+              <div className="flex items-center text-gray-600">
+                <MapPin className="w-4 h-4 mr-2 text-gray-400" />
                 {activity.location}
               </div>
             </div>
 
+            {activity.employees && (
+              <div className="flex items-center text-sm text-gray-600 mt-2">
+                <UserCircle2 className="w-4 h-4 mr-2 text-gray-400" />
+                {activity.employees.first_name} {activity.employees.last_name}
+              </div>
+            )}
+
             {activity.materials_used && activity.materials_used.length > 0 && (
-              <div className="mt-4">
-                <h4 className="font-medium mb-2">Kullanılan Malzemeler:</h4>
-                <ul className="list-disc list-inside space-y-1">
+              <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2 flex items-center text-gray-700">
+                  <Tag className="w-4 h-4 mr-2" />
+                  Kullanılan Malzemeler:
+                </h4>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {activity.materials_used.map((material, index) => (
-                    <li key={index}>
+                    <li key={index} className="text-sm text-gray-600 flex items-center">
+                      <span className="w-2 h-2 bg-primary rounded-full mr-2"></span>
                       {material.name} - {material.quantity} {material.unit}
                     </li>
                   ))}
