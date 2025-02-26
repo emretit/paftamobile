@@ -18,18 +18,13 @@ interface DealDetailsModalProps {
   onClose: () => void;
 }
 
-interface TaskQueryResponse {
+// Separate interface for raw task data
+interface RawTask {
   id: string;
   title: string;
   description: string;
   status: 'todo' | 'in_progress' | 'completed';
   assignee_id?: string;
-  assignee?: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    avatar_url: string | null;
-  };
   due_date?: string;
   priority: 'low' | 'medium' | 'high';
   type: 'opportunity' | 'proposal' | 'general';
@@ -38,6 +33,14 @@ interface TaskQueryResponse {
   related_item_title?: string;
   created_at?: string;
   updated_at?: string;
+}
+
+// Separate interface for raw assignee data
+interface RawAssignee {
+  id: string;
+  first_name: string;
+  last_name: string;
+  avatar_url: string | null;
 }
 
 const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
@@ -60,15 +63,25 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
     queryFn: async () => {
       if (!deal?.id) return [];
       
-      const { data, error } = await supabase
+      // Fetch tasks with basic join
+      const { data: tasksData, error } = await supabase
         .from('tasks')
-        .select('*, assignee:assignee_id(id, first_name, last_name, avatar_url)')
+        .select(`
+          *,
+          assignee:assignee_id (
+            id,
+            first_name,
+            last_name,
+            avatar_url
+          )
+        `)
         .eq('opportunity_id', deal.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      return (data as unknown as TaskQueryResponse[]).map(task => ({
+
+      // Transform the data to match Task type
+      return (tasksData as (RawTask & { assignee: RawAssignee | null })[]).map(task => ({
         ...task,
         item_type: "task" as const,
         assignee: task.assignee ? {
