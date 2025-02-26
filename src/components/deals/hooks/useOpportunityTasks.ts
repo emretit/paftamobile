@@ -34,7 +34,7 @@ const fetchTaskAssignee = async (assigneeId: string) => {
 };
 
 export const useOpportunityTasks = (opportunityId: string | undefined) => {
-  return useQuery<Task[]>({
+  return useQuery({
     queryKey: ['opportunity-tasks', opportunityId],
     queryFn: async () => {
       if (!opportunityId) return [];
