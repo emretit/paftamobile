@@ -21,6 +21,23 @@ const fetchAssignee = async (assigneeId: string | null): Promise<TaskAssignee | 
   };
 };
 
+interface RawTask {
+  id: string;
+  title: string;
+  description: string;
+  status: Task['status'];
+  priority: Task['priority'];
+  type: Task['type'];
+  item_type?: string;
+  assignee_id?: string;
+  due_date?: string;
+  opportunity_id?: string;
+  related_item_id?: string;
+  related_item_title?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   const { data, error } = await supabase
     .from('tasks')
@@ -31,14 +48,14 @@ const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   if (error) throw error;
   if (!data) return [];
 
-  return Promise.all(data.map(async (task: any) => ({
+  const tasks = await Promise.all((data as RawTask[]).map(async (task) => ({
     id: task.id,
     title: task.title,
     description: task.description,
     status: task.status,
     priority: task.priority,
     type: task.type,
-    item_type: task.item_type || 'task',
+    item_type: task.item_type as Task['item_type'] || 'task',
     assignee_id: task.assignee_id,
     assignee: task.assignee_id ? await fetchAssignee(task.assignee_id) : undefined,
     due_date: task.due_date,
@@ -48,6 +65,8 @@ const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
     created_at: task.created_at,
     updated_at: task.updated_at
   })));
+
+  return tasks;
 };
 
 export const useOpportunityTasks = (opportunityId: string | undefined) => {
