@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -15,23 +14,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+import type { Task } from "@/types/task";
+
 interface TaskFormProps {
   isOpen: boolean;
   onClose: () => void;
   taskToEdit?: Task | null;
-}
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: "todo" | "in_progress" | "completed";
-  assignee_id?: string;
-  due_date?: string;
-  priority: "low" | "medium" | "high";
-  type: "opportunity" | "proposal" | "general";
-  related_item_id?: string;
-  related_item_title?: string;
 }
 
 const TaskForm = ({ isOpen, onClose, taskToEdit }: TaskFormProps) => {
@@ -39,12 +27,11 @@ const TaskForm = ({ isOpen, onClose, taskToEdit }: TaskFormProps) => {
   const [task, setTask] = useState<Partial<Task>>(taskToEdit || {
     title: "",
     description: "",
-    status: "todo",
-    priority: "medium",
-    type: "general"
+    status: "todo" as const,
+    priority: "medium" as const,
+    type: "general" as const
   });
 
-  // Fetch employees for assignment
   const { data: employees } = useQuery({
     queryKey: ['employees'],
     queryFn: async () => {
@@ -57,7 +44,6 @@ const TaskForm = ({ isOpen, onClose, taskToEdit }: TaskFormProps) => {
     }
   });
 
-  // Fetch opportunities and proposals for linking
   const { data: relatedItems } = useQuery({
     queryKey: ['related-items'],
     queryFn: async () => {
@@ -126,6 +112,10 @@ const TaskForm = ({ isOpen, onClose, taskToEdit }: TaskFormProps) => {
     }
   };
 
+  const handlePriorityChange = (value: string) => {
+    setTask(prev => ({ ...prev, priority: value as Task['priority'] }));
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
@@ -184,7 +174,7 @@ const TaskForm = ({ isOpen, onClose, taskToEdit }: TaskFormProps) => {
             <Label>Priority</Label>
             <Select
               value={task.priority}
-              onValueChange={(value) => setTask(prev => ({ ...prev, priority: value }))}
+              onValueChange={handlePriorityChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select priority" />

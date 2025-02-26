@@ -1,30 +1,13 @@
-
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Link as LinkIcon, Trash2 } from "lucide-react";
+import { Calendar, Link as LinkIcon, Trash2, Pencil } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: "todo" | "in_progress" | "completed";
-  assignee_id?: string;
-  assignee?: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-  due_date?: string;
-  priority: "low" | "medium" | "high";
-  type: "opportunity" | "proposal" | "general";
-  related_item_id?: string;
-  related_item_title?: string;
-}
+import { cn } from "@/lib/utils";
+import type { Task } from "@/types/task";
 
 interface TaskCardProps {
   task: Task;

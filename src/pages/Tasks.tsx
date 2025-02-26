@@ -9,9 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Filter, Plus } from "lucide-react";
 import TasksKanban from "@/components/tasks/TasksKanban";
 import TaskForm from "@/components/tasks/TaskForm";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Task } from "@/types/task";
 
 interface TasksProps {
   isCollapsed: boolean;

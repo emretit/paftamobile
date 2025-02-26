@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Clock, CheckCircle2, ListTodo } from "lucide-react";
@@ -6,24 +5,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import TaskColumn from "./TaskColumn";
 import { toast } from "sonner";
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: "todo" | "in_progress" | "completed";
-  assignee_id?: string;
-  due_date?: string;
-  priority: "low" | "medium" | "high";
-  type: "opportunity" | "proposal" | "general";
-  related_item_id?: string;
-  related_item_title?: string;
-}
+import type { Task } from "@/types/task";
 
 interface TasksKanbanProps {
   searchQuery: string;
   selectedEmployee: string | null;
   selectedType: string | null;
+  onEditTask?: (task: Task) => void;
 }
 
 const columns = [
@@ -32,7 +20,7 @@ const columns = [
   { id: "completed", title: "Tamamlandı", icon: CheckCircle2 },
 ];
 
-const TasksKanban = ({ searchQuery, selectedEmployee, selectedType }: TasksKanbanProps) => {
+const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask }: TasksKanbanProps) => {
   const queryClient = useQueryClient();
   const [tasks, setTasks] = useState<Task[]>([]);
 
@@ -55,7 +43,6 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType }: TasksKanba
     }
   }, [fetchedTasks]);
 
-  // Set up real-time subscription
   useEffect(() => {
     const channel = supabase
       .channel('tasks-changes')
@@ -103,7 +90,6 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType }: TasksKanba
       return;
     }
 
-    // Optimistically update the UI
     const newTasks = Array.from(tasks);
     const task = newTasks.find(t => t.id === draggableId);
     if (task) {
@@ -111,7 +97,6 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType }: TasksKanba
       setTasks(newTasks);
     }
 
-    // Update in the database
     await updateTaskMutation.mutateAsync({
       id: draggableId,
       status: destination.droppableId
