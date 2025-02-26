@@ -25,9 +25,10 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask }
   const queryClient = useQueryClient();
   const [tasks, setTasks] = useState<Task[]>([]);
 
-  const { data: fetchedTasks } = useQuery({
+  const { data: fetchedTasks, isLoading, error } = useQuery({
     queryKey: ['tasks'],
     queryFn: async () => {
+      console.log('Fetching tasks...');
       const { data: tasksData, error } = await supabase
         .from('tasks')
         .select(`
@@ -41,7 +42,12 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask }
         `)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching tasks:', error);
+        throw error;
+      }
+      
+      console.log('Fetched tasks:', tasksData);
       
       return tasksData.map(task => ({
         ...task,
@@ -56,6 +62,7 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask }
 
   useEffect(() => {
     if (fetchedTasks) {
+      console.log('Setting tasks:', fetchedTasks);
       setTasks(fetchedTasks);
     }
   }, [fetchedTasks]);
@@ -67,6 +74,7 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask }
         'postgres_changes',
         { event: '*', schema: 'public', table: 'tasks' },
         (payload) => {
+          console.log('Task changed:', payload);
           queryClient.invalidateQueries({ queryKey: ['tasks'] });
         }
       )
@@ -140,6 +148,30 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask }
       return task.status === status && matchesSearch && matchesEmployee && matchesType;
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[500px]">
+        <div className="text-gray-500">Loading tasks...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-[500px]">
+        <div className="text-red-500">Error loading tasks: {error.message}</div>
+      </div>
+    );
+  }
+
+  if (!tasks.length) {
+    return (
+      <div className="flex items-center justify-center h-[500px]">
+        <div className="text-gray-500">No tasks found. Create your first task!</div>
+      </div>
+    );
+  }
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
