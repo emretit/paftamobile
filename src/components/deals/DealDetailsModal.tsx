@@ -18,16 +18,15 @@ interface DealDetailsModalProps {
   onClose: () => void;
 }
 
-// Define explicit types for state
-type EditingState = { [K in keyof Deal]?: boolean };
-type EditValues = { [K in keyof Deal]?: Deal[K] };
+interface EditingState {
+  [key: string]: boolean;
+}
 
 const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
   if (!deal) return null;
 
-  // Initialize state with explicit types
   const [isEditing, setIsEditing] = useState<EditingState>({});
-  const [editValues, setEditValues] = useState<EditValues>(deal);
+  const [editValues, setEditValues] = useState<Partial<Deal>>(deal);
 
   const formatDate = (date: Date) => {
     return format(new Date(date), 'PP');
@@ -118,7 +117,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   field="value"
                   label="Fırsat Değeri"
                   value={`$${deal.value.toLocaleString()}`}
-                  isEditing={isEditing.value || false}
+                  isEditing={Boolean(isEditing.value)}
                   editValue={editValues.value}
                   onEdit={handleEdit}
                   onSave={handleSave}
@@ -130,7 +129,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   field="employeeName"
                   label="Satış Temsilcisi"
                   value={deal.employeeName}
-                  isEditing={isEditing.employeeName || false}
+                  isEditing={Boolean(isEditing.employeeName)}
                   editValue={editValues.employeeName}
                   onEdit={handleEdit}
                   onSave={handleSave}
@@ -162,7 +161,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   field="description"
                   label="Açıklama"
                   value={deal.description}
-                  isEditing={isEditing.description || false}
+                  isEditing={Boolean(isEditing.description)}
                   editValue={editValues.description}
                   onEdit={handleEdit}
                   onSave={handleSave}
@@ -177,7 +176,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   field="notes"
                   label="Notlar"
                   value={deal.notes}
-                  isEditing={isEditing.notes || false}
+                  isEditing={Boolean(isEditing.notes)}
                   editValue={editValues.notes}
                   onEdit={handleEdit}
                   onSave={handleSave}
@@ -192,7 +191,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   field="internalComments"
                   label="İç Notlar"
                   value={deal.internalComments}
-                  isEditing={isEditing.internalComments || false}
+                  isEditing={Boolean(isEditing.internalComments)}
                   editValue={editValues.internalComments}
                   onEdit={handleEdit}
                   onSave={handleSave}
