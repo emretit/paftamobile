@@ -18,8 +18,7 @@ interface DealDetailsModalProps {
   onClose: () => void;
 }
 
-// Separate interface for raw task data
-interface RawTask {
+type DatabaseTask = {
   id: string;
   title: string;
   description: string;
@@ -33,14 +32,6 @@ interface RawTask {
   related_item_title?: string;
   created_at?: string;
   updated_at?: string;
-}
-
-// Separate interface for raw assignee data
-interface RawAssignee {
-  id: string;
-  first_name: string;
-  last_name: string;
-  avatar_url: string | null;
 }
 
 const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
@@ -63,33 +54,47 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
     queryFn: async () => {
       if (!deal?.id) return [];
       
-      // Fetch tasks with basic join
-      const { data: tasksData, error } = await supabase
+      // First, get the tasks
+      const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
-        .select(`
-          *,
-          assignee:assignee_id (
-            id,
-            first_name,
-            last_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('opportunity_id', deal.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (tasksError) throw tasksError;
 
-      // Transform the data to match Task type
-      return (tasksData as (RawTask & { assignee: RawAssignee | null })[]).map(task => ({
-        ...task,
-        item_type: "task" as const,
-        assignee: task.assignee ? {
-          id: task.assignee.id,
-          name: `${task.assignee.first_name} ${task.assignee.last_name}`,
-          avatar: task.assignee.avatar_url
-        } : undefined
-      }));
+      const tasks = tasksData as DatabaseTask[];
+
+      // Then, for tasks with assignees, get the assignee information
+      const tasksWithAssignees = await Promise.all(
+        tasks.map(async (task) => {
+          if (!task.assignee_id) {
+            return {
+              ...task,
+              item_type: "task" as const,
+              assignee: undefined
+            };
+          }
+
+          const { data: assigneeData } = await supabase
+            .from('employees')
+            .select('id, first_name, last_name, avatar_url')
+            .eq('id', task.assignee_id)
+            .single();
+
+          return {
+            ...task,
+            item_type: "task" as const,
+            assignee: assigneeData ? {
+              id: assigneeData.id,
+              name: `${assigneeData.first_name} ${assigneeData.last_name}`,
+              avatar: assigneeData.avatar_url
+            } : undefined
+          };
+        })
+      );
+
+      return tasksWithAssignees;
     },
     enabled: !!deal?.id
   });
