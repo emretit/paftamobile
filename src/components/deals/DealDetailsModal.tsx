@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { Card } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useQuery } from "react-query";
 
 interface Deal {
   id: string;
@@ -133,6 +133,40 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
       </div>
     );
   };
+
+  const { data: tasks } = useQuery({
+    queryKey: ['opportunity-tasks', deal?.id],
+    queryFn: async () => {
+      if (!deal?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('tasks')
+        .select(`
+          *,
+          assignee:assignee_id (
+            id,
+            first_name,
+            last_name,
+            avatar_url
+          )
+        `)
+        .eq('opportunity_id', deal.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      return data.map(task => ({
+        ...task,
+        item_type: "task" as const,
+        assignee: task.assignee ? {
+          id: task.assignee.id,
+          name: `${task.assignee.first_name} ${task.assignee.last_name}`,
+          avatar: task.assignee.avatar_url
+        } : undefined
+      }));
+    },
+    enabled: !!deal?.id
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -275,6 +309,19 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   ))}
                 </div>
               </div>
+            )}
+
+            {deal && (
+              <OpportunityTasks
+                opportunity={deal}
+                tasks={tasks || []}
+                onEditTask={(task) => {
+                  console.log('Edit task:', task);
+                }}
+                onSelectTask={(task) => {
+                  console.log('Select task:', task);
+                }}
+              />
             )}
           </div>
         </ScrollArea>

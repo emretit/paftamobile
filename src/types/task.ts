@@ -14,6 +14,12 @@ export interface Task {
   priority: 'low' | 'medium' | 'high';
   type: 'opportunity' | 'proposal' | 'general';
   item_type: 'task' | 'opportunity';
+  opportunity_id?: string;
+  opportunity?: {
+    id: string;
+    title: string;
+    status: string;
+  };
   related_item_id?: string;
   related_item_title?: string;
   created_at?: string;
