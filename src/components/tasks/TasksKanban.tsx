@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Clock, CheckCircle2, ListTodo } from "lucide-react";
@@ -15,10 +16,10 @@ interface TasksKanbanProps {
 }
 
 const columns = [
-  { id: "todo", title: "Yapılacaklar", icon: ListTodo },
-  { id: "in_progress", title: "Devam Ediyor", icon: Clock },
-  { id: "completed", title: "Tamamlandı", icon: CheckCircle2 },
-];
+  { id: "todo" as const, title: "Yapılacaklar", icon: ListTodo },
+  { id: "in_progress" as const, title: "Devam Ediyor", icon: Clock },
+  { id: "completed" as const, title: "Tamamlandı", icon: CheckCircle2 },
+] as const;
 
 const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask }: TasksKanbanProps) => {
   const queryClient = useQueryClient();
@@ -77,7 +78,7 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask }
   }, [queryClient]);
 
   const updateTaskMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+    mutationFn: async ({ id, status }: { id: string; status: Task['status'] }) => {
       const { data, error } = await supabase
         .from('tasks')
         .update({ status })
@@ -106,10 +107,14 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask }
       return;
     }
 
+    const newStatus = destination.droppableId;
+    if (newStatus !== 'todo' && newStatus !== 'in_progress' && newStatus !== 'completed') {
+      return; // Invalid status
+    }
+
     const newTasks = Array.from(tasks);
     const task = newTasks.find(t => t.id === draggableId);
     if (task) {
-      const newStatus = destination.droppableId as 'todo' | 'in_progress' | 'completed';
       task.status = newStatus;
       setTasks(newTasks);
 
@@ -120,7 +125,7 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask }
     }
   };
 
-  const filterTasks = (status: string) => {
+  const filterTasks = (status: Task['status']) => {
     return tasks.filter(task => {
       const matchesSearch = !searchQuery || 
         task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
