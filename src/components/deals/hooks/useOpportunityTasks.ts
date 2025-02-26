@@ -19,7 +19,13 @@ interface DatabaseTask {
   updated_at?: string;
 }
 
-const fetchTaskAssignee = async (assigneeId: string) => {
+interface TaskAssignee {
+  id: string;
+  name: string;
+  avatar?: string;
+}
+
+const fetchTaskAssignee = async (assigneeId: string): Promise<TaskAssignee | undefined> => {
   const { data } = await supabase
     .from('employees')
     .select('id, first_name, last_name, avatar_url')
@@ -36,7 +42,7 @@ const fetchTaskAssignee = async (assigneeId: string) => {
 export const useOpportunityTasks = (opportunityId: string | undefined) => {
   return useQuery({
     queryKey: ['opportunity-tasks', opportunityId],
-    queryFn: async () => {
+    queryFn: async (): Promise<Task[]> => {
       if (!opportunityId) return [];
       
       const { data: tasksData, error } = await supabase
@@ -50,7 +56,7 @@ export const useOpportunityTasks = (opportunityId: string | undefined) => {
       const rawTasks = tasksData as DatabaseTask[];
       
       const processedTasks = await Promise.all(
-        rawTasks.map(async (task) => {
+        rawTasks.map(async (task): Promise<Task> => {
           const assignee = task.assignee_id 
             ? await fetchTaskAssignee(task.assignee_id)
             : undefined;
