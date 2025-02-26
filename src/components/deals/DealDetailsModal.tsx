@@ -22,11 +22,22 @@ interface EditingState {
   [key: string]: boolean;
 }
 
+function useEditableDeal(initialDeal: Deal | null) {
+  const [isEditing, setIsEditing] = useState<EditingState>({});
+  const [editValues, setEditValues] = useState<Partial<Deal>>(initialDeal || {});
+
+  return {
+    isEditing,
+    editValues,
+    setIsEditing,
+    setEditValues
+  };
+}
+
 const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
   if (!deal) return null;
 
-  const [isEditing, setIsEditing] = useState<EditingState>({});
-  const [editValues, setEditValues] = useState<Partial<Deal>>(deal);
+  const { isEditing, editValues, setIsEditing, setEditValues } = useEditableDeal(deal);
 
   const formatDate = (date: Date) => {
     return format(new Date(date), 'PP');
