@@ -24,7 +24,7 @@ const fetchAssignee = async (assigneeId: string | null): Promise<TaskAssignee | 
 const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   const { data, error } = await supabase
     .from('tasks')
-    .select('*, opportunities!inner(*)')
+    .select('*, opportunities(*)')  // Inner join'i kaldırdık
     .eq('opportunity_id', opportunityId)
     .order('created_at', { ascending: false });
 
@@ -32,7 +32,7 @@ const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   if (!data) return [];
 
   return Promise.all(
-    data.map(async (task) => ({
+    data.map(async (task: any) => ({
       id: task.id,
       title: task.title,
       description: task.description,
@@ -42,7 +42,7 @@ const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
       due_date: task.due_date ?? undefined,
       priority: task.priority,
       type: task.type,
-      item_type: task.item_type || 'task',
+      item_type: 'task',
       opportunity_id: task.opportunity_id,
       related_item_id: task.related_item_id ?? undefined,
       related_item_title: task.related_item_title ?? undefined,
