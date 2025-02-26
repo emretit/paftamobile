@@ -3,22 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Task } from "@/types/task";
 
-interface RawTask {
-  id: string;
-  title: string;
-  description: string;
-  status: 'todo' | 'in_progress' | 'completed';
-  assignee_id?: string;
-  due_date?: string;
-  priority: 'low' | 'medium' | 'high';
-  type: 'opportunity' | 'proposal' | 'general';
-  opportunity_id?: string;
-  related_item_id?: string;
-  related_item_title?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
 interface Assignee {
   id: string;
   name: string;
@@ -41,18 +25,6 @@ const fetchAssignee = async (assigneeId: string): Promise<Assignee | undefined> 
   };
 };
 
-const transformTask = async (rawTask: RawTask): Promise<Task> => {
-  const assignee = rawTask.assignee_id 
-    ? await fetchAssignee(rawTask.assignee_id)
-    : undefined;
-
-  return {
-    ...rawTask,
-    item_type: "task" as const,
-    assignee
-  };
-};
-
 const fetchTasks = async (opportunityId: string) => {
   const { data, error } = await supabase
     .from('tasks')
@@ -63,7 +35,20 @@ const fetchTasks = async (opportunityId: string) => {
   if (error) throw error;
   if (!data) return [] as Task[];
 
-  const tasks = await Promise.all(data.map(transformTask));
+  const tasks = await Promise.all(
+    data.map(async (rawTask) => {
+      const assignee = rawTask.assignee_id 
+        ? await fetchAssignee(rawTask.assignee_id)
+        : undefined;
+
+      return {
+        ...rawTask,
+        item_type: "task" as const,
+        assignee
+      } as Task;
+    })
+  );
+
   return tasks;
 };
 

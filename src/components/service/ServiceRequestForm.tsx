@@ -91,13 +91,17 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
 
   const onSubmit = async (data: FormData) => {
     try {
+      // Convert Date to ISO string for database storage
+      const formattedData = {
+        ...data,
+        due_date: data.due_date?.toISOString(),
+        status: 'new',
+        attachments: [],
+      };
+
       const { data: serviceRequest, error } = await supabase
         .from('service_requests')
-        .insert([{
-          ...data,
-          status: 'new',
-          attachments: [],
-        }])
+        .insert(formattedData)
         .select()
         .single();
 
