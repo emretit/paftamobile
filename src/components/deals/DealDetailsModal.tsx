@@ -40,15 +40,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
       
       const { data, error } = await supabase
         .from('tasks')
-        .select(`
-          *,
-          assignee:assignee_id (
-            id,
-            first_name,
-            last_name,
-            avatar_url
-          )
-        `)
+        .select('*, assignee:assignee_id(id, first_name, last_name, avatar_url)')
         .eq('opportunity_id', deal.id)
         .order('created_at', { ascending: false });
 
