@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { Card } from "@/components/ui/card";
@@ -17,11 +18,16 @@ interface DealDetailsModalProps {
   onClose: () => void;
 }
 
+// Define explicit types for state
+type EditingState = { [K in keyof Deal]?: boolean };
+type EditValues = { [K in keyof Deal]?: Deal[K] };
+
 const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
   if (!deal) return null;
 
-  const [isEditing, setIsEditing] = useState<Record<string, boolean>>({});
-  const [editValues, setEditValues] = useState<Partial<Deal>>(deal);
+  // Initialize state with explicit types
+  const [isEditing, setIsEditing] = useState<EditingState>({});
+  const [editValues, setEditValues] = useState<EditValues>(deal);
 
   const formatDate = (date: Date) => {
     return format(new Date(date), 'PP');
@@ -112,7 +118,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   field="value"
                   label="Fırsat Değeri"
                   value={`$${deal.value.toLocaleString()}`}
-                  isEditing={isEditing.value}
+                  isEditing={isEditing.value || false}
                   editValue={editValues.value}
                   onEdit={handleEdit}
                   onSave={handleSave}
@@ -124,7 +130,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   field="employeeName"
                   label="Satış Temsilcisi"
                   value={deal.employeeName}
-                  isEditing={isEditing.employeeName}
+                  isEditing={isEditing.employeeName || false}
                   editValue={editValues.employeeName}
                   onEdit={handleEdit}
                   onSave={handleSave}
@@ -156,40 +162,12 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   field="description"
                   label="Açıklama"
                   value={deal.description}
-                  isEditing={isEditing.description}
+                  isEditing={isEditing.description || false}
                   editValue={editValues.description}
                   onEdit={handleEdit}
                   onSave={handleSave}
                   onChange={handleChange}
                 />
-              </div>
-            )}
-
-            {deal.productServices && deal.productServices.length > 0 && (
-              <div>
-                <h3 className="font-medium text-gray-600 mb-2">Ürünler & Hizmetler</h3>
-                <div className="space-y-2">
-                  {deal.productServices.map((item: any) => (
-                    <div key={item.id} className="flex justify-between items-center">
-                      <span>{item.name}</span>
-                      <span>${item.price.toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {deal.nextSteps && deal.nextSteps.length > 0 && (
-              <div>
-                <h3 className="font-medium text-gray-600 mb-2">Sonraki Adımlar</h3>
-                <div className="space-y-2">
-                  {deal.nextSteps.map((step: any) => (
-                    <div key={step.id} className="flex justify-between items-center">
-                      <span>{step.action}</span>
-                      <span className="text-sm text-gray-500">{step.dueDate}</span>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
 
@@ -199,7 +177,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   field="notes"
                   label="Notlar"
                   value={deal.notes}
-                  isEditing={isEditing.notes}
+                  isEditing={isEditing.notes || false}
                   editValue={editValues.notes}
                   onEdit={handleEdit}
                   onSave={handleSave}
@@ -214,32 +192,12 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   field="internalComments"
                   label="İç Notlar"
                   value={deal.internalComments}
-                  isEditing={isEditing.internalComments}
+                  isEditing={isEditing.internalComments || false}
                   editValue={editValues.internalComments}
                   onEdit={handleEdit}
                   onSave={handleSave}
                   onChange={handleChange}
                 />
-              </div>
-            )}
-
-            {deal.proposalFiles && deal.proposalFiles.length > 0 && (
-              <div>
-                <h3 className="font-medium text-gray-600 mb-2">Teklif Dosyaları</h3>
-                <div className="space-y-2">
-                  {deal.proposalFiles.map((file: any) => (
-                    <div key={file.id} className="flex items-center gap-2">
-                      <a
-                        href={file.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
-                      >
-                        {file.name}
-                      </a>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
 
