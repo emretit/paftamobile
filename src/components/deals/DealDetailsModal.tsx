@@ -10,6 +10,7 @@ import { EditableField } from "./components/EditableField";
 import { DealHeader } from "./components/DealHeader";
 import { useDealEditing } from "./hooks/useDealEditing";
 import type { Deal } from "@/types/deal";
+import type { Task } from "@/types/task";
 
 interface DealDetailsModalProps {
   deal: Deal | null;
@@ -32,7 +33,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
     return format(new Date(date), 'PP');
   };
 
-  const { data: tasks } = useQuery({
+  const { data: tasks } = useQuery<Task[]>({
     queryKey: ['opportunity-tasks', deal?.id],
     queryFn: async () => {
       if (!deal?.id) return [];
@@ -61,7 +62,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
           name: `${task.assignee.first_name} ${task.assignee.last_name}`,
           avatar: task.assignee.avatar_url
         } : undefined
-      }));
+      })) as Task[];
     },
     enabled: !!deal?.id
   });
