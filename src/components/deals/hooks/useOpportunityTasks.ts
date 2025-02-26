@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Task, TaskAssignee } from "@/types/task";
 
-// Fetch assignee data
 const fetchAssignee = async (assigneeId: string | null): Promise<TaskAssignee | undefined> => {
   if (!assigneeId) return undefined;
   
@@ -22,20 +21,18 @@ const fetchAssignee = async (assigneeId: string | null): Promise<TaskAssignee | 
   };
 };
 
-// Fetch tasks
 const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   const { data, error } = await supabase
     .from('tasks')
-    .select('*')
+    .select('*, opportunities!inner(*)')
     .eq('opportunity_id', opportunityId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
   if (!data) return [];
 
-  // Process tasks with explicit typing
-  const processedTasks = await Promise.all(
-    data.map(async (task): Promise<Task> => ({
+  return Promise.all(
+    data.map(async (task) => ({
       id: task.id,
       title: task.title,
       description: task.description,
@@ -45,19 +42,16 @@ const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
       due_date: task.due_date ?? undefined,
       priority: task.priority,
       type: task.type,
-      item_type: 'task',
-      opportunity_id: task.opportunity_id ?? undefined,
+      item_type: task.item_type || 'task',
+      opportunity_id: task.opportunity_id,
       related_item_id: task.related_item_id ?? undefined,
       related_item_title: task.related_item_title ?? undefined,
       created_at: task.created_at ?? undefined,
       updated_at: task.updated_at ?? undefined
     }))
   );
-
-  return processedTasks;
 };
 
-// Hook with explicit return type
 export const useOpportunityTasks = (opportunityId: string | undefined) => {
   return useQuery({
     queryKey: ['opportunity-tasks', opportunityId],

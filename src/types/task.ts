@@ -15,7 +15,7 @@ export interface Task {
   due_date?: string;
   priority: 'low' | 'medium' | 'high';
   type: 'opportunity' | 'proposal' | 'general';
-  item_type: 'task';
+  item_type: 'task' | 'opportunity';  // opportunity tipini ekledik
   opportunity_id?: string;
   related_item_id?: string;
   related_item_title?: string;

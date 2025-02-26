@@ -20,7 +20,11 @@ export interface ServiceRequest {
   location?: string;
   due_date?: string;
   assignee_id?: string;
-  attachments?: ServiceRequestAttachment[];
+  assigned_to?: string;
+  equipment_id?: string;
+  notes?: string[];
+  warranty_info?: Record<string, any>;
+  attachments: ServiceRequestAttachment[];
   created_at?: string;
   updated_at?: string;
 }
