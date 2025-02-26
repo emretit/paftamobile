@@ -3,13 +3,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { format } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import OpportunityTasks from "./OpportunityTasks";
 import { EditableField } from "./components/EditableField";
 import { DealHeader } from "./components/DealHeader";
+import { useDealEditing } from "./hooks/useDealEditing";
 import type { Deal } from "@/types/deal";
 
 interface DealDetailsModalProps {
@@ -18,44 +16,19 @@ interface DealDetailsModalProps {
   onClose: () => void;
 }
 
-type EditableFields = Record<string, boolean>;
-
 const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
   if (!deal) return null;
 
-  const [editingFields, setEditingFields] = useState<EditableFields>({});
-  const [editValues, setEditValues] = useState(deal);
+  const {
+    editingFields,
+    editValues,
+    handleEdit,
+    handleChange,
+    handleSave
+  } = useDealEditing(deal);
 
   const formatDate = (date: Date) => {
     return format(new Date(date), 'PP');
-  };
-
-  const handleEdit = (field: keyof Deal) => {
-    setEditingFields(prev => ({ ...prev, [field]: true }));
-  };
-
-  const handleChange = (field: keyof Deal, value: string) => {
-    setEditValues(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSave = async (field: keyof Deal) => {
-    try {
-      const value = editValues[field];
-      if (value === undefined) return;
-
-      const { error } = await supabase
-        .from('deals')
-        .update({ [field]: value })
-        .eq('id', deal.id);
-
-      if (error) throw error;
-
-      setEditingFields(prev => ({ ...prev, [field]: false }));
-      toast.success('Değişiklikler kaydedildi');
-    } catch (error) {
-      console.error('Error updating deal:', error);
-      toast.error('Değişiklikler kaydedilirken bir hata oluştu');
-    }
   };
 
   const { data: tasks } = useQuery({
