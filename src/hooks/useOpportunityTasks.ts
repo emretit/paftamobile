@@ -46,7 +46,7 @@ export const useOpportunityTasks = () => {
   });
 
   const createAutoTasks = async (opportunityId: string, newStatus: string) => {
-    const autoTasks: Partial<CreateTaskInput>[] = [];
+    const autoTasks: Omit<CreateTaskInput, 'opportunity_id'>[] = [];
 
     switch (newStatus) {
       case 'negotiation':
@@ -81,7 +81,7 @@ export const useOpportunityTasks = () => {
       await createTaskMutation.mutateAsync({
         ...task,
         opportunity_id: opportunityId
-      } as CreateTaskInput);
+      });
     }
   };
 

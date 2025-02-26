@@ -57,10 +57,10 @@ export function ServiceActivitiesList({ serviceRequestId }: ServiceActivitiesLis
       // Type assertion to handle the JSON column
       const typedData = (data || []).map(item => ({
         ...item,
-        materials_used: Array.isArray(item.materials_used) ? item.materials_used.map(m => ({
-          name: String(m.name || ''),
-          quantity: Number(m.quantity || 0),
-          unit: String(m.unit || 'adet')
+        materials_used: Array.isArray(item.materials_used) ? item.materials_used.map((m: any) => ({
+          name: String(m?.name || ''),
+          quantity: Number(m?.quantity || 0),
+          unit: String(m?.unit || 'adet')
         })) : []
       })) as ServiceActivity[];
       
