@@ -30,46 +30,51 @@ const fetchTaskAssignee = async (assigneeId: string): Promise<TaskAssignee | und
     .from('employees')
     .select('id, first_name, last_name, avatar_url')
     .eq('id', assigneeId)
-    .single();
+    .maybeSingle();
   
-  return data ? {
+  if (!data) return undefined;
+  
+  return {
     id: data.id,
     name: `${data.first_name} ${data.last_name}`,
     avatar: data.avatar_url
-  } : undefined;
+  };
+};
+
+const processTask = async (task: DatabaseTask): Promise<Task> => {
+  let assignee: TaskAssignee | undefined;
+  
+  if (task.assignee_id) {
+    assignee = await fetchTaskAssignee(task.assignee_id);
+  }
+
+  return {
+    ...task,
+    item_type: "task" as const,
+    assignee
+  };
 };
 
 export const useOpportunityTasks = (opportunityId: string | undefined) => {
   return useQuery({
     queryKey: ['opportunity-tasks', opportunityId],
-    queryFn: async (): Promise<Task[]> => {
+    queryFn: async () => {
       if (!opportunityId) return [];
       
-      const { data: tasksData, error } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('opportunity_id', opportunityId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      if (!data) return [];
 
-      const rawTasks = tasksData as DatabaseTask[];
-      
-      const processedTasks = await Promise.all(
-        rawTasks.map(async (task): Promise<Task> => {
-          const assignee = task.assignee_id 
-            ? await fetchTaskAssignee(task.assignee_id)
-            : undefined;
-
-          return {
-            ...task,
-            item_type: "task" as const,
-            assignee
-          };
-        })
+      const tasks = await Promise.all(
+        (data as DatabaseTask[]).map(processTask)
       );
 
-      return processedTasks;
+      return tasks;
     },
     enabled: !!opportunityId
   });
