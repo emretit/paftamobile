@@ -41,11 +41,11 @@ const TaskCard = ({ task, onEdit, onSelect }: TaskCardProps) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "bg-red-100 text-red-700";
+        return "bg-red-100/80 text-red-700";
       case "medium":
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-[#FEF7CD] text-yellow-700";
       case "low":
-        return "bg-green-100 text-green-700";
+        return "bg-[#F2FCE2] text-green-700";
       default:
         return "bg-gray-100 text-gray-700";
     }
@@ -63,9 +63,9 @@ const TaskCard = ({ task, onEdit, onSelect }: TaskCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "border-l-green-500";
+        return "border-l-[#9b87f5]";
       case "in_progress":
-        return "border-l-blue-500";
+        return "border-l-[#0EA5E9]";
       default:
         return "border-l-gray-300";
     }
@@ -76,7 +76,7 @@ const TaskCard = ({ task, onEdit, onSelect }: TaskCardProps) => {
   return (
     <Card 
       className={cn(
-        "p-4 hover:shadow-md transition-all duration-200 bg-white border border-border/50 hover:border-border group cursor-pointer",
+        "p-4 hover:shadow-md transition-all duration-200 bg-white border border-border/50 hover:border-[#9b87f5]/30 group cursor-pointer",
         getStatusColor(task.status)
       )}
       onClick={() => onSelect?.(task)}
@@ -85,7 +85,7 @@ const TaskCard = ({ task, onEdit, onSelect }: TaskCardProps) => {
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-2">
             <div onClick={(e) => e.stopPropagation()} className="cursor-pointer">
-              <h3 className="font-medium text-gray-900 group-hover:text-primary transition-colors">
+              <h3 className="font-medium text-gray-900 group-hover:text-[#9b87f5] transition-colors">
                 {task.title}
               </h3>
               {task.description && (
@@ -110,7 +110,7 @@ const TaskCard = ({ task, onEdit, onSelect }: TaskCardProps) => {
           )}
 
           {task.type !== 'general' && (
-            <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-700">
+            <span className="inline-flex items-center px-2 py-1 bg-[#F1F0FB] text-[#7E69AB] rounded-full text-xs font-medium">
               {getTypeLabel(task.type)}
             </span>
           )}
@@ -130,7 +130,7 @@ const TaskCard = ({ task, onEdit, onSelect }: TaskCardProps) => {
 
           <div className="flex items-center gap-2">
             {task.related_item_id && (
-              <div className="flex items-center gap-1 text-xs text-blue-600">
+              <div className="flex items-center gap-1 text-xs text-[#9b87f5]">
                 <LinkIcon className="h-3 w-3" />
                 <span>{task.related_item_title}</span>
               </div>
@@ -139,7 +139,7 @@ const TaskCard = ({ task, onEdit, onSelect }: TaskCardProps) => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0"
+                className="h-7 w-7 p-0 hover:bg-[#F1F0FB] hover:text-[#9b87f5]"
                 onClick={(e) => {
                   e.stopPropagation();
                   onEdit?.(task);
@@ -150,7 +150,7 @@ const TaskCard = ({ task, onEdit, onSelect }: TaskCardProps) => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (confirm('Bu görevi silmek istediğinizden emin misiniz?')) {
