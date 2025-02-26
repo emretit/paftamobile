@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { Card } from "@/components/ui/card";
@@ -16,6 +15,28 @@ interface DealDetailsModalProps {
   deal: Deal | null;
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface TaskQueryResponse {
+  id: string;
+  title: string;
+  description: string;
+  status: 'todo' | 'in_progress' | 'completed';
+  assignee_id?: string;
+  assignee?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    avatar_url: string | null;
+  } | null;
+  due_date?: string;
+  priority: 'low' | 'medium' | 'high';
+  type: 'opportunity' | 'proposal' | 'general';
+  opportunity_id?: string;
+  related_item_id?: string;
+  related_item_title?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
@@ -46,7 +67,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
 
       if (error) throw error;
       
-      return data.map(task => ({
+      return (data as TaskQueryResponse[]).map(task => ({
         ...task,
         item_type: "task" as const,
         assignee: task.assignee ? {
@@ -54,7 +75,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
           name: `${task.assignee.first_name} ${task.assignee.last_name}`,
           avatar: task.assignee.avatar_url
         } : undefined
-      })) as Task[];
+      }));
     },
     enabled: !!deal?.id
   });
