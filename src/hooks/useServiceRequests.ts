@@ -15,6 +15,7 @@ interface ServiceRequest {
   description?: string;
   status: string;
   priority: string;
+  service_type: string;
   attachments: ServiceRequestAttachment[];
   notes?: string[];
   created_at?: string;
