@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Clock, CheckCircle2, ListTodo } from "lucide-react";
@@ -13,6 +12,7 @@ interface TasksKanbanProps {
   selectedEmployee: string | null;
   selectedType: string | null;
   onEditTask?: (task: Task) => void;
+  onSelectTask?: (task: Task) => void;
 }
 
 const columns = [
@@ -21,7 +21,7 @@ const columns = [
   { id: "completed" as const, title: "Tamamlandı", icon: CheckCircle2 },
 ] as const;
 
-const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask }: TasksKanbanProps) => {
+const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask, onSelectTask }: TasksKanbanProps) => {
   const queryClient = useQueryClient();
   const [tasks, setTasks] = useState<Task[]>([]);
 
@@ -183,6 +183,8 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask }
             title={column.title}
             icon={column.icon}
             tasks={filterTasks(column.id)}
+            onEdit={onEditTask}
+            onSelect={onSelectTask}
           />
         ))}
       </div>

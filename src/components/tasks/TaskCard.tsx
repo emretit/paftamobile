@@ -13,9 +13,10 @@ import type { Task } from "@/types/task";
 interface TaskCardProps {
   task: Task;
   onEdit?: (task: Task) => void;
+  onSelect?: (task: Task) => void;
 }
 
-const TaskCard = ({ task, onEdit }: TaskCardProps) => {
+const TaskCard = ({ task, onEdit, onSelect }: TaskCardProps) => {
   const queryClient = useQueryClient();
 
   const deleteTaskMutation = useMutation({
@@ -58,13 +59,16 @@ const TaskCard = ({ task, onEdit }: TaskCardProps) => {
   const isOverdue = task.due_date && isPast(new Date(task.due_date)) && task.status !== "completed";
 
   return (
-    <Card className={cn(
-      "p-4 hover:shadow-md transition-shadow bg-white border-l-4",
-      task.status === "completed" ? "border-l-green-500" : 
-      isOverdue ? "border-l-red-500" : 
-      task.priority === "high" ? "border-l-red-400" :
-      task.priority === "medium" ? "border-l-yellow-400" : "border-l-green-400"
-    )}>
+    <Card 
+      className={cn(
+        "p-4 hover:shadow-md transition-shadow bg-white border-l-4 cursor-pointer",
+        task.status === "completed" ? "border-l-green-500" : 
+        isOverdue ? "border-l-red-500" : 
+        task.priority === "high" ? "border-l-red-400" :
+        task.priority === "medium" ? "border-l-yellow-400" : "border-l-green-400"
+      )}
+      onClick={() => onSelect?.(task)}
+    >
       <div className="space-y-3">
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-3">
@@ -78,7 +82,10 @@ const TaskCard = ({ task, onEdit }: TaskCardProps) => {
               variant="ghost"
               size="sm"
               className="h-6 w-6 p-0"
-              onClick={() => onEdit?.(task)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.(task);
+              }}
             >
               <span className="sr-only">Edit</span>
               <Pencil className="h-4 w-4" />
@@ -87,7 +94,8 @@ const TaskCard = ({ task, onEdit }: TaskCardProps) => {
               variant="ghost"
               size="sm"
               className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 if (confirm('Are you sure you want to delete this task?')) {
                   deleteTaskMutation.mutate(task.id);
                 }

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Filter, Plus } from "lucide-react";
 import TasksKanban from "@/components/tasks/TasksKanban";
 import TaskForm from "@/components/tasks/TaskForm";
+import TaskDetailSheet from "@/components/tasks/TaskDetailSheet";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Task } from "@/types/task";
@@ -24,6 +25,7 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const { data: employees } = useQuery({
     queryKey: ['employees'],
@@ -40,6 +42,10 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
   const handleEditTask = (task: Task) => {
     setTaskToEdit(task);
     setIsTaskFormOpen(true);
+  };
+
+  const handleSelectTask = (task: Task) => {
+    setSelectedTask(task);
   };
 
   return (
@@ -119,6 +125,7 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
               selectedEmployee={selectedEmployee}
               selectedType={selectedType}
               onEditTask={handleEditTask}
+              onSelectTask={handleSelectTask}
             />
           </ScrollArea>
         </div>
@@ -130,6 +137,12 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
             setTaskToEdit(null);
           }}
           taskToEdit={taskToEdit}
+        />
+
+        <TaskDetailSheet
+          task={selectedTask}
+          isOpen={!!selectedTask}
+          onClose={() => setSelectedTask(null)}
         />
       </main>
     </div>
