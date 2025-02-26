@@ -28,7 +28,7 @@ const TaskForm = ({ isOpen, onClose, taskToEdit }: TaskFormProps) => {
     title: "",
     description: "",
     status: "todo" as const,
-    priority: "medium" as const,
+    priority: "low" as const,
     type: "general" as const
   });
 
@@ -63,7 +63,15 @@ const TaskForm = ({ isOpen, onClose, taskToEdit }: TaskFormProps) => {
       const { data, error } = await supabase
         .from('tasks')
         .insert([newTask])
-        .select()
+        .select(`
+          *,
+          assignee:assignee_id (
+            id,
+            first_name,
+            last_name,
+            avatar_url
+          )
+        `)
         .single();
       
       if (error) throw error;
@@ -86,7 +94,15 @@ const TaskForm = ({ isOpen, onClose, taskToEdit }: TaskFormProps) => {
         .from('tasks')
         .update(updatedTask)
         .eq('id', taskToEdit?.id)
-        .select()
+        .select(`
+          *,
+          assignee:assignee_id (
+            id,
+            first_name,
+            last_name,
+            avatar_url
+          )
+        `)
         .single();
       
       if (error) throw error;

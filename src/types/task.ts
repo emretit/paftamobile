@@ -5,6 +5,11 @@ export interface Task {
   description: string;
   status: 'todo' | 'in_progress' | 'completed';
   assignee_id?: string;
+  assignee?: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
   due_date?: string;
   priority: 'low' | 'medium' | 'high';
   type: 'opportunity' | 'proposal' | 'general';

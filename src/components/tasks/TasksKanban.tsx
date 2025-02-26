@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Clock, CheckCircle2, ListTodo } from "lucide-react";
@@ -27,13 +28,29 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask }
   const { data: fetchedTasks } = useQuery({
     queryKey: ['tasks'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: tasksData, error } = await supabase
         .from('tasks')
-        .select('*')
+        .select(`
+          *,
+          assignee:assignee_id (
+            id,
+            first_name,
+            last_name,
+            avatar_url
+          )
+        `)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Task[];
+      
+      return tasksData.map(task => ({
+        ...task,
+        assignee: task.assignee ? {
+          id: task.assignee.id,
+          name: `${task.assignee.first_name} ${task.assignee.last_name}`,
+          avatar: task.assignee.avatar_url
+        } : undefined
+      })) as Task[];
     }
   });
 
@@ -93,7 +110,7 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask }
     const newTasks = Array.from(tasks);
     const task = newTasks.find(t => t.id === draggableId);
     if (task) {
-      task.status = destination.droppableId;
+      task.status = destination.droppableId as Task['status'];
       setTasks(newTasks);
     }
 
