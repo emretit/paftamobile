@@ -24,32 +24,24 @@ const fetchAssignee = async (assigneeId: string | null): Promise<TaskAssignee | 
 const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   const { data, error } = await supabase
     .from('tasks')
-    .select('*, opportunities(*)')  // Inner join'i kaldırdık
+    .select('*')  // Basit sorgu yapalım
     .eq('opportunity_id', opportunityId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
   if (!data) return [];
 
-  return Promise.all(
-    data.map(async (task: any) => ({
-      id: task.id,
-      title: task.title,
-      description: task.description,
-      status: task.status,
-      assignee_id: task.assignee_id ?? undefined,
-      assignee: await fetchAssignee(task.assignee_id),
-      due_date: task.due_date ?? undefined,
-      priority: task.priority,
-      type: task.type,
-      item_type: 'task',
-      opportunity_id: task.opportunity_id,
-      related_item_id: task.related_item_id ?? undefined,
-      related_item_title: task.related_item_title ?? undefined,
-      created_at: task.created_at ?? undefined,
-      updated_at: task.updated_at ?? undefined
-    }))
-  );
+  return data.map((task: any) => ({
+    id: task.id,
+    title: task.title,
+    description: task.description,
+    status: task.status,
+    priority: task.priority,
+    type: task.type,
+    item_type: 'task',
+    created_at: task.created_at,
+    updated_at: task.updated_at
+  }));
 };
 
 export const useOpportunityTasks = (opportunityId: string | undefined) => {

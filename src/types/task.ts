@@ -10,15 +10,9 @@ export interface Task {
   title: string;
   description: string;
   status: 'todo' | 'in_progress' | 'completed';
-  assignee_id?: string;
-  assignee?: TaskAssignee;
-  due_date?: string;
   priority: 'low' | 'medium' | 'high';
   type: 'opportunity' | 'proposal' | 'general';
-  item_type: 'task';  // Sadece 'task' tipini bırakıyoruz
-  opportunity_id?: string;
-  related_item_id?: string;
-  related_item_title?: string;
+  item_type: 'task';
   created_at?: string;
   updated_at?: string;
 }
