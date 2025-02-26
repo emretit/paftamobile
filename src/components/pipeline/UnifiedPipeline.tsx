@@ -37,7 +37,6 @@ const UnifiedPipeline = ({
   const queryClient = useQueryClient();
   const [items, setItems] = useState<Task[]>([]);
 
-  // Fetch both tasks and deals
   const { data: fetchedItems, isLoading, error } = useQuery({
     queryKey: ['unified-pipeline'],
     queryFn: async () => {
@@ -74,18 +73,18 @@ const UnifiedPipeline = ({
                deal.status === "won" ? "completed" : "todo",
         assignee_id: deal.employee_id,
         due_date: deal.expected_close_date,
-        priority: deal.priority,
+        priority: deal.priority as Task['priority'],
         type: "opportunity",
-        item_type: "opportunity",
+        item_type: "opportunity" as const,
         related_item_id: deal.id,
         related_item_title: `${deal.title} (${new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(deal.value)})`,
         created_at: deal.created_at,
         updated_at: deal.updated_at
       }));
 
-      const tasks = tasksResponse.data.map(task => ({
+      const tasks: Task[] = tasksResponse.data.map(task => ({
         ...task,
-        item_type: "task",
+        item_type: "task" as const,
         assignee: task.assignee ? {
           id: task.assignee.id,
           name: `${task.assignee.first_name} ${task.assignee.last_name}`,
@@ -99,12 +98,10 @@ const UnifiedPipeline = ({
 
   useEffect(() => {
     if (fetchedItems) {
-      console.log('Setting items:', fetchedItems);
       setItems(fetchedItems);
     }
   }, [fetchedItems]);
 
-  // Set up realtime subscriptions
   useEffect(() => {
     const channel = supabase
       .channel('unified-pipeline-changes')
@@ -124,7 +121,7 @@ const UnifiedPipeline = ({
   }, [queryClient]);
 
   const updateItemMutation = useMutation({
-    mutationFn: async ({ id, status, itemType }: { id: string; status: Task['status']; itemType: string }) => {
+    mutationFn: async ({ id, status, itemType }: { id: string; status: Task['status']; itemType: Task['item_type'] }) => {
       if (itemType === "task") {
         const { data, error } = await supabase
           .from('tasks')
@@ -192,7 +189,7 @@ const UnifiedPipeline = ({
     return items.filter(item => {
       const matchesSearch = !searchQuery || 
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchQuery.toLowerCase());
+        (item.description?.toLowerCase() || '').includes(searchQuery.toLowerCase());
       
       const matchesEmployee = !selectedEmployee || 
         item.assignee_id === selectedEmployee;
