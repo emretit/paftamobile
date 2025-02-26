@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { format } from "date-fns";
-import { Wrench, Clock, MapPin, Tool } from "lucide-react";
+import { Wrench, Clock, MapPin, WrenchIcon } from "lucide-react";
 
 interface ServiceActivity {
   id: string;
@@ -24,6 +24,10 @@ interface ServiceActivity {
   start_time: string;
   status: string;
   performed_by?: string;
+  employees?: {
+    first_name: string;
+    last_name: string;
+  };
 }
 
 interface ServiceActivitiesListProps {
@@ -47,7 +51,14 @@ export function ServiceActivitiesList({ serviceRequestId }: ServiceActivitiesLis
         .order('start_time', { ascending: false });
 
       if (error) throw error;
-      return data as ServiceActivity[];
+      
+      // Type assertion to handle the JSON column
+      const typedData = (data || []).map(item => ({
+        ...item,
+        materials_used: Array.isArray(item.materials_used) ? item.materials_used : []
+      })) as ServiceActivity[];
+      
+      return typedData;
     }
   });
 
@@ -78,7 +89,7 @@ export function ServiceActivitiesList({ serviceRequestId }: ServiceActivitiesLis
                 {format(new Date(activity.start_time), 'dd.MM.yyyy HH:mm')}
               </div>
               <div className="flex items-center">
-                <Tool className="w-4 h-4 mr-2" />
+                <WrenchIcon className="w-4 h-4 mr-2" />
                 {activity.labor_hours} saat
               </div>
               <div className="flex items-center">

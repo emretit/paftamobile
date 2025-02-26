@@ -96,25 +96,33 @@ export function ServiceRequestTable() {
           </DialogHeader>
           
           {selectedRequest && (
-            isActivityFormOpen ? (
-              <ServiceActivityForm
-                serviceRequestId={selectedRequest}
-                onClose={() => setSelectedRequest(null)}
-                onSuccess={handleActivitySuccess}
-              />
-            ) : (
-              <>
-                <ServiceActivitiesList serviceRequestId={selectedRequest} />
-                <div className="flex justify-end mt-4">
-                  <Button
-                    onClick={() => setIsActivityFormOpen(true)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Yeni Aktivite Ekle
-                  </Button>
-                </div>
-              </>
-            )
+            <>
+              {serviceRequests?.find(r => r.id === selectedRequest)?.equipment_id && (
+                <WarrantyInfo 
+                  equipmentId={serviceRequests.find(r => r.id === selectedRequest)?.equipment_id} 
+                />
+              )}
+              
+              {isActivityFormOpen ? (
+                <ServiceActivityForm
+                  serviceRequestId={selectedRequest}
+                  onClose={() => setSelectedRequest(null)}
+                  onSuccess={handleActivitySuccess}
+                />
+              ) : (
+                <>
+                  <ServiceActivitiesList serviceRequestId={selectedRequest} />
+                  <div className="flex justify-end mt-4">
+                    <Button
+                      onClick={() => setIsActivityFormOpen(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Yeni Aktivite Ekle
+                    </Button>
+                  </div>
+                </>
+              )}
+            </>
           )}
         </DialogContent>
       </Dialog>
