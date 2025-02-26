@@ -47,6 +47,8 @@ const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
       type: task.type,
       item_type: 'task',
       opportunity_id: task.opportunity_id ?? undefined,
+      related_item_id: task.related_item_id ?? undefined,
+      related_item_title: task.related_item_title ?? undefined,
       created_at: task.created_at ?? undefined,
       updated_at: task.updated_at ?? undefined
     }))

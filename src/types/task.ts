@@ -15,13 +15,8 @@ export interface Task {
   due_date?: string;
   priority: 'low' | 'medium' | 'high';
   type: 'opportunity' | 'proposal' | 'general';
-  item_type: 'task' | 'opportunity';
+  item_type: 'task';
   opportunity_id?: string;
-  opportunity?: {
-    id: string;
-    title: string;
-    status: string;
-  };
   related_item_id?: string;
   related_item_title?: string;
   created_at?: string;
