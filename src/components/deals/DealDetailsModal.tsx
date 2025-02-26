@@ -7,8 +7,8 @@ import { DealMainInfo } from "./components/DealMainInfo";
 import { DealDates } from "./components/DealDates";
 import { DealTextFields } from "./components/DealTextFields";
 import { useDealEditing } from "./hooks/useDealEditing";
-import { useOpportunityTasks } from "./hooks/useOpportunityTasks";
 import type { Deal } from "@/types/deal";
+import type { Task } from "@/types/task";
 
 interface DealDetailsModalProps {
   deal: Deal | null;
@@ -27,7 +27,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
     handleSave
   } = useDealEditing(deal);
 
-  const { data: tasks } = useOpportunityTasks(deal.id);
+  const tasks: Task[] = []; // Temporarily empty array until we reimplement task functionality
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -68,7 +68,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
 
             <OpportunityTasks
               opportunity={deal}
-              tasks={tasks || []}
+              tasks={tasks}
               onEditTask={(task) => {
                 console.log('Edit task:', task);
               }}
