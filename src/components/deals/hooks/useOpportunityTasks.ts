@@ -1,43 +1,10 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-// Simple, flat type definitions without any nesting
-type TaskStatus = 'todo' | 'in_progress' | 'completed';
-type TaskPriority = 'low' | 'medium' | 'high';
-type TaskType = 'opportunity' | 'proposal' | 'general';
-
-// Simplified database interfaces
-interface RawTask {
-  id: string;
-  title: string;
-  description: string;
-  status: TaskStatus;
-  assignee_id: string | null;
-  due_date: string | null;
-  priority: TaskPriority;
-  type: TaskType;
-  opportunity_id: string | null;
-  created_at: string | null;
-  updated_at: string | null;
-}
-
-interface RawEmployee {
-  id: string;
-  first_name: string;
-  last_name: string;
-  avatar_url: string | null;
-}
-
-// Simple assignee object
-interface SimpleAssignee {
-  id: string;
-  name: string;
-  avatar: string | null;
-}
+import type { Task } from "@/types/task";
 
 // Fetch assignee data
-const fetchAssignee = async (assigneeId: string | null): Promise<SimpleAssignee | undefined> => {
+const fetchAssignee = async (assigneeId: string | null) => {
   if (!assigneeId) return undefined;
   
   const { data } = await supabase
@@ -56,7 +23,7 @@ const fetchAssignee = async (assigneeId: string | null): Promise<SimpleAssignee 
 };
 
 // Fetch tasks
-const fetchTasks = async (opportunityId: string) => {
+const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   const { data, error } = await supabase
     .from('tasks')
     .select('*')
@@ -68,13 +35,11 @@ const fetchTasks = async (opportunityId: string) => {
 
   // Process tasks
   const processedTasks = await Promise.all(
-    data.map(async (task: RawTask) => {
-      return {
-        ...task,
-        assignee: await fetchAssignee(task.assignee_id),
-        item_type: 'task' as const
-      };
-    })
+    data.map(async (task) => ({
+      ...task,
+      assignee: await fetchAssignee(task.assignee_id),
+      item_type: 'task' as const
+    }))
   );
 
   return processedTasks;
