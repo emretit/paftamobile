@@ -1,16 +1,16 @@
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { CalendarIcon } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -22,14 +22,26 @@ interface TaskFormProps {
   taskToEdit?: Task | null;
 }
 
+interface FormData {
+  title: string;
+  description: string;
+  priority: Task['priority'];
+  type: Task['type'];
+  assignee_id?: string;
+  due_date?: string;
+  related_item_id?: string;
+  related_item_title?: string;
+}
+
 const TaskForm = ({ isOpen, onClose, taskToEdit }: TaskFormProps) => {
   const queryClient = useQueryClient();
-  const [task, setTask] = useState<Partial<Task>>(taskToEdit || {
-    title: "",
-    description: "",
-    status: "todo" as const,
-    priority: "low" as const,
-    type: "general" as const
+  const { register, handleSubmit, setValue, reset, watch } = useForm<FormData>({
+    defaultValues: taskToEdit || {
+      title: "",
+      description: "",
+      priority: "medium",
+      type: "general",
+    }
   });
 
   const { data: employees } = useQuery({
@@ -59,244 +71,217 @@ const TaskForm = ({ isOpen, onClose, taskToEdit }: TaskFormProps) => {
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: async (newTask: Partial<Task>) => {
-      if (!newTask.title) throw new Error('Title is required');
-      
-      const taskToCreate = {
-        title: newTask.title,
-        description: newTask.description || '',
-        status: newTask.status || 'todo',
-        priority: newTask.priority || 'low',
-        type: newTask.type || 'general',
-        assignee_id: newTask.assignee_id,
-        due_date: newTask.due_date,
-        related_item_id: newTask.related_item_id,
-        related_item_title: newTask.related_item_title
-      };
-
-      const { data, error } = await supabase
+    mutationFn: async (data: FormData) => {
+      const { data: task, error } = await supabase
         .from('tasks')
-        .insert(taskToCreate)
-        .select(`
-          *,
-          assignee:assignee_id (
-            id,
-            first_name,
-            last_name,
-            avatar_url
-          )
-        `)
+        .insert([{
+          ...data,
+          status: 'todo'
+        }])
+        .select()
         .single();
-      
+
       if (error) throw error;
-      return data;
+      return task;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Task created successfully');
+      toast.success('Görev başarıyla oluşturuldu');
       onClose();
+      reset();
     },
     onError: (error) => {
-      toast.error('Failed to create task');
+      toast.error('Görev oluşturulurken bir hata oluştu');
       console.error('Error creating task:', error);
     }
   });
 
   const updateTaskMutation = useMutation({
-    mutationFn: async (updatedTask: Partial<Task>) => {
+    mutationFn: async (data: FormData) => {
       if (!taskToEdit?.id) throw new Error('Task ID is required for updates');
-      if (!updatedTask.title) throw new Error('Title is required');
 
-      const taskToUpdate = {
-        title: updatedTask.title,
-        description: updatedTask.description || '',
-        status: updatedTask.status || 'todo',
-        priority: updatedTask.priority || 'low',
-        type: updatedTask.type || 'general',
-        assignee_id: updatedTask.assignee_id,
-        due_date: updatedTask.due_date,
-        related_item_id: updatedTask.related_item_id,
-        related_item_title: updatedTask.related_item_title
-      };
-
-      const { data, error } = await supabase
+      const { data: task, error } = await supabase
         .from('tasks')
-        .update(taskToUpdate)
+        .update(data)
         .eq('id', taskToEdit.id)
-        .select(`
-          *,
-          assignee:assignee_id (
-            id,
-            first_name,
-            last_name,
-            avatar_url
-          )
-        `)
+        .select()
         .single();
-      
+
       if (error) throw error;
-      return data;
+      return task;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Task updated successfully');
+      toast.success('Görev başarıyla güncellendi');
       onClose();
+      reset();
     },
     onError: (error) => {
-      toast.error('Failed to update task');
+      toast.error('Görev güncellenirken bir hata oluştu');
       console.error('Error updating task:', error);
     }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!task.title) {
-      toast.error('Title is required');
-      return;
-    }
-    
+  const onSubmit = (data: FormData) => {
     if (taskToEdit) {
-      updateTaskMutation.mutate(task);
+      updateTaskMutation.mutate(data);
     } else {
-      createTaskMutation.mutate(task);
+      createTaskMutation.mutate(data);
     }
-  };
-
-  const handlePriorityChange = (value: string) => {
-    setTask(prev => ({ ...prev, priority: value as Task['priority'] }));
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            {taskToEdit ? 'Edit Task' : 'Create New Task'}
+            {taskToEdit ? 'Görevi Düzenle' : 'Yeni Görev Oluştur'}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">Başlık</Label>
             <Input
               id="title"
-              value={task.title}
-              onChange={(e) => setTask(prev => ({ ...prev, title: e.target.value }))}
-              required
+              {...register("title", { required: true })}
+              placeholder="Görev başlığını girin"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Açıklama</Label>
             <Textarea
               id="description"
-              value={task.description}
-              onChange={(e) => setTask(prev => ({ ...prev, description: e.target.value }))}
+              {...register("description")}
+              placeholder="Görev açıklamasını girin"
+              className="min-h-[100px]"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Due Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !task.due_date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {task.due_date ? format(new Date(task.due_date), "PPP") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={task.due_date ? new Date(task.due_date) : undefined}
-                  onSelect={(date) => setTask(prev => ({ ...prev, due_date: date?.toISOString() }))}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Öncelik</Label>
+              <Select
+                value={watch("priority")}
+                onValueChange={(value) => setValue("priority", value as Task["priority"])}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Öncelik seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Düşük</SelectItem>
+                  <SelectItem value="medium">Orta</SelectItem>
+                  <SelectItem value="high">Yüksek</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Tip</Label>
+              <Select
+                value={watch("type")}
+                onValueChange={(value) => setValue("type", value as Task["type"])}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Görev tipi seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="general">Genel</SelectItem>
+                  <SelectItem value="opportunity">Fırsat</SelectItem>
+                  <SelectItem value="proposal">Teklif</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Atanan Kişi</Label>
+              <Select
+                value={watch("assignee_id") || ""}
+                onValueChange={(value) => setValue("assignee_id", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Kişi seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees?.map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.first_name} {employee.last_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Bitiş Tarihi</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !watch("due_date") && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {watch("due_date") ? format(new Date(watch("due_date")), "PPP") : "Tarih seçin"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={watch("due_date") ? new Date(watch("due_date")) : undefined}
+                    onSelect={(date) => setValue("due_date", date?.toISOString())}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Priority</Label>
-            <Select
-              value={task.priority}
-              onValueChange={handlePriorityChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Assignee</Label>
-            <Select
-              value={task.assignee_id}
-              onValueChange={(value) => setTask(prev => ({ ...prev, assignee_id: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select assignee" />
-              </SelectTrigger>
-              <SelectContent>
-                {employees?.map((employee) => (
-                  <SelectItem key={employee.id} value={employee.id}>
-                    {employee.first_name} {employee.last_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Related Item</Label>
-            <Select
-              value={task.related_item_id}
-              onValueChange={(value) => {
-                const [type, id] = value.split(':');
-                const items = type === 'opportunity' ? relatedItems?.opportunities : relatedItems?.proposals;
-                const item = items?.find(i => i.id === id);
-                setTask(prev => ({
-                  ...prev,
-                  related_item_id: id,
-                  related_item_type: type,
-                  related_item_title: item?.title
-                }));
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Link to opportunity/proposal" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">None</SelectItem>
-                {relatedItems?.opportunities.map((opp) => (
-                  <SelectItem key={opp.id} value={`opportunity:${opp.id}`}>
-                    Opportunity: {opp.title}
-                  </SelectItem>
-                ))}
-                {relatedItems?.proposals.map((prop) => (
-                  <SelectItem key={prop.id} value={`proposal:${prop.id}`}>
-                    Proposal: {prop.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {watch("type") !== "general" && (
+            <div className="space-y-2">
+              <Label>İlişkili Öğe</Label>
+              <Select
+                value={watch("related_item_id") || ""}
+                onValueChange={(value) => {
+                  const [type, id] = value.split(':');
+                  let title = "";
+                  if (type === "opportunity") {
+                    title = relatedItems?.opportunities.find(o => o.id === id)?.title || "";
+                  } else if (type === "proposal") {
+                    title = relatedItems?.proposals.find(p => p.id === id)?.title || "";
+                  }
+                  setValue("related_item_id", id);
+                  setValue("related_item_title", title);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="İlişkili öğe seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {watch("type") === "opportunity" && relatedItems?.opportunities.map((opp) => (
+                    <SelectItem key={opp.id} value={`opportunity:${opp.id}`}>
+                      {opp.title}
+                    </SelectItem>
+                  ))}
+                  {watch("type") === "proposal" && relatedItems?.proposals.map((prop) => (
+                    <SelectItem key={prop.id} value={`proposal:${prop.id}`}>
+                      {prop.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              İptal
             </Button>
             <Button type="submit">
-              {taskToEdit ? 'Update' : 'Create'} Task
+              {taskToEdit ? 'Güncelle' : 'Oluştur'}
             </Button>
           </div>
         </form>
