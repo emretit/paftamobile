@@ -1,30 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-// Explicitly define the assignee type
-interface TaskAssignee {
-  id: string;
-  name: string;
-  avatar?: string;
-}
-
-// Explicitly define the processed task type
-interface ProcessedTask {
-  id: string;
-  title: string;
-  description: string;
-  status: 'todo' | 'in_progress' | 'completed';
-  assignee_id?: string;
-  assignee?: TaskAssignee;
-  due_date?: string;
-  priority: 'low' | 'medium' | 'high';
-  type: 'opportunity' | 'proposal' | 'general';
-  item_type: 'task';
-  opportunity_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
+import type { Task, TaskAssignee } from "@/types/task";
 
 // Fetch assignee data
 const fetchAssignee = async (assigneeId: string | null): Promise<TaskAssignee | undefined> => {
@@ -46,7 +23,7 @@ const fetchAssignee = async (assigneeId: string | null): Promise<TaskAssignee | 
 };
 
 // Fetch tasks
-const fetchTasks = async (opportunityId: string): Promise<ProcessedTask[]> => {
+const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   const { data, error } = await supabase
     .from('tasks')
     .select('*')
@@ -58,7 +35,7 @@ const fetchTasks = async (opportunityId: string): Promise<ProcessedTask[]> => {
 
   // Process tasks with explicit typing
   const processedTasks = await Promise.all(
-    data.map(async (task): Promise<ProcessedTask> => ({
+    data.map(async (task): Promise<Task> => ({
       id: task.id,
       title: task.title,
       description: task.description,
@@ -82,7 +59,7 @@ const fetchTasks = async (opportunityId: string): Promise<ProcessedTask[]> => {
 export const useOpportunityTasks = (opportunityId: string | undefined) => {
   return useQuery({
     queryKey: ['opportunity-tasks', opportunityId],
-    queryFn: async (): Promise<ProcessedTask[]> => {
+    queryFn: async (): Promise<Task[]> => {
       if (!opportunityId) return [];
       return fetchTasks(opportunityId);
     },

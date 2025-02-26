@@ -1,15 +1,17 @@
 
+export interface TaskAssignee {
+  id: string;
+  name: string;
+  avatar?: string;
+}
+
 export interface Task {
   id: string;
   title: string;
   description: string;
   status: 'todo' | 'in_progress' | 'completed';
   assignee_id?: string;
-  assignee?: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
+  assignee?: TaskAssignee;
   due_date?: string;
   priority: 'low' | 'medium' | 'high';
   type: 'opportunity' | 'proposal' | 'general';
