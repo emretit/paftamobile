@@ -30,21 +30,25 @@ const TaskCard = ({ task, onEdit, onSelect }: TaskCardProps) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Task deleted successfully');
+      toast.success('Görev başarıyla silindi');
     },
     onError: (error) => {
-      toast.error('Failed to delete task');
+      toast.error('Görev silinirken bir hata oluştu');
       console.error('Error deleting task:', error);
     }
   });
 
   const getPriorityColor = (priority: string) => {
-    const colors = {
-      high: "bg-red-100 text-red-700",
-      medium: "bg-yellow-100 text-yellow-700",
-      low: "bg-green-100 text-green-700",
-    };
-    return colors[priority as keyof typeof colors] || "bg-gray-100 text-gray-700";
+    switch (priority) {
+      case "high":
+        return "bg-red-100 text-red-700";
+      case "medium":
+        return "bg-yellow-100 text-yellow-700";
+      case "low":
+        return "bg-green-100 text-green-700";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
   };
 
   const getTypeLabel = (type: string) => {
@@ -56,78 +60,63 @@ const TaskCard = ({ task, onEdit, onSelect }: TaskCardProps) => {
     return labels[type as keyof typeof labels] || type;
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "border-l-green-500";
+      case "in_progress":
+        return "border-l-blue-500";
+      default:
+        return "border-l-gray-300";
+    }
+  };
+
   const isOverdue = task.due_date && isPast(new Date(task.due_date)) && task.status !== "completed";
 
   return (
     <Card 
       className={cn(
-        "p-4 hover:shadow-md transition-shadow bg-white border-l-4 cursor-pointer",
-        task.status === "completed" ? "border-l-green-500" : 
-        isOverdue ? "border-l-red-500" : 
-        task.priority === "high" ? "border-l-red-400" :
-        task.priority === "medium" ? "border-l-yellow-400" : "border-l-green-400"
+        "p-4 hover:shadow-md transition-all duration-200 bg-white border border-border/50 hover:border-border group cursor-pointer",
+        getStatusColor(task.status)
       )}
       onClick={() => onSelect?.(task)}
     >
-      <div className="space-y-3">
-        <div className="flex justify-between items-start">
-          <div className="flex items-center gap-3">
-            <h3 className="font-medium text-gray-900">{task.title}</h3>
-            <span className={`px-2 py-0.5 rounded-full text-xs ${getPriorityColor(task.priority)}`}>
-              {task.priority}
-            </span>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-2">
+            <div onClick={(e) => e.stopPropagation()} className="cursor-pointer">
+              <h3 className="font-medium text-gray-900 group-hover:text-primary transition-colors">
+                {task.title}
+              </h3>
+              {task.description && (
+                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit?.(task);
-              }}
-            >
-              <span className="sr-only">Edit</span>
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (confirm('Are you sure you want to delete this task?')) {
-                  deleteTaskMutation.mutate(task.id);
-                }
-              }}
-            >
-              <span className="sr-only">Delete</span>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+          <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(task.priority)}`}>
+            {task.priority === "high" ? "Yüksek" : task.priority === "medium" ? "Orta" : "Düşük"}
+          </span>
         </div>
-        
-        {task.description && (
-          <p className="text-sm text-gray-600">{task.description}</p>
-        )}
 
-        <div className="flex flex-wrap items-center gap-4 text-sm">
+        <div className="flex flex-wrap items-center gap-3 mt-2">
           {task.assignee && (
             <div className="flex items-center gap-2">
               <Avatar className="h-6 w-6">
                 <AvatarImage src={task.assignee.avatar} />
                 <AvatarFallback>{task.assignee.name.charAt(0)}</AvatarFallback>
               </Avatar>
-              <span className="text-gray-600">{task.assignee.name}</span>
+              <span className="text-sm text-gray-600">{task.assignee.name}</span>
             </div>
           )}
 
           {task.type !== 'general' && (
-            <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded-full text-xs">
+            <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-700">
               {getTypeLabel(task.type)}
             </span>
           )}
+        </div>
 
+        <div className="flex items-center justify-between mt-2">
           {task.due_date && (
             <div className={cn(
               "flex items-center gap-1 text-xs",
@@ -139,12 +128,40 @@ const TaskCard = ({ task, onEdit, onSelect }: TaskCardProps) => {
             </div>
           )}
 
-          {task.related_item_id && (
-            <div className="flex items-center gap-1 text-xs text-blue-600">
-              <LinkIcon className="h-3 w-3" />
-              <span>{task.related_item_title}</span>
+          <div className="flex items-center gap-2">
+            {task.related_item_id && (
+              <div className="flex items-center gap-1 text-xs text-blue-600">
+                <LinkIcon className="h-3 w-3" />
+                <span>{task.related_item_title}</span>
+              </div>
+            )}
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.(task);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm('Bu görevi silmek istediğinizden emin misiniz?')) {
+                    deleteTaskMutation.mutate(task.id);
+                  }
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </Card>

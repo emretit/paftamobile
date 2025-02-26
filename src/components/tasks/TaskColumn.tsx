@@ -28,7 +28,7 @@ const TaskColumn = ({ id, title, icon: Icon, tasks, onEdit, onSelect }: TaskColu
             ref={provided.innerRef}
             {...provided.droppableProps}
             className={`space-y-4 min-h-[500px] p-4 rounded-lg ${
-              snapshot.isDraggingOver ? "bg-gray-100" : "bg-gray-50"
+              snapshot.isDraggingOver ? "bg-gray-100/80" : "bg-gray-50/50"
             }`}
           >
             {tasks.map((task, index) => (
