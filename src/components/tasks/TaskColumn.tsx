@@ -2,32 +2,18 @@
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { LucideIcon } from "lucide-react";
 import TaskCard from "./TaskCard";
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: "todo" | "in_progress" | "completed";
-  assignee?: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-  dueDate?: string;
-  priority: "low" | "medium" | "high";
-  type: "opportunity" | "proposal" | "general";
-  relatedItemId?: string;
-  relatedItemTitle?: string;
-}
+import type { Task } from "@/types/task";
 
 interface TaskColumnProps {
   id: string;
   title: string;
   icon: LucideIcon;
   tasks: Task[];
+  onEdit?: (task: Task) => void;
+  onSelect?: (task: Task) => void;
 }
 
-const TaskColumn = ({ id, title, icon: Icon, tasks }: TaskColumnProps) => {
+const TaskColumn = ({ id, title, icon: Icon, tasks, onEdit, onSelect }: TaskColumnProps) => {
   return (
     <div className="flex-1 min-w-[300px]">
       <div className="flex items-center gap-2 mb-4">
@@ -54,7 +40,7 @@ const TaskColumn = ({ id, title, icon: Icon, tasks }: TaskColumnProps) => {
                     {...provided.dragHandleProps}
                     className={snapshot.isDragging ? "shadow-lg" : ""}
                   >
-                    <TaskCard task={task} />
+                    <TaskCard task={task} onEdit={onEdit} onSelect={onSelect} />
                   </div>
                 )}
               </Draggable>
