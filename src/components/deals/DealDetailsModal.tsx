@@ -18,13 +18,16 @@ interface DealDetailsModalProps {
   onClose: () => void;
 }
 
-type EditableFields = { [K in keyof Deal]?: boolean };
+// Move type definitions outside component
+type EditableFields = Record<string, boolean>;
+type EditableValues = Partial<Deal>;
 
 const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
   if (!deal) return null;
 
+  // Initialize state with simpler types
   const [isEditing, setIsEditing] = useState<EditableFields>({});
-  const [editValues, setEditValues] = useState<Deal>(deal);
+  const [editValues, setEditValues] = useState<EditableValues>(deal);
 
   const formatDate = (date: Date) => {
     return format(new Date(date), 'PP');
@@ -56,9 +59,12 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
 
   const handleSave = async (field: keyof Deal) => {
     try {
+      const value = editValues[field];
+      if (value === undefined) return;
+
       const { error } = await supabase
         .from('deals')
-        .update({ [field]: editValues[field] })
+        .update({ [field]: value })
         .eq('id', deal.id);
 
       if (error) throw error;
