@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { format } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
@@ -18,32 +18,24 @@ interface DealDetailsModalProps {
   onClose: () => void;
 }
 
-// Using a Map to store editing state
+type EditableFields = Record<string, boolean>;
+
 const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
   if (!deal) return null;
 
-  const [editingFields, setEditingFields] = useState<Set<string>>(new Set());
-  const [editValues, setEditValues] = useState<Record<string, any>>(deal);
-
-  const isFieldEditing = useCallback((field: string) => editingFields.has(field), [editingFields]);
+  const [editingFields, setEditingFields] = useState<EditableFields>({});
+  const [editValues, setEditValues] = useState(deal);
 
   const formatDate = (date: Date) => {
     return format(new Date(date), 'PP');
   };
 
   const handleEdit = (field: keyof Deal) => {
-    setEditingFields(prev => {
-      const next = new Set(prev);
-      next.add(field);
-      return next;
-    });
+    setEditingFields(prev => ({ ...prev, [field]: true }));
   };
 
   const handleChange = (field: keyof Deal, value: string) => {
-    setEditValues(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setEditValues(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async (field: keyof Deal) => {
@@ -58,11 +50,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
 
       if (error) throw error;
 
-      setEditingFields(prev => {
-        const next = new Set(prev);
-        next.delete(field);
-        return next;
-      });
+      setEditingFields(prev => ({ ...prev, [field]: false }));
       toast.success('Değişiklikler kaydedildi');
     } catch (error) {
       console.error('Error updating deal:', error);
@@ -114,7 +102,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
           <div className="space-y-6">
             <DealHeader
               deal={deal}
-              isEditing={Object.fromEntries([...editingFields].map(field => [field, true]))}
+              isEditing={editingFields}
               editValues={editValues}
               onEdit={handleEdit}
               onSave={handleSave}
@@ -127,7 +115,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   field="value"
                   label="Fırsat Değeri"
                   value={`$${deal.value.toLocaleString()}`}
-                  isEditing={isFieldEditing('value')}
+                  isEditing={!!editingFields.value}
                   editValue={editValues.value}
                   onEdit={handleEdit}
                   onSave={handleSave}
@@ -139,7 +127,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   field="employeeName"
                   label="Satış Temsilcisi"
                   value={deal.employeeName}
-                  isEditing={isFieldEditing('employeeName')}
+                  isEditing={!!editingFields.employeeName}
                   editValue={editValues.employeeName}
                   onEdit={handleEdit}
                   onSave={handleSave}
@@ -171,7 +159,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   field="description"
                   label="Açıklama"
                   value={deal.description}
-                  isEditing={isFieldEditing('description')}
+                  isEditing={!!editingFields.description}
                   editValue={editValues.description}
                   onEdit={handleEdit}
                   onSave={handleSave}
@@ -186,7 +174,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   field="notes"
                   label="Notlar"
                   value={deal.notes}
-                  isEditing={isFieldEditing('notes')}
+                  isEditing={!!editingFields.notes}
                   editValue={editValues.notes}
                   onEdit={handleEdit}
                   onSave={handleSave}
@@ -201,7 +189,7 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
                   field="internalComments"
                   label="İç Notlar"
                   value={deal.internalComments}
-                  isEditing={isFieldEditing('internalComments')}
+                  isEditing={!!editingFields.internalComments}
                   editValue={editValues.internalComments}
                   onEdit={handleEdit}
                   onSave={handleSave}
