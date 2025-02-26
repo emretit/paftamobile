@@ -49,6 +49,22 @@ const statusColors = {
   cancelled: "bg-gray-100 text-gray-800",
 };
 
+const statusLabels = {
+  new: "Yeni",
+  assigned: "Atandı",
+  in_progress: "Devam Ediyor",
+  on_hold: "Beklemede",
+  completed: "Tamamlandı",
+  cancelled: "İptal Edildi",
+};
+
+const priorityLabels = {
+  low: "Düşük",
+  medium: "Orta",
+  high: "Yüksek",
+  urgent: "Acil",
+};
+
 export function ServiceRequestTable() {
   const { data: serviceRequests, isLoading } = useQuery({
     queryKey: ['service-requests'],
@@ -68,7 +84,7 @@ export function ServiceRequestTable() {
   });
 
   if (isLoading) {
-    return <div>Loading service requests...</div>;
+    return <div>Servis talepleri yükleniyor...</div>;
   }
 
   return (
@@ -76,13 +92,13 @@ export function ServiceRequestTable() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Customer</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Priority</TableHead>
-            <TableHead>Assigned To</TableHead>
-            <TableHead>Due Date</TableHead>
-            <TableHead>Location</TableHead>
+            <TableHead>Başlık</TableHead>
+            <TableHead>Müşteri</TableHead>
+            <TableHead>Durum</TableHead>
+            <TableHead>Öncelik</TableHead>
+            <TableHead>Atanan Kişi</TableHead>
+            <TableHead>Termin Tarihi</TableHead>
+            <TableHead>Konum</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -92,12 +108,12 @@ export function ServiceRequestTable() {
               <TableCell>{request.customer?.name}</TableCell>
               <TableCell>
                 <Badge variant="secondary" className={statusColors[request.status as keyof typeof statusColors]}>
-                  {request.status}
+                  {statusLabels[request.status as keyof typeof statusLabels]}
                 </Badge>
               </TableCell>
               <TableCell>
                 <Badge variant="secondary" className={priorityColors[request.priority as keyof typeof priorityColors]}>
-                  {request.priority}
+                  {priorityLabels[request.priority as keyof typeof priorityLabels]}
                 </Badge>
               </TableCell>
               <TableCell>
@@ -105,19 +121,19 @@ export function ServiceRequestTable() {
                   <User className="h-4 w-4" />
                   {request.technician 
                     ? `${request.technician.first_name} ${request.technician.last_name}` 
-                    : 'Unassigned'}
+                    : 'Atanmadı'}
                 </div>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  {request.due_date ? new Date(request.due_date).toLocaleDateString() : 'Not set'}
+                  {request.due_date ? new Date(request.due_date).toLocaleDateString('tr-TR') : 'Belirlenmedi'}
                 </div>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
-                  {request.location || 'No location'}
+                  {request.location || 'Konum yok'}
                 </div>
               </TableCell>
             </TableRow>

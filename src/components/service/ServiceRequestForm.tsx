@@ -46,13 +46,20 @@ interface ServiceRequestFormProps {
 }
 
 const serviceTypes = [
-  'Installation',
-  'Repair',
-  'Maintenance',
-  'Support',
-  'Training',
-  'Inspection',
+  'Kurulum',
+  'Onarım',
+  'Bakım',
+  'Destek',
+  'Eğitim',
+  'İnceleme',
 ];
+
+const priorityLabels = {
+  low: 'Düşük',
+  medium: 'Orta',
+  high: 'Yüksek',
+  urgent: 'Acil'
+};
 
 export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
   const [files, setFiles] = useState<File[]>([]);
@@ -76,7 +83,7 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
           .upload(fileName, file);
 
         if (error) {
-          console.error('Error uploading file:', error);
+          console.error('Dosya yükleme hatası:', error);
           return null;
         }
 
@@ -120,11 +127,11 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
         if (updateError) throw updateError;
       }
 
-      toast.success("Service request created successfully");
+      toast.success("Servis talebi başarıyla oluşturuldu");
       onClose();
     } catch (error) {
-      console.error('Error creating service request:', error);
-      toast.error("Failed to create service request");
+      console.error('Servis talebi oluşturma hatası:', error);
+      toast.error("Servis talebi oluşturulamadı");
     }
   };
 
@@ -136,9 +143,9 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Service Subject</FormLabel>
+              <FormLabel>Servis Konusu</FormLabel>
               <FormControl>
-                <Input placeholder="Enter service subject" {...field} />
+                <Input placeholder="Servis konusunu giriniz" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -150,10 +157,10 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Açıklama</FormLabel>
               <FormControl>
                 <Textarea 
-                  placeholder="Describe the service request..."
+                  placeholder="Servis talebini açıklayınız..."
                   className="min-h-[100px]"
                   {...field}
                 />
@@ -168,11 +175,11 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
           name="customer_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Customer</FormLabel>
+              <FormLabel>Müşteri</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a customer" />
+                    <SelectValue placeholder="Müşteri seçiniz" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -194,18 +201,18 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
             name="priority"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Priority</FormLabel>
+                <FormLabel>Öncelik</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select priority" />
+                      <SelectValue placeholder="Öncelik seçiniz" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
+                    <SelectItem value="low">{priorityLabels.low}</SelectItem>
+                    <SelectItem value="medium">{priorityLabels.medium}</SelectItem>
+                    <SelectItem value="high">{priorityLabels.high}</SelectItem>
+                    <SelectItem value="urgent">{priorityLabels.urgent}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -218,11 +225,11 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
             name="service_type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Service Type</FormLabel>
+                <FormLabel>Servis Tipi</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select service type" />
+                      <SelectValue placeholder="Servis tipi seçiniz" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -244,9 +251,9 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
           name="location"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Location</FormLabel>
+              <FormLabel>Konum</FormLabel>
               <FormControl>
-                <Input placeholder="Service location" {...field} />
+                <Input placeholder="Servis konumu" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -258,7 +265,7 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
           name="due_date"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Preferred Date</FormLabel>
+              <FormLabel>Tercih Edilen Tarih</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -272,7 +279,7 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
                       {field.value ? (
                         format(field.value, "PPP")
                       ) : (
-                        <span>Pick a date</span>
+                        <span>Tarih seçiniz</span>
                       )}
                       <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
@@ -296,7 +303,7 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
         />
 
         <div className="space-y-2">
-          <FormLabel>Attachments</FormLabel>
+          <FormLabel>Ekler</FormLabel>
           <div className="flex items-center gap-4">
             <Button
               type="button"
@@ -304,7 +311,7 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
               onClick={() => document.getElementById('file-upload')?.click()}
             >
               <Upload className="w-4 h-4 mr-2" />
-              Upload Files
+              Dosya Yükle
             </Button>
             <input
               id="file-upload"
@@ -327,10 +334,10 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
 
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
+            İptal
           </Button>
           <Button type="submit">
-            Create Service Request
+            Servis Talebi Oluştur
           </Button>
         </div>
       </form>

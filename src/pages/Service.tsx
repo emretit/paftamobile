@@ -26,9 +26,9 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
       <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
         <div className="container mx-auto p-6">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-semibold">Service Management</h1>
+            <h1 className="text-2xl font-semibold">Servis Yönetimi</h1>
             <Button onClick={() => setIsCreateModalOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" /> New Service Request
+              <Plus className="mr-2 h-4 w-4" /> Yeni Servis Talebi
             </Button>
           </div>
           <ServiceRequestTable />
@@ -36,7 +36,7 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Create New Service Request</DialogTitle>
+                <DialogTitle>Yeni Servis Talebi Oluştur</DialogTitle>
               </DialogHeader>
               <ServiceRequestForm onClose={() => setIsCreateModalOpen(false)} />
             </DialogContent>
