@@ -32,7 +32,21 @@ type DatabaseTask = {
   related_item_title?: string;
   created_at?: string;
   updated_at?: string;
-}
+};
+
+const fetchTaskAssignee = async (assigneeId: string) => {
+  const { data } = await supabase
+    .from('employees')
+    .select('id, first_name, last_name, avatar_url')
+    .eq('id', assigneeId)
+    .single();
+  
+  return data ? {
+    id: data.id,
+    name: `${data.first_name} ${data.last_name}`,
+    avatar: data.avatar_url
+  } : undefined;
+};
 
 const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
   if (!deal) return null;
@@ -54,47 +68,31 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
     queryFn: async () => {
       if (!deal?.id) return [];
       
-      // First, get the tasks
-      const { data: tasksData, error: tasksError } = await supabase
+      const { data: tasksData, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('opportunity_id', deal.id)
         .order('created_at', { ascending: false });
 
-      if (tasksError) throw tasksError;
+      if (error) throw error;
 
-      const tasks = tasksData as DatabaseTask[];
-
-      // Then, for tasks with assignees, get the assignee information
-      const tasksWithAssignees = await Promise.all(
-        tasks.map(async (task) => {
-          if (!task.assignee_id) {
-            return {
-              ...task,
-              item_type: "task" as const,
-              assignee: undefined
-            };
-          }
-
-          const { data: assigneeData } = await supabase
-            .from('employees')
-            .select('id, first_name, last_name, avatar_url')
-            .eq('id', task.assignee_id)
-            .single();
+      const rawTasks = tasksData as DatabaseTask[];
+      
+      const processedTasks = await Promise.all(
+        rawTasks.map(async (task) => {
+          const assignee = task.assignee_id 
+            ? await fetchTaskAssignee(task.assignee_id)
+            : undefined;
 
           return {
             ...task,
             item_type: "task" as const,
-            assignee: assigneeData ? {
-              id: assigneeData.id,
-              name: `${assigneeData.first_name} ${assigneeData.last_name}`,
-              avatar: assigneeData.avatar_url
-            } : undefined
+            assignee
           };
         })
       );
 
-      return tasksWithAssignees;
+      return processedTasks;
     },
     enabled: !!deal?.id
   });
