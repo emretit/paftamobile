@@ -1,7 +1,6 @@
 
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from "react";
+import { useServiceRequests } from "@/hooks/useServiceRequests";
 import {
   Table,
   TableBody,
@@ -10,136 +9,115 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, User } from 'lucide-react';
-
-interface ServiceRequest {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  priority: string;
-  customer_id: string;
-  assigned_to: string;
-  due_date: string;
-  location: string;
-  service_type: string;
-  customer?: {
-    name: string;
-  };
-  technician?: {
-    first_name: string;
-    last_name: string;
-  };
-}
-
-const priorityColors = {
-  low: "bg-blue-100 text-blue-800",
-  medium: "bg-yellow-100 text-yellow-800",
-  high: "bg-orange-100 text-orange-800",
-  urgent: "bg-red-100 text-red-800",
-};
-
-const statusColors = {
-  new: "bg-blue-100 text-blue-800",
-  assigned: "bg-purple-100 text-purple-800",
-  in_progress: "bg-yellow-100 text-yellow-800",
-  on_hold: "bg-orange-100 text-orange-800",
-  completed: "bg-green-100 text-green-800",
-  cancelled: "bg-gray-100 text-gray-800",
-};
-
-const statusLabels = {
-  new: "Yeni",
-  assigned: "Atandı",
-  in_progress: "Devam Ediyor",
-  on_hold: "Beklemede",
-  completed: "Tamamlandı",
-  cancelled: "İptal Edildi",
-};
-
-const priorityLabels = {
-  low: "Düşük",
-  medium: "Orta",
-  high: "Yüksek",
-  urgent: "Acil",
-};
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ServiceActivityForm } from "./ServiceActivityForm";
+import { ServiceActivitiesList } from "./ServiceActivitiesList";
+import { format } from "date-fns";
+import { MessageSquare, Plus } from "lucide-react";
 
 export function ServiceRequestTable() {
-  const { data: serviceRequests, isLoading } = useQuery({
-    queryKey: ['service-requests'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('service_requests')
-        .select(`
-          *,
-          customer:customers(name),
-          technician:employees(first_name, last_name)
-        `)
-        .order('created_at', { ascending: false });
+  const { data: serviceRequests, refetch } = useServiceRequests();
+  const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
+  const [isActivityFormOpen, setIsActivityFormOpen] = useState(false);
 
-      if (error) throw error;
-      return (data || []) as ServiceRequest[];
-    },
-  });
-
-  if (isLoading) {
-    return <div>Servis talepleri yükleniyor...</div>;
-  }
+  const handleActivitySuccess = () => {
+    refetch();
+  };
 
   return (
-    <div className="rounded-md border">
+    <>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Başlık</TableHead>
             <TableHead>Müşteri</TableHead>
-            <TableHead>Durum</TableHead>
             <TableHead>Öncelik</TableHead>
-            <TableHead>Atanan Kişi</TableHead>
-            <TableHead>Termin Tarihi</TableHead>
-            <TableHead>Konum</TableHead>
+            <TableHead>Durum</TableHead>
+            <TableHead>Oluşturma Tarihi</TableHead>
+            <TableHead>İşlemler</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {serviceRequests?.map((request) => (
             <TableRow key={request.id}>
-              <TableCell className="font-medium">{request.title}</TableCell>
-              <TableCell>{request.customer?.name}</TableCell>
+              <TableCell>{request.title}</TableCell>
+              <TableCell>{request.customer_id}</TableCell>
+              <TableCell>{request.priority}</TableCell>
+              <TableCell>{request.status}</TableCell>
               <TableCell>
-                <Badge variant="secondary" className={statusColors[request.status as keyof typeof statusColors]}>
-                  {statusLabels[request.status as keyof typeof statusLabels]}
-                </Badge>
+                {request.created_at && format(new Date(request.created_at), 'dd.MM.yyyy')}
               </TableCell>
               <TableCell>
-                <Badge variant="secondary" className={priorityColors[request.priority as keyof typeof priorityColors]}>
-                  {priorityLabels[request.priority as keyof typeof priorityLabels]}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  {request.technician 
-                    ? `${request.technician.first_name} ${request.technician.last_name}` 
-                    : 'Atanmadı'}
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {request.due_date ? new Date(request.due_date).toLocaleDateString('tr-TR') : 'Belirlenmedi'}
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  {request.location || 'Konum yok'}
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedRequest(request.id);
+                      setIsActivityFormOpen(false);
+                    }}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Aktiviteler
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedRequest(request.id);
+                      setIsActivityFormOpen(true);
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Aktivite Ekle
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
-    </div>
+
+      <Dialog 
+        open={selectedRequest !== null} 
+        onOpenChange={(open) => !open && setSelectedRequest(null)}
+      >
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              {isActivityFormOpen ? "Yeni Servis Aktivitesi" : "Servis Aktiviteleri"}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedRequest && (
+            isActivityFormOpen ? (
+              <ServiceActivityForm
+                serviceRequestId={selectedRequest}
+                onClose={() => setSelectedRequest(null)}
+                onSuccess={handleActivitySuccess}
+              />
+            ) : (
+              <>
+                <ServiceActivitiesList serviceRequestId={selectedRequest} />
+                <div className="flex justify-end mt-4">
+                  <Button
+                    onClick={() => setIsActivityFormOpen(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Yeni Aktivite Ekle
+                  </Button>
+                </div>
+              </>
+            )
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
