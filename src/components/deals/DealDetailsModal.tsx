@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import OpportunityTasks from "./OpportunityTasks";
 import { EditableField } from "./components/EditableField";
 import { DealHeader } from "./components/DealHeader";
