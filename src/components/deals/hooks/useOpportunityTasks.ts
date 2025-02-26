@@ -1,36 +1,36 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Task } from "@/types/task";
 
-// Simplified database types to avoid deep nesting
-type TaskStatus = 'todo' | 'in_progress' | 'completed';
-type TaskPriority = 'low' | 'medium' | 'high';
-type TaskType = 'opportunity' | 'proposal' | 'general';
+// Define strict types without any recursion
+interface TaskAssignee {
+  id: string;
+  name: string;
+  avatar: string | null;
+}
 
-interface DatabaseTask {
+interface BaseTask {
   id: string;
   title: string;
   description: string;
-  status: TaskStatus;
+  status: 'todo' | 'in_progress' | 'completed';
   assignee_id?: string;
   due_date?: string;
-  priority: TaskPriority;
-  type: TaskType;
+  priority: 'low' | 'medium' | 'high';
+  type: 'opportunity' | 'proposal' | 'general';
   opportunity_id?: string;
   created_at?: string;
   updated_at?: string;
 }
 
-interface DatabaseEmployee {
+interface Employee {
   id: string;
   first_name: string;
   last_name: string;
   avatar_url: string | null;
 }
 
-// Fetch assignee details
-const fetchAssignee = async (assigneeId: string) => {
+const fetchAssignee = async (assigneeId: string): Promise<TaskAssignee | undefined> => {
   const { data } = await supabase
     .from('employees')
     .select('id, first_name, last_name, avatar_url')
@@ -39,8 +39,7 @@ const fetchAssignee = async (assigneeId: string) => {
 
   if (!data) return undefined;
 
-  const employee = data as DatabaseEmployee;
-  
+  const employee = data as Employee;
   return {
     id: employee.id,
     name: `${employee.first_name} ${employee.last_name}`,
@@ -48,8 +47,7 @@ const fetchAssignee = async (assigneeId: string) => {
   };
 };
 
-// Fetch tasks for an opportunity
-const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
+const fetchTasks = async (opportunityId: string) => {
   const { data, error } = await supabase
     .from('tasks')
     .select('*')
@@ -60,38 +58,27 @@ const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   if (!data) return [];
 
   const tasks = await Promise.all(
-    data.map(async (dbTask: DatabaseTask) => {
-      const assignee = dbTask.assignee_id 
-        ? await fetchAssignee(dbTask.assignee_id)
+    (data as BaseTask[]).map(async (task) => {
+      const assignee = task.assignee_id 
+        ? await fetchAssignee(task.assignee_id)
         : undefined;
 
       return {
-        id: dbTask.id,
-        title: dbTask.title,
-        description: dbTask.description,
-        status: dbTask.status,
-        assignee_id: dbTask.assignee_id,
-        assignee: assignee,
-        due_date: dbTask.due_date,
-        priority: dbTask.priority,
-        type: dbTask.type,
-        item_type: 'task' as const,
-        opportunity_id: dbTask.opportunity_id,
-        created_at: dbTask.created_at,
-        updated_at: dbTask.updated_at
-      } satisfies Task;
+        ...task,
+        assignee,
+        item_type: 'task' as const
+      };
     })
   );
 
   return tasks;
 };
 
-// Hook for fetching opportunity tasks
 export const useOpportunityTasks = (opportunityId: string | undefined) => {
   return useQuery({
     queryKey: ['opportunity-tasks', opportunityId],
     queryFn: async () => {
-      if (!opportunityId) return [] as Task[];
+      if (!opportunityId) return [];
       return fetchTasks(opportunityId);
     },
     enabled: !!opportunityId
