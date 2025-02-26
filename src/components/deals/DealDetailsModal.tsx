@@ -1,15 +1,14 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import OpportunityTasks from "./OpportunityTasks";
+import { EditableField } from "./components/EditableField";
+import { DealHeader } from "./components/DealHeader";
 import type { Deal } from "@/types/deal";
 
 interface DealDetailsModalProps {
@@ -18,43 +17,22 @@ interface DealDetailsModalProps {
   onClose: () => void;
 }
 
-// Move type definitions outside component
-type EditableFields = Record<string, boolean>;
-type EditableValues = Partial<Deal>;
-
 const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
   if (!deal) return null;
 
-  // Initialize state with simpler types
-  const [isEditing, setIsEditing] = useState<EditableFields>({});
-  const [editValues, setEditValues] = useState<EditableValues>(deal);
+  const [isEditing, setIsEditing] = useState<Record<string, boolean>>({});
+  const [editValues, setEditValues] = useState<Partial<Deal>>(deal);
 
   const formatDate = (date: Date) => {
     return format(new Date(date), 'PP');
   };
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      new: "bg-blue-100 text-blue-700",
-      negotiation: "bg-yellow-100 text-yellow-700",
-      follow_up: "bg-purple-100 text-purple-700",
-      won: "bg-green-100 text-green-700",
-      lost: "bg-red-100 text-red-700",
-    };
-    return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-700";
-  };
-
-  const getPriorityColor = (priority: string) => {
-    const colors = {
-      high: "bg-red-100 text-red-700",
-      medium: "bg-yellow-100 text-yellow-700",
-      low: "bg-green-100 text-green-700",
-    };
-    return colors[priority as keyof typeof colors] || "bg-gray-100 text-gray-700";
-  };
-
   const handleEdit = (field: keyof Deal) => {
     setIsEditing(prev => ({ ...prev, [field]: true }));
+  };
+
+  const handleChange = (field: keyof Deal, value: string) => {
+    setEditValues(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async (field: keyof Deal) => {
@@ -75,51 +53,6 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
       console.error('Error updating deal:', error);
       toast.error('Değişiklikler kaydedilirken bir hata oluştu');
     }
-  };
-
-  const renderEditableField = (
-    field: keyof Deal,
-    label: string,
-    value: string | number
-  ) => {
-    return (
-      <div className="flex justify-between items-center gap-2">
-        <span className="text-sm text-gray-500">{label}</span>
-        <div className="flex items-center gap-2">
-          {isEditing[field] ? (
-            <>
-              <Input
-                type={typeof value === 'number' ? 'number' : 'text'}
-                value={editValues[field]?.toString() || ''}
-                onChange={(e) => setEditValues(prev => ({
-                  ...prev,
-                  [field]: e.target.value
-                }))}
-                className="w-48"
-              />
-              <Button 
-                onClick={() => handleSave(field)}
-                size="sm"
-                variant="default"
-              >
-                Kaydet
-              </Button>
-            </>
-          ) : (
-            <>
-              <span>{value}</span>
-              <Button 
-                onClick={() => handleEdit(field)}
-                size="sm"
-                variant="ghost"
-              >
-                Düzenle
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-    );
   };
 
   const { data: tasks } = useQuery({
@@ -164,55 +97,39 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
         </DialogHeader>
         <ScrollArea className="max-h-[80vh] pr-4">
           <div className="space-y-6">
-            <div className="flex justify-between items-start">
-              <div>
-                {isEditing.title ? (
-                  <div className="flex items-center gap-2">
-                    <Input
-                      value={editValues.title}
-                      onChange={(e) => setEditValues(prev => ({
-                        ...prev,
-                        title: e.target.value
-                      }))}
-                      className="text-2xl font-bold"
-                    />
-                    <Button onClick={() => handleSave('title')}>
-                      Kaydet
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-2xl font-bold text-gray-900">{deal.title}</h2>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleEdit('title')}
-                    >
-                      Düzenle
-                    </Button>
-                  </div>
-                )}
-                {renderEditableField('customerName', 'Müşteri', deal.customerName)}
-                {deal.department && (
-                  renderEditableField('department', 'Departman', deal.department)
-                )}
-              </div>
-              <div className="flex gap-2">
-                <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(deal.status)}`}>
-                  {deal.status.replace('_', ' ')}
-                </span>
-                <span className={`px-2 py-1 rounded-full text-xs ${getPriorityColor(deal.priority)}`}>
-                  {deal.priority}
-                </span>
-              </div>
-            </div>
+            <DealHeader
+              deal={deal}
+              isEditing={isEditing}
+              editValues={editValues}
+              onEdit={handleEdit}
+              onSave={handleSave}
+              onChange={handleChange}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <Card className="p-4">
-                {renderEditableField('value', 'Fırsat Değeri', `$${deal.value.toLocaleString()}`)}
+                <EditableField
+                  field="value"
+                  label="Fırsat Değeri"
+                  value={`$${deal.value.toLocaleString()}`}
+                  isEditing={isEditing.value}
+                  editValue={editValues.value}
+                  onEdit={handleEdit}
+                  onSave={handleSave}
+                  onChange={handleChange}
+                />
               </Card>
               <Card className="p-4">
-                {renderEditableField('employeeName', 'Satış Temsilcisi', deal.employeeName)}
+                <EditableField
+                  field="employeeName"
+                  label="Satış Temsilcisi"
+                  value={deal.employeeName}
+                  isEditing={isEditing.employeeName}
+                  editValue={editValues.employeeName}
+                  onEdit={handleEdit}
+                  onSave={handleSave}
+                  onChange={handleChange}
+                />
               </Card>
             </div>
 
@@ -235,7 +152,16 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
 
             {deal.description && (
               <div>
-                {renderEditableField('description', 'Açıklama', deal.description)}
+                <EditableField
+                  field="description"
+                  label="Açıklama"
+                  value={deal.description}
+                  isEditing={isEditing.description}
+                  editValue={editValues.description}
+                  onEdit={handleEdit}
+                  onSave={handleSave}
+                  onChange={handleChange}
+                />
               </div>
             )}
 
@@ -269,13 +195,31 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
 
             {deal.notes && (
               <div>
-                {renderEditableField('notes', 'Notlar', deal.notes)}
+                <EditableField
+                  field="notes"
+                  label="Notlar"
+                  value={deal.notes}
+                  isEditing={isEditing.notes}
+                  editValue={editValues.notes}
+                  onEdit={handleEdit}
+                  onSave={handleSave}
+                  onChange={handleChange}
+                />
               </div>
             )}
 
             {deal.internalComments && (
               <div>
-                {renderEditableField('internalComments', 'İç Notlar', deal.internalComments)}
+                <EditableField
+                  field="internalComments"
+                  label="İç Notlar"
+                  value={deal.internalComments}
+                  isEditing={isEditing.internalComments}
+                  editValue={editValues.internalComments}
+                  onEdit={handleEdit}
+                  onSave={handleSave}
+                  onChange={handleChange}
+                />
               </div>
             )}
 
