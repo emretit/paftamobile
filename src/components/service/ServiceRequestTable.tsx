@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, MapPin, User } from 'lucide-react';
+import { Calendar, MapPin, User } from 'lucide-react';
 
 interface ServiceRequest {
   id: string;
@@ -24,6 +24,13 @@ interface ServiceRequest {
   due_date: string;
   location: string;
   service_type: string;
+  customer?: {
+    name: string;
+  };
+  technician?: {
+    first_name: string;
+    last_name: string;
+  };
 }
 
 const priorityColors = {
@@ -56,7 +63,7 @@ export function ServiceRequestTable() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as ServiceRequest[];
     },
   });
 
@@ -79,7 +86,7 @@ export function ServiceRequestTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {serviceRequests.map((request: any) => (
+          {serviceRequests?.map((request) => (
             <TableRow key={request.id}>
               <TableCell className="font-medium">{request.title}</TableCell>
               <TableCell>{request.customer?.name}</TableCell>
@@ -96,19 +103,21 @@ export function ServiceRequestTable() {
               <TableCell>
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  {request.technician ? `${request.technician.first_name} ${request.technician.last_name}` : 'Unassigned'}
+                  {request.technician 
+                    ? `${request.technician.first_name} ${request.technician.last_name}` 
+                    : 'Unassigned'}
                 </div>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  {new Date(request.due_date).toLocaleDateString()}
+                  {request.due_date ? new Date(request.due_date).toLocaleDateString() : 'Not set'}
                 </div>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
-                  {request.location}
+                  {request.location || 'No location'}
                 </div>
               </TableCell>
             </TableRow>

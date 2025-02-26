@@ -19,7 +19,13 @@ interface RawTask {
   updated_at?: string;
 }
 
-const fetchAssignee = async (assigneeId: string) => {
+interface Assignee {
+  id: string;
+  name: string;
+  avatar?: string | null;
+}
+
+const fetchAssignee = async (assigneeId: string): Promise<Assignee | undefined> => {
   const { data: employee } = await supabase
     .from('employees')
     .select('id, first_name, last_name, avatar_url')
@@ -57,13 +63,17 @@ const fetchTasks = async (opportunityId: string): Promise<Task[]> => {
   if (error) throw error;
   if (!data) return [];
 
-  return Promise.all(data.map(transformTask));
+  const transformedTasks = await Promise.all(data.map(transformTask));
+  return transformedTasks;
 };
 
 export const useOpportunityTasks = (opportunityId: string | undefined) => {
   return useQuery({
     queryKey: ['opportunity-tasks', opportunityId],
-    queryFn: () => opportunityId ? fetchTasks(opportunityId) : Promise.resolve([]) as Promise<Task[]>,
+    queryFn: () => {
+      if (!opportunityId) return Promise.resolve([] as Task[]);
+      return fetchTasks(opportunityId);
+    },
     enabled: !!opportunityId
   });
 };
