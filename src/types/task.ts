@@ -13,6 +13,7 @@ export interface Task {
   due_date?: string;
   priority: 'low' | 'medium' | 'high';
   type: 'opportunity' | 'proposal' | 'general';
+  item_type: 'task' | 'opportunity';
   related_item_id?: string;
   related_item_title?: string;
   created_at?: string;
