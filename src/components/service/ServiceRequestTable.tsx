@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useServiceRequests } from "@/hooks/useServiceRequests";
+import { useServiceRequests, ServicePriority, ServiceStatus } from "@/hooks/useServiceRequests";
 import {
   Table,
   TableBody,

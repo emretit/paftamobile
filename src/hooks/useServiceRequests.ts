@@ -3,19 +3,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-interface ServiceRequestAttachment {
+export interface ServiceRequestAttachment {
   name: string;
   path: string;
   type: string;
   size: number;
 }
 
+export type ServicePriority = 'low' | 'medium' | 'high' | 'urgent';
+export type ServiceStatus = 'new' | 'in_progress' | 'completed';
+
 export interface ServiceRequest {
   id: string;
   title: string;
   description?: string;
-  status: string;
-  priority: string;
+  status: ServiceStatus;
+  priority: ServicePriority;
   service_type: string;
   attachments: ServiceRequestAttachment[];
   notes?: string[];
@@ -32,7 +35,7 @@ export interface ServiceRequest {
 export interface ServiceRequestFormData {
   title: string;
   description?: string;
-  priority: string;
+  priority: ServicePriority;
   customer_id?: string;
   service_type: string;
   location?: string;
@@ -140,13 +143,14 @@ export const useServiceRequests = () => {
       const serviceRequestData = {
         ...formData,
         due_date: formData.due_date?.toISOString(),
-        status: 'new',
+        status: 'new' as ServiceStatus,
         attachments: [],
       };
 
+      // Supabase'e gönderilen veriler
       const { data, error } = await supabase
         .from('service_requests')
-        .insert(serviceRequestData)
+        .insert(serviceRequestData as any)
         .select()
         .single();
 
@@ -155,6 +159,7 @@ export const useServiceRequests = () => {
       if (files.length > 0 && data) {
         const uploadedFiles = await uploadFiles(files, data.id);
         
+        // Dosya yüklendikten sonra güncelle, JSON olarak attachments dizisini gönderiyoruz
         const { error: updateError } = await supabase
           .from('service_requests')
           .update({ attachments: uploadedFiles })
@@ -203,7 +208,7 @@ export const useServiceRequests = () => {
       const updatePayload = {
         ...updateData,
         due_date: updateData.due_date ? updateData.due_date.toISOString() : currentRequest.due_date,
-        attachments: updatedAttachments
+        attachments: updatedAttachments as any // any tipini kullanarak TypeScript uyumluluğu sağlıyoruz
       };
 
       const { data, error } = await supabase
@@ -276,7 +281,7 @@ export const useServiceRequests = () => {
 
       const { data, error } = await supabase
         .from('service_requests')
-        .update({ attachments: updatedAttachments })
+        .update({ attachments: updatedAttachments as any })
         .eq('id', requestId)
         .select()
         .single();

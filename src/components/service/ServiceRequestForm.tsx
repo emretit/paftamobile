@@ -27,9 +27,8 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { useServiceRequests, ServiceRequestFormData } from "@/hooks/useServiceRequests";
-
-type ServiceRequestPriority = 'low' | 'medium' | 'high' | 'urgent';
+import { useServiceRequests, ServiceRequestFormData, ServicePriority } from "@/hooks/useServiceRequests";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ServiceRequestFormProps {
   onClose: () => void;
@@ -75,7 +74,7 @@ export function ServiceRequestForm({ onClose, initialData, isEditing = false }: 
       : {
           title: '',
           description: '',
-          priority: 'medium' as ServiceRequestPriority,
+          priority: 'medium' as ServicePriority,
           customer_id: '',
           service_type: '',
           location: '',
