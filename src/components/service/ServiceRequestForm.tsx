@@ -21,28 +21,20 @@ import {
 } from "@/components/ui/select";
 import { useCustomerSelect } from "@/hooks/useCustomerSelect";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Upload } from "lucide-react";
+import { CalendarIcon, Upload, X, Trash2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
+import { useServiceRequests, ServiceRequestFormData } from "@/hooks/useServiceRequests";
 
-type ServiceRequestStatus = 'cancelled' | 'new' | 'completed' | 'assigned' | 'in_progress' | 'on_hold';
 type ServiceRequestPriority = 'low' | 'medium' | 'high' | 'urgent';
-
-interface FormData {
-  title: string;
-  description: string;
-  priority: ServiceRequestPriority;
-  customer_id: string;
-  service_type: string;
-  location: string;
-  due_date?: Date;
-}
 
 interface ServiceRequestFormProps {
   onClose: () => void;
+  initialData?: any;
+  isEditing?: boolean;
 }
 
 const serviceTypes = [
@@ -61,78 +53,89 @@ const priorityLabels = {
   urgent: 'Acil'
 };
 
-export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
+export function ServiceRequestForm({ onClose, initialData, isEditing = false }: ServiceRequestFormProps) {
   const [files, setFiles] = useState<File[]>([]);
+  const [existingAttachments, setExistingAttachments] = useState<any[]>(
+    initialData?.attachments || []
+  );
   const { customers } = useCustomerSelect();
-  const form = useForm<FormData>();
+  const { createServiceRequest, updateServiceRequest, isCreating, isUpdating, deleteAttachment } = useServiceRequests();
+  
+  const form = useForm<ServiceRequestFormData>({
+    defaultValues: isEditing && initialData 
+      ? {
+          title: initialData.title || '',
+          description: initialData.description || '',
+          priority: initialData.priority || 'medium',
+          customer_id: initialData.customer_id || '',
+          service_type: initialData.service_type ? initialData.service_type.toLowerCase() : '',
+          location: initialData.location || '',
+          due_date: initialData.due_date ? new Date(initialData.due_date) : undefined,
+        }
+      : {
+          title: '',
+          description: '',
+          priority: 'medium' as ServiceRequestPriority,
+          customer_id: '',
+          service_type: '',
+          location: '',
+        }
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setFiles(Array.from(e.target.files));
+      const newFiles = Array.from(e.target.files);
+      setFiles(prev => [...prev, ...newFiles]);
     }
   };
 
-  const uploadFiles = async (serviceRequestId: string) => {
-    const uploadedFiles = await Promise.all(
-      files.map(async (file) => {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${serviceRequestId}/${crypto.randomUUID()}.${fileExt}`;
-        
-        const { data, error } = await supabase.storage
-          .from('service-attachments')
-          .upload(fileName, file);
-
-        if (error) {
-          console.error('Dosya yükleme hatası:', error);
-          return null;
-        }
-
-        return {
-          name: file.name,
-          path: fileName,
-          type: file.type,
-          size: file.size,
-        };
-      })
-    );
-
-    return uploadedFiles.filter(Boolean);
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const onSubmit = async (data: FormData) => {
-    try {
-      const formattedData = {
-        ...data,
-        due_date: data.due_date?.toISOString(),
-        status: 'new' as ServiceRequestStatus,
-        attachments: [] as any[],
-      };
-
-      const { data: serviceRequest, error } = await supabase
-        .from('service_requests')
-        .insert(formattedData)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      if (files.length > 0 && serviceRequest) {
-        const uploadedFiles = await uploadFiles(serviceRequest.id);
-        
-        const { error: updateError } = await supabase
-          .from('service_requests')
-          .update({ attachments: uploadedFiles })
-          .eq('id', serviceRequest.id);
-
-        if (updateError) throw updateError;
+  const removeExistingAttachment = async (attachment: any) => {
+    if (isEditing && initialData?.id) {
+      try {
+        await deleteAttachment({ requestId: initialData.id, attachmentPath: attachment.path });
+        setExistingAttachments(prev => prev.filter(a => a.path !== attachment.path));
+      } catch (error) {
+        console.error("Dosya silme hatası:", error);
       }
-
-      toast.success("Servis talebi başarıyla oluşturuldu");
-      onClose();
-    } catch (error) {
-      console.error('Servis talebi oluşturma hatası:', error);
-      toast.error("Servis talebi oluşturulamadı");
     }
+  };
+
+  const onSubmit = async (data: ServiceRequestFormData) => {
+    if (isEditing && initialData?.id) {
+      updateServiceRequest({ 
+        id: initialData.id, 
+        updateData: data, 
+        newFiles: files 
+      });
+    } else {
+      createServiceRequest({ formData: data, files });
+    }
+    onClose();
+  };
+
+  const handleDownloadFile = (attachment: any) => {
+    if (!attachment.path) return;
+    
+    supabase.storage.from('service-attachments')
+      .download(attachment.path)
+      .then(({ data, error }) => {
+        if (error) {
+          toast.error("Dosya indirilemedi");
+          return;
+        }
+        
+        const url = URL.createObjectURL(data);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = attachment.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      });
   };
 
   return (
@@ -291,7 +294,7 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
                     selected={field.value}
                     onSelect={field.onChange}
                     disabled={(date) =>
-                      date < new Date()
+                      date < new Date(new Date().setDate(new Date().getDate() - 1))
                     }
                     initialFocus
                   />
@@ -302,8 +305,37 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
           )}
         />
 
-        <div className="space-y-2">
+        <div className="space-y-4">
           <FormLabel>Ekler</FormLabel>
+          
+          {/* Mevcut ekler (düzenleme modunda) */}
+          {isEditing && existingAttachments.length > 0 && (
+            <div className="space-y-2 mt-2 border p-3 rounded-md">
+              <h3 className="text-sm font-medium">Mevcut Dosyalar</h3>
+              <div className="space-y-2">
+                {existingAttachments.map((attachment, index) => (
+                  <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <div 
+                      className="text-sm text-blue-600 cursor-pointer hover:underline flex-1"
+                      onClick={() => handleDownloadFile(attachment)}
+                    >
+                      {attachment.name}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeExistingAttachment(attachment)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Yeni eklenen dosyalar */}
           <div className="flex items-center gap-4">
             <Button
               type="button"
@@ -321,11 +353,21 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
               className="hidden"
             />
           </div>
+          
           {files.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-2 border p-3 rounded-md">
+              <h3 className="text-sm font-medium">Yüklenecek Dosyalar</h3>
               {files.map((file, index) => (
-                <div key={index} className="text-sm text-gray-600">
-                  {file.name}
+                <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                  <span className="text-sm text-gray-600">{file.name}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeFile(index)}
+                  >
+                    <X className="h-4 w-4 text-gray-500" />
+                  </Button>
                 </div>
               ))}
             </div>
@@ -336,8 +378,8 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
           <Button type="button" variant="outline" onClick={onClose}>
             İptal
           </Button>
-          <Button type="submit">
-            Servis Talebi Oluştur
+          <Button type="submit" disabled={isCreating || isUpdating}>
+            {isEditing ? "Güncelle" : "Servis Talebi Oluştur"}
           </Button>
         </div>
       </form>

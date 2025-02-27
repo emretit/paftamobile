@@ -1,6 +1,7 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ServiceRequestAttachment {
   name: string;
@@ -9,7 +10,7 @@ interface ServiceRequestAttachment {
   size: number;
 }
 
-interface ServiceRequest {
+export interface ServiceRequest {
   id: string;
   title: string;
   description?: string;
@@ -24,10 +25,26 @@ interface ServiceRequest {
   customer_id?: string;
   equipment_id?: string;
   warranty_info?: Record<string, any>;
+  location?: string;
+  due_date?: string;
+}
+
+export interface ServiceRequestFormData {
+  title: string;
+  description?: string;
+  priority: string;
+  customer_id?: string;
+  service_type: string;
+  location?: string;
+  due_date?: Date;
+  equipment_id?: string;
 }
 
 export const useServiceRequests = () => {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  // Tüm servis taleplerini getir
+  const serviceRequestsQuery = useQuery({
     queryKey: ['service-requests'],
     queryFn: async (): Promise<ServiceRequest[]> => {
       console.log("Fetching service requests...");
@@ -57,7 +74,242 @@ export const useServiceRequests = () => {
         warranty_info: typeof item.warranty_info === 'object' ? item.warranty_info : undefined
       }));
     },
-    refetchOnWindowFocus: true, // Pencere odağı değiştiğinde yeniden veri çek
-    staleTime: 60000, // 1 dakika içindeki veriler güncel kabul edilsin
+    refetchOnWindowFocus: true,
+    staleTime: 60000,
   });
+
+  // Tek bir servis talebini getir
+  const getServiceRequest = async (id: string): Promise<ServiceRequest | null> => {
+    const { data, error } = await supabase
+      .from('service_requests')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching service request:", error);
+      return null;
+    }
+
+    return {
+      ...data,
+      attachments: Array.isArray(data.attachments) 
+        ? data.attachments.map((att: any) => ({
+            name: String(att.name || ''),
+            path: String(att.path || ''),
+            type: String(att.type || ''),
+            size: Number(att.size || 0)
+          }))
+        : [],
+      notes: Array.isArray(data.notes) ? data.notes : undefined,
+      warranty_info: typeof data.warranty_info === 'object' ? data.warranty_info : undefined
+    };
+  };
+
+  // Dosya yükleme fonksiyonu
+  const uploadFiles = async (files: File[], serviceRequestId: string) => {
+    const uploadedFiles = await Promise.all(
+      files.map(async (file) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${serviceRequestId}/${crypto.randomUUID()}.${fileExt}`;
+        
+        const { data, error } = await supabase.storage
+          .from('service-attachments')
+          .upload(fileName, file);
+
+        if (error) {
+          console.error('Dosya yükleme hatası:', error);
+          return null;
+        }
+
+        return {
+          name: file.name,
+          path: fileName,
+          type: file.type,
+          size: file.size,
+        };
+      })
+    );
+
+    return uploadedFiles.filter(Boolean);
+  };
+
+  // Servis talebi oluşturma
+  const createServiceRequestMutation = useMutation({
+    mutationFn: async ({ formData, files }: { formData: ServiceRequestFormData, files: File[] }) => {
+      const serviceRequestData = {
+        ...formData,
+        due_date: formData.due_date?.toISOString(),
+        status: 'new',
+        attachments: [],
+      };
+
+      const { data, error } = await supabase
+        .from('service_requests')
+        .insert(serviceRequestData)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (files.length > 0 && data) {
+        const uploadedFiles = await uploadFiles(files, data.id);
+        
+        const { error: updateError } = await supabase
+          .from('service_requests')
+          .update({ attachments: uploadedFiles })
+          .eq('id', data.id);
+
+        if (updateError) throw updateError;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['service-requests'] });
+      toast.success("Servis talebi başarıyla oluşturuldu");
+    },
+    onError: (error) => {
+      console.error('Servis talebi oluşturma hatası:', error);
+      toast.error("Servis talebi oluşturulamadı");
+    },
+  });
+
+  // Servis talebi güncelleme 
+  const updateServiceRequestMutation = useMutation({
+    mutationFn: async ({ 
+      id, 
+      updateData, 
+      newFiles = [] 
+    }: { 
+      id: string; 
+      updateData: Partial<ServiceRequestFormData>; 
+      newFiles?: File[] 
+    }) => {
+      // Mevcut servis talebini getir
+      const currentRequest = await getServiceRequest(id);
+      if (!currentRequest) {
+        throw new Error("Servis talebi bulunamadı");
+      }
+
+      let updatedAttachments = [...(currentRequest.attachments || [])];
+
+      // Yeni dosyalar varsa yükle
+      if (newFiles.length > 0) {
+        const uploadedFiles = await uploadFiles(newFiles, id);
+        updatedAttachments = [...updatedAttachments, ...uploadedFiles];
+      }
+
+      const updatePayload = {
+        ...updateData,
+        due_date: updateData.due_date ? updateData.due_date.toISOString() : currentRequest.due_date,
+        attachments: updatedAttachments
+      };
+
+      const { data, error } = await supabase
+        .from('service_requests')
+        .update(updatePayload)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['service-requests'] });
+      toast.success("Servis talebi başarıyla güncellendi");
+    },
+    onError: (error) => {
+      console.error('Servis talebi güncelleme hatası:', error);
+      toast.error("Servis talebi güncellenemedi");
+    },
+  });
+
+  // Servis talebi silme
+  const deleteServiceRequestMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // Önce talebe bağlı aktiviteleri sil
+      const { error: activitiesError } = await supabase
+        .from('service_activities')
+        .delete()
+        .eq('service_request_id', id);
+
+      if (activitiesError) throw activitiesError;
+
+      // Sonra talebi sil
+      const { error } = await supabase
+        .from('service_requests')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['service-requests'] });
+      toast.success("Servis talebi başarıyla silindi");
+    },
+    onError: (error) => {
+      console.error('Servis talebi silme hatası:', error);
+      toast.error("Servis talebi silinemedi");
+    },
+  });
+
+  // Dosya silme 
+  const deleteAttachmentMutation = useMutation({
+    mutationFn: async ({ requestId, attachmentPath }: { requestId: string, attachmentPath: string }) => {
+      // Önce dosyayı storage'dan sil
+      const { error: storageError } = await supabase.storage
+        .from('service-attachments')
+        .remove([attachmentPath]);
+
+      if (storageError) throw storageError;
+
+      // Sonra talepten dosya bilgisini kaldır
+      const currentRequest = await getServiceRequest(requestId);
+      if (!currentRequest) {
+        throw new Error("Servis talebi bulunamadı");
+      }
+
+      const updatedAttachments = currentRequest.attachments.filter(att => att.path !== attachmentPath);
+
+      const { data, error } = await supabase
+        .from('service_requests')
+        .update({ attachments: updatedAttachments })
+        .eq('id', requestId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['service-requests'] });
+      toast.success("Dosya başarıyla silindi");
+    },
+    onError: (error) => {
+      console.error('Dosya silme hatası:', error);
+      toast.error("Dosya silinemedi");
+    },
+  });
+
+  return {
+    // Queries
+    ...serviceRequestsQuery,
+    getServiceRequest,
+    
+    // Mutations
+    createServiceRequest: createServiceRequestMutation.mutate,
+    isCreating: createServiceRequestMutation.isPending,
+    
+    updateServiceRequest: updateServiceRequestMutation.mutate,
+    isUpdating: updateServiceRequestMutation.isPending,
+    
+    deleteServiceRequest: deleteServiceRequestMutation.mutate,
+    isDeleting: deleteServiceRequestMutation.isPending,
+    
+    deleteAttachment: deleteAttachmentMutation.mutate,
+    isDeletingAttachment: deleteAttachmentMutation.isPending,
+  };
 };

@@ -15,13 +15,25 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { ServiceActivityForm } from "./ServiceActivityForm";
 import { ServiceActivitiesList } from "./ServiceActivitiesList";
+import { ServiceRequestForm } from "./ServiceRequestForm";
 import { WarrantyInfo } from "./WarrantyInfo";
 import { format } from "date-fns";
-import { MessageSquare, Plus, AlertCircle, Clock, CheckCircle } from "lucide-react";
+import { MessageSquare, Plus, AlertCircle, Clock, CheckCircle, Edit, Trash, MoreVertical, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
 
 const getPriorityColor = (priority: string) => {
   switch (priority) {
@@ -31,6 +43,8 @@ const getPriorityColor = (priority: string) => {
       return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     case 'low':
       return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'urgent':
+      return 'bg-purple-100 text-purple-800 border-purple-200';
     default:
       return 'bg-gray-100 text-gray-800 border-gray-200';
   }
@@ -76,12 +90,66 @@ const getStatusText = (status: string) => {
 };
 
 export function ServiceRequestTable() {
-  const { data: serviceRequests, isLoading, isError, refetch } = useServiceRequests();
+  const { 
+    data: serviceRequests, 
+    isLoading, 
+    isError, 
+    refetch, 
+    deleteServiceRequest 
+  } = useServiceRequests();
+  
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
   const [isActivityFormOpen, setIsActivityFormOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedRequestData, setSelectedRequestData] = useState<any>(null);
 
   const handleActivitySuccess = () => {
     refetch();
+  };
+
+  const handleEditRequest = (request: any) => {
+    setSelectedRequestData(request);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteRequest = (request: any) => {
+    setSelectedRequestData(request);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedRequestData) {
+      deleteServiceRequest(selectedRequestData.id);
+      setIsDeleteModalOpen(false);
+      setSelectedRequestData(null);
+    }
+  };
+
+  const handleDownloadAttachment = async (attachment: any) => {
+    if (!attachment.path) return;
+    
+    const { data, error } = await supabase.storage
+      .from('service-attachments')
+      .download(attachment.path);
+    
+    if (error) {
+      console.error("Error downloading file:", error);
+      return;
+    }
+    
+    // Create blob link to download
+    const url = window.URL.createObjectURL(data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', attachment.name);
+    
+    // Append to html link element page and click it
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up and remove the link
+    link.parentNode?.removeChild(link);
   };
 
   if (isLoading) {
@@ -125,7 +193,7 @@ export function ServiceRequestTable() {
             <TableHead>Öncelik</TableHead>
             <TableHead>Durum</TableHead>
             <TableHead>Oluşturma Tarihi</TableHead>
-            <TableHead>İşlemler</TableHead>
+            <TableHead className="text-right">İşlemler</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -138,7 +206,10 @@ export function ServiceRequestTable() {
                   variant="secondary" 
                   className={`${getPriorityColor(request.priority)} border`}
                 >
-                  {request.priority}
+                  {request.priority === 'low' ? 'Düşük' : 
+                   request.priority === 'medium' ? 'Orta' :
+                   request.priority === 'high' ? 'Yüksek' : 
+                   request.priority === 'urgent' ? 'Acil' : request.priority}
                 </Badge>
               </TableCell>
               <TableCell>
@@ -155,8 +226,8 @@ export function ServiceRequestTable() {
               <TableCell>
                 {request.created_at && format(new Date(request.created_at), 'dd.MM.yyyy')}
               </TableCell>
-              <TableCell>
-                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <TableCell className="text-right">
+                <div className="flex items-center justify-end gap-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -168,17 +239,52 @@ export function ServiceRequestTable() {
                     <MessageSquare className="w-4 h-4 mr-2" />
                     Aktiviteler
                   </Button>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedRequest(request.id);
-                      setIsActivityFormOpen(true);
-                    }}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Aktivite Ekle
-                  </Button>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => {
+                        setSelectedRequest(request.id);
+                        setIsActivityFormOpen(true);
+                      }}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Aktivite Ekle
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEditRequest(request)}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Düzenle
+                      </DropdownMenuItem>
+                      {request.attachments && request.attachments.length > 0 && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel>Ekler</DropdownMenuLabel>
+                          {request.attachments.map((attachment: any, idx: number) => (
+                            <DropdownMenuItem 
+                              key={idx}
+                              onClick={() => handleDownloadAttachment(attachment)}
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              {attachment.name}
+                            </DropdownMenuItem>
+                          ))}
+                        </>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        className="text-red-600" 
+                        onClick={() => handleDeleteRequest(request)}
+                      >
+                        <Trash className="w-4 h-4 mr-2" />
+                        Sil
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </TableCell>
             </TableRow>
@@ -186,8 +292,9 @@ export function ServiceRequestTable() {
         </TableBody>
       </Table>
 
+      {/* Aktiviteler Dialog */}
       <Dialog 
-        open={selectedRequest !== null} 
+        open={selectedRequest !== null && !isEditModalOpen} 
         onOpenChange={(open) => !open && setSelectedRequest(null)}
       >
         <DialogContent className="max-w-3xl">
@@ -226,6 +333,54 @@ export function ServiceRequestTable() {
               )}
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Request Dialog */}
+      <Dialog
+        open={isEditModalOpen}
+        onOpenChange={(open) => {
+          setIsEditModalOpen(open);
+          if (!open) setSelectedRequestData(null);
+        }}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Servis Talebini Düzenle</DialogTitle>
+          </DialogHeader>
+          {selectedRequestData && (
+            <ServiceRequestForm 
+              onClose={() => setIsEditModalOpen(false)} 
+              initialData={selectedRequestData}
+              isEditing={true}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={isDeleteModalOpen}
+        onOpenChange={(open) => {
+          setIsDeleteModalOpen(open);
+          if (!open) setSelectedRequestData(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Servis Talebini Sil</DialogTitle>
+            <DialogDescription>
+              Bu servis talebini silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve tüm ilişkili aktiviteler de silinecektir.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
+              İptal
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Sil
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
