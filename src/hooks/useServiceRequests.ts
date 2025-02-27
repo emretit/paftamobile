@@ -11,7 +11,7 @@ export interface ServiceRequestAttachment {
 }
 
 export type ServicePriority = 'low' | 'medium' | 'high' | 'urgent';
-export type ServiceStatus = 'new' | 'in_progress' | 'completed';
+export type ServiceStatus = 'new' | 'in_progress' | 'completed' | 'cancelled' | 'assigned' | 'on_hold';
 
 export interface ServiceRequest {
   id: string;
