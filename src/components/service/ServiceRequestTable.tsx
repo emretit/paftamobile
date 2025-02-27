@@ -21,6 +21,7 @@ import {
 import { ServiceActivityForm } from "./ServiceActivityForm";
 import { ServiceActivitiesList } from "./ServiceActivitiesList";
 import { ServiceRequestForm } from "./ServiceRequestForm";
+import { ServiceRequestDetail } from "./ServiceRequestDetail";
 import { WarrantyInfo } from "./WarrantyInfo";
 import { format } from "date-fns";
 import { MessageSquare, Plus, AlertCircle, Clock, CheckCircle, Edit, Trash, MoreVertical, Download } from "lucide-react";
@@ -130,6 +131,8 @@ export function ServiceRequestTable() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedRequestData, setSelectedRequestData] = useState<any>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [selectedDetailRequest, setSelectedDetailRequest] = useState<any>(null);
 
   const handleActivitySuccess = () => {
     refetch();
@@ -151,6 +154,11 @@ export function ServiceRequestTable() {
       setIsDeleteModalOpen(false);
       setSelectedRequestData(null);
     }
+  };
+
+  const handleOpenDetail = (request: any) => {
+    setSelectedDetailRequest(request);
+    setIsDetailOpen(true);
   };
 
   // Durumu güncellemek için yeni fonksiyon
@@ -265,10 +273,17 @@ export function ServiceRequestTable() {
         </TableHeader>
         <TableBody>
           {serviceRequests?.map((request) => (
-            <TableRow key={request.id} className="group hover:bg-gray-50">
-              <TableCell className="font-medium">{request.title}</TableCell>
-              <TableCell>{request.service_type}</TableCell>
-              <TableCell>
+            <TableRow key={request.id} className="group hover:bg-gray-50 cursor-pointer">
+              <TableCell 
+                className="font-medium"
+                onClick={() => handleOpenDetail(request)}
+              >
+                {request.title}
+              </TableCell>
+              <TableCell onClick={() => handleOpenDetail(request)}>
+                {request.service_type}
+              </TableCell>
+              <TableCell onClick={() => handleOpenDetail(request)}>
                 <Badge 
                   variant="secondary" 
                   className={`${getPriorityColor(request.priority)} border`}
@@ -316,7 +331,7 @@ export function ServiceRequestTable() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
-              <TableCell>
+              <TableCell onClick={() => handleOpenDetail(request)}>
                 {request.created_at && format(new Date(request.created_at), 'dd.MM.yyyy')}
               </TableCell>
               <TableCell className="text-right">
@@ -324,7 +339,8 @@ export function ServiceRequestTable() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setSelectedRequest(request.id);
                       setIsActivityFormOpen(false);
                     }}
@@ -335,21 +351,29 @@ export function ServiceRequestTable() {
                   
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => {
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
                         setSelectedRequest(request.id);
                         setIsActivityFormOpen(true);
                       }}>
                         <Plus className="w-4 h-4 mr-2" />
                         Aktivite Ekle
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleEditRequest(request)}>
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditRequest(request);
+                      }}>
                         <Edit className="w-4 h-4 mr-2" />
                         Düzenle
                       </DropdownMenuItem>
@@ -360,7 +384,10 @@ export function ServiceRequestTable() {
                           {request.attachments.map((attachment: any, idx: number) => (
                             <DropdownMenuItem 
                               key={idx}
-                              onClick={() => handleDownloadAttachment(attachment)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownloadAttachment(attachment);
+                              }}
                             >
                               <Download className="w-4 h-4 mr-2" />
                               {attachment.name}
@@ -371,7 +398,10 @@ export function ServiceRequestTable() {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem 
                         className="text-red-600" 
-                        onClick={() => handleDeleteRequest(request)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteRequest(request);
+                        }}
                       >
                         <Trash className="w-4 h-4 mr-2" />
                         Sil
@@ -384,6 +414,13 @@ export function ServiceRequestTable() {
           ))}
         </TableBody>
       </Table>
+
+      {/* Servis Detay Sheet */}
+      <ServiceRequestDetail 
+        serviceRequest={selectedDetailRequest}
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+      />
 
       {/* Aktiviteler Dialog */}
       <Dialog 
