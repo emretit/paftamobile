@@ -32,8 +32,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const getPriorityColor = (priority: string) => {
   switch (priority) {
@@ -101,13 +104,25 @@ const getStatusText = (status: string) => {
   }
 };
 
+// Durum değişikliği için kullanılabilecek durum seçenekleri
+const statusOptions: {value: ServiceStatus, label: string}[] = [
+  { value: 'new', label: 'Yeni' },
+  { value: 'in_progress', label: 'Devam Ediyor' },
+  { value: 'assigned', label: 'Atandı' },
+  { value: 'on_hold', label: 'Beklemede' },
+  { value: 'completed', label: 'Tamamlandı' },
+  { value: 'cancelled', label: 'İptal Edildi' },
+];
+
 export function ServiceRequestTable() {
   const { 
     data: serviceRequests, 
     isLoading, 
     isError, 
     refetch, 
-    deleteServiceRequest 
+    deleteServiceRequest,
+    updateServiceRequest,
+    isUpdating
   } = useServiceRequests();
   
   const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
@@ -136,6 +151,46 @@ export function ServiceRequestTable() {
       setIsDeleteModalOpen(false);
       setSelectedRequestData(null);
     }
+  };
+
+  // Durumu güncellemek için yeni fonksiyon
+  const handleStatusChange = (requestId: string, newStatus: ServiceStatus) => {
+    const request = serviceRequests?.find(r => r.id === requestId);
+    if (!request) return;
+    
+    // Eğer durum aynıysa değişiklik yapmayalım
+    if (request.status === newStatus) return;
+    
+    updateServiceRequest({
+      id: requestId,
+      updateData: {
+        // Sadece durum bilgisini güncelliyoruz
+        title: request.title,
+        priority: request.priority,
+        service_type: request.service_type,
+        ...(request.location && { location: request.location }),
+        ...(request.description && { description: request.description }),
+        ...(request.customer_id && { customer_id: request.customer_id }),
+        ...(request.equipment_id && { equipment_id: request.equipment_id }),
+      },
+      // Yeni durum direkt backend tarafında değiştirilecek
+      // newFiles: [] ile ek dosya göndermiyoruz
+    });
+    
+    // Supabase'de direkt olarak durumu güncelle
+    supabase
+      .from('service_requests')
+      .update({ status: newStatus })
+      .eq('id', requestId)
+      .then(({ error }) => {
+        if (error) {
+          console.error('Durum güncellenirken hata oluştu:', error);
+          toast.error("Durum güncellenemedi");
+        } else {
+          toast.success(`Durum "${getStatusText(newStatus)}" olarak güncellendi`);
+          refetch(); // Listeyi yenile
+        }
+      });
   };
 
   const handleDownloadAttachment = async (attachment: any) => {
@@ -225,15 +280,41 @@ export function ServiceRequestTable() {
                 </Badge>
               </TableCell>
               <TableCell>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(request.status)}
-                  <Badge 
-                    variant="secondary" 
-                    className={`${getStatusColor(request.status)} border`}
-                  >
-                    {getStatusText(request.status)}
-                  </Badge>
-                </div>
+                {/* Durum değişikliği için dropdown menü */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded">
+                      {getStatusIcon(request.status)}
+                      <Badge 
+                        variant="secondary" 
+                        className={`${getStatusColor(request.status)} border`}
+                      >
+                        {getStatusText(request.status)}
+                      </Badge>
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuLabel>Durumu Değiştir</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuRadioGroup 
+                      value={request.status} 
+                      onValueChange={(value) => handleStatusChange(request.id, value as ServiceStatus)}
+                    >
+                      {statusOptions.map((option) => (
+                        <DropdownMenuRadioItem 
+                          key={option.value} 
+                          value={option.value}
+                          className={`flex items-center gap-2 ${
+                            request.status === option.value ? 'font-medium' : ''
+                          }`}
+                        >
+                          <div className={`w-2 h-2 rounded-full ${getStatusColor(option.value)}`} />
+                          {option.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TableCell>
               <TableCell>
                 {request.created_at && format(new Date(request.created_at), 'dd.MM.yyyy')}
