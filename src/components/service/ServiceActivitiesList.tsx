@@ -73,9 +73,11 @@ const getStatusIcon = (status: string) => {
 };
 
 export function ServiceActivitiesList({ serviceRequestId }: ServiceActivitiesListProps) {
-  const { data: activities, isLoading } = useQuery({
+  const { data: activities, isLoading, isError } = useQuery({
     queryKey: ['service-activities', serviceRequestId],
     queryFn: async () => {
+      console.log("Fetching service activities for request:", serviceRequestId);
+      
       const { data, error } = await supabase
         .from('service_activities')
         .select(`
@@ -88,7 +90,12 @@ export function ServiceActivitiesList({ serviceRequestId }: ServiceActivitiesLis
         .eq('service_request_id', serviceRequestId)
         .order('start_time', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching service activities:", error);
+        throw error;
+      }
+      
+      console.log("Service activities data:", data);
       
       const typedData = (data || []).map(item => ({
         ...item,
@@ -107,6 +114,14 @@ export function ServiceActivitiesList({ serviceRequestId }: ServiceActivitiesLis
     return (
       <div className="flex items-center justify-center h-32">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+        <p>Aktiviteler yüklenirken bir hata oluştu.</p>
       </div>
     );
   }
@@ -149,15 +164,15 @@ export function ServiceActivitiesList({ serviceRequestId }: ServiceActivitiesLis
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div className="flex items-center text-gray-600">
                 <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                {format(new Date(activity.start_time), 'dd.MM.yyyy HH:mm')}
+                {activity.start_time ? format(new Date(activity.start_time), 'dd.MM.yyyy HH:mm') : 'Henüz başlatılmadı'}
               </div>
               <div className="flex items-center text-gray-600">
                 <WrenchIcon className="w-4 h-4 mr-2 text-gray-400" />
-                {activity.labor_hours} saat
+                {activity.labor_hours ? `${activity.labor_hours} saat` : 'Belirtilmemiş'}
               </div>
               <div className="flex items-center text-gray-600">
                 <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                {activity.location}
+                {activity.location || 'Belirtilmemiş'}
               </div>
             </div>
 
