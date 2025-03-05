@@ -1,359 +1,77 @@
-import { useState } from "react";
-import { useServiceRequests, ServicePriority, ServiceStatus } from "@/hooks/useServiceRequests";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { ServiceActivityForm } from "./ServiceActivityForm";
-import { ServiceActivitiesList } from "./ServiceActivitiesList";
-import { ServiceRequestForm } from "./ServiceRequestForm";
+
+import React from "react";
+import { TableBody, Table } from "@/components/ui/table";
+import { ServiceRequestRow } from "./table/ServiceRequestRow";
+import { ServiceRequestTableHeader } from "./table/ServiceRequestTableHeader";
 import { ServiceRequestDetail } from "./ServiceRequestDetail";
-import { WarrantyInfo } from "./WarrantyInfo";
-import { format } from "date-fns";
-import { MessageSquare, Plus, Edit, Trash, MoreVertical, Download, AlertCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import {
-  getStatusIcon,
-  getStatusColor,
-  getStatusText
-} from "./utils/statusUtils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-} from "@/components/ui/dropdown-menu";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case 'high':
-      return 'bg-red-100 text-red-800 border-red-200';
-    case 'medium':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    case 'low':
-      return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'urgent':
-      return 'bg-purple-100 text-purple-800 border-purple-200';
-    default:
-      return 'bg-gray-100 text-gray-800 border-gray-200';
-  }
-};
-
-const statusOptions: {value: ServiceStatus, label: string}[] = [
-  { value: 'new', label: 'Yeni' },
-  { value: 'in_progress', label: 'Devam Ediyor' },
-  { value: 'assigned', label: 'Atandı' },
-  { value: 'on_hold', label: 'Beklemede' },
-  { value: 'completed', label: 'Tamamlandı' },
-  { value: 'cancelled', label: 'İptal Edildi' },
-];
+import { ActivityDialog } from "./dialog/ActivityDialog";
+import { EditDialog } from "./dialog/EditDialog";
+import { DeleteDialog } from "./dialog/DeleteDialog";
+import { LoadingState } from "./table/LoadingState";
+import { ErrorState } from "./table/ErrorState";
+import { EmptyState } from "./table/EmptyState";
+import { useServiceRequestTable } from "./state/useServiceRequestTable";
 
 export function ServiceRequestTable() {
-  const { 
-    data: serviceRequests, 
-    isLoading, 
-    isError, 
-    refetch, 
-    deleteServiceRequest,
-    updateServiceRequest,
-    isUpdating
-  } = useServiceRequests();
-  
-  const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
-  const [isActivityFormOpen, setIsActivityFormOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedRequestData, setSelectedRequestData] = useState<any>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [selectedDetailRequest, setSelectedDetailRequest] = useState<any>(null);
-
-  const handleActivitySuccess = () => {
-    refetch();
-  };
-
-  const handleEditRequest = (request: any) => {
-    setSelectedRequestData(request);
-    setIsEditModalOpen(true);
-  };
-
-  const handleDeleteRequest = (request: any) => {
-    setSelectedRequestData(request);
-    setIsDeleteModalOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (selectedRequestData) {
-      deleteServiceRequest(selectedRequestData.id);
-      setIsDeleteModalOpen(false);
-      setSelectedRequestData(null);
-    }
-  };
-
-  const handleOpenDetail = (request: any) => {
-    setSelectedDetailRequest(request);
-    setIsDetailOpen(true);
-  };
-
-  const handleStatusChange = (requestId: string, newStatus: ServiceStatus) => {
-    const request = serviceRequests?.find(r => r.id === requestId);
-    if (!request) return;
-    
-    if (request.status === newStatus) return;
-    
-    updateServiceRequest({
-      id: requestId,
-      updateData: {
-        title: request.title,
-        priority: request.priority,
-        service_type: request.service_type,
-        ...(request.location && { location: request.location }),
-        ...(request.description && { description: request.description }),
-        ...(request.customer_id && { customer_id: request.customer_id }),
-        ...(request.equipment_id && { equipment_id: request.equipment_id }),
-      },
-      newFiles: []
-    });
-    
-    supabase
-      .from('service_requests')
-      .update({ status: newStatus })
-      .eq('id', requestId)
-      .then(({ error }) => {
-        if (error) {
-          console.error('Durum güncellenirken hata oluştu:', error);
-          toast.error("Durum güncellenemedi");
-        } else {
-          toast.success(`Durum "${getStatusText(newStatus)}" olarak güncellendi`);
-          refetch();
-        }
-      });
-  };
-
-  const handleDownloadAttachment = async (attachment: any) => {
-    if (!attachment.path) return;
-    
-    const { data, error } = await supabase.storage
-      .from('service-attachments')
-      .download(attachment.path);
-    
-    if (error) {
-      console.error("Error downloading file:", error);
-      return;
-    }
-    
-    const url = window.URL.createObjectURL(data);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', attachment.name);
-    
-    document.body.appendChild(link);
-    link.click();
-    
-    link.parentNode?.removeChild(link);
-  };
+  const {
+    serviceRequests,
+    isLoading,
+    isError,
+    selectedRequest,
+    setSelectedRequest,
+    isActivityFormOpen,
+    setIsActivityFormOpen,
+    isEditModalOpen,
+    setIsEditModalOpen,
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
+    selectedRequestData,
+    setSelectedRequestData,
+    isDetailOpen,
+    setIsDetailOpen,
+    selectedDetailRequest,
+    handleActivitySuccess,
+    handleEditRequest,
+    handleDeleteRequest,
+    confirmDelete,
+    handleOpenDetail,
+    handleViewActivities,
+    handleAddActivity,
+    handleStatusChange,
+    handleDownloadAttachment,
+    statusOptions
+  } = useServiceRequestTable();
 
   if (isLoading) {
-    return (
-      <div className="h-48 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   if (isError) {
-    return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md my-4">
-        <p>Veri yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.</p>
-        <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-2">
-          Yeniden Dene
-        </Button>
-      </div>
-    );
+    return <ErrorState onRetry={() => window.location.reload()} />;
   }
 
   if (!serviceRequests || serviceRequests.length === 0) {
-    return (
-      <div className="text-center my-12 py-12 border border-dashed border-gray-300 rounded-lg">
-        <div className="text-gray-400 mb-4">
-          <AlertCircle className="h-12 w-12 mx-auto mb-4" />
-          <h3 className="text-lg font-medium">Henüz servis talebi bulunmuyor</h3>
-          <p className="mt-2">İlk servis talebinizi oluşturmak için "Yeni Servis Talebi" butonuna tıklayın.</p>
-        </div>
-      </div>
-    );
+    return <EmptyState />;
   }
 
   return (
     <>
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Başlık</TableHead>
-            <TableHead>Tür</TableHead>
-            <TableHead>Öncelik</TableHead>
-            <TableHead>Durum</TableHead>
-            <TableHead>Oluşturma Tarihi</TableHead>
-            <TableHead className="text-right">İşlemler</TableHead>
-          </TableRow>
-        </TableHeader>
+        <ServiceRequestTableHeader />
         <TableBody>
           {serviceRequests?.map((request) => (
-            <TableRow key={request.id} className="group hover:bg-gray-50 cursor-pointer">
-              <TableCell 
-                className="font-medium"
-                onClick={() => handleOpenDetail(request)}
-              >
-                {request.title}
-              </TableCell>
-              <TableCell onClick={() => handleOpenDetail(request)}>
-                {request.service_type}
-              </TableCell>
-              <TableCell onClick={() => handleOpenDetail(request)}>
-                <Badge 
-                  variant="secondary" 
-                  className={`${getPriorityColor(request.priority)} border`}
-                >
-                  {request.priority === 'low' ? 'Düşük' : 
-                   request.priority === 'medium' ? 'Orta' :
-                   request.priority === 'high' ? 'Yüksek' : 
-                   request.priority === 'urgent' ? 'Acil' : request.priority}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded">
-                      {getStatusIcon(request.status)}
-                      <Badge 
-                        variant="secondary" 
-                        className={`${getStatusColor(request.status)} border`}
-                      >
-                        {getStatusText(request.status)}
-                      </Badge>
-                    </div>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuLabel>Durumu Değiştir</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuRadioGroup 
-                      value={request.status} 
-                      onValueChange={(value) => handleStatusChange(request.id, value as ServiceStatus)}
-                    >
-                      {statusOptions.map((option) => (
-                        <DropdownMenuRadioItem 
-                          key={option.value} 
-                          value={option.value}
-                          className={`flex items-center gap-2 ${
-                            request.status === option.value ? 'font-medium' : ''
-                          }`}
-                        >
-                          <div className={`w-2 h-2 rounded-full ${getStatusColor(option.value)}`} />
-                          {option.label}
-                        </DropdownMenuRadioItem>
-                      ))}
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-              <TableCell onClick={() => handleOpenDetail(request)}>
-                {request.created_at && format(new Date(request.created_at), 'dd.MM.yyyy')}
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedRequest(request.id);
-                      setIsActivityFormOpen(false);
-                    }}
-                  >
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Aktiviteler
-                  </Button>
-                  
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedRequest(request.id);
-                        setIsActivityFormOpen(true);
-                      }}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Aktivite Ekle
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditRequest(request);
-                      }}>
-                        <Edit className="w-4 h-4 mr-2" />
-                        Düzenle
-                      </DropdownMenuItem>
-                      {request.attachments && request.attachments.length > 0 && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuLabel>Ekler</DropdownMenuLabel>
-                          {request.attachments.map((attachment: any, idx: number) => (
-                            <DropdownMenuItem 
-                              key={idx}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDownloadAttachment(attachment);
-                              }}
-                            >
-                              <Download className="w-4 h-4 mr-2" />
-                              {attachment.name}
-                            </DropdownMenuItem>
-                          ))}
-                        </>
-                      )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        className="text-red-600" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteRequest(request);
-                        }}
-                      >
-                        <Trash className="w-4 h-4 mr-2" />
-                        Sil
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </TableCell>
-            </TableRow>
+            <ServiceRequestRow
+              key={request.id}
+              request={request}
+              onOpenDetail={handleOpenDetail}
+              onStatusChange={handleStatusChange}
+              onViewActivities={handleViewActivities}
+              onAddActivity={handleAddActivity}
+              onEdit={handleEditRequest}
+              onDelete={handleDeleteRequest}
+              onDownloadAttachment={handleDownloadAttachment}
+              statusOptions={statusOptions}
+            />
           ))}
         </TableBody>
       </Table>
@@ -364,94 +82,29 @@ export function ServiceRequestTable() {
         onClose={() => setIsDetailOpen(false)}
       />
 
-      <Dialog 
-        open={selectedRequest !== null && !isEditModalOpen} 
+      <ActivityDialog 
+        isOpen={selectedRequest !== null && !isEditModalOpen}
+        selectedRequest={selectedRequest}
+        isActivityFormOpen={isActivityFormOpen}
         onOpenChange={(open) => !open && setSelectedRequest(null)}
-      >
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>
-              {isActivityFormOpen ? "Yeni Servis Aktivitesi" : "Servis Aktiviteleri"}
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedRequest && (
-            <>
-              {serviceRequests?.find(r => r.id === selectedRequest)?.equipment_id && (
-                <WarrantyInfo 
-                  equipmentId={serviceRequests.find(r => r.id === selectedRequest)?.equipment_id} 
-                />
-              )}
-              
-              {isActivityFormOpen ? (
-                <ServiceActivityForm
-                  serviceRequestId={selectedRequest}
-                  onClose={() => setSelectedRequest(null)}
-                  onSuccess={handleActivitySuccess}
-                />
-              ) : (
-                <>
-                  <ServiceActivitiesList serviceRequestId={selectedRequest} />
-                  <div className="flex justify-end mt-4">
-                    <Button
-                      onClick={() => setIsActivityFormOpen(true)}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Yeni Aktivite Ekle
-                    </Button>
-                  </div>
-                </>
-              )}
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+        setActivityFormOpen={setIsActivityFormOpen}
+        onActivitySuccess={handleActivitySuccess}
+        serviceRequests={serviceRequests || []}
+      />
 
-      <Dialog
-        open={isEditModalOpen}
-        onOpenChange={(open) => {
-          setIsEditModalOpen(open);
-          if (!open) setSelectedRequestData(null);
-        }}
-      >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Servis Talebini Düzenle</DialogTitle>
-          </DialogHeader>
-          {selectedRequestData && (
-            <ServiceRequestForm 
-              onClose={() => setIsEditModalOpen(false)} 
-              initialData={selectedRequestData}
-              isEditing={true}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      <EditDialog 
+        isOpen={isEditModalOpen}
+        selectedRequestData={selectedRequestData}
+        onOpenChange={setIsEditModalOpen}
+        onSetSelectedRequestData={setSelectedRequestData}
+      />
 
-      <Dialog
-        open={isDeleteModalOpen}
-        onOpenChange={(open) => {
-          setIsDeleteModalOpen(open);
-          if (!open) setSelectedRequestData(null);
-        }}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Servis Talebini Sil</DialogTitle>
-            <DialogDescription>
-              Bu servis talebini silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve tüm ilişkili aktiviteler de silinecektir.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
-              İptal
-            </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
-              Sil
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteDialog 
+        isOpen={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        onSetSelectedRequestData={setSelectedRequestData}
+        onConfirmDelete={confirmDelete}
+      />
     </>
   );
 }
