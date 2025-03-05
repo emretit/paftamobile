@@ -1,4 +1,5 @@
 
+import React from "react";
 import { CheckCircle2, WrenchIcon, AlertCircle } from "lucide-react";
 
 export const getActivityStatusColor = (status: string) => {
