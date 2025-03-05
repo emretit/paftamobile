@@ -44,22 +44,44 @@ const OpportunitiesSummary = () => {
           
         if (totalError) throw totalError;
         
-        // Get deals by status
+        // Get deals by status using a SQL query instead of groupBy
         const { data, error } = await supabase
-          .from('deals')
-          .select('status, count(*)')
-          .groupBy('status');
+          .rpc('get_deal_counts_by_status');
           
-        if (error) throw error;
+        if (error) {
+          // Fallback if the RPC function doesn't exist
+          const { data: rawData, error: queryError } = await supabase
+            .from('deals')
+            .select('status');
+            
+          if (queryError) throw queryError;
+          
+          // Process the data manually
+          const statusCounts: Record<string, number> = {};
+          rawData.forEach(deal => {
+            statusCounts[deal.status] = (statusCounts[deal.status] || 0) + 1;
+          });
+          
+          const formattedData: DealCount[] = Object.entries(statusCounts).map(([status, count]) => ({
+            status,
+            count,
+            label: statusLabels[status] || status,
+            color: statusColors[status] || "bg-gray-500"
+          }));
+          
+          setDealStats(formattedData);
+        } else {
+          // If RPC function exists and worked
+          const formattedData: DealCount[] = data.map(item => ({
+            status: item.status,
+            count: item.count,
+            label: statusLabels[item.status] || item.status,
+            color: statusColors[item.status] || "bg-gray-500"
+          }));
+          
+          setDealStats(formattedData);
+        }
         
-        const formattedData: DealCount[] = data.map(item => ({
-          status: item.status,
-          count: item.count,
-          label: statusLabels[item.status] || item.status,
-          color: statusColors[item.status] || "bg-gray-500"
-        }));
-        
-        setDealStats(formattedData);
         setTotalDeals(totalCount || 0);
       } catch (error) {
         console.error('Error fetching deal stats:', error);

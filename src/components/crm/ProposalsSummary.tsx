@@ -50,22 +50,44 @@ const ProposalsSummary = () => {
           
         if (totalError) throw totalError;
         
-        // Get proposals by status
+        // Get proposals by status using a SQL query instead of groupBy
         const { data, error } = await supabase
-          .from('proposals')
-          .select('status, count(*)')
-          .groupBy('status');
+          .rpc('get_proposal_counts_by_status');
           
-        if (error) throw error;
+        if (error) {
+          // Fallback if the RPC function doesn't exist
+          const { data: rawData, error: queryError } = await supabase
+            .from('proposals')
+            .select('status');
+            
+          if (queryError) throw queryError;
+          
+          // Process the data manually
+          const statusCounts: Record<string, number> = {};
+          rawData.forEach(proposal => {
+            statusCounts[proposal.status] = (statusCounts[proposal.status] || 0) + 1;
+          });
+          
+          const formattedData: ProposalCount[] = Object.entries(statusCounts).map(([status, count]) => ({
+            status,
+            count,
+            label: statusLabels[status] || status,
+            color: statusColors[status] || "bg-gray-500"
+          }));
+          
+          setProposalStats(formattedData);
+        } else {
+          // If RPC function exists and worked
+          const formattedData: ProposalCount[] = data.map(item => ({
+            status: item.status,
+            count: item.count,
+            label: statusLabels[item.status] || item.status,
+            color: statusColors[item.status] || "bg-gray-500"
+          }));
+          
+          setProposalStats(formattedData);
+        }
         
-        const formattedData: ProposalCount[] = data.map(item => ({
-          status: item.status,
-          count: item.count,
-          label: statusLabels[item.status] || item.status,
-          color: statusColors[item.status] || "bg-gray-500"
-        }));
-        
-        setProposalStats(formattedData);
         setTotalProposals(totalCount || 0);
       } catch (error) {
         console.error('Error fetching proposal stats:', error);
