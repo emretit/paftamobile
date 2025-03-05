@@ -19,6 +19,7 @@ import {
 
 // Define the CRM category items
 const crmItems = [
+  { path: "/crm", icon: LayoutDashboard, label: "Özet" },
   { path: "/deals", icon: PieChart, label: "Fırsatlar" },
   { path: "/proposals", icon: FileText, label: "Teklifler" },
   { path: "/tasks", icon: ListTodo, label: "Görevler" }

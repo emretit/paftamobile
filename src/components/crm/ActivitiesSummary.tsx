@@ -1,0 +1,158 @@
+
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Clock, CheckCircle, AlertTriangle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { format, isPast, isToday } from "date-fns";
+import { tr } from "date-fns/locale";
+
+interface Activity {
+  id: string;
+  title: string;
+  status: string;
+  due_date: string | null;
+  priority: string;
+  type: string;
+  isOverdue: boolean;
+}
+
+const priorityColors = {
+  high: "bg-red-100 text-red-800 border-red-200",
+  medium: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  low: "bg-blue-100 text-blue-800 border-blue-200"
+};
+
+const ActivitiesSummary = () => {
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        setLoading(true);
+        
+        const { data, error } = await supabase
+          .from('tasks')
+          .select('*')
+          .in('status', ['todo', 'in_progress'])
+          .order('due_date', { ascending: true })
+          .limit(5);
+          
+        if (error) throw error;
+        
+        const formattedData: Activity[] = data.map(task => {
+          const dueDate = task.due_date ? new Date(task.due_date) : null;
+          const isOverdue = dueDate ? isPast(dueDate) && !isToday(dueDate) : false;
+          
+          return {
+            ...task,
+            isOverdue
+          };
+        });
+        
+        setActivities(formattedData);
+      } catch (error) {
+        console.error('Error fetching activities:', error);
+        toast.error('Aktiviteler yüklenemedi');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchActivities();
+  }, []);
+  
+  const handleCompleteTask = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status: 'completed' })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      setActivities(prevActivities => 
+        prevActivities.filter(activity => activity.id !== id)
+      );
+      
+      toast.success('Görev tamamlandı');
+    } catch (error) {
+      console.error('Error completing task:', error);
+      toast.error('Görev tamamlanamadı');
+    }
+  };
+  
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        <div className="h-10 bg-gray-200 animate-pulse rounded-md"></div>
+        <div className="h-10 bg-gray-200 animate-pulse rounded-md"></div>
+        <div className="h-10 bg-gray-200 animate-pulse rounded-md"></div>
+      </div>
+    );
+  }
+  
+  if (activities.length === 0) {
+    return (
+      <div className="text-center py-6">
+        <p className="text-muted-foreground">Bekleyen aktivite bulunmuyor</p>
+        <p className="text-sm mt-2">Görevler sayfasından yeni aktivite ekleyebilirsiniz</p>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="space-y-3">
+      {activities.map((activity) => (
+        <div 
+          key={activity.id} 
+          className={`p-3 rounded-lg border flex justify-between items-center ${
+            activity.isOverdue ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'
+          }`}
+        >
+          <div className="space-y-1 flex-1">
+            <div className="flex items-center gap-2">
+              {activity.isOverdue && (
+                <AlertTriangle className="h-4 w-4 text-red-500" />
+              )}
+              <span className={`font-medium truncate ${activity.isOverdue ? 'text-red-700' : ''}`}>
+                {activity.title}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Badge 
+                variant="secondary"
+                className={priorityColors[activity.priority as keyof typeof priorityColors]}
+              >
+                {activity.priority === 'high' ? 'Yüksek' : 
+                 activity.priority === 'medium' ? 'Orta' : 'Düşük'}
+              </Badge>
+              
+              {activity.due_date && (
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span>
+                    {format(new Date(activity.due_date), 'd MMM', { locale: tr })}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-8 w-8 p-0" 
+            onClick={() => handleCompleteTask(activity.id)}
+          >
+            <CheckCircle className="h-5 w-5" />
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default ActivitiesSummary;
