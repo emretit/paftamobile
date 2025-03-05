@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
-import trLocale from 'date-fns/locale/tr';
+import * as trLocale from 'date-fns/locale/tr'; // Import with namespace instead of default
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -182,23 +183,8 @@ const TasksCalendar = ({
     }
   }, [fetchedTasks, searchQuery, selectedEmployee, selectedType]);
 
-  const handleEventResize = ({ event, start, end }: any) => {
-    const updatedEvents = events.map(existingEvent => {
-      return existingEvent.id === event.id
-        ? { ...existingEvent, start, end }
-        : existingEvent;
-    });
-    
-    setEvents(updatedEvents);
-    
-    // Update the task in Supabase
-    updateTaskMutation.mutate({
-      id: event.id,
-      due_date: start.toISOString()
-    });
-  };
-
-  const handleEventDrop = ({ event, start, end }: any) => {
+  // Function to handle event updates when moved in the calendar
+  const handleEventUpdate = ({ event, start, end }: any) => {
     const updatedEvents = events.map(existingEvent => {
       return existingEvent.id === event.id
         ? { ...existingEvent, start, end }
@@ -299,9 +285,8 @@ const TasksCalendar = ({
           startAccessor="start"
           endAccessor="end"
           style={{ width: '100%', height: '100%' }}
-          onEventDrop={handleEventDrop}
-          onEventResize={handleEventResize}
-          resizable
+          onEventDrop={handleEventUpdate}
+          onEventResize={handleEventUpdate}
           selectable
           onSelectEvent={handleSelectEvent}
           eventPropGetter={getEventStyle}
@@ -315,7 +300,14 @@ const TasksCalendar = ({
             previous: 'Geri',
             showMore: (total) => `+${total} daha`,
           }}
-          culture="tr"
+          formats={{
+            dayHeaderFormat: (date) => format(date, 'EEEE dd MMMM', { locale: trLocale }),
+            dayRangeHeaderFormat: ({ start, end }) => 
+              `${format(start, 'dd MMM', { locale: trLocale })} - ${format(end, 'dd MMM', { locale: trLocale })}`,
+            timeGutterFormat: (date) => format(date, 'HH:mm', { locale: trLocale }),
+            eventTimeRangeFormat: ({ start, end }) => 
+              `${format(start, 'HH:mm', { locale: trLocale })} - ${format(end, 'HH:mm', { locale: trLocale })}`,
+          }}
         />
       </div>
 
