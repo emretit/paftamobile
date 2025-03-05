@@ -1,5 +1,5 @@
 
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import NavHeader from "./navbar/NavHeader";
@@ -15,15 +15,22 @@ interface NavbarProps {
 
 const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isActive = (path: string) => location.pathname === path;
   const [expandedCategories, setExpandedCategories] = useState<string[]>(["CRM"]);
 
-  const toggleCategory = (category: string) => {
+  const toggleCategory = (category: string, path?: string) => {
+    // Toggle the expanded state
     setExpandedCategories(prev => 
       prev.includes(category) 
         ? prev.filter(c => c !== category)
         : [...prev, category]
     );
+    
+    // Navigate to the path if provided
+    if (path) {
+      navigate(path);
+    }
   };
 
   return (
@@ -43,10 +50,11 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
               return (
                 <div key={item.category}>
                   <button
-                    onClick={() => toggleCategory(item.category)}
+                    onClick={() => toggleCategory(item.category, item.path)}
                     className={cn(
                       "flex items-center w-full h-11 px-3 rounded-md text-white/80 hover:bg-[#9e1c2c]/20 hover:text-white",
-                      !isCollapsed && "justify-between"
+                      !isCollapsed && "justify-between",
+                      isActive(item.path || '') && "bg-[#9e1c2c] text-white"
                     )}
                   >
                     <div className="flex items-center">
