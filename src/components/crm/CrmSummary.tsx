@@ -1,9 +1,8 @@
+
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PieChart, LineChart, List, Clock, CheckCircle, AlertTriangle, BarChart, FileText } from "lucide-react";
+import { Plus, PieChart, List, FileText } from "lucide-react";
 
 import OpportunitiesSummary from "./OpportunitiesSummary";
 import ActivitiesSummary from "./ActivitiesSummary";
@@ -15,7 +14,7 @@ const CrmSummary = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Opportunities Section */}
-      <Card className="shadow-md">
+      <Card className="shadow-md border border-gray-200">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
             <CardTitle className="text-xl font-semibold">Fırsatlar</CardTitle>
@@ -28,19 +27,26 @@ const CrmSummary = () => {
         <CardContent>
           <OpportunitiesSummary />
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex gap-3">
           <Button 
             variant="outline" 
-            className="w-full" 
+            className="flex-1" 
             onClick={() => navigate("/deals")}
           >
             Tüm Fırsatları Görüntüle
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={() => navigate("/deals/new")}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Yeni Fırsat
           </Button>
         </CardFooter>
       </Card>
 
       {/* Activities Section */}
-      <Card className="shadow-md">
+      <Card className="shadow-md border border-gray-200">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
             <CardTitle className="text-xl font-semibold">Aktiviteler</CardTitle>
@@ -53,19 +59,26 @@ const CrmSummary = () => {
         <CardContent>
           <ActivitiesSummary />
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex gap-3">
           <Button 
             variant="outline" 
-            className="w-full" 
+            className="flex-1" 
             onClick={() => navigate("/tasks")}
           >
             Tüm Aktiviteleri Görüntüle
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={() => navigate("/tasks/new")}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Yeni Aktivite
           </Button>
         </CardFooter>
       </Card>
 
       {/* Proposals Section */}
-      <Card className="shadow-md">
+      <Card className="shadow-md border border-gray-200">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
             <CardTitle className="text-xl font-semibold">Teklifler</CardTitle>
@@ -90,6 +103,7 @@ const CrmSummary = () => {
             className="flex-1" 
             onClick={() => navigate("/proposal-form")}
           >
+            <Plus className="h-4 w-4 mr-2" />
             Yeni Teklif
           </Button>
         </CardFooter>
