@@ -15,7 +15,7 @@ const CrmDashboard = ({ isCollapsed, setIsCollapsed }: CrmDashboardProps) => {
     <DefaultLayout 
       isCollapsed={isCollapsed} 
       setIsCollapsed={setIsCollapsed}
-      title="CRM Gösterge Paneli"
+      title="CRM"
       subtitle="Fırsatlar, Aktiviteler ve Teklifler özeti"
     >
       <div className="container mx-auto py-6">

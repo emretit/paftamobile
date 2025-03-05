@@ -19,7 +19,6 @@ import {
 
 // Define the CRM category items
 const crmItems = [
-  { path: "/crm", icon: LayoutDashboard, label: "Özet" },
   { path: "/deals", icon: PieChart, label: "Fırsatlar" },
   { path: "/proposals", icon: FileText, label: "Teklifler" },
   { path: "/tasks", icon: ListTodo, label: "Görevler" }
@@ -30,7 +29,8 @@ export const navItems = [
   {
     category: "CRM",
     icon: Briefcase,
-    items: crmItems
+    items: crmItems,
+    path: "/crm"  // Ana kategori tıklandığında gidilecek path
   },
   { path: "/contacts", icon: Users, label: "Müşteriler" },
   { path: "/suppliers", icon: Truck, label: "Tedarikçiler" },
