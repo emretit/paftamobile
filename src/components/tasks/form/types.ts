@@ -1,5 +1,5 @@
 
-import type { Task } from "@/types/task";
+import type { Task, SubTask } from "@/types/task";
 
 export interface FormData {
   title: string;
@@ -10,4 +10,5 @@ export interface FormData {
   due_date?: string;
   related_item_id?: string;
   related_item_title?: string;
+  subtasks?: SubTask[];
 }

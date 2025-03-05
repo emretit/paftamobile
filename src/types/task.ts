@@ -5,6 +5,13 @@ export interface TaskAssignee {
   avatar?: string;
 }
 
+export interface SubTask {
+  id: string;
+  title: string;
+  completed: boolean;
+  created_at?: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -12,7 +19,7 @@ export interface Task {
   status: 'todo' | 'in_progress' | 'completed';
   priority: 'low' | 'medium' | 'high';
   type: 'opportunity' | 'proposal' | 'general';
-  item_type: 'task' | 'opportunity';  // opportunity tipini ekledik
+  item_type: 'task' | 'opportunity';
   assignee_id?: string;
   assignee?: TaskAssignee;
   due_date?: string;
@@ -21,4 +28,5 @@ export interface Task {
   related_item_title?: string;
   created_at?: string;
   updated_at?: string;
+  subtasks?: SubTask[];
 }

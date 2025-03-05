@@ -8,12 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Plus, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { Task } from "@/types/task";
+import { Checkbox } from "@/components/ui/checkbox"
+import { v4 as uuidv4 } from "uuid";
+import type { Task, SubTask } from "@/types/task";
 
 interface TaskDetailSheetProps {
   task: Task | null;
@@ -24,6 +26,8 @@ interface TaskDetailSheetProps {
 const TaskDetailSheet = ({ task, isOpen, onClose }: TaskDetailSheetProps) => {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Task | null>(task);
+  const [newSubtask, setNewSubtask] = useState("");
+  const [isAddingSubtask, setIsAddingSubtask] = useState(false);
 
   const { data: employees } = useQuery({
     queryKey: ['employees'],
@@ -67,6 +71,59 @@ const TaskDetailSheet = ({ task, isOpen, onClose }: TaskDetailSheetProps) => {
     const updatedData = { ...formData, [field]: value };
     setFormData(updatedData);
     updateTaskMutation.mutate({ [field]: value });
+  };
+
+  const handleAddSubtask = () => {
+    if (!formData || !newSubtask.trim()) return;
+    
+    const newSubtaskItem: SubTask = {
+      id: uuidv4(),
+      title: newSubtask.trim(),
+      completed: false,
+      created_at: new Date().toISOString()
+    };
+    
+    const currentSubtasks = formData.subtasks || [];
+    const updatedSubtasks = [...currentSubtasks, newSubtaskItem];
+    
+    setFormData({
+      ...formData,
+      subtasks: updatedSubtasks
+    });
+    
+    updateTaskMutation.mutate({ subtasks: updatedSubtasks });
+    setNewSubtask("");
+    setIsAddingSubtask(false);
+  };
+
+  const handleToggleSubtask = (subtaskId: string, completed: boolean) => {
+    if (!formData || !formData.subtasks) return;
+    
+    const updatedSubtasks = formData.subtasks.map(subtask => 
+      subtask.id === subtaskId ? { ...subtask, completed } : subtask
+    );
+    
+    setFormData({
+      ...formData,
+      subtasks: updatedSubtasks
+    });
+    
+    updateTaskMutation.mutate({ subtasks: updatedSubtasks });
+  };
+
+  const handleDeleteSubtask = (subtaskId: string) => {
+    if (!formData || !formData.subtasks) return;
+    
+    const updatedSubtasks = formData.subtasks.filter(subtask => 
+      subtask.id !== subtaskId
+    );
+    
+    setFormData({
+      ...formData,
+      subtasks: updatedSubtasks
+    });
+    
+    updateTaskMutation.mutate({ subtasks: updatedSubtasks });
   };
 
   if (!formData) return null;
@@ -170,6 +227,75 @@ const TaskDetailSheet = ({ task, isOpen, onClose }: TaskDetailSheetProps) => {
                   />
                 </PopoverContent>
               </Popover>
+            </div>
+
+            {/* Subtasks section */}
+            <div className="space-y-3 border-t pt-4 mt-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-md font-semibold">Alt Görevler</h3>
+                {!isAddingSubtask && (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setIsAddingSubtask(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Alt Görev Ekle
+                  </Button>
+                )}
+              </div>
+
+              {isAddingSubtask && (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={newSubtask}
+                    onChange={(e) => setNewSubtask(e.target.value)}
+                    placeholder="Alt görev başlığı"
+                    className="flex-1"
+                    autoFocus
+                  />
+                  <Button size="sm" onClick={handleAddSubtask}>
+                    Ekle
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => setIsAddingSubtask(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+
+              {formData.subtasks && formData.subtasks.length > 0 ? (
+                <div className="space-y-2">
+                  {formData.subtasks.map((subtask) => (
+                    <div key={subtask.id} className="flex items-center gap-2 p-2 rounded-md bg-gray-50">
+                      <Checkbox 
+                        checked={subtask.completed} 
+                        onCheckedChange={(checked) => 
+                          handleToggleSubtask(subtask.id, checked === true)
+                        } 
+                      />
+                      <span className={cn(
+                        "flex-1",
+                        subtask.completed && "line-through text-gray-500"
+                      )}>
+                        {subtask.title}
+                      </span>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => handleDeleteSubtask(subtask.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Alt görev bulunmuyor</p>
+              )}
             </div>
           </div>
         </div>
