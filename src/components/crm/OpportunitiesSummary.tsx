@@ -11,6 +11,11 @@ interface DealCount {
   color: string;
 }
 
+interface DealStatusCount {
+  status: string;
+  count: number;
+}
+
 const statusLabels: Record<string, string> = {
   new: "Yeni",
   negotiation: "Görüşme",
@@ -44,12 +49,13 @@ const OpportunitiesSummary = () => {
           
         if (totalError) throw totalError;
         
-        // Get deals by status using a SQL query instead of groupBy
+        // Get deals by status using a direct query
         const { data, error } = await supabase
-          .rpc('get_deal_counts_by_status');
+          .from('get_deal_counts_by_status')
+          .select('*');
           
         if (error) {
-          // Fallback if the RPC function doesn't exist
+          // Fallback if the query doesn't work
           const { data: rawData, error: queryError } = await supabase
             .from('deals')
             .select('status');
@@ -71,10 +77,10 @@ const OpportunitiesSummary = () => {
           
           setDealStats(formattedData);
         } else {
-          // If RPC function exists and worked
-          const formattedData: DealCount[] = data.map(item => ({
+          // If query worked
+          const formattedData: DealCount[] = (data as DealStatusCount[]).map(item => ({
             status: item.status,
-            count: item.count,
+            count: Number(item.count),
             label: statusLabels[item.status] || item.status,
             color: statusColors[item.status] || "bg-gray-500"
           }));

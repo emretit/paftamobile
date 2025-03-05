@@ -1490,6 +1490,20 @@ export type Database = {
         }
         Returns: string
       }
+      get_deal_counts_by_status: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          status: string
+          count: number
+        }[]
+      }
+      get_proposal_counts_by_status: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          status: string
+          count: number
+        }[]
+      }
       gtrgm_compress: {
         Args: {
           "": unknown

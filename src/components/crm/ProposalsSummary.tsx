@@ -11,6 +11,11 @@ interface ProposalCount {
   color: string;
 }
 
+interface ProposalStatusCount {
+  status: string;
+  count: number;
+}
+
 const statusLabels: Record<string, string> = {
   draft: "Taslak",
   new: "Yeni",
@@ -50,12 +55,13 @@ const ProposalsSummary = () => {
           
         if (totalError) throw totalError;
         
-        // Get proposals by status using a SQL query instead of groupBy
+        // Get proposals by status using a direct query
         const { data, error } = await supabase
-          .rpc('get_proposal_counts_by_status');
+          .from('get_proposal_counts_by_status')
+          .select('*');
           
         if (error) {
-          // Fallback if the RPC function doesn't exist
+          // Fallback if the query doesn't work
           const { data: rawData, error: queryError } = await supabase
             .from('proposals')
             .select('status');
@@ -77,10 +83,10 @@ const ProposalsSummary = () => {
           
           setProposalStats(formattedData);
         } else {
-          // If RPC function exists and worked
-          const formattedData: ProposalCount[] = data.map(item => ({
+          // If query worked
+          const formattedData: ProposalCount[] = (data as ProposalStatusCount[]).map(item => ({
             status: item.status,
-            count: item.count,
+            count: Number(item.count),
             label: statusLabels[item.status] || item.status,
             color: statusColors[item.status] || "bg-gray-500"
           }));
