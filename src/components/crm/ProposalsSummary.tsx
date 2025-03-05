@@ -55,13 +55,12 @@ const ProposalsSummary = () => {
           
         if (totalError) throw totalError;
         
-        // Get proposals by status using a direct query
+        // Get proposals by status using the database function
         const { data, error } = await supabase
-          .from('get_proposal_counts_by_status')
-          .select('*');
+          .rpc('get_proposal_counts_by_status');
           
         if (error) {
-          // Fallback if the query doesn't work
+          // Fallback if the RPC function doesn't work
           const { data: rawData, error: queryError } = await supabase
             .from('proposals')
             .select('status');
@@ -83,8 +82,8 @@ const ProposalsSummary = () => {
           
           setProposalStats(formattedData);
         } else {
-          // If query worked
-          const formattedData: ProposalCount[] = (data as ProposalStatusCount[]).map(item => ({
+          // If RPC function worked
+          const formattedData: ProposalCount[] = data.map((item: ProposalStatusCount) => ({
             status: item.status,
             count: Number(item.count),
             label: statusLabels[item.status] || item.status,

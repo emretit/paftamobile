@@ -49,13 +49,12 @@ const OpportunitiesSummary = () => {
           
         if (totalError) throw totalError;
         
-        // Get deals by status using a direct query
+        // Get deals by status using the database function
         const { data, error } = await supabase
-          .from('get_deal_counts_by_status')
-          .select('*');
+          .rpc('get_deal_counts_by_status');
           
         if (error) {
-          // Fallback if the query doesn't work
+          // Fallback if the RPC function doesn't work
           const { data: rawData, error: queryError } = await supabase
             .from('deals')
             .select('status');
@@ -77,8 +76,8 @@ const OpportunitiesSummary = () => {
           
           setDealStats(formattedData);
         } else {
-          // If query worked
-          const formattedData: DealCount[] = (data as DealStatusCount[]).map(item => ({
+          // If RPC function worked
+          const formattedData: DealCount[] = data.map((item: DealStatusCount) => ({
             status: item.status,
             count: Number(item.count),
             label: statusLabels[item.status] || item.status,
