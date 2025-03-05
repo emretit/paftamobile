@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, PieChart, List, FileText } from "lucide-react";
 
 import OpportunitiesSummary from "./OpportunitiesSummary";
-import ActivitiesSummary from "./ActivitiesSummary";
+import TasksSummary from "./TasksSummary";
 import ProposalsSummary from "./ProposalsSummary";
 
 const CrmSummary = () => {
@@ -46,19 +46,19 @@ const CrmSummary = () => {
           </CardFooter>
         </Card>
 
-        {/* Activities Section */}
+        {/* Tasks Section */}
         <Card className="w-full shadow-sm border border-gray-200 h-full">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-lg font-semibold">Aktiviteler</CardTitle>
+              <CardTitle className="text-lg font-semibold">Görevler</CardTitle>
               <div className="bg-green-100 p-2 rounded-full">
                 <List className="h-5 w-5 text-green-600" />
               </div>
             </div>
-            <CardDescription>Görevler ve toplantılar</CardDescription>
+            <CardDescription>Görevler ve durumları</CardDescription>
           </CardHeader>
           <CardContent className="pb-2">
-            <ActivitiesSummary />
+            <TasksSummary />
           </CardContent>
           <CardFooter className="flex flex-col gap-3 pt-4">
             <Button 
@@ -66,14 +66,14 @@ const CrmSummary = () => {
               className="w-full justify-center"
               onClick={() => navigate("/tasks")}
             >
-              Tüm Aktiviteleri Görüntüle
+              Tüm Görevleri Görüntüle
             </Button>
             <Button
               className="w-full justify-center"
               onClick={() => navigate("/tasks/new")}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Yeni Aktivite
+              Yeni Görev
             </Button>
           </CardFooter>
         </Card>

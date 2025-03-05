@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { format, isPast, isToday } from "date-fns";
 import { tr } from "date-fns/locale";
 
-interface Activity {
+interface Task {
   id: string;
   title: string;
   status: string;
@@ -24,12 +24,12 @@ const priorityColors = {
   low: "bg-blue-100 text-blue-800 border-blue-200"
 };
 
-const ActivitiesSummary = () => {
-  const [activities, setActivities] = useState<Activity[]>([]);
+const TasksSummary = () => {
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    const fetchActivities = async () => {
+    const fetchTasks = async () => {
       try {
         setLoading(true);
         
@@ -42,7 +42,7 @@ const ActivitiesSummary = () => {
           
         if (error) throw error;
         
-        const formattedData: Activity[] = data.map(task => {
+        const formattedData: Task[] = data.map(task => {
           const dueDate = task.due_date ? new Date(task.due_date) : null;
           const isOverdue = dueDate ? isPast(dueDate) && !isToday(dueDate) : false;
           
@@ -52,16 +52,16 @@ const ActivitiesSummary = () => {
           };
         });
         
-        setActivities(formattedData);
+        setTasks(formattedData);
       } catch (error) {
-        console.error('Error fetching activities:', error);
-        toast.error('Aktiviteler yüklenemedi');
+        console.error('Error fetching tasks:', error);
+        toast.error('Görevler yüklenemedi');
       } finally {
         setLoading(false);
       }
     };
     
-    fetchActivities();
+    fetchTasks();
   }, []);
   
   const handleCompleteTask = async (id: string) => {
@@ -73,8 +73,8 @@ const ActivitiesSummary = () => {
         
       if (error) throw error;
       
-      setActivities(prevActivities => 
-        prevActivities.filter(activity => activity.id !== id)
+      setTasks(prevTasks => 
+        prevTasks.filter(task => task.id !== id)
       );
       
       toast.success('Görev tamamlandı');
@@ -94,47 +94,47 @@ const ActivitiesSummary = () => {
     );
   }
   
-  if (activities.length === 0) {
+  if (tasks.length === 0) {
     return (
       <div className="text-center py-6">
-        <p className="text-muted-foreground">Bekleyen aktivite bulunmuyor</p>
-        <p className="text-sm mt-2">Görevler sayfasından yeni aktivite ekleyebilirsiniz</p>
+        <p className="text-muted-foreground">Bekleyen görev bulunmuyor</p>
+        <p className="text-sm mt-2">Görevler sayfasından yeni görev ekleyebilirsiniz</p>
       </div>
     );
   }
   
   return (
     <div className="space-y-3">
-      {activities.map((activity) => (
+      {tasks.map((task) => (
         <div 
-          key={activity.id} 
+          key={task.id} 
           className={`p-3 rounded-lg border flex justify-between items-center ${
-            activity.isOverdue ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'
+            task.isOverdue ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'
           }`}
         >
           <div className="space-y-1 flex-1">
             <div className="flex items-center gap-2">
-              {activity.isOverdue && (
+              {task.isOverdue && (
                 <AlertTriangle className="h-4 w-4 text-red-500" />
               )}
-              <span className={`font-medium truncate ${activity.isOverdue ? 'text-red-700' : ''}`}>
-                {activity.title}
+              <span className={`font-medium truncate ${task.isOverdue ? 'text-red-700' : ''}`}>
+                {task.title}
               </span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Badge 
                 variant="secondary"
-                className={priorityColors[activity.priority as keyof typeof priorityColors]}
+                className={priorityColors[task.priority as keyof typeof priorityColors]}
               >
-                {activity.priority === 'high' ? 'Yüksek' : 
-                 activity.priority === 'medium' ? 'Orta' : 'Düşük'}
+                {task.priority === 'high' ? 'Yüksek' : 
+                 task.priority === 'medium' ? 'Orta' : 'Düşük'}
               </Badge>
               
-              {activity.due_date && (
+              {task.due_date && (
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <Clock className="h-3 w-3" />
                   <span>
-                    {format(new Date(activity.due_date), 'd MMM', { locale: tr })}
+                    {format(new Date(task.due_date), 'd MMM', { locale: tr })}
                   </span>
                 </div>
               )}
@@ -145,7 +145,7 @@ const ActivitiesSummary = () => {
             size="sm" 
             variant="ghost" 
             className="h-8 w-8 p-0" 
-            onClick={() => handleCompleteTask(activity.id)}
+            onClick={() => handleCompleteTask(task.id)}
           >
             <CheckCircle className="h-5 w-5" />
           </Button>
@@ -155,4 +155,4 @@ const ActivitiesSummary = () => {
   );
 };
 
-export default ActivitiesSummary;
+export default TasksSummary;
