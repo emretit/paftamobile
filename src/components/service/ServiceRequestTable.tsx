@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useServiceRequests, ServicePriority, ServiceStatus } from "@/hooks/useServiceRequests";
 import {
@@ -24,8 +23,13 @@ import { ServiceRequestForm } from "./ServiceRequestForm";
 import { ServiceRequestDetail } from "./ServiceRequestDetail";
 import { WarrantyInfo } from "./WarrantyInfo";
 import { format } from "date-fns";
-import { MessageSquare, Plus, AlertCircle, Clock, CheckCircle, Edit, Trash, MoreVertical, Download } from "lucide-react";
+import { MessageSquare, Plus, Edit, Trash, MoreVertical, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  getStatusIcon,
+  getStatusColor,
+  getStatusText
+} from "./utils/statusUtils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -105,7 +109,6 @@ const getStatusText = (status: string) => {
   }
 };
 
-// Durum değişikliği için kullanılabilecek durum seçenekleri
 const statusOptions: {value: ServiceStatus, label: string}[] = [
   { value: 'new', label: 'Yeni' },
   { value: 'in_progress', label: 'Devam Ediyor' },
@@ -161,18 +164,15 @@ export function ServiceRequestTable() {
     setIsDetailOpen(true);
   };
 
-  // Durumu güncellemek için yeni fonksiyon
   const handleStatusChange = (requestId: string, newStatus: ServiceStatus) => {
     const request = serviceRequests?.find(r => r.id === requestId);
     if (!request) return;
     
-    // Eğer durum aynıysa değişiklik yapmayalım
     if (request.status === newStatus) return;
     
     updateServiceRequest({
       id: requestId,
       updateData: {
-        // Sadece durum bilgisini güncelliyoruz
         title: request.title,
         priority: request.priority,
         service_type: request.service_type,
@@ -181,11 +181,9 @@ export function ServiceRequestTable() {
         ...(request.customer_id && { customer_id: request.customer_id }),
         ...(request.equipment_id && { equipment_id: request.equipment_id }),
       },
-      // Yeni durum direkt backend tarafında değiştirilecek
-      // newFiles: [] ile ek dosya göndermiyoruz
+      newFiles: []
     });
     
-    // Supabase'de direkt olarak durumu güncelle
     supabase
       .from('service_requests')
       .update({ status: newStatus })
@@ -196,7 +194,7 @@ export function ServiceRequestTable() {
           toast.error("Durum güncellenemedi");
         } else {
           toast.success(`Durum "${getStatusText(newStatus)}" olarak güncellendi`);
-          refetch(); // Listeyi yenile
+          refetch();
         }
       });
   };
@@ -213,17 +211,14 @@ export function ServiceRequestTable() {
       return;
     }
     
-    // Create blob link to download
     const url = window.URL.createObjectURL(data);
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', attachment.name);
     
-    // Append to html link element page and click it
     document.body.appendChild(link);
     link.click();
     
-    // Clean up and remove the link
     link.parentNode?.removeChild(link);
   };
 
@@ -295,7 +290,6 @@ export function ServiceRequestTable() {
                 </Badge>
               </TableCell>
               <TableCell>
-                {/* Durum değişikliği için dropdown menü */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded">
@@ -415,14 +409,12 @@ export function ServiceRequestTable() {
         </TableBody>
       </Table>
 
-      {/* Servis Detay Sheet */}
       <ServiceRequestDetail 
         serviceRequest={selectedDetailRequest}
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
       />
 
-      {/* Aktiviteler Dialog */}
       <Dialog 
         open={selectedRequest !== null && !isEditModalOpen} 
         onOpenChange={(open) => !open && setSelectedRequest(null)}
@@ -466,7 +458,6 @@ export function ServiceRequestTable() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Request Dialog */}
       <Dialog
         open={isEditModalOpen}
         onOpenChange={(open) => {
@@ -488,7 +479,6 @@ export function ServiceRequestTable() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={isDeleteModalOpen}
         onOpenChange={(open) => {
