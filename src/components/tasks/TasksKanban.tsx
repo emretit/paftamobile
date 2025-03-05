@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Clock, CheckCircle2, ListTodo } from "lucide-react";
@@ -5,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import TaskColumn from "./TaskColumn";
 import { toast } from "sonner";
+import { useTaskRealtime } from "./hooks/useTaskRealtime";
 import type { Task } from "@/types/task";
 
 interface TasksKanbanProps {
@@ -24,6 +26,9 @@ const columns = [
 const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask, onSelectTask }: TasksKanbanProps) => {
   const queryClient = useQueryClient();
   const [tasks, setTasks] = useState<Task[]>([]);
+  
+  // Use the shared realtime hook
+  useTaskRealtime();
 
   const { data: fetchedTasks, isLoading, error } = useQuery({
     queryKey: ['tasks'],
@@ -66,24 +71,6 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask, 
       setTasks(fetchedTasks);
     }
   }, [fetchedTasks]);
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('tasks-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'tasks' },
-        (payload) => {
-          console.log('Task changed:', payload);
-          queryClient.invalidateQueries({ queryKey: ['tasks'] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
 
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Task['status'] }) => {
@@ -137,7 +124,7 @@ const TasksKanban = ({ searchQuery, selectedEmployee, selectedType, onEditTask, 
     return tasks.filter(task => {
       const matchesSearch = !searchQuery || 
         task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        task.description.toLowerCase().includes(searchQuery.toLowerCase());
+        task.description?.toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesEmployee = !selectedEmployee || 
         task.assignee_id === selectedEmployee;

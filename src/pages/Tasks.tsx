@@ -6,13 +6,17 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, Plus } from "lucide-react";
+import { Filter, Plus, CalendarIcon, LayoutGrid, Table as TableIcon } from "lucide-react";
 import TasksKanban from "@/components/tasks/TasksKanban";
 import TaskForm from "@/components/tasks/TaskForm";
 import TaskDetailSheet from "@/components/tasks/TaskDetailSheet";
+import TasksTable from "@/components/tasks/TasksTable";
+import TasksCalendar from "@/components/tasks/TasksCalendar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Task } from "@/types/task";
+
+type ViewType = "kanban" | "table" | "calendar";
 
 interface TasksProps {
   isCollapsed: boolean;
@@ -26,6 +30,7 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [activeView, setActiveView] = useState<ViewType>("kanban");
 
   const { data: employees } = useQuery({
     queryKey: ['employees'],
@@ -48,6 +53,42 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
     setSelectedTask(task);
   };
 
+  const getViewComponent = () => {
+    switch (activeView) {
+      case "table":
+        return (
+          <TasksTable
+            searchQuery={searchQuery}
+            selectedEmployee={selectedEmployee}
+            selectedType={selectedType}
+            onEditTask={handleEditTask}
+            onSelectTask={handleSelectTask}
+          />
+        );
+      case "calendar":
+        return (
+          <TasksCalendar
+            searchQuery={searchQuery}
+            selectedEmployee={selectedEmployee}
+            selectedType={selectedType}
+            onEditTask={handleEditTask}
+            onSelectTask={handleSelectTask}
+          />
+        );
+      case "kanban":
+      default:
+        return (
+          <TasksKanban
+            searchQuery={searchQuery}
+            selectedEmployee={selectedEmployee}
+            selectedType={selectedType}
+            onEditTask={handleEditTask}
+            onSelectTask={handleSelectTask}
+          />
+        );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
@@ -60,7 +101,36 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
               <h1 className="text-3xl font-bold text-gray-900">Görevler</h1>
               <p className="text-gray-600 mt-1">Tüm görevleri görüntüleyin ve yönetin</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-center">
+              <div className="bg-white border rounded-md p-1 flex items-center">
+                <Button 
+                  variant={activeView === "kanban" ? "default" : "ghost"} 
+                  size="sm"
+                  onClick={() => setActiveView("kanban")}
+                  className="px-3"
+                >
+                  <LayoutGrid className="h-4 w-4 mr-2" />
+                  Kanban
+                </Button>
+                <Button 
+                  variant={activeView === "table" ? "default" : "ghost"} 
+                  size="sm"
+                  onClick={() => setActiveView("table")}
+                  className="px-3"
+                >
+                  <TableIcon className="h-4 w-4 mr-2" />
+                  Tablo
+                </Button>
+                <Button 
+                  variant={activeView === "calendar" ? "default" : "ghost"} 
+                  size="sm"
+                  onClick={() => setActiveView("calendar")}
+                  className="px-3"
+                >
+                  <CalendarIcon className="h-4 w-4 mr-2" />
+                  Takvim
+                </Button>
+              </div>
               <Button variant="outline" size="sm">
                 <Filter className="h-4 w-4 mr-2" />
                 Filtrele
@@ -119,14 +189,8 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
             </div>
           </Card>
 
-          <ScrollArea className="h-[calc(100vh-280px)]">
-            <TasksKanban
-              searchQuery={searchQuery}
-              selectedEmployee={selectedEmployee}
-              selectedType={selectedType}
-              onEditTask={handleEditTask}
-              onSelectTask={handleSelectTask}
-            />
+          <ScrollArea className={`h-[calc(100vh-280px)] ${activeView === "calendar" ? "pr-4" : ""}`}>
+            {getViewComponent()}
           </ScrollArea>
         </div>
 
