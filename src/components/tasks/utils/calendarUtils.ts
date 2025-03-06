@@ -41,7 +41,9 @@ export const taskToCalendarEvent = (task: any): CalendarEvent => {
       start: today,
       end: today,
       allDay: true,
-      resource: task
+      resource: task,
+      status: task.status,
+      priority: task.priority
     };
   }
   
@@ -54,7 +56,9 @@ export const taskToCalendarEvent = (task: any): CalendarEvent => {
     start: dueDate,
     end: dueDate,
     allDay: true,
-    resource: task
+    resource: task,
+    status: task.status,
+    priority: task.priority
   };
 };
 
@@ -101,13 +105,14 @@ export const getEventStyle = (event: CalendarEvent) => {
   // Style for past due dates
   if (task.status !== 'completed' && 
       task.due_date && 
-      new Date(task.due_date) < new Date() && 
-      task.status !== 'completed') {
+      new Date(task.due_date) < new Date()) {
     style.backgroundColor = '#FEE2E2';
     style.color = '#B91C1C';
   }
   
-  return style;
+  return {
+    style
+  };
 };
 
 // Format date for display
@@ -115,4 +120,32 @@ export const formatDate = (date: Date | string) => {
   if (!date) return '';
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   return format(dateObj, 'dd MMM yyyy', { locale: tr });
+};
+
+// Calendar messages for Turkish localization
+export const calendarMessages = {
+  today: 'Bugün',
+  previous: 'Önceki',
+  next: 'Sonraki',
+  month: 'Ay',
+  week: 'Hafta',
+  day: 'Gün',
+  agenda: 'Ajanda',
+  date: 'Tarih',
+  time: 'Saat',
+  event: 'Etkinlik',
+  allDay: 'Tüm gün',
+  noEventsInRange: 'Bu aralıkta görev yok'
+};
+
+// Calendar format strings
+export const calendarFormats = {
+  monthHeaderFormat: 'MMMM yyyy',
+  dayHeaderFormat: 'dd MMMM yyyy',
+  dayRangeHeaderFormat: ({ start, end }: { start: Date, end: Date }) => 
+    `${format(start, 'dd MMM')} - ${format(end, 'dd MMM yyyy')}`,
+  agendaDateFormat: 'dd MMMM',
+  agendaTimeFormat: 'HH:mm',
+  agendaTimeRangeFormat: ({ start, end }: { start: Date, end: Date }) => 
+    `${format(start, 'HH:mm')} - ${format(end, 'HH:mm')}`
 };

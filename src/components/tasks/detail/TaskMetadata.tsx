@@ -1,61 +1,59 @@
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/types/task";
 
 interface TaskMetadataProps {
-  task: Task;
-  employees: any[] | undefined;
-  onUpdate: (field: keyof Task, value: any) => void;
+  formData: Task;
+  date: Date | undefined;
+  handleInputChange: (key: keyof Task, value: any) => void;
+  handleDateChange: (date: Date | undefined) => void;
 }
 
-export const TaskMetadata = ({ task, employees, onUpdate }: TaskMetadataProps) => {
+const TaskMetadata = ({ 
+  formData, 
+  date, 
+  handleInputChange, 
+  handleDateChange 
+}: TaskMetadataProps) => {
+  const { data: employees } = useQuery({
+    queryKey: ['employees'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('id, first_name, last_name')
+        .eq('status', 'active');
+      if (error) throw error;
+      return data;
+    }
+  });
+
   return (
-    <div className="space-y-4">
+    <>
       <div className="space-y-2">
+        <label className="text-sm font-medium">Assigned To</label>
         <Select
-          value={task.priority}
-          onValueChange={(value) => onUpdate("priority", value)}
+          value={formData.assignee_id || ''}
+          onValueChange={(value) => handleInputChange('assignee_id', value)}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Öncelik seçin" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="low">Düşük</SelectItem>
-            <SelectItem value="medium">Orta</SelectItem>
-            <SelectItem value="high">Yüksek</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Select
-          value={task.status}
-          onValueChange={(value) => onUpdate("status", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Durum seçin" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todo">Yapılacak</SelectItem>
-            <SelectItem value="in_progress">Devam Ediyor</SelectItem>
-            <SelectItem value="completed">Tamamlandı</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Select
-          value={task.assignee_id || ""}
-          onValueChange={(value) => onUpdate("assignee_id", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Atanan kişi seçin" />
+            <SelectValue placeholder="Select assignee" />
           </SelectTrigger>
           <SelectContent>
             {employees?.map((employee) => (
@@ -68,29 +66,70 @@ export const TaskMetadata = ({ task, employees, onUpdate }: TaskMetadataProps) =
       </div>
 
       <div className="space-y-2">
+        <label className="text-sm font-medium">Due Date</label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               className={cn(
                 "w-full justify-start text-left font-normal",
-                !task.due_date && "text-muted-foreground"
+                !date && "text-muted-foreground"
               )}
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {task.due_date ? format(new Date(task.due_date), "PPP") : "Bitiş tarihi seçin"}
+              {date ? format(date, "PPP") : <span>Pick a date</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar
               mode="single"
-              selected={task.due_date ? new Date(task.due_date) : undefined}
-              onSelect={(date) => onUpdate("due_date", date?.toISOString())}
+              selected={date}
+              onSelect={handleDateChange}
               initialFocus
+              className="p-3 pointer-events-auto"
             />
           </PopoverContent>
         </Popover>
       </div>
-    </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Status</label>
+        <Select
+          value={formData.status}
+          onValueChange={(value) => 
+            handleInputChange('status', value as Task['status'])
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todo">To Do</SelectItem>
+            <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Priority</label>
+        <Select
+          value={formData.priority}
+          onValueChange={(value) => 
+            handleInputChange('priority', value as Task['priority'])
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select priority" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="low">Low</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="high">High</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </>
   );
 };
+
+export default TaskMetadata;

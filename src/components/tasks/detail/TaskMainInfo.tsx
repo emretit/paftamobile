@@ -4,30 +4,33 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Task } from "@/types/task";
 
 interface TaskMainInfoProps {
-  task: Task;
-  onUpdate: (field: keyof Task, value: any) => void;
+  formData: Task;
+  handleInputChange: (key: keyof Task, value: any) => void;
 }
 
-export const TaskMainInfo = ({ task, onUpdate }: TaskMainInfoProps) => {
+const TaskMainInfo = ({ formData, handleInputChange }: TaskMainInfoProps) => {
   return (
     <>
       <div className="space-y-2">
+        <label className="text-sm font-medium">Task Name</label>
         <Input
-          value={task.title}
-          onChange={(e) => onUpdate("title", e.target.value)}
-          placeholder="Görev başlığı"
-          className="text-lg font-medium"
+          value={formData.title}
+          onChange={(e) => handleInputChange('title', e.target.value)}
+          placeholder="Enter task name"
         />
       </div>
 
       <div className="space-y-2">
+        <label className="text-sm font-medium">Description</label>
         <Textarea
-          value={task.description || ""}
-          onChange={(e) => onUpdate("description", e.target.value)}
-          placeholder="Görev açıklaması"
-          className="min-h-[100px]"
+          value={formData.description || ''}
+          onChange={(e) => handleInputChange('description', e.target.value)}
+          placeholder="Enter task description"
+          className="min-h-32"
         />
       </div>
     </>
   );
 };
+
+export default TaskMainInfo;
