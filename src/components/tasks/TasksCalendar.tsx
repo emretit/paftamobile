@@ -1,3 +1,4 @@
+
 import { useTaskRealtime } from "./hooks/useTaskRealtime";
 import { useTaskCalendar } from "./hooks/useTaskCalendar";
 import { TaskCalendarView } from "./calendar/TaskCalendarView";
@@ -74,7 +75,7 @@ const TasksCalendar = ({
       />
 
       <TaskQuickView
-        isOpen={isQuickViewOpen}
+        open={isQuickViewOpen}
         onOpenChange={setIsQuickViewOpen}
         selectedEvent={selectedEvent}
         onViewTask={handleViewTask}

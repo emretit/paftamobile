@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { PriorityBadge } from '@/components/tasks/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import type { CalendarEvent } from '@/types/calendar';
+import type { CalendarEvent } from '@/components/tasks/hooks/useTaskCalendar';
 
 interface TaskQuickViewProps {
   selectedEvent: CalendarEvent;
