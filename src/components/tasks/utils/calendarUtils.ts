@@ -1,13 +1,13 @@
 
 import { format } from "date-fns";
-import tr from "date-fns/locale/tr";
 import { dateFnsLocalizer } from "react-big-calendar";
 import { CalendarEvent } from "../hooks/useTaskCalendar";
+import * as trLocale from "date-fns/locale/tr";
 
 // Setup localizer for react-big-calendar
 export const getLocalizer = () => {
   const locales = {
-    'tr': tr,
+    'tr': trLocale,
   };
 
   return dateFnsLocalizer({
@@ -74,10 +74,10 @@ export const calendarMessages = {
 
 // Calendar custom date formats
 export const calendarFormats = {
-  dayHeaderFormat: (date: Date) => format(date, 'EEEE dd MMMM', { locale: tr }),
+  dayHeaderFormat: (date: Date) => format(date, 'EEEE dd MMMM', { locale: trLocale }),
   dayRangeHeaderFormat: ({ start, end }: { start: Date; end: Date }) => 
-    `${format(start, 'dd MMM', { locale: tr })} - ${format(end, 'dd MMM', { locale: tr })}`,
-  timeGutterFormat: (date: Date) => format(date, 'HH:mm', { locale: tr }),
+    `${format(start, 'dd MMM', { locale: trLocale })} - ${format(end, 'dd MMM', { locale: trLocale })}`,
+  timeGutterFormat: (date: Date) => format(date, 'HH:mm', { locale: trLocale }),
   eventTimeRangeFormat: ({ start, end }: { start: Date; end: Date }) => 
-    `${format(start, 'HH:mm', { locale: tr })} - ${format(end, 'HH:mm', { locale: tr })}`,
+    `${format(start, 'HH:mm', { locale: trLocale })} - ${format(end, 'HH:mm', { locale: trLocale })}`,
 };

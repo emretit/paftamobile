@@ -1,6 +1,6 @@
 
 import { format } from "date-fns";
-import tr from "date-fns/locale/tr";
+import * as trLocale from "date-fns/locale/tr";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { 
@@ -71,7 +71,7 @@ export const TaskQuickView = ({
             <div className="space-y-1">
               <p className="text-xs font-medium text-gray-500">Tarih</p>
               <div className="text-sm">
-                {selectedEvent.resource.due_date && format(new Date(selectedEvent.resource.due_date), "dd MMMM yyyy", { locale: tr })}
+                {selectedEvent.resource.due_date && format(new Date(selectedEvent.resource.due_date), "dd MMMM yyyy", { locale: trLocale })}
               </div>
             </div>
           </div>

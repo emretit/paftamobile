@@ -30,14 +30,16 @@ export const TaskCalendarView = ({
         startAccessor="start"
         endAccessor="end"
         style={{ width: '100%', height: '100%' }}
-        onEventDrop={onEventUpdate}
-        onEventResize={onEventUpdate}
         selectable
         onSelectEvent={onSelectEvent}
         eventPropGetter={getEventStyle}
         views={['month', 'week', 'day']}
         messages={calendarMessages}
         formats={calendarFormats}
+        // The following props need to be added with a drag-n-drop library
+        // Remove for now as they cause errors
+        // onEventDrop={onEventUpdate}
+        // onEventResize={onEventUpdate}
       />
     </div>
   );
