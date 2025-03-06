@@ -1,6 +1,6 @@
 
 import { format } from "date-fns";
-import * as trLocale from "date-fns/locale/tr";
+import tr from 'date-fns/locale/tr';
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { 
@@ -35,10 +35,10 @@ export const TaskQuickView = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{selectedEvent.title}</DialogTitle>
+          <DialogTitle>{selectedEvent?.title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          {selectedEvent.resource.description && (
+          {selectedEvent?.resource.description && (
             <p className="text-sm text-gray-600">{selectedEvent.resource.description}</p>
           )}
           
@@ -46,32 +46,32 @@ export const TaskQuickView = ({
             <div className="space-y-1">
               <p className="text-xs font-medium text-gray-500">Durum</p>
               <div className="text-sm">
-                {selectedEvent.resource.status === "todo" && "Yapılacak"}
-                {selectedEvent.resource.status === "in_progress" && "Devam Ediyor"}
-                {selectedEvent.resource.status === "completed" && "Tamamlandı"}
+                {selectedEvent?.resource.status === "todo" && "Yapılacak"}
+                {selectedEvent?.resource.status === "in_progress" && "Devam Ediyor"}
+                {selectedEvent?.resource.status === "completed" && "Tamamlandı"}
               </div>
             </div>
             
             <div className="space-y-1">
               <p className="text-xs font-medium text-gray-500">Öncelik</p>
               <div className="text-sm">
-                {selectedEvent.resource.priority === "high" && "Yüksek"}
-                {selectedEvent.resource.priority === "medium" && "Orta"}
-                {selectedEvent.resource.priority === "low" && "Düşük"}
+                {selectedEvent?.resource.priority === "high" && "Yüksek"}
+                {selectedEvent?.resource.priority === "medium" && "Orta"}
+                {selectedEvent?.resource.priority === "low" && "Düşük"}
               </div>
             </div>
             
             <div className="space-y-1">
               <p className="text-xs font-medium text-gray-500">Atanan</p>
               <div className="text-sm">
-                {selectedEvent.resource.assignee?.name || "-"}
+                {selectedEvent?.resource.assignee?.name || "-"}
               </div>
             </div>
             
             <div className="space-y-1">
               <p className="text-xs font-medium text-gray-500">Tarih</p>
               <div className="text-sm">
-                {selectedEvent.resource.due_date && format(new Date(selectedEvent.resource.due_date), "dd MMMM yyyy", { locale: trLocale })}
+                {selectedEvent?.resource.due_date && format(new Date(selectedEvent.resource.due_date), "dd MMMM yyyy", { locale: tr })}
               </div>
             </div>
           </div>
@@ -93,7 +93,7 @@ export const TaskQuickView = ({
             size="sm"
             onClick={() => {
               if (confirm('Bu görevi silmek istediğinizden emin misiniz?')) {
-                onDeleteTask(selectedEvent.id);
+                onDeleteTask(selectedEvent?.id || '');
               }
             }}
           >
