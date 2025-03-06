@@ -1,8 +1,7 @@
-
 import { useTaskRealtime } from "./hooks/useTaskRealtime";
 import { useTaskCalendar } from "./hooks/useTaskCalendar";
 import { TaskCalendarView } from "./calendar/TaskCalendarView";
-import { TaskQuickView } from "./calendar/TaskQuickView";
+import TaskQuickView from "./calendar/TaskQuickView";
 import type { Task } from "@/types/task";
 
 interface TasksCalendarProps {
