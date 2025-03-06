@@ -1,4 +1,5 @@
 
+import { getDaysInMonth, getMonth, getYear, setDate, setMonth, setYear } from "date-fns";
 import { format } from "date-fns";
 import { dateFnsLocalizer } from "react-big-calendar";
 import { CalendarEvent } from "../hooks/useTaskCalendar";
@@ -7,77 +8,111 @@ import { tr } from 'date-fns/locale/tr';
 // Setup localizer for react-big-calendar
 export const getLocalizer = () => {
   const locales = {
-    'tr': tr,
+    'tr': tr
   };
-
+  
   return dateFnsLocalizer({
     format,
-    parse: (value: string, format: string) => new Date(value),
-    startOfWeek: () => new Date(),
-    getDay: (date: Date) => date.getDay(),
+    getDaysInMonth,
+    getMonth,
+    getYear,
+    setDate,
+    setMonth,
+    setYear,
     locales,
   });
 };
 
-// Get event styling based on priority and status
-export const getEventStyle = (event: any) => {
-  let backgroundColor;
-  let borderColor;
-  
-  // Set colors based on priority
-  switch (event.priority) {
-    case 'high':
-      backgroundColor = '#FEE2E2';
-      borderColor = '#EF4444';
-      break;
-    case 'medium':
-      backgroundColor = '#FEF3C7';
-      borderColor = '#F59E0B';
-      break;
-    case 'low':
-      backgroundColor = '#D1FAE5';
-      borderColor = '#10B981';
-      break;
-    default:
-      backgroundColor = '#E5E7EB';
-      borderColor = '#6B7280';
+// Get current date for calendar
+export const getCurrentDate = () => {
+  return new Date();
+};
+
+// Convert task to calendar event
+export const taskToCalendarEvent = (task: any): CalendarEvent => {
+  if (!task.due_date) {
+    // If task has no due date, set it to today
+    const today = new Date();
+    today.setHours(12, 0, 0, 0); // Noon
+    
+    return {
+      id: task.id,
+      title: task.title,
+      start: today,
+      end: today,
+      allDay: true,
+      resource: task
+    };
   }
   
-  // Completed tasks have a different style
-  if (event.status === 'completed') {
-    backgroundColor = '#F3F4F6';
-    borderColor = '#9CA3AF';
-  }
+  const dueDate = new Date(task.due_date);
+  dueDate.setHours(12, 0, 0, 0); // Set to noon
   
   return {
-    style: {
-      backgroundColor,
-      borderLeft: `4px solid ${borderColor}`,
-      borderRadius: '4px',
-      opacity: event.status === 'completed' ? 0.7 : 1,
-      color: '#374151',
-      fontWeight: 500,
-    }
+    id: task.id,
+    title: task.title,
+    start: dueDate,
+    end: dueDate,
+    allDay: true,
+    resource: task
   };
 };
 
-// Calendar messages for localization
-export const calendarMessages = {
-  month: 'Ay',
-  week: 'Hafta',
-  day: 'Gün',
-  today: 'Bugün',
-  next: 'İleri',
-  previous: 'Geri',
-  showMore: (total: number) => `+${total} daha`,
+// Get event style based on task status and priority
+export const getEventStyle = (event: CalendarEvent) => {
+  if (!event.resource) return {};
+  
+  const task = event.resource;
+  
+  // Default styles
+  let style: React.CSSProperties = {
+    border: '1px solid #fff',
+    borderRadius: '4px',
+    padding: '2px 4px',
+    fontSize: '12px',
+  };
+  
+  // Apply styles based on status
+  switch (task.status) {
+    case 'completed':
+      style.backgroundColor = '#D1FAE5';
+      style.color = '#065F46';
+      break;
+    case 'in_progress':
+      style.backgroundColor = '#DBEAFE';
+      style.color = '#1E40AF';
+      break;
+    case 'todo':
+      style.backgroundColor = '#F3F4F6';
+      style.color = '#1F2937';
+      break;
+    default:
+      // No special styling
+      break;
+  }
+  
+  // Apply priority styling
+  if (task.priority === 'high') {
+    style.borderLeft = '3px solid #EF4444';
+  } else if (task.priority === 'medium') {
+    style.borderLeft = '3px solid #F59E0B';
+  }
+  
+  // Style for past due dates
+  if (task.status !== 'completed' && 
+      task.due_date && 
+      new Date(task.due_date) < new Date() && 
+      task.status !== 'completed') {
+    style.backgroundColor = '#FEE2E2';
+    style.color = '#B91C1C';
+  }
+  
+  return style;
 };
 
-// Calendar custom date formats
-export const calendarFormats = {
-  dayHeaderFormat: (date: Date) => format(date, 'EEEE dd MMMM', { locale: tr }),
-  dayRangeHeaderFormat: ({ start, end }: { start: Date; end: Date }) => 
-    `${format(start, 'dd MMM', { locale: tr })} - ${format(end, 'dd MMM', { locale: tr })}`,
-  timeGutterFormat: (date: Date) => format(date, 'HH:mm', { locale: tr }),
-  eventTimeRangeFormat: ({ start, end }: { start: Date; end: Date }) => 
-    `${format(start, 'HH:mm', { locale: tr })} - ${format(end, 'HH:mm', { locale: tr })}`,
+// Format date for display
+export const formatDate = (date: Date | string) => {
+  if (!date) return '';
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return format(dateObj, 'dd MMM yyyy', { locale: tr });
 };
