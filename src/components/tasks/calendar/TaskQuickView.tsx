@@ -1,186 +1,115 @@
 
-import { format } from "date-fns";
-import { tr } from 'date-fns/locale/tr';
-import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from "@/components/ui/popover";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import type { Task } from "@/types/task";
+import { format } from 'date-fns';
+import { tr } from 'date-fns/locale';
+import { Calendar, Clock } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { PriorityBadge } from '@/components/tasks/table';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import type { CalendarEvent } from '@/types/calendar';
 
 interface TaskQuickViewProps {
-  task: Task;
-  anchor: HTMLElement | null;
-  onEdit?: (task: Task) => void;
-  onDelete?: (taskId: string) => void;
-  onSelect?: (task: Task) => void;
-  onClose: () => void;
+  selectedEvent: CalendarEvent;
+  onViewTask: () => void;
+  onEditTask: () => void;
+  onDeleteTask: (taskId: string) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-const TaskQuickView = ({ 
-  task, 
-  anchor, 
-  onEdit, 
-  onDelete, 
-  onSelect,
-  onClose 
+const TaskQuickView = ({
+  selectedEvent,
+  onViewTask,
+  onEditTask,
+  onDeleteTask,
+  open,
+  onOpenChange
 }: TaskQuickViewProps) => {
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800 hover:bg-red-200';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
-      case 'low':
-        return 'bg-green-100 text-green-800 hover:bg-green-200';
-      default:
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
-    }
-  };
+  if (!selectedEvent) return null;
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800 hover:bg-green-200';
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
-      case 'todo':
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
-      default:
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+  const handleDelete = () => {
+    if (confirm('Are you sure you want to delete this task?')) {
+      onDeleteTask(selectedEvent.id);
+      onOpenChange(false);
     }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'completed': return 'Tamamlandı';
-      case 'in_progress': return 'Devam Ediyor';
-      case 'todo': return 'Yapılacak';
-      default: return status;
-    }
-  };
-
-  const formatDueDate = (date: string) => {
-    return format(new Date(date), 'dd MMMM yyyy', { locale: tr });
-  };
-
-  if (!anchor) return null;
-  
-  const handleTaskSelect = () => {
-    if (onSelect) {
-      onSelect(task);
-    }
-    onClose();
   };
 
   return (
-    <Popover open={true} onOpenChange={onClose}>
-      <PopoverTrigger asChild>
-        <div className="hidden">Trigger</div>
-      </PopoverTrigger>
-      <PopoverContent 
-        className="w-80 p-0" 
-        align="start" 
-        side="right" 
-        sideOffset={5}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <Card className="border-0 shadow-none">
-          <CardHeader className="pb-2">
-            <CardTitle 
-              className="text-lg cursor-pointer hover:text-blue-600"
-              onClick={handleTaskSelect}
-            >
-              {task.title}
-            </CardTitle>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge className={getStatusColor(task.status)}>
-                {getStatusText(task.status)}
-              </Badge>
-              <Badge className={getPriorityColor(task.priority)}>
-                {task.priority === 'high' ? 'Yüksek' : 
-                  task.priority === 'medium' ? 'Orta' : 'Düşük'}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="pb-2">
-            {task.description && (
-              <CardDescription className="mt-1 text-sm text-gray-600 whitespace-pre-wrap">
-                {task.description}
-              </CardDescription>
-            )}
-            {task.due_date && (
-              <div className="mt-3 text-sm text-gray-600">
-                <span className="font-medium">Son Tarih:</span> {formatDueDate(task.due_date)}
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle className="text-xl">{selectedEvent.title}</SheetTitle>
+          <SheetDescription>
+            {selectedEvent.extendedProps?.description || 'No description provided'}
+          </SheetDescription>
+        </SheetHeader>
+        <div className="space-y-4 mt-6">
+          {selectedEvent.extendedProps?.status && (
+            <div className="border rounded-md p-3 bg-gray-50">
+              <div className="text-sm font-medium mb-1">Status</div>
+              <div className="flex items-center">
+                <span className="capitalize">{selectedEvent.extendedProps.status.replace('_', ' ')}</span>
               </div>
-            )}
-            {task.assignee && (
-              <div className="mt-3 flex items-center">
-                <span className="text-sm text-gray-600 mr-2">Atanan:</span>
-                <div className="flex items-center">
-                  <Avatar className="h-6 w-6 mr-2">
-                    <AvatarImage src={task.assignee.avatar} />
-                    <AvatarFallback>{task.assignee.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm">{task.assignee.name}</span>
+            </div>
+          )}
+
+          {selectedEvent.extendedProps?.priority && (
+            <div className="border rounded-md p-3 bg-gray-50">
+              <div className="text-sm font-medium mb-1">Priority</div>
+              <div className="flex items-center">
+                <PriorityBadge priority={selectedEvent.extendedProps.priority} />
+              </div>
+            </div>
+          )}
+
+          {selectedEvent.start && (
+            <div className="border rounded-md p-3 bg-gray-50">
+              <div className="text-sm font-medium mb-1">Due Date</div>
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                <span>{format(new Date(selectedEvent.start), 'PPP', { locale: tr })}</span>
+              </div>
+              {selectedEvent.extendedProps?.includesTime && (
+                <div className="flex items-center mt-1">
+                  <Clock className="h-4 w-4 mr-2 text-gray-500" />
+                  <span>{format(new Date(selectedEvent.start), 'p', { locale: tr })}</span>
                 </div>
-              </div>
-            )}
-          </CardContent>
-          <CardFooter className="flex justify-between pt-2">
-            <div className="flex gap-2">
-              {onEdit && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => { 
-                    onEdit(task);
-                    onClose();
-                  }}
-                >
-                  <Pencil className="h-4 w-4 mr-1" /> 
-                  Düzenle
-                </Button>
-              )}
-              {onDelete && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => {
-                    if(confirm('Bu görevi silmek istediğinizden emin misiniz?')) {
-                      onDelete(task.id);
-                      onClose();
-                    }
-                  }}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" /> 
-                  Sil
-                </Button>
               )}
             </div>
-            <Button 
-              size="sm"
-              onClick={handleTaskSelect}
-            >
-              Detaylar
-            </Button>
-          </CardFooter>
-        </Card>
-      </PopoverContent>
-    </Popover>
+          )}
+
+          {selectedEvent.extendedProps?.assignee && (
+            <div className="border rounded-md p-3 bg-gray-50">
+              <div className="text-sm font-medium mb-1">Assigned To</div>
+              <div className="flex items-center">
+                <Avatar className="h-6 w-6 mr-2">
+                  <AvatarImage
+                    src={selectedEvent.extendedProps.assignee.avatar}
+                    alt={selectedEvent.extendedProps.assignee.name}
+                  />
+                  <AvatarFallback>
+                    {selectedEvent.extendedProps.assignee.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <span>{selectedEvent.extendedProps.assignee.name}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2 mt-8">
+          <Button onClick={onViewTask}>View Task Details</Button>
+          <Button variant="outline" onClick={onEditTask}>Edit Task</Button>
+          <Button variant="destructive" onClick={handleDelete}>Delete Task</Button>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };
 
