@@ -1,6 +1,6 @@
 
 import { format } from "date-fns";
-import tr from 'date-fns/locale/tr';
+import { tr } from 'date-fns/locale/tr';
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { 

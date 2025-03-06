@@ -2,7 +2,7 @@
 import { format } from "date-fns";
 import { dateFnsLocalizer } from "react-big-calendar";
 import { CalendarEvent } from "../hooks/useTaskCalendar";
-import tr from 'date-fns/locale/tr';
+import { tr } from 'date-fns/locale/tr';
 
 // Setup localizer for react-big-calendar
 export const getLocalizer = () => {
