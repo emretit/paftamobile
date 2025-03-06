@@ -46,24 +46,24 @@ const TaskQuickView = ({
         <SheetHeader>
           <SheetTitle className="text-xl">{selectedEvent.title}</SheetTitle>
           <SheetDescription>
-            {selectedEvent.extendedProps?.description || 'No description provided'}
+            {selectedEvent.resource?.description || 'No description provided'}
           </SheetDescription>
         </SheetHeader>
         <div className="space-y-4 mt-6">
-          {selectedEvent.extendedProps?.status && (
+          {selectedEvent.resource?.status && (
             <div className="border rounded-md p-3 bg-gray-50">
               <div className="text-sm font-medium mb-1">Status</div>
               <div className="flex items-center">
-                <span className="capitalize">{selectedEvent.extendedProps.status.replace('_', ' ')}</span>
+                <span className="capitalize">{selectedEvent.resource.status.replace('_', ' ')}</span>
               </div>
             </div>
           )}
 
-          {selectedEvent.extendedProps?.priority && (
+          {selectedEvent.resource?.priority && (
             <div className="border rounded-md p-3 bg-gray-50">
               <div className="text-sm font-medium mb-1">Priority</div>
               <div className="flex items-center">
-                <PriorityBadge priority={selectedEvent.extendedProps.priority} />
+                <PriorityBadge priority={selectedEvent.resource.priority} />
               </div>
             </div>
           )}
@@ -75,7 +75,7 @@ const TaskQuickView = ({
                 <Calendar className="h-4 w-4 mr-2 text-gray-500" />
                 <span>{format(new Date(selectedEvent.start), 'PPP', { locale: tr })}</span>
               </div>
-              {selectedEvent.extendedProps?.includesTime && (
+              {selectedEvent.resource?.due_date_includes_time && (
                 <div className="flex items-center mt-1">
                   <Clock className="h-4 w-4 mr-2 text-gray-500" />
                   <span>{format(new Date(selectedEvent.start), 'p', { locale: tr })}</span>
@@ -84,20 +84,20 @@ const TaskQuickView = ({
             </div>
           )}
 
-          {selectedEvent.extendedProps?.assignee && (
+          {selectedEvent.resource?.assignee && (
             <div className="border rounded-md p-3 bg-gray-50">
               <div className="text-sm font-medium mb-1">Assigned To</div>
               <div className="flex items-center">
                 <Avatar className="h-6 w-6 mr-2">
                   <AvatarImage
-                    src={selectedEvent.extendedProps.assignee.avatar}
-                    alt={selectedEvent.extendedProps.assignee.name}
+                    src={selectedEvent.resource.assignee.avatar}
+                    alt={selectedEvent.resource.assignee.name}
                   />
                   <AvatarFallback>
-                    {selectedEvent.extendedProps.assignee.name.charAt(0)}
+                    {selectedEvent.resource.assignee.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <span>{selectedEvent.extendedProps.assignee.name}</span>
+                <span>{selectedEvent.resource.assignee.name}</span>
               </div>
             </div>
           )}
