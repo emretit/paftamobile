@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Filter, Plus, CalendarIcon, LayoutGrid, Table as TableIcon } from "lucide-react";
 import TasksKanban from "@/components/tasks/TasksKanban";
 import TaskForm from "@/components/tasks/TaskForm";
-import TaskDetailSheet from "@/components/tasks/TaskDetailSheet";
+import TaskDetailPanel from "@/components/tasks/TaskDetailPanel";
 import TasksTable from "@/components/tasks/TasksTable";
 import TasksCalendar from "@/components/tasks/TasksCalendar";
 import { useQuery } from "@tanstack/react-query";
@@ -30,6 +30,7 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
   const [activeView, setActiveView] = useState<ViewType>("kanban");
 
   const { data: employees } = useQuery({
@@ -51,6 +52,7 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
 
   const handleSelectTask = (task: Task) => {
     setSelectedTask(task);
+    setIsDetailPanelOpen(true);
   };
 
   const getViewComponent = () => {
@@ -61,7 +63,6 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
             searchQuery={searchQuery}
             selectedEmployee={selectedEmployee}
             selectedType={selectedType}
-            onEditTask={handleEditTask}
             onSelectTask={handleSelectTask}
           />
         );
@@ -203,10 +204,13 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
           taskToEdit={taskToEdit}
         />
 
-        <TaskDetailSheet
+        <TaskDetailPanel
           task={selectedTask}
-          isOpen={!!selectedTask}
-          onClose={() => setSelectedTask(null)}
+          isOpen={isDetailPanelOpen}
+          onClose={() => {
+            setIsDetailPanelOpen(false);
+            setSelectedTask(null);
+          }}
         />
       </main>
     </div>

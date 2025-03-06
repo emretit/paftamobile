@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { ChevronUp, ChevronDown, Pencil, Trash2, MoreHorizontal } from "lucide-react";
+import { ChevronUp, ChevronDown, MoreHorizontal } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -18,11 +19,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useTaskRealtime } from "./hooks/useTaskRealtime";
 import type { Task } from "@/types/task";
+import LoadingState from "./kanban/LoadingState";
 
 type SortField = "title" | "due_date" | "status" | "priority" | "assignee";
 type SortDirection = "asc" | "desc";
@@ -31,16 +40,14 @@ interface TasksTableProps {
   searchQuery: string;
   selectedEmployee: string | null;
   selectedType: string | null;
-  onEditTask?: (task: Task) => void;
-  onSelectTask?: (task: Task) => void;
+  onSelectTask: (task: Task) => void;
 }
 
 const TasksTable = ({ 
   searchQuery, 
   selectedEmployee, 
   selectedType, 
-  onEditTask,
-  onSelectTask 
+  onSelectTask
 }: TasksTableProps) => {
   const queryClient = useQueryClient();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -79,6 +86,44 @@ const TasksTable = ({
           avatar: task.assignee.avatar_url
         } : undefined
       })) as Task[];
+    }
+  });
+
+  const updateTaskStatusMutation = useMutation({
+    mutationFn: async ({ taskId, status }: { taskId: string; status: Task['status'] }) => {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status })
+        .eq('id', taskId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Task status updated');
+    },
+    onError: (error) => {
+      toast.error('Error updating task status');
+      console.error('Error updating task status:', error);
+    }
+  });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: string) => {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Task deleted successfully');
+    },
+    onError: (error) => {
+      toast.error('Error deleting task');
+      console.error('Error deleting task:', error);
     }
   });
 
@@ -145,25 +190,6 @@ const TasksTable = ({
     }
   }, [fetchedTasks, searchQuery, selectedEmployee, selectedType, sortField, sortDirection]);
 
-  const deleteTaskMutation = useMutation({
-    mutationFn: async (taskId: string) => {
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', taskId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Görev başarıyla silindi');
-    },
-    onError: (error) => {
-      toast.error('Görev silinirken bir hata oluştu');
-      console.error('Error deleting task:', error);
-    }
-  });
-
   const handleSort = (field: SortField) => {
     if (field === sortField) {
       // Toggle direction if same field
@@ -208,37 +234,12 @@ const TasksTable = ({
     return <span className={`px-2 py-1 rounded-full text-xs ${color}`}>{label}</span>;
   };
 
-  const renderStatusBadge = (status: string) => {
-    let color;
-    let label;
-    
-    switch (status) {
-      case "todo":
-        color = "bg-gray-100 text-gray-700";
-        label = "Yapılacak";
-        break;
-      case "in_progress":
-        color = "bg-blue-100 text-blue-700";
-        label = "Devam Ediyor";
-        break;
-      case "completed":
-        color = "bg-green-100 text-green-700";
-        label = "Tamamlandı";
-        break;
-      default:
-        color = "bg-gray-100 text-gray-700";
-        label = status;
-    }
-    
-    return <span className={`px-2 py-1 rounded-full text-xs ${color}`}>{label}</span>;
+  const handleStatusChange = (taskId: string, status: Task['status']) => {
+    updateTaskStatusMutation.mutate({ taskId, status });
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[500px]">
-        <div className="text-gray-500">Loading tasks...</div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   if (error) {
@@ -267,7 +268,7 @@ const TasksTable = ({
               onClick={() => handleSort("title")}
             >
               <div className="flex items-center">
-                Görev
+                Task Name
                 {getSortIcon("title")}
               </div>
             </TableHead>
@@ -276,17 +277,8 @@ const TasksTable = ({
               onClick={() => handleSort("due_date")}
             >
               <div className="flex items-center">
-                Bitiş Tarihi
+                Due Date
                 {getSortIcon("due_date")}
-              </div>
-            </TableHead>
-            <TableHead 
-              className="cursor-pointer hover:bg-gray-50"
-              onClick={() => handleSort("status")}
-            >
-              <div className="flex items-center">
-                Durum
-                {getSortIcon("status")}
               </div>
             </TableHead>
             <TableHead 
@@ -294,7 +286,7 @@ const TasksTable = ({
               onClick={() => handleSort("priority")}
             >
               <div className="flex items-center">
-                Öncelik
+                Priority
                 {getSortIcon("priority")}
               </div>
             </TableHead>
@@ -303,11 +295,14 @@ const TasksTable = ({
               onClick={() => handleSort("assignee")}
             >
               <div className="flex items-center">
-                Atanan
+                Assigned To
                 {getSortIcon("assignee")}
               </div>
             </TableHead>
-            <TableHead className="w-[80px]">İşlemler</TableHead>
+            <TableHead className="w-[180px]">
+              Status
+            </TableHead>
+            <TableHead className="w-[80px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -315,7 +310,7 @@ const TasksTable = ({
             <TableRow 
               key={task.id}
               className="cursor-pointer hover:bg-gray-50"
-              onClick={() => onSelectTask?.(task)}
+              onClick={() => onSelectTask(task)}
             >
               <TableCell className="font-medium">
                 <div className="flex flex-col">
@@ -343,7 +338,6 @@ const TasksTable = ({
                   <span className="text-gray-400">-</span>
                 )}
               </TableCell>
-              <TableCell>{renderStatusBadge(task.status)}</TableCell>
               <TableCell>{renderPriorityBadge(task.priority)}</TableCell>
               <TableCell>
                 {task.assignee ? (
@@ -358,6 +352,21 @@ const TasksTable = ({
                   <span className="text-gray-400">-</span>
                 )}
               </TableCell>
+              <TableCell onClick={(e) => e.stopPropagation()}>
+                <Select
+                  value={task.status}
+                  onValueChange={(value) => handleStatusChange(task.id, value as Task['status'])}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todo">To Do</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </TableCell>
               <TableCell>
                 <div onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
@@ -370,20 +379,15 @@ const TasksTable = ({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onEditTask?.(task)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        <span>Düzenle</span>
-                      </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => {
-                          if (confirm('Bu görevi silmek istediğinizden emin misiniz?')) {
+                          if (confirm('Are you sure you want to delete this task?')) {
                             deleteTaskMutation.mutate(task.id);
                           }
                         }}
                         className="text-red-600"
                       >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Sil</span>
+                        Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
