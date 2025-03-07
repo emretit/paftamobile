@@ -27,7 +27,10 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
   };
 
   return (
-    <TableRow className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+    <TableRow 
+      className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} cursor-pointer hover:bg-gray-100`}
+      onClick={() => onSelect(proposal)}
+    >
       <TableCell>#{proposal.proposal_number}</TableCell>
       <TableCell>
         {proposal.customer?.name || "-"}
@@ -60,19 +63,25 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
       <TableCell>
         {proposal.valid_until ? format(new Date(proposal.valid_until), "dd.MM.yyyy") : "-"}
       </TableCell>
-      <TableCell>
+      <TableCell onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onSelect(proposal)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(proposal);
+            }}
           >
             <Eye className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => window.location.href = `/proposals/edit/${proposal.id}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              window.location.href = `/proposals/edit/${proposal.id}`;
+            }}
           >
             <Pencil className="h-4 w-4" />
           </Button>
