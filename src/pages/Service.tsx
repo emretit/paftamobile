@@ -1,9 +1,16 @@
-
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { ServiceRequestTable } from "@/components/service/ServiceRequestTable";
 import { Button } from "@/components/ui/button";
-import { Plus, CalendarIcon, LayoutGrid, Table as TableIcon, BookOpen, AlertTriangle, Clock, CheckCircle } from "lucide-react";
+import { 
+  Plus, 
+  CalendarIcon, 
+  Table as TableIcon, 
+  BookOpen, 
+  AlertTriangle, 
+  Clock, 
+  CheckCircle 
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -38,7 +45,6 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
   
   const { data: serviceRequests } = useServiceRequests();
 
-  // Get summary stats
   const getSummaryStats = () => {
     if (!serviceRequests) return { total: 0, new: 0, inProgress: 0, completed: 0 };
     
@@ -123,7 +129,6 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
             </div>
           </div>
 
-          {/* Özet Kartları */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -178,7 +183,6 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
             </Card>
           </div>
 
-          {/* Filtreler */}
           <Card className="p-4 mb-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <Input
