@@ -1,17 +1,10 @@
 
-import type { PipelineItem } from "@/types/pipeline";
-
-interface PipelineFilters {
-  employeeId?: string;
-  customerName?: string;
-  status?: string[];
-  priority?: string[];
-}
+import type { PipelineItem, PipelineFilter } from "@/types/pipeline";
 
 export const filterItems = (
   items: PipelineItem[],
   searchTerm: string,
-  filters: PipelineFilters
+  filters: PipelineFilter
 ): PipelineItem[] => {
   if (!items || items.length === 0) {
     return [];
@@ -33,7 +26,8 @@ export const filterItems = (
       if ('assignee_id' in item && item.assignee_id !== filters.employeeId) {
         return false;
       }
-      if ('employee' in item && item.employee?.id !== filters.employeeId) {
+      // For deals, check employee property
+      if ('employeeName' in item && item.employeeName !== filters.employeeId) {
         return false;
       }
     }

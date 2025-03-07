@@ -7,7 +7,7 @@ import DealCard from "../deals/DealCard";
 import TaskCard from "../tasks/TaskCard";
 import { Deal } from "@/types/deal";
 import { Task } from "@/types/task";
-import type { PipelineView, ItemType, PipelineColumn } from "@/types/pipeline";
+import type { PipelineView, ItemType, PipelineColumn, PipelineItem, PipelineDeal } from "@/types/pipeline";
 
 // Define columns for the pipeline
 const pipelineColumns: PipelineColumn[] = [
@@ -16,37 +16,6 @@ const pipelineColumns: PipelineColumn[] = [
   { id: "completed", name: "Completed" },
   { id: "postponed", name: "Postponed" },
 ];
-
-// Extended interfaces for the pipeline items
-interface TaskWithAssignee extends Task {
-  assignee?: {
-    id: string;
-    name: string;
-    avatar: string;
-  };
-}
-
-interface DealWithEmployee extends Partial<Deal> {
-  id: string;
-  title: string;
-  status: Deal['status'];
-  value: number;
-  customerName: string;
-  employeeName: string;
-  proposalDate: Date;
-  lastContactDate: Date;
-  priority: Deal['priority'];
-  item_type: 'deal';
-  employee?: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    avatar_url: string;
-  };
-}
-
-// Create a type for all pipeline items
-type PipelineItem = TaskWithAssignee | DealWithEmployee;
 
 interface UnifiedPipelineProps {
   view: PipelineView;
@@ -79,26 +48,26 @@ export const UnifiedPipeline = ({
     if (pipelineItems) {
       // Filter based on view type
       const filteredItems = pipelineItems.filter(item => {
-        if (view === 'tasks') return item.item_type === 'task';
-        if (view === 'deals') return item.item_type === 'deal';
+        if (view === 'tasks') return 'type' in item; // Task has 'type' property
+        if (view === 'deals') return 'value' in item; // Deal has 'value' property
         return true; // unified view shows all
       });
       
-      setItems(filteredItems as PipelineItem[]);
+      setItems(filteredItems);
     }
   }, [pipelineItems, view]);
 
   // Filter items based on search term and filters
-  const filteredItems = filterItems(items as any, searchTerm, filters);
+  const filteredItems = filterItems(items, searchTerm, filters);
 
   // Update the status of a pipeline item
-  const handleUpdateStatus = (id: string, status: string, type: ItemType) => {
-    if (type === 'deal') {
+  const handleUpdateStatus = (id: string, status: string, itemType: ItemType) => {
+    if (itemType === 'deal') {
       updateDealStatusMutation.mutate({ 
         id, 
         status: status as Deal['status'] 
       });
-    } else if (type === 'task') {
+    } else {
       updateTaskStatusMutation.mutate({ 
         id, 
         status: status as Task['status'] 
@@ -121,10 +90,11 @@ export const UnifiedPipeline = ({
           <h3 className="font-semibold text-md mb-4">{column.name}</h3>
           
           {filteredItems.filter(item => item.status === column.id).map(item => (
-            <div key={`${item.item_type}-${item.id}`} className="mb-2">
-              {item.item_type === 'deal' ? (
+            <div key={`${item.id}`} className="mb-2">
+              {/* Check if item is a Deal by looking for the value property */}
+              {'value' in item ? (
                 <DealCard 
-                  deal={item as unknown as Deal}
+                  deal={item as Deal}
                   onClick={() => {}}
                   onSelect={() => {}}
                   isSelected={false}

@@ -17,4 +17,10 @@ export interface PipelineFilter {
   priority?: string[];
 }
 
-export type PipelineItem = Task | Deal;
+// Extend the Deal type to include item_type for pipeline compatibility
+export interface PipelineDeal extends Deal {
+  item_type: 'deal';
+}
+
+// Union type for all pipeline items
+export type PipelineItem = Task | PipelineDeal;
