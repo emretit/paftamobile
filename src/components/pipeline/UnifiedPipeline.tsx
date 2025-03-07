@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useQuery } from "@tanstack/react-query";
@@ -7,6 +8,7 @@ import { ReloadIcon } from "@radix-ui/react-icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePipelineMutations } from "./hooks/usePipelineMutations";
@@ -27,6 +29,7 @@ interface Deal {
     last_name: string;
     avatar_url: string;
   };
+  type: string;
 }
 
 const columnTitles = {
@@ -111,14 +114,14 @@ const UnifiedPipeline = () => {
       
       return data.map(deal => ({
         ...deal,
-        item_type: 'opportunity',
+        type: 'deal',
         employee: deal.employee ? {
           id: deal.employee.id,
           first_name: deal.employee.first_name,
           last_name: deal.employee.last_name,
           avatar_url: deal.employee.avatar_url
         } : undefined
-      })) as Deal[];
+      })) as unknown as Deal[];
     }
   });
   
@@ -134,7 +137,7 @@ const UnifiedPipeline = () => {
     if (!allItems) return {};
     
     return allItems.reduce((acc: { [key: string]: any[] }, item: any) => {
-      const status = item.item_type === 'task' ? item.status : item.status;
+      const status = item.type === 'task' ? item.status : item.status;
       if (!acc[status]) {
         acc[status] = [];
       }
@@ -160,7 +163,7 @@ const UnifiedPipeline = () => {
     const item = allItems.find((item: any) => item.id === itemId);
     
     if (item) {
-      const itemType = item.item_type;
+      const itemType = item.type === 'task' ? 'task' : 'opportunity';
       await handleUpdateStatus(itemId, newStatus, itemType);
     }
   };
@@ -179,18 +182,18 @@ const UnifiedPipeline = () => {
   };
   
   const getEmployeeAvatar = (item: any) => {
-    if (item.item_type === 'task' && item.assignee) {
+    if (item.type === 'task' && item.assignee) {
       return item.assignee.avatar;
-    } else if (item.item_type === 'deal' && item.employee) {
+    } else if (item.type === 'deal' && item.employee) {
       return item.employee.avatar_url;
     }
     return null;
   };
   
   const getEmployeeName = (item: any) => {
-    if (item.item_type === 'task' && item.assignee) {
+    if (item.type === 'task' && item.assignee) {
       return item.assignee.name;
-    } else if (item.item_type === 'deal' && item.employee) {
+    } else if (item.type === 'deal' && item.employee) {
       return `${item.employee.first_name} ${item.employee.last_name}`;
     }
     return 'Unassigned';
@@ -251,7 +254,7 @@ const UnifiedPipeline = () => {
                                 <CardHeader>
                                   <CardTitle>{item.title}</CardTitle>
                                   <CardDescription>
-                                    {item.item_type === 'deal' ? (
+                                    {item.type === 'deal' ? (
                                       <>Amount: ${item.amount}</>
                                     ) : (
                                       item.description
@@ -266,17 +269,17 @@ const UnifiedPipeline = () => {
                                   <div>
                                     <div className="text-sm font-medium">{getEmployeeName(item)}</div>
                                     <div className="text-xs text-muted-foreground">
-                                      {item.item_type === 'deal' ? 'Deal' : 'Task'}
+                                      {item.type === 'deal' ? 'Deal' : 'Task'}
                                     </div>
                                   </div>
                                 </CardContent>
                                 <CardFooter className="justify-between">
-                                  {item.item_type === 'deal' && (
+                                  {item.type === 'deal' && (
                                     <Badge variant="secondary">
                                       Close Date: {new Date(item.close_date).toLocaleDateString()}
                                     </Badge>
                                   )}
-                                  <Badge className="capitalize">{item.item_type}</Badge>
+                                  <Badge className="capitalize">{item.type}</Badge>
                                 </CardFooter>
                               </Card>
                             </div>
