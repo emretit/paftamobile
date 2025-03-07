@@ -31,6 +31,7 @@ export interface ServiceRequest {
 }
 
 export interface ServiceRequestFormData {
+  id?: string;
   title: string;
   description?: string;
   priority: ServicePriority;

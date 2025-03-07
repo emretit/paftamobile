@@ -8,6 +8,9 @@ export type CalendarEvent = {
   start: Date;
   end: Date;
   resource: ServiceRequest;
+  technician?: string;
+  technician_name?: string;
+  isDraggableEvent?: boolean;
 };
 
 export const getEventStyle = (status: ServiceStatus): CSSProperties => {
@@ -40,11 +43,36 @@ export const getEventStyle = (status: ServiceStatus): CSSProperties => {
   }
 };
 
+export const getCustomEventWrapper = (event: CalendarEvent) => {
+  let statusLabel = '';
+  
+  switch (event.resource.status) {
+    case 'new': statusLabel = 'Yeni'; break;
+    case 'assigned': statusLabel = 'Atandı'; break;
+    case 'in_progress': statusLabel = 'Devam Ediyor'; break;
+    case 'completed': statusLabel = 'Tamamlandı'; break;
+    case 'cancelled': statusLabel = 'İptal'; break;
+    case 'on_hold': statusLabel = 'Beklemede'; break;
+    default: statusLabel = 'Bilinmiyor';
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="text-xs font-semibold">{event.title}</div>
+      <div className="flex justify-between text-xs mt-1">
+        <span>{event.technician_name || 'Atanmamış'}</span>
+        <span className="bg-white/20 text-white px-1 rounded text-xs">{statusLabel}</span>
+      </div>
+    </div>
+  );
+};
+
 export const mapServiceRequestsToEvents = (
   serviceRequests: ServiceRequest[],
   searchQuery: string,
   statusFilter: string | null,
-  technicianFilter: string | null
+  technicianFilter: string | null,
+  technicians: { id: string; name: string }[]
 ): CalendarEvent[] => {
   if (!serviceRequests) return [];
 
@@ -74,13 +102,17 @@ export const mapServiceRequestsToEvents = (
     .filter(request => request.due_date) // Only include events with dates
     .map(request => {
       const dueDate = new Date(request.due_date!);
+      const technician = technicians.find(t => t.id === request.assigned_to);
       
       return {
         id: request.id,
         title: request.title,
         start: dueDate,
         end: new Date(dueDate.getTime() + 2 * 60 * 60 * 1000), // Add 2 hours for the event duration
-        resource: request
+        resource: request,
+        technician: request.assigned_to,
+        technician_name: technician?.name,
+        isDraggableEvent: true
       };
     });
 };

@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { CalendarEvent } from "./calendarUtils";
+import { ServiceRequest } from "@/hooks/useServiceRequests";
 
 export const useCalendarEventService = () => {
   const { toast } = useToast();
@@ -38,8 +39,53 @@ export const useCalendarEventService = () => {
     return await updateEventDate(event.id, start);
   };
 
+  const assignServiceToTechnician = async (
+    serviceId: string, 
+    technicianId: string, 
+    scheduledDate: Date
+  ) => {
+    try {
+      const { error } = await supabase
+        .from('service_requests')
+        .update({ 
+          assigned_to: technicianId,
+          due_date: scheduledDate.toISOString(),
+          status: 'assigned'
+        })
+        .eq('id', serviceId);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Servis atandı",
+        description: "Servis talebi teknisyene başarıyla atandı",
+        variant: "default",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error assigning service to technician:', error);
+      toast({
+        title: "Hata",
+        description: "Servis ataması yapılırken bir hata oluştu",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  const handleUnassignedServiceDrop = async (
+    service: ServiceRequest, 
+    technicianId: string,
+    date: Date
+  ) => {
+    return await assignServiceToTechnician(service.id, technicianId, date);
+  };
+
   return {
     updateEventDate,
-    handleEventDrop
+    handleEventDrop,
+    assignServiceToTechnician,
+    handleUnassignedServiceDrop
   };
 };

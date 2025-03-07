@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,19 +29,21 @@ const formSchema = z.object({
   equipment_id: z.string().optional(),
 });
 
-interface ServiceRequestFormProps {
+export interface ServiceRequestFormProps {
   onClose: () => void;
+  initialData?: ServiceRequestFormData;
+  isEditing?: boolean;
 }
 
-export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
+export function ServiceRequestForm({ onClose, initialData, isEditing = false }: ServiceRequestFormProps) {
   const [files, setFiles] = useState<File[]>([]);
-  const { createServiceRequest, isCreating } = useServiceRequests();
+  const { createServiceRequest, updateServiceRequest, isCreating, isUpdating } = useServiceRequests();
   const { toast } = useToast();
   const { customers, isLoading: isLoadingCustomers } = useCustomerSelect();
 
   const form = useForm<ServiceRequestFormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       title: "",
       description: "",
       priority: "medium",
@@ -51,6 +53,22 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
     },
   });
 
+  // Set form values when initialData changes (for editing)
+  useEffect(() => {
+    if (initialData && isEditing) {
+      Object.keys(initialData).forEach((key) => {
+        const value = initialData[key as keyof ServiceRequestFormData];
+        if (value !== undefined) {
+          if (key === 'due_date' && typeof value === 'string') {
+            form.setValue(key as any, new Date(value));
+          } else {
+            form.setValue(key as any, value);
+          }
+        }
+      });
+    }
+  }, [initialData, isEditing, form]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFiles(Array.from(e.target.files));
@@ -58,11 +76,23 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
   };
 
   const onSubmit = (data: ServiceRequestFormData) => {
-    createServiceRequest({ formData: data, files });
-    toast({
-      title: "Servis Talebi Oluşturuldu",
-      description: "Servis talebi başarıyla oluşturuldu",
-    });
+    if (isEditing && initialData?.id) {
+      updateServiceRequest({ 
+        id: initialData.id, 
+        updateData: data,
+        newFiles: files
+      });
+      toast({
+        title: "Servis Talebi Güncellendi",
+        description: "Servis talebi başarıyla güncellendi",
+      });
+    } else {
+      createServiceRequest({ formData: data, files });
+      toast({
+        title: "Servis Talebi Oluşturuldu",
+        description: "Servis talebi başarıyla oluşturuldu",
+      });
+    }
     onClose();
   };
 
@@ -267,9 +297,9 @@ export function ServiceRequestForm({ onClose }: ServiceRequestFormProps) {
           <Button variant="outline" onClick={onClose} type="button">
             İptal
           </Button>
-          <Button type="submit" disabled={isCreating}>
-            {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Oluştur
+          <Button type="submit" disabled={isCreating || isUpdating}>
+            {(isCreating || isUpdating) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isEditing ? "Güncelle" : "Oluştur"}
           </Button>
         </div>
       </form>
