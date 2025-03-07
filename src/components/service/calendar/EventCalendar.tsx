@@ -34,7 +34,8 @@ export const EventCalendar = ({ events, onSelectEvent }: EventCalendarProps) => 
       views={['month', 'week', 'day']}
       messages={turkishMessages}
       culture="tr"
-      draggableAccessor={() => true}
+      // Remove the draggableAccessor prop that's causing the build error
+      // draggableAccessor={() => true}
     />
   );
 };
