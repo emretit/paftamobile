@@ -7,9 +7,9 @@ import {
   fetchRequestWithItems,
   createPurchaseRequest,
   updatePurchaseRequest,
-  updateRequestStatus,
   deletePurchaseRequest
-} from "@/api/purchaseRequests";
+} from "@/api/purchase/requests";
+import { updateRequestStatus } from "@/api/purchase/requestStatus";
 
 export const usePurchaseRequests = () => {
   const queryClient = useQueryClient();
