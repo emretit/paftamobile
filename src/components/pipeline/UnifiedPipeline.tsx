@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useQuery } from "@tanstack/react-query";
@@ -79,15 +78,16 @@ const UnifiedPipeline = () => {
         throw error;
       }
       
-      return data.map(task => ({
+      return (data.map(task => ({
         ...task,
-        type: 'task',
+        type: task.type || 'general',
+        item_type: task.item_type || 'task',
         assignee: task.assignee ? {
           id: task.assignee.id,
           name: `${task.assignee.first_name} ${task.assignee.last_name}`,
           avatar: task.assignee.avatar_url
         } : undefined
-      })) as Task[];
+      })) as unknown) as Task[];
     }
   });
   
@@ -112,7 +112,7 @@ const UnifiedPipeline = () => {
         throw error;
       }
       
-      return data.map(deal => ({
+      return (data.map(deal => ({
         ...deal,
         type: 'deal',
         employee: deal.employee ? {
@@ -121,12 +121,12 @@ const UnifiedPipeline = () => {
           last_name: deal.employee.last_name,
           avatar_url: deal.employee.avatar_url
         } : undefined
-      })) as unknown as Deal[];
+      })) as unknown) as Deal[];
     }
   });
   
   const allItems = React.useMemo(() => {
-    const normalizedTasks = (tasks || []).map(task => ({ ...task, type: 'task' }));
+    const normalizedTasks = (tasks || []).map(task => ({ ...task, type: task.type || 'task' }));
     const normalizedDeals = (deals || []).map(deal => ({ ...deal, type: 'deal' }));
     return [...normalizedTasks, ...normalizedDeals];
   }, [tasks, deals]);
@@ -182,18 +182,18 @@ const UnifiedPipeline = () => {
   };
   
   const getEmployeeAvatar = (item: any) => {
-    if (item.type === 'task' && item.assignee) {
+    if ('assignee' in item && item.assignee) {
       return item.assignee.avatar;
-    } else if (item.type === 'deal' && item.employee) {
+    } else if ('employee' in item && item.employee) {
       return item.employee.avatar_url;
     }
     return null;
   };
   
   const getEmployeeName = (item: any) => {
-    if (item.type === 'task' && item.assignee) {
+    if ('assignee' in item && item.assignee) {
       return item.assignee.name;
-    } else if (item.type === 'deal' && item.employee) {
+    } else if ('employee' in item && item.employee) {
       return `${item.employee.first_name} ${item.employee.last_name}`;
     }
     return 'Unassigned';

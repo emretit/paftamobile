@@ -4,7 +4,6 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Task, SubTask } from "@/types/task";
-import { v4 as uuidv4 } from "uuid";
 
 export const useTaskDetail = (task: Task | null) => {
   const queryClient = useQueryClient();
@@ -36,7 +35,7 @@ export const useTaskDetail = (task: Task | null) => {
         .single();
 
       if (error) throw error;
-      return updatedTask;
+      return updatedTask as Task;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });

@@ -42,10 +42,10 @@ export const useKanbanTasks = (
       const { data, error } = await query;
       if (error) throw error;
       
-      // Gelen veriyi Task tipine dönüştür
+      // Convert the data to Task type
       return data.map((item: any) => ({
         ...item,
-        item_type: item.item_type || 'task', // Varsayılan değer atıyoruz
+        item_type: item.item_type || 'task', // Set default value
         assignee: item.assignee ? {
           id: item.assignee.id,
           name: item.assignee.name,

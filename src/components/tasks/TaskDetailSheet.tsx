@@ -36,7 +36,7 @@ const TaskDetailSheet = ({ task, open, onOpenChange }: TaskDetailSheetProps) => 
         .single();
 
       if (error) throw error;
-      return data;
+      return data as Task;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });

@@ -41,7 +41,7 @@ const TaskDetails = ({ task, isOpen, onClose }: TaskDetailsProps) => {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as Task;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
