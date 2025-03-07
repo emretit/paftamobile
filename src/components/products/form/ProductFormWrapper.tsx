@@ -10,7 +10,7 @@ import { ProductFormSchema, productSchema } from "./ProductFormSchema";
 import ProductGeneralSection from "./ProductGeneralSection";
 import ProductPricingSection from "./ProductPricingSection";
 import ProductInventorySection from "./ProductInventorySection";
-import ProductSupplierSection from "./ProductSupplierSection";
+import ProductSupplierSection from "./supplier/ProductSupplierSection";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
