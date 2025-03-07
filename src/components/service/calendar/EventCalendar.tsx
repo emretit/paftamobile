@@ -1,4 +1,3 @@
-
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { CalendarEvent, getEventStyle } from "./calendarUtils";
@@ -34,7 +33,6 @@ export const EventCalendar = ({
   const { handleEventDrop } = useCalendarEventService();
   const calendarRef = useRef<any>(null);
 
-  // Style events based on service request status
   const eventPropGetter = (event: CalendarEvent) => {
     return {
       style: getEventStyle(event.resource.status),
@@ -42,18 +40,14 @@ export const EventCalendar = ({
     };
   };
 
-  // Function to handle drop from outside the calendar
   const handleDropFromOutside = ({ start, end, allDay }: any) => {
-    // Get the current resource (technician) if in day or week view
     const technicianId = calendarRef.current?.view?.props?.resource?.technicianId || null;
     
-    // Handle the drop event with date and technician
     if (onDropFromOutside) {
       onDropFromOutside(start, technicianId);
     }
   };
 
-  // Customize the event component
   const components = {
     event: ({ event }: { event: CalendarEvent }) => {
       let statusLabel = '';
@@ -87,7 +81,6 @@ export const EventCalendar = ({
     ),
   };
 
-  // Custom messages for Turkish localization
   const messages = {
     today: 'Bugün',
     previous: 'Önceki',
@@ -103,7 +96,6 @@ export const EventCalendar = ({
     noEventsInRange: 'Bu aralıkta servis talebi yok',
   };
 
-  // Resources for day and week views (technicians)
   const resources = technicians.map(tech => ({
     id: tech.id,
     title: tech.name,
@@ -124,7 +116,6 @@ export const EventCalendar = ({
       views={{ month: true, week: true, day: true }}
       messages={messages}
       culture="tr"
-      draggable
       onEventDrop={handleEventDrop}
       onDropFromOutside={handleDropFromOutside}
       droppable={true}
