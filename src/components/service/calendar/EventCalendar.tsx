@@ -1,6 +1,8 @@
 
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
+import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import { CalendarEvent, getEventStyle } from "./calendarUtils";
 import { useCalendarEventService } from "./calendarEventService";
 import { useRef } from "react";
@@ -9,6 +11,9 @@ import "moment/locale/tr";
 
 moment.locale("tr");
 const localizer = momentLocalizer(moment);
+
+// Create a DnD-enabled Calendar component
+const DnDCalendar = withDragAndDrop(Calendar);
 
 interface EventCalendarProps {
   events: CalendarEvent[];
@@ -111,7 +116,7 @@ export const EventCalendar = ({
   }));
 
   return (
-    <Calendar
+    <DnDCalendar
       ref={calendarRef}
       localizer={localizer}
       events={events}
