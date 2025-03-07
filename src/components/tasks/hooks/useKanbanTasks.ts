@@ -20,7 +20,7 @@ export const useKanbanTasks = (
         .from('tasks')
         .select(`
           *,
-          assignee:assignee_id(id, name:first_name, avatar)
+          assignee:assignee_id(id, name:first_name, avatar_url)
         `);
 
       if (searchQuery) {
@@ -32,12 +32,22 @@ export const useKanbanTasks = (
       }
 
       if (selectedType) {
-        query = query.eq('type', selectedType as "opportunity" | "proposal" | "general");
+        query = query.eq('type', selectedType);
       }
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as unknown as Task[];
+      
+      // Gelen veriyi Task tipine dönüştür
+      return data.map((item: any) => ({
+        ...item,
+        item_type: item.item_type || 'task', // Varsayılan değer atıyoruz
+        assignee: item.assignee ? {
+          id: item.assignee.id,
+          name: item.assignee.name,
+          avatar: item.assignee.avatar_url
+        } : undefined
+      })) as Task[];
     }
   });
 
