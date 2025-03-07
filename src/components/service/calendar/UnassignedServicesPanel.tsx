@@ -1,6 +1,6 @@
 
 import React, { useMemo } from "react";
-import { ServiceRequest } from "@/hooks/useServiceRequests";
+import { ServiceRequest } from "@/hooks/service/types";
 import { 
   Table, 
   TableBody, 
@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getPriorityBadge } from "@/components/service/utils/priorityUtils";
+import { getPriorityColor, getPriorityText } from "@/components/service/utils/priorityUtils";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
@@ -37,6 +37,15 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
       (service.status === 'new' || service.status === 'in_progress')
     );
   }, [services]);
+
+  // Create a helper function to render priority badge
+  const renderPriorityBadge = (priority: string) => {
+    return (
+      <Badge className={getPriorityColor(priority)}>
+        {getPriorityText(priority)}
+      </Badge>
+    );
+  };
 
   return (
     <div 
@@ -93,7 +102,7 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
                     <TableCell>
                       {service.created_at && format(new Date(service.created_at), 'dd MMM', { locale: tr })}
                     </TableCell>
-                    <TableCell>{getPriorityBadge(service.priority)}</TableCell>
+                    <TableCell>{renderPriorityBadge(service.priority)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -124,7 +124,6 @@ export const EventCalendar = ({
       views={{ month: true, week: true, day: true }}
       messages={messages}
       culture="tr"
-      resizable
       draggable
       onEventDrop={handleEventDrop}
       onDropFromOutside={handleDropFromOutside}
