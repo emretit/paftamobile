@@ -23,7 +23,7 @@ interface Deal {
   created_at: string;
   updated_at: string;
   employee_id: string;
-  employee: {
+  employee?: {
     id: string;
     first_name: string;
     last_name: string;
@@ -81,7 +81,7 @@ const UnifiedPipeline = () => {
       
       return data.map(task => ({
         ...task,
-        item_type: 'task',
+        type: 'task',
         assignee: task.assignee ? {
           id: task.assignee.id,
           name: `${task.assignee.first_name} ${task.assignee.last_name}`,
@@ -98,7 +98,7 @@ const UnifiedPipeline = () => {
         .from('deals')
         .select(`
           *,
-          employee (
+          employee:employee_id (
             id,
             first_name,
             last_name,
