@@ -8,12 +8,18 @@ export const useCustomerSelect = () => {
   const { data: customers, ...customerQuery } = useQuery({
     queryKey: ["customers-select"],
     queryFn: async () => {
+      console.log("Fetching customers for select component");
       const { data, error } = await supabase
         .from("customers")
         .select("id, name, company, email, mobile_phone, office_phone, address, representative")
         .order("name");
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching customers:", error);
+        throw error;
+      }
+      
+      console.log("Customers data:", data);
       return data as Customer[];
     },
   });
