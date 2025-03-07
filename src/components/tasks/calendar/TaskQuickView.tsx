@@ -75,12 +75,10 @@ const TaskQuickView = ({
                 <Calendar className="h-4 w-4 mr-2 text-gray-500" />
                 <span>{format(new Date(selectedEvent.start), 'PPP', { locale: tr })}</span>
               </div>
-              {selectedEvent.resource?.due_date_includes_time && (
-                <div className="flex items-center mt-1">
-                  <Clock className="h-4 w-4 mr-2 text-gray-500" />
-                  <span>{format(new Date(selectedEvent.start), 'p', { locale: tr })}</span>
-                </div>
-              )}
+              <div className="flex items-center mt-1">
+                <Clock className="h-4 w-4 mr-2 text-gray-500" />
+                <span>{format(new Date(selectedEvent.start), 'p', { locale: tr })}</span>
+              </div>
             </div>
           )}
 
