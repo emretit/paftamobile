@@ -1,7 +1,7 @@
 
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { Proposal } from "@/types/proposal";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -64,17 +64,7 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
         {proposal.valid_until ? format(new Date(proposal.valid_until), "dd.MM.yyyy") : "-"}
       </TableCell>
       <TableCell onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect(proposal);
-            }}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center justify-center">
           <Button
             variant="ghost"
             size="icon"
