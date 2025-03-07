@@ -2,7 +2,12 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { PurchaseOrder, PurchaseOrderStatus, PurchaseOrderItem } from "@/types/purchase";
+import { 
+  PurchaseOrder, 
+  PurchaseOrderStatus, 
+  PurchaseRequestStatus,
+  PurchaseOrderItem 
+} from "@/types/purchase";
 import { toast } from "sonner";
 
 export const usePurchaseOrders = () => {
@@ -102,7 +107,7 @@ export const usePurchaseOrders = () => {
       .insert([{
         request_id: requestId,
         supplier_id: supplierId,
-        status: 'draft',
+        status: 'draft' as PurchaseOrderStatus,
         issued_by: user.id,
       }])
       .select()
@@ -120,9 +125,9 @@ export const usePurchaseOrders = () => {
       description: item.description,
       quantity: item.quantity,
       unit: item.unit,
-      unit_price: item.estimated_unit_price || 0,
+      unit_price: Number(item.estimated_unit_price) || 0,
       tax_rate: 18, // Default tax rate
-      total_price: (item.quantity || 0) * (item.estimated_unit_price || 0)
+      total_price: Number(item.quantity || 0) * Number(item.estimated_unit_price || 0)
     }));
 
     // Insert order items
@@ -135,10 +140,10 @@ export const usePurchaseOrders = () => {
       throw itemsError;
     }
 
-    // Update request status to converted
+    // Update request status to converted - FIX: Use correct type for PurchaseRequestStatus
     const { error: requestError } = await supabase
       .from("purchase_requests")
-      .update({ status: 'converted' as PurchaseOrderStatus })
+      .update({ status: 'converted' as PurchaseRequestStatus })
       .eq("id", requestId);
     
     if (requestError) {
