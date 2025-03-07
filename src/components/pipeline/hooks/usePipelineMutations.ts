@@ -20,7 +20,8 @@ export const usePipelineMutations = () => {
       } else {
         const dealStatus = status === "todo" ? "new" : 
                          status === "in_progress" ? "negotiation" : 
-                         status === "completed" ? "won" : "new";
+                         status === "completed" ? "won" : 
+                         status === "postponed" ? "lost" : "new";
         
         const { data, error } = await supabase
           .from('deals')

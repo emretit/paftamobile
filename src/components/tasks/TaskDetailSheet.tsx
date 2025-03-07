@@ -1,30 +1,26 @@
+
 import { useState, useEffect } from "react";
-import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Task } from "@/types/task";
-import TaskDetailHeader from "./detail/TaskDetailHeader";
-import TaskMainInfo from "./detail/TaskMainInfo";
-import TaskMetadata from "./detail/TaskMetadata";
 
-interface TaskDetailsProps {
+interface TaskDetailSheetProps {
   task: Task | null;
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-const TaskDetails = ({ task, isOpen, onClose }: TaskDetailsProps) => {
+const TaskDetailSheet = ({ task, open, onOpenChange }: TaskDetailSheetProps) => {
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<Task | null>(null);
-  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [description, setDescription] = useState("");
 
   useEffect(() => {
     if (task) {
-      setFormData(task);
-      setDate(task.due_date ? new Date(task.due_date) : undefined);
+      setDescription(task.description || "");
     }
   }, [task]);
 
@@ -47,72 +43,37 @@ const TaskDetails = ({ task, isOpen, onClose }: TaskDetailsProps) => {
       toast.success('Task updated successfully');
     },
     onError: (error) => {
-      toast.error('Failed to update task: ' + error.message);
+      toast.error('Failed to update task');
+      console.error(error);
     }
   });
 
-  const handleInputChange = (key: keyof Task, value: any) => {
-    if (!formData) return;
-    setFormData({
-      ...formData,
-      [key]: value
-    });
-  };
-
-  const handleDateChange = (newDate: Date | undefined) => {
-    setDate(newDate);
-    if (formData && newDate) {
-      setFormData({
-        ...formData,
-        due_date: newDate.toISOString()
-      });
+  const handleSave = () => {
+    if (task) {
+      updateTaskMutation.mutate({ description });
     }
   };
 
-  const handleSave = () => {
-    if (!formData) return;
-    updateTaskMutation.mutate(formData);
-  };
-
-  if (!formData) return null;
+  if (!task) return null;
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="sm:max-w-md">
-        <SheetHeader className="relative">
-          <TaskDetailHeader onClose={onClose} />
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>{task.title}</SheetTitle>
         </SheetHeader>
-        <div className="mt-6 space-y-6">
-          <TaskMainInfo 
-            formData={formData} 
-            handleInputChange={handleInputChange} 
+        <div className="py-4 space-y-4">
+          <Textarea
+            placeholder="Add a description..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="min-h-[100px]"
           />
-
-          <TaskMetadata 
-            formData={formData}
-            date={date}
-            handleInputChange={handleInputChange}
-            handleDateChange={handleDateChange}
-          />
-
-          <Button
-            className="w-full"
-            onClick={handleSave}
-            disabled={updateTaskMutation.isPending}
-          >
-            {updateTaskMutation.isPending ? (
-              "Saving..."
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Save Changes
-              </>
-            )}
-          </Button>
+          <Button onClick={handleSave}>Save Changes</Button>
         </div>
       </SheetContent>
     </Sheet>
   );
 };
 
-export default TaskDetails;
+export default TaskDetailSheet;

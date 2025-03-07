@@ -91,6 +91,7 @@ const TaskTableRow = ({
           <SelectContent>
             <SelectItem value="todo">To Do</SelectItem>
             <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="postponed">Postponed</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
           </SelectContent>
         </Select>
