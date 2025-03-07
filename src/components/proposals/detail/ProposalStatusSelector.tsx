@@ -2,15 +2,18 @@
 import { Button } from "@/components/ui/button";
 import { ProposalStatus } from "@/types/proposal";
 import { workflowStages, finalStages } from "../constants";
+import { Loader2 } from "lucide-react";
 
 interface ProposalStatusSelectorProps {
   currentStatus: ProposalStatus;
   onStatusChange: (status: ProposalStatus) => void;
+  isUpdating?: boolean;
 }
 
 export const ProposalStatusSelector = ({ 
   currentStatus, 
-  onStatusChange 
+  onStatusChange,
+  isUpdating = false
 }: ProposalStatusSelectorProps) => {
   return (
     <div className="space-y-4">
@@ -24,7 +27,11 @@ export const ProposalStatusSelector = ({
               variant={currentStatus === stage.status ? 'default' : 'outline'}
               onClick={() => onStatusChange(stage.status)}
               className="justify-start"
+              disabled={isUpdating}
             >
+              {isUpdating && currentStatus !== stage.status && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               {stage.label}
             </Button>
           ))}
@@ -45,7 +52,11 @@ export const ProposalStatusSelector = ({
                 stage.status === 'rejected' ? 'bg-red-600 hover:bg-red-700 text-white' : 
                 stage.status === 'converted_to_order' ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : ''
               } ${currentStatus !== stage.status ? 'bg-white text-gray-800' : ''}`}
+              disabled={isUpdating}
             >
+              {isUpdating && currentStatus !== stage.status && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               {stage.label}
             </Button>
           ))}

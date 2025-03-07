@@ -3,15 +3,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import type { Proposal, ProposalStatus } from "@/types/proposal";
 import { ProposalBasicInfo } from "./detail/ProposalBasicInfo";
 import { ProposalDetailsTab } from "./detail/ProposalDetailsTab";
 import { ProposalItemsTab } from "./detail/ProposalItemsTab";
 import { ProposalNotesTab } from "./detail/ProposalNotesTab";
 import { StatusBadge } from "./detail/StatusBadge";
+import { useProposalStatusUpdate } from "@/hooks/useProposalStatusUpdate";
 
 interface ProposalDetailSheetProps {
   proposal: Proposal | null;
@@ -20,8 +18,8 @@ interface ProposalDetailSheetProps {
 }
 
 export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetailSheetProps) => {
-  const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Proposal | null>(null);
+  const { updateProposalStatus, isUpdating } = useProposalStatusUpdate();
 
   useEffect(() => {
     if (proposal) {
@@ -29,34 +27,20 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
     }
   }, [proposal]);
 
-  const updateProposalMutation = useMutation({
-    mutationFn: async (updatedProposal: Partial<Proposal>) => {
-      if (!proposal?.id) throw new Error('Proposal ID is required');
-
-      const { data, error } = await supabase
-        .from('proposals')
-        .update(updatedProposal as any)
-        .eq('id', proposal.id)
-        .select();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['proposals'] });
-      toast.success('Teklif başarıyla güncellendi');
-    },
-    onError: (error) => {
-      toast.error('Teklif güncellenirken bir hata oluştu');
-      console.error('Update error:', error);
-    }
-  });
-
   const handleStatusChange = (status: ProposalStatus) => {
     if (!formData) return;
+    
+    // Update local state immediately for responsive UI
     const updatedData = { ...formData, status };
     setFormData(updatedData);
-    updateProposalMutation.mutate({ status });
+    
+    // Call the mutation to update the server
+    if (formData.id) {
+      updateProposalStatus.mutate({ 
+        proposalId: formData.id, 
+        status 
+      });
+    }
   };
 
   if (!formData) return null;
@@ -89,6 +73,7 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
               <ProposalDetailsTab 
                 proposal={formData} 
                 onStatusChange={handleStatusChange} 
+                isUpdating={isUpdating}
               />
             </TabsContent>
 

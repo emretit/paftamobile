@@ -6,11 +6,13 @@ import { ProposalStatusSelector } from "./ProposalStatusSelector";
 interface ProposalDetailsTabProps {
   proposal: Proposal;
   onStatusChange: (status: ProposalStatus) => void;
+  isUpdating?: boolean;
 }
 
 export const ProposalDetailsTab = ({ 
   proposal, 
-  onStatusChange 
+  onStatusChange,
+  isUpdating = false
 }: ProposalDetailsTabProps) => {
   return (
     <div className="space-y-4">
@@ -27,7 +29,8 @@ export const ProposalDetailsTab = ({
           {/* Status selection buttons */}
           <ProposalStatusSelector 
             currentStatus={proposal.status} 
-            onStatusChange={onStatusChange} 
+            onStatusChange={onStatusChange}
+            isUpdating={isUpdating}
           />
         </div>
       </div>
