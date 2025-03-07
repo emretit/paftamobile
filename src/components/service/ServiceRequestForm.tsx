@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -17,8 +16,11 @@ import {
 import { CustomerField } from "./form/CustomerField";
 import { FileUploadField } from "./form/FileUploadField";
 import { FormActions } from "./form/FormActions";
+import { ServiceRequestPreview } from "./form/ServiceRequestPreview";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useCustomerSelect } from "@/hooks/useCustomerSelect";
 
-// Define the form schema
 const formSchema = z.object({
   title: z.string().min(3, { message: "Başlık en az 3 karakter olmalıdır" }),
   description: z.string().optional(),
@@ -38,8 +40,10 @@ export interface ServiceRequestFormProps {
 
 export function ServiceRequestForm({ onClose, initialData, isEditing = false }: ServiceRequestFormProps) {
   const [files, setFiles] = useState<File[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
   const { createServiceRequest, updateServiceRequest, isCreating, isUpdating } = useServiceRequests();
   const { toast } = useToast();
+  const { customers } = useCustomerSelect();
 
   const form = useForm<ServiceRequestFormData>({
     resolver: zodResolver(formSchema),
@@ -53,7 +57,6 @@ export function ServiceRequestForm({ onClose, initialData, isEditing = false }: 
     },
   });
 
-  // Set form values when initialData changes (for editing)
   useEffect(() => {
     if (initialData && isEditing) {
       Object.keys(initialData).forEach((key) => {
@@ -68,6 +71,14 @@ export function ServiceRequestForm({ onClose, initialData, isEditing = false }: 
       });
     }
   }, [initialData, isEditing, form]);
+
+  const getCustomerName = () => {
+    const customerId = form.watch("customer_id");
+    if (!customerId || !customers) return undefined;
+    
+    const customer = customers.find(c => c.id === customerId);
+    return customer?.name;
+  };
 
   const onSubmit = (data: ServiceRequestFormData) => {
     if (isEditing && initialData?.id) {
@@ -93,18 +104,40 @@ export function ServiceRequestForm({ onClose, initialData, isEditing = false }: 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <TitleField form={form} />
-        <DescriptionField form={form} />
-        <PriorityField form={form} />
-        <ServiceTypeField form={form} />
-        <CustomerField form={form} />
-        <LocationField form={form} />
-        <DueDateField form={form} />
-        <FileUploadField files={files} setFiles={setFiles} />
+        <div className="flex justify-end items-center space-x-2 pb-2 border-b">
+          <Label htmlFor="show-preview" className="text-sm">Önizleme Göster</Label>
+          <Switch 
+            id="show-preview" 
+            checked={showPreview} 
+            onCheckedChange={setShowPreview}
+          />
+        </div>
+        
+        {showPreview ? (
+          <ServiceRequestPreview 
+            formData={form.getValues()} 
+            files={files}
+            customerName={getCustomerName()}
+          />
+        ) : (
+          <>
+            <TitleField form={form} />
+            <DescriptionField form={form} />
+            <PriorityField form={form} />
+            <ServiceTypeField form={form} />
+            <CustomerField form={form} />
+            <LocationField form={form} />
+            <DueDateField form={form} />
+            <FileUploadField files={files} setFiles={setFiles} />
+          </>
+        )}
+        
         <FormActions 
           onClose={onClose} 
           isSubmitting={isCreating || isUpdating} 
-          isEditing={isEditing} 
+          isEditing={isEditing}
+          showPreview={showPreview}
+          setShowPreview={setShowPreview} 
         />
       </form>
     </Form>
