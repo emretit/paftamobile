@@ -139,7 +139,7 @@ export const EventCalendar = ({
       messages={messages}
       culture="tr"
       onDropFromOutside={handleDropFromOutside}
-      droppable={true}
+      // Removed the 'droppable' prop as it's not in the type definitions
       onEventDrop={moveEvent}
       components={customComponents}
       view={currentView as any}
