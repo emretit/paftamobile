@@ -21,7 +21,7 @@ export const useKanbanColumns = (
     { id: "postponed", title: "Ertelendi", icon: Hourglass }
   ];
 
-  const [columns, setColumns] = useState<KanbanColumn[]>([...defaultColumns]);
+  const [columns, setColumns] = useState<KanbanColumn[]>(defaultColumns);
   const [isAddColumnOpen, setIsAddColumnOpen] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [columnToDelete, setColumnToDelete] = useState<string | null>(null);
