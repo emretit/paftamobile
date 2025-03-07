@@ -8,12 +8,12 @@ import { toast } from "sonner";
 export const usePurchaseInvoices = () => {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({
-    status: "" as string,
+    status: "",
     search: "",
-    dateRange: { from: null, to: null } as { from: Date | null, to: null }
+    dateRange: { from: null, to: null } as { from: Date | null, to: Date | null }
   });
 
-  const fetchPurchaseInvoices = async (): Promise<PurchaseInvoice[]> => {
+  const fetchInvoices = async (): Promise<PurchaseInvoice[]> => {
     let query = supabase
       .from("purchase_invoices")
       .select("*")
@@ -45,7 +45,7 @@ export const usePurchaseInvoices = () => {
     return data;
   };
 
-  const fetchPurchaseInvoiceById = async (id: string): Promise<PurchaseInvoice> => {
+  const fetchInvoiceById = async (id: string): Promise<PurchaseInvoice> => {
     const { data, error } = await supabase
       .from("purchase_invoices")
       .select("*")
@@ -60,7 +60,7 @@ export const usePurchaseInvoices = () => {
     return data;
   };
 
-  const createPurchaseInvoice = async (invoiceData: any) => {
+  const createInvoice = async (invoiceData: any) => {
     const { data, error } = await supabase
       .from("purchase_invoices")
       .insert([invoiceData])
@@ -76,7 +76,7 @@ export const usePurchaseInvoices = () => {
     return data;
   };
 
-  const updatePurchaseInvoice = async ({ id, data }: { id: string, data: Partial<PurchaseInvoice> }) => {
+  const updateInvoice = async ({ id, data }: { id: string, data: any }) => {
     const { error } = await supabase
       .from("purchase_invoices")
       .update(data)
@@ -91,23 +91,8 @@ export const usePurchaseInvoices = () => {
     return { id };
   };
 
-  const updateInvoiceStatus = async ({ id, status }: { id: string, status: InvoiceStatus }) => {
-    const { error } = await supabase
-      .from("purchase_invoices")
-      .update({ status })
-      .eq("id", id);
-
-    if (error) {
-      toast.error("Fatura durumu güncellenirken hata oluştu");
-      throw error;
-    }
-
-    toast.success("Fatura durumu başarıyla güncellendi");
-    return { id };
-  };
-
-  const registerPayment = async ({ id, amount }: { id: string, amount: number }) => {
-    // Get current invoice to check the current paid amount
+  const recordPayment = async ({ id, amount }: { id: string, amount: number }) => {
+    // Get current invoice
     const { data: invoice, error: fetchError } = await supabase
       .from("purchase_invoices")
       .select("*")
@@ -115,36 +100,37 @@ export const usePurchaseInvoices = () => {
       .single();
     
     if (fetchError) {
-      toast.error("Fatura bilgileri alınırken hata oluştu");
+      toast.error("Fatura bilgisi alınamadı");
       throw fetchError;
     }
     
-    const newPaidAmount = invoice.paid_amount + amount;
-    const newStatus: InvoiceStatus = 
-      newPaidAmount >= invoice.total_amount 
-        ? 'paid' 
-        : newPaidAmount > 0 
-          ? 'partially_paid' 
-          : 'pending';
+    // Calculate new paid amount and status
+    const newPaidAmount = parseFloat(String(invoice.paid_amount)) + amount;
+    const newStatus = newPaidAmount >= parseFloat(String(invoice.total_amount)) 
+      ? 'paid' 
+      : newPaidAmount > 0 
+        ? 'partially_paid' 
+        : 'pending';
     
-    const { error } = await supabase
+    // Update invoice
+    const { error: updateError } = await supabase
       .from("purchase_invoices")
-      .update({ 
+      .update({
         paid_amount: newPaidAmount,
-        status: newStatus
+        status: newStatus as InvoiceStatus
       })
       .eq("id", id);
-
-    if (error) {
+    
+    if (updateError) {
       toast.error("Ödeme kaydedilirken hata oluştu");
-      throw error;
+      throw updateError;
     }
-
+    
     toast.success("Ödeme başarıyla kaydedildi");
     return { id };
   };
 
-  const deletePurchaseInvoice = async (id: string) => {
+  const deleteInvoice = async (id: string) => {
     const { error } = await supabase
       .from("purchase_invoices")
       .delete()
@@ -161,46 +147,32 @@ export const usePurchaseInvoices = () => {
 
   const { data: invoices, isLoading, error, refetch } = useQuery({
     queryKey: ['purchaseInvoices', filters],
-    queryFn: fetchPurchaseInvoices,
+    queryFn: fetchInvoices,
   });
 
-  const getInvoice = (id: string) => {
-    return useQuery({
-      queryKey: ['purchaseInvoice', id],
-      queryFn: () => fetchPurchaseInvoiceById(id),
-    });
-  };
-
   const createInvoiceMutation = useMutation({
-    mutationFn: createPurchaseInvoice,
+    mutationFn: createInvoice,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchaseInvoices'] });
     },
   });
 
   const updateInvoiceMutation = useMutation({
-    mutationFn: updatePurchaseInvoice,
+    mutationFn: updateInvoice,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchaseInvoices'] });
     },
   });
 
-  const updateStatusMutation = useMutation({
-    mutationFn: updateInvoiceStatus,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['purchaseInvoices'] });
-    },
-  });
-
-  const registerPaymentMutation = useMutation({
-    mutationFn: registerPayment,
+  const recordPaymentMutation = useMutation({
+    mutationFn: recordPayment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchaseInvoices'] });
     },
   });
 
   const deleteInvoiceMutation = useMutation({
-    mutationFn: deletePurchaseInvoice,
+    mutationFn: deleteInvoice,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchaseInvoices'] });
     },
@@ -213,11 +185,10 @@ export const usePurchaseInvoices = () => {
     filters,
     setFilters,
     refetch,
-    getInvoice,
+    fetchInvoiceById,
     createInvoiceMutation,
     updateInvoiceMutation,
-    updateStatusMutation,
-    registerPaymentMutation,
+    recordPaymentMutation,
     deleteInvoiceMutation,
   };
 };

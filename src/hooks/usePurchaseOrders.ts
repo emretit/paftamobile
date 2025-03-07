@@ -2,23 +2,18 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  PurchaseOrder, 
-  PurchaseOrderItem, 
-  PurchaseOrderFormData,
-  PurchaseOrderStatus
-} from "@/types/purchase";
+import { PurchaseOrder, PurchaseOrderStatus, PurchaseOrderItem } from "@/types/purchase";
 import { toast } from "sonner";
 
 export const usePurchaseOrders = () => {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({
-    status: "" as string,
+    status: "",
     search: "",
-    dateRange: { from: null, to: null } as { from: Date | null, to: null }
+    dateRange: { from: null, to: null } as { from: Date | null, to: Date | null }
   });
 
-  const fetchPurchaseOrders = async (): Promise<PurchaseOrder[]> => {
+  const fetchOrders = async (): Promise<PurchaseOrder[]> => {
     let query = supabase
       .from("purchase_orders")
       .select("*")
@@ -43,28 +38,14 @@ export const usePurchaseOrders = () => {
     const { data, error } = await query;
     
     if (error) {
-      toast.error("Satın alma siparişleri yüklenirken hata oluştu");
+      toast.error("Sipariş listesi yüklenirken hata oluştu");
       throw error;
     }
     
     return data;
   };
 
-  const fetchPurchaseOrderItems = async (orderId: string): Promise<PurchaseOrderItem[]> => {
-    const { data, error } = await supabase
-      .from("purchase_order_items")
-      .select("*")
-      .eq("po_id", orderId);
-
-    if (error) {
-      toast.error("Sipariş öğeleri yüklenirken hata oluştu");
-      throw error;
-    }
-
-    return data;
-  };
-
-  const fetchPurchaseOrderById = async (id: string): Promise<PurchaseOrder> => {
+  const fetchOrderById = async (id: string): Promise<PurchaseOrder> => {
     const { data, error } = await supabase
       .from("purchase_orders")
       .select("*")
@@ -72,100 +53,154 @@ export const usePurchaseOrders = () => {
       .single();
 
     if (error) {
-      toast.error("Satın alma siparişi yüklenirken hata oluştu");
+      toast.error("Sipariş yüklenirken hata oluştu");
       throw error;
     }
 
     return data;
   };
 
-  const createPurchaseOrder = async (orderData: PurchaseOrderFormData) => {
-    const { items, ...orderDetails } = orderData;
-    
-    // Get current user from Supabase
+  const fetchOrderItems = async (orderId: string): Promise<PurchaseOrderItem[]> => {
+    const { data, error } = await supabase
+      .from("purchase_order_items")
+      .select("*")
+      .eq("po_id", orderId);
+
+    if (error) {
+      toast.error("Sipariş kalemleri yüklenirken hata oluştu");
+      throw error;
+    }
+
+    return data;
+  };
+
+  const fetchOrderWithItems = async (id: string) => {
+    const order = await fetchOrderById(id);
+    const items = await fetchOrderItems(id);
+    return { ...order, items };
+  };
+
+  const createOrderFromRequest = async ({ 
+    requestId, 
+    supplierId, 
+    items 
+  }: { 
+    requestId: string, 
+    supplierId: string, 
+    items: any[] 
+  }) => {
+    // Get current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Kullanıcı kimliği alınamadı");
       throw new Error("User not authenticated");
     }
-    
-    // Create the order first
+
+    // Create the base order
     const { data: order, error: orderError } = await supabase
       .from("purchase_orders")
-      .insert([
-        { ...orderDetails, issued_by: user.id }
-      ])
+      .insert([{
+        request_id: requestId,
+        supplier_id: supplierId,
+        status: 'draft',
+        issued_by: user.id,
+      }])
       .select()
       .single();
 
     if (orderError) {
-      toast.error("Satın alma siparişi oluşturulurken hata oluştu");
+      toast.error("Sipariş oluşturulurken hata oluştu");
       throw orderError;
     }
 
-    // Then create all items
-    const itemsWithOrderId = items.map(item => ({
-      ...item,
-      po_id: order.id
+    // Process items
+    const orderItems = items.map(item => ({
+      po_id: order.id,
+      product_id: item.product_id,
+      description: item.description,
+      quantity: item.quantity,
+      unit: item.unit,
+      unit_price: item.estimated_unit_price || 0,
+      tax_rate: 18, // Default tax rate
+      total_price: (item.quantity || 0) * (item.estimated_unit_price || 0)
     }));
 
+    // Insert order items
     const { error: itemsError } = await supabase
       .from("purchase_order_items")
-      .insert(itemsWithOrderId);
+      .insert(orderItems);
 
     if (itemsError) {
-      toast.error("Sipariş öğeleri eklenirken hata oluştu");
+      toast.error("Sipariş kalemleri eklenirken hata oluştu");
       throw itemsError;
     }
 
-    toast.success("Satın alma siparişi başarıyla oluşturuldu");
+    // Update request status to converted
+    const { error: requestError } = await supabase
+      .from("purchase_requests")
+      .update({ status: 'converted' as PurchaseOrderStatus })
+      .eq("id", requestId);
+    
+    if (requestError) {
+      toast.error("Talep durumu güncellenirken hata oluştu");
+      // Don't throw here, the order is already created
+    }
+
+    toast.success("Sipariş başarıyla oluşturuldu");
     return order;
   };
 
-  const updatePurchaseOrder = async ({ id, data }: { id: string, data: Partial<PurchaseOrderFormData> }) => {
-    const { items, ...orderDetails } = data as any;
+  const updateOrder = async ({ id, data }: { id: string, data: any }) => {
+    const { items, ...orderDetails } = data;
     
-    // Update the order details
+    // Update the order
     const { error: orderError } = await supabase
       .from("purchase_orders")
       .update(orderDetails)
       .eq("id", id);
 
     if (orderError) {
-      toast.error("Satın alma siparişi güncellenirken hata oluştu");
+      toast.error("Sipariş güncellenirken hata oluştu");
       throw orderError;
     }
 
     // If items are provided, handle them
     if (items && items.length > 0) {
-      // First, delete the existing items
+      // Delete existing items
       const { error: deleteError } = await supabase
         .from("purchase_order_items")
         .delete()
         .eq("po_id", id);
 
       if (deleteError) {
-        toast.error("Mevcut sipariş öğeleri silinirken hata oluştu");
+        toast.error("Mevcut sipariş kalemleri silinirken hata oluştu");
         throw deleteError;
       }
 
-      // Then insert the new items
-      const itemsWithOrderId = items.map((item: any) => ({
-        ...item,
-        po_id: id
+      // Insert new items
+      const orderItems = items.map((item: any) => ({
+        po_id: id,
+        product_id: item.product_id,
+        description: item.description,
+        quantity: item.quantity,
+        unit: item.unit,
+        unit_price: parseFloat(String(item.unit_price)),
+        tax_rate: parseFloat(String(item.tax_rate)),
+        discount_rate: parseFloat(String(item.discount_rate || 0)),
+        total_price: parseFloat(String(item.total_price))
       }));
 
       const { error: itemsError } = await supabase
         .from("purchase_order_items")
-        .insert(itemsWithOrderId);
+        .insert(orderItems);
 
       if (itemsError) {
-        toast.error("Sipariş öğeleri eklenirken hata oluştu");
+        toast.error("Sipariş kalemleri eklenirken hata oluştu");
         throw itemsError;
       }
     }
 
-    toast.success("Satın alma siparişi başarıyla güncellendi");
+    toast.success("Sipariş başarıyla güncellendi");
     return { id };
   };
 
@@ -184,14 +219,14 @@ export const usePurchaseOrders = () => {
     return { id };
   };
 
-  const updateReceiptQuantities = async ({ 
-    id, 
+  const receiveItems = async ({ 
+    orderId, 
     items 
   }: { 
-    id: string, 
+    orderId: string, 
     items: { id: string, received_quantity: number }[] 
   }) => {
-    // Update each item one by one (could be optimized with a transaction)
+    // Update each item's received quantity
     for (const item of items) {
       const { error } = await supabase
         .from("purchase_order_items")
@@ -199,65 +234,58 @@ export const usePurchaseOrders = () => {
         .eq("id", item.id);
       
       if (error) {
-        toast.error("Teslim alınan miktar güncellenirken hata oluştu");
+        toast.error("Ürün alımı kaydedilirken hata oluştu");
         throw error;
       }
     }
     
-    // Check if all items are fully received
-    const { data: orderItems, error: itemsError } = await supabase
+    // Determine if all items are fully received
+    const { data: orderItems } = await supabase
       .from("purchase_order_items")
       .select("quantity, received_quantity")
-      .eq("po_id", id);
+      .eq("po_id", orderId);
     
-    if (itemsError) {
-      toast.error("Sipariş öğeleri kontrol edilirken hata oluştu");
-      throw itemsError;
-    }
+    const allReceived = orderItems?.every(item => 
+      parseFloat(String(item.received_quantity)) >= parseFloat(String(item.quantity))
+    );
     
-    const allItemsReceived = orderItems.every(item => item.received_quantity >= item.quantity);
-    const anyItemReceived = orderItems.some(item => item.received_quantity > 0);
+    const partiallyReceived = orderItems?.some(item => 
+      parseFloat(String(item.received_quantity)) > 0
+    );
     
-    // Update order status based on receipt status
-    let newStatus: PurchaseOrderStatus = 'sent';
-    if (allItemsReceived) {
+    let newStatus: PurchaseOrderStatus = 'confirmed';
+    if (allReceived) {
       newStatus = 'received';
-    } else if (anyItemReceived) {
+    } else if (partiallyReceived) {
       newStatus = 'partially_received';
     }
     
-    await updateOrderStatus({ id, status: newStatus });
+    // Update order status
+    await updateOrderStatus({ id: orderId, status: newStatus });
     
-    toast.success("Teslim alınan miktarlar başarıyla güncellendi");
-    return { id };
+    toast.success("Ürün alımı başarıyla kaydedildi");
+    return { id: orderId };
   };
 
-  const deletePurchaseOrder = async (id: string) => {
-    // Delete the order (cascade will delete items)
+  const deleteOrder = async (id: string) => {
     const { error } = await supabase
       .from("purchase_orders")
       .delete()
       .eq("id", id);
 
     if (error) {
-      toast.error("Satın alma siparişi silinirken hata oluştu");
+      toast.error("Sipariş silinirken hata oluştu");
       throw error;
     }
 
-    toast.success("Satın alma siparişi başarıyla silindi");
+    toast.success("Sipariş başarıyla silindi");
     return { id };
   };
 
   const { data: orders, isLoading, error, refetch } = useQuery({
     queryKey: ['purchaseOrders', filters],
-    queryFn: fetchPurchaseOrders,
+    queryFn: fetchOrders,
   });
-
-  const fetchOrderWithItems = async (id: string) => {
-    const order = await fetchPurchaseOrderById(id);
-    const items = await fetchPurchaseOrderItems(id);
-    return { ...order, items };
-  };
 
   const getOrderWithItems = (id: string) => {
     return useQuery({
@@ -267,14 +295,15 @@ export const usePurchaseOrders = () => {
   };
 
   const createOrderMutation = useMutation({
-    mutationFn: createPurchaseOrder,
+    mutationFn: createOrderFromRequest,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['purchaseRequests'] });
     },
   });
 
   const updateOrderMutation = useMutation({
-    mutationFn: updatePurchaseOrder,
+    mutationFn: updateOrder,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
     },
@@ -287,15 +316,16 @@ export const usePurchaseOrders = () => {
     },
   });
 
-  const updateReceiptMutation = useMutation({
-    mutationFn: updateReceiptQuantities,
+  const receiveItemsMutation = useMutation({
+    mutationFn: receiveItems,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
 
   const deleteOrderMutation = useMutation({
-    mutationFn: deletePurchaseOrder,
+    mutationFn: deleteOrder,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
     },
@@ -312,7 +342,7 @@ export const usePurchaseOrders = () => {
     createOrderMutation,
     updateOrderMutation,
     updateStatusMutation,
-    updateReceiptMutation,
+    receiveItemsMutation,
     deleteOrderMutation,
   };
 };
