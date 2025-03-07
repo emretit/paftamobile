@@ -184,7 +184,6 @@ export const ServiceRequestCalendar = ({
           endAccessor="end"
           style={{ width: '100%', height: '100%' }}
           selectable
-          resizable
           onSelectEvent={(event) => onSelectRequest(event.resource)}
           eventPropGetter={eventStyleGetter}
           views={['month', 'week', 'day']}

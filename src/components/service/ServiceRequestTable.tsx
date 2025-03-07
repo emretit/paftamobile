@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal, FileText, Edit, Trash2, Clock } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,

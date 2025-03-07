@@ -1,8 +1,9 @@
+
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { ServiceRequestTable } from "@/components/service/ServiceRequestTable";
 import { Button } from "@/components/ui/button";
-import { Plus, CalendarIcon, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { Plus, CalendarIcon, LayoutGrid, Table as TableIcon, BookOpen, AlertTriangle, Clock, CheckCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
