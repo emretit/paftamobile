@@ -19,7 +19,7 @@ export const useKanbanColumns = (
     { id: "in_progress", title: "Devam Ediyor", icon: Clock },
     { id: "completed", title: "Tamamlandı", icon: Check },
     { id: "postponed", title: "Ertelendi", icon: Hourglass }
-  ] as const;
+  ];
 
   const [columns, setColumns] = useState<KanbanColumn[]>(defaultColumns);
   const [isAddColumnOpen, setIsAddColumnOpen] = useState(false);
