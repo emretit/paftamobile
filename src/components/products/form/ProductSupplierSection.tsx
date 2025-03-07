@@ -1,4 +1,3 @@
-
 import { 
   FormControl, 
   FormField, 
@@ -38,10 +37,13 @@ const ProductSupplierSection = ({ form }: ProductSupplierSectionProps) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("suppliers")
-        .select("id, name, email, phone")
+        .select("id, name")
         .order("name");
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching suppliers:", error);
+        return [];
+      }
       return data || [];
     },
   });
