@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,6 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [stockFilter, setStockFilter] = useState("all");
 
-  // Kategorileri getiren sorgu
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -35,7 +33,6 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
     },
   });
 
-  // Ürünleri getiren sorgu
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["products", searchQuery, categoryFilter, stockFilter],
     queryFn: async () => {
@@ -57,7 +54,6 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
         query = query.eq("category_id", categoryFilter);
       }
 
-      // Stok durumu filtrelemesi
       if (stockFilter !== "all") {
         switch (stockFilter) {
           case "out_of_stock":
@@ -83,7 +79,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen font-sans">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main className={`flex-1 transition-all duration-300 ease-in-out ${
         isCollapsed ? "ml-[68px]" : "ml-[250px]"
