@@ -3,6 +3,7 @@ import { format, getDate, getMonth, getYear, parseISO, startOfWeek } from "date-
 import { dateFnsLocalizer } from "react-big-calendar";
 import { CalendarEvent } from "../hooks/useTaskCalendar";
 import { tr } from 'date-fns/locale/tr';
+import type { Locale } from 'date-fns';
 
 // Setup localizer for react-big-calendar
 export const getLocalizer = () => {

@@ -7,7 +7,7 @@ import type { Task } from "@/types/task";
 export const usePipelineMutations = () => {
   const queryClient = useQueryClient();
   
-  const mutateAsync = useMutation({
+  const updateStatus = useMutation({
     mutationFn: async ({ id, status, itemType }: { id: string; status: Task['status']; itemType: Task['item_type'] }) => {
       if (itemType === "task") {
         const { data, error } = await supabase
@@ -50,6 +50,6 @@ export const usePipelineMutations = () => {
   });
   
   return {
-    mutateAsync
+    updateStatus
   };
 };
