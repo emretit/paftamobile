@@ -134,14 +134,14 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tümü</SelectItem>
-                  <SelectItem value="discovery_scheduled">Keşif Planlandı</SelectItem>
-                  <SelectItem value="meeting_completed">Görüşme Tamamlandı</SelectItem>
-                  <SelectItem value="quote_in_progress">Teklif Hazırlanıyor</SelectItem>
-                  <SelectItem value="quote_sent">Teklif Gönderildi</SelectItem>
-                  <SelectItem value="negotiation">Müzakere Aşaması</SelectItem>
+                  <SelectItem value="discovery_scheduled">Planlandı</SelectItem>
+                  <SelectItem value="meeting_completed">Keşif Tamamlandı</SelectItem>
+                  <SelectItem value="quote_in_progress">Hazırlanıyor</SelectItem>
+                  <SelectItem value="quote_sent">Gönderildi</SelectItem>
+                  <SelectItem value="negotiation">Müzakerede</SelectItem>
                   <SelectItem value="approved">Onaylandı</SelectItem>
                   <SelectItem value="rejected">Reddedildi</SelectItem>
-                  <SelectItem value="converted_to_order">Siparişe Dönüştü</SelectItem>
+                  <SelectItem value="converted_to_order">Sipariş Oldu</SelectItem>
                 </SelectContent>
               </Select>
               <Select

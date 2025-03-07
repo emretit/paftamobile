@@ -5,6 +5,7 @@ import { Eye, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { Proposal } from "@/types/proposal";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { statusLabels, statusStyles } from "../constants";
 
 interface ProposalTableRowProps {
   proposal: Proposal;
@@ -15,32 +16,14 @@ interface ProposalTableRowProps {
 
 export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: ProposalTableRowProps) => {
   const getStatusBadge = (status: string) => {
-    const baseClasses = "px-2 py-1 text-xs rounded-full font-medium";
-    switch (status) {
-      case "draft":
-        return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>Taslak</span>;
-      case "new":
-      case "discovery_scheduled":
-        return <span className={`${baseClasses} bg-blue-100 text-blue-800`}>Keşif Planlandı</span>;
-      case "meeting_completed":
-        return <span className={`${baseClasses} bg-indigo-100 text-indigo-800`}>Görüşme Tamamlandı</span>;
-      case "quote_in_progress":
-        return <span className={`${baseClasses} bg-violet-100 text-violet-800`}>Teklif Hazırlanıyor</span>;
-      case "sent":
-      case "quote_sent":
-        return <span className={`${baseClasses} bg-yellow-100 text-yellow-800`}>Teklif Gönderildi</span>;
-      case "negotiation":
-        return <span className={`${baseClasses} bg-purple-100 text-purple-800`}>Müzakere Aşaması</span>;
-      case "accepted":
-      case "approved":
-        return <span className={`${baseClasses} bg-green-100 text-green-800`}>Onaylandı</span>;
-      case "rejected":
-        return <span className={`${baseClasses} bg-red-100 text-red-800`}>Reddedildi</span>;
-      case "converted_to_order":
-        return <span className={`${baseClasses} bg-indigo-100 text-indigo-800`}>Siparişe Dönüştü</span>;
-      default:
-        return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>{status}</span>;
-    }
+    const style = statusStyles[status] || { bg: "bg-gray-100", text: "text-gray-800" };
+    const label = statusLabels[status] || status;
+    
+    return (
+      <span className={`px-2 py-1 text-xs rounded-full font-medium ${style.bg} ${style.text}`}>
+        {label}
+      </span>
+    );
   };
 
   return (
