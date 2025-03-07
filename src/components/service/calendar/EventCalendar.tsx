@@ -34,7 +34,6 @@ export const EventCalendar = ({ events, onSelectEvent }: EventCalendarProps) => 
       views={['month', 'week', 'day']}
       messages={turkishMessages}
       culture="tr"
-      onEventDrop={handleEventDrop as any}
       draggableAccessor={() => true}
     />
   );
