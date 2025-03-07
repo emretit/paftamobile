@@ -30,6 +30,7 @@ import EmployeeEdit from "@/pages/EmployeeEdit";
 import EmployeeDetails from "@/pages/EmployeeDetails";
 import Tasks from "@/pages/Tasks";
 import CrmDashboard from "@/pages/CrmDashboard";
+import PurchaseManagement from "@/pages/PurchaseManagement";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,7 @@ const App = () => {
           <Route path="/employees/:id" element={<EmployeeDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/employee/:id/edit" element={<EmployeeEdit isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           <Route path="/tasks" element={<Tasks isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+          <Route path="/purchase-management" element={<PurchaseManagement isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
         </Routes>
       </Router>
     </QueryClientProvider>

@@ -14,7 +14,8 @@ import {
   Settings,
   Calendar,
   Briefcase,
-  ListTodo
+  ListTodo,
+  ShoppingCart
 } from "lucide-react";
 
 // Define the CRM category items
@@ -37,6 +38,7 @@ export const navItems = [
   { path: "/products", icon: Package, label: "Ürünler & Hizmetler" },
   { path: "/employees", icon: HardHat, label: "Çalışanlar" },
   { path: "/finance", icon: Wallet, label: "Finans" },
+  { path: "/purchase-management", icon: ShoppingCart, label: "Satın Alma" },
   { path: "/service", icon: Wrench, label: "Servis" },
   { path: "/calendar", icon: Calendar, label: "Takvim" },
   { path: "/purchase-invoices", icon: FileDown, label: "Alış Faturaları" },

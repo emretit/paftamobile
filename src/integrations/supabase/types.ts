@@ -1189,6 +1189,338 @@ export type Database = {
           },
         ]
       }
+      purchase_invoices: {
+        Row: {
+          created_at: string | null
+          currency: string
+          due_date: string
+          id: string
+          invoice_date: string
+          invoice_number: string
+          notes: string | null
+          paid_amount: number | null
+          po_id: string | null
+          status: Database["public"]["Enums"]["invoice_status"] | null
+          subtotal: number
+          supplier_id: string
+          tax_amount: number
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string
+          due_date: string
+          id?: string
+          invoice_date: string
+          invoice_number: string
+          notes?: string | null
+          paid_amount?: number | null
+          po_id?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"] | null
+          subtotal?: number
+          supplier_id: string
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string
+          due_date?: string
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          notes?: string | null
+          paid_amount?: number | null
+          po_id?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"] | null
+          subtotal?: number
+          supplier_id?: string
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_invoices_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoices_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_order_items: {
+        Row: {
+          created_at: string | null
+          description: string
+          discount_rate: number | null
+          id: string
+          po_id: string
+          product_id: string | null
+          quantity: number
+          received_quantity: number | null
+          tax_rate: number
+          total_price: number
+          unit: string
+          unit_price: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          discount_rate?: number | null
+          id?: string
+          po_id: string
+          product_id?: string | null
+          quantity: number
+          received_quantity?: number | null
+          tax_rate?: number
+          total_price: number
+          unit: string
+          unit_price: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          discount_rate?: number | null
+          id?: string
+          po_id?: string
+          product_id?: string | null
+          quantity?: number
+          received_quantity?: number | null
+          tax_rate?: number
+          total_price?: number
+          unit?: string
+          unit_price?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_items_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          created_at: string | null
+          currency: string
+          delivery_address: string | null
+          delivery_terms: string | null
+          expected_delivery_date: string | null
+          id: string
+          issued_by: string | null
+          issued_date: string | null
+          notes: string | null
+          payment_terms: string | null
+          po_number: string
+          request_id: string | null
+          status: Database["public"]["Enums"]["purchase_order_status"] | null
+          subtotal: number
+          supplier_id: string
+          tax_amount: number
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string
+          delivery_address?: string | null
+          delivery_terms?: string | null
+          expected_delivery_date?: string | null
+          id?: string
+          issued_by?: string | null
+          issued_date?: string | null
+          notes?: string | null
+          payment_terms?: string | null
+          po_number?: string
+          request_id?: string | null
+          status?: Database["public"]["Enums"]["purchase_order_status"] | null
+          subtotal?: number
+          supplier_id: string
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string
+          delivery_address?: string | null
+          delivery_terms?: string | null
+          expected_delivery_date?: string | null
+          id?: string
+          issued_by?: string | null
+          issued_date?: string | null
+          notes?: string | null
+          payment_terms?: string | null
+          po_number?: string
+          request_id?: string | null
+          status?: Database["public"]["Enums"]["purchase_order_status"] | null
+          subtotal?: number
+          supplier_id?: string
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_request_items: {
+        Row: {
+          created_at: string | null
+          description: string
+          estimated_total: number | null
+          estimated_unit_price: number | null
+          id: string
+          notes: string | null
+          product_id: string | null
+          quantity: number
+          request_id: string
+          unit: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          estimated_total?: number | null
+          estimated_unit_price?: number | null
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          quantity: number
+          request_id: string
+          unit: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          estimated_total?: number | null
+          estimated_unit_price?: number | null
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          quantity?: number
+          request_id?: string
+          unit?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_request_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_request_items_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string | null
+          department: string | null
+          description: string | null
+          id: string
+          needed_by_date: string | null
+          notes: string | null
+          preferred_supplier_id: string | null
+          request_number: string
+          requested_date: string | null
+          requester_id: string
+          status: Database["public"]["Enums"]["purchase_request_status"] | null
+          title: string
+          total_budget: number
+          updated_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          department?: string | null
+          description?: string | null
+          id?: string
+          needed_by_date?: string | null
+          notes?: string | null
+          preferred_supplier_id?: string | null
+          request_number?: string
+          requested_date?: string | null
+          requester_id: string
+          status?: Database["public"]["Enums"]["purchase_request_status"] | null
+          title: string
+          total_budget?: number
+          updated_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          department?: string | null
+          description?: string | null
+          id?: string
+          needed_by_date?: string | null
+          notes?: string | null
+          preferred_supplier_id?: string | null
+          request_number?: string
+          requested_date?: string | null
+          requester_id?: string
+          status?: Database["public"]["Enums"]["purchase_request_status"] | null
+          title?: string
+          total_budget?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_requests_preferred_supplier_id_fkey"
+            columns: ["preferred_supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_activities: {
         Row: {
           activity_type: string
@@ -1603,6 +1935,12 @@ export type Database = {
       event_type: "technical" | "sales"
       financial_instrument_status: "pending" | "cleared" | "bounced"
       financial_instrument_type: "check" | "promissory_note"
+      invoice_status:
+        | "pending"
+        | "paid"
+        | "partially_paid"
+        | "overdue"
+        | "cancelled"
       payment_direction: "incoming" | "outgoing"
       payment_status: "pending" | "completed" | "failed"
       payment_type: "havale" | "eft" | "kredi_karti" | "nakit"
@@ -1614,6 +1952,19 @@ export type Database = {
         | "expired"
         | "review"
         | "negotiation"
+      purchase_order_status:
+        | "draft"
+        | "sent"
+        | "confirmed"
+        | "received"
+        | "partially_received"
+        | "cancelled"
+      purchase_request_status:
+        | "draft"
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "converted"
       sales_event_category: "proposal_deadline" | "sales_meeting" | "follow_up"
       service_priority: "low" | "medium" | "high" | "urgent"
       service_status:
