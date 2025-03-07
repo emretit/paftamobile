@@ -1,104 +1,108 @@
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
-import { ReloadIcon } from "@radix-ui/react-icons";
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
-import { usePipelineMutations } from "./hooks/usePipelineMutations";
+import { supabase } from "@/integrations/supabase/client";
 import type { Task } from "@/types/task";
+import type { Deal } from "@/types/deal";
 
-interface Deal {
+interface Employee {
   id: string;
-  title: string;
-  status: 'new' | 'negotiation' | 'won' | 'lost';
-  amount: number;
-  close_date: string;
-  created_at: string;
-  updated_at: string;
-  employee_id: string;
-  employee?: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    avatar_url: string;
-  };
-  type: string;
+  first_name: string;
+  last_name: string;
+  avatar_url: string;
 }
 
-const columnTitles = {
-  todo: "Tasks To Do",
-  in_progress: "Tasks In Progress",
-  completed: "Tasks Completed",
-  postponed: "Tasks Postponed",
-  new: "Deals New",
-  negotiation: "Deals Negotiation",
-  won: "Deals Won",
-  lost: "Deals Lost",
-};
+interface DealWithEmployee extends Deal {
+  employee: Employee;
+}
 
-const statusMap = {
-  new: "new",
-  negotiation: "negotiation",
-  won: "won",
-  lost: "lost",
-  todo: "todo",
-  in_progress: "in_progress",
-  completed: "completed",
-  postponed: "postponed",
-};
+interface TaskWithAssignee extends Task {
+  assignee: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
+}
+
+interface Column {
+  id: string;
+  title: string;
+  items: (TaskWithAssignee | DealWithEmployee)[];
+}
+
+const columnOrder = ['opportunities', 'in_progress', 'completed', 'postponed'];
 
 const UnifiedPipeline = () => {
-  const [isRefetching, setIsRefetching] = useState(false);
-  const { updateStatus } = usePipelineMutations();
-  
-  const { data: tasks, isLoading: isLoadingTasks, refetch: refetchTasks } = useQuery({
-    queryKey: ['tasks'],
+  const [columns, setColumns] = useState<Record<string, Column>>({
+    opportunities: {
+      id: 'opportunities',
+      title: 'Opportunities',
+      items: [],
+    },
+    in_progress: {
+      id: 'in_progress',
+      title: 'In Progress',
+      items: [],
+    },
+    completed: {
+      id: 'completed',
+      title: 'Completed',
+      items: [],
+    },
+    postponed: {
+      id: 'postponed',
+      title: 'Postponed',
+      items: [],
+    },
+  });
+
+  const { data: tasks, isLoading: isTasksLoading } = useQuery({
+    queryKey: ['pipeline-tasks'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tasks')
         .select(`
           *,
-          assignee:assignee_id (
+          assignee:assignee_id(
             id,
             first_name,
             last_name,
             avatar_url
           )
         `)
+        .in('status', ['todo', 'in_progress', 'completed', 'postponed'])
         .order('created_at', { ascending: false });
-      
+    
       if (error) {
         console.error('Error fetching tasks:', error);
         throw error;
       }
-      
-      return (data.map(task => ({
+    
+      return data.map(task => ({
         ...task,
         type: task.type || 'general',
-        item_type: task.item_type || 'task',
+        // Explicitly setting item_type as it's required in the Task interface
+        item_type: 'task',
         assignee: task.assignee ? {
           id: task.assignee.id,
           name: `${task.assignee.first_name} ${task.assignee.last_name}`,
           avatar: task.assignee.avatar_url
         } : undefined
-      })) as unknown) as Task[];
+      })) as unknown as Task[];
     }
   });
-  
-  const { data: deals, isLoading: isLoadingDeals, refetch: refetchDeals } = useQuery({
-    queryKey: ['deals'],
+
+  const { data: deals, isLoading: isDealsLoading } = useQuery({
+    queryKey: ['pipeline-deals'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('deals')
         .select(`
           *,
-          employee:employee_id (
+          employee:employee_id(
             id,
             first_name,
             last_name,
@@ -112,75 +116,108 @@ const UnifiedPipeline = () => {
         throw error;
       }
       
-      return (data.map(deal => ({
-        ...deal,
-        type: 'deal',
-        employee: deal.employee ? {
-          id: deal.employee.id,
-          first_name: deal.employee.first_name,
-          last_name: deal.employee.last_name,
-          avatar_url: deal.employee.avatar_url
-        } : undefined
-      })) as unknown) as Deal[];
+      return data as DealWithEmployee[];
     }
   });
-  
-  const allItems = React.useMemo(() => {
-    const normalizedTasks = (tasks || []).map(task => ({ ...task, type: task.type || 'task' }));
-    const normalizedDeals = (deals || []).map(deal => ({ ...deal, type: 'deal' }));
-    return [...normalizedTasks, ...normalizedDeals];
-  }, [tasks, deals]);
-  
-  const isLoading = isLoadingTasks || isLoadingDeals;
-  
-  const groupedItems = React.useMemo(() => {
-    if (!allItems) return {};
-    
-    return allItems.reduce((acc: { [key: string]: any[] }, item: any) => {
-      const status = item.type === 'task' ? item.status : item.status;
-      if (!acc[status]) {
-        acc[status] = [];
+
+  React.useEffect(() => {
+    if (tasks && deals) {
+      // Group tasks by status
+      const groupedTasks = tasks.reduce((acc: Record<string, TaskWithAssignee[]>, task) => {
+        if (!acc[task.status]) {
+          acc[task.status] = [];
+        }
+        acc[task.status].push(task as TaskWithAssignee);
+        return acc;
+      }, {});
+
+      // Initialize items array for each column
+      const newColumns: Record<string, Column> = {
+        opportunities: { ...columns.opportunities, items: [] },
+        in_progress: { ...columns.in_progress, items: [] },
+        completed: { ...columns.completed, items: [] },
+        postponed: { ...columns.postponed, items: [] },
+      };
+
+      // Add tasks to the appropriate column
+      if (groupedTasks.todo) {
+        newColumns.opportunities.items.push(...groupedTasks.todo);
       }
-      acc[status].push(item);
-      return acc;
-    }, {});
-  }, [allItems]);
-  
-  const onDragEnd = async (result: DropResult) => {
+      if (groupedTasks.in_progress) {
+        newColumns.in_progress.items.push(...groupedTasks.in_progress);
+      }
+      if (groupedTasks.completed) {
+        newColumns.completed.items.push(...groupedTasks.completed);
+      }
+      if (groupedTasks.postponed) {
+        newColumns.postponed.items.push(...groupedTasks.postponed);
+      }
+
+      // Add deals to the opportunities column
+      newColumns.opportunities.items.push(...deals);
+
+      // Update the state with the new columns
+      setColumns(newColumns);
+    }
+  }, [tasks, deals]);
+
+  const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
-    
+
     if (!destination) {
       return;
     }
-    
-    if (destination.droppableId === source.droppableId && destination.index === source.index) {
+
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
       return;
     }
-    
-    const itemId = draggableId;
-    const newStatus = destination.droppableId as Task['status'];
-    
-    const item = allItems.find((item: any) => item.id === itemId);
-    
-    if (item) {
-      const itemType = item.type === 'task' ? 'task' : 'opportunity';
-      await handleUpdateStatus(itemId, newStatus, itemType);
+
+    const start = columns[source.droppableId];
+    const finish = columns[destination.droppableId];
+
+    if (start === finish) {
+      const newItemIds = Array.from(start.items);
+      const [removed] = newItemIds.splice(source.index, 1);
+      newItemIds.splice(destination.index, 0, removed);
+
+      const newColumn = {
+        ...start,
+        items: newItemIds,
+      };
+      setColumns({
+        ...columns,
+        [newColumn.id]: newColumn,
+      });
+      return;
     }
+
+    // Moving from one list to another
+    const startItemIds = Array.from(start.items);
+    const [removed] = startItemIds.splice(source.index, 1);
+
+    const finishItemIds = Array.from(finish.items);
+    finishItemIds.splice(destination.index, 0, removed);
+
+    const newStart = {
+      ...start,
+      items: startItemIds,
+    };
+
+    const newFinish = {
+      ...finish,
+      items: finishItemIds,
+    };
+
+    setColumns({
+      ...columns,
+      [newStart.id]: newStart,
+      [newFinish.id]: newFinish,
+    });
   };
-  
-  const handleUpdateStatus = (id: string, status: Task['status'], itemType: Task['item_type']) => {
-    updateStatus.mutate({ id, status, itemType });
-  };
-  
-  const refetchData = async () => {
-    setIsRefetching(true);
-    try {
-      await Promise.all([refetchTasks(), refetchDeals()]);
-    } finally {
-      setIsRefetching(false);
-    }
-  };
-  
+
   const getEmployeeAvatar = (item: any) => {
     if ('assignee' in item && item.assignee) {
       return item.assignee.avatar;
@@ -189,7 +226,7 @@ const UnifiedPipeline = () => {
     }
     return null;
   };
-  
+
   const getEmployeeName = (item: any) => {
     if ('assignee' in item && item.assignee) {
       return item.assignee.name;
@@ -198,104 +235,71 @@ const UnifiedPipeline = () => {
     }
     return 'Unassigned';
   };
-  
+
+  if (isTasksLoading || isDealsLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between space-x-2 mb-4">
-        <h2 className="text-2xl font-bold tracking-tight">Unified Pipeline</h2>
-        <Button variant="outline" size="sm" onClick={refetchData} disabled={isRefetching}>
-          {isRefetching ? (
-            <>
-              <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
-              Yenileniyor...
-            </>
-          ) : (
-            <>
-              <ReloadIcon className="mr-2 h-4 w-4" />
-              Yenile
-            </>
-          )}
-        </Button>
+    <DragDropContext onDragEnd={onDragEnd}>
+      <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+        {columnOrder.map((columnId) => {
+          const column = columns[columnId];
+          return (
+            <Droppable droppableId={column.id} key={column.id}>
+              {(provided) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  style={{
+                    background: '#f0f0f0',
+                    padding: 8,
+                    width: 250,
+                    minHeight: 500,
+                  }}
+                >
+                  <h2>{column.title}</h2>
+                  {column.items.map((item, index) => (
+                    <Draggable draggableId={item.id} index={index} key={item.id}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          style={{
+                            userSelect: 'none',
+                            padding: 16,
+                            margin: '0 0 8px 0',
+                            backgroundColor: 'white',
+                            color: '#333',
+                            ...provided.draggableProps.style,
+                          }}
+                        >
+                          <Card>
+                            <CardContent>
+                              <div>
+                                {item.title}
+                                <br />
+                                <Avatar className="h-6 w-6">
+                                  <AvatarImage src={getEmployeeAvatar(item) || ''} />
+                                  <AvatarFallback>{getEmployeeName(item)?.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                {getEmployeeName(item)}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          );
+        })}
       </div>
-      
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 h-full">
-          {Object.entries(statusMap).map(([statusKey, statusValue]) => (
-            <div key={statusKey} className="flex flex-col h-full">
-              <div className="text-sm font-bold mb-2">{columnTitles[statusValue as keyof typeof columnTitles] || statusKey}</div>
-              <Droppable droppableId={statusValue}>
-                {(provided, snapshot) => (
-                  <ScrollArea
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={cn("flex-1 h-full p-2 rounded-md", snapshot.isDraggingOver ? "bg-secondary" : "bg-secondary/50")}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Skeleton className="mb-2 h-32 rounded-md" />
-                        <Skeleton className="mb-2 h-32 rounded-md" />
-                        <Skeleton className="mb-2 h-32 rounded-md" />
-                      </>
-                    ) : groupedItems[statusValue]?.length === 0 ? (
-                      <div className="text-muted-foreground text-center py-4">
-                        No items in this column.
-                      </div>
-                    ) : (
-                      groupedItems[statusValue]?.map((item: any, index: number) => (
-                        <Draggable key={item.id} draggableId={item.id} index={index}>
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className={cn("mb-2", snapshot.isDragging ? "shadow-md" : "shadow")}
-                            >
-                              <Card>
-                                <CardHeader>
-                                  <CardTitle>{item.title}</CardTitle>
-                                  <CardDescription>
-                                    {item.type === 'deal' ? (
-                                      <>Amount: ${item.amount}</>
-                                    ) : (
-                                      item.description
-                                    )}
-                                  </CardDescription>
-                                </CardHeader>
-                                <CardContent className="flex items-center space-x-4">
-                                  <Avatar>
-                                    <AvatarImage src={getEmployeeAvatar(item)} />
-                                    <AvatarFallback>{getEmployeeName(item)?.charAt(0)}</AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                    <div className="text-sm font-medium">{getEmployeeName(item)}</div>
-                                    <div className="text-xs text-muted-foreground">
-                                      {item.type === 'deal' ? 'Deal' : 'Task'}
-                                    </div>
-                                  </div>
-                                </CardContent>
-                                <CardFooter className="justify-between">
-                                  {item.type === 'deal' && (
-                                    <Badge variant="secondary">
-                                      Close Date: {new Date(item.close_date).toLocaleDateString()}
-                                    </Badge>
-                                  )}
-                                  <Badge className="capitalize">{item.type}</Badge>
-                                </CardFooter>
-                              </Card>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))
-                    )}
-                    {provided.placeholder}
-                  </ScrollArea>
-                )}
-              </Droppable>
-            </div>
-          ))}
-        </div>
-      </DragDropContext>
-    </div>
+    </DragDropContext>
   );
 };
 
