@@ -4,78 +4,52 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Task } from "@/types/task";
 
-// Helper function to map task status to deal status
-const mapTaskStatusToDealStatus = (taskStatus: Task['status']) => {
-  switch (taskStatus) {
-    case 'todo':
-      return 'new';
-    case 'in_progress':
-      return 'negotiating';
-    case 'completed':
-      return 'won';
-    case 'postponed':
-      return 'lost';
-    default:
-      return 'new';
-  }
-};
-
 export const usePipelineMutations = () => {
   const queryClient = useQueryClient();
   
-  // Update task status
-  const updateTaskStatus = useMutation({
-    mutationFn: async ({ 
-      taskId, 
-      status 
-    }: { 
-      taskId: string; 
-      status: Task['status']
-    }) => {
-      // Update task status
-      const { error: taskError } = await supabase
-        .from('tasks')
-        .update({ status })
-        .eq('id', taskId);
-      
-      if (taskError) throw taskError;
-      
-      // Return the task to get its opportunity_id
-      const { data: task, error: getTaskError } = await supabase
-        .from('tasks')
-        .select('opportunity_id')
-        .eq('id', taskId)
-        .single();
-      
-      if (getTaskError) throw getTaskError;
-      
-      // If task is related to an opportunity, update opportunity status
-      if (task?.opportunity_id) {
-        const dealStatus = mapTaskStatusToDealStatus(status);
+  const mutateAsync = useMutation({
+    mutationFn: async ({ id, status, itemType }: { id: string; status: Task['status']; itemType: Task['item_type'] }) => {
+      if (itemType === "task") {
+        const { data, error } = await supabase
+          .from('tasks')
+          .update({ status })
+          .eq('id', id)
+          .select()
+          .single();
         
-        const { error: dealError } = await supabase
-          .from('opportunities')
+        if (error) throw error;
+        return data;
+      } else {
+        // Map task status to deal status
+        const dealStatus = 
+          status === "todo" ? "new" : 
+          status === "in_progress" ? "negotiation" : 
+          status === "completed" ? "won" : 
+          status === "postponed" ? "lost" : "new";
+        
+        const { data, error } = await supabase
+          .from('deals')
           .update({ status: dealStatus })
-          .eq('id', task.opportunity_id);
+          .eq('id', id)
+          .select()
+          .single();
         
-        if (dealError) throw dealError;
+        if (error) throw error;
+        return data;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
       toast.success('Status updated successfully');
     },
     onError: (error) => {
-      toast.error('Failed to update status');
-      console.error('Update status error:', error);
+      toast.error('Durum güncellenirken bir hata oluştu');
+      console.error('Error updating status:', error);
     }
   });
   
-  // Add other mutations like create, delete, etc.
-  
   return {
-    updateTaskStatus,
-    // Return other mutations
+    mutateAsync
   };
 };
