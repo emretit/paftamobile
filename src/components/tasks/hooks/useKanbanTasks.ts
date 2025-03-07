@@ -45,7 +45,7 @@ export const useKanbanTasks = (
       // Convert the data to Task type
       return data.map((item: any) => ({
         ...item,
-        item_type: item.item_type || 'task', // Set default value
+        item_type: 'task', // Set default value
         assignee: item.assignee ? {
           id: item.assignee.id,
           name: item.assignee.name,

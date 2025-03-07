@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
+import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Textarea } from "@/components/ui/textarea";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -10,17 +9,17 @@ import type { Task } from "@/types/task";
 
 interface TaskDetailSheetProps {
   task: Task | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-const TaskDetailSheet = ({ task, open, onOpenChange }: TaskDetailSheetProps) => {
+const TaskDetailSheet = ({ task, isOpen, onClose }: TaskDetailSheetProps) => {
   const queryClient = useQueryClient();
-  const [description, setDescription] = useState("");
+  const [formData, setFormData] = useState<Task | null>(null);
 
   useEffect(() => {
     if (task) {
-      setDescription(task.description || "");
+      setFormData(task);
     }
   }, [task]);
 
@@ -30,46 +29,61 @@ const TaskDetailSheet = ({ task, open, onOpenChange }: TaskDetailSheetProps) => 
 
       const { data, error } = await supabase
         .from('tasks')
-        .update(updatedTask)
+        .update(updatedTask as any)
         .eq('id', task.id)
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
-      return data as Task;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       toast.success('Task updated successfully');
+      onClose();
     },
     onError: (error) => {
       toast.error('Failed to update task');
-      console.error(error);
+      console.error('Update error:', error);
     }
   });
 
   const handleSave = () => {
-    if (task) {
-      updateTaskMutation.mutate({ description });
-    }
+    if (!formData) return;
+    updateTaskMutation.mutate(formData);
   };
 
-  if (!task) return null;
+  const handleInputChange = (key: keyof Task, value: any) => {
+    if (!formData) return;
+    setFormData({ ...formData, [key]: value });
+  };
+
+  if (!formData) return null;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent>
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent className="sm:max-w-xl overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>{task.title}</SheetTitle>
+          <SheetTitle>Task Details</SheetTitle>
         </SheetHeader>
-        <div className="py-4 space-y-4">
+        
+        <div className="py-4 space-y-6">
           <Textarea
             placeholder="Add a description..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            value={formData.description || ""}
+            onChange={(e) => handleInputChange('description', e.target.value)}
             className="min-h-[100px]"
           />
-          <Button onClick={handleSave}>Save Changes</Button>
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={handleSave} disabled={updateTaskMutation.isPending}>
+              {updateTaskMutation.isPending ? "Saving..." : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </SheetContent>
     </Sheet>

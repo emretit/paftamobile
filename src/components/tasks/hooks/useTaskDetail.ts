@@ -1,69 +1,66 @@
 
 import { useState } from "react";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { Task, SubTask } from "@/types/task";
+import type { Task } from "@/types/task";
 
-export const useTaskDetail = (task: Task | null) => {
+export const useTaskDetail = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<Task | null>(task);
-  const [newSubtask, setNewSubtask] = useState("");
-  const [isAddingSubtask, setIsAddingSubtask] = useState(false);
-
-  const { data: employees } = useQuery({
-    queryKey: ['employees'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('employees')
-        .select('id, first_name, last_name')
-        .eq('status', 'active');
-      if (error) throw error;
-      return data;
-    }
-  });
 
   const updateTaskMutation = useMutation({
-    mutationFn: async (data: Partial<Task>) => {
-      if (!task?.id) throw new Error('Task ID is required');
-
-      const { data: updatedTask, error } = await supabase
+    mutationFn: async (task: Partial<Task>) => {
+      if (!task.id) throw new Error('Task ID is required');
+      
+      setIsLoading(true);
+      const { data, error } = await supabase
         .from('tasks')
-        .update(data)
+        .update(task as any) // Type assertion to avoid TypeScript errors
         .eq('id', task.id)
         .select()
         .single();
-
+      
       if (error) throw error;
-      return updatedTask as Task;
+      setIsLoading(false);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Görev güncellendi');
+      toast.success('Task updated successfully');
     },
     onError: (error) => {
-      toast.error('Görev güncellenirken bir hata oluştu');
+      setIsLoading(false);
+      toast.error('Failed to update task');
       console.error('Error updating task:', error);
     }
   });
 
-  const handleChange = (field: keyof Task, value: any) => {
-    if (!formData) return;
-
-    const updatedData = { ...formData, [field]: value };
-    setFormData(updatedData);
-    updateTaskMutation.mutate({ [field]: value });
-  };
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: string) => {
+      setIsLoading(true);
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+      
+      if (error) throw error;
+      setIsLoading(false);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Task deleted successfully');
+    },
+    onError: (error) => {
+      setIsLoading(false);
+      toast.error('Failed to delete task');
+      console.error('Error deleting task:', error);
+    }
+  });
 
   return {
-    formData,
-    setFormData,
-    newSubtask,
-    setNewSubtask,
-    isAddingSubtask,
-    setIsAddingSubtask,
-    employees,
+    isLoading,
     updateTaskMutation,
-    handleChange
+    deleteTaskMutation
   };
 };

@@ -1626,7 +1626,7 @@ export type Database = {
       supplier_status: "aktif" | "pasif" | "potansiyel"
       supplier_type: "bireysel" | "kurumsal"
       task_priority: "low" | "medium" | "high"
-      task_status: "todo" | "in_progress" | "completed"
+      task_status: "todo" | "in_progress" | "completed" | "postponed"
       task_type: "opportunity" | "proposal" | "general"
       technical_event_category:
         | "installation"

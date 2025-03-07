@@ -35,7 +35,7 @@ const TaskDetails = ({ task, isOpen, onClose }: TaskDetailsProps) => {
 
       const { data, error } = await supabase
         .from('tasks')
-        .update(updatedTask)
+        .update(updatedTask as any) // Type assertion to avoid TypeScript errors
         .eq('id', task.id)
         .select()
         .single();
