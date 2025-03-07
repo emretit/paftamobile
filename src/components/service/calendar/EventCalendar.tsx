@@ -61,8 +61,13 @@ export const EventCalendar = ({
     }
   };
 
-  const components = {
-    event: ({ event }: { event: CalendarEvent }) => {
+  // Custom accessor functions for the calendar
+  const getEventStart = (event: CalendarEvent) => event.start;
+  const getEventEnd = (event: CalendarEvent) => event.end;
+
+  const customComponents = {
+    event: (props: any) => {
+      const event = props.event as CalendarEvent;
       let statusLabel = '';
       
       switch (event.resource.status) {
@@ -109,6 +114,10 @@ export const EventCalendar = ({
     noEventsInRange: 'Bu aralıkta servis talebi yok',
   };
 
+  // Resource accessor functions
+  const resourceIdAccessor = (resource: any) => resource.id;
+  const resourceTitleAccessor = (resource: any) => resource.title;
+
   const resources = technicians.map(tech => ({
     id: tech.id,
     title: tech.name,
@@ -120,11 +129,11 @@ export const EventCalendar = ({
       ref={calendarRef}
       localizer={localizer}
       events={events}
-      startAccessor="start"
-      endAccessor="end"
+      startAccessor={getEventStart}
+      endAccessor={getEventEnd}
       style={{ width: '100%', height: '100%' }}
       selectable
-      onSelectEvent={(event) => onSelectEvent(event)}
+      onSelectEvent={(event) => onSelectEvent(event as CalendarEvent)}
       eventPropGetter={eventPropGetter}
       views={{ month: true, week: true, day: true }}
       messages={messages}
@@ -132,14 +141,14 @@ export const EventCalendar = ({
       onDropFromOutside={handleDropFromOutside}
       droppable={true}
       onEventDrop={moveEvent}
-      components={components}
+      components={customComponents}
       view={currentView as any}
       onView={(view) => onViewChange(view)}
       date={currentDate}
       onNavigate={(date) => setCurrentDate(date)}
       resources={currentView !== 'month' ? resources : undefined}
-      resourceIdAccessor="id"
-      resourceTitleAccessor="title"
+      resourceIdAccessor={resourceIdAccessor}
+      resourceTitleAccessor={resourceTitleAccessor}
     />
   );
 };
