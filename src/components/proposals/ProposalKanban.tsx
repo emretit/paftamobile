@@ -1,80 +1,54 @@
 
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { FileText, Users, Clock, CheckCircle2, XCircle } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { useProposals } from "@/hooks/useProposals";
-import { format } from "date-fns";
-import { tr } from "date-fns/locale";
-import { Proposal, ProposalStatus } from "@/types/proposal";
-import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
+import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import ProposalColumn from "./kanban/ProposalColumn";
+import type { Proposal, ProposalStatus } from "@/types/proposal";
 
-const columns: {
-  id: ProposalStatus;
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  allowedSourceStatuses?: ProposalStatus[];
-}[] = [
-  { 
-    id: "new", 
-    title: "Yeni Teklifler", 
-    icon: FileText,
-    allowedSourceStatuses: ["review"] // New proposals can only come back from review
-  },
-  { 
-    id: "review", 
-    title: "İncelemede", 
-    icon: Users,
-    allowedSourceStatuses: ["new", "negotiation"] // Can receive from new or negotiation
-  },
-  { 
-    id: "negotiation", 
-    title: "Görüşme Aşamasında", 
-    icon: Clock,
-    allowedSourceStatuses: ["review"] // Can only come from review
-  },
-  { 
-    id: "accepted", 
-    title: "Kabul Edildi", 
-    icon: CheckCircle2,
-    allowedSourceStatuses: ["negotiation", "review"] // Can be accepted from negotiation or review
-  },
-  { 
-    id: "rejected", 
-    title: "Reddedildi", 
-    icon: XCircle,
-    allowedSourceStatuses: ["negotiation", "review"] // Can be rejected from negotiation or review
-  },
+interface ProposalKanbanProps {
+  proposals: Proposal[];
+  onProposalSelect: (proposal: Proposal) => void;
+}
+
+const columns = [
+  { id: "draft", title: "Taslak", color: "bg-gray-600" },
+  { id: "new", title: "Yeni", color: "bg-blue-600" },
+  { id: "sent", title: "Gönderildi", color: "bg-yellow-600" },
+  { id: "accepted", title: "Kabul Edildi", color: "bg-green-600" },
+  { id: "rejected", title: "Reddedildi", color: "bg-red-600" }
 ];
 
-const ProposalKanban = () => {
-  const { data: proposals, isLoading } = useProposals();
-  const { toast } = useToast();
+export const ProposalKanban = ({ proposals, onProposalSelect }: ProposalKanbanProps) => {
   const queryClient = useQueryClient();
+  const [localProposals, setLocalProposals] = useState<Proposal[]>(proposals);
 
-  const getProposalsByStatus = (status: ProposalStatus) => {
-    return proposals?.filter((proposal) => proposal.status === status) || [];
-  };
+  // Update local state when props change
+  useState(() => {
+    setLocalProposals(proposals);
+  });
 
-  const isMovementAllowed = (sourceStatus: ProposalStatus, destinationStatus: ProposalStatus) => {
-    const destinationColumn = columns.find(col => col.id === destinationStatus);
-    if (!destinationColumn?.allowedSourceStatuses) return false;
-    return destinationColumn.allowedSourceStatuses.includes(sourceStatus);
-  };
-
-  const updateProposalStatus = async (proposalId: string, newStatus: ProposalStatus) => {
-    const { error } = await supabase
-      .from('proposals')
-      .update({ status: newStatus })
-      .eq('id', proposalId);
-
-    if (error) {
-      throw error;
+  const updateProposalMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: ProposalStatus }) => {
+      const { error } = await supabase
+        .from('proposals')
+        .update({ status })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+      toast.success('Teklif durumu güncellendi');
+    },
+    onError: (error) => {
+      toast.error('Teklif güncellenirken bir hata oluştu');
+      console.error('Error updating proposal:', error);
     }
-  };
+  });
 
-  const onDragEnd = async (result: DropResult) => {
+  const handleDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
 
     if (!destination) return;
@@ -86,158 +60,46 @@ const ProposalKanban = () => {
       return;
     }
 
-    const proposal = proposals?.find(p => p.id === draggableId);
-    if (!proposal) return;
-
-    if (!isMovementAllowed(proposal.status, destination.droppableId as ProposalStatus)) {
-      toast({
-        title: "İzin verilmeyen hareket",
-        description: "Bu durum değişikliğine izin verilmiyor.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const newStatus = destination.droppableId as ProposalStatus;
-    const sourceColumn = columns.find(col => col.id === source.droppableId);
-    const destinationColumn = columns.find(col => col.id === destination.droppableId);
     
-    try {
-      await updateProposalStatus(draggableId, newStatus);
-      
-      queryClient.setQueryData(['proposals'], (oldData: Proposal[] | undefined) => {
-        if (!oldData) return [];
-        return oldData.map(proposal => 
-          proposal.id === draggableId 
-            ? { ...proposal, status: newStatus }
-            : proposal
-        );
-      });
+    const newProposals = Array.from(localProposals);
+    const proposal = newProposals.find(p => p.id === draggableId);
+    
+    if (proposal) {
+      proposal.status = newStatus;
+      setLocalProposals(newProposals);
 
-      toast({
-        title: `${sourceColumn?.title} → ${destinationColumn?.title}`,
-        description: "Teklif durumu başarıyla güncellendi.",
-        className: "bg-green-50 border-green-200",
+      await updateProposalMutation.mutateAsync({ 
+        id: draggableId, 
+        status: newStatus 
       });
-    } catch (error) {
-      console.error('Error updating proposal status:', error);
-      toast({
-        title: "Hata",
-        description: "Teklif durumu güncellenirken bir hata oluştu.",
-        variant: "destructive",
-      });
-      
-      queryClient.invalidateQueries({ queryKey: ['proposals'] });
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex gap-6 overflow-x-auto pb-4">
-        {columns.map((column) => (
-          <div key={column.id} className="flex-1 min-w-[300px]">
-            <div className="animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
-              <div className="bg-gray-50 p-4 rounded-lg min-h-[500px]">
-                <div className="space-y-4">
-                  {[...Array(3)].map((_, index) => (
-                    <div key={index} className="h-24 bg-gray-200 rounded-lg"></div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
+  const filterProposalsByStatus = (status: string) => {
+    return localProposals.filter(proposal => proposal.status === status);
+  };
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex gap-6 overflow-x-auto pb-4">
-        {columns.map((column) => (
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <div className="flex flex-col lg:flex-row gap-6">
+        {columns.map(column => (
           <div key={column.id} className="flex-1 min-w-[300px]">
             <div className="flex items-center gap-2 mb-4">
-              <column.icon className="h-5 w-5 text-gray-500" />
-              <h3 className="font-semibold text-gray-900">{column.title}</h3>
-              <span className="ml-auto bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full text-sm font-medium">
-                {getProposalsByStatus(column.id).length}
-              </span>
+              <div className={`h-3 w-3 rounded-full ${column.color}`}></div>
+              <h2 className="font-semibold text-gray-900">
+                {column.title} ({filterProposalsByStatus(column.id).length})
+              </h2>
             </div>
-            <Droppable droppableId={column.id}>
-              {(provided, snapshot) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className={`min-h-[500px] p-4 rounded-lg transition-colors duration-200 ${
-                    snapshot.isDraggingOver 
-                      ? "bg-gray-100/80 ring-2 ring-primary/20" 
-                      : "bg-gray-50/80"
-                  }`}
-                >
-                  {getProposalsByStatus(column.id).map((proposal, index) => (
-                    <Draggable
-                      key={proposal.id}
-                      draggableId={proposal.id}
-                      index={index}
-                    >
-                      {(provided, snapshot) => (
-                        <Card
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className={`group p-4 mb-3 bg-white rounded-lg border-border/50 transition-all duration-200 ${
-                            snapshot.isDragging 
-                              ? "shadow-lg scale-[1.02] ring-2 ring-primary/20 rotate-1" 
-                              : "hover:shadow-md hover:border-border"
-                          }`}
-                        >
-                          <div className="space-y-2.5">
-                            <div className="flex justify-between items-start">
-                              <h4 className="font-medium text-gray-900 group-hover:text-primary transition-colors">
-                                #{proposal.proposal_number}
-                              </h4>
-                              <span className="text-sm text-gray-500 tabular-nums">
-                                {format(new Date(proposal.created_at), 'dd MMM', { locale: tr })}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600 line-clamp-1">{proposal.customer?.name}</p>
-                            <div className="flex justify-between items-center pt-0.5">
-                              <span className="text-sm font-medium tabular-nums">
-                                {new Intl.NumberFormat('tr-TR', {
-                                  style: 'currency',
-                                  currency: 'TRY',
-                                  minimumFractionDigits: 0,
-                                  maximumFractionDigits: 0
-                                }).format(proposal.total_value)}
-                              </span>
-                              {proposal.employee && (
-                                <span className="text-xs text-gray-500 truncate max-w-[120px]">
-                                  {`${proposal.employee.first_name} ${proposal.employee.last_name}`}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </Card>
-                      )}
-                    </Draggable>
-                  ))}
-                  {getProposalsByStatus(column.id).length === 0 && (
-                    <div className="flex items-center justify-center h-24 border border-dashed border-gray-200 rounded-lg">
-                      <p className="text-gray-500 text-sm">
-                        Bu durumda teklif bulunmuyor
-                      </p>
-                    </div>
-                  )}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
+            <ProposalColumn
+              id={column.id}
+              title={column.title}
+              proposals={filterProposalsByStatus(column.id)}
+              onSelect={onProposalSelect}
+            />
           </div>
         ))}
       </div>
     </DragDropContext>
   );
 };
-
-export default ProposalKanban;
