@@ -16,7 +16,7 @@ export interface Task {
   id: string;
   title: string;
   description: string;
-  status: 'todo' | 'in_progress' | 'completed';
+  status: 'todo' | 'in_progress' | 'completed' | 'postponed';
   priority: 'low' | 'medium' | 'high';
   type: 'opportunity' | 'proposal' | 'general';
   item_type: 'task' | 'opportunity';

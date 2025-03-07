@@ -1,13 +1,14 @@
 
 import React from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
-import { Clock, CheckCircle2, ListTodo } from "lucide-react";
+import { Clock, CheckCircle2, ListTodo, Calendar } from "lucide-react";
 import TaskColumn from "../TaskColumn";
 import type { Task } from "@/types/task";
 
 export const COLUMNS = [
   { id: "todo" as const, title: "Yapılacaklar", icon: ListTodo },
   { id: "in_progress" as const, title: "Devam Ediyor", icon: Clock },
+  { id: "postponed" as const, title: "Ertelendi", icon: Calendar },
   { id: "completed" as const, title: "Tamamlandı", icon: CheckCircle2 },
 ] as const;
 
@@ -41,7 +42,7 @@ const TaskKanbanBoard: React.FC<TaskKanbanBoardProps> = ({
     }
 
     const newStatus = destination.droppableId;
-    if (newStatus !== 'todo' && newStatus !== 'in_progress' && newStatus !== 'completed') {
+    if (newStatus !== 'todo' && newStatus !== 'in_progress' && newStatus !== 'postponed' && newStatus !== 'completed') {
       return; // Invalid status
     }
 
