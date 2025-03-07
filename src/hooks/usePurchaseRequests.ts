@@ -2,13 +2,13 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { PurchaseRequest, PurchaseRequestItem, PurchaseRequestFormData } from "@/types/purchase";
+import { PurchaseRequest, PurchaseRequestItem, PurchaseRequestFormData, PurchaseRequestStatus } from "@/types/purchase";
 import { toast } from "sonner";
 
 export const usePurchaseRequests = () => {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({
-    status: "",
+    status: "" as string,
     search: "",
     dateRange: { from: null, to: null } as { from: Date | null, to: Date | null }
   });
@@ -20,7 +20,7 @@ export const usePurchaseRequests = () => {
       .order("created_at", { ascending: false });
 
     if (filters.status) {
-      query = query.eq("status", filters.status);
+      query = query.eq("status", filters.status as PurchaseRequestStatus);
     }
 
     if (filters.search) {
@@ -167,7 +167,7 @@ export const usePurchaseRequests = () => {
     return { id };
   };
 
-  const updateRequestStatus = async ({ id, status, approvedBy = null }: { id: string, status: string, approvedBy?: string | null }) => {
+  const updateRequestStatus = async ({ id, status, approvedBy = null }: { id: string, status: PurchaseRequestStatus, approvedBy?: string | null }) => {
     const updateData: any = { status };
     
     // If the status is 'approved', set the approved_by and approved_at fields

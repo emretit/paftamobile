@@ -2,42 +2,37 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { PurchaseInvoice, PurchaseInvoiceFormData, InvoiceStatus } from "@/types/purchase";
+import { PurchaseInvoice, InvoiceStatus } from "@/types/purchase";
 import { toast } from "sonner";
 
 export const usePurchaseInvoices = () => {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({
-    status: "",
+    status: "" as string,
     search: "",
-    supplier: "",
-    dateRange: { from: null, to: null } as { from: Date | null, to: Date | null }
+    dateRange: { from: null, to: null } as { from: Date | null, to: null }
   });
 
   const fetchPurchaseInvoices = async (): Promise<PurchaseInvoice[]> => {
     let query = supabase
       .from("purchase_invoices")
-      .select("*, suppliers(name), purchase_orders(po_number)")
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (filters.status) {
-      query = query.eq("status", filters.status);
+      query = query.eq("status", filters.status as InvoiceStatus);
     }
 
     if (filters.search) {
       query = query.or(`invoice_number.ilike.%${filters.search}%`);
     }
 
-    if (filters.supplier) {
-      query = query.eq("supplier_id", filters.supplier);
-    }
-
     if (filters.dateRange.from) {
-      query = query.gte("invoice_date", filters.dateRange.from.toISOString());
+      query = query.gte("created_at", filters.dateRange.from.toISOString());
     }
 
     if (filters.dateRange.to) {
-      query = query.lte("invoice_date", filters.dateRange.to.toISOString());
+      query = query.lte("created_at", filters.dateRange.to.toISOString());
     }
 
     const { data, error } = await query;
@@ -53,7 +48,7 @@ export const usePurchaseInvoices = () => {
   const fetchPurchaseInvoiceById = async (id: string): Promise<PurchaseInvoice> => {
     const { data, error } = await supabase
       .from("purchase_invoices")
-      .select("*, suppliers(name, email, address, mobile_phone, company), purchase_orders(po_number)")
+      .select("*")
       .eq("id", id)
       .single();
 
@@ -65,7 +60,7 @@ export const usePurchaseInvoices = () => {
     return data;
   };
 
-  const createPurchaseInvoice = async (invoiceData: PurchaseInvoiceFormData) => {
+  const createPurchaseInvoice = async (invoiceData: any) => {
     const { data, error } = await supabase
       .from("purchase_invoices")
       .insert([invoiceData])
@@ -81,7 +76,7 @@ export const usePurchaseInvoices = () => {
     return data;
   };
 
-  const updatePurchaseInvoice = async ({ id, data }: { id: string, data: Partial<PurchaseInvoiceFormData> }) => {
+  const updatePurchaseInvoice = async ({ id, data }: { id: string, data: Partial<PurchaseInvoice> }) => {
     const { error } = await supabase
       .from("purchase_invoices")
       .update(data)
@@ -111,49 +106,42 @@ export const usePurchaseInvoices = () => {
     return { id };
   };
 
-  const recordPayment = async ({ id, amount }: { id: string, amount: number }) => {
-    // Get current invoice data
+  const registerPayment = async ({ id, amount }: { id: string, amount: number }) => {
+    // Get current invoice to check the current paid amount
     const { data: invoice, error: fetchError } = await supabase
       .from("purchase_invoices")
-      .select("total_amount, paid_amount, status")
+      .select("*")
       .eq("id", id)
       .single();
-
+    
     if (fetchError) {
       toast.error("Fatura bilgileri alınırken hata oluştu");
       throw fetchError;
     }
-
-    // Calculate new paid amount
-    const newPaidAmount = parseFloat(invoice.paid_amount) + amount;
     
-    // Determine new status
-    let newStatus: InvoiceStatus = invoice.status;
-    if (newPaidAmount >= parseFloat(invoice.total_amount)) {
-      newStatus = "paid";
-    } else if (newPaidAmount > 0) {
-      newStatus = "partially_paid";
-    }
-
-    // Update the invoice
-    const { error: updateError } = await supabase
+    const newPaidAmount = invoice.paid_amount + amount;
+    const newStatus: InvoiceStatus = 
+      newPaidAmount >= invoice.total_amount 
+        ? 'paid' 
+        : newPaidAmount > 0 
+          ? 'partially_paid' 
+          : 'pending';
+    
+    const { error } = await supabase
       .from("purchase_invoices")
       .update({ 
-        paid_amount: newPaidAmount, 
-        status: newStatus 
+        paid_amount: newPaidAmount,
+        status: newStatus
       })
       .eq("id", id);
 
-    if (updateError) {
+    if (error) {
       toast.error("Ödeme kaydedilirken hata oluştu");
-      throw updateError;
+      throw error;
     }
 
-    // Create payment record in bank_transactions if needed
-    // This would be implemented based on how your payment system works
-
     toast.success("Ödeme başarıyla kaydedildi");
-    return { id, newPaidAmount, newStatus };
+    return { id };
   };
 
   const deletePurchaseInvoice = async (id: string) => {
@@ -176,7 +164,7 @@ export const usePurchaseInvoices = () => {
     queryFn: fetchPurchaseInvoices,
   });
 
-  const getInvoiceById = (id: string) => {
+  const getInvoice = (id: string) => {
     return useQuery({
       queryKey: ['purchaseInvoice', id],
       queryFn: () => fetchPurchaseInvoiceById(id),
@@ -204,8 +192,8 @@ export const usePurchaseInvoices = () => {
     },
   });
 
-  const recordPaymentMutation = useMutation({
-    mutationFn: recordPayment,
+  const registerPaymentMutation = useMutation({
+    mutationFn: registerPayment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchaseInvoices'] });
     },
@@ -225,11 +213,11 @@ export const usePurchaseInvoices = () => {
     filters,
     setFilters,
     refetch,
-    getInvoiceById,
+    getInvoice,
     createInvoiceMutation,
     updateInvoiceMutation,
     updateStatusMutation,
-    recordPaymentMutation,
+    registerPaymentMutation,
     deleteInvoiceMutation,
   };
 };
