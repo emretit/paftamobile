@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { CalendarIcon, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -81,7 +82,7 @@ const TaskDetailSheet = ({ task, isOpen, onClose }: TaskDetailSheetProps) => {
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className="sm:max-w-xl overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Task Details</SheetTitle>
+          <h2 className="text-lg font-semibold text-foreground">Task Details</h2>
         </SheetHeader>
         
         <div className="py-4 space-y-6">
