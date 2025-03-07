@@ -48,7 +48,7 @@ export const useKanbanTasks = (
   }, [data]);
 
   const updateTaskMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: Task['status'] | string }) => {
+    mutationFn: async ({ id, status }: { id: string; status: Task['status'] }) => {
       const { error } = await supabase
         .from('tasks')
         .update({ status })
@@ -66,7 +66,7 @@ export const useKanbanTasks = (
     }
   });
 
-  const filterTasks = useCallback((status: Task['status'] | string) => {
+  const filterTasks = useCallback((status: Task['status']) => {
     return tasks.filter(task => task.status === status);
   }, [tasks]);
 

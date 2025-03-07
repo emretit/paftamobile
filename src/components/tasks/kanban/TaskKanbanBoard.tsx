@@ -15,18 +15,27 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import type { Task } from "@/types/task";
+import { LucideIcon } from "lucide-react";
 
-export const DEFAULT_COLUMNS = [
-  { id: "todo" as const, title: "Yapılacaklar", icon: ListTodo },
-  { id: "in_progress" as const, title: "Devam Ediyor", icon: Clock },
-  { id: "completed" as const, title: "Tamamlandı", icon: CheckCircle2 },
-  { id: "postponed" as const, title: "Ertelendi", icon: Calendar },
-] as const;
+// Define a type for column configuration
+interface ColumnConfig {
+  id: string;
+  title: string;
+  icon: LucideIcon;
+}
+
+// Define the default columns with "postponed" at the end
+export const DEFAULT_COLUMNS: ColumnConfig[] = [
+  { id: "todo", title: "Yapılacaklar", icon: ListTodo },
+  { id: "in_progress", title: "Devam Ediyor", icon: Clock },
+  { id: "completed", title: "Tamamlandı", icon: CheckCircle2 },
+  { id: "postponed", title: "Ertelendi", icon: Calendar },
+];
 
 interface TaskKanbanBoardProps {
   tasks: Task[];
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
-  filterTasks: (status: Task['status']) => Task[];
+  filterTasks: (status: string) => Task[];
   onUpdateTaskStatus: (id: string, status: Task['status']) => Promise<void>;
   onEditTask?: (task: Task) => void;
   onSelectTask?: (task: Task) => void;
@@ -40,7 +49,7 @@ const TaskKanbanBoard: React.FC<TaskKanbanBoardProps> = ({
   onEditTask,
   onSelectTask
 }) => {
-  const [columns, setColumns] = useState(DEFAULT_COLUMNS);
+  const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
   const [isAddColumnOpen, setIsAddColumnOpen] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [columnToDelete, setColumnToDelete] = useState<string | null>(null);
@@ -87,14 +96,15 @@ const TaskKanbanBoard: React.FC<TaskKanbanBoardProps> = ({
       return;
     }
 
-    setColumns([...columns, { id: id as any, title: newColumnTitle, icon: ListTodo }]);
+    const newColumns = [...columns, { id, title: newColumnTitle, icon: ListTodo }];
+    setColumns(newColumns);
     setNewColumnTitle("");
     setIsAddColumnOpen(false);
     toast.success("Yeni sütun eklendi");
   };
 
   const handleDeleteColumn = (id: string) => {
-    if (id === 'todo' || id === 'in_progress' || id === 'completed' || id === 'postponed') {
+    if (["todo", "in_progress", "completed", "postponed"].includes(id)) {
       toast.error("Varsayılan sütunlar silinemez");
       return;
     }
@@ -106,7 +116,8 @@ const TaskKanbanBoard: React.FC<TaskKanbanBoardProps> = ({
       return;
     }
 
-    setColumns(columns.filter(col => col.id !== id));
+    const newColumns = columns.filter(col => col.id !== id);
+    setColumns(newColumns);
     toast.success("Sütun silindi");
   };
 
@@ -128,7 +139,8 @@ const TaskKanbanBoard: React.FC<TaskKanbanBoardProps> = ({
       ));
 
       // Remove the column
-      setColumns(columns.filter(col => col.id !== columnToDelete));
+      const newColumns = columns.filter(col => col.id !== columnToDelete);
+      setColumns(newColumns);
       toast.success("Sütun silindi ve görevler 'Yapılacaklar' sütununa taşındı");
     } catch (error) {
       toast.error("Sütun silinirken bir hata oluştu");
@@ -159,11 +171,10 @@ const TaskKanbanBoard: React.FC<TaskKanbanBoardProps> = ({
                 <div className="flex items-center gap-2">
                   <column.icon className="h-5 w-5 text-gray-500" />
                   <h2 className="font-semibold text-gray-900">
-                    {column.title} ({filterTasks(column.id as Task['status']).length})
+                    {column.title} ({filterTasks(column.id).length})
                   </h2>
                 </div>
-                {column.id !== 'todo' && column.id !== 'in_progress' && 
-                 column.id !== 'completed' && column.id !== 'postponed' && (
+                {!["todo", "in_progress", "completed", "postponed"].includes(column.id) && (
                   <Button 
                     variant="ghost" 
                     size="sm" 
@@ -178,7 +189,7 @@ const TaskKanbanBoard: React.FC<TaskKanbanBoardProps> = ({
                 id={column.id}
                 title={column.title}
                 icon={column.icon}
-                tasks={filterTasks(column.id as Task['status'])}
+                tasks={filterTasks(column.id)}
                 onEdit={onEditTask}
                 onSelect={onSelectTask}
               />
