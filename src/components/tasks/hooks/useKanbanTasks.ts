@@ -32,12 +32,12 @@ export const useKanbanTasks = (
       }
 
       if (selectedType) {
-        query = query.eq('type', selectedType);
+        query = query.eq('type', selectedType as "opportunity" | "proposal" | "general");
       }
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Task[];
+      return data as unknown as Task[];
     }
   });
 
@@ -66,7 +66,7 @@ export const useKanbanTasks = (
     }
   });
 
-  const filterTasks = useCallback((status: Task['status']) => {
+  const filterTasks = useCallback((status: string) => {
     return tasks.filter(task => task.status === status);
   }, [tasks]);
 
