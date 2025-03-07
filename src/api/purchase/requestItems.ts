@@ -5,52 +5,93 @@ import { PurchaseRequestItem, PurchaseRequestItemFormData } from "@/types/purcha
 
 // Function to fetch purchase request items
 export const fetchPurchaseRequestItems = async (requestId: string): Promise<PurchaseRequestItem[]> => {
-  const { data, error } = await supabase
-    .from("purchase_request_items")
-    .select("*")
-    .eq("request_id", requestId);
+  console.log(`Fetching items for purchase request ID ${requestId}`);
+  
+  try {
+    const { data, error } = await supabase
+      .from("purchase_request_items")
+      .select("*")
+      .eq("request_id", requestId);
 
-  if (error) {
-    toast.error("Talep öğeleri yüklenirken hata oluştu");
+    if (error) {
+      console.error(`Error fetching items for request ID ${requestId}:`, error);
+      toast.error("Talep öğeleri yüklenirken hata oluştu");
+      throw error;
+    }
+
+    console.log(`Successfully fetched ${data?.length || 0} items for request ID ${requestId}`);
+    return data || [];
+  } catch (error) {
+    console.error(`Exception in fetchPurchaseRequestItems for request ID ${requestId}:`, error);
+    toast.error("Talep öğeleri yüklenirken beklenmeyen bir hata oluştu");
     throw error;
   }
-
-  return data;
 };
 
 // Function to add purchase request items
 export const addPurchaseRequestItems = async (requestId: string, items: PurchaseRequestItemFormData[]) => {
-  const itemsWithRequestId = items.map(item => ({
-    ...item,
-    request_id: requestId,
-    estimated_total: (item.quantity || 0) * (item.estimated_unit_price || 0)
-  }));
+  console.log(`Adding ${items.length} items to purchase request ID ${requestId}`);
+  
+  try {
+    if (!items || items.length === 0) {
+      console.log(`No items to add for request ID ${requestId}`);
+      return true;
+    }
+    
+    const itemsWithRequestId = items.map(item => ({
+      ...item,
+      request_id: requestId,
+      estimated_total: (item.quantity || 0) * (item.estimated_unit_price || 0)
+    }));
 
-  const { error } = await supabase
-    .from("purchase_request_items")
-    .insert(itemsWithRequestId);
+    const { error } = await supabase
+      .from("purchase_request_items")
+      .insert(itemsWithRequestId);
 
-  if (error) {
-    toast.error("Talep öğeleri eklenirken hata oluştu");
+    if (error) {
+      console.error(`Error adding items to request ID ${requestId}:`, error);
+      toast.error("Talep öğeleri eklenirken hata oluştu");
+      throw error;
+    }
+
+    console.log(`Successfully added ${items.length} items to request ID ${requestId}`);
+    return true;
+  } catch (error) {
+    console.error(`Exception in addPurchaseRequestItems for request ID ${requestId}:`, error);
+    toast.error("Talep öğeleri eklenirken beklenmeyen bir hata oluştu");
     throw error;
   }
-
-  return true;
 };
 
 // Function to update purchase request items
 export const updatePurchaseRequestItems = async (requestId: string, items: PurchaseRequestItemFormData[]) => {
-  // First, delete the existing items
-  const { error: deleteError } = await supabase
-    .from("purchase_request_items")
-    .delete()
-    .eq("request_id", requestId);
+  console.log(`Updating items for purchase request ID ${requestId}`);
+  
+  try {
+    // First, delete the existing items
+    const { error: deleteError } = await supabase
+      .from("purchase_request_items")
+      .delete()
+      .eq("request_id", requestId);
 
-  if (deleteError) {
-    toast.error("Mevcut talep öğeleri silinirken hata oluştu");
-    throw deleteError;
+    if (deleteError) {
+      console.error(`Error deleting existing items for request ID ${requestId}:`, deleteError);
+      toast.error("Mevcut talep öğeleri silinirken hata oluştu");
+      throw deleteError;
+    }
+
+    console.log(`Successfully deleted existing items for request ID ${requestId}`);
+    
+    // Then insert the new items if there are any
+    if (items && items.length > 0) {
+      const result = await addPurchaseRequestItems(requestId, items);
+      return result;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`Exception in updatePurchaseRequestItems for request ID ${requestId}:`, error);
+    toast.error("Talep öğeleri güncellenirken beklenmeyen bir hata oluştu");
+    throw error;
   }
-
-  // Then insert the new items
-  return addPurchaseRequestItems(requestId, items);
 };

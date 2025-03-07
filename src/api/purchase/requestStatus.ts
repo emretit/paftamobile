@@ -13,24 +13,35 @@ export const updateRequestStatus = async ({
   status: PurchaseRequestStatus, 
   approvedBy?: string | null 
 }) => {
-  const updateData: any = { status };
+  console.log(`Updating status of purchase request ID ${id} to ${status}`);
   
-  // If the status is 'approved', set the approved_by and approved_at fields
-  if (status === 'approved') {
-    updateData.approved_by = approvedBy;
-    updateData.approved_at = new Date().toISOString();
-  }
-  
-  const { error } = await supabase
-    .from("purchase_requests")
-    .update(updateData)
-    .eq("id", id);
+  try {
+    const updateData: any = { status };
+    
+    // If the status is 'approved', set the approved_by and approved_at fields
+    if (status === 'approved') {
+      updateData.approved_by = approvedBy;
+      updateData.approved_at = new Date().toISOString();
+      console.log(`Setting approval data for request ID ${id}`);
+    }
+    
+    const { error } = await supabase
+      .from("purchase_requests")
+      .update(updateData)
+      .eq("id", id);
 
-  if (error) {
-    toast.error("Satın alma talebi durumu güncellenirken hata oluştu");
+    if (error) {
+      console.error(`Error updating status of request ID ${id} to ${status}:`, error);
+      toast.error("Satın alma talebi durumu güncellenirken hata oluştu");
+      throw error;
+    }
+
+    console.log(`Successfully updated status of request ID ${id} to ${status}`);
+    toast.success("Talep durumu başarıyla güncellendi");
+    return { id };
+  } catch (error) {
+    console.error(`Exception in updateRequestStatus for request ID ${id}:`, error);
+    toast.error("Satın alma talebi durumu güncellenirken beklenmeyen bir hata oluştu");
     throw error;
   }
-
-  toast.success("Talep durumu başarıyla güncellendi");
-  return { id };
 };
