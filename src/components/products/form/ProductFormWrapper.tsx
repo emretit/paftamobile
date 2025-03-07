@@ -4,7 +4,6 @@ import { useProductForm } from "./hooks/useProductForm";
 import { useProductFormActions } from "./hooks/useProductFormActions";
 import ProductFormHeader from "./ProductFormHeader";
 import ProductFormTabs from "./ProductFormTabs";
-import { useEffect } from "react";
 
 const ProductFormWrapper = () => {
   const { form, isEditing, isSubmitting, setIsSubmitting, productId } = useProductForm();
@@ -14,7 +13,7 @@ const ProductFormWrapper = () => {
     setIsSubmitting
   );
 
-  const handleSubmit = async (values, addAnother = false) => {
+  const handleSubmit = async (values: any, addAnother = false) => {
     const result = await onSubmit(values, addAnother);
     if (result.resetForm) {
       form.reset();

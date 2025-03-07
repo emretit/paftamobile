@@ -10,13 +10,18 @@ import ProductSupplierSection from "./supplier/ProductSupplierSection";
 
 interface ProductFormTabsProps {
   form: UseFormReturn<ProductFormSchema>;
-  onSubmit: (values: ProductFormSchema) => Promise<{ resetForm: boolean }>;
+  onSubmit: (values: ProductFormSchema, addAnother: boolean) => Promise<{ resetForm: boolean }>;
 }
 
 const ProductFormTabs = ({ form, onSubmit }: ProductFormTabsProps) => {
+  // Handle form submission with only the values parameter
+  const handleSubmit = (values: ProductFormSchema) => {
+    return onSubmit(values, false);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit((values) => onSubmit(values, false))}>
+      <form onSubmit={form.handleSubmit(handleSubmit)}>
         <Tabs defaultValue="general" className="w-full">
           <TabsList className="grid grid-cols-4 mb-8">
             <TabsTrigger value="general">Genel Bilgiler</TabsTrigger>

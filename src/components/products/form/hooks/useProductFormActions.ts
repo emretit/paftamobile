@@ -31,8 +31,10 @@ export const useProductFormActions = (
         toast.success("Ürün başarıyla güncellendi");
         navigate(`/product-details/${productId}`);
       } else {
+        // Ensure name is not undefined as it's required by the schema
         const insertData = {
           ...values,
+          name: values.name, // Explicitly include name to satisfy TypeScript
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
