@@ -25,6 +25,13 @@ const crmItems = [
   { path: "/tasks", icon: ListTodo, label: "Görevler" }
 ];
 
+// Define the Products & Services category items
+const productsItems = [
+  { path: "/products", icon: Package, label: "Ürün Listesi" },
+  { path: "/product-form", icon: FileText, label: "Yeni Ürün Ekle" },
+  { path: "/services", icon: Wrench, label: "Hizmetler" }
+];
+
 export const navItems = [
   { path: "/", icon: LayoutDashboard, label: "Gösterge Paneli" },
   {
@@ -35,7 +42,12 @@ export const navItems = [
   },
   { path: "/contacts", icon: Users, label: "Müşteriler" },
   { path: "/suppliers", icon: Truck, label: "Tedarikçiler" },
-  { path: "/products", icon: Package, label: "Ürünler & Hizmetler" },
+  {
+    category: "Ürünler & Hizmetler",
+    icon: Package,
+    items: productsItems,
+    path: "/products"
+  },
   { path: "/employees", icon: HardHat, label: "Çalışanlar" },
   { path: "/finance", icon: Wallet, label: "Finans" },
   { path: "/purchase-management", icon: ShoppingCart, label: "Satın Alma" },
