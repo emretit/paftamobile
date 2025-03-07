@@ -1,7 +1,7 @@
 
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { CalendarEvent, getEventStyle, getCustomEventWrapper } from "./calendarUtils";
+import { CalendarEvent, getEventStyle } from "./calendarUtils";
 import { useCalendarEventService } from "./calendarEventService";
 import { useRef } from "react";
 import moment from "moment";
@@ -55,7 +55,29 @@ export const EventCalendar = ({
 
   // Customize the event component
   const components = {
-    event: ({ event }: { event: CalendarEvent }) => getCustomEventWrapper(event),
+    event: ({ event }: { event: CalendarEvent }) => {
+      let statusLabel = '';
+      
+      switch (event.resource.status) {
+        case 'new': statusLabel = 'Yeni'; break;
+        case 'assigned': statusLabel = 'Atandı'; break;
+        case 'in_progress': statusLabel = 'Devam Ediyor'; break;
+        case 'completed': statusLabel = 'Tamamlandı'; break;
+        case 'cancelled': statusLabel = 'İptal'; break;
+        case 'on_hold': statusLabel = 'Beklemede'; break;
+        default: statusLabel = 'Bilinmiyor';
+      }
+    
+      return (
+        <div className="flex flex-col h-full">
+          <div className="text-xs font-semibold">{event.title}</div>
+          <div className="flex justify-between text-xs mt-1">
+            <span>{event.technician_name || 'Atanmamış'}</span>
+            <span className="bg-white/20 text-white px-1 rounded text-xs">{statusLabel}</span>
+          </div>
+        </div>
+      );
+    },
     timeSlotWrapper: ({ children }: any) => (
       <div 
         className="h-full w-full bg-gray-50/50 hover:bg-gray-100/50 transition-colors"

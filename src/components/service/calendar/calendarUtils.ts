@@ -1,5 +1,5 @@
 
-import { ServiceRequest, ServiceStatus } from "@/hooks/useServiceRequests";
+import { ServiceRequest, ServiceStatus } from "@/hooks/service/types";
 import { CSSProperties } from "react";
 
 export type CalendarEvent = {
@@ -43,6 +43,7 @@ export const getEventStyle = (status: ServiceStatus): CSSProperties => {
   }
 };
 
+// Instead of returning JSX, we'll return a render function
 export const getCustomEventWrapper = (event: CalendarEvent) => {
   let statusLabel = '';
   
@@ -56,15 +57,20 @@ export const getCustomEventWrapper = (event: CalendarEvent) => {
     default: statusLabel = 'Bilinmiyor';
   }
 
-  return (
-    <div className="flex flex-col h-full">
-      <div className="text-xs font-semibold">{event.title}</div>
-      <div className="flex justify-between text-xs mt-1">
-        <span>{event.technician_name || 'Atanmamış'}</span>
-        <span className="bg-white/20 text-white px-1 rounded text-xs">{statusLabel}</span>
-      </div>
-    </div>
-  );
+  // Return a render function that the Calendar can use
+  return ({ event: _event, title }: any) => {
+    return {
+      html: `
+        <div class="flex flex-col h-full">
+          <div class="text-xs font-semibold">${event.title}</div>
+          <div class="flex justify-between text-xs mt-1">
+            <span>${event.technician_name || 'Atanmamış'}</span>
+            <span class="bg-white/20 text-white px-1 rounded text-xs">${statusLabel}</span>
+          </div>
+        </div>
+      `
+    };
+  };
 };
 
 export const mapServiceRequestsToEvents = (
