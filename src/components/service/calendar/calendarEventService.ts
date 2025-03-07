@@ -9,10 +9,11 @@ export const useCalendarEventService = () => {
 
   const updateEventDate = async (eventId: string, newDate: Date) => {
     try {
-      // Update the service request with new date
       const { error } = await supabase
         .from('service_requests')
-        .update({ due_date: newDate.toISOString() })
+        .update({ 
+          due_date: newDate.toISOString(),
+        })
         .eq('id', eventId);
         
       if (error) throw error;
@@ -50,7 +51,7 @@ export const useCalendarEventService = () => {
         .update({ 
           assigned_to: technicianId,
           due_date: scheduledDate.toISOString(),
-          status: 'assigned'
+          status: 'assigned' // Update status when assigned
         })
         .eq('id', serviceId);
         

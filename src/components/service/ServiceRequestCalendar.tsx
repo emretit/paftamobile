@@ -1,10 +1,10 @@
-
-import React from "react";
+import React, { useEffect } from "react";
 import { useServiceRequests, ServiceRequest } from "@/hooks/useServiceRequests";
 import { mapServiceRequestsToEvents } from "./calendar/calendarUtils";
 import { CalendarProvider, useCalendar } from "./calendar/CalendarContext";
 import { CalendarControls } from "./calendar/CalendarControls";
 import { CalendarContainer } from "./calendar/CalendarContainer";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ServiceRequestCalendarProps {
   searchQuery: string;
@@ -19,7 +19,28 @@ export const ServiceRequestCalendar = ({
   technicianFilter,
   onSelectRequest
 }: ServiceRequestCalendarProps) => {
-  const { data: serviceRequests, isLoading, error } = useServiceRequests();
+  const { data: serviceRequests, isLoading, error, refetch } = useServiceRequests();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('service_requests_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'service_requests'
+        },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
 
   if (isLoading) {
     return (
@@ -60,7 +81,6 @@ export const ServiceRequestCalendar = ({
   );
 };
 
-// This is a separate component to avoid re-rendering the entire calendar when filters change
 const CalendarEventsWrapper = ({
   serviceRequests,
   searchQuery,
