@@ -1,3 +1,4 @@
+
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { CalendarEvent, getEventStyle } from "./calendarUtils";
@@ -30,7 +31,7 @@ export const EventCalendar = ({
   currentDate,
   setCurrentDate
 }: EventCalendarProps) => {
-  const { handleEventDrop } = useCalendarEventService();
+  const { updateEventDate } = useCalendarEventService();
   const calendarRef = useRef<any>(null);
 
   const eventPropGetter = (event: CalendarEvent) => {
@@ -45,6 +46,13 @@ export const EventCalendar = ({
     
     if (onDropFromOutside) {
       onDropFromOutside(start, technicianId);
+    }
+  };
+
+  // Handle moving events within the calendar
+  const moveEvent = ({ event, start, end }: any) => {
+    if (event && start) {
+      updateEventDate(event.id, start);
     }
   };
 
@@ -116,9 +124,9 @@ export const EventCalendar = ({
       views={{ month: true, week: true, day: true }}
       messages={messages}
       culture="tr"
-      onEventDrop={handleEventDrop}
       onDropFromOutside={handleDropFromOutside}
       droppable={true}
+      onEventDrop={moveEvent}
       components={components}
       view={currentView as any}
       onView={(view) => onViewChange(view)}
