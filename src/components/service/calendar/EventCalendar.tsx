@@ -1,7 +1,6 @@
 
-import { BigCalendar, Calendar as BigCalendarType } from "react-big-calendar";
+import { Calendar } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { ServiceRequest } from "@/hooks/useServiceRequests";
 import { CalendarEvent, getEventStyle } from "./calendarUtils";
 import { getTurkishLocalizer, turkishMessages } from "./calendarLocalizer";
 import { useCalendarEventService } from "./calendarEventService";
@@ -23,7 +22,7 @@ export const EventCalendar = ({ events, onSelectEvent }: EventCalendarProps) => 
   };
 
   return (
-    <BigCalendar
+    <Calendar
       localizer={localizer}
       events={events}
       startAccessor="start"
