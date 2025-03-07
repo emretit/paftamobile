@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 
 interface DashboardCardProps {
@@ -12,12 +13,12 @@ interface DashboardCardProps {
 
 const DashboardCard = ({ title, value, icon, trend }: DashboardCardProps) => {
   return (
-    <Card className="p-6">
+    <Card className="p-4">
       <div className="flex items-center justify-between">
         <div className="text-secondary">{icon}</div>
         {trend && (
           <div
-            className={`text-sm ${
+            className={`text-xs ${
               trend.isPositive ? "text-green-500" : "text-red-500"
             }`}
           >
@@ -25,9 +26,9 @@ const DashboardCard = ({ title, value, icon, trend }: DashboardCardProps) => {
           </div>
         )}
       </div>
-      <div className="mt-4">
-        <h3 className="text-lg font-medium text-gray-600">{title}</h3>
-        <p className="text-2xl font-bold mt-1">{value}</p>
+      <div className="mt-3">
+        <h3 className="text-sm font-medium text-gray-600">{title}</h3>
+        <p className="text-xl font-bold mt-1">{value}</p>
       </div>
     </Card>
   );
