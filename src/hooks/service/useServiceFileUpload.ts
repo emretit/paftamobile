@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ServiceRequestAttachment } from "./types";
 
 export const useServiceFileUpload = () => {
-  // Dosya yükleme fonksiyonu
+  // File upload function
   const uploadFiles = async (files: File[], serviceRequestId: string): Promise<ServiceRequestAttachment[]> => {
     const uploadedFiles = await Promise.all(
       files.map(async (file) => {
@@ -15,7 +15,7 @@ export const useServiceFileUpload = () => {
           .upload(fileName, file);
 
         if (error) {
-          console.error('Dosya yükleme hatası:', error);
+          console.error('File upload error:', error);
           return null;
         }
 

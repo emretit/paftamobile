@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ServiceRequest, ServiceQueriesResult } from "./types";
 
 export const useServiceQueries = (): ServiceQueriesResult => {
-  // Tüm servis taleplerini getir
+  // Fetch all service requests
   const serviceRequestsQuery = useQuery({
     queryKey: ['service-requests'],
     queryFn: async (): Promise<ServiceRequest[]> => {
@@ -39,7 +39,7 @@ export const useServiceQueries = (): ServiceQueriesResult => {
     staleTime: 60000,
   });
 
-  // Tek bir servis talebini getir
+  // Get a single service request
   const getServiceRequest = async (id: string): Promise<ServiceRequest | null> => {
     const { data, error } = await supabase
       .from('service_requests')
@@ -70,5 +70,7 @@ export const useServiceQueries = (): ServiceQueriesResult => {
   return {
     ...serviceRequestsQuery,
     getServiceRequest,
+    isError: !!serviceRequestsQuery.error,
+    refetch: serviceRequestsQuery.refetch
   };
 };

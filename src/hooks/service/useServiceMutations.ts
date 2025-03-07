@@ -11,7 +11,7 @@ export const useServiceMutations = (): ServiceMutationsResult => {
   const { uploadFiles } = useServiceFileUpload();
   const { getServiceRequest } = useServiceQueries();
 
-  // Servis talebi oluşturma
+  // Create service request
   const createServiceRequestMutation = useMutation({
     mutationFn: async ({ formData, files }: { formData: ServiceRequestFormData, files: File[] }) => {
       const serviceRequestData = {
@@ -21,10 +21,10 @@ export const useServiceMutations = (): ServiceMutationsResult => {
         attachments: [],
       };
 
-      // Supabase'e gönderilen veriler
+      // Submit to Supabase
       const { data, error } = await supabase
         .from('service_requests')
-        .insert(serviceRequestData as any)
+        .insert(serviceRequestData)
         .select()
         .single();
 
@@ -33,10 +33,18 @@ export const useServiceMutations = (): ServiceMutationsResult => {
       if (files.length > 0 && data) {
         const uploadedFiles = await uploadFiles(files, data.id);
         
-        // Dosya yüklendikten sonra güncelle, JSON olarak attachments dizisini gönderiyoruz
+        // After upload, update with the attachments array
+        // Convert to a plain object structure that Supabase can handle
+        const attachmentsForDb = uploadedFiles.map(file => ({
+          name: file.name,
+          path: file.path,
+          type: file.type,
+          size: file.size
+        }));
+        
         const { error: updateError } = await supabase
           .from('service_requests')
-          .update({ attachments: uploadedFiles })
+          .update({ attachments: attachmentsForDb })
           .eq('id', data.id);
 
         if (updateError) throw updateError;
@@ -46,15 +54,15 @@ export const useServiceMutations = (): ServiceMutationsResult => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['service-requests'] });
-      toast.success("Servis talebi başarıyla oluşturuldu");
+      toast.success("Service request created successfully");
     },
     onError: (error) => {
-      console.error('Servis talebi oluşturma hatası:', error);
-      toast.error("Servis talebi oluşturulamadı");
+      console.error('Service request creation error:', error);
+      toast.error("Failed to create service request");
     },
   });
 
-  // Servis talebi güncelleme 
+  // Update service request
   const updateServiceRequestMutation = useMutation({
     mutationFn: async ({ 
       id, 
@@ -65,24 +73,32 @@ export const useServiceMutations = (): ServiceMutationsResult => {
       updateData: Partial<ServiceRequestFormData>; 
       newFiles?: File[] 
     }) => {
-      // Mevcut servis talebini getir
+      // Get current service request
       const currentRequest = await getServiceRequest(id);
       if (!currentRequest) {
-        throw new Error("Servis talebi bulunamadı");
+        throw new Error("Service request not found");
       }
 
       let updatedAttachments = [...(currentRequest.attachments || [])];
 
-      // Yeni dosyalar varsa yükle
+      // Upload new files if any
       if (newFiles.length > 0) {
         const uploadedFiles = await uploadFiles(newFiles, id);
         updatedAttachments = [...updatedAttachments, ...uploadedFiles];
       }
 
+      // Convert attachments to a plain object structure Supabase can handle
+      const attachmentsForDb = updatedAttachments.map(file => ({
+        name: file.name,
+        path: file.path,
+        type: file.type,
+        size: file.size
+      }));
+
       const updatePayload = {
         ...updateData,
         due_date: updateData.due_date ? updateData.due_date.toISOString() : currentRequest.due_date,
-        attachments: updatedAttachments as any // any tipini kullanarak TypeScript uyumluluğu sağlıyoruz
+        attachments: attachmentsForDb
       };
 
       const { data, error } = await supabase
@@ -97,18 +113,18 @@ export const useServiceMutations = (): ServiceMutationsResult => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['service-requests'] });
-      toast.success("Servis talebi başarıyla güncellendi");
+      toast.success("Service request updated successfully");
     },
     onError: (error) => {
-      console.error('Servis talebi güncelleme hatası:', error);
-      toast.error("Servis talebi güncellenemedi");
+      console.error('Service request update error:', error);
+      toast.error("Failed to update service request");
     },
   });
 
-  // Servis talebi silme
+  // Delete service request
   const deleteServiceRequestMutation = useMutation({
     mutationFn: async (id: string) => {
-      // Önce talebe bağlı aktiviteleri sil
+      // First delete related activities
       const { error: activitiesError } = await supabase
         .from('service_activities')
         .delete()
@@ -116,7 +132,7 @@ export const useServiceMutations = (): ServiceMutationsResult => {
 
       if (activitiesError) throw activitiesError;
 
-      // Sonra talebi sil
+      // Then delete the request
       const { error } = await supabase
         .from('service_requests')
         .delete()
@@ -127,35 +143,43 @@ export const useServiceMutations = (): ServiceMutationsResult => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['service-requests'] });
-      toast.success("Servis talebi başarıyla silindi");
+      toast.success("Service request deleted successfully");
     },
     onError: (error) => {
-      console.error('Servis talebi silme hatası:', error);
-      toast.error("Servis talebi silinemedi");
+      console.error('Service request deletion error:', error);
+      toast.error("Failed to delete service request");
     },
   });
 
-  // Dosya silme 
+  // Delete attachment
   const deleteAttachmentMutation = useMutation({
     mutationFn: async ({ requestId, attachmentPath }: { requestId: string, attachmentPath: string }) => {
-      // Önce dosyayı storage'dan sil
+      // First delete from storage
       const { error: storageError } = await supabase.storage
         .from('service-attachments')
         .remove([attachmentPath]);
 
       if (storageError) throw storageError;
 
-      // Sonra talepten dosya bilgisini kaldır
+      // Then remove attachment info from request
       const currentRequest = await getServiceRequest(requestId);
       if (!currentRequest) {
-        throw new Error("Servis talebi bulunamadı");
+        throw new Error("Service request not found");
       }
 
       const updatedAttachments = currentRequest.attachments.filter(att => att.path !== attachmentPath);
+      
+      // Convert to a plain object structure that Supabase can handle
+      const attachmentsForDb = updatedAttachments.map(file => ({
+        name: file.name,
+        path: file.path,
+        type: file.type,
+        size: file.size
+      }));
 
       const { data, error } = await supabase
         .from('service_requests')
-        .update({ attachments: updatedAttachments as any })
+        .update({ attachments: attachmentsForDb })
         .eq('id', requestId)
         .select()
         .single();
@@ -165,11 +189,11 @@ export const useServiceMutations = (): ServiceMutationsResult => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['service-requests'] });
-      toast.success("Dosya başarıyla silindi");
+      toast.success("File deleted successfully");
     },
     onError: (error) => {
-      console.error('Dosya silme hatası:', error);
-      toast.error("Dosya silinemedi");
+      console.error('File deletion error:', error);
+      toast.error("Failed to delete file");
     },
   });
 

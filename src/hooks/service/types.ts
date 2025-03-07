@@ -44,7 +44,9 @@ export interface ServiceRequestFormData {
 export interface ServiceQueriesResult {
   data: ServiceRequest[] | undefined;
   isLoading: boolean;
+  isError: boolean;
   error: Error | null;
+  refetch: () => Promise<any>;
   getServiceRequest: (id: string) => Promise<ServiceRequest | null>;
 }
 
