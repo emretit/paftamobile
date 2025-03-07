@@ -1,6 +1,5 @@
 
-import { getDaysInMonth, getMonth, getYear, setDate, setMonth, setYear } from "date-fns";
-import { format } from "date-fns";
+import { format, getDate, getMonth, getYear, startOfWeek, endOfWeek } from "date-fns";
 import { dateFnsLocalizer } from "react-big-calendar";
 import { CalendarEvent } from "../hooks/useTaskCalendar";
 import { tr } from 'date-fns/locale/tr';
@@ -13,12 +12,11 @@ export const getLocalizer = () => {
   
   return dateFnsLocalizer({
     format,
-    getDaysInMonth,
+    getDate,
     getMonth,
     getYear,
-    setDate,
-    setMonth,
-    setYear,
+    startOfWeek,
+    endOfWeek,
     locales,
   });
 };
@@ -89,6 +87,10 @@ export const getEventStyle = (event: CalendarEvent) => {
     case 'todo':
       style.backgroundColor = '#F3F4F6';
       style.color = '#1F2937';
+      break;
+    case 'postponed':
+      style.backgroundColor = '#FEF3C7';
+      style.color = '#92400E';
       break;
     default:
       // No special styling

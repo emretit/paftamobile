@@ -53,7 +53,7 @@ const TasksCalendar = ({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[500px]">
-        <div className="text-gray-500">Loading tasks...</div>
+        <div className="text-gray-500">Görevler yükleniyor...</div>
       </div>
     );
   }
@@ -61,7 +61,7 @@ const TasksCalendar = ({
   if (error) {
     return (
       <div className="flex items-center justify-center h-[500px]">
-        <div className="text-red-500">Error loading tasks: {error.message}</div>
+        <div className="text-red-500">Görevler yüklenirken hata oluştu: {error.message}</div>
       </div>
     );
   }

@@ -36,10 +36,7 @@ export const TaskCalendarView = ({
         views={['month', 'week', 'day']}
         messages={calendarMessages}
         formats={calendarFormats}
-        // The following props need to be added with a drag-n-drop library
-        // Remove for now as they cause errors
-        // onEventDrop={onEventUpdate}
-        // onEventResize={onEventUpdate}
+        culture="tr"
       />
     </div>
   );
