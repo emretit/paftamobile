@@ -35,7 +35,7 @@ export const useKanbanTasks = (
         // Check if selectedType is a valid task type
         const validTypes = ['opportunity', 'proposal', 'general'];
         if (validTypes.includes(selectedType)) {
-          query = query.eq('type', selectedType);
+          query = query.eq('type', selectedType as Task['type']);
         }
       }
 

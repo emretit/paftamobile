@@ -1,5 +1,5 @@
 
-import { format, getDate, getMonth, getYear, startOfWeek, endOfWeek } from "date-fns";
+import { format, getDate, getMonth, getYear } from "date-fns";
 import { dateFnsLocalizer } from "react-big-calendar";
 import { CalendarEvent } from "../hooks/useTaskCalendar";
 import { tr } from 'date-fns/locale/tr';
@@ -12,11 +12,17 @@ export const getLocalizer = () => {
   
   return dateFnsLocalizer({
     format,
+    parse: (date: Date | string) => new Date(date),
+    getDay: (date: Date) => date.getDay(),
+    startOfWeek: (date: Date) => {
+      const day = date.getDay();
+      const diff = (day + 6) % 7;
+      date.setDate(date.getDate() - diff);
+      return date;
+    },
     getDate,
     getMonth,
     getYear,
-    startOfWeek,
-    endOfWeek,
     locales,
   });
 };
