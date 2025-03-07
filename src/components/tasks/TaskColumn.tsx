@@ -15,41 +15,38 @@ interface TaskColumnProps {
 
 const TaskColumn = ({ id, title, icon: Icon, tasks, onEdit, onSelect }: TaskColumnProps) => {
   return (
-    <div className="flex-1 min-w-[300px]">
-      <div className="flex items-center gap-2 mb-4">
-        <Icon className="h-5 w-5 text-gray-500" />
-        <h2 className="font-semibold text-gray-900">
-          {title} ({tasks.length})
-        </h2>
-      </div>
-      <Droppable droppableId={id}>
-        {(provided, snapshot) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className={`space-y-4 min-h-[500px] p-4 rounded-lg ${
-              snapshot.isDraggingOver ? "bg-gray-100/80" : "bg-gray-50/50"
-            }`}
-          >
-            {tasks.map((task, index) => (
-              <Draggable key={task.id} draggableId={task.id} index={index}>
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    {...provided.dragHandleProps}
-                    className={snapshot.isDragging ? "shadow-lg" : ""}
-                  >
-                    <TaskCard task={task} onEdit={onEdit} onSelect={onSelect} />
-                  </div>
-                )}
-              </Draggable>
-            ))}
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
-    </div>
+    <Droppable droppableId={id}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.droppableProps}
+          className={`space-y-4 min-h-[500px] p-4 rounded-lg ${
+            snapshot.isDraggingOver ? "bg-gray-100/80" : "bg-gray-50/50"
+          }`}
+        >
+          {tasks.map((task, index) => (
+            <Draggable key={task.id} draggableId={task.id} index={index}>
+              {(provided, snapshot) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.draggableProps}
+                  {...provided.dragHandleProps}
+                  className={snapshot.isDragging ? "shadow-lg" : ""}
+                >
+                  <TaskCard task={task} onEdit={onEdit} onSelect={onSelect} />
+                </div>
+              )}
+            </Draggable>
+          ))}
+          {provided.placeholder}
+          {tasks.length === 0 && (
+            <div className="text-center py-8 text-gray-500 text-sm">
+              Bu sütunda görev yok
+            </div>
+          )}
+        </div>
+      )}
+    </Droppable>
   );
 };
 

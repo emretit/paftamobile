@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -10,88 +10,65 @@ export const useKanbanTasks = (
   selectedEmployee: string | null,
   selectedType: string | null
 ) => {
-  const queryClient = useQueryClient();
   const [tasks, setTasks] = useState<Task[]>([]);
+  const queryClient = useQueryClient();
 
-  // Fetch tasks
-  const { data: fetchedTasks, isLoading, error } = useQuery({
-    queryKey: ['tasks'],
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["tasks", searchQuery, selectedEmployee, selectedType],
     queryFn: async () => {
-      console.log('Fetching tasks...');
-      const { data: tasksData, error } = await supabase
+      let query = supabase
         .from('tasks')
         .select(`
           *,
-          assignee:assignee_id (
-            id,
-            first_name,
-            last_name,
-            avatar_url
-          )
-        `)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching tasks:', error);
-        throw error;
+          assignee:assignee_id(id, name:first_name, avatar)
+        `);
+
+      if (searchQuery) {
+        query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
       }
-      
-      console.log('Fetched tasks:', tasksData);
-      
-      return tasksData.map(task => ({
-        ...task,
-        assignee: task.assignee ? {
-          id: task.assignee.id,
-          name: `${task.assignee.first_name} ${task.assignee.last_name}`,
-          avatar: task.assignee.avatar_url
-        } : undefined
-      })) as Task[];
+
+      if (selectedEmployee) {
+        query = query.eq('assignee_id', selectedEmployee);
+      }
+
+      if (selectedType) {
+        query = query.eq('type', selectedType);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as Task[];
     }
   });
 
-  // Update task status
+  useEffect(() => {
+    if (data) {
+      setTasks(data);
+    }
+  }, [data]);
+
   const updateTaskMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: Task['status'] }) => {
-      const { data, error } = await supabase
+    mutationFn: async ({ id, status }: { id: string; status: Task['status'] | string }) => {
+      const { error } = await supabase
         .from('tasks')
         .update({ status })
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
       
       if (error) throw error;
-      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Görev durumu güncellendi');
     },
     onError: (error) => {
-      toast.error('Failed to update task status');
-      console.error('Error updating task status:', error);
+      toast.error('Görev güncellenirken bir hata oluştu');
+      console.error('Error updating task:', error);
     }
   });
 
-  // Set tasks when data is fetched
-  useEffect(() => {
-    if (fetchedTasks) {
-      console.log('Setting tasks:', fetchedTasks);
-      setTasks(fetchedTasks);
-    }
-  }, [fetchedTasks]);
-
-  // Filter tasks by status
-  const filterTasks = (status: Task['status']) => {
-    return tasks.filter(task => {
-      const matchesSearch = !searchQuery || 
-        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        task.description?.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesEmployee = !selectedEmployee || 
-        task.assignee_id === selectedEmployee;
-      
-      const matchesType = !selectedType || 
-        task.type === selectedType;
-
-      return task.status === status && matchesSearch && matchesEmployee && matchesType;
-    });
-  };
+  const filterTasks = useCallback((status: Task['status'] | string) => {
+    return tasks.filter(task => task.status === status);
+  }, [tasks]);
 
   return {
     tasks,
