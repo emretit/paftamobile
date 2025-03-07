@@ -3,27 +3,21 @@ import React, { useEffect, useState } from "react";
 import { usePipelineItems } from "./hooks/usePipelineItems";
 import { filterItems } from "./utils/filterItems";
 import { usePipelineMutations } from "./hooks/usePipelineMutations";
-import { columns } from "./constants";
-import { DealColumn } from "../deals/DealColumn";
-import { TaskColumn } from "../tasks/TaskColumn";
+import DealCard from "../deals/DealCard";
+import TaskCard from "../tasks/TaskCard";
 import { Deal } from "@/types/deal";
 import { Task } from "@/types/task";
-import type { PipelineView, ItemType } from "@/types/pipeline";
+import type { PipelineView, ItemType, PipelineColumn } from "@/types/pipeline";
 
-// Define interfaces for the different item types with employee data
-interface DealWithEmployee extends Deal {
-  customerName?: string;
-  employeeName?: string;
-  proposalDate?: string;
-  lastContactDate?: string;
-  employee?: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    avatar_url: string;
-  };
-}
+// Define columns for the pipeline
+const pipelineColumns: PipelineColumn[] = [
+  { id: "todo", name: "To Do" },
+  { id: "in_progress", name: "In Progress" },
+  { id: "completed", name: "Completed" },
+  { id: "postponed", name: "Postponed" },
+];
 
+// Extended interfaces for the pipeline items
 interface TaskWithAssignee extends Task {
   assignee?: {
     id: string;
@@ -32,8 +26,27 @@ interface TaskWithAssignee extends Task {
   };
 }
 
+interface DealWithEmployee extends Partial<Deal> {
+  id: string;
+  title: string;
+  status: Deal['status'];
+  value: number;
+  customerName: string;
+  employeeName: string;
+  proposalDate: Date;
+  lastContactDate: Date;
+  priority: Deal['priority'];
+  item_type: 'deal';
+  employee?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    avatar_url: string;
+  };
+}
+
 // Create a type for all pipeline items
-type PipelineItem = DealWithEmployee | TaskWithAssignee;
+type PipelineItem = TaskWithAssignee | DealWithEmployee;
 
 interface UnifiedPipelineProps {
   view: PipelineView;
@@ -54,67 +67,29 @@ export const UnifiedPipeline = ({
   const [items, setItems] = useState<PipelineItem[]>([]);
   const { updateTaskStatusMutation, updateDealStatusMutation } = usePipelineMutations();
   const { 
-    tasks, 
-    deals, 
+    items: pipelineItems, 
     isLoading,
-    isError 
+    error
   } = usePipelineItems();
+
+  const isError = !!error;
 
   // Process and combine tasks and deals based on the current view
   useEffect(() => {
-    if (view === 'deals' && deals) {
-      // Process deals data
-      const processedDeals = deals.map(deal => {
-        // Add item_type to distinguish in the pipeline
-        return {
-          ...deal,
-          item_type: 'deal' as ItemType,
-          customerName: deal.customer?.name || 'No Customer',
-          employeeName: deal.employee ? 
-            `${deal.employee.first_name} ${deal.employee.last_name}` : 
-            'Unassigned',
-          proposalDate: deal.proposal_date || '',
-          lastContactDate: deal.last_contact_date || ''
-        } as DealWithEmployee;
-      });
-      setItems(processedDeals);
-    } else if (view === 'tasks' && tasks) {
-      // Process tasks data
-      const processedTasks = tasks.map(task => {
-        return {
-          ...task,
-          item_type: 'task' as ItemType,
-        } as TaskWithAssignee;
-      });
-      setItems(processedTasks);
-    } else if (view === 'unified' && tasks && deals) {
-      // Combine both tasks and deals for unified view
-      const processedDeals = deals.map(deal => {
-        return {
-          ...deal,
-          item_type: 'deal' as ItemType,
-          customerName: deal.customer?.name || 'No Customer',
-          employeeName: deal.employee ? 
-            `${deal.employee.first_name} ${deal.employee.last_name}` : 
-            'Unassigned',
-          proposalDate: deal.proposal_date || '',
-          lastContactDate: deal.last_contact_date || ''
-        } as DealWithEmployee;
+    if (pipelineItems) {
+      // Filter based on view type
+      const filteredItems = pipelineItems.filter(item => {
+        if (view === 'tasks') return item.item_type === 'task';
+        if (view === 'deals') return item.item_type === 'deal';
+        return true; // unified view shows all
       });
       
-      const processedTasks = tasks.map(task => {
-        return {
-          ...task,
-          item_type: 'task' as ItemType,
-        } as TaskWithAssignee;
-      });
-      
-      setItems([...processedDeals, ...processedTasks]);
+      setItems(filteredItems as PipelineItem[]);
     }
-  }, [tasks, deals, view]);
+  }, [pipelineItems, view]);
 
   // Filter items based on search term and filters
-  const filteredItems = filterItems(items, searchTerm, filters);
+  const filteredItems = filterItems(items as any, searchTerm, filters);
 
   // Update the status of a pipeline item
   const handleUpdateStatus = (id: string, status: string, type: ItemType) => {
@@ -141,26 +116,24 @@ export const UnifiedPipeline = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
-      {columns.map((column) => (
+      {pipelineColumns.map((column) => (
         <div key={column.id} className="bg-slate-50 rounded-lg p-4">
           <h3 className="font-semibold text-md mb-4">{column.name}</h3>
           
-          {filteredItems.filter(item => 
-            // For deals
-            (item.item_type === 'deal' && item.status === column.id) ||
-            // For tasks
-            (item.item_type === 'task' && item.status === column.id)
-          ).map(item => (
+          {filteredItems.filter(item => item.status === column.id).map(item => (
             <div key={`${item.item_type}-${item.id}`} className="mb-2">
               {item.item_type === 'deal' ? (
-                <DealColumn 
-                  deal={item as DealWithEmployee} 
-                  onUpdateStatus={(status) => handleUpdateStatus(item.id, status, 'deal')}
+                <DealCard 
+                  deal={item as unknown as Deal}
+                  onClick={() => {}}
+                  onSelect={() => {}}
+                  isSelected={false}
                 />
               ) : (
-                <TaskColumn
-                  task={item as TaskWithAssignee}
-                  onUpdateStatus={(status) => handleUpdateStatus(item.id, status, 'task')}
+                <TaskCard
+                  task={item as Task}
+                  onEdit={() => {}}
+                  onSelect={() => {}}
                 />
               )}
             </div>

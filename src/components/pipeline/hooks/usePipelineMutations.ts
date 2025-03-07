@@ -22,7 +22,7 @@ export const usePipelineMutations = () => {
       toast.success('Task status updated');
     },
     onError: (error) => {
-      toast.error('Error updating task status');
+      toast.error('Failed to update task status');
       console.error('Error updating task status:', error);
     }
   });
@@ -41,7 +41,7 @@ export const usePipelineMutations = () => {
       toast.success('Deal status updated');
     },
     onError: (error) => {
-      toast.error('Error updating deal status');
+      toast.error('Failed to update deal status');
       console.error('Error updating deal status:', error);
     }
   });
