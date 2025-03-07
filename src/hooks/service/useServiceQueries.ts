@@ -68,9 +68,11 @@ export const useServiceQueries = (): ServiceQueriesResult => {
   };
 
   return {
-    ...serviceRequestsQuery,
-    getServiceRequest,
+    data: serviceRequestsQuery.data,
+    isLoading: serviceRequestsQuery.isLoading,
+    error: serviceRequestsQuery.error as Error | null,
     isError: !!serviceRequestsQuery.error,
-    refetch: serviceRequestsQuery.refetch
+    refetch: serviceRequestsQuery.refetch,
+    getServiceRequest
   };
 };
