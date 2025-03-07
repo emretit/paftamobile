@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { formatMoney } from "@/components/deals/utils";
+import { statusStyles, statusLabels } from "../proposals/constants";
 import type { Proposal, ProposalStatus } from "@/types/proposal";
 
 interface ProposalDetailSheetProps {
@@ -59,33 +60,29 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
 
   if (!formData) return null;
 
-  const getStatusBadge = (status: string) => {
-    const baseClasses = "px-2 py-1 text-xs rounded-full font-medium";
-    switch (status) {
-      case "draft":
-        return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>Taslak</span>;
-      case "new":
-      case "discovery_scheduled":
-        return <span className={`${baseClasses} bg-blue-100 text-blue-800`}>Keşif Planlandı</span>;
-      case "meeting_completed":
-        return <span className={`${baseClasses} bg-indigo-100 text-indigo-800`}>Görüşme Tamamlandı</span>;
-      case "quote_in_progress":
-        return <span className={`${baseClasses} bg-violet-100 text-violet-800`}>Teklif Hazırlanıyor</span>;
-      case "sent":
-      case "quote_sent":
-        return <span className={`${baseClasses} bg-yellow-100 text-yellow-800`}>Teklif Gönderildi</span>;
-      case "negotiation":
-        return <span className={`${baseClasses} bg-purple-100 text-purple-800`}>Müzakere Aşaması</span>;
-      case "accepted":
-      case "approved":
-        return <span className={`${baseClasses} bg-green-100 text-green-800`}>Onaylandı</span>;
-      case "rejected":
-        return <span className={`${baseClasses} bg-red-100 text-red-800`}>Reddedildi</span>;
-      case "converted_to_order":
-        return <span className={`${baseClasses} bg-indigo-100 text-indigo-800`}>Siparişe Dönüştü</span>;
-      default:
-        return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>{status}</span>;
-    }
+  // Define the status workflow stages
+  const workflowStages: { status: ProposalStatus; label: string }[] = [
+    { status: 'discovery_scheduled', label: 'Keşif Planlandı' },
+    { status: 'meeting_completed', label: 'Görüşme Tamamlandı' },
+    { status: 'quote_in_progress', label: 'Teklif Hazırlanıyor' },
+    { status: 'quote_sent', label: 'Teklif Gönderildi' },
+    { status: 'negotiation', label: 'Müzakere Aşaması' }
+  ];
+
+  // Define the final stages
+  const finalStages: { status: ProposalStatus; label: string }[] = [
+    { status: 'approved', label: 'Onaylandı' },
+    { status: 'rejected', label: 'Reddedildi' },
+    { status: 'converted_to_order', label: 'Siparişe Dönüştü' }
+  ];
+
+  const getStatusBadge = (status: ProposalStatus) => {
+    const style = statusStyles[status];
+    return (
+      <span className={`px-2 py-1 text-xs rounded-full font-medium ${style.bg} ${style.text}`}>
+        {statusLabels[status]}
+      </span>
+    );
   };
 
   return (
@@ -140,64 +137,73 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
 
             <TabsContent value="details" className="space-y-4">
               <div className="rounded-md border p-4">
-                <h4 className="font-medium mb-2">Durum Güncelle</h4>
-                <div className="flex flex-wrap gap-2">
-                  <Button 
-                    size="sm" 
-                    variant={formData.status === 'discovery_scheduled' ? 'default' : 'outline'}
-                    onClick={() => handleStatusChange('discovery_scheduled')}
-                  >
-                    Keşif Planlandı
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={formData.status === 'meeting_completed' ? 'default' : 'outline'}
-                    onClick={() => handleStatusChange('meeting_completed')}
-                  >
-                    Görüşme Tamamlandı
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={formData.status === 'quote_in_progress' ? 'default' : 'outline'}
-                    onClick={() => handleStatusChange('quote_in_progress')}
-                  >
-                    Teklif Hazırlanıyor
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={formData.status === 'quote_sent' ? 'default' : 'outline'}
-                    onClick={() => handleStatusChange('quote_sent')}
-                  >
-                    Teklif Gönderildi
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={formData.status === 'negotiation' ? 'default' : 'outline'}
-                    onClick={() => handleStatusChange('negotiation')}
-                  >
-                    Müzakere Aşaması
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={formData.status === 'approved' ? 'default' : 'outline'}
-                    onClick={() => handleStatusChange('approved')}
-                  >
-                    Onaylandı
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={formData.status === 'rejected' ? 'default' : 'outline'}
-                    onClick={() => handleStatusChange('rejected')}
-                  >
-                    Reddedildi
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={formData.status === 'converted_to_order' ? 'default' : 'outline'}
-                    onClick={() => handleStatusChange('converted_to_order')}
-                  >
-                    Siparişe Dönüştü
-                  </Button>
+                <h4 className="font-medium mb-3">Teklif Durumu</h4>
+                
+                <div className="space-y-4">
+                  {/* Workflow progress visualization */}
+                  <div className="relative mb-6">
+                    <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200"></div>
+                    <div className="flex justify-between relative">
+                      {workflowStages.map((stage, index) => {
+                        // Calculate active stage based on current status and position
+                        const isActive = workflowStages.findIndex(s => s.status === formData.status) >= index;
+                        const isPastStage = workflowStages.findIndex(s => s.status === formData.status) > index;
+                        
+                        return (
+                          <div key={stage.status} className="flex flex-col items-center z-10">
+                            <button 
+                              className={`w-4 h-4 rounded-full ${
+                                isPastStage ? 'bg-blue-600' : isActive ? 'bg-blue-500' : 'bg-gray-300'
+                              } mb-2`}
+                              onClick={() => handleStatusChange(stage.status)}
+                              title={stage.label}
+                            />
+                            <span className="text-xs text-gray-600 whitespace-nowrap px-1">
+                              {stage.label}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h5 className="text-sm font-medium">Süreç Aşamaları</h5>
+                    <div className="grid grid-cols-2 gap-2">
+                      {workflowStages.map(stage => (
+                        <Button 
+                          key={stage.status}
+                          size="sm" 
+                          variant={formData.status === stage.status ? 'default' : 'outline'}
+                          onClick={() => handleStatusChange(stage.status)}
+                          className="justify-start"
+                        >
+                          {stage.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h5 className="text-sm font-medium">Sonuç Aşamaları</h5>
+                    <div className="grid grid-cols-2 gap-2">
+                      {finalStages.map(stage => (
+                        <Button 
+                          key={stage.status}
+                          size="sm" 
+                          variant={formData.status === stage.status ? 'default' : 'outline'}
+                          onClick={() => handleStatusChange(stage.status)}
+                          className={`justify-start ${
+                            stage.status === 'approved' ? 'bg-green-600 hover:bg-green-700 text-white' : 
+                            stage.status === 'rejected' ? 'bg-red-600 hover:bg-red-700 text-white' : 
+                            stage.status === 'converted_to_order' ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : ''
+                          } ${formData.status !== stage.status ? 'bg-white text-gray-800' : ''}`}
+                        >
+                          {stage.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
