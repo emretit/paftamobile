@@ -34,3 +34,19 @@ export const statusLabels: Record<ProposalStatus, string> = {
   quote_sent: 'Teklif Gönderildi',
   converted_to_order: 'Siparişe Dönüştü'
 };
+
+// Define the status workflow stages
+export const workflowStages: { status: ProposalStatus; label: string }[] = [
+  { status: 'discovery_scheduled', label: 'Keşif Planlandı' },
+  { status: 'meeting_completed', label: 'Görüşme Tamamlandı' },
+  { status: 'quote_in_progress', label: 'Teklif Hazırlanıyor' },
+  { status: 'quote_sent', label: 'Teklif Gönderildi' },
+  { status: 'negotiation', label: 'Müzakere Aşaması' }
+];
+
+// Define the final stages
+export const finalStages: { status: ProposalStatus; label: string }[] = [
+  { status: 'approved', label: 'Onaylandı' },
+  { status: 'rejected', label: 'Reddedildi' },
+  { status: 'converted_to_order', label: 'Siparişe Dönüştü' }
+];
