@@ -1,7 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, FileText, Building, User } from "lucide-react";
+import { Calendar, FileText, Building, User, DollarSign } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/components/deals/utils";
@@ -16,19 +16,27 @@ const ProposalCard = ({ proposal, onSelect }: ProposalCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "accepted":
+      case "approved":
         return "border-l-green-500";
       case "rejected":
         return "border-l-red-500";
       case "sent":
+      case "quote_sent":
         return "border-l-yellow-500";
       case "new":
+      case "discovery_scheduled":
         return "border-l-blue-500";
+      case "negotiation":
+        return "border-l-purple-500";
+      case "converted_to_order":
+        return "border-l-indigo-500";
       default:
         return "border-l-gray-300";
     }
   };
   
-  const isOverdue = proposal.valid_until && isPast(new Date(proposal.valid_until)) && proposal.status !== "accepted" && proposal.status !== "rejected";
+  const isOverdue = proposal.valid_until && isPast(new Date(proposal.valid_until)) && 
+    !["accepted", "approved", "rejected", "converted_to_order"].includes(proposal.status);
 
   return (
     <Card 

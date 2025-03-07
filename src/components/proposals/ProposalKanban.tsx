@@ -5,6 +5,7 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ProposalColumn from "./kanban/ProposalColumn";
+import { FileText, Calendar, Building, MessageSquare, CheckSquare, XSquare, DollarSign, Users } from "lucide-react";
 import type { Proposal, ProposalStatus } from "@/types/proposal";
 
 interface ProposalKanbanProps {
@@ -13,11 +14,14 @@ interface ProposalKanbanProps {
 }
 
 const columns = [
-  { id: "draft", title: "Taslak", color: "bg-gray-600" },
-  { id: "new", title: "Yeni", color: "bg-blue-600" },
-  { id: "sent", title: "Gönderildi", color: "bg-yellow-600" },
-  { id: "accepted", title: "Kabul Edildi", color: "bg-green-600" },
-  { id: "rejected", title: "Reddedildi", color: "bg-red-600" }
+  { id: "discovery_scheduled", title: "Keşif Planlandı", icon: Calendar, color: "bg-blue-600" },
+  { id: "meeting_completed", title: "Görüşme Tamamlandı", icon: Users, color: "bg-indigo-600" },
+  { id: "quote_in_progress", title: "Teklif Hazırlanıyor", icon: FileText, color: "bg-violet-600" },
+  { id: "quote_sent", title: "Teklif Gönderildi", icon: DollarSign, color: "bg-yellow-600" },
+  { id: "negotiation", title: "Müzakere Aşaması", icon: MessageSquare, color: "bg-purple-600" },
+  { id: "approved", title: "Onaylandı", icon: CheckSquare, color: "bg-green-600" },
+  { id: "rejected", title: "Reddedildi", icon: XSquare, color: "bg-red-600" },
+  { id: "converted_to_order", title: "Siparişe Dönüştü", icon: DollarSign, color: "bg-indigo-800" }
 ];
 
 export const ProposalKanban = ({ proposals, onProposalSelect }: ProposalKanbanProps) => {
@@ -82,9 +86,9 @@ export const ProposalKanban = ({ proposals, onProposalSelect }: ProposalKanbanPr
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex overflow-x-auto gap-6 pb-4">
         {columns.map(column => (
-          <div key={column.id} className="flex-1 min-w-[300px]">
+          <div key={column.id} className="flex-none min-w-[320px]">
             <div className="flex items-center gap-2 mb-4">
               <div className={`h-3 w-3 rounded-full ${column.color}`}></div>
               <h2 className="font-semibold text-gray-900">
@@ -94,6 +98,7 @@ export const ProposalKanban = ({ proposals, onProposalSelect }: ProposalKanbanPr
             <ProposalColumn
               id={column.id}
               title={column.title}
+              icon={column.icon}
               proposals={filterProposalsByStatus(column.id)}
               onSelect={onProposalSelect}
             />

@@ -1,14 +1,19 @@
 
 export type ProposalStatus = 
-  | 'draft' 
-  | 'sent' 
-  | 'approved' 
-  | 'rejected' 
-  | 'expired'
+  | 'draft'
   | 'new'
   | 'review'
+  | 'sent'
   | 'negotiation'
-  | 'accepted';
+  | 'accepted'
+  | 'rejected'
+  | 'expired'
+  | 'discovery_scheduled'
+  | 'meeting_completed'
+  | 'quote_in_progress'
+  | 'quote_sent'
+  | 'approved'
+  | 'converted_to_order';
 
 export interface ProposalItem {
   id: string;
@@ -29,10 +34,12 @@ export interface Proposal {
   total_value: number;
   sent_date: string | null;
   valid_until: string | null;
-  customer_segment: string | null;
   created_at: string;
   updated_at: string;
   proposal_number: number;
+  customer_segment: string | null;
+  payment_term?: string;
+  internal_notes?: string;
   customer?: {
     name: string;
   };

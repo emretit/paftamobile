@@ -40,9 +40,8 @@ export const useProposals = (filters?: ProposalFilters) => {
         if (filters.search) {
           query = query.or(`
             proposal_number.ilike.%${filters.search}%,
-            customers.name.ilike.%${filters.search}%,
-            employees.first_name.ilike.%${filters.search}%,
-            employees.last_name.ilike.%${filters.search}%
+            title.ilike.%${filters.search}%,
+            customer.name.ilike.%${filters.search}%
           `);
         }
       }
@@ -74,9 +73,24 @@ export const useProposals = (filters?: ProposalFilters) => {
           }
         }
 
+        // Handle status mapping to ensure TypeScript compliance
+        let status: ProposalStatus = (item.status || 'new') as ProposalStatus;
+        
+        // Make sure the status is one of the allowed values
+        const validStatuses: ProposalStatus[] = [
+          'draft', 'new', 'review', 'sent', 'negotiation', 
+          'accepted', 'rejected', 'expired', 'discovery_scheduled', 
+          'meeting_completed', 'quote_in_progress', 'quote_sent', 
+          'approved', 'converted_to_order'
+        ];
+        
+        if (!validStatuses.includes(status)) {
+          status = 'new'; // Default fallback
+        }
+
         return {
           ...item,
-          status: (item.status || 'new') as ProposalStatus,
+          status,
           items: parsedItems
         };
       });

@@ -1,16 +1,18 @@
 
 import { Droppable, Draggable } from "@hello-pangea/dnd";
+import { LucideIcon } from "lucide-react";
 import ProposalCard from "./ProposalCard";
 import type { Proposal } from "@/types/proposal";
 
 interface ProposalColumnProps {
   id: string;
   title: string;
+  icon: LucideIcon;
   proposals: Proposal[];
   onSelect: (proposal: Proposal) => void;
 }
 
-const ProposalColumn = ({ id, title, proposals, onSelect }: ProposalColumnProps) => {
+const ProposalColumn = ({ id, title, icon: Icon, proposals, onSelect }: ProposalColumnProps) => {
   return (
     <Droppable droppableId={id}>
       {(provided, snapshot) => (

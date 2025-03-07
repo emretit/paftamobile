@@ -5,7 +5,7 @@ import { useProposals } from "@/hooks/useProposals";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ProposalStatus } from "@/types/proposal";
+import { Proposal, ProposalStatus } from "@/types/proposal";
 import { ProposalFilters } from "./ProposalFilters";
 import { Column } from "./types";
 import { ProposalTableHeader } from "./table/ProposalTableHeader";
@@ -14,9 +14,10 @@ import { ProposalTableSkeleton } from "./table/ProposalTableSkeleton";
 
 interface ProposalTableProps {
   filters: ProposalFilters;
+  onProposalSelect: (proposal: Proposal) => void;
 }
 
-const ProposalTable = ({ filters }: ProposalTableProps) => {
+const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
   const { data: proposals, isLoading } = useProposals(filters);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -82,6 +83,7 @@ const ProposalTable = ({ filters }: ProposalTableProps) => {
               proposal={proposal}
               index={index}
               formatMoney={formatMoney}
+              onSelect={onProposalSelect}
             />
           ))}
         </TableBody>

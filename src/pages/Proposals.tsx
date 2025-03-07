@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, Plus, CalendarIcon, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { Filter, Plus, LayoutGrid, Table as TableIcon } from "lucide-react";
 import { ProposalFilters as ProposalFiltersType } from "@/components/proposals/ProposalFilters";
 import { ProposalActions } from "@/components/proposals/ProposalActions";
 import { ProposalAnalytics } from "@/components/proposals/ProposalAnalytics";
@@ -134,11 +134,14 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tümü</SelectItem>
-                  <SelectItem value="draft">Taslak</SelectItem>
-                  <SelectItem value="new">Yeni</SelectItem>
-                  <SelectItem value="sent">Gönderildi</SelectItem>
-                  <SelectItem value="accepted">Kabul Edildi</SelectItem>
+                  <SelectItem value="discovery_scheduled">Keşif Planlandı</SelectItem>
+                  <SelectItem value="meeting_completed">Görüşme Tamamlandı</SelectItem>
+                  <SelectItem value="quote_in_progress">Teklif Hazırlanıyor</SelectItem>
+                  <SelectItem value="quote_sent">Teklif Gönderildi</SelectItem>
+                  <SelectItem value="negotiation">Müzakere Aşaması</SelectItem>
+                  <SelectItem value="approved">Onaylandı</SelectItem>
                   <SelectItem value="rejected">Reddedildi</SelectItem>
+                  <SelectItem value="converted_to_order">Siparişe Dönüştü</SelectItem>
                 </SelectContent>
               </Select>
               <Select
