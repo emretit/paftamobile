@@ -2,6 +2,7 @@
 import { ProposalStatus } from "@/types/proposal";
 import { workflowStages } from "../constants";
 import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
 
 interface ProposalWorkflowProgressProps {
   currentStatus: ProposalStatus;
@@ -14,21 +15,20 @@ export const ProposalWorkflowProgress = ({
 }: ProposalWorkflowProgressProps) => {
   // Calculate current step index
   const currentIndex = workflowStages.findIndex(s => s.status === currentStatus);
+  const progressPercentage = currentIndex >= 0 
+    ? (currentIndex / (workflowStages.length - 1)) * 100 
+    : 0;
   
   return (
-    <div className="relative pt-2">
-      {/* Progress bar background */}
-      <div className="absolute top-5 left-0 right-0 h-1.5 bg-gray-100 rounded-full"></div>
-      
-      {/* Active progress bar */}
-      <div 
-        className="absolute top-5 left-0 h-1.5 bg-blue-500 rounded-full transition-all duration-300"
-        style={{ 
-          width: `${currentIndex >= 0 
-            ? (currentIndex / (workflowStages.length - 1)) * 100 
-            : 0}%` 
-        }}
-      ></div>
+    <div className="space-y-5">
+      {/* Progress bar with animation */}
+      <div className="relative">
+        <Progress 
+          value={progressPercentage} 
+          className="h-2" 
+          indicatorClassName="bg-blue-500 transition-all duration-500 ease-in-out"
+        />
+      </div>
       
       {/* Workflow stages */}
       <div className="flex justify-between relative">
@@ -37,22 +37,36 @@ export const ProposalWorkflowProgress = ({
           const isPastStage = currentIndex > index;
           const isCurrentStage = currentIndex === index;
           const isFutureStage = currentIndex < index;
+          const isNextStep = index === currentIndex + 1;
           
           return (
-            <div key={stage.status} className="flex flex-col items-center z-10">
+            <div 
+              key={stage.status} 
+              className={cn(
+                "flex flex-col items-center transition-all duration-300 z-10",
+                isCurrentStage && "scale-105"
+              )}
+            >
               <button 
                 className={cn(
-                  "w-5 h-5 rounded-full transition-all duration-200",
-                  isPastStage && "bg-blue-500 ring-2 ring-blue-100",
-                  isCurrentStage && "bg-blue-500 ring-4 ring-blue-100 scale-110",
-                  isFutureStage && "bg-gray-200",
+                  "w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 shadow-sm",
+                  isPastStage && "bg-blue-500 border-blue-600 text-white",
+                  isCurrentStage && "bg-blue-600 border-blue-700 text-white ring-4 ring-blue-100",
+                  isFutureStage && "bg-white border-gray-200 text-gray-400",
+                  isNextStep && "border-blue-300 cursor-pointer hover:border-blue-500",
+                  (!isNextStep && isFutureStage) && "opacity-50 cursor-not-allowed"
                 )}
-                onClick={() => onStatusChange(stage.status)}
-                title={stage.label}
-              />
+                onClick={() => isNextStep && onStatusChange(stage.status)}
+                disabled={!isNextStep && !isCurrentStage}
+                title={isNextStep ? `İlerle: ${stage.label}` : stage.label}
+              >
+                <span className="text-sm font-medium">{index + 1}</span>
+              </button>
               <span className={cn(
-                "text-xs mt-2 transition-colors duration-200",
-                isCurrentStage ? "font-medium text-blue-700" : "text-gray-600"
+                "text-xs mt-2 transition-all duration-200 text-center",
+                isCurrentStage ? "font-semibold text-blue-700" : "text-gray-600",
+                isPastStage && "text-gray-800",
+                !isCurrentStage && !isNextStep && !isPastStage && "opacity-50"
               )}>
                 {stage.label}
               </span>

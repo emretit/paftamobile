@@ -3,7 +3,6 @@ import { Proposal, ProposalStatus } from "@/types/proposal";
 import { ProposalWorkflowProgress } from "./ProposalWorkflowProgress";
 import { ProposalStatusSelector } from "./ProposalStatusSelector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User2 } from "lucide-react";
 
 interface ProposalDetailsTabProps {
   proposal: Proposal;
@@ -22,15 +21,16 @@ export const ProposalDetailsTab = ({
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-medium">Teklif Durumu</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           {/* Workflow progress visualization */}
-          <ProposalWorkflowProgress 
-            currentStatus={proposal.status} 
-            onStatusChange={onStatusChange} 
-          />
+          <div className="mb-6">
+            <ProposalWorkflowProgress 
+              currentStatus={proposal.status} 
+              onStatusChange={onStatusChange} 
+            />
+          </div>
           
-          {/* Status selection buttons */}
-          <div className="mt-6">
+          <div className="border-t pt-6">
             <ProposalStatusSelector 
               currentStatus={proposal.status} 
               onStatusChange={onStatusChange}
