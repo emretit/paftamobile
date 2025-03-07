@@ -1,4 +1,6 @@
 
+import { StatusBadge as GenericStatusBadge } from "@/components/ui/status-badge";
+
 type EmployeeStatus = 'active' | 'inactive';
 
 interface StatusBadgeProps {
@@ -6,14 +8,14 @@ interface StatusBadgeProps {
 }
 
 export const StatusBadge = ({ status }: StatusBadgeProps) => {
-  const styles = {
-    active: 'bg-green-100 text-green-800',
-    inactive: 'bg-gray-100 text-gray-800'
-  };
+  const variant = status === 'active' ? 'success' : 'neutral';
+  const label = status.charAt(0).toUpperCase() + status.slice(1);
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
+    <GenericStatusBadge
+      label={label}
+      variant={variant}
+      size="sm"
+    />
   );
 };
