@@ -6,6 +6,7 @@ import { CalendarProvider, useCalendar } from "./calendar/CalendarContext";
 import { CalendarControls } from "./calendar/CalendarControls";
 import { CalendarContainer } from "./calendar/CalendarContainer";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ServiceRequestCalendarProps {
   searchQuery: string;
@@ -21,6 +22,7 @@ export const ServiceRequestCalendar = ({
   onSelectRequest
 }: ServiceRequestCalendarProps) => {
   const { data: serviceRequests, isLoading, error, refetch } = useServiceRequests();
+  const queryClient = useQueryClient();
 
   // Realtime subscription to service_requests table changes
   useEffect(() => {
@@ -33,8 +35,10 @@ export const ServiceRequestCalendar = ({
           schema: 'public',
           table: 'service_requests'
         },
-        () => {
+        (payload) => {
+          console.log('Service request changed:', payload);
           // Refresh data when any change happens
+          queryClient.invalidateQueries({ queryKey: ['service-requests'] });
           refetch();
         }
       )
@@ -43,7 +47,7 @@ export const ServiceRequestCalendar = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [refetch]);
+  }, [refetch, queryClient]);
 
   if (isLoading) {
     return (

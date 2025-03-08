@@ -3,10 +3,12 @@ import { useState } from "react";
 import { ServiceRequest } from "@/hooks/useServiceRequests";
 import { useCalendarEventService } from "./calendarEventService";
 import { useCalendar } from "./CalendarContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useDragAndDrop = () => {
   const { draggedService, setDraggedService, currentView, technicians } = useCalendar();
   const { handleUnassignedServiceDrop } = useCalendarEventService();
+  const queryClient = useQueryClient();
 
   const handleDragStart = (e: React.DragEvent, service: ServiceRequest) => {
     setDraggedService(service);
@@ -51,7 +53,12 @@ export const useDragAndDrop = () => {
     
     // Assign the service to the technician on the selected date
     if (technicianId) {
-      await handleUnassignedServiceDrop(draggedService, technicianId, date);
+      const success = await handleUnassignedServiceDrop(draggedService, technicianId, date);
+      
+      // If assignment was successful, manually trigger a data refresh
+      if (success) {
+        queryClient.invalidateQueries({ queryKey: ['service-requests'] });
+      }
     }
     
     // Reset the dragged service

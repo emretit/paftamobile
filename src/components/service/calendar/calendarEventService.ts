@@ -3,9 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { CalendarEvent } from "./calendarUtils";
 import { ServiceRequest } from "@/hooks/useServiceRequests";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useCalendarEventService = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const updateEventDate = async (eventId: string, newDate: Date) => {
     try {
@@ -17,6 +19,9 @@ export const useCalendarEventService = () => {
         .eq('id', eventId);
         
       if (error) throw error;
+      
+      // Invalidate and refetch service requests data
+      queryClient.invalidateQueries({ queryKey: ['service-requests'] });
       
       toast({
         title: "Servis talebi güncellendi",
@@ -56,6 +61,9 @@ export const useCalendarEventService = () => {
         .eq('id', serviceId);
         
       if (error) throw error;
+      
+      // Invalidate and refetch service requests data
+      queryClient.invalidateQueries({ queryKey: ['service-requests'] });
       
       toast({
         title: "Servis atandı",
