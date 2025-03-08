@@ -9,14 +9,14 @@ export const useCustomerNames = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("customers")
-        .select("id, name");
+        .select("id, name, company");
 
       if (error) {
         console.error("Error fetching customer names:", error);
         throw error;
       }
       
-      return data as Pick<Customer, "id" | "name">[];
+      return data as Pick<Customer, "id" | "name" | "company">[];
     },
   });
 
@@ -24,7 +24,11 @@ export const useCustomerNames = () => {
     if (!customerId) return "-";
     
     const customer = customers?.find(c => c.id === customerId);
-    return customer ? customer.name : customerId.substring(0, 8);
+    if (!customer) return customerId.substring(0, 8);
+    
+    return customer.company 
+      ? `${customer.name} (${customer.company})` 
+      : customer.name;
   };
 
   return {
