@@ -41,8 +41,14 @@ export const EventCalendar = ({
 
   const eventPropGetter = (event: CalendarEvent) => {
     return {
-      style: getEventStyle(event.resource.status),
-      className: 'cursor-grab'
+      style: {
+        ...getEventStyle(event.resource.status),
+        borderRadius: '6px',
+        border: 'none',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+      },
+      className: 'cursor-grab hover:shadow-md hover:translate-y-[-2px]'
     };
   };
 
@@ -82,7 +88,7 @@ export const EventCalendar = ({
     
       return (
         <div 
-          className="flex flex-col h-full"
+          className="flex flex-col h-full p-1.5 transition-all"
           draggable
           onDragStart={(e) => {
             e.stopPropagation();
@@ -104,21 +110,57 @@ export const EventCalendar = ({
             }, 0);
           }}
         >
-          <div className="text-xs font-semibold">{event.title}</div>
+          <div className="text-xs font-semibold truncate">{event.title}</div>
           <div className="flex justify-between text-xs mt-1">
-            <span>{event.technician_name || 'Atanmamış'}</span>
-            <span className="bg-white/20 text-white px-1 rounded text-xs">{statusLabel}</span>
+            <span className="truncate max-w-[60%]">{event.technician_name || 'Atanmamış'}</span>
+            <span className="bg-white/30 text-white px-1.5 py-0.5 rounded-full text-[10px] font-medium">{statusLabel}</span>
           </div>
         </div>
       );
     },
     timeSlotWrapper: ({ children }: any) => (
       <div 
-        className="h-full w-full bg-gray-50/50 hover:bg-gray-100/50 transition-colors"
+        className="h-full w-full bg-gray-50/30 hover:bg-blue-50/30 transition-colors"
       >
         {children}
       </div>
     ),
+    toolbar: (props: any) => {
+      const { onNavigate, label, onView, localizer, views } = props;
+      return (
+        <div className="flex items-center justify-between p-2 border-b bg-white">
+          <div className="flex items-center gap-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 w-8 p-0 rounded-full"
+              onClick={() => onNavigate('PREV')}
+            >
+              <span className="sr-only">Önceki</span>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 bg-white hover:bg-blue-50"
+              onClick={() => onNavigate('TODAY')}
+            >
+              Bugün
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 w-8 p-0 rounded-full"
+              onClick={() => onNavigate('NEXT')}
+            >
+              <span className="sr-only">Sonraki</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <h3 className="text-base font-medium ml-2">{label}</h3>
+          </div>
+        </div>
+      );
+    },
   };
 
   const messages = {
@@ -174,3 +216,5 @@ export const EventCalendar = ({
     />
   );
 };
+
+import { ChevronLeft, ChevronRight } from "lucide-react";

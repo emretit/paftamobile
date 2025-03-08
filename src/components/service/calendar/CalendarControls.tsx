@@ -36,22 +36,22 @@ export const CalendarControls: React.FC<CalendarControlsProps> = ({
   };
 
   return (
-    <div className="p-4 border-b flex justify-between items-center">
+    <div className="p-4 border-b flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
       <div className="flex items-center gap-2">
-        <Calendar className="h-5 w-5 text-gray-500" />
-        <h2 className="text-lg font-semibold">Servis Takvimi</h2>
+        <Calendar className="h-5 w-5 text-blue-500" />
+        <h2 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Servis Takvimi</h2>
       </div>
       
       <div className="flex items-center gap-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8">
-              <Layers className="h-4 w-4 mr-2" />
+            <Button variant="outline" size="sm" className="h-9 bg-white shadow-sm hover:bg-blue-50 transition-colors">
+              <Layers className="h-4 w-4 mr-2 text-blue-500" />
               {getViewLabel()}
-              <ChevronDown className="h-4 w-4 ml-1" />
+              <ChevronDown className="h-4 w-4 ml-1 text-gray-400" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent>
+          <DropdownMenuContent className="animate-fade-in">
             <DropdownMenuItem onClick={() => setCurrentView('month')}>
               Aylık Görünüm
             </DropdownMenuItem>
@@ -69,10 +69,10 @@ export const CalendarControls: React.FC<CalendarControlsProps> = ({
             value={technicianFilter || "all"}
             onValueChange={(value) => console.log("Selected technician:", value)}
           >
-            <SelectTrigger className="w-[180px] h-8">
+            <SelectTrigger className="w-[200px] h-9 bg-white shadow-sm">
               <SelectValue placeholder="Teknisyen seçin" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="animate-fade-in">
               <SelectItem value="all">Tüm Teknisyenler</SelectItem>
               {technicians?.map((tech) => (
                 <SelectItem key={tech.id} value={tech.id}>

@@ -7,6 +7,7 @@ import { CalendarControls } from "./calendar/CalendarControls";
 import { CalendarContainer } from "./calendar/CalendarContainer";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { Card } from "@/components/ui/card";
 
 interface ServiceRequestCalendarProps {
   searchQuery: string;
@@ -71,7 +72,7 @@ export const ServiceRequestCalendar = ({
 
   return (
     <CalendarProvider>
-      <div className="bg-white rounded-md border overflow-hidden">
+      <Card className="shadow-lg overflow-hidden animate-fade-in">
         <CalendarControls technicianFilter={technicianFilter} />
         
         {serviceRequests && (
@@ -83,7 +84,7 @@ export const ServiceRequestCalendar = ({
             onSelectEvent={handleSelectEvent}
           />
         )}
-      </div>
+      </Card>
     </CalendarProvider>
   );
 };
