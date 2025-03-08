@@ -51,12 +51,9 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
     },
   });
   
-  // Filter for only new unassigned services
-  const unassignedServices = useMemo(() => {
-    return services.filter(service => 
-      !service.assigned_to && 
-      service.status === 'new'
-    );
+  // Filter for only new services (with status "new")
+  const newServices = useMemo(() => {
+    return services.filter(service => service.status === 'new');
   }, [services]);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -114,7 +111,7 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
     >
       <div className="flex items-center justify-between p-3 border-b">
         {!isCollapsed && (
-          <h3 className="text-sm font-semibold">Servis Tablosundan Atanmamış Servisler</h3>
+          <h3 className="text-sm font-semibold">Yeni Durumdaki Servisler</h3>
         )}
         <Button 
           onClick={togglePanel} 
@@ -128,9 +125,9 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
       
       {!isCollapsed && (
         <ScrollArea className="flex-1">
-          {unassignedServices.length === 0 ? (
+          {newServices.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-              <p>Durumu "Yeni" olan atanmamış servis talebi bulunmamaktadır.</p>
+              <p>Durumu "Yeni" olan servis talebi bulunmamaktadır.</p>
             </div>
           ) : (
             <Table>
@@ -145,7 +142,7 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {unassignedServices.map((service) => (
+                {newServices.map((service) => (
                   <TableRow 
                     key={service.id}
                     draggable
