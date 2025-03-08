@@ -4,11 +4,13 @@ import { ServiceRequest } from "@/hooks/useServiceRequests";
 import { useCalendarEventService } from "./calendarEventService";
 import { useCalendar } from "./CalendarContext";
 import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
 
 export const useDragAndDrop = () => {
   const { draggedService, setDraggedService, currentView, technicians } = useCalendar();
   const { handleUnassignedServiceDrop, unassignService } = useCalendarEventService();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const handleDragStart = (e: React.DragEvent, service: ServiceRequest) => {
     setDraggedService(service);
@@ -34,19 +36,26 @@ export const useDragAndDrop = () => {
     if (!draggedService) return;
     
     // If there's no technician selected in resources view, show an error
-    if (!technicianId && currentView !== 'month') {
-      console.error('No technician selected');
+    if (!technicianId && currentView === 'week') {
+      toast({
+        title: "Teknisyen seçilmedi",
+        description: "Lütfen bir teknisyen seçin veya aylık görünümde sürükleyin",
+        variant: "destructive",
+      });
       return;
     }
     
-    // For month view, prompt the user to select a technician
-    if (currentView === 'month') {
-      // For simplicity, we're just using the first technician
-      // In a real app, you'd show a modal to select a technician
+    // For month view or day view, prompt the user to select a technician if none is selected
+    if (!technicianId) {
+      // If technicians exist, use the first one as default
       technicianId = technicians?.[0]?.id || null;
       
       if (!technicianId) {
-        console.error('No technicians available');
+        toast({
+          title: "Teknisyen bulunamadı",
+          description: "Sistemde kayıtlı teknisyen bulunamadı",
+          variant: "destructive",
+        });
         return;
       }
     }
@@ -58,6 +67,11 @@ export const useDragAndDrop = () => {
       // If assignment was successful, manually trigger a data refresh
       if (success) {
         queryClient.invalidateQueries({ queryKey: ['service-requests'] });
+        toast({
+          title: "Servis atandı",
+          description: "Servis talebi başarıyla atandı",
+          variant: "default",
+        });
       }
     }
     

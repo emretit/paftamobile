@@ -46,6 +46,7 @@ export const EventCalendar = ({
     getEventEnd, 
     resourceIdAccessor, 
     resourceTitleAccessor, 
+    formats,
     messages 
   } = useCalendarConfig();
   
@@ -89,6 +90,7 @@ export const EventCalendar = ({
       eventPropGetter={eventPropGetter}
       views={views}
       messages={messages}
+      formats={formats}
       culture="tr"
       onDropFromOutside={handleDropFromOutside}
       onEventDrop={moveEvent}
@@ -97,12 +99,17 @@ export const EventCalendar = ({
       onView={(view) => onViewChange(view)}
       date={currentDate}
       onNavigate={(date) => setCurrentDate(date)}
-      resources={resources}
+      resources={currentView === 'week' ? resources : undefined} // Only use resources in week view
       resourceIdAccessor={resourceIdAccessor}
       resourceTitleAccessor={resourceTitleAccessor}
       resizable
       showMultiDayTimes
       dayLayoutAlgorithm="no-overlap"
+      drilldownView="day" // When clicking a date in month view, drill down to day view
+      popup // Enable popup for events
+      step={60} // 60 minutes per slot
+      timeslots={1} // 1 slot per step
+      longPressThreshold={250} // Make it easier to drag on mobile
     />
   );
 };

@@ -28,11 +28,16 @@ export const useCalendarEventHandlers = ({
   // Handle moving events within the calendar
   const moveEvent = ({ event, start, end }: any) => {
     if (event && start) {
-      // Teknisyenin ID'sini alma - mevcut teknisyeni koruyoruz
+      // Get technician ID - preserve the current technician
       const technicianId = event.resource?.assigned_to || null;
       
-      // Servisi güncelle
-      updateEventDate(event.id, start, technicianId);
+      // Update the service with the new date and preserve technician
+      updateEventDate(event.id, start, technicianId)
+        .then(success => {
+          if (!success) {
+            console.error("Failed to update event date");
+          }
+        });
     }
   };
 

@@ -11,22 +11,22 @@ export const useCalendarEventService = () => {
 
   const updateEventDate = async (eventId: string, newDate: Date, technicianId?: string | null) => {
     try {
-      // Güncelleme verisini hazırla
+      // Prepare update data
       const updateData: any = { 
         due_date: newDate.toISOString() 
       };
       
-      // Eğer teknisyen ID'si verildiyse, onu da güncelleme verisine ekle
+      // If technician ID is provided, include it in the update data
       if (technicianId !== undefined) {
         updateData.assigned_to = technicianId;
         
-        // Eğer teknisyen atanmışsa, durumu "assigned" olarak güncelle
+        // If a technician is assigned, update status to "assigned"
         if (technicianId) {
           updateData.status = 'assigned';
         }
       }
       
-      // Veritabanını güncelle
+      // Update the database
       const { error } = await supabase
         .from('service_requests')
         .update(updateData)
