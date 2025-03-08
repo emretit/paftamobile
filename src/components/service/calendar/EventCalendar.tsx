@@ -8,6 +8,8 @@ import { useCalendarEventService } from "./calendarEventService";
 import { useRef } from "react";
 import moment from "moment";
 import "moment/locale/tr";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 moment.locale("tr");
 const localizer = momentLocalizer(moment);
@@ -216,5 +218,3 @@ export const EventCalendar = ({
     />
   );
 };
-
-import { ChevronLeft, ChevronRight } from "lucide-react";
