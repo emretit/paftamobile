@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ServiceRequest, ServiceStatus } from "@/hooks/service/types";
 import { getStatusBadge } from "@/components/service/utils/statusUtils";
+import { useCustomerNames } from "@/hooks/useCustomerNames";
 
 interface ServiceTableRowProps {
   request: ServiceRequest;
@@ -28,6 +29,8 @@ const ServiceTableRow: React.FC<ServiceTableRowProps> = ({
   onDeleteRequest,
   getTechnicianName
 }) => {
+  const { getCustomerName } = useCustomerNames();
+  
   return (
     <TableRow 
       key={request.id}
@@ -39,7 +42,7 @@ const ServiceTableRow: React.FC<ServiceTableRowProps> = ({
       </TableCell>
       <TableCell>{request.title}</TableCell>
       <TableCell>
-        {request.customer_id ? request.customer_id.substring(0, 8) : "-"}
+        {getCustomerName(request.customer_id)}
       </TableCell>
       <TableCell>
         {request.due_date
