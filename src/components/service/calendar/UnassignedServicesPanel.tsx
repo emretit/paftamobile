@@ -114,7 +114,7 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
     >
       <div className="flex items-center justify-between p-3 border-b">
         {!isCollapsed && (
-          <h3 className="text-sm font-semibold">Atanmamış Servisler</h3>
+          <h3 className="text-sm font-semibold">Servis Tablosundan Atanmamış Servisler</h3>
         )}
         <Button 
           onClick={togglePanel} 
