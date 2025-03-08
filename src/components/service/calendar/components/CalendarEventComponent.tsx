@@ -47,27 +47,9 @@ export const CalendarEventComponent = ({ event }: CalendarEventComponentProps) =
 
   return (
     <div 
-      className={`flex flex-col h-full p-1.5 transition-all ${statusClass} rounded-md shadow-sm`}
-      draggable
-      onDragStart={(e) => {
-        e.stopPropagation();
-        // Set drag data for the event
-        e.dataTransfer.setData('text/plain', JSON.stringify({
-          id: event.id,
-          title: event.title
-        }));
-        
-        // Create a custom drag image
-        const dragImage = document.createElement('div');
-        dragImage.innerHTML = `<div style="padding: 8px 12px; background: ${statusClass}; color: white; border-radius: 4px; font-family: system-ui; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">${event.title}</div>`;
-        document.body.appendChild(dragImage);
-        e.dataTransfer.setDragImage(dragImage, 10, 10);
-        
-        // Clean up
-        setTimeout(() => {
-          document.body.removeChild(dragImage);
-        }, 0);
-      }}
+      className={`flex flex-col h-full p-1.5 transition-all ${statusClass} rounded-md shadow-sm cursor-move`}
+      draggable="true"
+      data-event-id={event.id}
     >
       <div className="text-xs font-semibold truncate text-white">{event.title}</div>
       

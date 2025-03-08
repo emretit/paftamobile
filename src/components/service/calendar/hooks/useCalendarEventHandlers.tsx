@@ -54,7 +54,7 @@ export const useCalendarEventHandlers = ({
     }
   };
 
-  // Handle event selection
+  // Handle event selection - separated from drag start to avoid interference
   const handleSelectEvent = (event: any) => {
     onSelectEvent(event as CalendarEvent);
   };

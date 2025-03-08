@@ -106,11 +106,11 @@ export const EventCalendar = ({
       resizable
       showMultiDayTimes
       dayLayoutAlgorithm="no-overlap"
-      drilldownView="day" // When clicking a date in month view, drill down to day view
+      drilldownView={null} // Disable drill down to prevent click conflicts with drag
       popup // Enable popup for events
       step={60} // 60 minutes per slot
       timeslots={1} // 1 slot per step
-      longPressThreshold={250} // Make it easier to drag on mobile
+      longPressThreshold={10} // Make it easier to drag on mobile (lower value = faster drag recognition)
       draggableAccessor={() => true} // Make all events draggable
     />
   );

@@ -19,9 +19,10 @@ export const useCalendarConfig = () => {
         borderRadius: '6px',
         border: 'none',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        cursor: 'move',
         transition: 'transform 0.15s ease, box-shadow 0.15s ease',
       },
-      className: 'cursor-grab hover:shadow-md hover:translate-y-[-2px]'
+      className: 'draggable-event cursor-move hover:shadow-md hover:translate-y-[-2px]'
     };
   };
 
