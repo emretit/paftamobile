@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { useServiceRequests, ServiceRequest } from "@/hooks/useServiceRequests";
 import { mapServiceRequestsToEvents } from "./calendar/calendarUtils";
@@ -21,6 +22,7 @@ export const ServiceRequestCalendar = ({
 }: ServiceRequestCalendarProps) => {
   const { data: serviceRequests, isLoading, error, refetch } = useServiceRequests();
 
+  // Realtime subscription to service_requests table changes
   useEffect(() => {
     const channel = supabase
       .channel('service_requests_changes')
@@ -32,6 +34,7 @@ export const ServiceRequestCalendar = ({
           table: 'service_requests'
         },
         () => {
+          // Refresh data when any change happens
           refetch();
         }
       )
