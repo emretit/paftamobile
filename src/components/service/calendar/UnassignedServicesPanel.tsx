@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getPriorityColor, getPriorityText } from "@/components/service/utils/priorityUtils";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
 import { useToast } from "@/components/ui/use-toast";
 import { useDragAndDrop } from "./useDragAndDrop";
@@ -135,8 +135,9 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">ID</TableHead>
+                <TableRow className="bg-gray-50">
+                  <TableHead>Servis No</TableHead>
+                  <TableHead>Başlık</TableHead>
                   <TableHead>Müşteri</TableHead>
                   <TableHead>Tarih</TableHead>
                   <TableHead>Durum</TableHead>
@@ -152,20 +153,33 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
                     className="cursor-grab hover:bg-gray-50"
                   >
                     <TableCell className="font-medium">
-                      {service.id.substring(0, 4)}
+                      {service.id.substring(0, 8)}
+                    </TableCell>
+                    <TableCell>{service.title}</TableCell>
+                    <TableCell>
+                      {service.customer_id ? service.customer_id.substring(0, 8) : "-"}
                     </TableCell>
                     <TableCell>
-                      {service.title.length > 15
-                        ? `${service.title.substring(0, 15)}...`
-                        : service.title}
-                    </TableCell>
-                    <TableCell>
-                      {service.created_at && format(new Date(service.created_at), 'dd MMM', { locale: tr })}
+                      {service.due_date
+                        ? format(parseISO(service.due_date), "dd MMM yyyy", { locale: tr })
+                        : service.created_at 
+                          ? format(new Date(service.created_at), 'dd MMM', { locale: tr })
+                          : "-"}
                     </TableCell>
                     <TableCell>{getStatusBadge(service.status)}</TableCell>
                     <TableCell>
-                      <Badge className={getPriorityColor(service.priority)}>
-                        {getPriorityText(service.priority)}
+                      <Badge variant="outline" className={
+                        service.priority === "high" 
+                          ? "border-red-500 text-red-800 bg-red-50" 
+                          : service.priority === "medium"
+                          ? "border-yellow-500 text-yellow-800 bg-yellow-50"
+                          : "border-blue-500 text-blue-800 bg-blue-50"
+                      }>
+                        {service.priority === "high" 
+                          ? "Yüksek" 
+                          : service.priority === "medium" 
+                          ? "Orta" 
+                          : "Düşük"}
                       </Badge>
                     </TableCell>
                   </TableRow>
