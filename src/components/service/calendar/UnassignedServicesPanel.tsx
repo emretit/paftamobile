@@ -1,6 +1,6 @@
 
 import React, { useMemo } from "react";
-import { ServiceRequest } from "@/hooks/service/types";
+import { ServiceRequest } from "@/hooks/useServiceRequests";
 import { 
   Table, 
   TableBody, 
@@ -18,6 +18,9 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { useToast } from "@/components/ui/use-toast";
 import { useDragAndDrop } from "./useDragAndDrop";
+import { getStatusBadge } from "@/components/service/utils/statusUtils";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UnassignedServicesPanelProps {
   services: ServiceRequest[];
@@ -35,6 +38,19 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
   const { handleDropToUnassigned } = useDragAndDrop();
   const { toast } = useToast();
   
+  // Get employee names for assigned technicians
+  const { data: employees } = useQuery({
+    queryKey: ["employees"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("employees")
+        .select("id, first_name, last_name");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+  
   // Filter for only new unassigned services
   const unassignedServices = useMemo(() => {
     return services.filter(service => 
@@ -42,15 +58,6 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
       service.status === 'new'
     );
   }, [services]);
-
-  // Create a helper function to render priority badge
-  const renderPriorityBadge = (priority: string) => {
-    return (
-      <Badge className={getPriorityColor(priority)}>
-        {getPriorityText(priority)}
-      </Badge>
-    );
-  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -89,6 +96,14 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
     }
   };
 
+  // Get technician name helper function
+  const getTechnicianName = (technicianId?: string) => {
+    if (!technicianId || !employees) return "-";
+    
+    const employee = employees.find((e) => e.id === technicianId);
+    return employee ? `${employee.first_name} ${employee.last_name}` : "-";
+  };
+
   return (
     <div 
       className={`transition-all duration-300 flex flex-col bg-white border-l border-gray-200 h-full ${
@@ -124,6 +139,7 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
                   <TableHead className="w-12">ID</TableHead>
                   <TableHead>Müşteri</TableHead>
                   <TableHead>Tarih</TableHead>
+                  <TableHead>Durum</TableHead>
                   <TableHead>Öncelik</TableHead>
                 </TableRow>
               </TableHeader>
@@ -139,14 +155,19 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
                       {service.id.substring(0, 4)}
                     </TableCell>
                     <TableCell>
-                      {service.title.length > 20
-                        ? `${service.title.substring(0, 20)}...`
+                      {service.title.length > 15
+                        ? `${service.title.substring(0, 15)}...`
                         : service.title}
                     </TableCell>
                     <TableCell>
                       {service.created_at && format(new Date(service.created_at), 'dd MMM', { locale: tr })}
                     </TableCell>
-                    <TableCell>{renderPriorityBadge(service.priority)}</TableCell>
+                    <TableCell>{getStatusBadge(service.status)}</TableCell>
+                    <TableCell>
+                      <Badge className={getPriorityColor(service.priority)}>
+                        {getPriorityText(service.priority)}
+                      </Badge>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
