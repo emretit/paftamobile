@@ -81,11 +81,26 @@ export const mapServiceRequestsToEvents = (
       const dueDate = new Date(request.due_date!);
       const technician = technicians.find(t => t.id === request.assigned_to);
       
+      // Create a proper end time - for all-day events, set to end of day
+      // This ensures proper rendering in all calendar views (day, week, month)
+      const startDate = new Date(dueDate);
+      let endDate;
+      
+      // If the time part is all zeros (00:00:00), treat as all-day event
+      if (startDate.getHours() === 0 && startDate.getMinutes() === 0 && startDate.getSeconds() === 0) {
+        // For all-day events, set end date to the end of the same day
+        endDate = new Date(startDate);
+        endDate.setHours(23, 59, 59);
+      } else {
+        // For events with specific times, add 2 hours for duration
+        endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+      }
+      
       return {
         id: request.id,
         title: request.title,
-        start: dueDate,
-        end: new Date(dueDate.getTime() + 2 * 60 * 60 * 1000), // Add 2 hours for the event duration
+        start: startDate,
+        end: endDate,
         resource: request,
         technician: request.assigned_to,
         technician_name: technician?.name,

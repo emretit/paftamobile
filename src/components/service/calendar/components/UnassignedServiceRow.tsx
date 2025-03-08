@@ -6,7 +6,8 @@ import { ServiceRequest } from "@/hooks/useServiceRequests";
 import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
 import { getStatusBadge } from "@/components/service/utils/statusUtils";
-import { Clock, AlertTriangle } from "lucide-react";
+import { Clock, AlertTriangle, User } from "lucide-react";
+import { useCustomerNames } from "@/hooks/useCustomerNames";
 
 interface UnassignedServiceRowProps {
   service: ServiceRequest;
@@ -17,6 +18,8 @@ export const UnassignedServiceRow: React.FC<UnassignedServiceRowProps> = ({
   service,
   dragStart
 }) => {
+  const { getCustomerName } = useCustomerNames();
+
   // Priority colors
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
@@ -42,6 +45,8 @@ export const UnassignedServiceRow: React.FC<UnassignedServiceRowProps> = ({
     }
   };
 
+  const customerName = getCustomerName(service.customer_id);
+
   return (
     <TableRow 
       key={service.id}
@@ -49,10 +54,16 @@ export const UnassignedServiceRow: React.FC<UnassignedServiceRowProps> = ({
       onDragStart={(e) => dragStart(e, service)}
       className="cursor-grab hover:bg-gray-50 transition-colors"
     >
-      <TableCell className="font-medium">
-        {service.title}
+      <TableCell className="py-2">
+        <div>
+          <div className="font-medium text-gray-900 truncate">{service.title}</div>
+          <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+            <User className="h-3 w-3" />
+            <span className="truncate">{customerName}</span>
+          </div>
+        </div>
       </TableCell>
-      <TableCell>
+      <TableCell className="py-2">
         <div className="flex items-center gap-1 text-gray-600">
           <Clock className="h-3.5 w-3.5" />
           {service.due_date
@@ -62,7 +73,7 @@ export const UnassignedServiceRow: React.FC<UnassignedServiceRowProps> = ({
               : "-"}
         </div>
       </TableCell>
-      <TableCell>{getPriorityBadge(service.priority)}</TableCell>
+      <TableCell className="py-2">{getPriorityBadge(service.priority)}</TableCell>
     </TableRow>
   );
 };

@@ -1,13 +1,15 @@
 
 import React from "react";
 import { CalendarEvent } from "../calendarUtils";
-import { ClipboardList, Clock, UserCheck } from "lucide-react";
+import { ClipboardList, Clock, UserCheck, User } from "lucide-react";
+import { useCustomerNames } from "@/hooks/useCustomerNames";
 
 interface CalendarEventComponentProps {
   event: CalendarEvent;
 }
 
 export const CalendarEventComponent = ({ event }: CalendarEventComponentProps) => {
+  const { getCustomerName } = useCustomerNames();
   let statusLabel = '';
   let statusClass = '';
   
@@ -41,6 +43,8 @@ export const CalendarEventComponent = ({ event }: CalendarEventComponentProps) =
       statusClass = 'bg-gray-500';
   }
 
+  const customerName = getCustomerName(event.resource.customer_id);
+
   return (
     <div 
       className={`flex flex-col h-full p-1.5 transition-all ${statusClass} rounded-md shadow-sm`}
@@ -66,6 +70,13 @@ export const CalendarEventComponent = ({ event }: CalendarEventComponentProps) =
       }}
     >
       <div className="text-xs font-semibold truncate text-white">{event.title}</div>
+      
+      {/* Customer info */}
+      <div className="flex items-center gap-1 text-white/90 text-xs truncate mt-1">
+        <User className="h-3 w-3" />
+        <span className="truncate">{customerName}</span>
+      </div>
+      
       <div className="flex justify-between text-xs mt-1">
         {event.technician_name ? (
           <div className="flex items-center gap-1 text-white/90 truncate max-w-[60%]">

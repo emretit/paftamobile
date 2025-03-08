@@ -40,7 +40,7 @@ export const UnassignedServicesHeader: React.FC<UnassignedServicesHeaderProps> =
   return (
     <TableHeader>
       <TableRow className="bg-gray-50/70">
-        {renderSortableHeader("Başlık", "title")}
+        {renderSortableHeader("Servis", "title")}
         {renderSortableHeader("Tarih", "due_date")}
         {renderSortableHeader("Öncelik", "priority")}
       </TableRow>

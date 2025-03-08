@@ -39,6 +39,7 @@ export const useCalendarConfig = () => {
     event: 'Etkinlik',
     allDay: 'Tüm Gün',
     noEventsInRange: 'Bu aralıkta servis talebi yok',
+    showMore: total => `+${total} daha fazla`
   };
 
   return {

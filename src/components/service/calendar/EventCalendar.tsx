@@ -68,6 +68,14 @@ export const EventCalendar = ({
     technicianId: tech.id
   }));
 
+  // Define available views
+  const views = {
+    month: true,
+    week: true,
+    day: true,
+    agenda: false // disabled agenda view
+  };
+
   return (
     <DnDCalendar
       ref={calendarRef}
@@ -79,7 +87,7 @@ export const EventCalendar = ({
       selectable
       onSelectEvent={handleSelectEvent}
       eventPropGetter={eventPropGetter}
-      views={{ month: true, week: true, day: true }}
+      views={views}
       messages={messages}
       culture="tr"
       onDropFromOutside={handleDropFromOutside}
@@ -92,6 +100,9 @@ export const EventCalendar = ({
       resources={resources}
       resourceIdAccessor={resourceIdAccessor}
       resourceTitleAccessor={resourceTitleAccessor}
+      resizable
+      showMultiDayTimes
+      dayLayoutAlgorithm="no-overlap"
     />
   );
 };
