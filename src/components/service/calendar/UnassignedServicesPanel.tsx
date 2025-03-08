@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { getPriorityColor, getPriorityText } from "@/components/service/utils/priorityUtils";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { useToast } from "@/components/ui/use-toast";
+import { useDragAndDrop } from "./useDragAndDrop";
 
 interface UnassignedServicesPanelProps {
   services: ServiceRequest[];
@@ -30,6 +32,9 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
   togglePanel,
   dragStart
 }) => {
+  const { handleDropToUnassigned } = useDragAndDrop();
+  const { toast } = useToast();
+  
   // Filter for only new unassigned services
   const unassignedServices = useMemo(() => {
     return services.filter(service => 
@@ -47,11 +52,50 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
     );
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    
+    try {
+      // Parse the dropped data
+      const droppedData = JSON.parse(e.dataTransfer.getData('text/plain'));
+      
+      // Find the service in the services array
+      const droppedService = services.find(service => service.id === droppedData.id);
+      
+      if (droppedService && droppedService.assigned_to) {
+        // Handle unassigning the service
+        const success = await handleDropToUnassigned(droppedService);
+        
+        if (!success) {
+          toast({
+            title: "Atama kaldırılamadı",
+            description: "Servis talebi atanmamış olarak güncellenemedi",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error handling drop:', error);
+      toast({
+        title: "Hata",
+        description: "Sürükle bırak işlemi sırasında bir hata oluştu",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div 
       className={`transition-all duration-300 flex flex-col bg-white border-l border-gray-200 h-full ${
         isCollapsed ? 'w-10' : 'w-96'
       }`}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
       <div className="flex items-center justify-between p-3 border-b">
         {!isCollapsed && (

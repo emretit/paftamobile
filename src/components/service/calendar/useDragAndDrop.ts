@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 export const useDragAndDrop = () => {
   const { draggedService, setDraggedService, currentView, technicians } = useCalendar();
-  const { handleUnassignedServiceDrop } = useCalendarEventService();
+  const { handleUnassignedServiceDrop, unassignService } = useCalendarEventService();
   const queryClient = useQueryClient();
 
   const handleDragStart = (e: React.DragEvent, service: ServiceRequest) => {
@@ -65,8 +65,24 @@ export const useDragAndDrop = () => {
     setDraggedService(null);
   };
 
+  const handleDropToUnassigned = async (service: ServiceRequest) => {
+    if (!service) return false;
+    
+    // Unassign the service
+    const success = await unassignService(service.id);
+    
+    // If unassignment was successful, manually trigger a data refresh
+    if (success) {
+      queryClient.invalidateQueries({ queryKey: ['service-requests'] });
+      return true;
+    }
+    
+    return false;
+  };
+
   return {
     handleDragStart,
-    handleDropFromOutside
+    handleDropFromOutside,
+    handleDropToUnassigned
   };
 };

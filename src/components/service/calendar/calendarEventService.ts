@@ -83,6 +83,39 @@ export const useCalendarEventService = () => {
     }
   };
 
+  const unassignService = async (serviceId: string) => {
+    try {
+      const { error } = await supabase
+        .from('service_requests')
+        .update({ 
+          assigned_to: null,
+          status: 'new' // Reset status to new when unassigned
+        })
+        .eq('id', serviceId);
+        
+      if (error) throw error;
+      
+      // Invalidate and refetch service requests data
+      queryClient.invalidateQueries({ queryKey: ['service-requests'] });
+      
+      toast({
+        title: "Servis atama kaldırıldı",
+        description: "Servis talebi atanmamış olarak güncellendi",
+        variant: "default",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error unassigning service:', error);
+      toast({
+        title: "Hata",
+        description: "Servis ataması kaldırılırken bir hata oluştu",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   const handleUnassignedServiceDrop = async (
     service: ServiceRequest, 
     technicianId: string,
@@ -95,6 +128,7 @@ export const useCalendarEventService = () => {
     updateEventDate,
     handleEventDrop,
     assignServiceToTechnician,
+    unassignService,
     handleUnassignedServiceDrop
   };
 };
