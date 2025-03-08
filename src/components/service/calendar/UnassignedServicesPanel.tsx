@@ -71,7 +71,7 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
         <ScrollArea className="flex-1">
           {unassignedServices.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-              <p>Atanmamış servis talebi bulunmamaktadır.</p>
+              <p>Durumu "Yeni" olan atanmamış servis talebi bulunmamaktadır.</p>
             </div>
           ) : (
             <Table>
