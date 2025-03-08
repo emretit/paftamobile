@@ -6,7 +6,7 @@ import {
   TableBody,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,36 +32,29 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
   const { newServices, sortField, sortDirection, handleSort } = useUnassignedServicesSorting(services);
   const { handleDragOver, handleDrop } = useUnassignedServicesDragDrop(services);
   
-  // Get employee names for reference
-  const { data: employees } = useQuery({
-    queryKey: ["employees"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("employees")
-        .select("id, first_name, last_name");
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
   return (
     <div 
-      className={`transition-all duration-300 flex flex-col bg-white border-l border-gray-200 h-full ${
-        isCollapsed ? 'w-10' : 'w-96'
+      className={`transition-all duration-300 flex flex-col bg-white border-l border-gray-200 h-full shadow-sm ${
+        isCollapsed ? 'w-10' : 'w-80'
       }`}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <div className="flex items-center justify-between p-3 border-b">
+      <div className="flex items-center justify-between p-3 border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         {!isCollapsed && (
-          <h3 className="text-sm font-semibold">Yeni Durumdaki Servisler</h3>
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-blue-600" />
+            <h3 className="text-sm font-medium">Yeni Servisler</h3>
+            <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">
+              {newServices.length}
+            </span>
+          </div>
         )}
         <Button 
           onClick={togglePanel} 
           variant="ghost" 
           size="sm" 
-          className="p-1 h-8 w-8 ml-auto"
+          className="p-1 h-8 w-8 ml-auto rounded-full"
         >
           {isCollapsed ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         </Button>

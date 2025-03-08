@@ -10,6 +10,7 @@ import "moment/locale/tr";
 import { useCalendarConfig } from "./hooks/useCalendarConfig";
 import { useCalendarComponents } from "./hooks/useCalendarComponents";
 import { useCalendarEventHandlers } from "./hooks/useCalendarEventHandlers";
+import { Button } from "@/components/ui/button";
 
 moment.locale("tr");
 const localizer = momentLocalizer(moment);
@@ -88,7 +89,7 @@ export const EventCalendar = ({
       onView={(view) => onViewChange(view)}
       date={currentDate}
       onNavigate={(date) => setCurrentDate(date)}
-      resources={currentView !== 'month' ? resources : undefined}
+      resources={resources}
       resourceIdAccessor={resourceIdAccessor}
       resourceTitleAccessor={resourceTitleAccessor}
     />

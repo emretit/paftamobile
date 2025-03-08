@@ -15,14 +15,15 @@ export type CalendarEvent = {
 
 export const getEventStyle = (status: ServiceStatus): CSSProperties => {
   const baseStyle: CSSProperties = {
-    borderRadius: '4px',
-    opacity: 0.8,
+    borderRadius: '6px',
+    opacity: 0.9,
     color: 'white',
     border: '0px',
     display: 'block',
     textOverflow: 'ellipsis',
     overflow: 'hidden',
-    whiteSpace: 'nowrap'
+    whiteSpace: 'nowrap',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
   };
   
   switch (status) {
@@ -41,36 +42,6 @@ export const getEventStyle = (status: ServiceStatus): CSSProperties => {
     default:
       return { ...baseStyle, backgroundColor: '#718096' }; // Gray
   }
-};
-
-// Instead of returning JSX, we'll return a render function
-export const getCustomEventWrapper = (event: CalendarEvent) => {
-  let statusLabel = '';
-  
-  switch (event.resource.status) {
-    case 'new': statusLabel = 'Yeni'; break;
-    case 'assigned': statusLabel = 'Atandı'; break;
-    case 'in_progress': statusLabel = 'Devam Ediyor'; break;
-    case 'completed': statusLabel = 'Tamamlandı'; break;
-    case 'cancelled': statusLabel = 'İptal'; break;
-    case 'on_hold': statusLabel = 'Beklemede'; break;
-    default: statusLabel = 'Bilinmiyor';
-  }
-
-  // Return a render function that the Calendar can use
-  return ({ event: _event, title }: any) => {
-    return {
-      html: `
-        <div class="flex flex-col h-full">
-          <div class="text-xs font-semibold">${event.title}</div>
-          <div class="flex justify-between text-xs mt-1">
-            <span>${event.technician_name || 'Atanmamış'}</span>
-            <span class="bg-white/20 text-white px-1 rounded text-xs">${statusLabel}</span>
-          </div>
-        </div>
-      `
-    };
-  };
 };
 
 export const mapServiceRequestsToEvents = (
@@ -92,13 +63,13 @@ export const mapServiceRequestsToEvents = (
     );
   }
   
-  if (statusFilter) {
+  if (statusFilter && statusFilter !== 'all') {
     filteredRequests = filteredRequests.filter(request => 
       request.status === statusFilter
     );
   }
   
-  if (technicianFilter) {
+  if (technicianFilter && technicianFilter !== 'all') {
     filteredRequests = filteredRequests.filter(request => 
       request.assigned_to === technicianFilter
     );
