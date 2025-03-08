@@ -1,6 +1,8 @@
 
 import React from "react";
 import { AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ServiceStatus } from "@/hooks/useServiceRequests";
 
 export const getStatusIcon = (status: string) => {
   switch (status) {
@@ -50,5 +52,24 @@ export const getStatusText = (status: string) => {
       return 'Beklemede';
     default:
       return status;
+  }
+};
+
+export const getStatusBadge = (status: ServiceStatus) => {
+  switch (status) {
+    case "new":
+      return <Badge className="bg-purple-500">Yeni</Badge>;
+    case "assigned":
+      return <Badge className="bg-blue-500">Atandı</Badge>;
+    case "in_progress":
+      return <Badge className="bg-orange-500">Devam Ediyor</Badge>;
+    case "completed":
+      return <Badge className="bg-green-500">Tamamlandı</Badge>;
+    case "cancelled":
+      return <Badge className="bg-red-500">İptal</Badge>;
+    case "on_hold":
+      return <Badge className="bg-yellow-500">Beklemede</Badge>;
+    default:
+      return <Badge>Bilinmiyor</Badge>;
   }
 };
