@@ -5,11 +5,11 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import { CalendarEvent } from "./calendarUtils";
 import { useCalendarEventService } from "./calendarEventService";
-import { useRef } from "react";
 import moment from "moment";
 import "moment/locale/tr";
 import { useCalendarConfig } from "./hooks/useCalendarConfig";
 import { useCalendarComponents } from "./hooks/useCalendarComponents";
+import { useCalendarEventHandlers } from "./hooks/useCalendarEventHandlers";
 
 moment.locale("tr");
 const localizer = momentLocalizer(moment);
@@ -38,8 +38,7 @@ export const EventCalendar = ({
   currentDate,
   setCurrentDate
 }: EventCalendarProps) => {
-  const { updateEventDate } = useCalendarEventService();
-  const calendarRef = useRef<any>(null);
+  // Use custom hooks for configuration, components and event handlers
   const { 
     eventPropGetter, 
     getEventStart, 
@@ -48,22 +47,18 @@ export const EventCalendar = ({
     resourceTitleAccessor, 
     messages 
   } = useCalendarConfig();
+  
   const components = useCalendarComponents();
-
-  const handleDropFromOutside = ({ start, end, allDay }: any) => {
-    const technicianId = calendarRef.current?.view?.props?.resource?.technicianId || null;
-    
-    if (onDropFromOutside) {
-      onDropFromOutside(start, technicianId);
-    }
-  };
-
-  // Handle moving events within the calendar
-  const moveEvent = ({ event, start, end }: any) => {
-    if (event && start) {
-      updateEventDate(event.id, start);
-    }
-  };
+  
+  const {
+    calendarRef,
+    handleDropFromOutside,
+    moveEvent,
+    handleSelectEvent
+  } = useCalendarEventHandlers({
+    onDropFromOutside,
+    onSelectEvent
+  });
 
   // Map technicians to calendar resources format
   const resources = technicians.map(tech => ({
@@ -81,7 +76,7 @@ export const EventCalendar = ({
       endAccessor={getEventEnd}
       style={{ width: '100%', height: '100%' }}
       selectable
-      onSelectEvent={(event) => onSelectEvent(event as CalendarEvent)}
+      onSelectEvent={handleSelectEvent}
       eventPropGetter={eventPropGetter}
       views={{ month: true, week: true, day: true }}
       messages={messages}
