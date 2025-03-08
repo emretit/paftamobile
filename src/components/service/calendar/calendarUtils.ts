@@ -10,7 +10,7 @@ export type CalendarEvent = {
   resource: ServiceRequest;
   technician?: string;
   technician_name?: string;
-  isDraggableEvent?: boolean;
+  isDraggable?: boolean;
 };
 
 export const getEventStyle = (status: ServiceStatus): CSSProperties => {
@@ -104,7 +104,7 @@ export const mapServiceRequestsToEvents = (
         resource: request,
         technician: request.assigned_to,
         technician_name: technician?.name,
-        isDraggableEvent: true
+        isDraggable: true
       };
     });
 };

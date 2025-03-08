@@ -11,6 +11,8 @@ export const useCalendarEventService = () => {
 
   const updateEventDate = async (eventId: string, newDate: Date, technicianId?: string | null) => {
     try {
+      console.log("Updating event:", eventId, "to date:", newDate.toISOString(), "technician:", technicianId);
+      
       // Prepare update data
       const updateData: any = { 
         due_date: newDate.toISOString() 
@@ -36,12 +38,6 @@ export const useCalendarEventService = () => {
       
       // Invalidate and refetch service requests data
       queryClient.invalidateQueries({ queryKey: ['service-requests'] });
-      
-      toast({
-        title: "Servis talebi güncellendi",
-        description: "Servis tarihi başarıyla güncellendi",
-        variant: "default",
-      });
       
       return true;
     } catch (error) {

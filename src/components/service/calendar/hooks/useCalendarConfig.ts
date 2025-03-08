@@ -35,6 +35,12 @@ export const useCalendarConfig = () => {
     
     eventTimeRangeFormat: ({ start, end }: { start: Date, end: Date }, culture: string, localizer: any) => {
       return `${localizer.format(start, 'HH:mm', culture)} - ${localizer.format(end, 'HH:mm', culture)}`;
+    },
+    
+    dayRangeHeaderFormat: ({ start, end }: { start: Date, end: Date }, culture: string, localizer: any) => {
+      const startFormat = localizer.format(start, 'DD MMM', culture);
+      const endFormat = localizer.format(end, 'DD MMM', culture);
+      return `${startFormat} - ${endFormat}`;
     }
   };
 
@@ -52,7 +58,7 @@ export const useCalendarConfig = () => {
     event: 'Etkinlik',
     allDay: 'Tüm Gün',
     noEventsInRange: 'Bu aralıkta servis talebi yok',
-    showMore: total => `+${total} daha fazla`
+    showMore: (total: number) => `+${total} daha fazla`
   };
 
   return {

@@ -35,6 +35,8 @@ export const useDragAndDrop = () => {
   const handleDropFromOutside = async (date: Date, technicianId: string | null) => {
     if (!draggedService) return;
     
+    console.log("Drop from outside:", draggedService.title, "to date:", date, "technician:", technicianId);
+    
     // If there's no technician selected in resources view, show an error
     if (!technicianId && currentView === 'week') {
       toast({

@@ -94,6 +94,7 @@ export const EventCalendar = ({
       culture="tr"
       onDropFromOutside={handleDropFromOutside}
       onEventDrop={moveEvent}
+      onEventResize={moveEvent}
       components={components}
       view={currentView as any}
       onView={(view) => onViewChange(view)}
@@ -110,6 +111,7 @@ export const EventCalendar = ({
       step={60} // 60 minutes per slot
       timeslots={1} // 1 slot per step
       longPressThreshold={250} // Make it easier to drag on mobile
+      draggableAccessor={() => true} // Make all events draggable
     />
   );
 };
