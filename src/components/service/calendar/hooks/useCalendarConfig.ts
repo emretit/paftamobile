@@ -1,6 +1,7 @@
 
 import moment from "moment";
 import { CalendarEvent, getEventStyle } from "../calendarUtils";
+import { CSSProperties } from "react";
 
 export const useCalendarConfig = () => {
   // Custom accessor functions for the calendar
@@ -22,7 +23,7 @@ export const useCalendarConfig = () => {
         border: 'none',
         boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
         cursor: 'pointer',
-        userSelect: 'none',
+        userSelect: 'none' as CSSProperties['userSelect'], // Type assertion to fix the issue
         transition: 'all 0.2s cubic-bezier(.25,.8,.25,1)',
       },
       className: 'google-calendar-event hover:shadow-md hover:z-[999] active:cursor-grabbing'
