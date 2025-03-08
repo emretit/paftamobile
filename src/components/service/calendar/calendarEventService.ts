@@ -9,13 +9,27 @@ export const useCalendarEventService = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const updateEventDate = async (eventId: string, newDate: Date) => {
+  const updateEventDate = async (eventId: string, newDate: Date, technicianId?: string | null) => {
     try {
+      // Güncelleme verisini hazırla
+      const updateData: any = { 
+        due_date: newDate.toISOString() 
+      };
+      
+      // Eğer teknisyen ID'si verildiyse, onu da güncelleme verisine ekle
+      if (technicianId !== undefined) {
+        updateData.assigned_to = technicianId;
+        
+        // Eğer teknisyen atanmışsa, durumu "assigned" olarak güncelle
+        if (technicianId) {
+          updateData.status = 'assigned';
+        }
+      }
+      
+      // Veritabanını güncelle
       const { error } = await supabase
         .from('service_requests')
-        .update({ 
-          due_date: newDate.toISOString(),
-        })
+        .update(updateData)
         .eq('id', eventId);
         
       if (error) throw error;
@@ -42,7 +56,7 @@ export const useCalendarEventService = () => {
   };
 
   const handleEventDrop = async ({ event, start }: { event: CalendarEvent, start: Date, end: Date }) => {
-    return await updateEventDate(event.id, start);
+    return await updateEventDate(event.id, start, event.resource?.assigned_to);
   };
 
   const assignServiceToTechnician = async (

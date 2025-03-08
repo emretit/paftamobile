@@ -25,6 +25,19 @@ export const useCalendarConfig = () => {
     };
   };
 
+  // Custom formats
+  const formats = {
+    dayFormat: (date: Date, culture: string, localizer: any) => 
+      localizer.format(date, 'ddd DD', culture), // Gün (Pts 12) formatı
+    
+    timeGutterFormat: (date: Date, culture: string, localizer: any) => 
+      localizer.format(date, 'HH:mm', culture), // 24-saat formatı
+    
+    eventTimeRangeFormat: ({ start, end }: { start: Date, end: Date }, culture: string, localizer: any) => {
+      return `${localizer.format(start, 'HH:mm', culture)} - ${localizer.format(end, 'HH:mm', culture)}`;
+    }
+  };
+
   // Calendar messages (translations)
   const messages = {
     today: 'Bugün',
@@ -48,6 +61,7 @@ export const useCalendarConfig = () => {
     resourceIdAccessor,
     resourceTitleAccessor,
     eventPropGetter,
+    formats,
     messages
   };
 };

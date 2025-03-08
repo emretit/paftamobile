@@ -28,7 +28,11 @@ export const useCalendarEventHandlers = ({
   // Handle moving events within the calendar
   const moveEvent = ({ event, start, end }: any) => {
     if (event && start) {
-      updateEventDate(event.id, start);
+      // Teknisyenin ID'sini alma - mevcut teknisyeni koruyoruz
+      const technicianId = event.resource?.assigned_to || null;
+      
+      // Servisi güncelle
+      updateEventDate(event.id, start, technicianId);
     }
   };
 
