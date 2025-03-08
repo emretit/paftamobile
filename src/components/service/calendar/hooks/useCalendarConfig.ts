@@ -11,18 +11,21 @@ export const useCalendarConfig = () => {
   const resourceIdAccessor = (resource: any) => resource.id;
   const resourceTitleAccessor = (resource: any) => resource.title;
 
-  // Event appearance
+  // Event appearance - Google Calendar style
   const eventPropGetter = (event: CalendarEvent) => {
+    const baseStyle = getEventStyle(event.resource.status);
+    
     return {
       style: {
-        ...getEventStyle(event.resource.status),
-        borderRadius: '6px',
+        ...baseStyle,
+        borderRadius: '4px',
         border: 'none',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        cursor: 'move',
-        transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+        cursor: 'pointer',
+        userSelect: 'none',
+        transition: 'all 0.2s cubic-bezier(.25,.8,.25,1)',
       },
-      className: 'draggable-event cursor-move hover:shadow-md hover:translate-y-[-2px]'
+      className: 'google-calendar-event hover:shadow-md hover:z-[999] active:cursor-grabbing'
     };
   };
 

@@ -13,16 +13,30 @@ export const useDragAndDrop = () => {
   const { toast } = useToast();
 
   const handleDragStart = (e: React.DragEvent, service: ServiceRequest) => {
+    console.log("Drag start with service:", service.title);
     setDraggedService(service);
+    
     // Set drag data for the event
     e.dataTransfer.setData('text/plain', JSON.stringify({
       id: service.id,
       title: service.title
     }));
     
-    // Create a custom drag image that looks better
+    // Create a custom drag image that looks better (Google Calendar style)
     const dragImage = document.createElement('div');
-    dragImage.innerHTML = `<div style="padding: 8px 12px; background: #805AD5; color: white; border-radius: 4px; font-family: system-ui; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">${service.title}</div>`;
+    dragImage.innerHTML = `
+      <div style="
+        padding: 8px 12px; 
+        background: #805AD5; 
+        color: white; 
+        border-radius: 4px; 
+        font-family: system-ui; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        font-size: 14px;
+      ">
+        ${service.title}
+      </div>
+    `;
     document.body.appendChild(dragImage);
     e.dataTransfer.setDragImage(dragImage, 10, 10);
     
@@ -33,9 +47,18 @@ export const useDragAndDrop = () => {
   };
 
   const handleDropFromOutside = async (date: Date, technicianId: string | null) => {
-    if (!draggedService) return;
+    if (!draggedService) {
+      console.log("No dragged service found");
+      return;
+    }
     
     console.log("Drop from outside:", draggedService.title, "to date:", date, "technician:", technicianId);
+    
+    // Show immediate feedback (Google Calendar style)
+    toast({
+      title: "Servis atanıyor...",
+      description: "Lütfen bekleyin",
+    });
     
     // If there's no technician selected in resources view, show an error
     if (!technicianId && currentView === 'week') {
@@ -83,6 +106,12 @@ export const useDragAndDrop = () => {
 
   const handleDropToUnassigned = async (service: ServiceRequest) => {
     if (!service) return false;
+    
+    // Show immediate feedback (Google Calendar style)
+    toast({
+      title: "Atama kaldırılıyor...",
+      description: "Lütfen bekleyin",
+    });
     
     // Unassign the service
     const success = await unassignService(service.id);

@@ -28,13 +28,21 @@ export const useCalendarEventService = () => {
         }
       }
       
+      // Immediately show feedback for better UX
+      console.log("Sending update to database:", updateData);
+      
       // Update the database
       const { error } = await supabase
         .from('service_requests')
         .update(updateData)
         .eq('id', eventId);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error from supabase:", error);
+        throw error;
+      }
+      
+      console.log("Update successful, invalidating queries");
       
       // Invalidate and refetch service requests data
       queryClient.invalidateQueries({ queryKey: ['service-requests'] });

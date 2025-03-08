@@ -46,11 +46,7 @@ export const CalendarEventComponent = ({ event }: CalendarEventComponentProps) =
   const customerName = getCustomerName(event.resource.customer_id);
 
   return (
-    <div 
-      className={`flex flex-col h-full p-1.5 transition-all ${statusClass} rounded-md shadow-sm cursor-move`}
-      draggable="true"
-      data-event-id={event.id}
-    >
+    <div className={`flex flex-col h-full p-1.5 ${statusClass} rounded-md shadow-sm`}>
       <div className="text-xs font-semibold truncate text-white">{event.title}</div>
       
       {/* Customer info */}

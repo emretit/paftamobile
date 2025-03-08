@@ -11,6 +11,7 @@ import { useCalendarConfig } from "./hooks/useCalendarConfig";
 import { useCalendarComponents } from "./hooks/useCalendarComponents";
 import { useCalendarEventHandlers } from "./hooks/useCalendarEventHandlers";
 import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
 
 moment.locale("tr");
 const localizer = momentLocalizer(moment);
@@ -62,6 +63,75 @@ export const EventCalendar = ({
     onSelectEvent
   });
 
+  // Add Google Calendar-like CSS styles
+  useEffect(() => {
+    // Add custom styles to make it feel more like Google Calendar
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .rbc-calendar {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+      }
+      .rbc-month-view {
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .rbc-header {
+        font-weight: 500;
+        padding: 10px 3px;
+        border-bottom: 1px solid #e0e0e0;
+      }
+      .rbc-day-bg {
+        transition: background-color 0.2s;
+      }
+      .rbc-day-bg:hover {
+        background-color: #f5f5f5;
+      }
+      .rbc-off-range-bg {
+        background-color: #f9f9f9;
+      }
+      .rbc-today {
+        background-color: #e8f5e9;
+      }
+      .rbc-event {
+        transition: transform 0.1s, box-shadow 0.1s;
+      }
+      .rbc-event:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+        z-index: 100;
+      }
+      .rbc-toolbar button {
+        color: #5f6368;
+        border-radius: 4px;
+        border: 1px solid #dadce0;
+      }
+      .rbc-toolbar button:hover {
+        background-color: #f1f3f4;
+        color: #202124;
+      }
+      .rbc-toolbar button.rbc-active {
+        background-color: #e8eaed;
+        color: #202124;
+        box-shadow: none;
+      }
+      .rbc-event.rbc-selected {
+        background-color: transparent !important;
+        box-shadow: 0 0 0 2px #4285f4 !important;
+        z-index: 200;
+      }
+      .rbc-day-slot .rbc-event-content {
+        padding: 2px 5px;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // Map technicians to calendar resources format
   const resources = technicians.map(tech => ({
     id: tech.id,
@@ -106,11 +176,11 @@ export const EventCalendar = ({
       resizable
       showMultiDayTimes
       dayLayoutAlgorithm="no-overlap"
-      drilldownView={null} // Disable drill down to prevent click conflicts with drag
+      drilldownView={null} // Disable drill down to prevent conflicts with drag operations
       popup // Enable popup for events
       step={60} // 60 minutes per slot
       timeslots={1} // 1 slot per step
-      longPressThreshold={10} // Make it easier to drag on mobile (lower value = faster drag recognition)
+      longPressThreshold={1} // Almost immediate drag recognition (Google Calendar-like)
       draggableAccessor={() => true} // Make all events draggable
     />
   );

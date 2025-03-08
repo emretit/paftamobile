@@ -27,10 +27,16 @@ export const useCalendarEventHandlers = ({
     }
   };
 
-  // Handle moving events within the calendar
+  // Handle moving events within the calendar - Google Calendar style
   const moveEvent = ({ event, start, end, isAllDay }: any) => {
     if (event && start) {
       console.log("Moving event:", event.id, "to", start, "isAllDay:", isAllDay);
+      
+      // Create a visual feedback of the drag operation
+      toast({
+        title: "Taşınıyor...",
+        description: "Servis talebi yeni konuma taşınıyor",
+      });
       
       // Get technician ID - preserve the current technician
       const technicianId = event.resource?.assigned_to || null;
@@ -54,9 +60,12 @@ export const useCalendarEventHandlers = ({
     }
   };
 
-  // Handle event selection - separated from drag start to avoid interference
+  // Handle event selection - completely separate from drag operations
   const handleSelectEvent = (event: any) => {
-    onSelectEvent(event as CalendarEvent);
+    // Introduce a slight delay to avoid conflicts with drag operations
+    setTimeout(() => {
+      onSelectEvent(event as CalendarEvent);
+    }, 10);
   };
 
   return {
