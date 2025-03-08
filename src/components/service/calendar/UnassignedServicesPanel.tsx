@@ -30,11 +30,11 @@ export const UnassignedServicesPanel: React.FC<UnassignedServicesPanelProps> = (
   togglePanel,
   dragStart
 }) => {
-  // Filter for unassigned services
+  // Filter for only new unassigned services
   const unassignedServices = useMemo(() => {
     return services.filter(service => 
       !service.assigned_to && 
-      (service.status === 'new' || service.status === 'in_progress')
+      service.status === 'new'
     );
   }, [services]);
 
