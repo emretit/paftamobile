@@ -1,5 +1,4 @@
 
-import { useNavigate } from "react-router-dom";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import CrmSummary from "@/components/crm/CrmSummary";
 
@@ -9,14 +8,12 @@ interface CrmDashboardProps {
 }
 
 const CrmDashboard = ({ isCollapsed, setIsCollapsed }: CrmDashboardProps) => {
-  const navigate = useNavigate();
-
   return (
     <DefaultLayout 
       isCollapsed={isCollapsed} 
       setIsCollapsed={setIsCollapsed}
-      title="CRM"
-      subtitle="Fırsatlar, Aktiviteler ve Teklifler özeti"
+      title="CRM Kontrol Paneli"
+      subtitle="Fırsatlar, Teklifler ve Görevlere genel bakış"
     >
       <div className="container mx-auto py-6">
         <CrmSummary />

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { Card } from "@/components/ui/card";
@@ -106,8 +107,6 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
               </Button>
             </div>
           </div>
-
-          <ProposalAnalytics />
 
           <Card className="p-4 mb-6">
             <div className="flex flex-col sm:flex-row gap-4">

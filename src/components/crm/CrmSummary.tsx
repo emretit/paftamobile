@@ -1,21 +1,31 @@
 
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, PieChart, List, FileText } from "lucide-react";
+import { Plus, PieChart, List, FileText, BarChart, Activity, Zap } from "lucide-react";
 
 import OpportunitiesSummary from "./OpportunitiesSummary";
 import TasksSummary from "./TasksSummary";
 import ProposalsSummary from "./ProposalsSummary";
+import DealAnalytics from "./DealAnalytics";
+import ProposalAnalytics from "./ProposalAnalytics";
 
 const CrmSummary = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-        {/* Opportunities Section */}
-        <Card className="w-full shadow-sm border border-gray-200 h-full">
+    <div className="container mx-auto px-4 py-6 space-y-8">
+      {/* Summary Cards Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+        {/* Opportunities Summary */}
+        <Card className="w-full shadow-md border border-gray-200 h-full bg-white">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg font-semibold">Fırsatlar</CardTitle>
@@ -46,8 +56,8 @@ const CrmSummary = () => {
           </CardFooter>
         </Card>
 
-        {/* Tasks Section */}
-        <Card className="w-full shadow-sm border border-gray-200 h-full">
+        {/* Tasks Summary */}
+        <Card className="w-full shadow-md border border-gray-200 h-full bg-white">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg font-semibold">Görevler</CardTitle>
@@ -78,8 +88,8 @@ const CrmSummary = () => {
           </CardFooter>
         </Card>
 
-        {/* Proposals Section */}
-        <Card className="w-full shadow-sm border border-gray-200 h-full md:col-span-2 lg:col-span-1">
+        {/* Proposals Summary */}
+        <Card className="w-full shadow-md border border-gray-200 h-full bg-white">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg font-semibold">Teklifler</CardTitle>
@@ -108,6 +118,87 @@ const CrmSummary = () => {
               Yeni Teklif
             </Button>
           </CardFooter>
+        </Card>
+      </div>
+
+      {/* Analytics Section */}
+      <div className="space-y-6">
+        <h2 className="text-2xl font-semibold">Analitik Görünüm</h2>
+        
+        {/* Deal Analytics */}
+        <Card className="shadow-md border border-gray-200 bg-white">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-xl font-semibold">Fırsat Analizi</CardTitle>
+                <CardDescription>Fırsat dönüşümleri ve performans</CardDescription>
+              </div>
+              <div className="bg-blue-100 p-2 rounded-full">
+                <BarChart className="h-5 w-5 text-blue-600" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <DealAnalytics />
+          </CardContent>
+        </Card>
+        
+        {/* Proposal Analytics */}
+        <Card className="shadow-md border border-gray-200 bg-white">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-xl font-semibold">Teklif Analizi</CardTitle>
+                <CardDescription>Teklif dönüşümleri ve performans</CardDescription>
+              </div>
+              <div className="bg-purple-100 p-2 rounded-full">
+                <Activity className="h-5 w-5 text-purple-600" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ProposalAnalytics />
+          </CardContent>
+        </Card>
+        
+        {/* Quick Actions */}
+        <Card className="shadow-md border border-gray-200 bg-white">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-xl font-semibold">Hızlı İşlemler</CardTitle>
+              <div className="bg-amber-100 p-2 rounded-full">
+                <Zap className="h-5 w-5 text-amber-600" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button 
+                size="lg" 
+                className="w-full h-16 text-lg"
+                onClick={() => navigate("/deals/new")}
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Yeni Fırsat Oluştur
+              </Button>
+              <Button 
+                size="lg" 
+                className="w-full h-16 text-lg"
+                onClick={() => navigate("/proposal-form")}
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Yeni Teklif Oluştur
+              </Button>
+              <Button 
+                size="lg" 
+                className="w-full h-16 text-lg"
+                onClick={() => navigate("/tasks/new")}
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Yeni Görev Oluştur
+              </Button>
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>
