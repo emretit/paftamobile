@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -68,7 +67,6 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
 
       if (error) throw error;
 
-      // Update the employee object
       const updatedEmployee: Employee = {
         ...employee,
         first_name: formData.first_name,

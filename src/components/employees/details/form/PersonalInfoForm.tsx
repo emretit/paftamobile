@@ -1,7 +1,7 @@
-
 import { useState } from "react";
 import { PersonalInfoFields } from "./PersonalInfoFields";
 import { PersonalInfoExtendedFields } from "./PersonalInfoExtendedFields";
+import { EmploymentDetails } from "./EmploymentDetails";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface PersonalInfoFormProps {
@@ -20,11 +20,16 @@ interface PersonalInfoFormProps {
     emergency_contact_name?: string;
     emergency_contact_phone?: string;
     emergency_contact_relation?: string;
+    hire_date: string;
+    department: string;
+    position: string;
+    status: string;
   };
   handleInputChange: (field: string, value: string) => void;
+  departments: { name: string }[];
 }
 
-export const PersonalInfoForm = ({ formData, handleInputChange }: PersonalInfoFormProps) => {
+export const PersonalInfoForm = ({ formData, handleInputChange, departments }: PersonalInfoFormProps) => {
   const [activeTab, setActiveTab] = useState("basic");
 
   return (
@@ -32,9 +37,10 @@ export const PersonalInfoForm = ({ formData, handleInputChange }: PersonalInfoFo
       <h3 className="text-lg font-semibold border-b pb-2">Kişisel Bilgiler</h3>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-2 w-full">
+        <TabsList className="grid grid-cols-3 w-full">
           <TabsTrigger value="basic">Temel Bilgiler</TabsTrigger>
           <TabsTrigger value="extended">Detaylı Bilgiler</TabsTrigger>
+          <TabsTrigger value="employment">İstihdam Bilgileri</TabsTrigger>
         </TabsList>
         
         <TabsContent value="basic" className="pt-4">
@@ -47,6 +53,14 @@ export const PersonalInfoForm = ({ formData, handleInputChange }: PersonalInfoFo
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <PersonalInfoExtendedFields formData={formData} handleInputChange={handleInputChange} />
           </div>
+        </TabsContent>
+        
+        <TabsContent value="employment" className="pt-4">
+          <EmploymentDetails 
+            formData={formData} 
+            handleInputChange={handleInputChange}
+            departments={departments}
+          />
         </TabsContent>
       </Tabs>
     </div>
