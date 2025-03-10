@@ -3,7 +3,7 @@ import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Employee } from "../types";
 import { useEditableEmployeeForm } from "./form/useEditableEmployeeForm";
-import { PersonalInfoFields } from "./form/PersonalInfoFields";
+import { PersonalInfoForm } from "./form/PersonalInfoForm";
 import { PositionFields } from "./form/PositionFields";
 import { StatusFields } from "./form/StatusFields";
 
@@ -38,12 +38,12 @@ export const EditableEmployeeDetails = ({ employee, onSave }: EditableEmployeeDe
       </div>
       
       <form className="space-y-6">
+        <PersonalInfoForm 
+          formData={formData} 
+          handleInputChange={handleInputChange} 
+        />
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <PersonalInfoFields 
-            formData={formData} 
-            handleInputChange={handleInputChange} 
-          />
-          
           <PositionFields 
             formData={formData} 
             departments={departments} 

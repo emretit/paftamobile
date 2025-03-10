@@ -17,6 +17,16 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
     department: employee.department,
     hire_date: employee.hire_date,
     status: employee.status,
+    date_of_birth: employee.date_of_birth || "",
+    gender: employee.gender || "",
+    marital_status: employee.marital_status || "",
+    address: employee.address || "",
+    city: employee.city || "",
+    postal_code: employee.postal_code || "",
+    id_ssn: employee.id_ssn || "",
+    emergency_contact_name: employee.emergency_contact_name || "",
+    emergency_contact_phone: employee.emergency_contact_phone || "",
+    emergency_contact_relation: employee.emergency_contact_relation || "",
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -42,6 +52,16 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
           department: formData.department,
           hire_date: formData.hire_date,
           status: formData.status,
+          date_of_birth: formData.date_of_birth || null,
+          gender: formData.gender || null,
+          marital_status: formData.marital_status || null,
+          address: formData.address || null,
+          city: formData.city || null,
+          postal_code: formData.postal_code || null,
+          id_ssn: formData.id_ssn || null,
+          emergency_contact_name: formData.emergency_contact_name || null,
+          emergency_contact_phone: formData.emergency_contact_phone || null,
+          emergency_contact_relation: formData.emergency_contact_relation || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', employee.id);
@@ -58,9 +78,24 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
         department: formData.department,
         hire_date: formData.hire_date,
         status: formData.status as 'active' | 'inactive',
+        date_of_birth: formData.date_of_birth || null,
+        gender: formData.gender || null,
+        marital_status: formData.marital_status || null,
+        address: formData.address || null,
+        city: formData.city || null,
+        postal_code: formData.postal_code || null,
+        id_ssn: formData.id_ssn || null,
+        emergency_contact_name: formData.emergency_contact_name || null,
+        emergency_contact_phone: formData.emergency_contact_phone || null,
+        emergency_contact_relation: formData.emergency_contact_relation || null,
       };
 
       onSave(updatedEmployee);
+      
+      toast({
+        title: "Başarılı",
+        description: "Çalışan bilgileri başarıyla güncellendi.",
+      });
     } catch (error) {
       console.error('Error updating employee:', error);
       toast({
