@@ -3,9 +3,7 @@ import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Employee } from "../../types";
 import { useEditableEmployeeForm } from "./useEditableEmployeeForm";
-import { PersonalInfoForm } from "./PersonalInfoForm";
-import { PositionFields } from "./PositionFields";
-import { StatusFields } from "./StatusFields";
+import { FormFields } from "./FormFields";
 
 interface EditableEmployeeDetailsProps {
   employee: Employee;
@@ -19,7 +17,6 @@ export const EditableEmployeeDetails = ({ employee, onSave }: EditableEmployeeDe
     isLoading,
     handleInputChange,
     handleSubmit,
-    shouldShowDepartment
   } = useEditableEmployeeForm(employee, onSave);
 
   return (
@@ -37,25 +34,12 @@ export const EditableEmployeeDetails = ({ employee, onSave }: EditableEmployeeDe
       </div>
       
       <form className="space-y-6">
-        <PersonalInfoForm 
-          formData={formData} 
-          handleInputChange={handleInputChange} 
+        <FormFields 
+          formData={formData}
           departments={departments}
+          handleInputChange={handleInputChange}
+          isEditing={true}
         />
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <PositionFields 
-            formData={formData} 
-            departments={departments} 
-            shouldShowDepartment={shouldShowDepartment}
-            handleInputChange={handleInputChange} 
-          />
-          
-          <StatusFields 
-            formData={formData} 
-            handleInputChange={handleInputChange} 
-          />
-        </div>
       </form>
     </div>
   );
