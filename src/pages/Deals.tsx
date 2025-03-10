@@ -1,7 +1,6 @@
 
 import Navbar from "@/components/Navbar";
 import DealDetailsModal from "@/components/deals/DealDetailsModal";
-import DealStats from "@/components/deals/DealStats";
 import DealBulkActions from "@/components/deals/DealBulkActions";
 import DealsHeader from "@/components/deals/DealsHeader";
 import DealsKanban from "@/components/deals/DealsKanban";
@@ -36,7 +35,6 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
       >
         <div className="p-6">
           <DealsHeader />
-          <DealStats />
           <DealsKanban
             deals={deals}
             onDragEnd={handleDragEnd}

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { Card } from "@/components/ui/card";
@@ -9,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Filter, Plus, LayoutGrid, Table as TableIcon } from "lucide-react";
 import { ProposalFilters as ProposalFiltersType } from "@/components/proposals/ProposalFilters";
 import { ProposalActions } from "@/components/proposals/ProposalActions";
-import { ProposalAnalytics } from "@/components/proposals/ProposalAnalytics";
 import ProposalTable from "@/components/proposals/ProposalTable";
 import { ProposalKanban } from "@/components/proposals/ProposalKanban";
 import { ProposalDetailSheet } from "@/components/proposals/ProposalDetailSheet";
