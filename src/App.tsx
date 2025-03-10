@@ -54,9 +54,9 @@ const App = () => {
           
           {/* Protected routes */}
           <Route path="/products" element={<ProtectedRoute><Products isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
-          <Route path="/product-form" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
-          <Route path="/product-form/:id" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
-          <Route path="/product-details/:id" element={<ProtectedRoute><ProductDetails /></ProtectedRoute>} />
+          <Route path="/product-form" element={<ProtectedRoute><ProductForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
+          <Route path="/product-form/:id" element={<ProtectedRoute><ProductForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
+          <Route path="/product-details/:id" element={<ProtectedRoute><ProductDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
           <Route path="/contacts" element={<ProtectedRoute><Contacts isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
           <Route path="/contacts/new" element={<ProtectedRoute><CustomerForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
           <Route path="/contacts/:id" element={<ProtectedRoute><ContactDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
