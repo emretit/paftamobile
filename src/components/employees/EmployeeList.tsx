@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Plus, Grid, List } from "lucide-react";
 import type { Employee } from "./types";
-import { EmployeeTable } from "./EmployeeTable";
+import EmployeeTable from "./EmployeeTable";
 import { EmployeeGrid } from "./EmployeeGrid";
 import { FilterBar } from "./FilterBar";
 import { useToast } from "@/components/ui/use-toast";

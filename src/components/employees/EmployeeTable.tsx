@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Employee } from "./types";
-import StatusBadge from "./StatusBadge";
+import { StatusBadge } from "./StatusBadge";
 import { EmployeeDetailPanel } from "./details/EmployeeDetailPanel";
 
 interface EmployeeTableProps {
