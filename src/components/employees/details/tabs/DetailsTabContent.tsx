@@ -10,10 +10,15 @@ import { useEmployeeDepartments } from "../../form/useEmployeeDepartments";
 interface DetailsTabContentProps {
   employee: Employee;
   handleEmployeeUpdate: (employee: Employee) => void;
+  isEditing: boolean;
 }
 
-export const DetailsTabContent = ({ employee, handleEmployeeUpdate }: DetailsTabContentProps) => {
-  const [isEditingDetails, setIsEditingDetails] = useState(false);
+export const DetailsTabContent = ({ 
+  employee, 
+  handleEmployeeUpdate,
+  isEditing: initialIsEditing
+}: DetailsTabContentProps) => {
+  const [isEditingDetails, setIsEditingDetails] = useState(initialIsEditing);
   const departments = useEmployeeDepartments();
   
   return (

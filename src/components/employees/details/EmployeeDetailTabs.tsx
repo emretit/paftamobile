@@ -25,7 +25,8 @@ export const EmployeeDetailTabs = ({
       
       <EmployeeTabsContent 
         employee={employee} 
-        handleEmployeeUpdate={handleEmployeeUpdate} 
+        handleEmployeeUpdate={handleEmployeeUpdate}
+        isEditing={isEditing}
       />
     </Tabs>
   );

@@ -10,15 +10,21 @@ import { EmployeeTasksTab } from "../EmployeeTasksTab";
 interface TabsContentProps {
   employee: Employee;
   handleEmployeeUpdate: (employee: Employee) => void;
+  isEditing: boolean;
 }
 
-export const EmployeeTabsContent = ({ employee, handleEmployeeUpdate }: TabsContentProps) => {
+export const EmployeeTabsContent = ({ 
+  employee, 
+  handleEmployeeUpdate,
+  isEditing 
+}: TabsContentProps) => {
   return (
     <>
       <TabsContent value="details" className="mt-6">
         <DetailsTabContent 
           employee={employee} 
-          handleEmployeeUpdate={handleEmployeeUpdate} 
+          handleEmployeeUpdate={handleEmployeeUpdate}
+          isEditing={isEditing}
         />
       </TabsContent>
       
