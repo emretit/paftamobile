@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -20,6 +20,7 @@ interface EmployeeFormProps {
 
 export const EmployeeForm = ({ initialData }: EmployeeFormProps) => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { toast } = useToast();
   const departments = useEmployeeDepartments();
   const { selectedFile, handleFileChange, uploadAvatar } = useImageUpload();
@@ -104,15 +105,19 @@ export const EmployeeForm = ({ initialData }: EmployeeFormProps) => {
           title: "Success",
           description: "Employee information updated successfully",
         });
+        
+        // Navigate to employee details after update
+        navigate(`/employees/${initialData.id}`);
       } else {
         // Add new employee
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('employees')
           .insert([{
             ...employeeData,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
-          }]);
+          }])
+          .select();
 
         if (error) {
           if (error.code === '23505') {
@@ -132,9 +137,14 @@ export const EmployeeForm = ({ initialData }: EmployeeFormProps) => {
           title: "Success",
           description: "New employee added successfully",
         });
+        
+        // Navigate to employee list or details if available
+        if (data && data[0]?.id) {
+          navigate(`/employees/${data[0].id}`);
+        } else {
+          navigate("/employees");
+        }
       }
-      
-      navigate("/employees");
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -186,7 +196,7 @@ export const EmployeeForm = ({ initialData }: EmployeeFormProps) => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate(initialData ? `/employees/details/${initialData.id}` : "/employees")}
+              onClick={() => navigate(id ? `/employees/${id}` : "/employees")}
             >
               Cancel
             </Button>

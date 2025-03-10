@@ -1,7 +1,10 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Pencil, Maximize2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Employee } from "@/components/employees/types";
 import { EmployeeDetailsView } from "./EmployeeDetailsView";
@@ -18,17 +21,50 @@ interface EmployeeDetailPanelProps {
 
 export const EmployeeDetailPanel = ({ employee, isOpen, onClose }: EmployeeDetailPanelProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("details");
 
   if (!employee) {
     return null;
   }
 
+  const handleViewFullDetails = () => {
+    navigate(`/employees/${employee.id}`);
+    onClose();
+  };
+
+  const handleEditEmployee = () => {
+    navigate(`/employees/${employee.id}/edit`);
+    onClose();
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className="sm:max-w-md md:max-w-lg overflow-y-auto">
         <SheetHeader className="mb-4">
-          <SheetTitle>Çalışan Detayları</SheetTitle>
+          <div className="flex justify-between items-center">
+            <SheetTitle>Çalışan Detayları</SheetTitle>
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleViewFullDetails}
+                className="flex items-center gap-1"
+              >
+                <Maximize2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Tam Görünüm</span>
+              </Button>
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={handleEditEmployee}
+                className="flex items-center gap-1"
+              >
+                <Pencil className="h-4 w-4" />
+                <span className="hidden sm:inline">Düzenle</span>
+              </Button>
+            </div>
+          </div>
         </SheetHeader>
         
         <div className="mb-6">
