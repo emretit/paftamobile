@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,9 +20,7 @@ export const EmployeeList = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Transform Supabase response to Employee type
   const transformToEmployee = (item: any): Employee => {
-    // Check if status is a valid value, default to 'active' otherwise
     let status = item.status;
     if (status !== 'active' && status !== 'inactive') {
       console.warn(`Invalid status: ${status}, defaulting to 'active'`);
@@ -45,7 +42,6 @@ export const EmployeeList = () => {
   };
 
   useEffect(() => {
-    // Implement employees fetch from Supabase
     const fetchEmployees = async () => {
       try {
         setIsLoading(true);
@@ -73,7 +69,6 @@ export const EmployeeList = () => {
 
     fetchEmployees();
 
-    // Set up real-time subscription for employees table
     const channel = supabase
       .channel('employees-changes')
       .on(
@@ -84,7 +79,6 @@ export const EmployeeList = () => {
           table: 'employees'
         },
         (payload) => {
-          // Handle the real-time changes
           if (payload.eventType === 'INSERT') {
             const newEmployee = transformToEmployee(payload.new);
             setEmployees(prev => [newEmployee, ...prev]);
@@ -107,7 +101,6 @@ export const EmployeeList = () => {
     };
   }, [toast]);
 
-  // Filter employees based on search query and status filter
   const filteredEmployees = employees.filter(employee => {
     const matchesSearch = 
       searchQuery === '' || 

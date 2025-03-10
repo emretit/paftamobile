@@ -35,6 +35,11 @@ const EmployeeTable = ({ employees, isLoading }: EmployeeTableProps) => {
     navigate(`/employees/${employeeId}/edit`);
   };
 
+  const handleViewDetailsClick = (e: React.MouseEvent, employeeId: string) => {
+    e.stopPropagation();
+    navigate(`/employees/${employeeId}`);
+  };
+
   if (isLoading) {
     return <div>Yükleniyor...</div>;
   }
@@ -82,13 +87,26 @@ const EmployeeTable = ({ employees, isLoading }: EmployeeTableProps) => {
                   <TableCell>{new Date(employee.hire_date).toLocaleDateString("tr-TR")}</TableCell>
                   <TableCell><StatusBadge status={employee.status} /></TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => handleEditClick(e, employee.id)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => handleViewDetailsClick(e, employee.id)}
+                      >
+                        <span className="sr-only">Detaylar</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye">
+                          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => handleEditClick(e, employee.id)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

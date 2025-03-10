@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Employee } from "@/components/employees/types";
@@ -61,7 +61,7 @@ const EmployeeEdit = ({ isCollapsed, setIsCollapsed }: EmployeeEditPageProps) =>
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
         <div className="container mx-auto p-6">
-          <div className="mb-6">
+          <div className="flex items-center justify-between mb-6">
             <Button
               onClick={() => navigate("/employees")}
               variant="ghost"
@@ -70,6 +70,17 @@ const EmployeeEdit = ({ isCollapsed, setIsCollapsed }: EmployeeEditPageProps) =>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Çalışanlara Dön
             </Button>
+            
+            {!isLoading && employee && (
+              <Button
+                onClick={() => navigate(`/employees/${id}`)}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <User className="h-4 w-4" />
+                Çalışana Git
+              </Button>
+            )}
           </div>
           
           {isLoading ? (
