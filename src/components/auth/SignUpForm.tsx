@@ -16,6 +16,7 @@ export const SignUpForm = ({ onSignUpSuccess, onError }: SignUpFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -24,12 +25,25 @@ export const SignUpForm = ({ onSignUpSuccess, onError }: SignUpFormProps) => {
     setLoading(true);
     onError(null);
     
+    if (!companyName.trim()) {
+      onError("Şirket adı gereklidir.");
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Lütfen şirket adını giriniz.",
+      });
+      setLoading(false);
+      return;
+    }
+    
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: name,
+          company_name: companyName,
+          is_primary_account: true
         }
       }
     });
@@ -70,6 +84,13 @@ export const SignUpForm = ({ onSignUpSuccess, onError }: SignUpFormProps) => {
           placeholder="E-posta"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <Input
+          type="text"
+          placeholder="Şirket Adı"
+          value={companyName}
+          onChange={(e) => setCompanyName(e.target.value)}
           required
         />
         <div className="relative">

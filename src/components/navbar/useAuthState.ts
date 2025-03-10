@@ -33,9 +33,23 @@ export const useAuthState = () => {
       : user.email?.substring(0, 2).toUpperCase() || "UK";
   };
 
+  // Check if user is a primary account
+  const isPrimaryAccount = () => {
+    if (!user) return false;
+    return user.user_metadata?.is_primary_account === true;
+  };
+
+  // Get company name
+  const getCompanyName = () => {
+    if (!user) return "";
+    return user.user_metadata?.company_name || "";
+  };
+
   return {
     user,
     loading,
-    userInitials: getUserInitials()
+    userInitials: getUserInitials(),
+    isPrimaryAccount: isPrimaryAccount(),
+    companyName: getCompanyName()
   };
 };
