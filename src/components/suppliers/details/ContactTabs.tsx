@@ -1,3 +1,4 @@
+
 import { Activity, Receipt, FileText, CreditCard, FileStack } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { 
@@ -18,7 +19,7 @@ interface ContactTabsProps {
 export const ContactTabs = ({ supplier }: ContactTabsProps) => {
   return (
     <CustomTabs defaultValue="overview" className="space-y-4">
-      <CustomTabsList className="bg-white border w-full">
+      <CustomTabsList className="w-full">
         <CustomTabsTrigger value="overview">Genel Bilgiler</CustomTabsTrigger>
         <CustomTabsTrigger value="activities" className="flex items-center gap-1">
           <Activity className="h-4 w-4" />

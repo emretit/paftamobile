@@ -37,25 +37,25 @@ const Employees = ({ isCollapsed, setIsCollapsed }: EmployeesProps) => {
       }`}>
         <TopBar />
         <CustomTabs defaultValue="employees" className="space-y-4">
-          <CustomTabsList className="w-full justify-start h-12 p-0 px-6 bg-white shadow-sm border-b">
-            <CustomTabsTrigger value="employees" className="h-12 px-4">
-              <UserCog className="h-4 w-4 mr-2" />
+          <CustomTabsList className="w-full h-12 px-6 bg-white shadow-sm border-b">
+            <CustomTabsTrigger value="employees" className="flex items-center gap-2">
+              <UserCog className="h-4 w-4" />
               Çalışan Yönetimi
             </CustomTabsTrigger>
-            <CustomTabsTrigger value="leaves" className="h-12 px-4">
-              <Clock className="h-4 w-4 mr-2" />
+            <CustomTabsTrigger value="leaves" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
               İzin Yönetimi
             </CustomTabsTrigger>
-            <CustomTabsTrigger value="salary" className="h-12 px-4">
-              <Wallet className="h-4 w-4 mr-2" />
+            <CustomTabsTrigger value="salary" className="flex items-center gap-2">
+              <Wallet className="h-4 w-4" />
               Maaş Yönetimi
             </CustomTabsTrigger>
-            <CustomTabsTrigger value="performance" className="h-12 px-4">
-              <BarChart3 className="h-4 w-4 mr-2" />
+            <CustomTabsTrigger value="performance" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
               Performans
             </CustomTabsTrigger>
-            <CustomTabsTrigger value="tasks" className="h-12 px-4">
-              <GanttChartSquare className="h-4 w-4 mr-2" />
+            <CustomTabsTrigger value="tasks" className="flex items-center gap-2">
+              <GanttChartSquare className="h-4 w-4" />
               Görev Yönetimi
             </CustomTabsTrigger>
           </CustomTabsList>

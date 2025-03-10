@@ -25,24 +25,24 @@ export const EmployeeDetailTabs = ({
 }: EmployeeDetailTabsProps) => {
   return (
     <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab} className="w-full animate-fade-in">
-      <TabsList className="grid grid-cols-5 w-full bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-1 shadow-sm sticky top-4 z-10">
-        <TabsTrigger value="details" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
+      <TabsList className="w-full sticky top-4 z-10">
+        <TabsTrigger value="details" className="flex items-center gap-2">
           <User className="w-4 h-4" />
           <span className="hidden sm:inline">Genel Bilgiler</span>
         </TabsTrigger>
-        <TabsTrigger value="salary" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
+        <TabsTrigger value="salary" className="flex items-center gap-2">
           <DollarSign className="w-4 h-4" />
           <span className="hidden sm:inline">Maaş</span>
         </TabsTrigger>
-        <TabsTrigger value="leave" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
+        <TabsTrigger value="leave" className="flex items-center gap-2">
           <Calendar className="w-4 h-4" />
           <span className="hidden sm:inline">İzin</span>
         </TabsTrigger>
-        <TabsTrigger value="performance" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
+        <TabsTrigger value="performance" className="flex items-center gap-2">
           <BarChart2 className="w-4 h-4" />
           <span className="hidden sm:inline">Performans</span>
         </TabsTrigger>
-        <TabsTrigger value="tasks" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
+        <TabsTrigger value="tasks" className="flex items-center gap-2">
           <CheckSquare className="w-4 h-4" />
           <span className="hidden sm:inline">Görevler</span>
         </TabsTrigger>

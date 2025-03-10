@@ -25,10 +25,10 @@ const PurchaseManagement = ({ isCollapsed, setIsCollapsed }: PurchaseManagementP
     >
       <div className="container mx-auto py-6">
         <CustomTabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <CustomTabsList className="grid grid-cols-3 w-full bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-1 shadow-sm">
-            <CustomTabsTrigger value="requests" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Satın Alma Talepleri</CustomTabsTrigger>
-            <CustomTabsTrigger value="orders" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Satın Alma Siparişleri</CustomTabsTrigger>
-            <CustomTabsTrigger value="invoices" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Faturalar</CustomTabsTrigger>
+          <CustomTabsList className="w-full grid grid-cols-3">
+            <CustomTabsTrigger value="requests">Satın Alma Talepleri</CustomTabsTrigger>
+            <CustomTabsTrigger value="orders">Satın Alma Siparişleri</CustomTabsTrigger>
+            <CustomTabsTrigger value="invoices">Faturalar</CustomTabsTrigger>
           </CustomTabsList>
           
           <CustomTabsContent value="requests">
