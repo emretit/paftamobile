@@ -18,7 +18,7 @@ import {
   CustomTabsList, 
   CustomTabsTrigger 
 } from "@/components/ui/custom-tabs";
-import { TopBar } from "@/components/employees/TopBar";
+import { TopBar } from "@/components/TopBar";
 import { EmployeeList } from "@/components/employees/EmployeeList";
 
 interface EmployeesProps {
