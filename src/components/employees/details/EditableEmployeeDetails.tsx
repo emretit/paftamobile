@@ -41,6 +41,7 @@ export const EditableEmployeeDetails = ({ employee, onSave }: EditableEmployeeDe
         <PersonalInfoForm 
           formData={formData} 
           handleInputChange={handleInputChange} 
+          departments={departments}
         />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
