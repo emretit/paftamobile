@@ -563,44 +563,74 @@ export type Database = {
       }
       employees: {
         Row: {
+          address: string | null
           avatar_url: string | null
+          city: string | null
           created_at: string | null
+          date_of_birth: string | null
           department: string
           email: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relation: string | null
           first_name: string
+          gender: string | null
           hire_date: string
           id: string
+          id_ssn: string | null
           last_name: string
+          marital_status: string | null
           phone: string | null
           position: string
+          postal_code: string | null
           status: string
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
           avatar_url?: string | null
+          city?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
           department: string
           email: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relation?: string | null
           first_name: string
+          gender?: string | null
           hire_date: string
           id?: string
+          id_ssn?: string | null
           last_name: string
+          marital_status?: string | null
           phone?: string | null
           position: string
+          postal_code?: string | null
           status: string
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
           avatar_url?: string | null
+          city?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
           department?: string
           email?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relation?: string | null
           first_name?: string
+          gender?: string | null
           hire_date?: string
           id?: string
+          id_ssn?: string | null
           last_name?: string
+          marital_status?: string | null
           phone?: string | null
           position?: string
+          postal_code?: string | null
           status?: string
           updated_at?: string | null
         }
@@ -1892,16 +1922,26 @@ export type Database = {
           search_query: string
         }
         Returns: {
+          address: string | null
           avatar_url: string | null
+          city: string | null
           created_at: string | null
+          date_of_birth: string | null
           department: string
           email: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relation: string | null
           first_name: string
+          gender: string | null
           hire_date: string
           id: string
+          id_ssn: string | null
           last_name: string
+          marital_status: string | null
           phone: string | null
           position: string
+          postal_code: string | null
           status: string
           updated_at: string | null
         }[]
