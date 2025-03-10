@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { TopBar } from "@/components/TopBar";
 import SupplierListHeader from "@/components/suppliers/SupplierListHeader";
 import SupplierListFilters from "@/components/suppliers/SupplierListFilters";
 import SupplierList from "@/components/suppliers/SupplierList";
@@ -63,33 +64,36 @@ const Suppliers = ({ isCollapsed, setIsCollapsed }: SuppliersProps) => {
     <div className="min-h-screen bg-white flex relative">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main
-        className={`flex-1 p-4 sm:p-8 transition-all duration-300 ${
+        className={`flex-1 transition-all duration-300 ${
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}
       >
-        <div className="flex justify-between items-center mb-8">
-          <SupplierListHeader />
-          <Link to="/suppliers/new">
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Yeni Tedarikçi
-            </Button>
-          </Link>
+        <TopBar />
+        <div className="p-4 sm:p-8">
+          <div className="flex justify-between items-center mb-8">
+            <SupplierListHeader />
+            <Link to="/suppliers/new">
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Yeni Tedarikçi
+              </Button>
+            </Link>
+          </div>
+          <SupplierListFilters 
+            search={search}
+            setSearch={setSearch}
+            typeFilter={typeFilter}
+            setTypeFilter={setTypeFilter}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+          />
+          <SupplierList 
+            suppliers={sortedSuppliers}
+            isLoading={isLoading}
+            sortDirection={sortDirection}
+            onSortDirectionChange={setSortDirection}
+          />
         </div>
-        <SupplierListFilters 
-          search={search}
-          setSearch={setSearch}
-          typeFilter={typeFilter}
-          setTypeFilter={setTypeFilter}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-        />
-        <SupplierList 
-          suppliers={sortedSuppliers}
-          isLoading={isLoading}
-          sortDirection={sortDirection}
-          onSortDirectionChange={setSortDirection}
-        />
       </main>
     </div>
   );

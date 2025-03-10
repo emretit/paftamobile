@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,8 +16,15 @@ import ProductInventory from "@/components/products/details/ProductInventory";
 import ProductRelated from "@/components/products/details/ProductRelated";
 import { Product } from "@/types/product";
 import { Badge } from "@/components/ui/badge";
+import Navbar from "@/components/Navbar";
+import { TopBar } from "@/components/TopBar";
 
-const ProductDetails = () => {
+interface ProductDetailsProps {
+  isCollapsed: boolean;
+  setIsCollapsed: (value: boolean) => void;
+}
+
+const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -110,118 +116,138 @@ const ProductDetails = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100" />
+      <div className="min-h-screen bg-gray-50 flex">
+        <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+        <main className={`flex-1 transition-all duration-300 ${
+          isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
+        }`}>
+          <TopBar />
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100" />
+          </div>
+        </main>
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <h2 className="text-xl font-semibold mb-4">Ürün bulunamadı</h2>
-        <Button onClick={() => navigate("/products")}>Ürünlere Dön</Button>
+      <div className="min-h-screen bg-gray-50 flex">
+        <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+        <main className={`flex-1 transition-all duration-300 ${
+          isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
+        }`}>
+          <TopBar />
+          <div className="flex flex-col items-center justify-center h-full">
+            <h2 className="text-xl font-semibold mb-4">Ürün bulunamadı</h2>
+            <Button onClick={() => navigate("/products")}>Ürünlere Dön</Button>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="container flex h-16 items-center">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/products")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex items-center gap-2 ml-4">
-            <Package2 className="h-5 w-5" />
-            <h1 className="text-lg font-semibold">{product.name}</h1>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" onClick={() => duplicateProductMutation.mutate()}>
-              <Copy className="h-4 w-4 mr-2" />
-              Kopyala
+    <div className="min-h-screen bg-gray-50 flex">
+      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <main className={`flex-1 transition-all duration-300 ${
+        isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
+      }`}>
+        <TopBar />
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+          <div className="container flex h-16 items-center">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/products")}>
+              <ArrowLeft className="h-4 w-4" />
             </Button>
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              PDF
-            </Button>
-            <Button onClick={handleEdit}>
-              <Edit className="h-4 w-4 mr-2" />
-              Düzenle
-            </Button>
+            <div className="flex items-center gap-2 ml-4">
+              <Package2 className="h-5 w-5" />
+              <h1 className="text-lg font-semibold">{product.name}</h1>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <Button variant="outline" onClick={() => duplicateProductMutation.mutate()}>
+                <Copy className="h-4 w-4 mr-2" />
+                Kopyala
+              </Button>
+              <Button variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                PDF
+              </Button>
+              <Button onClick={handleEdit}>
+                <Edit className="h-4 w-4 mr-2" />
+                Düzenle
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="container py-6">
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2 mb-4">
-            <Badge variant={product.is_active ? "default" : "secondary"}>
-              {product.is_active ? "Aktif" : "Pasif"}
-            </Badge>
-            <Badge variant={
-              product.stock_quantity <= 0 ? "destructive" : 
-              product.stock_quantity <= product.min_stock_level ? "warning" : 
-              "default"
-            }>
-              {product.stock_quantity <= 0 ? "Stokta Yok" : 
-               product.stock_quantity <= product.min_stock_level ? "Düşük Stok" : 
-               "Stokta"}
-            </Badge>
-            <span className="text-sm text-muted-foreground">
-              SKU: {product.sku || "N/A"}
-            </span>
+        <div className="container py-6">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2 mb-4">
+              <Badge variant={product.is_active ? "default" : "secondary"}>
+                {product.is_active ? "Aktif" : "Pasif"}
+              </Badge>
+              <Badge variant={
+                product.stock_quantity <= 0 ? "destructive" : 
+                product.stock_quantity <= product.min_stock_level ? "warning" : 
+                "default"
+              }>
+                {product.stock_quantity <= 0 ? "Stokta Yok" : 
+                 product.stock_quantity <= product.min_stock_level ? "Düşük Stok" : 
+                 "Stokta"}
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                SKU: {product.sku || "N/A"}
+              </span>
+            </div>
+
+            <CustomTabs defaultValue="general" className="w-full">
+              <CustomTabsList className="w-full grid grid-cols-4">
+                <CustomTabsTrigger value="general">Genel</CustomTabsTrigger>
+                <CustomTabsTrigger value="pricing">Fiyatlandırma</CustomTabsTrigger>
+                <CustomTabsTrigger value="stock">Stok</CustomTabsTrigger>
+                <CustomTabsTrigger value="related">Benzer Ürünler</CustomTabsTrigger>
+              </CustomTabsList>
+              
+              <CustomTabsContent value="general" className="mt-6">
+                <ProductGeneralInfo
+                  product={product}
+                  onUpdate={updateProductMutation.mutate}
+                />
+              </CustomTabsContent>
+              
+              <CustomTabsContent value="pricing" className="mt-6">
+                <ProductPricing
+                  price={product.price}
+                  discountPrice={product.discount_price}
+                  currency={product.currency}
+                  taxRate={product.tax_rate}
+                  onUpdate={updateProductMutation.mutate}
+                />
+              </CustomTabsContent>
+              
+              <CustomTabsContent value="stock" className="mt-6">
+                <ProductInventory
+                  stockQuantity={product.stock_quantity}
+                  minStockLevel={product.min_stock_level}
+                  unit={product.unit}
+                  supplier={product.suppliers}
+                  lastPurchaseDate={product.last_purchase_date}
+                  onUpdate={updateProductMutation.mutate}
+                />
+              </CustomTabsContent>
+              
+              <CustomTabsContent value="related" className="mt-6">
+                <ProductRelated 
+                  categoryId={product.category_id} 
+                  currentProductId={product.id}
+                  relatedProducts={product.related_products}
+                  onUpdate={updateProductMutation.mutate}
+                />
+              </CustomTabsContent>
+            </CustomTabs>
           </div>
-
-          <CustomTabs defaultValue="general" className="w-full">
-            <CustomTabsList className="w-full grid grid-cols-4">
-              <CustomTabsTrigger value="general">Genel</CustomTabsTrigger>
-              <CustomTabsTrigger value="pricing">Fiyatlandırma</CustomTabsTrigger>
-              <CustomTabsTrigger value="stock">Stok</CustomTabsTrigger>
-              <CustomTabsTrigger value="related">Benzer Ürünler</CustomTabsTrigger>
-            </CustomTabsList>
-            
-            <CustomTabsContent value="general" className="mt-6">
-              <ProductGeneralInfo
-                product={product}
-                onUpdate={updateProductMutation.mutate}
-              />
-            </CustomTabsContent>
-            
-            <CustomTabsContent value="pricing" className="mt-6">
-              <ProductPricing
-                price={product.price}
-                discountPrice={product.discount_price}
-                currency={product.currency}
-                taxRate={product.tax_rate}
-                onUpdate={updateProductMutation.mutate}
-              />
-            </CustomTabsContent>
-            
-            <CustomTabsContent value="stock" className="mt-6">
-              <ProductInventory
-                stockQuantity={product.stock_quantity}
-                minStockLevel={product.min_stock_level}
-                unit={product.unit}
-                supplier={product.suppliers}
-                lastPurchaseDate={product.last_purchase_date}
-                onUpdate={updateProductMutation.mutate}
-              />
-            </CustomTabsContent>
-            
-            <CustomTabsContent value="related" className="mt-6">
-              <ProductRelated 
-                categoryId={product.category_id} 
-                currentProductId={product.id}
-                relatedProducts={product.related_products}
-                onUpdate={updateProductMutation.mutate}
-              />
-            </CustomTabsContent>
-          </CustomTabs>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

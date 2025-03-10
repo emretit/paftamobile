@@ -1,5 +1,6 @@
 
 import Navbar from "@/components/Navbar";
+import { TopBar } from "@/components/TopBar";
 import FinanceHeader from "@/components/finance/FinanceHeader";
 import AccountSummary from "@/components/finance/bank-accounts/AccountSummary";
 import GeneralLedger from "@/components/finance/GeneralLedger";
@@ -28,6 +29,7 @@ const Finance = ({ isCollapsed, setIsCollapsed }: FinanceProps) => {
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}
       >
+        <TopBar />
         <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6 animate-fade-in">
           <FinanceHeader />
 

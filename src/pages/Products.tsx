@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import ProductGrid from "@/components/products/ProductGrid";
 import ProductTable from "@/components/products/ProductTable";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
+import { TopBar } from "@/components/TopBar";
 
 interface ProductsProps {
   isCollapsed: boolean;
@@ -79,11 +81,12 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   };
 
   return (
-    <div className="flex min-h-screen font-sans">
+    <div className="min-h-screen bg-gray-50 flex">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <main className={`flex-1 transition-all duration-300 ease-in-out ${
-        isCollapsed ? "ml-[68px]" : "ml-[250px]"
+      <main className={`flex-1 transition-all duration-300 ${
+        isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
       }`}>
+        <TopBar />
         <div className="container mx-auto p-8 max-w-7xl">
           <ProductFilters
             setSearchQuery={setSearchQuery}
