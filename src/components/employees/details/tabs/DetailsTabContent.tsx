@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Employee } from "../../types";
-import { Save, User } from "lucide-react";
+import { User } from "lucide-react";
 import { EditableEmployeeDetails } from "../form/EditableEmployeeDetails";
 import { FormFields } from "../form/FormFields";
 import { useEmployeeDepartments } from "../../form/useEmployeeDepartments";
