@@ -18,10 +18,6 @@ export const DetailsTabContent = ({
   handleEmployeeUpdate,
   isEditing: initialIsEditing
 }: DetailsTabContentProps) => {
-  // Always set to true to keep edit mode active
-  const [isEditingDetails, setIsEditingDetails] = useState(true);
-  const departments = useEmployeeDepartments();
-  
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex justify-between items-center mb-6">

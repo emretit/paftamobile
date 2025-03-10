@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -41,15 +40,18 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
     e.preventDefault();
     setIsLoading(true);
 
-    // Ensure status is either 'active' or 'inactive'
-    const validStatus = formData.status === 'active' || formData.status === 'inactive' 
-      ? formData.status 
-      : 'active';
-    
-    console.log('Saving employee with status:', validStatus);
+    const statusMap: Record<string, 'active' | 'inactive'> = {
+      'aktif': 'active',
+      'pasif': 'inactive',
+      'izinli': 'active',
+      'ayrıldı': 'inactive',
+      'active': 'active',
+      'inactive': 'inactive'
+    };
 
+    const validStatus = statusMap[formData.status] || 'active';
+    
     try {
-      // Update the database with the form data
       const { error } = await supabase
         .from('employees')
         .update({
@@ -59,7 +61,7 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
           position: formData.position,
           department: formData.department,
           hire_date: formData.hire_date,
-          status: validStatus, // Use validated status
+          status: validStatus,
           date_of_birth: formData.date_of_birth || null,
           gender: formData.gender || null,
           marital_status: formData.marital_status || null,
@@ -76,26 +78,10 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
 
       if (error) throw error;
 
-      // Create the updated employee object to pass to onSave
       const updatedEmployee: Employee = {
         ...employee,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        phone: formData.phone || null,
-        position: formData.position,
-        department: formData.department,
-        hire_date: formData.hire_date,
-        status: validStatus as 'active' | 'inactive', // Use validated status
-        date_of_birth: formData.date_of_birth || null,
-        gender: formData.gender || null,
-        marital_status: formData.marital_status || null,
-        address: formData.address || null,
-        city: formData.city || null,
-        postal_code: formData.postal_code || null,
-        id_ssn: formData.id_ssn || null,
-        emergency_contact_name: formData.emergency_contact_name || null,
-        emergency_contact_phone: formData.emergency_contact_phone || null,
-        emergency_contact_relation: formData.emergency_contact_relation || null,
+        ...formData,
+        status: validStatus,
       };
 
       onSave(updatedEmployee);
