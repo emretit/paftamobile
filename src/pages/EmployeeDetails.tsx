@@ -76,7 +76,7 @@ const EmployeeDetails = ({ isCollapsed, setIsCollapsed }: EmployeeDetailsPagePro
               Geri Dön
             </button>
             <Button
-              onClick={() => navigate(`/employees/edit/${id}`)}
+              onClick={() => navigate(`/employees/${id}/edit`)}
               className="flex items-center gap-2"
             >
               <Pencil className="h-4 w-4" />

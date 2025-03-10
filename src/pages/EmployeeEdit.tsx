@@ -69,7 +69,7 @@ const EmployeeEdit = ({ isCollapsed, setIsCollapsed }: EmployeeEditPageProps) =>
         <div className="container mx-auto p-6">
           <div className="mb-6">
             <button
-              onClick={() => navigate(`/employees/details/${id}`)}
+              onClick={() => navigate(`/employees/${id}`)}
               className="flex items-center text-gray-600 hover:text-gray-900"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />

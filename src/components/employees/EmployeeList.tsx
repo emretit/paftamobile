@@ -1,96 +1,79 @@
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { FilterBar } from "./FilterBar";
+import { Button } from "@/components/ui/button";
+import { Plus, Grid, List } from "lucide-react";
+import type { Employee } from "./types";
 import { EmployeeTable } from "./EmployeeTable";
 import { EmployeeGrid } from "./EmployeeGrid";
-import type { Employee } from "./types";
+import { FilterBar } from "./FilterBar";
 import { useToast } from "@/components/ui/use-toast";
-import { useDebounce } from "@/hooks/useDebounce";
 
-// Type guard to check if status is valid
-const isValidStatus = (status: string): status is Employee['status'] => {
-  return ['active', 'inactive'].includes(status);
-};
-
-// Function to transform database row to Employee type
-const transformToEmployee = (row: any): Employee => {
-  if (!isValidStatus(row.status)) {
-    console.warn(`Invalid status: ${row.status}, defaulting to 'active'`);
-    row.status = 'active';
-  }
-  
-  return {
-    id: row.id,
-    first_name: row.first_name,
-    last_name: row.last_name,
-    email: row.email,
-    phone: row.phone,
-    position: row.position,
-    department: row.department,
-    hire_date: row.hire_date,
-    status: row.status,
-    avatar_url: row.avatar_url
-  };
-};
+type ViewMode = 'table' | 'grid';
 
 export const EmployeeList = () => {
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
-  const debouncedSearch = useDebounce(searchQuery, 300);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const navigate = useNavigate();
   const { toast } = useToast();
 
-  const fetchEmployees = async (search?: string) => {
-    try {
-      setIsLoading(true);
-      let query = supabase
-        .from('employees')
-        .select('id, first_name, last_name, email, phone, position, department, hire_date, status, avatar_url');
-
-      if (search) {
-        query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%,department.ilike.%${search}%,position.ilike.%${search}%`);
-      }
-
-      if (selectedDepartments.length > 0) {
-        query = query.in('department', selectedDepartments);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch employees",
-          variant: "destructive",
-        });
-        console.error('Error fetching employees:', error);
-        return;
-      }
-
-      const transformedEmployees = (data || []).map(transformToEmployee);
-      setEmployees(transformedEmployees);
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: "Error",
-        description: "An error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+  // Transform Supabase response to Employee type
+  const transformToEmployee = (item: any): Employee => {
+    // Check if status is a valid value, default to 'active' otherwise
+    let status = item.status;
+    if (status !== 'active' && status !== 'inactive') {
+      console.warn(`Invalid status: ${status}, defaulting to 'active'`);
+      status = 'active';
     }
+
+    return {
+      id: item.id,
+      first_name: item.first_name,
+      last_name: item.last_name,
+      email: item.email,
+      phone: item.phone || "",
+      position: item.position,
+      department: item.department,
+      hire_date: item.hire_date,
+      status: status,
+      avatar_url: item.avatar_url
+    };
   };
 
-  // Effect for search and department filters
   useEffect(() => {
-    fetchEmployees(debouncedSearch);
-  }, [debouncedSearch, selectedDepartments]);
+    // Implement employees fetch from Supabase
+    const fetchEmployees = async () => {
+      try {
+        setIsLoading(true);
+        
+        const { data, error } = await supabase
+          .from('employees')
+          .select('*')
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
 
-  // Effect for realtime updates
-  useEffect(() => {
+        const transformedEmployees = data ? data.map(transformToEmployee) : [];
+        setEmployees(transformedEmployees);
+      } catch (error) {
+        console.error('Error fetching employees:', error);
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Çalışan bilgileri yüklenirken bir hata oluştu.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEmployees();
+
+    // Set up real-time subscription for employees table
     const channel = supabase
       .channel('employees-changes')
       .on(
@@ -100,27 +83,21 @@ export const EmployeeList = () => {
           schema: 'public',
           table: 'employees'
         },
-        async (payload) => {
-          console.log('Realtime update received:', payload);
-          await fetchEmployees(debouncedSearch);
-          
-          let message = '';
-          switch (payload.eventType) {
-            case 'INSERT':
-              message = 'New employee added';
-              break;
-            case 'UPDATE':
-              message = 'Employee information updated';
-              break;
-            case 'DELETE':
-              message = 'Employee removed';
-              break;
+        (payload) => {
+          // Handle the real-time changes
+          if (payload.eventType === 'INSERT') {
+            const newEmployee = transformToEmployee(payload.new);
+            setEmployees(prev => [newEmployee, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedEmployee = transformToEmployee(payload.new);
+            setEmployees(prev => 
+              prev.map(emp => emp.id === updatedEmployee.id ? updatedEmployee : emp)
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setEmployees(prev => 
+              prev.filter(emp => emp.id !== payload.old.id)
+            );
           }
-          
-          toast({
-            title: "Update",
-            description: message,
-          });
         }
       )
       .subscribe();
@@ -128,31 +105,72 @@ export const EmployeeList = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [debouncedSearch, selectedDepartments, toast]);
+  }, [toast]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <div className="text-gray-500">Loading...</div>
-      </div>
-    );
-  }
+  // Filter employees based on search query and status filter
+  const filteredEmployees = employees.filter(employee => {
+    const matchesSearch = 
+      searchQuery === '' || 
+      `${employee.first_name} ${employee.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      employee.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      employee.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      employee.department.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = 
+      statusFilter === 'all' || 
+      employee.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleAddEmployee = () => {
+    navigate('/employees/new');
+  };
 
   return (
-    <>
-      <FilterBar 
-        viewMode={viewMode} 
-        setViewMode={setViewMode}
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Çalışan Listesi</h2>
+        <div className="flex space-x-2">
+          <Button
+            size="icon"
+            variant={viewMode === 'table' ? 'default' : 'outline'}
+            onClick={() => setViewMode('table')}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant={viewMode === 'grid' ? 'default' : 'outline'}
+            onClick={() => setViewMode('grid')}
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+          <Button onClick={handleAddEmployee} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Yeni Çalışan
+          </Button>
+        </div>
+      </div>
+
+      <FilterBar
         searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        selectedDepartments={selectedDepartments}
-        onDepartmentChange={setSelectedDepartments}
+        setSearchQuery={setSearchQuery}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
       />
+
       {viewMode === 'table' ? (
-        <EmployeeTable employees={employees} />
+        <EmployeeTable 
+          employees={filteredEmployees} 
+          isLoading={isLoading} 
+        />
       ) : (
-        <EmployeeGrid employees={employees} />
+        <EmployeeGrid 
+          employees={filteredEmployees} 
+          isLoading={isLoading} 
+        />
       )}
-    </>
+    </div>
   );
 };

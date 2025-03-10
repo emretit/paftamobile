@@ -75,10 +75,9 @@ const App = () => {
           <Route path="/purchase-invoices" element={<ProtectedRoute><PurchaseInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
           <Route path="/sales-invoices" element={<ProtectedRoute><SalesInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
           <Route path="/employees" element={<ProtectedRoute><Employees isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
-          <Route path="/employee-form" element={<ProtectedRoute><EmployeeForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
-          <Route path="/employee-form/:id" element={<ProtectedRoute><EmployeeForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
+          <Route path="/employees/new" element={<ProtectedRoute><EmployeeForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
           <Route path="/employees/:id" element={<ProtectedRoute><EmployeeDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
-          <Route path="/employee/:id/edit" element={<ProtectedRoute><EmployeeEdit isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
+          <Route path="/employees/:id/edit" element={<ProtectedRoute><EmployeeEdit isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
           <Route path="/tasks" element={<ProtectedRoute><Tasks isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
           <Route path="/purchase-management" element={<ProtectedRoute><PurchaseManagement isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
         </Routes>
