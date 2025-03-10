@@ -25,13 +25,13 @@ const DefaultLayout = ({
       
       <div 
         className={`flex-1 transition-all duration-300 ease-in-out overflow-auto ${
-          isCollapsed ? "ml-[68px]" : "ml-[250px]"
+          isCollapsed ? "ml-[60px]" : "ml-64"
         }`}
       >
         <TopBar />
         
         <div className="px-6 py-4 bg-white border-b">
-          <h1 className="text-2xl font-bold">{title}</h1>
+          <h1 className="text-2xl font-bold text-primary-dark">{title}</h1>
           {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
         </div>
         

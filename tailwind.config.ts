@@ -29,24 +29,24 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#D32F2F", // Canlı Kırmızı
+          DEFAULT: "#D32F2F", // NGS Bright Red
           foreground: "#ffffff",
-          dark: "#B71C1C", // Koyu Kırmızı (accent)
+          dark: "#B71C1C", // NGS Dark Red (accent)
         },
         secondary: {
-          DEFAULT: "#FFFFFF", // Beyaz
-          foreground: "#4A4A4A", // Koyu Gri
+          DEFAULT: "#FFFFFF", // White
+          foreground: "#4A4A4A", // Dark Grey
         },
         destructive: {
-          DEFAULT: "#E53935", // Hatalar için kırmızı
+          DEFAULT: "#E53935", // Error Red
           foreground: "#ffffff",
         },
         muted: {
-          DEFAULT: "#F5F5F5", // Hafif gri arka plan
-          foreground: "#4A4A4A", // Koyu Gri
+          DEFAULT: "#F5F5F5", // Light Grey background
+          foreground: "#4A4A4A", // Dark Grey
         },
         accent: {
-          DEFAULT: "#B71C1C", // Koyu Kırmızı
+          DEFAULT: "#B71C1C", // NGS Dark Red
           foreground: "#ffffff",
         },
         popover: {
@@ -58,15 +58,15 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         success: {
-          DEFAULT: "#4CAF50", // Yeşil
+          DEFAULT: "#4CAF50", // Green
           foreground: "#ffffff",
         },
         warning: {
-          DEFAULT: "#F39C12", // Turuncu
+          DEFAULT: "#F39C12", // Orange
           foreground: "#ffffff",
         },
         error: {
-          DEFAULT: "#E53935", // Kırmızıya yakın canlı hata rengi
+          DEFAULT: "#E53935", // Vivid Red
           foreground: "#ffffff",
         },
       },

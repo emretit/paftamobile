@@ -11,13 +11,14 @@ interface DetailActionsProps {
 
 export const DetailActions: React.FC<DetailActionsProps> = ({ isPending, onSave, onClose }) => {
   return (
-    <div className="mt-6 flex justify-end space-x-2">
-      <Button variant="outline" onClick={onClose}>
+    <div className="mt-6 flex justify-end space-x-3">
+      <Button variant="outline" onClick={onClose} className="font-medium">
         Kapat
       </Button>
       <Button 
         onClick={onSave}
         disabled={isPending}
+        className="font-medium"
       >
         {isPending ? (
           <>

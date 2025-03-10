@@ -19,16 +19,17 @@ export const FormActions: React.FC<FormActionsProps> = ({
   setShowPreview
 }) => {
   return (
-    <div className="flex justify-end space-x-2 pt-4">
-      <Button variant="outline" onClick={onClose} type="button">
+    <div className="flex justify-end space-x-3 pt-6">
+      <Button variant="outline" onClick={onClose} type="button" className="font-medium">
         İptal
       </Button>
       
       {setShowPreview && (
         <Button 
           type="button" 
-          variant="outline" 
+          variant="secondary" 
           onClick={() => setShowPreview(!showPreview)}
+          className="font-medium"
         >
           {showPreview ? (
             <>
@@ -44,7 +45,7 @@ export const FormActions: React.FC<FormActionsProps> = ({
         </Button>
       )}
       
-      <Button type="submit" disabled={isSubmitting}>
+      <Button type="submit" disabled={isSubmitting} className="font-medium">
         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {isEditing ? "Güncelle" : "Oluştur"}
       </Button>

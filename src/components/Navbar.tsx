@@ -36,7 +36,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
     <aside
       className={`fixed left-0 top-0 h-screen z-20 transition-all duration-300 ${
         isCollapsed ? "w-[60px]" : "w-64"
-      } border-r bg-white`}
+      } border-r bg-primary`}
     >
       <nav className="flex h-full w-full flex-col">
         <NavHeader isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
@@ -51,9 +51,9 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
                   <button
                     onClick={() => toggleCategory(item.category, item.path)}
                     className={cn(
-                      "flex items-center w-full h-11 px-3 rounded-md text-secondary-foreground hover:bg-primary/10 hover:text-primary",
+                      "flex items-center w-full h-11 px-3 rounded-md text-white hover:bg-accent/70",
                       !isCollapsed && "justify-between",
-                      isActive(item.path || '') && "bg-primary text-white hover:text-white"
+                      isActive(item.path || '') && "bg-accent"
                     )}
                   >
                     <div className="flex items-center">
@@ -96,7 +96,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
           })}
         </div>
 
-        <Separator className="bg-gray-200" />
+        <Separator className="bg-white/20" />
         
         <div className="p-3">
           <NavLink
@@ -109,9 +109,9 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
         </div>
       </nav>
 
-      <div className="p-4 border-t">
+      <div className="p-4 border-t border-white/20">
         <div className="flex items-center justify-between">
-          {!isCollapsed && <span className="text-sm font-medium">Hesap</span>}
+          {!isCollapsed && <span className="text-sm font-medium text-white">Hesap</span>}
           <UserMenu />
         </div>
       </div>

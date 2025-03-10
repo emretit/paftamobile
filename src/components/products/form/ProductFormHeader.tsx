@@ -31,17 +31,18 @@ const ProductFormHeader = ({
           variant="ghost" 
           size="icon"
           onClick={() => navigate(productId ? `/product-details/${productId}` : "/products")}
+          className="h-10 w-10 rounded-full"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-2xl font-semibold">
+        <h1 className="text-2xl font-bold text-primary-dark">
           {isEditing ? "Ürünü Düzenle" : "Yeni Ürün"}
         </h1>
       </div>
       
-      <div className="flex space-x-2">
+      <div className="flex space-x-3">
         {isEditing && (
-          <Button variant="outline" onClick={onDuplicate}>
+          <Button variant="outline" onClick={onDuplicate} className="font-medium">
             <Copy className="h-4 w-4 mr-2" />
             Ürünü Kopyala
           </Button>
@@ -50,6 +51,7 @@ const ProductFormHeader = ({
           onClick={form.handleSubmit((values) => onSubmit(values, true))}
           variant="secondary"
           disabled={isSubmitting}
+          className="font-medium"
         >
           <Plus className="h-4 w-4 mr-2" />
           Kaydet ve Yeni Ekle
@@ -57,6 +59,7 @@ const ProductFormHeader = ({
         <Button 
           onClick={form.handleSubmit((values) => onSubmit(values, false))}
           disabled={isSubmitting}
+          className="font-medium"
         >
           <Save className="h-4 w-4 mr-2" />
           {isEditing ? "Güncelle" : "Kaydet"}

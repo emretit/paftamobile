@@ -33,7 +33,7 @@
     --input: 0 0% 90%;
     --ring: 0 65% 51%; /* #D32F2F */
  
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
  
   .dark {
@@ -87,6 +87,14 @@
   .slide-in {
     @apply animate-[slideIn_0.3s_ease-in-out];
   }
+  
+  .ngs-form-input {
+    @apply border-2 border-primary rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50;
+  }
+  
+  .ngs-hover-effect {
+    @apply hover:bg-[#FCE4EC] transition-colors duration-200;
+  }
 }
 
 @layer base {
@@ -99,6 +107,10 @@
   }
   html {
     scroll-behavior: smooth;
+  }
+  
+  label {
+    @apply font-semibold text-foreground text-sm;
   }
 }
 

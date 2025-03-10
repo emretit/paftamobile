@@ -8,11 +8,11 @@ interface FormActionsProps {
 
 const FormActions = ({ onClose, isEditing }: FormActionsProps) => {
   return (
-    <div className="flex justify-end gap-2">
-      <Button type="button" variant="outline" onClick={onClose}>
+    <div className="flex justify-end gap-3 pt-4">
+      <Button type="button" variant="outline" onClick={onClose} className="font-medium">
         İptal
       </Button>
-      <Button type="submit">
+      <Button type="submit" className="font-medium">
         {isEditing ? 'Güncelle' : 'Oluştur'}
       </Button>
     </div>
