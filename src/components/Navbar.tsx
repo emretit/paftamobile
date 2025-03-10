@@ -1,4 +1,3 @@
-
 import { useLocation, useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -7,6 +6,7 @@ import NavLink from "./navbar/NavLink";
 import { navItems, settingsItem } from "./navbar/nav-config";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import UserMenu from "@/components/UserMenu";
 
 interface NavbarProps {
   isCollapsed: boolean;
@@ -20,29 +20,27 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
   const [expandedCategories, setExpandedCategories] = useState<string[]>(["CRM"]);
 
   const toggleCategory = (category: string, path?: string) => {
-    // Toggle the expanded state
     setExpandedCategories(prev => 
       prev.includes(category) 
         ? prev.filter(c => c !== category)
         : [...prev, category]
     );
     
-    // Navigate to the path if provided
     if (path) {
       navigate(path);
     }
   };
 
   return (
-    <div className={cn(
-      "fixed left-0 top-0 z-50 h-full shadow-xl bg-[#1A1F2C]",
-      isCollapsed ? "w-[68px]" : "w-[250px]",
-      "group transition-all duration-300 ease-in-out"
-    )}>
+    <aside
+      className={`fixed left-0 top-0 h-screen z-10 transition-all duration-300 ${
+        isCollapsed ? "w-[60px]" : "w-64"
+      } border-r bg-white`}
+    >
       <nav className="flex h-full w-full flex-col">
         <NavHeader isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
         
-        <div className="flex-1 space-y-1 px-3 py-4">
+        <div className="flex-1 overflow-auto">
           {navItems.map((item, index) => {
             if ('category' in item) {
               const isExpanded = expandedCategories.includes(item.category);
@@ -109,7 +107,14 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
           />
         </div>
       </nav>
-    </div>
+
+      <div className="p-4 border-t">
+        <div className="flex items-center justify-between">
+          {!isCollapsed && <span className="text-sm font-medium">Hesap</span>}
+          <UserMenu />
+        </div>
+      </div>
+    </aside>
   );
 };
 
