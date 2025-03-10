@@ -3,6 +3,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Bell, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuthState } from "@/components/navbar/useAuthState";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +13,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export const TopBar = () => {
+  const navigate = useNavigate();
+  const { user, userInitials } = useAuthState();
+  
+  const handleProfileClick = () => {
+    navigate("/profile");
+  };
+
   return (
     <div className="h-16 border-b bg-white flex items-center justify-between px-6">
       <div className="flex items-center gap-2">
@@ -25,19 +34,21 @@ export const TopBar = () => {
           <DropdownMenuTrigger asChild>
             <div className="flex items-center gap-2 cursor-pointer">
               <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>YK</AvatarFallback>
+                <AvatarImage src={user?.user_metadata?.avatar_url} />
+                <AvatarFallback>{userInitials}</AvatarFallback>
               </Avatar>
               <div className="hidden sm:block">
-                <p className="text-sm font-medium">Yönetici Kullanıcı</p>
-                <p className="text-xs text-gray-500">yonetici@firma.com</p>
+                <p className="text-sm font-medium">
+                  {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Kullanıcı"}
+                </p>
+                <p className="text-xs text-gray-500">{user?.email || ""}</p>
               </div>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem>Profilim</DropdownMenuItem>
-            <DropdownMenuItem>Ayarlar</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">Çıkış Yap</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleProfileClick}>Profilim</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/settings")}>Ayarlar</DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600" onClick={() => navigate("/auth")}>Çıkış Yap</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
