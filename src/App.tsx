@@ -24,7 +24,6 @@ import SalesInvoices from "@/pages/SalesInvoices";
 import Auth from "@/pages/Auth";
 import Employees from "@/pages/Employees";
 import EmployeeForm from "@/pages/EmployeeForm";
-import EmployeeEdit from "@/pages/EmployeeEdit";
 import EmployeeDetails from "@/pages/EmployeeDetails";
 import Tasks from "@/pages/Tasks";
 import CrmDashboard from "@/pages/CrmDashboard";
