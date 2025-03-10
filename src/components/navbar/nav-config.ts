@@ -12,7 +12,6 @@ import {
   FileText,
   Package,
   Settings,
-  Calendar,
   Briefcase,
   ListTodo,
   ShoppingCart
@@ -38,7 +37,7 @@ export const navItems = [
     category: "CRM",
     icon: Briefcase,
     items: crmItems,
-    path: "/crm"  // Ana kategori tıklandığında gidilecek path
+    path: "/crm"
   },
   { path: "/contacts", icon: Users, label: "Müşteriler" },
   { path: "/suppliers", icon: Truck, label: "Tedarikçiler" },
@@ -52,7 +51,6 @@ export const navItems = [
   { path: "/finance", icon: Wallet, label: "Finans" },
   { path: "/purchase-management", icon: ShoppingCart, label: "Satın Alma" },
   { path: "/service", icon: Wrench, label: "Servis" },
-  { path: "/calendar", icon: Calendar, label: "Takvim" },
   { path: "/purchase-invoices", icon: FileDown, label: "Alış Faturaları" },
   { path: "/sales-invoices", icon: FileUp, label: "Satış Faturaları" }
 ];

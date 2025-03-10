@@ -17,7 +17,6 @@ import Proposals from "@/pages/Proposals";
 import ProposalForm from "@/pages/ProposalForm";
 import Deals from "@/pages/Deals";
 import DealsTable from "@/pages/DealsTable";
-import Calendar from "@/pages/Calendar";
 import Finance from "@/pages/Finance";
 import Service from "@/pages/Service";
 import Settings from "@/pages/Settings";
@@ -70,7 +69,6 @@ const App = () => {
           <Route path="/proposal-form" element={<ProtectedRoute><ProposalForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
           <Route path="/deals" element={<ProtectedRoute><Deals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
           <Route path="/deals-table" element={<ProtectedRoute><DealsTable isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
-          <Route path="/calendar" element={<ProtectedRoute><Calendar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
           <Route path="/finance" element={<ProtectedRoute><Finance isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
           <Route path="/service" element={<ProtectedRoute><Service isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>} />
