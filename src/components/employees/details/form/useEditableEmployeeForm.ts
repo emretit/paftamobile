@@ -41,6 +41,13 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
     e.preventDefault();
     setIsLoading(true);
 
+    // Ensure status is either 'active' or 'inactive'
+    const validStatus = formData.status === 'active' || formData.status === 'inactive' 
+      ? formData.status 
+      : 'active';
+    
+    console.log('Saving employee with status:', validStatus);
+
     try {
       // Update the database with the form data
       const { error } = await supabase
@@ -52,7 +59,7 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
           position: formData.position,
           department: formData.department,
           hire_date: formData.hire_date,
-          status: formData.status,
+          status: validStatus, // Use validated status
           date_of_birth: formData.date_of_birth || null,
           gender: formData.gender || null,
           marital_status: formData.marital_status || null,
@@ -78,7 +85,7 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
         position: formData.position,
         department: formData.department,
         hire_date: formData.hire_date,
-        status: formData.status as 'active' | 'inactive',
+        status: validStatus as 'active' | 'inactive', // Use validated status
         date_of_birth: formData.date_of_birth || null,
         gender: formData.gender || null,
         marital_status: formData.marital_status || null,
