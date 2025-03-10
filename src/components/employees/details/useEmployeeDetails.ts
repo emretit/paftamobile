@@ -8,7 +8,6 @@ export const useEmployeeDetails = (id?: string) => {
   const { toast } = useToast();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
 
   useEffect(() => {
@@ -49,7 +48,6 @@ export const useEmployeeDetails = (id?: string) => {
 
   const handleEmployeeUpdate = (updatedEmployee: Employee) => {
     setEmployee(updatedEmployee);
-    setIsEditing(false);
     toast({
       title: "Başarılı",
       description: "Çalışan bilgileri başarıyla güncellendi.",
@@ -59,8 +57,6 @@ export const useEmployeeDetails = (id?: string) => {
   return {
     employee,
     isLoading,
-    isEditing,
-    setIsEditing,
     activeTab,
     setActiveTab,
     handleEmployeeUpdate

@@ -18,8 +18,6 @@ const EmployeeDetails = ({ isCollapsed, setIsCollapsed }: EmployeeDetailsPagePro
   const { 
     employee, 
     isLoading, 
-    isEditing, 
-    setIsEditing, 
     activeTab, 
     setActiveTab, 
     handleEmployeeUpdate 
@@ -30,11 +28,7 @@ const EmployeeDetails = ({ isCollapsed, setIsCollapsed }: EmployeeDetailsPagePro
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
         <div className="container mx-auto p-6">
-          <EmployeeDetailsHeader 
-            isEditing={isEditing} 
-            setIsEditing={setIsEditing} 
-            employeeId={employee?.id}
-          />
+          <EmployeeDetailsHeader employeeId={employee?.id} />
           
           {isLoading ? (
             <EmployeeDetailsLoading />
@@ -50,7 +44,7 @@ const EmployeeDetails = ({ isCollapsed, setIsCollapsed }: EmployeeDetailsPagePro
                 employee={employee}
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
-                isEditing={isEditing}
+                isEditing={false}
                 handleEmployeeUpdate={handleEmployeeUpdate}
               />
             </>

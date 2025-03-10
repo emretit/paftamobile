@@ -33,42 +33,35 @@ export const EmployeeDetailTabs = ({
       </TabsList>
       
       <TabsContent value="details" className="mt-6">
-        {isEditing ? (
-          <EditableEmployeeDetails 
-            employee={employee} 
-            onSave={handleEmployeeUpdate} 
-          />
-        ) : (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium mb-4">Çalışan Detayları</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <p className="text-sm text-gray-500">Adı Soyadı</p>
-                <p className="font-medium">{employee.first_name} {employee.last_name}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Departman</p>
-                <p className="font-medium">{employee.department}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Pozisyon</p>
-                <p className="font-medium">{employee.position}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">E-posta</p>
-                <p className="font-medium">{employee.email}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Telefon</p>
-                <p className="font-medium">{employee.phone || "-"}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">İşe Başlama Tarihi</p>
-                <p className="font-medium">{new Date(employee.hire_date).toLocaleDateString('tr-TR')}</p>
-              </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium mb-4">Çalışan Detayları</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <p className="text-sm text-gray-500">Adı Soyadı</p>
+              <p className="font-medium">{employee.first_name} {employee.last_name}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Departman</p>
+              <p className="font-medium">{employee.department}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Pozisyon</p>
+              <p className="font-medium">{employee.position}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">E-posta</p>
+              <p className="font-medium">{employee.email}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Telefon</p>
+              <p className="font-medium">{employee.phone || "-"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">İşe Başlama Tarihi</p>
+              <p className="font-medium">{new Date(employee.hire_date).toLocaleDateString('tr-TR')}</p>
             </div>
           </div>
-        )}
+        </div>
       </TabsContent>
       
       <TabsContent value="salary" className="mt-6">

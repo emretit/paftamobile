@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Pencil, Maximize2 } from "lucide-react";
+import { Maximize2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Employee } from "@/components/employees/types";
 import { EmployeeDetailsView } from "./EmployeeDetailsView";
@@ -33,37 +33,21 @@ export const EmployeeDetailPanel = ({ employee, isOpen, onClose }: EmployeeDetai
     onClose();
   };
 
-  const handleEditEmployee = () => {
-    navigate(`/employees/${employee.id}`);
-    onClose();
-  };
-
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className="sm:max-w-md md:max-w-lg overflow-y-auto">
         <SheetHeader className="mb-4">
           <div className="flex justify-between items-center">
             <SheetTitle>Çalışan Detayları</SheetTitle>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleViewFullDetails}
-                className="flex items-center gap-1"
-              >
-                <Maximize2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Tam Görünüm</span>
-              </Button>
-              <Button 
-                variant="default" 
-                size="sm" 
-                onClick={handleEditEmployee}
-                className="flex items-center gap-1"
-              >
-                <Pencil className="h-4 w-4" />
-                <span className="hidden sm:inline">Düzenle</span>
-              </Button>
-            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleViewFullDetails}
+              className="flex items-center gap-1"
+            >
+              <Maximize2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Tam Görünüm</span>
+            </Button>
           </div>
         </SheetHeader>
         
