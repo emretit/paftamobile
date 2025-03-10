@@ -13,22 +13,22 @@ export const coreFeatures = [
   {
     title: "Kolay Kullanım",
     description: "Sezgisel arayüz ile tüm ekibiniz hızlıca adapte olabilir, eğitim gerektirmez.",
-    icon: <Zap className="h-6 w-6 text-blue-600" />,
+    icon: Zap,
   },
   {
     title: "Esnek Raporlama",
     description: "Özelleştirilebilir raporlar ve grafiklerle verilerinizi anlamlı bilgilere dönüştürün.",
-    icon: <BarChart3 className="h-6 w-6 text-blue-600" />,
+    icon: BarChart3,
   },
   {
     title: "Entegrasyonlar",
     description: "Mevcut araçlarınızla sorunsuz entegrasyon, iş akışlarınızı kesintisiz hale getirin.",
-    icon: <Globe className="h-6 w-6 text-blue-600" />,
+    icon: Globe,
   },
   {
     title: "Mobil Uyumlu",
     description: "Hareket halindeyken bile işlerinizi yönetin, her cihazdan erişim sağlayın.",
-    icon: <Smartphone className="h-6 w-6 text-blue-600" />,
+    icon: Smartphone,
   },
 ];
 
