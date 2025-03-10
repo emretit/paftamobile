@@ -1,0 +1,107 @@
+
+/* Modern calendar styles */
+.modern-calendar .rbc-calendar {
+  font-family: 'Inter', sans-serif;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.modern-calendar .rbc-header {
+  padding: 10px 0;
+  font-weight: 500;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modern-calendar .rbc-month-view {
+  border-radius: 8px;
+  overflow: hidden;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.modern-calendar .rbc-day-bg {
+  transition: background-color 0.2s;
+}
+
+.modern-calendar .rbc-day-bg:hover {
+  background-color: #f3f4f6;
+}
+
+.modern-calendar .rbc-today {
+  background-color: #f0f9ff;
+}
+
+.modern-calendar .rbc-toolbar {
+  margin-bottom: 20px;
+  padding: 0 10px;
+}
+
+.modern-calendar .rbc-toolbar button {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #374151;
+  padding: 6px 12px;
+  font-weight: 500;
+}
+
+.modern-calendar .rbc-toolbar button:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.modern-calendar .rbc-toolbar button.rbc-active {
+  background-color: #9b87f5;
+  border-color: #9b87f5;
+  color: white;
+}
+
+.modern-calendar .rbc-toolbar button.rbc-active:hover {
+  background-color: #8b76e4;
+  border-color: #8b76e4;
+}
+
+.modern-calendar .rbc-event {
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-size: 0.875rem;
+  border: none;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.modern-calendar .rbc-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.modern-calendar .rbc-day-slot .rbc-event {
+  border-left: 4px solid rgba(0, 0, 0, 0.2);
+}
+
+.modern-calendar .rbc-off-range-bg {
+  background-color: #f9fafb;
+}
+
+.modern-calendar .rbc-off-range {
+  color: #9ca3af;
+}
+
+.modern-calendar .rbc-date-cell {
+  padding: 5px 10px;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.modern-calendar .rbc-date-cell.rbc-now {
+  font-weight: bold;
+  color: #9b87f5;
+}
+
+.modern-calendar .rbc-month-row {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modern-calendar .rbc-row-bg {
+  border-bottom: none;
+}

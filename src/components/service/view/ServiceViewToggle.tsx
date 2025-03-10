@@ -15,7 +15,7 @@ export const ServiceViewToggle: React.FC<ServiceViewToggleProps> = ({
   setActiveView
 }) => {
   return (
-    <div className="bg-white border rounded-md p-1 flex items-center">
+    <div className="bg-white border rounded-md p-1 flex items-center shadow-sm">
       <Button 
         variant={activeView === "table" ? "default" : "ghost"} 
         size="sm"

@@ -5,6 +5,7 @@ import { ServiceRequestTable } from "@/components/service/ServiceRequestTable";
 import { ServiceRequestCalendar } from "@/components/service/ServiceRequestCalendar";
 import { ViewType } from "./ServiceViewToggle";
 import { ServiceRequest } from "@/hooks/useServiceRequests";
+import { NewServiceRequests } from "@/components/service/NewServiceRequests";
 
 interface ServiceContentViewProps {
   activeView: ViewType;
@@ -25,12 +26,19 @@ export const ServiceContentView: React.FC<ServiceContentViewProps> = ({
     switch (activeView) {
       case "calendar":
         return (
-          <ServiceRequestCalendar
-            searchQuery={searchQuery}
-            statusFilter={statusFilter === "all" ? null : statusFilter}
-            technicianFilter={technicianFilter === "all" ? null : technicianFilter}
-            onSelectRequest={onSelectRequest}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
+              <ServiceRequestCalendar
+                searchQuery={searchQuery}
+                statusFilter={statusFilter === "all" ? null : statusFilter}
+                technicianFilter={technicianFilter === "all" ? null : technicianFilter}
+                onSelectRequest={onSelectRequest}
+              />
+            </div>
+            <div className="lg:col-span-1">
+              <NewServiceRequests onSelectRequest={onSelectRequest} />
+            </div>
+          </div>
         );
       case "table":
       default:

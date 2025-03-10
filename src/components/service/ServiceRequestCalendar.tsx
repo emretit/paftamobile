@@ -8,6 +8,9 @@ import { useTechnicianNames } from "./hooks/useTechnicianNames";
 import { Card } from "@/components/ui/card";
 import { TECHNICIAN_COLORS } from "@/types/calendar";
 
+// Import additional components
+import "./calendar/calendar-styles.css";
+
 const localizer = momentLocalizer(moment);
 
 interface ServiceRequestCalendarProps {
@@ -79,7 +82,8 @@ export const ServiceRequestCalendar: React.FC<ServiceRequestCalendarProps> = ({
         end: new Date(eventDate.getTime() + 60 * 60 * 1000), // 1 hour duration
         resource: request,
         allDay: false,
-        technicianId: request.assigned_to
+        technicianId: request.assigned_to,
+        status: request.status
       };
     });
   }, [filteredRequests]);
@@ -87,6 +91,7 @@ export const ServiceRequestCalendar: React.FC<ServiceRequestCalendarProps> = ({
   // Custom event styling
   const eventStyleGetter = (event: any) => {
     const color = getTechnicianColor(event.technicianId);
+    const isNewRequest = event.status === "new";
     
     return {
       style: {
@@ -94,7 +99,10 @@ export const ServiceRequestCalendar: React.FC<ServiceRequestCalendarProps> = ({
         borderRadius: '4px',
         color: '#fff',
         border: 'none',
-        display: 'block'
+        display: 'block',
+        boxShadow: isNewRequest ? '0 0 0 2px #ff4081' : 'none',
+        borderLeft: isNewRequest ? '4px solid #ff4081' : 'none',
+        opacity: 0.9
       }
     };
   };
@@ -123,7 +131,7 @@ export const ServiceRequestCalendar: React.FC<ServiceRequestCalendarProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-md border p-4 min-h-[600px]">
+    <div className="bg-white rounded-md border p-4 min-h-[600px] shadow-sm modern-calendar">
       <Calendar
         localizer={localizer}
         events={calendarEvents}
