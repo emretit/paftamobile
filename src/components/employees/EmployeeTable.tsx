@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Pencil } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -125,8 +125,8 @@ const EmployeeTable = ({ employees, isLoading }: EmployeeTableProps) => {
                       onClick={(e) => handleViewDetailsClick(e, employee.id)}
                       className="h-8 w-8 ml-auto"
                     >
-                      <span className="sr-only">Detaylar</span>
-                      <Eye className="h-4 w-4" />
+                      <span className="sr-only">Düzenle</span>
+                      <Pencil className="h-4 w-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
