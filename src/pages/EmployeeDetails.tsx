@@ -26,8 +26,8 @@ const EmployeeDetails = ({ isCollapsed, setIsCollapsed }: EmployeeDetailsPagePro
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <main className={`transition-all duration-300 pt-6 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
-        <div className="container mx-auto px-6">
+      <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
+        <div className="container mx-auto px-6 py-6">
           <EmployeeDetailsHeader 
             employeeId={employee?.id} 
             employeeName={employee ? `${employee.first_name} ${employee.last_name}` : undefined}

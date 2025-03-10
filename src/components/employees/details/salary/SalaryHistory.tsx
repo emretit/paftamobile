@@ -1,7 +1,7 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { FileEdit, Calendar } from "lucide-react";
+import { FileEdit, Calendar, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SalaryRecord } from "./types";
 
@@ -16,7 +16,7 @@ export const SalaryHistory = ({ salaryHistory, isLoading }: SalaryHistoryProps) 
   };
 
   return (
-    <Card className="border border-gray-100 shadow-sm">
+    <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
       <CardHeader className="bg-white pb-2 border-b border-gray-100">
         <CardTitle className="text-lg flex items-center">
           <Calendar className="h-5 w-5 mr-2 text-primary" />
@@ -47,15 +47,18 @@ export const SalaryHistory = ({ salaryHistory, isLoading }: SalaryHistoryProps) 
               <TableBody>
                 {salaryHistory.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                      <p className="mb-2">Henüz maaş kaydı bulunmamaktadır.</p>
-                      <p className="text-sm">Çalışana ait maaş kayıtları burada görüntülenecek.</p>
+                    <TableCell colSpan={8} className="text-center py-10 text-gray-500">
+                      <div className="max-w-xs mx-auto">
+                        <Calendar className="h-10 w-10 mx-auto text-gray-300 mb-3" />
+                        <p className="font-medium mb-2 text-gray-700">Henüz maaş kaydı bulunmamaktadır</p>
+                        <p className="text-sm">Çalışana ait maaş kayıtları burada görüntülenecek.</p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (
                   salaryHistory.map((record) => (
                     <TableRow key={record.id} className="hover:bg-gray-50/50 transition-colors">
-                      <TableCell>{new Date(record.payment_date).toLocaleDateString('tr-TR')}</TableCell>
+                      <TableCell className="font-medium">{new Date(record.payment_date).toLocaleDateString('tr-TR')}</TableCell>
                       <TableCell>₺{record.base_salary.toLocaleString()}</TableCell>
                       <TableCell>₺{record.allowances.toLocaleString()}</TableCell>
                       <TableCell>₺{record.bonuses.toLocaleString()}</TableCell>
@@ -73,8 +76,8 @@ export const SalaryHistory = ({ salaryHistory, isLoading }: SalaryHistoryProps) 
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-primary">
-                          <FileEdit className="h-4 w-4" />
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-primary hover:bg-gray-100 rounded-full">
+                          <ChevronRight className="h-4 w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>

@@ -14,7 +14,7 @@ export const SalaryStats = ({ salaryHistory }: SalaryStatsProps) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <Card className="border-0 shadow-md bg-gradient-to-br from-white to-gray-50">
+      <Card className="border-0 shadow-md bg-gradient-to-br from-white to-gray-50 hover:shadow-lg transition-shadow">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center">
             <CreditCard className="h-4 w-4 mr-2 text-primary" />
@@ -34,7 +34,7 @@ export const SalaryStats = ({ salaryHistory }: SalaryStatsProps) => {
           </p>
         </CardContent>
       </Card>
-      <Card className="border-0 shadow-md bg-gradient-to-br from-white to-gray-50">
+      <Card className="border-0 shadow-md bg-gradient-to-br from-white to-gray-50 hover:shadow-lg transition-shadow">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center">
             <TrendingUp className="h-4 w-4 mr-2 text-primary" />
@@ -52,7 +52,7 @@ export const SalaryStats = ({ salaryHistory }: SalaryStatsProps) => {
           </p>
         </CardContent>
       </Card>
-      <Card className="border-0 shadow-md bg-gradient-to-br from-white to-gray-50">
+      <Card className="border-0 shadow-md bg-gradient-to-br from-white to-gray-50 hover:shadow-lg transition-shadow">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center">
             <PieChart className="h-4 w-4 mr-2 text-primary" />
