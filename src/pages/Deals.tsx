@@ -1,5 +1,6 @@
 
 import Navbar from "@/components/Navbar";
+import { TopBar } from "@/components/TopBar";
 import DealDetailsModal from "@/components/deals/DealDetailsModal";
 import DealBulkActions from "@/components/deals/DealBulkActions";
 import DealsHeader from "@/components/deals/DealsHeader";
@@ -33,6 +34,7 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
           isCollapsed ? 'ml-[60px]' : 'ml-[60px] sm:ml-64'
         }`}
       >
+        <TopBar />
         <div className="p-6">
           <DealsHeader />
           <DealsKanban

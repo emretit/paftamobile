@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
+import { TopBar } from "@/components/TopBar";
 import CustomerListHeader from "@/components/customers/CustomerListHeader";
 import CustomerListFilters from "@/components/customers/CustomerListFilters";
 import CustomerList from "@/components/customers/CustomerList";
@@ -73,25 +74,28 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
     <div className="min-h-screen bg-white flex relative">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main
-        className={`flex-1 p-4 sm:p-8 transition-all duration-300 ${
+        className={`flex-1 transition-all duration-300 ${
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}
       >
-        <CustomerListHeader />
-        <CustomerListFilters 
-          search={search}
-          setSearch={setSearch}
-          typeFilter={typeFilter}
-          setTypeFilter={setTypeFilter}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-        />
-        <CustomerList 
-          customers={sortedCustomers}
-          isLoading={isLoading}
-          sortDirection={sortDirection}
-          onSortDirectionChange={setSortDirection}
-        />
+        <TopBar />
+        <div className="p-4 sm:p-8">
+          <CustomerListHeader />
+          <CustomerListFilters 
+            search={search}
+            setSearch={setSearch}
+            typeFilter={typeFilter}
+            setTypeFilter={setTypeFilter}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+          />
+          <CustomerList 
+            customers={sortedCustomers}
+            isLoading={isLoading}
+            sortDirection={sortDirection}
+            onSortDirectionChange={setSortDirection}
+          />
+        </div>
       </main>
     </div>
   );

@@ -1,6 +1,7 @@
 
 import { useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+import { TopBar } from "@/components/TopBar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ContactHeader } from "@/components/customers/details/ContactHeader";
@@ -40,8 +41,11 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
     return (
       <div className="min-h-screen bg-white">
         <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-        <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'} p-8`}>
-          <div className="text-center py-8">Yükleniyor...</div>
+        <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
+          <TopBar />
+          <div className="p-8">
+            <div className="text-center py-8">Yükleniyor...</div>
+          </div>
         </main>
       </div>
     );
@@ -51,8 +55,11 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
     return (
       <div className="min-h-screen bg-white">
         <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-        <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'} p-8`}>
-          <div className="text-center py-8">Müşteri bulunamadı</div>
+        <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
+          <TopBar />
+          <div className="p-8">
+            <div className="text-center py-8">Müşteri bulunamadı</div>
+          </div>
         </main>
       </div>
     );
@@ -61,9 +68,12 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
   return (
     <div className="min-h-screen bg-white">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'} p-8`}>
-        <ContactHeader customer={customer} id={id} />
-        <ContactTabs customer={customer} />
+      <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
+        <TopBar />
+        <div className="p-8">
+          <ContactHeader customer={customer} id={id} />
+          <ContactTabs customer={customer} />
+        </div>
       </main>
     </div>
   );

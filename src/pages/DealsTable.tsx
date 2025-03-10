@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
+import { TopBar } from "@/components/TopBar";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import DealsTable from "@/components/deals/DealsTable";
@@ -74,6 +75,7 @@ const DealsTablePage = ({ isCollapsed, setIsCollapsed }: DealsTablePageProps) =>
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}
       >
+        <TopBar />
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
