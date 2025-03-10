@@ -28,3 +28,14 @@ export const initialFormData: EmployeeFormData = {
 };
 
 export const POSITIONS = ['Admin', 'Technician', 'Sales Rep', 'Support'];
+
+// Add form validation schema
+export const formValidationSchema = {
+  first_name: { required: true, message: 'First name is required' },
+  last_name: { required: true, message: 'Last name is required' },
+  email: { required: true, message: 'Email is required' },
+  position: { required: true, message: 'Position is required' },
+  department: { required: true, message: 'Department is required' },
+  hire_date: { required: true, message: 'Hire date is required' },
+  status: { required: true, message: 'Status is required' }
+};

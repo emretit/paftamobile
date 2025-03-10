@@ -23,21 +23,22 @@ export const EmployeeForm = ({ initialData }: EmployeeFormProps) => {
   const { toast } = useToast();
   const departments = useEmployeeDepartments();
   const { selectedFile, handleFileChange, uploadAvatar } = useImageUpload();
-  const { validateEmail, validatePhoneNumber } = useFormValidation();
+  const { validateForm } = useFormValidation();
   
   const [formData, setFormData] = useState<EmployeeFormData>(
     initialData || initialFormData
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // Oturum durumunu kontrol et
+  // Check auth session
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast({
-          title: "Hata",
-          description: "Bu işlemi gerçekleştirmek için giriş yapmalısınız",
+          title: "Error",
+          description: "You must be logged in to perform this action",
           variant: "destructive",
         });
         navigate("/auth");
@@ -49,42 +50,30 @@ export const EmployeeForm = ({ initialData }: EmployeeFormProps) => {
 
   const handleFormChange = (field: keyof EmployeeFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when field is edited
+    if (formErrors[field]) {
+      setFormErrors(prev => {
+        const updated = { ...prev };
+        delete updated[field];
+        return updated;
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Önce oturum durumunu kontrol et
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    // Validate form
+    const { isValid, errors } = validateForm(formData);
+    if (!isValid) {
+      setFormErrors(errors);
+      setIsLoading(false);
       toast({
-        title: "Hata",
-        description: "Bu işlemi gerçekleştirmek için giriş yapmalısınız",
+        title: "Validation Error",
+        description: "Please check the form for errors",
         variant: "destructive",
       });
-      setIsLoading(false);
-      navigate("/auth");
-      return;
-    }
-
-    if (!validateEmail(formData.email)) {
-      toast({
-        title: "Hata",
-        description: "Geçerli bir e-posta adresi giriniz",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    if (formData.phone && !validatePhoneNumber(formData.phone)) {
-      toast({
-        title: "Hata",
-        description: "Geçerli bir telefon numarası giriniz",
-        variant: "destructive",
-      });
-      setIsLoading(false);
       return;
     }
 
@@ -103,26 +92,45 @@ export const EmployeeForm = ({ initialData }: EmployeeFormProps) => {
         // Update existing employee
         const { error } = await supabase
           .from('employees')
-          .update(employeeData)
+          .update({
+            ...employeeData,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', initialData.id);
 
         if (error) throw error;
 
         toast({
-          title: "Başarılı",
-          description: "Çalışan bilgileri güncellendi",
+          title: "Success",
+          description: "Employee information updated successfully",
         });
       } else {
         // Add new employee
         const { error } = await supabase
           .from('employees')
-          .insert([employeeData]);
+          .insert([{
+            ...employeeData,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }]);
 
-        if (error) throw error;
+        if (error) {
+          if (error.code === '23505') {
+            toast({
+              title: "Error",
+              description: "An employee with this email already exists",
+              variant: "destructive",
+            });
+            setFormErrors(prev => ({ ...prev, email: "This email is already in use" }));
+            setIsLoading(false);
+            return;
+          }
+          throw error;
+        }
 
         toast({
-          title: "Başarılı",
-          description: "Çalışan eklendi",
+          title: "Success",
+          description: "New employee added successfully",
         });
       }
       
@@ -130,10 +138,10 @@ export const EmployeeForm = ({ initialData }: EmployeeFormProps) => {
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Hata",
+        title: "Error",
         description: initialData 
-          ? "Çalışan güncellenirken bir hata oluştu"
-          : "Çalışan eklenirken bir hata oluştu",
+          ? "Failed to update employee"
+          : "Failed to add employee",
         variant: "destructive",
       });
     } finally {
@@ -145,24 +153,28 @@ export const EmployeeForm = ({ initialData }: EmployeeFormProps) => {
     <div className="container mx-auto p-6">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">
-          {initialData ? 'Çalışan Düzenle' : 'Yeni Çalışan Ekle'}
+          {initialData ? 'Edit Employee' : 'Add New Employee'}
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <PersonalInfo
             formData={formData}
             onFormChange={handleFormChange}
+            errors={formErrors}
+            isEditMode={!!initialData}
           />
 
           <RoleInfo
             formData={formData}
             departments={departments}
             onFormChange={handleFormChange}
+            errors={formErrors}
           />
 
           <StatusInfo
             formData={formData}
             onFormChange={handleFormChange}
+            errors={formErrors}
           />
 
           <ImageUpload
@@ -176,10 +188,10 @@ export const EmployeeForm = ({ initialData }: EmployeeFormProps) => {
               variant="outline"
               onClick={() => navigate(initialData ? `/employees/details/${initialData.id}` : "/employees")}
             >
-              İptal
+              Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Kaydediliyor..." : (initialData ? "Güncelle" : "Ekle")}
+              {isLoading ? "Saving..." : (initialData ? "Update" : "Add Employee")}
             </Button>
           </div>
         </form>

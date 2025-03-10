@@ -14,15 +14,16 @@ interface RoleInfoProps {
   formData: EmployeeFormData;
   departments: Department[];
   onFormChange: (field: keyof EmployeeFormData, value: string) => void;
+  errors: Record<string, string>;
 }
 
-export const RoleInfo = ({ formData, departments, onFormChange }: RoleInfoProps) => {
+export const RoleInfo = ({ formData, departments, onFormChange, errors }: RoleInfoProps) => {
   const shouldShowDepartment = formData.position !== 'Admin';
 
   return (
     <div className="grid grid-cols-2 gap-4">
       <div className="space-y-2">
-        <Label htmlFor="position">Role</Label>
+        <Label htmlFor="position">Role *</Label>
         <Select
           value={formData.position}
           onValueChange={(value) => {
@@ -32,7 +33,7 @@ export const RoleInfo = ({ formData, departments, onFormChange }: RoleInfoProps)
             }
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger className={errors.position ? "border-red-500" : ""}>
             <SelectValue placeholder="Select role" />
           </SelectTrigger>
           <SelectContent>
@@ -43,16 +44,19 @@ export const RoleInfo = ({ formData, departments, onFormChange }: RoleInfoProps)
             ))}
           </SelectContent>
         </Select>
+        {errors.position && (
+          <p className="text-sm text-red-500">{errors.position}</p>
+        )}
       </div>
 
       {shouldShowDepartment && (
         <div className="space-y-2">
-          <Label htmlFor="department">Department</Label>
+          <Label htmlFor="department">Department *</Label>
           <Select
             value={formData.department}
             onValueChange={(value) => onFormChange('department', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className={errors.department ? "border-red-500" : ""}>
               <SelectValue placeholder="Select department" />
             </SelectTrigger>
             <SelectContent>
@@ -63,6 +67,9 @@ export const RoleInfo = ({ formData, departments, onFormChange }: RoleInfoProps)
               ))}
             </SelectContent>
           </Select>
+          {errors.department && (
+            <p className="text-sm text-red-500">{errors.department}</p>
+          )}
         </div>
       )}
     </div>
