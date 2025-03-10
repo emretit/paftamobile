@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +10,6 @@ import TasksViewToggle, { ViewType } from "./header/TasksViewToggle";
 import TasksPageHeader from "./header/TasksPageHeader";
 import TasksKanban from "./TasksKanban";
 import TasksTable from "./TasksTable";
-import TasksCalendar from "./TasksCalendar";
 import TaskForm from "./TaskForm";
 import TaskDetailPanel from "./TaskDetailPanel";
 import type { Task } from "@/types/task";
@@ -62,16 +62,6 @@ const TasksContent = () => {
             onSelectTask={handleSelectTask}
           />
         );
-      case "calendar":
-        return (
-          <TasksCalendar
-            searchQuery={searchQuery}
-            selectedEmployee={selectedEmployee}
-            selectedType={selectedType}
-            onEditTask={handleEditTask}
-            onSelectTask={handleSelectTask}
-          />
-        );
       case "kanban":
       default:
         return (
@@ -104,7 +94,7 @@ const TasksContent = () => {
         employees={employees}
       />
 
-      <ScrollArea className={`h-[calc(100vh-280px)] ${activeView === "calendar" ? "pr-4" : ""}`}>
+      <ScrollArea className="h-[calc(100vh-280px)]">
         {getViewComponent()}
       </ScrollArea>
 
