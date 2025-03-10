@@ -1,6 +1,5 @@
 
 import { Tabs } from "@/components/ui/tabs";
-import { useState } from "react";
 import type { Employee } from "../types";
 import { EmployeeTabsList } from "./tabs/TabsList";
 import { EmployeeTabsContent } from "./tabs/TabsContent";
@@ -17,7 +16,7 @@ export const EmployeeDetailTabs = ({
   employee, 
   activeTab, 
   setActiveTab, 
-  isEditing: externalIsEditing, 
+  isEditing, 
   handleEmployeeUpdate 
 }: EmployeeDetailTabsProps) => {
   return (
