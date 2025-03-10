@@ -19,6 +19,7 @@ export const SignUpForm = ({ onSignUpSuccess, onError }: SignUpFormProps) => {
   const [companyName, setCompanyName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +37,7 @@ export const SignUpForm = ({ onSignUpSuccess, onError }: SignUpFormProps) => {
       return;
     }
     
-    const { error } = await supabase.auth.signUp({
+    const { error, data } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -56,9 +57,12 @@ export const SignUpForm = ({ onSignUpSuccess, onError }: SignUpFormProps) => {
         description: error.message,
       });
     } else {
+      // Set emailSent to true if confirmationSentAt exists in the response
+      setEmailSent(!!data?.user?.confirmation_sent_at);
+      
       toast({
         title: "Başarılı",
-        description: "Hesabınız oluşturuldu. Giriş yapabilirsiniz.",
+        description: "Hesabınız oluşturuldu." + (data?.user?.confirmation_sent_at ? " Lütfen e-posta onayınızı tamamlayın." : " Giriş yapabilirsiniz."),
       });
       onSignUpSuccess();
     }
@@ -110,9 +114,20 @@ export const SignUpForm = ({ onSignUpSuccess, onError }: SignUpFormProps) => {
           </button>
         </div>
       </div>
+      
+      {emailSent && (
+        <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-md">
+          Onay e-postası gönderildi. Lütfen e-posta kutunuzu kontrol edin ve hesabınızı onaylayın.
+        </div>
+      )}
+      
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "Hesap oluşturuluyor..." : "Hesap Oluştur"}
       </Button>
+      
+      <p className="text-xs text-gray-500 mt-2 text-center">
+        Kayıt olduktan sonra, e-posta adresinize bir onay bağlantısı gönderilecektir.
+      </p>
     </form>
   );
 };
