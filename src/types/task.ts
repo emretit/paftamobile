@@ -30,3 +30,10 @@ export interface Task {
   updated_at?: string;
   subtasks?: SubTask[];
 }
+
+export interface Employee {
+  id: string;
+  first_name: string;
+  last_name: string;
+  avatar_url?: string;
+}
