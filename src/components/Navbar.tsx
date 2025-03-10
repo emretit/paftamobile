@@ -1,3 +1,4 @@
+
 import { useLocation, useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -33,7 +34,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-screen z-10 transition-all duration-300 ${
+      className={`fixed left-0 top-0 h-screen z-20 transition-all duration-300 ${
         isCollapsed ? "w-[60px]" : "w-64"
       } border-r bg-white`}
     >
@@ -50,9 +51,9 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
                   <button
                     onClick={() => toggleCategory(item.category, item.path)}
                     className={cn(
-                      "flex items-center w-full h-11 px-3 rounded-md text-white/80 hover:bg-[#9e1c2c]/20 hover:text-white",
+                      "flex items-center w-full h-11 px-3 rounded-md text-gray-700 hover:bg-[#9e1c2c]/20 hover:text-[#9e1c2c]",
                       !isCollapsed && "justify-between",
-                      isActive(item.path || '') && "bg-[#9e1c2c] text-white"
+                      isActive(item.path || '') && "bg-[#9e1c2c] text-white hover:text-white"
                     )}
                   >
                     <div className="flex items-center">
@@ -95,7 +96,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
           })}
         </div>
 
-        <Separator className="bg-[#9e1c2c]/20" />
+        <Separator className="bg-gray-200" />
         
         <div className="p-3">
           <NavLink

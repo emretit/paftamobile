@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import ScreenshotSection from "@/components/landing/ScreenshotSection";
@@ -9,6 +8,7 @@ import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import FaqSection from "@/components/landing/FaqSection";
 import CtaSection from "@/components/landing/CtaSection";
 import FooterSection from "@/components/landing/FooterSection";
+import LoginButton from "@/components/navbar/LoginButton";
 
 interface IndexProps {
   isCollapsed: boolean;
@@ -18,9 +18,17 @@ interface IndexProps {
 const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
   return (
     <div className="min-h-screen bg-white">
-      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-10">
+        <div className="container mx-auto p-4 flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <img src="/logo.png" alt="NGS Logo" className="h-8 w-8" />
+            <span className="text-xl font-bold text-gray-900">NGS</span>
+          </div>
+          <LoginButton />
+        </div>
+      </header>
       
-      <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
+      <main className="pt-16">
         <HeroSection />
         <FeaturesSection />
         <ScreenshotSection />
