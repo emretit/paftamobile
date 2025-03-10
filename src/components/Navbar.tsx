@@ -36,7 +36,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
     <aside
       className={`fixed left-0 top-0 h-screen z-20 transition-all duration-300 ${
         isCollapsed ? "w-[60px]" : "w-64"
-      } border-r bg-gray-900`}
+      } border-r border-white/10 bg-gray-900 shadow-lg`}
     >
       <nav className="flex h-full w-full flex-col">
         <NavHeader isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
@@ -51,9 +51,11 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
                   <button
                     onClick={() => toggleCategory(item.category, item.path)}
                     className={cn(
-                      "flex items-center w-full h-11 px-3 rounded-md text-primary/80 hover:bg-white/5 hover:text-primary",
+                      "flex items-center w-full h-11 px-3 rounded-md",
                       !isCollapsed && "justify-between",
-                      isActive(item.path || '') && "bg-white/10 text-primary"
+                      isActive(item.path || '') 
+                        ? "bg-primary/10 text-primary font-medium" 
+                        : "text-gray-300 hover:bg-gray-800 hover:text-white"
                     )}
                   >
                     <div className="flex items-center">
@@ -96,7 +98,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
           })}
         </div>
 
-        <Separator className="bg-white/10" />
+        <Separator className="bg-white/5" />
         
         <div className="p-3">
           <NavLink
@@ -109,9 +111,9 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
         </div>
       </nav>
 
-      <div className="p-4 border-t border-white/10">
+      <div className="p-4 border-t border-white/5">
         <div className="flex items-center justify-between">
-          {!isCollapsed && <span className="text-sm font-medium text-primary">Hesap</span>}
+          {!isCollapsed && <span className="text-sm font-medium text-gray-300">Hesap</span>}
           <UserMenu />
         </div>
       </div>
