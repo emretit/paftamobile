@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -147,14 +148,6 @@ const App = () => {
             element={
               <AuthGuard>
                 <EmployeeDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/employees/:id/edit"
-            element={
-              <AuthGuard>
-                <EmployeeEdit isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
               </AuthGuard>
             }
           />
