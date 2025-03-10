@@ -1,6 +1,11 @@
 
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  CustomTabs, 
+  CustomTabsContent, 
+  CustomTabsList, 
+  CustomTabsTrigger 
+} from "@/components/ui/custom-tabs";
 import { RequestsTable } from "@/components/purchase/requests/RequestsTable";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 
@@ -19,29 +24,29 @@ const PurchaseManagement = ({ isCollapsed, setIsCollapsed }: PurchaseManagementP
       setIsCollapsed={setIsCollapsed}
     >
       <div className="container mx-auto py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="requests">Satın Alma Talepleri</TabsTrigger>
-            <TabsTrigger value="orders">Satın Alma Siparişleri</TabsTrigger>
-            <TabsTrigger value="invoices">Faturalar</TabsTrigger>
-          </TabsList>
+        <CustomTabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <CustomTabsList className="mb-6">
+            <CustomTabsTrigger value="requests">Satın Alma Talepleri</CustomTabsTrigger>
+            <CustomTabsTrigger value="orders">Satın Alma Siparişleri</CustomTabsTrigger>
+            <CustomTabsTrigger value="invoices">Faturalar</CustomTabsTrigger>
+          </CustomTabsList>
           
-          <TabsContent value="requests">
+          <CustomTabsContent value="requests">
             <RequestsTable />
-          </TabsContent>
+          </CustomTabsContent>
           
-          <TabsContent value="orders">
+          <CustomTabsContent value="orders">
             <div className="p-8 text-center">
               <p>Sipariş sayfası yakında eklenecek.</p>
             </div>
-          </TabsContent>
+          </CustomTabsContent>
           
-          <TabsContent value="invoices">
+          <CustomTabsContent value="invoices">
             <div className="p-8 text-center">
               <p>Fatura sayfası yakında eklenecek.</p>
             </div>
-          </TabsContent>
-        </Tabs>
+          </CustomTabsContent>
+        </CustomTabs>
       </div>
     </DefaultLayout>
   );

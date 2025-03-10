@@ -1,6 +1,11 @@
 
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  CustomTabs, 
+  CustomTabsContent, 
+  CustomTabsList, 
+  CustomTabsTrigger 
+} from "@/components/ui/custom-tabs";
 import { GeneralSettingsTab } from "./GeneralSettingsTab";
 import { CompanyInfoTab } from "./CompanyInfoTab";
 import { AuditLogsTab } from "./AuditLogsTab";
@@ -17,24 +22,24 @@ export const SystemSettings = () => {
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-      <TabsList>
-        <TabsTrigger value="general">Genel Ayarlar</TabsTrigger>
-        <TabsTrigger value="company">Şirket Bilgileri</TabsTrigger>
-        <TabsTrigger value="audit">Denetim Günlüğü</TabsTrigger>
-      </TabsList>
+    <CustomTabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <CustomTabsList>
+        <CustomTabsTrigger value="general">Genel Ayarlar</CustomTabsTrigger>
+        <CustomTabsTrigger value="company">Şirket Bilgileri</CustomTabsTrigger>
+        <CustomTabsTrigger value="audit">Denetim Günlüğü</CustomTabsTrigger>
+      </CustomTabsList>
 
-      <TabsContent value="general">
+      <CustomTabsContent value="general">
         <GeneralSettingsTab />
-      </TabsContent>
+      </CustomTabsContent>
 
-      <TabsContent value="company">
+      <CustomTabsContent value="company">
         <CompanyInfoTab />
-      </TabsContent>
+      </CustomTabsContent>
 
-      <TabsContent value="audit">
+      <CustomTabsContent value="audit">
         <AuditLogsTab />
-      </TabsContent>
-    </Tabs>
+      </CustomTabsContent>
+    </CustomTabs>
   );
 };

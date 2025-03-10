@@ -1,11 +1,5 @@
 
 import Navbar from "@/components/Navbar";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import FinanceHeader from "@/components/finance/FinanceHeader";
 import AccountSummary from "@/components/finance/bank-accounts/AccountSummary";
 import GeneralLedger from "@/components/finance/GeneralLedger";
@@ -13,6 +7,12 @@ import BankAccounts from "@/components/finance/BankAccounts";
 import CashFlow from "@/components/finance/CashFlow";
 import Reports from "@/components/finance/Reports";
 import FinancialInstruments from "@/components/finance/FinancialInstruments";
+import { 
+  CustomTabs, 
+  CustomTabsContent, 
+  CustomTabsList, 
+  CustomTabsTrigger 
+} from "@/components/ui/custom-tabs";
 
 interface FinanceProps {
   isCollapsed: boolean;
@@ -32,65 +32,50 @@ const Finance = ({ isCollapsed, setIsCollapsed }: FinanceProps) => {
           <FinanceHeader />
 
           {/* Ana İçerik Sekmeleri */}
-          <Tabs defaultValue="bank-accounts" className="space-y-6">
+          <CustomTabs defaultValue="bank-accounts" className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2">
-              <TabsList className="w-full h-auto flex flex-wrap gap-2 bg-transparent">
-                <TabsTrigger 
-                  value="bank-accounts"
-                  className="flex-1 min-w-[150px] data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
-                >
+              <CustomTabsList className="w-full h-auto flex flex-wrap gap-2 bg-transparent">
+                <CustomTabsTrigger value="bank-accounts" className="flex-1 min-w-[150px]">
                   Banka Hesapları
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="cash-flow"
-                  className="flex-1 min-w-[150px] data-[state=active]:bg-green-50 data-[state=active]:text-green-700"
-                >
+                </CustomTabsTrigger>
+                <CustomTabsTrigger value="cash-flow" className="flex-1 min-w-[150px]">
                   Nakit Akışı
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="financial-instruments"
-                  className="flex-1 min-w-[150px] data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700"
-                >
+                </CustomTabsTrigger>
+                <CustomTabsTrigger value="financial-instruments" className="flex-1 min-w-[150px]">
                   Çek/Senet
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="general-ledger"
-                  className="flex-1 min-w-[150px] data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700"
-                >
+                </CustomTabsTrigger>
+                <CustomTabsTrigger value="general-ledger" className="flex-1 min-w-[150px]">
                   Genel Muhasebe
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="reports"
-                  className="flex-1 min-w-[150px] data-[state=active]:bg-gray-50 data-[state=active]:text-gray-700"
-                >
+                </CustomTabsTrigger>
+                <CustomTabsTrigger value="reports" className="flex-1 min-w-[150px]">
                   Raporlar
-                </TabsTrigger>
-              </TabsList>
+                </CustomTabsTrigger>
+              </CustomTabsList>
             </div>
 
-            <TabsContent value="bank-accounts" className="mt-6 animate-fade-in">
+            <CustomTabsContent value="bank-accounts" className="mt-6 animate-fade-in">
               <AccountSummary />
               <div className="mt-6">
                 <BankAccounts />
               </div>
-            </TabsContent>
+            </CustomTabsContent>
 
-            <TabsContent value="cash-flow" className="mt-6 animate-fade-in">
+            <CustomTabsContent value="cash-flow" className="mt-6 animate-fade-in">
               <CashFlow />
-            </TabsContent>
+            </CustomTabsContent>
 
-            <TabsContent value="financial-instruments" className="mt-6 animate-fade-in">
+            <CustomTabsContent value="financial-instruments" className="mt-6 animate-fade-in">
               <FinancialInstruments />
-            </TabsContent>
+            </CustomTabsContent>
 
-            <TabsContent value="general-ledger" className="mt-6 animate-fade-in">
+            <CustomTabsContent value="general-ledger" className="mt-6 animate-fade-in">
               <GeneralLedger />
-            </TabsContent>
+            </CustomTabsContent>
 
-            <TabsContent value="reports" className="mt-6 animate-fade-in">
+            <CustomTabsContent value="reports" className="mt-6 animate-fade-in">
               <Reports />
-            </TabsContent>
-          </Tabs>
+            </CustomTabsContent>
+          </CustomTabs>
         </div>
       </main>
     </div>

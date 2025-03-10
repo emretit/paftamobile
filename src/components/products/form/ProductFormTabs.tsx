@@ -1,6 +1,11 @@
 
 import { Form } from "@/components/ui/form";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  CustomTabs, 
+  CustomTabsContent, 
+  CustomTabsList, 
+  CustomTabsTrigger 
+} from "@/components/ui/custom-tabs";
 import { UseFormReturn } from "react-hook-form";
 import { ProductFormSchema } from "./ProductFormSchema";
 import ProductGeneralSection from "./ProductGeneralSection";
@@ -22,30 +27,30 @@ const ProductFormTabs = ({ form, onSubmit }: ProductFormTabsProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)}>
-        <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid grid-cols-4 mb-8">
-            <TabsTrigger value="general">Genel Bilgiler</TabsTrigger>
-            <TabsTrigger value="pricing">Fiyatlandırma</TabsTrigger>
-            <TabsTrigger value="inventory">Stok</TabsTrigger>
-            <TabsTrigger value="additional">Ek Bilgiler</TabsTrigger>
-          </TabsList>
+        <CustomTabs defaultValue="general" className="w-full">
+          <CustomTabsList className="grid grid-cols-4 mb-8">
+            <CustomTabsTrigger value="general">Genel Bilgiler</CustomTabsTrigger>
+            <CustomTabsTrigger value="pricing">Fiyatlandırma</CustomTabsTrigger>
+            <CustomTabsTrigger value="inventory">Stok</CustomTabsTrigger>
+            <CustomTabsTrigger value="additional">Ek Bilgiler</CustomTabsTrigger>
+          </CustomTabsList>
           
-          <TabsContent value="general">
+          <CustomTabsContent value="general">
             <ProductGeneralSection form={form} />
-          </TabsContent>
+          </CustomTabsContent>
           
-          <TabsContent value="pricing">
+          <CustomTabsContent value="pricing">
             <ProductPricingSection form={form} />
-          </TabsContent>
+          </CustomTabsContent>
           
-          <TabsContent value="inventory">
+          <CustomTabsContent value="inventory">
             <ProductInventorySection form={form} />
-          </TabsContent>
+          </CustomTabsContent>
           
-          <TabsContent value="additional">
+          <CustomTabsContent value="additional">
             <ProductSupplierSection form={form} />
-          </TabsContent>
-        </Tabs>
+          </CustomTabsContent>
+        </CustomTabs>
       </form>
     </Form>
   );

@@ -1,4 +1,3 @@
-
 import Navbar from "@/components/Navbar";
 import { 
   Card, 
@@ -13,7 +12,12 @@ import {
   Wallet,
   BarChart3,
 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  CustomTabs, 
+  CustomTabsContent, 
+  CustomTabsList, 
+  CustomTabsTrigger 
+} from "@/components/ui/custom-tabs";
 import { TopBar } from "@/components/employees/TopBar";
 import { EmployeeList } from "@/components/employees/EmployeeList";
 
@@ -30,31 +34,31 @@ const Employees = ({ isCollapsed, setIsCollapsed }: EmployeesProps) => {
         isCollapsed ? 'ml-[60px]' : 'ml-64'
       }`}>
         <TopBar />
-        <Tabs defaultValue="employees" className="space-y-4">
-          <TabsList className="bg-white border w-full justify-start h-12 p-0 px-6">
-            <TabsTrigger value="employees" className="data-[state=active]:bg-gray-100 h-12 px-4">
+        <CustomTabs defaultValue="employees" className="space-y-4">
+          <CustomTabsList className="w-full justify-start h-12 p-0 px-6">
+            <CustomTabsTrigger value="employees" className="h-12 px-4">
               <UserCog className="h-4 w-4 mr-2" />
               Çalışan Yönetimi
-            </TabsTrigger>
-            <TabsTrigger value="leaves" className="data-[state=active]:bg-gray-100 h-12 px-4">
+            </CustomTabsTrigger>
+            <CustomTabsTrigger value="leaves" className="h-12 px-4">
               <Clock className="h-4 w-4 mr-2" />
               İzin Yönetimi
-            </TabsTrigger>
-            <TabsTrigger value="salary" className="data-[state=active]:bg-gray-100 h-12 px-4">
+            </CustomTabsTrigger>
+            <CustomTabsTrigger value="salary" className="h-12 px-4">
               <Wallet className="h-4 w-4 mr-2" />
               Maaş Yönetimi
-            </TabsTrigger>
-            <TabsTrigger value="performance" className="data-[state=active]:bg-gray-100 h-12 px-4">
+            </CustomTabsTrigger>
+            <CustomTabsTrigger value="performance" className="h-12 px-4">
               <BarChart3 className="h-4 w-4 mr-2" />
               Performans
-            </TabsTrigger>
-            <TabsTrigger value="tasks" className="data-[state=active]:bg-gray-100 h-12 px-4">
+            </CustomTabsTrigger>
+            <CustomTabsTrigger value="tasks" className="h-12 px-4">
               <GanttChartSquare className="h-4 w-4 mr-2" />
               Görev Yönetimi
-            </TabsTrigger>
-          </TabsList>
+            </CustomTabsTrigger>
+          </CustomTabsList>
 
-          <TabsContent value="employees" className="space-y-4 m-0">
+          <CustomTabsContent value="employees" className="space-y-4 m-0">
             <main className="p-6">
               <div className="mb-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -102,9 +106,9 @@ const Employees = ({ isCollapsed, setIsCollapsed }: EmployeesProps) => {
               </div>
               <EmployeeList />
             </main>
-          </TabsContent>
+          </CustomTabsContent>
 
-          <TabsContent value="leaves" className="m-0">
+          <CustomTabsContent value="leaves" className="m-0">
             <div className="p-6">
               <Card>
                 <CardContent className="p-6">
@@ -112,9 +116,9 @@ const Employees = ({ isCollapsed, setIsCollapsed }: EmployeesProps) => {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
+          </CustomTabsContent>
 
-          <TabsContent value="salary" className="m-0">
+          <CustomTabsContent value="salary" className="m-0">
             <div className="p-6">
               <Card>
                 <CardContent className="p-6">
@@ -122,9 +126,9 @@ const Employees = ({ isCollapsed, setIsCollapsed }: EmployeesProps) => {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
+          </CustomTabsContent>
 
-          <TabsContent value="performance" className="m-0">
+          <CustomTabsContent value="performance" className="m-0">
             <div className="p-6">
               <Card>
                 <CardContent className="p-6">
@@ -132,9 +136,9 @@ const Employees = ({ isCollapsed, setIsCollapsed }: EmployeesProps) => {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
+          </CustomTabsContent>
 
-          <TabsContent value="tasks" className="m-0">
+          <CustomTabsContent value="tasks" className="m-0">
             <div className="p-6">
               <Card>
                 <CardContent className="p-6">
@@ -142,8 +146,8 @@ const Employees = ({ isCollapsed, setIsCollapsed }: EmployeesProps) => {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-        </Tabs>
+          </CustomTabsContent>
+        </CustomTabs>
       </div>
     </div>
   );

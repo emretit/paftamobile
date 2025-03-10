@@ -1,10 +1,16 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Edit, ArrowLeft, Copy, Download, Package2 } from "lucide-react";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  CustomTabs, 
+  CustomTabsContent, 
+  CustomTabsList, 
+  CustomTabsTrigger 
+} from "@/components/ui/custom-tabs";
 import ProductGeneralInfo from "@/components/products/details/ProductGeneralInfo";
 import ProductPricing from "@/components/products/details/ProductPricing";
 import ProductInventory from "@/components/products/details/ProductInventory";
@@ -169,22 +175,22 @@ const ProductDetails = () => {
             </span>
           </div>
 
-          <Tabs defaultValue="general" className="w-full">
-            <TabsList className="w-full grid grid-cols-4">
-              <TabsTrigger value="general">Genel</TabsTrigger>
-              <TabsTrigger value="pricing">Fiyatlandırma</TabsTrigger>
-              <TabsTrigger value="stock">Stok</TabsTrigger>
-              <TabsTrigger value="related">Benzer Ürünler</TabsTrigger>
-            </TabsList>
+          <CustomTabs defaultValue="general" className="w-full">
+            <CustomTabsList className="w-full grid grid-cols-4">
+              <CustomTabsTrigger value="general">Genel</CustomTabsTrigger>
+              <CustomTabsTrigger value="pricing">Fiyatlandırma</CustomTabsTrigger>
+              <CustomTabsTrigger value="stock">Stok</CustomTabsTrigger>
+              <CustomTabsTrigger value="related">Benzer Ürünler</CustomTabsTrigger>
+            </CustomTabsList>
             
-            <TabsContent value="general" className="mt-6">
+            <CustomTabsContent value="general" className="mt-6">
               <ProductGeneralInfo
                 product={product}
                 onUpdate={updateProductMutation.mutate}
               />
-            </TabsContent>
+            </CustomTabsContent>
             
-            <TabsContent value="pricing" className="mt-6">
+            <CustomTabsContent value="pricing" className="mt-6">
               <ProductPricing
                 price={product.price}
                 discountPrice={product.discount_price}
@@ -192,9 +198,9 @@ const ProductDetails = () => {
                 taxRate={product.tax_rate}
                 onUpdate={updateProductMutation.mutate}
               />
-            </TabsContent>
+            </CustomTabsContent>
             
-            <TabsContent value="stock" className="mt-6">
+            <CustomTabsContent value="stock" className="mt-6">
               <ProductInventory
                 stockQuantity={product.stock_quantity}
                 minStockLevel={product.min_stock_level}
@@ -203,17 +209,17 @@ const ProductDetails = () => {
                 lastPurchaseDate={product.last_purchase_date}
                 onUpdate={updateProductMutation.mutate}
               />
-            </TabsContent>
+            </CustomTabsContent>
             
-            <TabsContent value="related" className="mt-6">
+            <CustomTabsContent value="related" className="mt-6">
               <ProductRelated 
                 categoryId={product.category_id} 
                 currentProductId={product.id}
                 relatedProducts={product.related_products}
                 onUpdate={updateProductMutation.mutate}
               />
-            </TabsContent>
-          </Tabs>
+            </CustomTabsContent>
+          </CustomTabs>
         </div>
       </div>
     </div>

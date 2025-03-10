@@ -1,7 +1,12 @@
 
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  CustomTabs, 
+  CustomTabsContent, 
+  CustomTabsList, 
+  CustomTabsTrigger 
+} from "@/components/ui/custom-tabs";
 import { UserManagement } from "@/components/settings/UserManagement";
 import { RoleManagement } from "@/components/settings/RoleManagement";
 import { SystemSettings } from "@/components/settings/SystemSettings";
@@ -21,25 +26,25 @@ const Settings = ({ isCollapsed, setIsCollapsed }: SettingsProps) => {
         <div className="max-w-6xl mx-auto">
           <h1 className="text-2xl font-bold mb-6">Ayarlar & Yönetim</h1>
           
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="users">Kullanıcılar</TabsTrigger>
-              <TabsTrigger value="roles">Roller & İzinler</TabsTrigger>
-              <TabsTrigger value="system">Sistem Ayarları</TabsTrigger>
-            </TabsList>
+          <CustomTabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <CustomTabsList>
+              <CustomTabsTrigger value="users">Kullanıcılar</CustomTabsTrigger>
+              <CustomTabsTrigger value="roles">Roller & İzinler</CustomTabsTrigger>
+              <CustomTabsTrigger value="system">Sistem Ayarları</CustomTabsTrigger>
+            </CustomTabsList>
 
-            <TabsContent value="users">
+            <CustomTabsContent value="users">
               <UserManagement />
-            </TabsContent>
+            </CustomTabsContent>
 
-            <TabsContent value="roles">
+            <CustomTabsContent value="roles">
               <RoleManagement />
-            </TabsContent>
+            </CustomTabsContent>
 
-            <TabsContent value="system">
+            <CustomTabsContent value="system">
               <SystemSettings />
-            </TabsContent>
-          </Tabs>
+            </CustomTabsContent>
+          </CustomTabs>
         </div>
       </main>
     </div>
