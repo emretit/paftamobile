@@ -51,9 +51,9 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
                   <button
                     onClick={() => toggleCategory(item.category, item.path)}
                     className={cn(
-                      "flex items-center w-full h-11 px-3 rounded-md text-gray-700 hover:bg-[#9e1c2c]/20 hover:text-[#9e1c2c]",
+                      "flex items-center w-full h-11 px-3 rounded-md text-secondary-foreground hover:bg-primary/10 hover:text-primary",
                       !isCollapsed && "justify-between",
-                      isActive(item.path || '') && "bg-[#9e1c2c] text-white hover:text-white"
+                      isActive(item.path || '') && "bg-primary text-white hover:text-white"
                     )}
                   >
                     <div className="flex items-center">
