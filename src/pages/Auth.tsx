@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Eye, EyeOff, Mail } from "lucide-react";
+import { Eye, EyeOff, Mail, AlertTriangle } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -21,18 +21,36 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [view, setView] = useState<"signin" | "signup" | "forgotten_password">("signin");
   const [resetPasswordSuccess, setResetPasswordSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Check for password reset token in URL
+  // Check for password reset token or errors in URL
   useEffect(() => {
     const handlePasswordReset = async () => {
+      // Check for error parameters in the URL hash
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get("access_token");
       const type = hashParams.get("type");
+      const errorCode = hashParams.get("error_code");
+      const errorDescription = hashParams.get("error_description");
+      
+      // Clear the URL without reloading the page
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      if (errorCode) {
+        // Handle various error codes
+        setError(errorDescription || "Şifre sıfırlama bağlantısında bir sorun oluştu.");
+        setView("forgotten_password");
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: errorDescription || "Şifre sıfırlama bağlantısında bir sorun oluştu.",
+          duration: 5000,
+        });
+        return;
+      }
       
       if (type === "recovery" && accessToken) {
         setLoading(true);
-        // Clear the URL without reloading the page
-        window.history.replaceState({}, document.title, window.location.pathname);
         
         try {
           // Set up new password view
@@ -84,6 +102,7 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -96,6 +115,7 @@ const Auth = () => {
     });
 
     if (error) {
+      setError(error.message);
       toast({
         variant: "destructive",
         title: "Hata",
@@ -114,6 +134,7 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -121,6 +142,7 @@ const Auth = () => {
     });
 
     if (error) {
+      setError(error.message);
       toast({
         variant: "destructive",
         title: "Hata",
@@ -135,12 +157,14 @@ const Auth = () => {
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin + window.location.pathname,
     });
 
     if (error) {
+      setError(error.message);
       toast({
         variant: "destructive",
         title: "Hata",
@@ -172,6 +196,13 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2 text-red-800">
+              <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <div className="text-sm">{error}</div>
+            </div>
+          )}
+
           {view === "forgotten_password" ? (
             <>
               {resetPasswordSuccess ? (
@@ -185,6 +216,7 @@ const Auth = () => {
                     onClick={() => {
                       setView("signin");
                       setResetPasswordSuccess(false);
+                      setError(null);
                     }}
                   >
                     Giriş Sayfasına Dön
@@ -208,7 +240,10 @@ const Auth = () => {
                     <Button 
                       type="button" 
                       variant="outline" 
-                      onClick={() => setView("signin")} 
+                      onClick={() => {
+                        setView("signin");
+                        setError(null);
+                      }} 
                       className="w-full"
                     >
                       Geri Dön
@@ -218,7 +253,10 @@ const Auth = () => {
               )}
             </>
           ) : (
-            <Tabs defaultValue={view} value={view} onValueChange={(v) => setView(v as any)} className="space-y-4">
+            <Tabs defaultValue={view} value={view} onValueChange={(v) => {
+              setView(v as any);
+              setError(null);
+            }} className="space-y-4">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Giriş</TabsTrigger>
                 <TabsTrigger value="signup">Kayıt</TabsTrigger>
@@ -253,7 +291,10 @@ const Auth = () => {
                     <div className="text-right">
                       <button
                         type="button"
-                        onClick={() => setView("forgotten_password")}
+                        onClick={() => {
+                          setView("forgotten_password");
+                          setError(null);
+                        }}
                         className="text-sm text-blue-600 hover:underline"
                       >
                         Şifremi Unuttum
