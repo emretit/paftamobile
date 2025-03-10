@@ -8,14 +8,20 @@ import { PerformanceForm } from "./performance/PerformanceForm";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import type { PerformanceRecord } from "./performance/types";
 
 interface EmployeePerformanceTabProps {
   employeeId: string;
 }
 
 export const EmployeePerformanceTab = ({ employeeId }: EmployeePerformanceTabProps) => {
-  const { performanceData, isLoading, chartData, isSubmitting, handleSubmitPerformance } = usePerformanceData(employeeId);
+  const { performanceHistory, isLoading, addPerformanceRecord } = usePerformanceData(employeeId);
   const [showForm, setShowForm] = useState(false);
+
+  const handleSubmitSuccess = (record: PerformanceRecord) => {
+    addPerformanceRecord(record);
+    setShowForm(false);
+  };
 
   if (isLoading) {
     return (
@@ -42,28 +48,37 @@ export const EmployeePerformanceTab = ({ employeeId }: EmployeePerformanceTabPro
       {showForm ? (
         <Card className="p-6">
           <PerformanceForm 
-            employeeId={employeeId} 
-            onSubmit={handleSubmitPerformance}
-            onCancel={() => setShowForm(false)}
-            isSubmitting={isSubmitting}
+            employeeId={employeeId}
+            onSuccess={handleSubmitSuccess}
+            onClose={() => setShowForm(false)}
           />
         </Card>
       ) : (
         <>
-          {performanceData.length > 0 ? (
+          {performanceHistory.length > 0 ? (
             <>
-              <PerformanceStats data={performanceData[0]} />
+              <PerformanceStats 
+                latestScores={performanceHistory[0]} 
+                performanceTrend={{
+                  trend: performanceHistory.length > 1 
+                    ? ((performanceHistory[0].overall_score - performanceHistory[1].overall_score) / performanceHistory[1].overall_score) * 100
+                    : 0,
+                  icon: performanceHistory.length > 1 
+                    ? performanceHistory[0].overall_score >= performanceHistory[1].overall_score ? "up" : "down"
+                    : null
+                }}
+              />
               
               <Card className="p-6">
                 <h3 className="text-lg font-medium mb-4">Performans Trendi</h3>
                 <div className="h-80">
-                  <PerformanceChart data={chartData} />
+                  <PerformanceChart data={performanceHistory} />
                 </div>
               </Card>
               
               <Card className="p-6">
                 <h3 className="text-lg font-medium mb-4">Değerlendirme Geçmişi</h3>
-                <PerformanceHistoryTable data={performanceData} />
+                <PerformanceHistoryTable data={performanceHistory} />
               </Card>
             </>
           ) : (

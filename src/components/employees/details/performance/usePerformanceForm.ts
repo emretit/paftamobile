@@ -35,19 +35,6 @@ export const usePerformanceForm = (
       ) / 4;
       
       // This is a placeholder until the actual performance table is created
-      console.log('Submitted performance data:', { 
-        ...values, 
-        employee_id: employeeId,
-        overall_score: overall,
-        reviewer_name: 'Current User', // This would be the logged-in user in a real app
-      });
-      
-      toast({
-        title: "Başarılı",
-        description: "Performans değerlendirmesi kaydedildi.",
-      });
-      
-      // Add the new record to the state (simulating DB update)
       const newRecord: PerformanceRecord = {
         id: Date.now().toString(),
         employee_id: employeeId,
@@ -68,6 +55,11 @@ export const usePerformanceForm = (
       
       onSuccess(newRecord);
       onClose();
+      
+      toast({
+        title: "Başarılı",
+        description: "Performans değerlendirmesi kaydedildi.",
+      });
     } catch (error) {
       console.error('Error saving performance data:', error);
       toast({

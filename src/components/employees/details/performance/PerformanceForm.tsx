@@ -24,7 +24,7 @@ interface PerformanceFormProps {
 
 export const PerformanceForm = ({ 
   employeeId, 
-  onSuccess, 
+  onSuccess,
   onClose 
 }: PerformanceFormProps) => {
   const { form, handleSubmit } = usePerformanceForm(employeeId, onSuccess, onClose);
