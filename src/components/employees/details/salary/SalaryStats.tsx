@@ -1,5 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CreditCard, TrendingUp, PieChart } from "lucide-react";
 import { SalaryRecord } from "./types";
 
 interface SalaryStatsProps {
@@ -13,14 +14,17 @@ export const SalaryStats = ({ salaryHistory }: SalaryStatsProps) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card>
+      <Card className="border border-gray-100 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Son Maaş</CardTitle>
+          <CardTitle className="text-sm font-medium flex items-center">
+            <CreditCard className="h-4 w-4 mr-2 text-primary" />
+            Son Maaş
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
             {salaryHistory.length > 0 ? 
-              `₺${calculateNetSalary(salaryHistory[salaryHistory.length - 1]).toLocaleString()}` : 
+              `₺${calculateNetSalary(salaryHistory[salaryHistory.length - 1]).toLocaleString('tr-TR')}` : 
               "₺0"}
           </div>
           <p className="text-xs text-gray-500">
@@ -30,26 +34,40 @@ export const SalaryStats = ({ salaryHistory }: SalaryStatsProps) => {
           </p>
         </CardContent>
       </Card>
-      <Card>
+      <Card className="border border-gray-100 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Toplam Bonuslar (Yıllık)</CardTitle>
+          <CardTitle className="text-sm font-medium flex items-center">
+            <TrendingUp className="h-4 w-4 mr-2 text-primary" />
+            Toplam Bonuslar (Yıllık)
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {`₺${salaryHistory.reduce((sum, record) => sum + record.bonuses, 0).toLocaleString()}`}
+            {`₺${salaryHistory.reduce((sum, record) => sum + record.bonuses, 0).toLocaleString('tr-TR')}`}
           </div>
+          <p className="text-xs text-gray-500">
+            {salaryHistory.length > 1 ? 
+              `${salaryHistory.length} ödeme` : 
+              salaryHistory.length === 1 ? "1 ödeme" : "Ödeme yok"}
+          </p>
         </CardContent>
       </Card>
-      <Card>
+      <Card className="border border-gray-100 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Ortalama Aylık Net</CardTitle>
+          <CardTitle className="text-sm font-medium flex items-center">
+            <PieChart className="h-4 w-4 mr-2 text-primary" />
+            Ortalama Aylık Net
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
             {salaryHistory.length > 0 ? 
-              `₺${(salaryHistory.reduce((sum, record) => sum + calculateNetSalary(record), 0) / salaryHistory.length).toLocaleString()}` : 
+              `₺${(salaryHistory.reduce((sum, record) => sum + calculateNetSalary(record), 0) / salaryHistory.length).toLocaleString('tr-TR')}` : 
               "₺0"}
           </div>
+          <p className="text-xs text-gray-500">
+            Tüm ödemelerin ortalaması
+          </p>
         </CardContent>
       </Card>
     </div>

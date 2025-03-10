@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Pencil } from "lucide-react";
+import { Pencil, Eye } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -14,6 +14,7 @@ import {
 import { Employee } from "./types";
 import { StatusBadge } from "./StatusBadge";
 import { EmployeeDetailPanel } from "./details/EmployeeDetailPanel";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface EmployeeTableProps {
   employees: Employee[];
@@ -41,14 +42,53 @@ const EmployeeTable = ({ employees, isLoading }: EmployeeTableProps) => {
   };
 
   if (isLoading) {
-    return <div>Yükleniyor...</div>;
+    return (
+      <div className="rounded-md border bg-white">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Çalışan</TableHead>
+              <TableHead>Departman</TableHead>
+              <TableHead>Pozisyon</TableHead>
+              <TableHead>İletişim</TableHead>
+              <TableHead>İşe Başlama</TableHead>
+              <TableHead>Durum</TableHead>
+              <TableHead className="text-right">İşlemler</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <TableRow key={index}>
+                <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-5 w-28" /></TableCell>
+                <TableCell>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </TableCell>
+                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Skeleton className="h-8 w-8 rounded-md" />
+                    <Skeleton className="h-8 w-8 rounded-md" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
   }
 
   return (
     <>
-      <div className="rounded-md border">
+      <div className="rounded-md border bg-white overflow-hidden">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-gray-50">
             <TableRow>
               <TableHead>Çalışan</TableHead>
               <TableHead>Departman</TableHead>
@@ -70,7 +110,7 @@ const EmployeeTable = ({ employees, isLoading }: EmployeeTableProps) => {
               employees.map((employee) => (
                 <TableRow 
                   key={employee.id}
-                  className="cursor-pointer hover:bg-gray-50"
+                  className="cursor-pointer hover:bg-gray-50 transition-colors"
                   onClick={() => handleRowClick(employee)}
                 >
                   <TableCell className="font-medium">
@@ -92,17 +132,16 @@ const EmployeeTable = ({ employees, isLoading }: EmployeeTableProps) => {
                         variant="ghost"
                         size="icon"
                         onClick={(e) => handleViewDetailsClick(e, employee.id)}
+                        className="h-8 w-8"
                       >
                         <span className="sr-only">Detaylar</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye">
-                          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-                          <circle cx="12" cy="12" r="3"/>
-                        </svg>
+                        <Eye className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={(e) => handleEditClick(e, employee.id)}
+                        className="h-8 w-8"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>

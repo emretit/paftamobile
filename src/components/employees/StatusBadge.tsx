@@ -9,7 +9,7 @@ interface StatusBadgeProps {
 
 export const StatusBadge = ({ status }: StatusBadgeProps) => {
   const variant = status === 'active' ? 'success' : 'neutral';
-  const label = status.charAt(0).toUpperCase() + status.slice(1);
+  const label = status === 'active' ? 'Aktif' : 'Pasif';
 
   return (
     <GenericStatusBadge

@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
-import { UserPlus, Search } from "lucide-react";
+import { UserPlus, Search, Filter } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface FilterBarProps {
@@ -21,7 +21,7 @@ export const FilterBar = ({
   const navigate = useNavigate();
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm border mb-6">
+    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6">
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div className="flex flex-1 items-center gap-4 max-w-4xl">
           <div className="relative flex-1">
@@ -34,21 +34,27 @@ export const FilterBar = ({
             />
           </div>
 
-          <Select
-            value={statusFilter}
-            onValueChange={setStatusFilter}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Durum seç" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tümü</SelectItem>
-              <SelectItem value="active">Aktif</SelectItem>
-              <SelectItem value="inactive">Pasif</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="min-w-[180px]">
+            <Select
+              value={statusFilter}
+              onValueChange={setStatusFilter}
+            >
+              <SelectTrigger className="w-full gap-2">
+                <Filter className="h-4 w-4 text-gray-400" />
+                <SelectValue placeholder="Durum seç" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tümü</SelectItem>
+                <SelectItem value="active">Aktif</SelectItem>
+                <SelectItem value="inactive">Pasif</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-          <Button onClick={() => navigate('/employees/new')} className="hidden sm:flex items-center gap-2 whitespace-nowrap">
+          <Button 
+            onClick={() => navigate('/employees/new')} 
+            className="hidden sm:flex items-center gap-2 whitespace-nowrap"
+          >
             <UserPlus className="h-4 w-4" />
             Yeni Çalışan
           </Button>
