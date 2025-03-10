@@ -2,7 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Mail, Phone, Briefcase, Building } from "lucide-react";
+import { Calendar, Mail, Phone, Briefcase, Building, MapPin } from "lucide-react";
 import type { Employee } from "../types";
 
 interface EmployeeDetailsViewProps {
@@ -12,26 +12,34 @@ interface EmployeeDetailsViewProps {
 export const EmployeeDetailsView = ({ employee }: EmployeeDetailsViewProps) => {
   return (
     <div className="space-y-6">
-      <Card className="border border-gray-100 shadow-sm">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
+      <Card className="border-0 shadow-md bg-gradient-to-r from-white to-gray-50/80 overflow-hidden">
+        <CardHeader className="pb-4 relative">
+          <div className="absolute inset-0 bg-primary/5 h-24 -z-10"></div>
+          <div className="flex items-center justify-between pt-10 z-10">
             <div className="flex items-center space-x-4">
-              <Avatar className="h-20 w-20 border-2 border-primary/10">
+              <Avatar className="h-24 w-24 border-4 border-white shadow-md">
                 <AvatarImage src={employee.avatar_url || undefined} alt={`${employee.first_name} ${employee.last_name}`} />
-                <AvatarFallback className="text-2xl bg-primary/5 text-primary">
+                <AvatarFallback className="text-3xl bg-primary/10 text-primary">
                   {employee.first_name[0]}
                   {employee.last_name[0]}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="text-2xl font-bold">
+                <h2 className="text-2xl font-bold text-gray-800">
                   {employee.first_name} {employee.last_name}
                 </h2>
-                <p className="text-gray-500">{employee.position}</p>
-                <div className="mt-2">
+                <p className="text-gray-600 flex items-center mt-1">
+                  <Briefcase className="h-4 w-4 mr-2 text-primary" />
+                  {employee.position}
+                </p>
+                <div className="mt-3 flex items-center space-x-3">
                   <Badge variant={employee.status === 'active' ? 'default' : 'secondary'} className="capitalize">
                     {employee.status === 'active' ? 'Aktif' : 'Pasif'}
                   </Badge>
+                  <span className="text-sm text-gray-500">
+                    <MapPin className="h-3 w-3 inline mr-1" />
+                    İstanbul, Türkiye
+                  </span>
                 </div>
               </div>
             </div>
@@ -40,53 +48,61 @@ export const EmployeeDetailsView = ({ employee }: EmployeeDetailsViewProps) => {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border border-gray-100 shadow-sm">
-          <CardHeader>
+        <Card className="border-0 shadow-md bg-white">
+          <CardHeader className="border-b border-gray-100 pb-4">
             <CardTitle className="text-lg flex items-center">
               <Mail className="h-5 w-5 mr-2 text-primary" />
               Kişisel Bilgiler
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-500">E-posta</p>
-              <p className="text-sm font-medium">{employee.email}</p>
+          <CardContent className="space-y-4 pt-4">
+            <div className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <Mail className="h-5 w-5 mr-3 text-gray-400" />
+              <div>
+                <p className="text-xs text-gray-500">E-posta</p>
+                <p className="text-sm font-medium">{employee.email}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Telefon</p>
-              <p className="text-sm font-medium">{employee.phone || "-"}</p>
+            <div className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <Phone className="h-5 w-5 mr-3 text-gray-400" />
+              <div>
+                <p className="text-xs text-gray-500">Telefon</p>
+                <p className="text-sm font-medium">{employee.phone || "-"}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">İşe Başlama Tarihi</p>
-              <p className="text-sm font-medium flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                {new Date(employee.hire_date).toLocaleDateString('tr-TR')}
-              </p>
+            <div className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <Calendar className="h-5 w-5 mr-3 text-gray-400" />
+              <div>
+                <p className="text-xs text-gray-500">İşe Başlama Tarihi</p>
+                <p className="text-sm font-medium">
+                  {new Date(employee.hire_date).toLocaleDateString('tr-TR')}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border border-gray-100 shadow-sm">
-          <CardHeader>
+        <Card className="border-0 shadow-md bg-white">
+          <CardHeader className="border-b border-gray-100 pb-4">
             <CardTitle className="text-lg flex items-center">
               <Building className="h-5 w-5 mr-2 text-primary" />
               Departman Bilgileri
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-500">Departman</p>
-              <p className="text-sm font-medium flex items-center">
-                <Building className="h-4 w-4 mr-2 text-gray-400" />
-                {employee.department}
-              </p>
+          <CardContent className="space-y-4 pt-4">
+            <div className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <Building className="h-5 w-5 mr-3 text-gray-400" />
+              <div>
+                <p className="text-xs text-gray-500">Departman</p>
+                <p className="text-sm font-medium">{employee.department}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Pozisyon</p>
-              <p className="text-sm font-medium flex items-center">
-                <Briefcase className="h-4 w-4 mr-2 text-gray-400" />
-                {employee.position}
-              </p>
+            <div className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <Briefcase className="h-5 w-5 mr-3 text-gray-400" />
+              <div>
+                <p className="text-xs text-gray-500">Pozisyon</p>
+                <p className="text-sm font-medium">{employee.position}</p>
+              </div>
             </div>
           </CardContent>
         </Card>

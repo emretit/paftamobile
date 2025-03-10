@@ -5,6 +5,7 @@ import { EmployeeSalaryTab } from "./EmployeeSalaryTab";
 import { EmployeeLeaveTab } from "./EmployeeLeaveTab";
 import { EmployeePerformanceTab } from "./EmployeePerformanceTab";
 import { EmployeeTasksTab } from "./EmployeeTasksTab";
+import { User, DollarSign, Calendar, BarChart2, CheckSquare } from "lucide-react";
 import type { Employee } from "../types";
 
 interface EmployeeDetailTabsProps {
@@ -24,39 +25,57 @@ export const EmployeeDetailTabs = ({
 }: EmployeeDetailTabsProps) => {
   return (
     <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid grid-cols-5 w-full">
-        <TabsTrigger value="details">Genel Bilgiler</TabsTrigger>
-        <TabsTrigger value="salary">Maaş Yönetimi</TabsTrigger>
-        <TabsTrigger value="leave">İzin Yönetimi</TabsTrigger>
-        <TabsTrigger value="performance">Performans</TabsTrigger>
-        <TabsTrigger value="tasks">Görevler</TabsTrigger>
+      <TabsList className="grid grid-cols-5 w-full bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-1">
+        <TabsTrigger value="details" className="flex items-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
+          <User className="w-4 h-4" />
+          <span className="hidden sm:inline">Genel Bilgiler</span>
+        </TabsTrigger>
+        <TabsTrigger value="salary" className="flex items-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
+          <DollarSign className="w-4 h-4" />
+          <span className="hidden sm:inline">Maaş</span>
+        </TabsTrigger>
+        <TabsTrigger value="leave" className="flex items-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
+          <Calendar className="w-4 h-4" />
+          <span className="hidden sm:inline">İzin</span>
+        </TabsTrigger>
+        <TabsTrigger value="performance" className="flex items-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
+          <BarChart2 className="w-4 h-4" />
+          <span className="hidden sm:inline">Performans</span>
+        </TabsTrigger>
+        <TabsTrigger value="tasks" className="flex items-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
+          <CheckSquare className="w-4 h-4" />
+          <span className="hidden sm:inline">Görevler</span>
+        </TabsTrigger>
       </TabsList>
       
       <TabsContent value="details" className="mt-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium mb-4">Çalışan Detayları</h3>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+          <h3 className="text-lg font-medium mb-6 text-gray-800 flex items-center">
+            <User className="w-5 h-5 mr-2 text-primary" />
+            Çalışan Detayları
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+            <div className="space-y-1">
               <p className="text-sm text-gray-500">Adı Soyadı</p>
               <p className="font-medium">{employee.first_name} {employee.last_name}</p>
             </div>
-            <div>
+            <div className="space-y-1">
               <p className="text-sm text-gray-500">Departman</p>
               <p className="font-medium">{employee.department}</p>
             </div>
-            <div>
+            <div className="space-y-1">
               <p className="text-sm text-gray-500">Pozisyon</p>
               <p className="font-medium">{employee.position}</p>
             </div>
-            <div>
+            <div className="space-y-1">
               <p className="text-sm text-gray-500">E-posta</p>
               <p className="font-medium">{employee.email}</p>
             </div>
-            <div>
+            <div className="space-y-1">
               <p className="text-sm text-gray-500">Telefon</p>
               <p className="font-medium">{employee.phone || "-"}</p>
             </div>
-            <div>
+            <div className="space-y-1">
               <p className="text-sm text-gray-500">İşe Başlama Tarihi</p>
               <p className="font-medium">{new Date(employee.hire_date).toLocaleDateString('tr-TR')}</p>
             </div>
