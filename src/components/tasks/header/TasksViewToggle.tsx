@@ -1,9 +1,9 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid, Table as TableIcon, CalendarIcon } from "lucide-react";
+import { LayoutGrid, Table as TableIcon } from "lucide-react";
 
-export type ViewType = "kanban" | "table" | "calendar";
+export type ViewType = "kanban" | "table";
 
 interface TasksViewToggleProps {
   activeView: ViewType;
@@ -30,15 +30,6 @@ const TasksViewToggle = ({ activeView, setActiveView }: TasksViewToggleProps) =>
       >
         <TableIcon className="h-4 w-4 mr-2" />
         Tablo
-      </Button>
-      <Button 
-        variant={activeView === "calendar" ? "default" : "ghost"} 
-        size="sm"
-        onClick={() => setActiveView("calendar")}
-        className="px-3"
-      >
-        <CalendarIcon className="h-4 w-4 mr-2" />
-        Takvim
       </Button>
     </div>
   );

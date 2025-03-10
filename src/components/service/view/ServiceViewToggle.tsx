@@ -1,9 +1,9 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, Table as TableIcon } from "lucide-react";
+import { Table as TableIcon } from "lucide-react";
 
-export type ViewType = "table" | "calendar";
+export type ViewType = "table";
 
 interface ServiceViewToggleProps {
   activeView: ViewType;
@@ -24,15 +24,6 @@ export const ServiceViewToggle: React.FC<ServiceViewToggleProps> = ({
       >
         <TableIcon className="h-4 w-4 mr-2" />
         Tablo
-      </Button>
-      <Button 
-        variant={activeView === "calendar" ? "default" : "ghost"} 
-        size="sm"
-        onClick={() => setActiveView("calendar")}
-        className="px-3"
-      >
-        <CalendarIcon className="h-4 w-4 mr-2" />
-        Takvim
       </Button>
     </div>
   );
