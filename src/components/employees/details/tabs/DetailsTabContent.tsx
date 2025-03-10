@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Employee } from "../../types";
 import { User } from "lucide-react";
 import { EditableEmployeeDetails } from "../form/EditableEmployeeDetails";
-import { FormFields } from "../form/FormFields";
+import { FormFields } from "./FormFields";
 import { useEmployeeDepartments } from "../../form/useEmployeeDepartments";
 
 interface DetailsTabContentProps {
