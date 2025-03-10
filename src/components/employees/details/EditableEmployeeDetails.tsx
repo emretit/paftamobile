@@ -23,9 +23,8 @@ export const EditableEmployeeDetails = ({ employee, onSave }: EditableEmployeeDe
   } = useEditableEmployeeForm(employee, onSave);
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium">Çalışan Detayları</h3>
+    <div className="animate-fade-in">
+      <div className="flex justify-end mb-4">
         <Button 
           type="submit" 
           className="flex items-center gap-2" 
