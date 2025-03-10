@@ -23,6 +23,16 @@ export const EmployeePerformanceTab = ({ employeeId }: EmployeePerformanceTabPro
     setShowForm(false);
   };
 
+  // Transform performance records to chart data format
+  const chartData = performanceHistory.map(record => ({
+    period: record.review_period,
+    Technical: record.technical_score,
+    Communication: record.communication_score,
+    Teamwork: record.teamwork_score,
+    Leadership: record.leadership_score,
+    Overall: record.overall_score
+  }));
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -72,7 +82,7 @@ export const EmployeePerformanceTab = ({ employeeId }: EmployeePerformanceTabPro
               <Card className="p-6">
                 <h3 className="text-lg font-medium mb-4">Performans Trendi</h3>
                 <div className="h-80">
-                  <PerformanceChart data={performanceHistory} />
+                  <PerformanceChart data={chartData} />
                 </div>
               </Card>
               
