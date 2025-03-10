@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +15,7 @@ export const EmployeeList = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -112,7 +112,11 @@ export const EmployeeList = () => {
       statusFilter === 'all' || 
       employee.status === statusFilter;
     
-    return matchesSearch && matchesStatus;
+    const matchesDepartment = 
+      departmentFilter === 'all' || 
+      employee.department === departmentFilter;
+    
+    return matchesSearch && matchesStatus && matchesDepartment;
   });
 
   const handleAddEmployee = () => {
@@ -150,6 +154,8 @@ export const EmployeeList = () => {
         setSearchQuery={setSearchQuery}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
+        departmentFilter={departmentFilter}
+        setDepartmentFilter={setDepartmentFilter}
       />
 
       {viewMode === 'table' ? (
