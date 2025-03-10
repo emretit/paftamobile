@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, Save, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Employee } from "@/components/employees/types";
@@ -14,6 +14,7 @@ import { EmployeeLeaveTab } from "@/components/employees/details/EmployeeLeaveTa
 import { EmployeePerformanceTab } from "@/components/employees/details/EmployeePerformanceTab";
 import { EmployeeTasksTab } from "@/components/employees/details/EmployeeTasksTab";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EditableEmployeeDetails } from "@/components/employees/details/EditableEmployeeDetails";
 
 interface EmployeeDetailsPageProps {
   isCollapsed: boolean;
@@ -27,7 +28,8 @@ const EmployeeDetails = ({ isCollapsed, setIsCollapsed }: EmployeeDetailsPagePro
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("details");
-
+  const [isEditing, setIsEditing] = useState(false);
+  
   useEffect(() => {
     const fetchEmployee = async () => {
       try {
@@ -62,6 +64,15 @@ const EmployeeDetails = ({ isCollapsed, setIsCollapsed }: EmployeeDetailsPagePro
     fetchEmployee();
   }, [id, toast]);
 
+  const handleEmployeeUpdate = (updatedEmployee: Employee) => {
+    setEmployee(updatedEmployee);
+    setIsEditing(false);
+    toast({
+      title: "Başarılı",
+      description: "Çalışan bilgileri başarıyla güncellendi.",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
@@ -77,13 +88,28 @@ const EmployeeDetails = ({ isCollapsed, setIsCollapsed }: EmployeeDetailsPagePro
               Çalışanlara Dön
             </Button>
             {!isLoading && employee && (
-              <Button
-                onClick={() => navigate(`/employees/${id}/edit`)}
-                className="flex items-center gap-2"
-              >
-                <Pencil className="h-4 w-4" />
-                Düzenle
-              </Button>
+              <>
+                {isEditing ? (
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => setIsEditing(false)}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <X className="h-4 w-4" />
+                      İptal
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Düzenle
+                  </Button>
+                )}
+              </>
             )}
           </div>
           
@@ -116,35 +142,42 @@ const EmployeeDetails = ({ isCollapsed, setIsCollapsed }: EmployeeDetailsPagePro
                 </TabsList>
                 
                 <TabsContent value="details" className="mt-6">
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-medium mb-4">Çalışan Detayları</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <p className="text-sm text-gray-500">Adı Soyadı</p>
-                        <p className="font-medium">{employee.first_name} {employee.last_name}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Departman</p>
-                        <p className="font-medium">{employee.department}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Pozisyon</p>
-                        <p className="font-medium">{employee.position}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">E-posta</p>
-                        <p className="font-medium">{employee.email}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Telefon</p>
-                        <p className="font-medium">{employee.phone || "-"}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">İşe Başlama Tarihi</p>
-                        <p className="font-medium">{new Date(employee.hire_date).toLocaleDateString('tr-TR')}</p>
+                  {isEditing ? (
+                    <EditableEmployeeDetails 
+                      employee={employee} 
+                      onSave={handleEmployeeUpdate} 
+                    />
+                  ) : (
+                    <div className="bg-white rounded-lg shadow p-6">
+                      <h3 className="text-lg font-medium mb-4">Çalışan Detayları</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <p className="text-sm text-gray-500">Adı Soyadı</p>
+                          <p className="font-medium">{employee.first_name} {employee.last_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Departman</p>
+                          <p className="font-medium">{employee.department}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Pozisyon</p>
+                          <p className="font-medium">{employee.position}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">E-posta</p>
+                          <p className="font-medium">{employee.email}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Telefon</p>
+                          <p className="font-medium">{employee.phone || "-"}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">İşe Başlama Tarihi</p>
+                          <p className="font-medium">{new Date(employee.hire_date).toLocaleDateString('tr-TR')}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="salary" className="mt-6">

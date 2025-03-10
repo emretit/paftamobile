@@ -34,7 +34,7 @@ export const EmployeeDetailPanel = ({ employee, isOpen, onClose }: EmployeeDetai
   };
 
   const handleEditEmployee = () => {
-    navigate(`/employees/${employee.id}/edit`);
+    navigate(`/employees/${employee.id}`);
     onClose();
   };
 
