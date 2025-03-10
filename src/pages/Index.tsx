@@ -10,12 +10,7 @@ import CtaSection from "@/components/landing/CtaSection";
 import FooterSection from "@/components/landing/FooterSection";
 import LoginButton from "@/components/navbar/LoginButton";
 
-interface IndexProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
-}
-
-const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
+const Index = () => {
   return (
     <div className="min-h-screen bg-white">
       <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-10">

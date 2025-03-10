@@ -59,7 +59,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
                     <div className="flex items-center">
                       <Icon className="h-5 w-5 flex-shrink-0" />
                       {!isCollapsed && (
-                        <span className="ml-3">{item.category}</span>
+                        <span className="ml-3 text-sm font-medium">{item.category}</span>
                       )}
                     </div>
                     {!isCollapsed && (
