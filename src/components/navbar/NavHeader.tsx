@@ -25,7 +25,7 @@ const NavHeader = ({ isCollapsed, setIsCollapsed }: NavHeaderProps) => {
                 className="relative h-10 w-10 transition-transform duration-300 group-hover:scale-105"
               />
             </div>
-            <span className="text-lg font-semibold tracking-tight text-white">NGS</span>
+            <span className="text-lg font-semibold tracking-tight text-primary">NGS</span>
           </>
         )}
         {isCollapsed && (
@@ -44,7 +44,7 @@ const NavHeader = ({ isCollapsed, setIsCollapsed }: NavHeaderProps) => {
         variant="ghost"
         size="icon"
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="h-9 w-9 text-white hover:bg-accent"
+        className="h-9 w-9 text-primary hover:bg-white/10"
       >
         {isCollapsed ? (
           <ChevronRight className="h-4 w-4" />
