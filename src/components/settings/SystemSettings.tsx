@@ -23,10 +23,10 @@ export const SystemSettings = () => {
 
   return (
     <CustomTabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-      <CustomTabsList>
-        <CustomTabsTrigger value="general">Genel Ayarlar</CustomTabsTrigger>
-        <CustomTabsTrigger value="company">Şirket Bilgileri</CustomTabsTrigger>
-        <CustomTabsTrigger value="audit">Denetim Günlüğü</CustomTabsTrigger>
+      <CustomTabsList className="grid grid-cols-3 w-full bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-1 shadow-sm">
+        <CustomTabsTrigger value="general" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Genel Ayarlar</CustomTabsTrigger>
+        <CustomTabsTrigger value="company" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Şirket Bilgileri</CustomTabsTrigger>
+        <CustomTabsTrigger value="audit" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Denetim Günlüğü</CustomTabsTrigger>
       </CustomTabsList>
 
       <CustomTabsContent value="general">

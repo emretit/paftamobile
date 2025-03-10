@@ -36,20 +36,20 @@ const Finance = ({ isCollapsed, setIsCollapsed }: FinanceProps) => {
           {/* Ana İçerik Sekmeleri */}
           <CustomTabs defaultValue="bank-accounts" className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2">
-              <CustomTabsList className="w-full h-auto flex flex-wrap gap-2 bg-transparent">
-                <CustomTabsTrigger value="bank-accounts" className="flex-1 min-w-[150px]">
+              <CustomTabsList className="w-full h-auto flex flex-wrap gap-2 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-1 shadow-sm">
+                <CustomTabsTrigger value="bank-accounts" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   Banka Hesapları
                 </CustomTabsTrigger>
-                <CustomTabsTrigger value="cash-flow" className="flex-1 min-w-[150px]">
+                <CustomTabsTrigger value="cash-flow" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   Nakit Akışı
                 </CustomTabsTrigger>
-                <CustomTabsTrigger value="financial-instruments" className="flex-1 min-w-[150px]">
+                <CustomTabsTrigger value="financial-instruments" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   Çek/Senet
                 </CustomTabsTrigger>
-                <CustomTabsTrigger value="general-ledger" className="flex-1 min-w-[150px]">
+                <CustomTabsTrigger value="general-ledger" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   Genel Muhasebe
                 </CustomTabsTrigger>
-                <CustomTabsTrigger value="reports" className="flex-1 min-w-[150px]">
+                <CustomTabsTrigger value="reports" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   Raporlar
                 </CustomTabsTrigger>
               </CustomTabsList>

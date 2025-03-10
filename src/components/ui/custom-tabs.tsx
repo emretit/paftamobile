@@ -12,7 +12,7 @@ const CustomTabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "inline-flex h-12 items-center justify-center rounded-xl bg-white p-1 shadow-sm border border-gray-100",
+      "grid grid-cols-5 w-full bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-1 shadow-sm sticky top-4 z-10",
       className
     )}
     {...props}
@@ -27,13 +27,11 @@ const CustomTabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "inline-flex items-center justify-center whitespace-nowrap rounded-lg px-5 py-2.5 text-sm font-medium transition-all relative",
+      "flex items-center justify-center space-x-2 rounded-lg transition-all duration-200",
       "text-gray-600 hover:text-gray-900",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       "disabled:pointer-events-none disabled:opacity-50",
-      "data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-sm",
-      "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 after:opacity-0 after:transition-all",
-      "data-[state=active]:after:opacity-100",
+      "data-[state=active]:bg-primary data-[state=active]:text-white",
       className
     )}
     {...props}
@@ -48,7 +46,7 @@ const CustomTabsContent = React.forwardRef<
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      "mt-4 ring-offset-background animate-in fade-in-0 zoom-in-95 duration-200",
+      "mt-6 animate-fade-in",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       className
     )}

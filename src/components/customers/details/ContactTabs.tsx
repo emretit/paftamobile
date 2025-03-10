@@ -1,3 +1,4 @@
+
 import { Activity, Receipt, FileText, CreditCard, FileStack } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { 
@@ -19,31 +20,31 @@ interface ContactTabsProps {
 export const ContactTabs = ({ customer }: ContactTabsProps) => {
   return (
     <CustomTabs defaultValue="overview" className="space-y-4">
-      <CustomTabsList className="bg-white border w-full">
-        <CustomTabsTrigger value="overview">Genel Bilgiler</CustomTabsTrigger>
-        <CustomTabsTrigger value="payments" className="flex items-center gap-1">
+      <CustomTabsList className="grid grid-cols-7 w-full bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-1 shadow-sm">
+        <CustomTabsTrigger value="overview" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Genel Bilgiler</CustomTabsTrigger>
+        <CustomTabsTrigger value="payments" className="flex items-center justify-center gap-1 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
           <CreditCard className="h-4 w-4" />
-          Cari Hareketler
+          <span className="hidden md:inline">Cari Hareketler</span>
         </CustomTabsTrigger>
-        <CustomTabsTrigger value="activities" className="flex items-center gap-1">
+        <CustomTabsTrigger value="activities" className="flex items-center justify-center gap-1 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
           <Activity className="h-4 w-4" />
-          Aktiviteler
+          <span className="hidden md:inline">Aktiviteler</span>
         </CustomTabsTrigger>
-        <CustomTabsTrigger value="service-receipts" className="flex items-center gap-1">
+        <CustomTabsTrigger value="service-receipts" className="flex items-center justify-center gap-1 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
           <Receipt className="h-4 w-4" />
-          Servis Fişleri
+          <span className="hidden md:inline">Servis Fişleri</span>
         </CustomTabsTrigger>
-        <CustomTabsTrigger value="offers" className="flex items-center gap-1">
+        <CustomTabsTrigger value="offers" className="flex items-center justify-center gap-1 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
           <FileText className="h-4 w-4" />
-          Teklifler
+          <span className="hidden md:inline">Teklifler</span>
         </CustomTabsTrigger>
-        <CustomTabsTrigger value="invoices" className="flex items-center gap-1">
+        <CustomTabsTrigger value="invoices" className="flex items-center justify-center gap-1 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
           <Receipt className="h-4 w-4" />
-          Faturalar
+          <span className="hidden md:inline">Faturalar</span>
         </CustomTabsTrigger>
-        <CustomTabsTrigger value="contracts" className="flex items-center gap-1">
+        <CustomTabsTrigger value="contracts" className="flex items-center justify-center gap-1 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
           <FileStack className="h-4 w-4" />
-          Sözleşmeler
+          <span className="hidden md:inline">Sözleşmeler</span>
         </CustomTabsTrigger>
       </CustomTabsList>
 

@@ -28,11 +28,11 @@ const ProductFormTabs = ({ form, onSubmit }: ProductFormTabsProps) => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)}>
         <CustomTabs defaultValue="general" className="w-full">
-          <CustomTabsList className="grid grid-cols-4 mb-8">
-            <CustomTabsTrigger value="general">Genel Bilgiler</CustomTabsTrigger>
-            <CustomTabsTrigger value="pricing">Fiyatlandırma</CustomTabsTrigger>
-            <CustomTabsTrigger value="inventory">Stok</CustomTabsTrigger>
-            <CustomTabsTrigger value="additional">Ek Bilgiler</CustomTabsTrigger>
+          <CustomTabsList className="grid grid-cols-4 w-full bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-1 shadow-sm">
+            <CustomTabsTrigger value="general" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Genel Bilgiler</CustomTabsTrigger>
+            <CustomTabsTrigger value="pricing" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Fiyatlandırma</CustomTabsTrigger>
+            <CustomTabsTrigger value="inventory" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Stok</CustomTabsTrigger>
+            <CustomTabsTrigger value="additional" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Ek Bilgiler</CustomTabsTrigger>
           </CustomTabsList>
           
           <CustomTabsContent value="general">

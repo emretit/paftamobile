@@ -56,12 +56,12 @@ export const EmployeeDetailPanel = ({ employee, isOpen, onClose }: EmployeeDetai
         </div>
           
         <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-5 w-full">
-            <TabsTrigger value="details">Genel Bilgiler</TabsTrigger>
-            <TabsTrigger value="salary">Maaş</TabsTrigger>
-            <TabsTrigger value="leave">İzin</TabsTrigger>
-            <TabsTrigger value="performance">Performans</TabsTrigger>
-            <TabsTrigger value="tasks">Görevler</TabsTrigger>
+          <TabsList className="grid grid-cols-5 w-full bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-1 shadow-sm">
+            <TabsTrigger value="details" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Genel Bilgiler</TabsTrigger>
+            <TabsTrigger value="salary" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Maaş</TabsTrigger>
+            <TabsTrigger value="leave" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">İzin</TabsTrigger>
+            <TabsTrigger value="performance" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Performans</TabsTrigger>
+            <TabsTrigger value="tasks" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Görevler</TabsTrigger>
           </TabsList>
             
           <TabsContent value="details" className="mt-6">

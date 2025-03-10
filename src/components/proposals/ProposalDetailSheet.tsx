@@ -63,10 +63,10 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
           <ProposalBasicInfo proposal={formData} />
 
           <Tabs defaultValue="details">
-            <TabsList className="w-full mb-4">
-              <TabsTrigger value="details" className="flex-1">Teklif Detayları</TabsTrigger>
-              <TabsTrigger value="items" className="flex-1">Kalemler</TabsTrigger>
-              <TabsTrigger value="notes" className="flex-1">Notlar</TabsTrigger>
+            <TabsList className="grid grid-cols-3 w-full bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-1 shadow-sm">
+              <TabsTrigger value="details" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Teklif Detayları</TabsTrigger>
+              <TabsTrigger value="items" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Kalemler</TabsTrigger>
+              <TabsTrigger value="notes" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">Notlar</TabsTrigger>
             </TabsList>
 
             <TabsContent value="details">

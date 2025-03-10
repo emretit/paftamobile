@@ -133,3 +133,27 @@
     opacity: 1;
   }
 }
+
+/* Animations for tab transitions */
+.tab-transition {
+  transition: all 0.3s ease;
+}
+
+.tab-enter {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.tab-enter-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.tab-exit {
+  opacity: 1;
+}
+
+.tab-exit-active {
+  opacity: 0;
+  transform: scale(0.95);
+}
