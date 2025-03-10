@@ -1,12 +1,12 @@
 
 import { Button } from "@/components/ui/button";
 import { Filter, Plus } from "lucide-react";
-import TasksViewToggle from "./TasksViewToggle";
+import TasksViewToggle, { ViewType } from "./TasksViewToggle";
 
 interface TasksPageHeaderProps {
   onAddTask: () => void;
-  activeView: string;
-  setActiveView: (view: any) => void;
+  activeView: ViewType;
+  setActiveView: (view: ViewType) => void;
 }
 
 const TasksPageHeader = ({ onAddTask, activeView, setActiveView }: TasksPageHeaderProps) => {
