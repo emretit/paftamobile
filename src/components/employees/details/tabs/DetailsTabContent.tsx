@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Employee } from "../../types";
 import { Edit, Eye, User } from "lucide-react";
-import { EditableEmployeeDetails } from "../EditableEmployeeDetails";
+import { EditableEmployeeDetails } from "../form/EditableEmployeeDetails";
 import { formatDate } from "../utils/formatDate";
 
 interface DetailsTabContentProps {

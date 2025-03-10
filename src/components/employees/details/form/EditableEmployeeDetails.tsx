@@ -1,11 +1,11 @@
 
 import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Employee } from "../types";
-import { useEditableEmployeeForm } from "./form/useEditableEmployeeForm";
-import { PersonalInfoForm } from "./form/PersonalInfoForm";
-import { PositionFields } from "./form/PositionFields";
-import { StatusFields } from "./form/StatusFields";
+import type { Employee } from "../../types";
+import { useEditableEmployeeForm } from "./useEditableEmployeeForm";
+import { PersonalInfoForm } from "./PersonalInfoForm";
+import { PositionFields } from "./PositionFields";
+import { StatusFields } from "./StatusFields";
 
 interface EditableEmployeeDetailsProps {
   employee: Employee;
