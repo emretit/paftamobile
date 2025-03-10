@@ -49,7 +49,7 @@ const App = () => {
       <Router>
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={<PublicRoute><Index isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></PublicRoute>} />
+          <Route path="/" element={<PublicRoute><Index /></PublicRoute>} />
           <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
           
           {/* Protected routes */}
