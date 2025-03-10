@@ -39,6 +39,7 @@ export const EditableEmployeeDetails = ({ employee, onSave }: EditableEmployeeDe
           departments={departments}
           handleInputChange={handleInputChange}
           isEditing={true}
+          showExtendedInfo={true}
         />
       </form>
     </div>
