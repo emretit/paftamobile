@@ -1,10 +1,20 @@
 
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { usePerformanceForm } from "./usePerformanceForm";
 import { PerformanceRecord } from "./types";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
 
 interface PerformanceFormProps {
   employeeId: string;
@@ -12,133 +22,157 @@ interface PerformanceFormProps {
   onClose: () => void;
 }
 
-export const PerformanceForm = ({ employeeId, onSuccess, onClose }: PerformanceFormProps) => {
+export const PerformanceForm = ({ 
+  employeeId, 
+  onSuccess, 
+  onClose 
+}: PerformanceFormProps) => {
   const { form, handleSubmit } = usePerformanceForm(employeeId, onSuccess, onClose);
 
+  const renderScoreField = (
+    name: "technical_score" | "communication_score" | "teamwork_score" | "leadership_score",
+    label: string,
+    description: string
+  ) => (
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className="space-y-1">
+          <div className="flex justify-between items-center">
+            <FormLabel>{label}</FormLabel>
+            <span className="text-sm font-medium">{field.value}/5</span>
+          </div>
+          <FormControl>
+            <Slider
+              min={1}
+              max={5}
+              step={0.5}
+              value={[field.value]}
+              onValueChange={(values) => field.onChange(values[0])}
+            />
+          </FormControl>
+          <p className="text-xs text-muted-foreground">{description}</p>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 py-4">
-      <FormField
-        control={form.control}
-        name="review_period"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Değerlendirme Dönemi</FormLabel>
-            <FormControl>
-              <Input type="month" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <div className="grid grid-cols-2 gap-4">
+    <Form {...form}>
+      <form onSubmit={handleSubmit} className="space-y-6">
         <FormField
           control={form.control}
-          name="technical_score"
+          name="review_period"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Teknik Performans (1-5)</FormLabel>
+              <FormLabel>Değerlendirme Dönemi</FormLabel>
               <FormControl>
-                <Input type="number" min="1" max="5" step="0.5" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                <Input type="month" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        <Separator className="my-4" />
+        
+        <div className="space-y-4">
+          <h3 className="text-md font-medium">Performans Puanları</h3>
+          
+          {renderScoreField(
+            "technical_score",
+            "Teknik Yetkinlik",
+            "Teknik bilgi, problemleri çözme ve uzmanlık becerileri"
+          )}
+          
+          {renderScoreField(
+            "communication_score",
+            "İletişim Becerileri",
+            "Sözlü ve yazılı iletişim, sunum ve raporlama becerileri"
+          )}
+          
+          {renderScoreField(
+            "teamwork_score",
+            "Takım Çalışması",
+            "İş birliği, takım içinde uyum ve ortak hedeflere katkı"
+          )}
+          
+          {renderScoreField(
+            "leadership_score",
+            "Liderlik",
+            "İnisiyatif alma, sorumluluk üstlenme ve diğerlerini yönlendirme"
+          )}
+        </div>
+
+        <Separator className="my-4" />
+        
         <FormField
           control={form.control}
-          name="communication_score"
+          name="strengths"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>İletişim (1-5)</FormLabel>
+              <FormLabel>Güçlü Yönler</FormLabel>
               <FormControl>
-                <Input type="number" min="1" max="5" step="0.5" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                <Textarea rows={3} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+        
         <FormField
           control={form.control}
-          name="teamwork_score"
+          name="areas_for_improvement"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Takım Çalışması (1-5)</FormLabel>
+              <FormLabel>Gelişim Alanları</FormLabel>
               <FormControl>
-                <Input type="number" min="1" max="5" step="0.5" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                <Textarea rows={3} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+        
         <FormField
           control={form.control}
-          name="leadership_score"
+          name="goals"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Liderlik (1-5)</FormLabel>
+              <FormLabel>Hedefler</FormLabel>
               <FormControl>
-                <Input type="number" min="1" max="5" step="0.5" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
+                <Textarea rows={3} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-      </div>
-      <FormField
-        control={form.control}
-        name="strengths"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Güçlü Yönleri</FormLabel>
-            <FormControl>
-              <Textarea rows={3} {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="areas_for_improvement"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Geliştirilmesi Gereken Alanlar</FormLabel>
-            <FormControl>
-              <Textarea rows={3} {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="goals"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Hedefler</FormLabel>
-            <FormControl>
-              <Textarea rows={3} {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="notes"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Ek Notlar</FormLabel>
-            <FormControl>
-              <Textarea rows={2} {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <div className="flex justify-end">
-        <Button type="submit">Değerlendirmeyi Kaydet</Button>
-      </div>
-    </form>
+        
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ek Notlar</FormLabel>
+              <FormControl>
+                <Textarea rows={3} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end gap-3">
+          <Button type="button" variant="outline" onClick={onClose}>
+            İptal
+          </Button>
+          <Button type="submit">
+            Kaydet
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };
