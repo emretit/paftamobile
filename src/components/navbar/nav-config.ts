@@ -4,7 +4,6 @@ import {
   Users, 
   PieChart,
   Truck,
-  HardHat,
   Wallet,
   Wrench,
   FileDown,
@@ -47,7 +46,6 @@ export const navItems = [
     items: productsItems,
     path: "/products"
   },
-  { path: "/employees", icon: HardHat, label: "Çalışanlar" },
   { path: "/finance", icon: Wallet, label: "Finans" },
   { path: "/purchase-management", icon: ShoppingCart, label: "Satın Alma" },
   { path: "/service", icon: Wrench, label: "Servis" },

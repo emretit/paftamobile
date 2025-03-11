@@ -23,9 +23,6 @@ import Settings from "@/pages/Settings";
 import PurchaseInvoices from "@/pages/PurchaseInvoices";
 import SalesInvoices from "@/pages/SalesInvoices";
 import Auth from "@/pages/Auth";
-import Employees from "@/pages/Employees";
-import EmployeeForm from "@/pages/EmployeeForm";
-import EmployeeDetails from "@/pages/EmployeeDetails";
 import Tasks from "@/pages/Tasks";
 import CrmDashboard from "@/pages/CrmDashboard";
 import PurchaseManagement from "@/pages/PurchaseManagement";
@@ -134,22 +131,6 @@ const App = () => {
           <Route
             path="/sales-invoices"
             element={<ProtectedRoute><SalesInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/employees"
-            element={<ProtectedRoute><Employees isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/employees/new"
-            element={<ProtectedRoute><EmployeeForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/employees/:id"
-            element={
-              <AuthGuard>
-                <EmployeeDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-              </AuthGuard>
-            }
           />
           <Route
             path="/tasks"

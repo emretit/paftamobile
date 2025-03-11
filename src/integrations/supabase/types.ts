@@ -528,13 +528,6 @@ export type Database = {
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "deals_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
         ]
       }
       departments: {
@@ -557,81 +550,6 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      employees: {
-        Row: {
-          address: string | null
-          avatar_url: string | null
-          city: string | null
-          created_at: string | null
-          date_of_birth: string | null
-          department: string
-          email: string
-          emergency_contact_name: string | null
-          emergency_contact_phone: string | null
-          emergency_contact_relation: string | null
-          first_name: string
-          gender: string | null
-          hire_date: string
-          id: string
-          id_ssn: string | null
-          last_name: string
-          marital_status: string | null
-          phone: string | null
-          position: string
-          postal_code: string | null
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          address?: string | null
-          avatar_url?: string | null
-          city?: string | null
-          created_at?: string | null
-          date_of_birth?: string | null
-          department: string
-          email: string
-          emergency_contact_name?: string | null
-          emergency_contact_phone?: string | null
-          emergency_contact_relation?: string | null
-          first_name: string
-          gender?: string | null
-          hire_date: string
-          id?: string
-          id_ssn?: string | null
-          last_name: string
-          marital_status?: string | null
-          phone?: string | null
-          position: string
-          postal_code?: string | null
-          status: string
-          updated_at?: string | null
-        }
-        Update: {
-          address?: string | null
-          avatar_url?: string | null
-          city?: string | null
-          created_at?: string | null
-          date_of_birth?: string | null
-          department?: string
-          email?: string
-          emergency_contact_name?: string | null
-          emergency_contact_phone?: string | null
-          emergency_contact_relation?: string | null
-          first_name?: string
-          gender?: string | null
-          hire_date?: string
-          id?: string
-          id_ssn?: string | null
-          last_name?: string
-          marital_status?: string | null
-          phone?: string | null
-          position?: string
-          postal_code?: string | null
-          status?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -729,15 +647,7 @@ export type Database = {
           title?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "events_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       financial_instruments: {
         Row: {
@@ -1204,13 +1114,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "proposals_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "proposals_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
@@ -1599,13 +1502,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "service_activities_performed_by_fkey"
-            columns: ["performed_by"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "service_activities_service_request_id_fkey"
             columns: ["service_request_id"]
             isOneToOne: false
@@ -1670,13 +1566,6 @@ export type Database = {
           warranty_info?: Json | null
         }
         Relationships: [
-          {
-            foreignKeyName: "service_requests_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "service_requests_customer_id_fkey"
             columns: ["customer_id"]
@@ -1783,15 +1672,7 @@ export type Database = {
           type?: Database["public"]["Enums"]["task_type"]
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "tasks_assignee_id_fkey"
-            columns: ["assignee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -1816,26 +1697,7 @@ export type Database = {
       }
     }
     Views: {
-      sales_performance: {
-        Row: {
-          accepted_proposals: number | null
-          employee_id: string | null
-          employee_name: string | null
-          month: string | null
-          success_rate: number | null
-          total_proposals: number | null
-          total_value: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "proposals_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       assign_role: {
@@ -1916,35 +1778,6 @@ export type Database = {
           email: string
         }
         Returns: undefined
-      }
-      search_employees: {
-        Args: {
-          search_query: string
-        }
-        Returns: {
-          address: string | null
-          avatar_url: string | null
-          city: string | null
-          created_at: string | null
-          date_of_birth: string | null
-          department: string
-          email: string
-          emergency_contact_name: string | null
-          emergency_contact_phone: string | null
-          emergency_contact_relation: string | null
-          first_name: string
-          gender: string | null
-          hire_date: string
-          id: string
-          id_ssn: string | null
-          last_name: string
-          marital_status: string | null
-          phone: string | null
-          position: string
-          postal_code: string | null
-          status: string
-          updated_at: string | null
-        }[]
       }
       set_limit: {
         Args: {
