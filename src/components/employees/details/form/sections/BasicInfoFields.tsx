@@ -136,7 +136,7 @@ export const BasicInfoFields = ({
         {isEditing ? (
           <Select
             value={formData.status}
-            onValueChange={(value: 'active' | 'inactive') => 
+            onValueChange={(value: string) => 
               handleInputChange?.('status', value)
             }
           >
@@ -150,7 +150,7 @@ export const BasicInfoFields = ({
           </Select>
         ) : (
           <div className="p-2 bg-gray-50 rounded-md">
-            {formData.status === 'active' ? 'Aktif' : 'Pasif'}
+            {formData.status === 'active' || formData.status === 'aktif' ? 'Aktif' : 'Pasif'}
           </div>
         )}
       </div>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -44,8 +43,12 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
     console.log("Submitting form with status:", formData.status);
     
     try {
-      // For Supabase, we need to ensure the status is exactly one of the valid values
-      // that matches the check constraint in the database
+      // For status, we need to ensure it's either 'active' or 'inactive'
+      // However, in the database, 'aktif' is also a valid value (it's the Turkish equivalent)
+      // So we need to check if the status is 'active' and keep it, otherwise set it to the original value
+      const statusValue = formData.status === 'active' ? 'active' : 
+                         (formData.status === 'inactive' ? 'inactive' : employee.status);
+      
       const { error } = await supabase
         .from('employees')
         .update({
@@ -56,7 +59,8 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
           position: formData.position,
           department: formData.department,
           hire_date: formData.hire_date,
-          status: formData.status === 'active' ? 'active' : 'inactive',
+          // Use the original status if it's not explicitly changed to active/inactive
+          status: statusValue,
           date_of_birth: formData.date_of_birth || null,
           gender: formData.gender || null,
           marital_status: formData.marital_status || null,
@@ -78,11 +82,11 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
 
       console.log("Employee updated successfully");
 
-      // Create updated employee object with the valid status
+      // Create updated employee object with the original status if needed
       const updatedEmployee: Employee = {
         ...employee,
         ...formData,
-        status: formData.status === 'active' ? 'active' : 'inactive',
+        status: statusValue,
       };
 
       // Call onSave to update the parent component state
