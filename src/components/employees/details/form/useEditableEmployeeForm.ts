@@ -35,6 +35,7 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
       ...prev,
       [field]: value,
     }));
+    console.log(`Field ${field} changed to: ${value}`);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,9 +43,21 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
     setIsLoading(true);
     
     console.log("Submitting form with status:", formData.status);
+    console.log("Original employee status:", employee.status);
+    console.log("Full form data:", formData);
     
     try {
-      // Allow status to be updated in the database
+      // Analyze available status options
+      const validStatusOptions = ["active", "inactive"];
+      console.log("Is status value in valid options?", validStatusOptions.includes(formData.status));
+      
+      // Normalize status - ensure we use only valid values
+      let normalizedStatus = formData.status;
+      if (formData.status === "aktif" || formData.status === "izinli") {
+        normalizedStatus = "active";
+        console.log("Normalizing status to:", normalizedStatus);
+      }
+      
       const updateData = {
         first_name: formData.first_name,
         last_name: formData.last_name,
@@ -53,7 +66,7 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
         position: formData.position,
         department: formData.department,
         hire_date: formData.hire_date,
-        status: formData.status, // Allow status to be updated
+        status: normalizedStatus, // Use normalized status
         date_of_birth: formData.date_of_birth || null,
         gender: formData.gender || null,
         marital_status: formData.marital_status || null,
@@ -67,22 +80,26 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
         updated_at: new Date().toISOString(),
       };
 
-      const { error } = await supabase
+      console.log("Sending update with data:", updateData);
+
+      const { data, error } = await supabase
         .from('employees')
         .update(updateData)
-        .eq('id', employee.id);
+        .eq('id', employee.id)
+        .select();
 
       if (error) {
         console.error("Supabase update error:", error);
         throw error;
       }
 
-      console.log("Employee updated successfully");
+      console.log("Employee updated successfully, response:", data);
 
       // Create updated employee object
       const updatedEmployee: Employee = {
         ...employee,
         ...formData,
+        status: normalizedStatus, // Use normalized status
       };
 
       // Call onSave to update the parent component state

@@ -151,8 +151,6 @@ export const BasicInfoFields = ({
             <SelectContent>
               <SelectItem value="active">Aktif</SelectItem>
               <SelectItem value="inactive">Pasif</SelectItem>
-              <SelectItem value="aktif">Aktif</SelectItem>
-              <SelectItem value="izinli">İzinli</SelectItem>
             </SelectContent>
           </Select>
         ) : (
