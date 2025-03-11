@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -43,9 +44,7 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
     console.log("Submitting form with status:", formData.status);
     
     try {
-      // Important: We're keeping the original status value from the database
-      // to avoid issues with the database constraint
-      // The database likely has a check constraint that only allows specific values
+      // Allow status to be updated in the database
       const updateData = {
         first_name: formData.first_name,
         last_name: formData.last_name,
@@ -54,8 +53,7 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
         position: formData.position,
         department: formData.department,
         hire_date: formData.hire_date,
-        // Keep the original status to avoid constraint violations
-        status: employee.status,
+        status: formData.status, // Allow status to be updated
         date_of_birth: formData.date_of_birth || null,
         gender: formData.gender || null,
         marital_status: formData.marital_status || null,
@@ -85,8 +83,6 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
       const updatedEmployee: Employee = {
         ...employee,
         ...formData,
-        // Ensure we keep the original status
-        status: employee.status,
       };
 
       // Call onSave to update the parent component state

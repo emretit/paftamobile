@@ -140,10 +140,26 @@ export const BasicInfoFields = ({
 
       <div className="space-y-2">
         <Label htmlFor="status">Durum</Label>
-        {/* Always render as read-only to avoid status constraint issues */}
-        <div className="p-2 bg-gray-50 rounded-md">
-          {getStatusDisplay(formData.status)}
-        </div>
+        {isEditing ? (
+          <Select
+            value={formData.status}
+            onValueChange={(value) => handleInputChange?.('status', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Durum seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Aktif</SelectItem>
+              <SelectItem value="inactive">Pasif</SelectItem>
+              <SelectItem value="aktif">Aktif</SelectItem>
+              <SelectItem value="izinli">İzinli</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+          <div className="p-2 bg-gray-50 rounded-md">
+            {getStatusDisplay(formData.status)}
+          </div>
+        )}
       </div>
     </div>
   );

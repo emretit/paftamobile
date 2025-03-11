@@ -15,8 +15,17 @@ export const SaveButton = ({ isLoading, onClick }: SaveButtonProps) => {
       onClick={(e) => onClick(e)}
       disabled={isLoading}
     >
-      <Save className="h-4 w-4" />
-      {isLoading ? "Kaydediliyor..." : "Kaydet"}
+      {isLoading ? (
+        <>
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+          Kaydediliyor...
+        </>
+      ) : (
+        <>
+          <Save className="h-4 w-4" />
+          Kaydet
+        </>
+      )}
     </Button>
   );
 };
