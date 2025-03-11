@@ -43,36 +43,35 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
     console.log("Submitting form with status:", formData.status);
     
     try {
-      // For status, we need to ensure it's either 'active' or 'inactive'
-      // However, in the database, 'aktif' is also a valid value (it's the Turkish equivalent)
-      // So we need to check if the status is 'active' and keep it, otherwise set it to the original value
-      const statusValue = formData.status === 'active' ? 'active' : 
-                         (formData.status === 'inactive' ? 'inactive' : employee.status);
-      
+      // Important: We're keeping the original status value from the database
+      // to avoid issues with the database constraint
+      // The database likely has a check constraint that only allows specific values
+      const updateData = {
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email: formData.email,
+        phone: formData.phone || null,
+        position: formData.position,
+        department: formData.department,
+        hire_date: formData.hire_date,
+        // Keep the original status to avoid constraint violations
+        status: employee.status,
+        date_of_birth: formData.date_of_birth || null,
+        gender: formData.gender || null,
+        marital_status: formData.marital_status || null,
+        address: formData.address || null,
+        city: formData.city || null,
+        postal_code: formData.postal_code || null,
+        id_ssn: formData.id_ssn || null,
+        emergency_contact_name: formData.emergency_contact_name || null,
+        emergency_contact_phone: formData.emergency_contact_phone || null,
+        emergency_contact_relation: formData.emergency_contact_relation || null,
+        updated_at: new Date().toISOString(),
+      };
+
       const { error } = await supabase
         .from('employees')
-        .update({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          email: formData.email,
-          phone: formData.phone || null,
-          position: formData.position,
-          department: formData.department,
-          hire_date: formData.hire_date,
-          // Use the original status if it's not explicitly changed to active/inactive
-          status: statusValue,
-          date_of_birth: formData.date_of_birth || null,
-          gender: formData.gender || null,
-          marital_status: formData.marital_status || null,
-          address: formData.address || null,
-          city: formData.city || null,
-          postal_code: formData.postal_code || null,
-          id_ssn: formData.id_ssn || null,
-          emergency_contact_name: formData.emergency_contact_name || null,
-          emergency_contact_phone: formData.emergency_contact_phone || null,
-          emergency_contact_relation: formData.emergency_contact_relation || null,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', employee.id);
 
       if (error) {
@@ -82,25 +81,27 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
 
       console.log("Employee updated successfully");
 
-      // Create updated employee object with the original status if needed
+      // Create updated employee object
       const updatedEmployee: Employee = {
         ...employee,
         ...formData,
-        status: statusValue,
+        // Ensure we keep the original status
+        status: employee.status,
       };
 
       // Call onSave to update the parent component state
       onSave(updatedEmployee);
       
       toast({
-        title: "Success",
-        description: "Employee information updated successfully.",
+        title: "Başarılı",
+        description: "Çalışan bilgileri başarıyla güncellendi.",
+        variant: "default",
       });
     } catch (error) {
       console.error('Error updating employee:', error);
       toast({
-        title: "Error",
-        description: "An error occurred while updating employee information.",
+        title: "Hata",
+        description: "Çalışan bilgileri güncellenirken bir hata oluştu.",
         variant: "destructive",
       });
     } finally {

@@ -20,7 +20,8 @@ export const BasicInfoFields = ({
   // Helper function to display status in Turkish
   const getStatusDisplay = (status: string | undefined) => {
     if (!status) return '-';
-    return status === 'active' || status === 'aktif' ? 'Aktif' : 'Pasif';
+    if (status === 'active' || status === 'aktif' || status === 'izinli') return 'Aktif';
+    return 'Pasif';
   };
 
   return (
@@ -139,26 +140,10 @@ export const BasicInfoFields = ({
 
       <div className="space-y-2">
         <Label htmlFor="status">Durum</Label>
-        {isEditing ? (
-          <Select
-            value={formData.status}
-            onValueChange={(value: string) => 
-              handleInputChange?.('status', value)
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Durum seçin" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Aktif</SelectItem>
-              <SelectItem value="inactive">Pasif</SelectItem>
-            </SelectContent>
-          </Select>
-        ) : (
-          <div className="p-2 bg-gray-50 rounded-md">
-            {getStatusDisplay(formData.status)}
-          </div>
-        )}
+        {/* Always render as read-only to avoid status constraint issues */}
+        <div className="p-2 bg-gray-50 rounded-md">
+          {getStatusDisplay(formData.status)}
+        </div>
       </div>
     </div>
   );

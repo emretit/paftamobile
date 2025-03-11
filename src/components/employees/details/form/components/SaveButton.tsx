@@ -16,7 +16,7 @@ export const SaveButton = ({ isLoading, onClick }: SaveButtonProps) => {
       disabled={isLoading}
     >
       <Save className="h-4 w-4" />
-      {isLoading ? "Saving..." : "Save"}
+      {isLoading ? "Kaydediliyor..." : "Kaydet"}
     </Button>
   );
 };
