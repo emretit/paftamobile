@@ -56,7 +56,6 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
           position: formData.position,
           department: formData.department,
           hire_date: formData.hire_date,
-          // Only use the exact status values allowed by the database
           status: formData.status === 'active' ? 'active' : 'inactive',
           date_of_birth: formData.date_of_birth || null,
           gender: formData.gender || null,
