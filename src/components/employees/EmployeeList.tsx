@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Grid, List } from "lucide-react";
+import { Plus, Grid, List, RefreshCw } from "lucide-react";
 import type { Employee, ViewMode } from "./types";
 import EmployeeTable from "./EmployeeTable";
 import { EmployeeGrid } from "./EmployeeGrid";
@@ -43,32 +43,32 @@ export const EmployeeList = () => {
     };
   };
 
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        setIsLoading(true);
+  const fetchEmployees = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .order('created_at', { ascending: false });
         
-        const { data, error } = await supabase
-          .from('employees')
-          .select('*')
-          .order('created_at', { ascending: false });
-          
-        if (error) throw error;
+      if (error) throw error;
 
-        const transformedEmployees = data ? data.map(transformToEmployee) : [];
-        setEmployees(transformedEmployees);
-      } catch (error) {
-        console.error('Error fetching employees:', error);
-        toast({
-          variant: "destructive",
-          title: "Hata",
-          description: "Çalışan bilgileri yüklenirken bir hata oluştu.",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      const transformedEmployees = data ? data.map(transformToEmployee) : [];
+      setEmployees(transformedEmployees);
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load employee data.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchEmployees();
 
     const channel = supabase
@@ -103,6 +103,36 @@ export const EmployeeList = () => {
     };
   }, [toast]);
 
+  const handleClearEmployees = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Delete all employees from the database
+      const { error } = await supabase
+        .from('employees')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Safety check to avoid deleting with an empty condition
+        
+      if (error) throw error;
+
+      setEmployees([]);
+      
+      toast({
+        title: "Success",
+        description: "All employee data has been cleared.",
+      });
+    } catch (error) {
+      console.error('Error clearing employees:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to clear employee data.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const filteredEmployees = employees.filter(employee => {
     const matchesSearch = 
       searchQuery === '' || 
@@ -129,7 +159,7 @@ export const EmployeeList = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Çalışan Listesi</h2>
+        <h2 className="text-xl font-semibold">Employee List</h2>
         <div className="flex space-x-2">
           <Button
             size="icon"
@@ -145,9 +175,18 @@ export const EmployeeList = () => {
           >
             <Grid className="h-4 w-4" />
           </Button>
+          <Button variant="outline" onClick={fetchEmployees} className="flex items-center gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+          {employees.length > 0 && (
+            <Button variant="destructive" onClick={handleClearEmployees} disabled={isLoading}>
+              Clear All
+            </Button>
+          )}
           <Button onClick={handleAddEmployee} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
-            Yeni Çalışan
+            New Employee
           </Button>
         </div>
       </div>
