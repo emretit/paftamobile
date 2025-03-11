@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -27,6 +26,7 @@ import Tasks from "@/pages/Tasks";
 import CrmDashboard from "@/pages/CrmDashboard";
 import PurchaseManagement from "@/pages/PurchaseManagement";
 import AuthGuard from "@/components/AuthGuard";
+import Employees from "@/pages/Employees";
 
 const queryClient = new QueryClient();
 
@@ -139,6 +139,10 @@ const App = () => {
           <Route
             path="/purchase-management"
             element={<ProtectedRoute><PurchaseManagement isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/employees"
+            element={<ProtectedRoute><Employees isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
         </Routes>
       </Router>

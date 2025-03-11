@@ -554,6 +554,263 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_documents: {
+        Row: {
+          created_at: string | null
+          document_type: string
+          employee_id: string | null
+          file_name: string
+          file_url: string
+          id: string
+          updated_at: string | null
+          upload_date: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_type: string
+          employee_id?: string | null
+          file_name: string
+          file_url: string
+          id?: string
+          updated_at?: string | null
+          upload_date?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          document_type?: string
+          employee_id?: string | null
+          file_name?: string
+          file_url?: string
+          id?: string
+          updated_at?: string | null
+          upload_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_documents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_leaves: {
+        Row: {
+          created_at: string | null
+          employee_id: string | null
+          end_date: string
+          id: string
+          leave_type: string
+          reason: string | null
+          start_date: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id?: string | null
+          end_date: string
+          id?: string
+          leave_type: string
+          reason?: string | null
+          start_date: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string | null
+          end_date?: string
+          id?: string
+          leave_type?: string
+          reason?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_leaves_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_performance: {
+        Row: {
+          created_at: string | null
+          employee_id: string | null
+          feedback: string | null
+          id: string
+          metrics: Json
+          rating: number | null
+          review_date: string
+          review_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id?: string | null
+          feedback?: string | null
+          id?: string
+          metrics?: Json
+          rating?: number | null
+          review_date: string
+          review_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string | null
+          feedback?: string | null
+          id?: string
+          metrics?: Json
+          rating?: number | null
+          review_date?: string
+          review_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_performance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_salaries: {
+        Row: {
+          allowances: Json | null
+          created_at: string | null
+          effective_date: string
+          employee_id: string | null
+          gross_salary: number
+          id: string
+          net_salary: number
+          updated_at: string | null
+        }
+        Insert: {
+          allowances?: Json | null
+          created_at?: string | null
+          effective_date: string
+          employee_id?: string | null
+          gross_salary: number
+          id?: string
+          net_salary: number
+          updated_at?: string | null
+        }
+        Update: {
+          allowances?: Json | null
+          created_at?: string | null
+          effective_date?: string
+          employee_id?: string | null
+          gross_salary?: number
+          id?: string
+          net_salary?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_salaries_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          address: string | null
+          avatar_url: string | null
+          city: string | null
+          country: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          department: string
+          district: string | null
+          email: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relation: string | null
+          first_name: string
+          gender: Database["public"]["Enums"]["gender_type"] | null
+          hire_date: string
+          id: string
+          id_ssn: string | null
+          last_name: string
+          marital_status:
+            | Database["public"]["Enums"]["marital_status_type"]
+            | null
+          phone: string | null
+          position: string
+          postal_code: string | null
+          status: Database["public"]["Enums"]["employee_status"]
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          avatar_url?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          department: string
+          district?: string | null
+          email: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relation?: string | null
+          first_name: string
+          gender?: Database["public"]["Enums"]["gender_type"] | null
+          hire_date: string
+          id?: string
+          id_ssn?: string | null
+          last_name: string
+          marital_status?:
+            | Database["public"]["Enums"]["marital_status_type"]
+            | null
+          phone?: string | null
+          position: string
+          postal_code?: string | null
+          status?: Database["public"]["Enums"]["employee_status"]
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          avatar_url?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          department?: string
+          district?: string | null
+          email?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relation?: string | null
+          first_name?: string
+          gender?: Database["public"]["Enums"]["gender_type"] | null
+          hire_date?: string
+          id?: string
+          id_ssn?: string | null
+          last_name?: string
+          marital_status?:
+            | Database["public"]["Enums"]["marital_status_type"]
+            | null
+          phone?: string | null
+          position?: string
+          postal_code?: string | null
+          status?: Database["public"]["Enums"]["employee_status"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       equipment: {
         Row: {
           created_at: string | null
@@ -1805,15 +2062,18 @@ export type Database = {
       customer_type: "bireysel" | "kurumsal"
       deal_priority: "low" | "medium" | "high"
       deal_status: "new" | "negotiation" | "follow_up" | "won" | "lost"
+      employee_status: "aktif" | "pasif"
       event_type: "technical" | "sales"
       financial_instrument_status: "pending" | "cleared" | "bounced"
       financial_instrument_type: "check" | "promissory_note"
+      gender_type: "male" | "female" | "other"
       invoice_status:
         | "pending"
         | "paid"
         | "partially_paid"
         | "overdue"
         | "cancelled"
+      marital_status_type: "single" | "married" | "divorced" | "widowed"
       payment_direction: "incoming" | "outgoing"
       payment_status: "pending" | "completed" | "failed"
       payment_type: "havale" | "eft" | "kredi_karti" | "nakit"

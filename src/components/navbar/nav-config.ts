@@ -1,4 +1,3 @@
-
 import { 
   LayoutDashboard, 
   Users, 
@@ -13,7 +12,8 @@ import {
   Settings,
   Briefcase,
   ListTodo,
-  ShoppingCart
+  ShoppingCart,
+  UserCircle
 } from "lucide-react";
 
 // Define the CRM category items
@@ -40,6 +40,7 @@ export const navItems = [
   },
   { path: "/contacts", icon: Users, label: "Müşteriler" },
   { path: "/suppliers", icon: Truck, label: "Tedarikçiler" },
+  { path: "/employees", icon: UserCircle, label: "Çalışanlar" },
   {
     category: "Ürünler & Hizmetler",
     icon: Package,
