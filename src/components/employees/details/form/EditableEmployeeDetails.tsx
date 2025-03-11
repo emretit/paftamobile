@@ -1,8 +1,8 @@
 
-import type { Employee } from "../../types";
 import { useEditableEmployeeForm } from "./useEditableEmployeeForm";
 import { SaveButton } from "./components/SaveButton";
-import { EmployeeForm } from "./components/EmployeeForm";
+import { FormFields } from "./FormFields";
+import type { Employee } from "../../types";
 
 interface EditableEmployeeDetailsProps {
   employee: Employee;
@@ -19,7 +19,7 @@ export const EditableEmployeeDetails = ({ employee, onSave }: EditableEmployeeDe
   } = useEditableEmployeeForm(employee, onSave);
 
   return (
-    <div className="animate-fade-in bg-white rounded-xl shadow-lg border border-gray-100 p-8">
+    <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8">
       <div className="flex justify-end mb-6">
         <SaveButton 
           isLoading={isLoading} 
@@ -27,10 +27,11 @@ export const EditableEmployeeDetails = ({ employee, onSave }: EditableEmployeeDe
         />
       </div>
       
-      <EmployeeForm
+      <FormFields
         formData={formData}
         departments={departments}
         handleInputChange={handleInputChange}
+        isEditing={true}
       />
     </div>
   );

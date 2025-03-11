@@ -42,49 +42,11 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
     e.preventDefault();
     setIsLoading(true);
     
-    console.log("Submitting form with status:", formData.status);
-    console.log("Original employee status:", employee.status);
-    console.log("Full form data:", formData);
+    console.log("Submitting form with data:", formData);
     
     try {
-      // Analyze available status options
-      const validStatusOptions = ["active", "inactive"];
-      console.log("Is status value in valid options?", validStatusOptions.includes(formData.status));
-      
-      // Normalize status - ensure we use only valid values
-      let normalizedStatus: 'active' | 'inactive' = formData.status as 'active' | 'inactive';
-      
-      // Check if status has a non-standard value and normalize it
-      if (typeof formData.status === 'string') {
-        const lowerStatus = formData.status.toLowerCase();
-        if (lowerStatus === 'aktif' || lowerStatus === 'izinli') {
-          normalizedStatus = 'active';
-          console.log("Normalizing status to:", normalizedStatus);
-        } else if (!validStatusOptions.includes(formData.status)) {
-          normalizedStatus = 'inactive'; // Default to inactive for any other values
-          console.log("Invalid status value, defaulting to inactive");
-        }
-      }
-      
       const updateData = {
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        email: formData.email,
-        phone: formData.phone || null,
-        position: formData.position,
-        department: formData.department,
-        hire_date: formData.hire_date,
-        status: normalizedStatus, // Use normalized status
-        date_of_birth: formData.date_of_birth || null,
-        gender: formData.gender || null,
-        marital_status: formData.marital_status || null,
-        address: formData.address || null,
-        city: formData.city || null,
-        postal_code: formData.postal_code || null,
-        id_ssn: formData.id_ssn || null,
-        emergency_contact_name: formData.emergency_contact_name || null,
-        emergency_contact_phone: formData.emergency_contact_phone || null,
-        emergency_contact_relation: formData.emergency_contact_relation || null,
+        ...formData,
         updated_at: new Date().toISOString(),
       };
 
@@ -103,20 +65,15 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
 
       console.log("Employee updated successfully, response:", data);
 
-      // Create updated employee object
-      const updatedEmployee: Employee = {
+      // Call onSave to update the parent component state
+      onSave({
         ...employee,
         ...formData,
-        status: normalizedStatus, // Use normalized status
-      };
-
-      // Call onSave to update the parent component state
-      onSave(updatedEmployee);
+      });
       
       toast({
         title: "Başarılı",
         description: "Çalışan bilgileri başarıyla güncellendi.",
-        variant: "default",
       });
     } catch (error) {
       console.error('Error updating employee:', error);
