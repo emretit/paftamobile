@@ -14,8 +14,35 @@ export const useEmployeeForm = (initialData?: Employee) => {
   const { validateForm } = useFormValidation();
   const { selectedFile, handleFileChange, uploadAvatar } = useImageUpload();
   
+  // Map employee data to form data format
+  const mapEmployeeToFormData = (employee: Employee): EmployeeFormData => {
+    return {
+      first_name: employee.first_name,
+      last_name: employee.last_name,
+      email: employee.email,
+      phone: employee.phone || '',
+      position: employee.position,
+      department: employee.department,
+      hire_date: employee.hire_date,
+      status: employee.status === 'active' ? 'active' : 'inactive',
+      avatar_url: employee.avatar_url || '',
+      date_of_birth: employee.date_of_birth || '',
+      gender: employee.gender || '',
+      marital_status: employee.marital_status || '',
+      address: employee.address || '',
+      country: employee.country || '',
+      city: employee.city || '',
+      district: employee.district || '',
+      postal_code: employee.postal_code || '',
+      id_ssn: employee.id_ssn || '',
+      emergency_contact_name: employee.emergency_contact_name || '',
+      emergency_contact_phone: employee.emergency_contact_phone || '',
+      emergency_contact_relation: employee.emergency_contact_relation || '',
+    };
+  };
+  
   const [formData, setFormData] = useState<EmployeeFormData>(
-    initialData || initialFormData
+    initialData ? mapEmployeeToFormData(initialData) : initialFormData
   );
   const [isLoading, setIsLoading] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -52,6 +79,7 @@ export const useEmployeeForm = (initialData?: Employee) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    console.log("Submitting form data:", formData);
 
     // Validate form
     const { isValid, errors } = validateForm(formData);
@@ -72,10 +100,16 @@ export const useEmployeeForm = (initialData?: Employee) => {
         avatarUrl = await uploadAvatar(selectedFile);
       }
 
+      // Ensure status is either 'active' or 'inactive'
+      const status = formData.status === 'active' ? 'active' : 'inactive';
+
       const employeeData = {
         ...formData,
+        status: status,
         avatar_url: avatarUrl,
       };
+
+      console.log("Prepared employee data:", employeeData);
 
       if (initialData) {
         // Update existing employee
@@ -87,7 +121,10 @@ export const useEmployeeForm = (initialData?: Employee) => {
           })
           .eq('id', initialData.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase update error:", error);
+          throw error;
+        }
 
         toast({
           title: "Success",
@@ -118,6 +155,7 @@ export const useEmployeeForm = (initialData?: Employee) => {
             setIsLoading(false);
             return;
           }
+          console.error("Supabase insert error:", error);
           throw error;
         }
 

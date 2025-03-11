@@ -37,6 +37,7 @@ export const useEmployeeDetails = (id?: string) => {
         status: statusValue
       };
       
+      console.log("Fetched employee data:", employeeData);
       setEmployee(employeeData);
     } catch (error) {
       console.error('Error:', error);
@@ -52,9 +53,10 @@ export const useEmployeeDetails = (id?: string) => {
 
   useEffect(() => {
     fetchEmployee();
-  }, [id, toast]);
+  }, [id]);
 
   const handleEmployeeUpdate = (updatedEmployee: Employee) => {
+    console.log("Handling employee update:", updatedEmployee);
     setEmployee(updatedEmployee);
     toast({
       title: "Başarılı",

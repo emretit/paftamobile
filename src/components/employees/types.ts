@@ -16,7 +16,9 @@ export interface Employee {
   gender?: string | null;
   marital_status?: string | null;
   address?: string | null;
+  country?: string | null;
   city?: string | null;
+  district?: string | null;
   postal_code?: string | null;
   id_ssn?: string | null;
   

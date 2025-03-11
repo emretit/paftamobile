@@ -14,6 +14,22 @@ export interface EmployeeFormData {
   hire_date: string;
   status: 'active' | 'inactive';
   avatar_url?: string;
+  
+  // Extended personal information
+  date_of_birth?: string;
+  gender?: string;
+  marital_status?: string;
+  address?: string;
+  country?: string;
+  city?: string;
+  district?: string;
+  postal_code?: string;
+  id_ssn?: string;
+  
+  // Emergency contact
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  emergency_contact_relation?: string;
 }
 
 export const initialFormData: EmployeeFormData = {
@@ -24,10 +40,26 @@ export const initialFormData: EmployeeFormData = {
   position: "",
   department: "",
   hire_date: new Date().toISOString().split('T')[0],
-  status: "active"
+  status: "active",
+  
+  // Initialize extended fields
+  date_of_birth: "",
+  gender: "",
+  marital_status: "",
+  address: "",
+  country: "",
+  city: "",
+  district: "",
+  postal_code: "",
+  id_ssn: "",
+  emergency_contact_name: "",
+  emergency_contact_phone: "",
+  emergency_contact_relation: ""
 };
 
 export const POSITIONS = ['Admin', 'Technician', 'Sales Rep', 'Support'];
+export const GENDERS = ['Male', 'Female', 'Other', 'Prefer not to say'];
+export const MARITAL_STATUS = ['Single', 'Married', 'Divorced', 'Widowed'];
 
 // Add form validation schema
 export const formValidationSchema = {
