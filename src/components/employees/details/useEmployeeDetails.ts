@@ -23,13 +23,11 @@ export const useEmployeeDetails = (id?: string) => {
 
       if (error) throw error;
       
-      // Map status values from database
-      let statusValue: 'active' | 'inactive' = 'active';
-      if (data.status === 'active' || data.status === 'aktif' || data.status === 'izinli') {
-        statusValue = 'active';
-      } else if (data.status === 'inactive' || data.status === 'pasif' || data.status === 'ayrıldı') {
-        statusValue = 'inactive';
-      }
+      // Map status values from database to ensure consistency
+      const statusValue: 'active' | 'inactive' = 
+        (data.status === 'active' || data.status === 'aktif' || data.status === 'izinli') 
+          ? 'active' 
+          : 'inactive';
       
       // Convert data to Employee type
       const employeeData: Employee = {
@@ -43,8 +41,8 @@ export const useEmployeeDetails = (id?: string) => {
       console.error('Error:', error);
       toast({
         variant: "destructive",
-        title: "Hata",
-        description: "Çalışan bilgileri yüklenirken bir hata oluştu.",
+        title: "Error",
+        description: "Failed to load employee details.",
       });
     } finally {
       setIsLoading(false);
@@ -59,8 +57,8 @@ export const useEmployeeDetails = (id?: string) => {
     console.log("Handling employee update:", updatedEmployee);
     setEmployee(updatedEmployee);
     toast({
-      title: "Başarılı",
-      description: "Çalışan bilgileri başarıyla güncellendi.",
+      title: "Success",
+      description: "Employee information updated successfully.",
     });
     
     // Refresh employee data from the database to ensure we have the latest data

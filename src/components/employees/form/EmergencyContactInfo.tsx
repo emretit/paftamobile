@@ -12,7 +12,7 @@ interface EmergencyContactInfoProps {
 export const EmergencyContactInfo = ({ formData, onFormChange, errors }: EmergencyContactInfoProps) => {
   return (
     <>
-      <h2 className="text-lg font-semibold text-gray-800 mt-8 mb-4">Emergency Contact</h2>
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">Emergency Contact</h2>
       
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">

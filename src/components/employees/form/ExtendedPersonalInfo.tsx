@@ -50,7 +50,7 @@ export const ExtendedPersonalInfo = ({ formData, onFormChange, errors }: Extende
 
   return (
     <>
-      <h2 className="text-lg font-semibold text-gray-800 mt-8 mb-4">Extended Personal Information</h2>
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">Extended Personal Information</h2>
       
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">

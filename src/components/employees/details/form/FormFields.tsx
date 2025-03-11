@@ -18,7 +18,7 @@ export const FormFields = ({
   departments, 
   handleInputChange, 
   isEditing = false,
-  showExtendedInfo = false
+  showExtendedInfo = true // Changed default to true to always show extended info
 }: FormFieldsProps) => {
   return (
     <div className="space-y-6">
@@ -29,7 +29,7 @@ export const FormFields = ({
         isEditing={isEditing}
       />
       
-      {/* Extended personal information sections */}
+      {/* Extended personal information sections - now always shown */}
       {showExtendedInfo && (
         <>
           <PersonalInfoFields

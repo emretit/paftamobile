@@ -19,7 +19,7 @@ export const StatusBadge = ({ status }: StatusBadgeProps) => {
   }
   
   const variant = normalizedStatus === 'active' ? 'success' : 'neutral';
-  const label = normalizedStatus === 'active' ? 'Aktif' : 'Pasif';
+  const label = normalizedStatus === 'active' ? 'Active' : 'Inactive';
 
   return (
     <GenericStatusBadge
