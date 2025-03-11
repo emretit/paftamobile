@@ -10,39 +10,39 @@ export const useEmployeeDetails = (id?: string) => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("details");
 
-  useEffect(() => {
-    const fetchEmployee = async () => {
-      if (!id) return;
+  const fetchEmployee = async () => {
+    if (!id) return;
+    
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
       
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase
-          .from('employees')
-          .select('*')
-          .eq('id', id)
-          .single();
+      // Convert data to Employee type
+      const employeeData: Employee = {
+        ...data,
+        status: data.status === 'active' ? 'active' : 'inactive'
+      };
+      
+      setEmployee(employeeData);
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Çalışan bilgileri yüklenirken bir hata oluştu.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        if (error) throw error;
-        
-        // Convert data to Employee type
-        const employeeData: Employee = {
-          ...data,
-          status: data.status === 'active' ? 'active' : 'inactive'
-        };
-        
-        setEmployee(employeeData);
-      } catch (error) {
-        console.error('Error:', error);
-        toast({
-          variant: "destructive",
-          title: "Hata",
-          description: "Çalışan bilgileri yüklenirken bir hata oluştu.",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
+  useEffect(() => {
     fetchEmployee();
   }, [id, toast]);
 
@@ -52,6 +52,9 @@ export const useEmployeeDetails = (id?: string) => {
       title: "Başarılı",
       description: "Çalışan bilgileri başarıyla güncellendi.",
     });
+    
+    // Refresh employee data from the database to ensure we have the latest data
+    fetchEmployee();
   };
 
   return {

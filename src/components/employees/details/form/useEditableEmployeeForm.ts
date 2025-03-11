@@ -41,16 +41,16 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
     e.preventDefault();
     setIsLoading(true);
 
-    const statusMap: Record<string, 'active' | 'inactive'> = {
-      'aktif': 'active',
-      'pasif': 'inactive',
-      'izinli': 'active',
-      'ayrıldı': 'inactive',
-      'active': 'active',
-      'inactive': 'inactive'
-    };
-
-    const validStatus = statusMap[formData.status] || 'active';
+    // Ensure status is either 'active' or 'inactive' as required by the database constraint
+    let validStatus: 'active' | 'inactive';
+    
+    if (formData.status === 'active' || formData.status === 'inactive') {
+      validStatus = formData.status;
+    } else if (formData.status === 'aktif' || formData.status === 'izinli') {
+      validStatus = 'active';
+    } else {
+      validStatus = 'inactive';
+    }
     
     try {
       const { error } = await supabase
@@ -80,14 +80,14 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
 
       if (error) throw error;
 
-      // Güncellenmiş çalışan verisini oluştur
+      // Create updated employee object with the valid status
       const updatedEmployee: Employee = {
         ...employee,
         ...formData,
         status: validStatus,
       };
 
-      // onSave callback'ini çağırarak ana bileşene bilgi ver
+      // Call onSave to update the parent component state
       onSave(updatedEmployee);
       
       toast({
