@@ -52,10 +52,18 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
       console.log("Is status value in valid options?", validStatusOptions.includes(formData.status));
       
       // Normalize status - ensure we use only valid values
-      let normalizedStatus = formData.status;
-      if (formData.status === "aktif" || formData.status === "izinli") {
-        normalizedStatus = "active";
-        console.log("Normalizing status to:", normalizedStatus);
+      let normalizedStatus: 'active' | 'inactive' = formData.status as 'active' | 'inactive';
+      
+      // Check if status has a non-standard value and normalize it
+      if (typeof formData.status === 'string') {
+        const lowerStatus = formData.status.toLowerCase();
+        if (lowerStatus === 'aktif' || lowerStatus === 'izinli') {
+          normalizedStatus = 'active';
+          console.log("Normalizing status to:", normalizedStatus);
+        } else if (!validStatusOptions.includes(formData.status)) {
+          normalizedStatus = 'inactive'; // Default to inactive for any other values
+          console.log("Invalid status value, defaulting to inactive");
+        }
       }
       
       const updateData = {
