@@ -27,10 +27,11 @@ import CrmDashboard from "@/pages/CrmDashboard";
 import PurchaseManagement from "@/pages/PurchaseManagement";
 import AuthGuard from "@/components/AuthGuard";
 import Employees from "@/pages/Employees";
+import AddEmployee from "./pages/AddEmployee";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+function App() {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
   const PublicRoute = ({ children }: { children: React.ReactNode }) => children;
@@ -144,10 +145,18 @@ const App = () => {
             path="/employees"
             element={<ProtectedRoute><Employees isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
+          <Route
+            path="/add-employee"
+            element={
+              <AuthGuard>
+                <AddEmployee isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+              </AuthGuard>
+            }
+          />
         </Routes>
       </Router>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;

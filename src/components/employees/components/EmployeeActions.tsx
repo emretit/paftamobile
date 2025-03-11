@@ -41,7 +41,7 @@ export const EmployeeActions = ({
 
       <Button 
         variant="default" 
-        onClick={() => navigate('/employee-form')}
+        onClick={() => navigate('/add-employee')}
         className="gap-1"
       >
         <Plus className="h-4 w-4" />

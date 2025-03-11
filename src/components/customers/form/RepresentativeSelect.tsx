@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Employee } from "@/types/employee";
+import type { Employee } from "@/types/employee";
 
 interface RepresentativeOption {
   id: string;
@@ -72,7 +72,7 @@ const RepresentativeSelect = () => {
               <SelectContent>
                 <SelectItem value="">Seçilmedi</SelectItem>
                 {representatives.map((rep) => (
-                  <SelectItem key={rep.id} value={rep.name}>
+                  <SelectItem key={rep.id} value={rep.id}>
                     {rep.name}
                   </SelectItem>
                 ))}

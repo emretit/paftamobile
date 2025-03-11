@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useTechnicianNames = () => {
-  const { data: employees } = useQuery({
+  const { data: employees = [] } = useQuery({
     queryKey: ["employees"],
     queryFn: async () => {
       try {

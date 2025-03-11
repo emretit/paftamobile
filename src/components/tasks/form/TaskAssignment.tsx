@@ -1,3 +1,4 @@
+
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ interface TaskAssignmentProps {
 }
 
 const TaskAssignment = ({ watch, setValue }: TaskAssignmentProps) => {
-  const { data: employees } = useQuery({
+  const { data: employees = [] } = useQuery({
     queryKey: ["employees-for-assignment"],
     queryFn: async () => {
       const { data, error } = await supabase

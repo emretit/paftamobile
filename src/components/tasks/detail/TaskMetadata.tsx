@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ const TaskMetadata = ({
   handleInputChange, 
   handleDateChange 
 }: TaskMetadataProps) => {
-  const { data: employees } = useQuery({
+  const { data: employees = [] } = useQuery({
     queryKey: ["employees-for-tasks"],
     queryFn: async () => {
       const { data, error } = await supabase
