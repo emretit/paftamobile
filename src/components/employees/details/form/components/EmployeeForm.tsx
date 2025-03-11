@@ -21,7 +21,6 @@ export const EmployeeForm = ({
         departments={departments}
         handleInputChange={handleInputChange}
         isEditing={true}
-        showExtendedInfo={true}
       />
     </div>
   );
