@@ -1,46 +1,36 @@
 
 import { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import type { Employee } from "../types";
+import { useToast } from "@/components/ui/use-toast";
+import { Employee } from "@/types/employee";
 
-export const useEmployeeDetails = (id?: string) => {
-  const { toast } = useToast();
+export const useEmployeeDetails = () => {
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("details");
+  const { id } = useParams<{ id: string }>();
+  const { toast } = useToast();
 
   const fetchEmployee = async () => {
     if (!id) return;
     
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const { data, error } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('id', id)
+        .from("employees")
+        .select("*")
+        .eq("id", id)
         .single();
 
       if (error) throw error;
-      
-      // Ensure status is only 'active' or 'inactive'
-      const normalizedStatus: 'active' | 'inactive' = 
-        data.status === 'active' ? 'active' : 'inactive';
-      
-      // Convert data to Employee type
-      const employeeData: Employee = {
-        ...data,
-        status: normalizedStatus
-      };
-      
-      console.log("Fetched employee data:", employeeData);
-      setEmployee(employeeData);
+      setEmployee(data as Employee);
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error fetching employee:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load employee details.",
+        description: "Failed to fetch employee details.",
       });
     } finally {
       setIsLoading(false);
@@ -49,26 +39,34 @@ export const useEmployeeDetails = (id?: string) => {
 
   useEffect(() => {
     fetchEmployee();
-  }, [id]);
-
-  const handleEmployeeUpdate = (updatedEmployee: Employee) => {
-    console.log("Handling employee update:", updatedEmployee);
-    setEmployee(updatedEmployee);
-    toast({
-      title: "Success",
-      description: "Employee information updated successfully.",
-    });
     
-    // Refresh employee data from the database to ensure we have the latest data
-    fetchEmployee();
-  };
+    // Subscribe to changes
+    const subscription = supabase
+      .channel(`employee-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'employees',
+          filter: `id=eq.${id}`
+        },
+        (payload) => {
+          setEmployee(payload.new as Employee);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, [id]);
 
   return {
     employee,
     isLoading,
     activeTab,
     setActiveTab,
-    handleEmployeeUpdate,
-    refreshEmployee: fetchEmployee // Export refresh function to manually trigger refresh
+    refetch: fetchEmployee,
   };
 };

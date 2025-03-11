@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -33,14 +32,15 @@ const TaskMetadata = ({
   handleDateChange 
 }: TaskMetadataProps) => {
   const { data: employees } = useQuery({
-    queryKey: ['employees'],
+    queryKey: ["employees-for-tasks"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('employees')
-        .select('id, first_name, last_name')
-        .eq('status', 'active');
+        .from("employees")
+        .select("id, first_name, last_name, avatar_url")
+        .eq("status", "aktif");
+
       if (error) throw error;
-      return data;
+      return data || [];
     }
   });
 

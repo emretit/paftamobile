@@ -1,4 +1,3 @@
-
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -19,14 +18,15 @@ interface TaskAssignmentProps {
 
 const TaskAssignment = ({ watch, setValue }: TaskAssignmentProps) => {
   const { data: employees } = useQuery({
-    queryKey: ['employees'],
+    queryKey: ["employees-for-assignment"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('employees')
-        .select('id, first_name, last_name')
-        .eq('status', 'active');
+        .from("employees")
+        .select("id, first_name, last_name, avatar_url")
+        .eq("status", "aktif");
+
       if (error) throw error;
-      return data;
+      return data || [];
     }
   });
 

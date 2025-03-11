@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,15 +23,16 @@ const TasksContent = () => {
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
   const [activeView, setActiveView] = useState<ViewType>("kanban");
 
-  const { data: employees } = useQuery({
-    queryKey: ['employees'],
+  const { employees } = useQuery({
+    queryKey: ["task-assignees"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('employees')
-        .select('id, first_name, last_name')
-        .eq('status', 'active');
+        .from("employees")
+        .select("id, first_name, last_name, avatar_url")
+        .eq("status", "aktif");
+
       if (error) throw error;
-      return data;
+      return data || [];
     }
   });
 

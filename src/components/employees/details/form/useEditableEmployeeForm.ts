@@ -2,104 +2,65 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import type { Employee } from "../../types";
-import { useEmployeeDepartments } from "../../form/useEmployeeDepartments";
+import { Employee } from "@/types/employee";
 
-export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: Employee) => void) => {
+interface UseEditableEmployeeFormProps {
+  employee: Employee | null;
+  onSuccess?: () => void;
+}
+
+export const useEditableEmployeeForm = ({ 
+  employee, 
+  onSuccess 
+}: UseEditableEmployeeFormProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const departments = useEmployeeDepartments();
-  const [formData, setFormData] = useState({
-    first_name: employee.first_name,
-    last_name: employee.last_name,
-    email: employee.email,
-    phone: employee.phone || "",
-    position: employee.position,
-    department: employee.department,
-    hire_date: employee.hire_date,
-    status: employee.status, // Only 'active' or 'inactive'
-    date_of_birth: employee.date_of_birth || "",
-    gender: employee.gender || "",
-    marital_status: employee.marital_status || "",
-    address: employee.address || "",
-    city: employee.city || "",
-    postal_code: employee.postal_code || "",
-    country: employee.country || "",
-    district: employee.district || "",
-    id_ssn: employee.id_ssn || "",
-    emergency_contact_name: employee.emergency_contact_name || "",
-    emergency_contact_phone: employee.emergency_contact_phone || "",
-    emergency_contact_relation: employee.emergency_contact_relation || "",
-  });
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-    console.log(`Field ${field} changed to: ${value}`);
+  const handleEdit = () => {
+    setIsEditing(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
+  const handleSave = async (updatedData: Partial<Employee>) => {
+    if (!employee?.id) return;
     
-    console.log("Submitting form with data:", formData);
-    
+    setIsSaving(true);
     try {
-      // Ensure status is only 'active' or 'inactive'
-      const status: 'active' | 'inactive' = 
-        formData.status === 'active' ? 'active' : 'inactive';
-        
-      const updateData = {
-        ...formData,
-        status, // Use normalized status
-        updated_at: new Date().toISOString(),
-      };
+      const { error } = await supabase
+        .from("employees")
+        .update(updatedData)
+        .eq("id", employee.id);
 
-      console.log("Sending update with data:", updateData);
+      if (error) throw error;
 
-      const { data, error } = await supabase
-        .from('employees')
-        .update(updateData)
-        .eq('id', employee.id)
-        .select();
-
-      if (error) {
-        console.error("Supabase update error:", error);
-        throw error;
-      }
-
-      console.log("Employee updated successfully, response:", data);
-
-      // Call onSave to update the parent component state
-      onSave({
-        ...employee,
-        ...formData,
-        status: status, // Ensure status is properly typed
+      toast({
+        title: "Success",
+        description: "Employee details updated successfully.",
       });
       
-      toast({
-        title: "Başarılı",
-        description: "Çalışan bilgileri başarıyla güncellendi.",
-      });
+      setIsEditing(false);
+      if (onSuccess) onSuccess();
     } catch (error) {
-      console.error('Error updating employee:', error);
+      console.error("Error updating employee:", error);
       toast({
-        title: "Hata",
-        description: "Çalışan bilgileri güncellenirken bir hata oluştu.",
         variant: "destructive",
+        title: "Error",
+        description: "Failed to update employee details.",
       });
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
   return {
-    formData,
-    departments,
-    isLoading,
-    handleInputChange,
-    handleSubmit,
+    isEditing,
+    isSaving,
+    handleEdit,
+    handleCancel,
+    handleSave,
   };
 };
