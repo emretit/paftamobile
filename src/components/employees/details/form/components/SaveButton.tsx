@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 interface SaveButtonProps {
   isLoading: boolean;
-  onClick: () => void;
+  onClick: (e: React.FormEvent) => void | Promise<void>;
 }
 
 export const SaveButton = ({ isLoading, onClick }: SaveButtonProps) => {

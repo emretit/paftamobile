@@ -28,6 +28,7 @@ export const EditableEmployeeDetails = ({ employee, onSave }: EditableEmployeeDe
         formData={formData}
         departments={departments}
         handleInputChange={handleInputChange}
+        onSubmit={handleSubmit}
       />
     </div>
   );
