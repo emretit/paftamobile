@@ -1,5 +1,5 @@
 
-import { useParams, useNavigate } from "react-router-dom";
+import { useEmployeeForm } from "./useEmployeeForm";
 import { PersonalInfo } from "./PersonalInfo";
 import { RoleInfo } from "./RoleInfo";
 import { StatusInfo } from "./StatusInfo";
@@ -7,17 +7,15 @@ import { ImageUpload } from "./ImageUpload";
 import { FormActions } from "./FormActions";
 import { ExtendedPersonalInfo } from "./ExtendedPersonalInfo";
 import { EmergencyContactInfo } from "./EmergencyContactInfo";
-import { useEmployeeForm } from "./useEmployeeForm";
 import { useEmployeeDepartments } from "./useEmployeeDepartments";
 import type { Employee } from "../types";
 
 interface EmployeeFormWrapperProps {
   initialData?: Employee;
+  onSuccess?: () => void;
 }
 
-export const EmployeeFormWrapper = ({ initialData }: EmployeeFormWrapperProps) => {
-  const { id } = useParams();
-  const navigate = useNavigate();
+export const EmployeeFormWrapper = ({ initialData, onSuccess }: EmployeeFormWrapperProps) => {
   const departments = useEmployeeDepartments();
   
   const {
@@ -29,17 +27,13 @@ export const EmployeeFormWrapper = ({ initialData }: EmployeeFormWrapperProps) =
     handleFileChange,
     selectedFile,
     isEditMode
-  } = useEmployeeForm(initialData);
-
-  const handleCancel = () => {
-    navigate(id ? `/employees/${id}` : "/employees");
-  };
+  } = useEmployeeForm(initialData, onSuccess);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Information */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Basic Information</h2>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Temel Bilgiler</h2>
         
         <PersonalInfo
           formData={formData}
@@ -82,7 +76,7 @@ export const EmployeeFormWrapper = ({ initialData }: EmployeeFormWrapperProps) =
 
       {/* Image Upload */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Profile Image</h2>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Profil Resmi</h2>
         <ImageUpload
           onFileChange={handleFileChange}
           selectedFile={selectedFile}
@@ -93,7 +87,7 @@ export const EmployeeFormWrapper = ({ initialData }: EmployeeFormWrapperProps) =
       <FormActions 
         isLoading={isLoading} 
         isEditMode={isEditMode}
-        onCancel={handleCancel}
+        onCancel={() => window.history.back()}
       />
     </form>
   );
