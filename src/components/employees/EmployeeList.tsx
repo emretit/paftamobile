@@ -60,8 +60,8 @@ export const EmployeeList = () => {
       console.error('Error fetching employees:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to load employee data.",
+        title: "Hata",
+        description: "Çalışan bilgileri yüklenirken bir hata oluştu.",
       });
     } finally {
       setIsLoading(false);
@@ -118,15 +118,15 @@ export const EmployeeList = () => {
       setEmployees([]);
       
       toast({
-        title: "Success",
-        description: "All employee data has been cleared.",
+        title: "Başarılı",
+        description: "Tüm çalışan bilgileri silindi.",
       });
     } catch (error) {
       console.error('Error clearing employees:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to clear employee data.",
+        title: "Hata",
+        description: "Çalışan bilgileri silinirken bir hata oluştu.",
       });
     } finally {
       setIsLoading(false);
@@ -159,7 +159,7 @@ export const EmployeeList = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Employee List</h2>
+        <h2 className="text-xl font-semibold">Çalışan Listesi</h2>
         <div className="flex space-x-2">
           <Button
             size="icon"
@@ -177,16 +177,16 @@ export const EmployeeList = () => {
           </Button>
           <Button variant="outline" onClick={fetchEmployees} className="flex items-center gap-2">
             <RefreshCw className="h-4 w-4" />
-            Refresh
+            Yenile
           </Button>
           {employees.length > 0 && (
             <Button variant="destructive" onClick={handleClearEmployees} disabled={isLoading}>
-              Clear All
+              Tümünü Sil
             </Button>
           )}
           <Button onClick={handleAddEmployee} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
-            New Employee
+            Yeni Çalışan
           </Button>
         </div>
       </div>
