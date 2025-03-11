@@ -17,6 +17,12 @@ export const BasicInfoFields = ({
   handleInputChange,
   isEditing = false
 }: BasicInfoFieldsProps) => {
+  // Helper function to display status in Turkish
+  const getStatusDisplay = (status: string | undefined) => {
+    if (!status) return '-';
+    return status === 'active' || status === 'aktif' ? 'Aktif' : 'Pasif';
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="space-y-2">
@@ -150,7 +156,7 @@ export const BasicInfoFields = ({
           </Select>
         ) : (
           <div className="p-2 bg-gray-50 rounded-md">
-            {formData.status === 'active' || formData.status === 'aktif' ? 'Aktif' : 'Pasif'}
+            {getStatusDisplay(formData.status)}
           </div>
         )}
       </div>
