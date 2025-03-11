@@ -8,6 +8,31 @@ import { useImageUpload } from "./useImageUpload";
 import { initialFormData, type EmployeeFormData } from "./types";
 import type { Employee } from "../types";
 
+// Helper function to map Employee to form data
+const mapEmployeeToFormData = (employee: Employee): EmployeeFormData => {
+  return {
+    first_name: employee.first_name,
+    last_name: employee.last_name,
+    email: employee.email,
+    phone: employee.phone || '',
+    position: employee.position,
+    department: employee.department,
+    hire_date: employee.hire_date,
+    status: employee.status === 'active' ? 'active' : 'inactive',
+    avatar_url: employee.avatar_url || '',
+    date_of_birth: employee.date_of_birth || '',
+    gender: employee.gender || '',
+    marital_status: employee.marital_status || '',
+    address: employee.address || '',
+    city: employee.city || '',
+    postal_code: employee.postal_code || '',
+    id_ssn: employee.id_ssn || '',
+    emergency_contact_name: employee.emergency_contact_name || '',
+    emergency_contact_phone: employee.emergency_contact_phone || '',
+    emergency_contact_relation: employee.emergency_contact_relation || '',
+  };
+};
+
 export const useEmployeeForm = (initialData?: Employee, onSuccess?: () => void) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -87,31 +112,6 @@ export const useEmployeeForm = (initialData?: Employee, onSuccess?: () => void) 
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Helper function to map Employee to form data
-  const mapEmployeeToFormData = (employee: Employee): EmployeeFormData => {
-    return {
-      first_name: employee.first_name,
-      last_name: employee.last_name,
-      email: employee.email,
-      phone: employee.phone || '',
-      position: employee.position,
-      department: employee.department,
-      hire_date: employee.hire_date,
-      status: employee.status === 'active' ? 'active' : 'inactive',
-      avatar_url: employee.avatar_url || '',
-      date_of_birth: employee.date_of_birth || '',
-      gender: employee.gender || '',
-      marital_status: employee.marital_status || '',
-      address: employee.address || '',
-      city: employee.city || '',
-      postal_code: employee.postal_code || '',
-      id_ssn: employee.id_ssn || '',
-      emergency_contact_name: employee.emergency_contact_name || '',
-      emergency_contact_phone: employee.emergency_contact_phone || '',
-      emergency_contact_relation: employee.emergency_contact_relation || '',
-    };
   };
 
   return {
