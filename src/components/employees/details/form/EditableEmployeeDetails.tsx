@@ -21,14 +21,16 @@ export const EditableEmployeeDetails = ({ employee, onSave }: EditableEmployeeDe
   return (
     <div className="animate-fade-in bg-white rounded-xl shadow-lg border border-gray-100 p-8">
       <div className="flex justify-end mb-6">
-        <SaveButton isLoading={isLoading} onClick={handleSubmit} />
+        <SaveButton 
+          isLoading={isLoading} 
+          onClick={handleSubmit} 
+        />
       </div>
       
       <EmployeeForm
         formData={formData}
         departments={departments}
         handleInputChange={handleInputChange}
-        onSubmit={handleSubmit}
       />
     </div>
   );

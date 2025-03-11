@@ -7,24 +7,15 @@ interface EmployeeFormProps {
   formData: Partial<Employee>;
   departments: { name: string }[];
   handleInputChange: (field: string, value: string) => void;
-  onSubmit?: (e: React.FormEvent) => void | Promise<void>;
 }
 
 export const EmployeeForm = ({ 
   formData, 
   departments, 
-  handleInputChange,
-  onSubmit
+  handleInputChange
 }: EmployeeFormProps) => {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSubmit) {
-      onSubmit(e);
-    }
-  };
-
   return (
-    <form className="space-y-6" onSubmit={handleSubmit}>
+    <div className="space-y-6">
       <FormFields 
         formData={formData}
         departments={departments}
@@ -32,6 +23,6 @@ export const EmployeeForm = ({
         isEditing={true}
         showExtendedInfo={true}
       />
-    </form>
+    </div>
   );
 };

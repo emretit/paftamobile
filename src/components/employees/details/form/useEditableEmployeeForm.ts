@@ -43,20 +43,9 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
     
     console.log("Submitting form with status:", formData.status);
     
-    // Ensure status is either 'active' or 'inactive' for database
-    let dbStatus: 'active' | 'inactive';
-    
-    if (formData.status === 'active' || formData.status === 'inactive') {
-      dbStatus = formData.status;
-    } else if (formData.status === 'aktif' || formData.status === 'izinli') {
-      dbStatus = 'active';
-    } else {
-      dbStatus = 'inactive';
-    }
-    
-    console.log("Mapped status for database:", dbStatus);
-    
     try {
+      // For Supabase, we need to ensure the status is exactly one of the valid values
+      // that matches the check constraint in the database
       const { error } = await supabase
         .from('employees')
         .update({
@@ -67,7 +56,8 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
           position: formData.position,
           department: formData.department,
           hire_date: formData.hire_date,
-          status: dbStatus,
+          // Only use the exact status values allowed by the database
+          status: formData.status === 'active' ? 'active' : 'inactive',
           date_of_birth: formData.date_of_birth || null,
           gender: formData.gender || null,
           marital_status: formData.marital_status || null,
@@ -93,21 +83,21 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
       const updatedEmployee: Employee = {
         ...employee,
         ...formData,
-        status: dbStatus,
+        status: formData.status === 'active' ? 'active' : 'inactive',
       };
 
       // Call onSave to update the parent component state
       onSave(updatedEmployee);
       
       toast({
-        title: "Başarılı",
-        description: "Çalışan bilgileri başarıyla güncellendi.",
+        title: "Success",
+        description: "Employee information updated successfully.",
       });
     } catch (error) {
       console.error('Error updating employee:', error);
       toast({
-        title: "Hata",
-        description: "Çalışan bilgileri güncellenirken bir hata oluştu.",
+        title: "Error",
+        description: "An error occurred while updating employee information.",
         variant: "destructive",
       });
     } finally {
@@ -121,6 +111,5 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
     isLoading,
     handleInputChange,
     handleSubmit,
-    shouldShowDepartment: formData.position !== 'Admin'
   };
 };

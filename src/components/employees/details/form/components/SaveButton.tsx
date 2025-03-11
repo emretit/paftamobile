@@ -12,14 +12,11 @@ export const SaveButton = ({ isLoading, onClick }: SaveButtonProps) => {
     <Button 
       type="submit" 
       className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-md transition-all" 
-      onClick={(e) => {
-        e.preventDefault(); // Prevent default form submission
-        onClick(e);
-      }}
+      onClick={onClick}
       disabled={isLoading}
     >
       <Save className="h-4 w-4" />
-      {isLoading ? "Kaydediliyor..." : "Kaydet"}
+      {isLoading ? "Saving..." : "Save"}
     </Button>
   );
 };
