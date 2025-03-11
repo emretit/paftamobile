@@ -23,6 +23,8 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
     address: employee.address || "",
     city: employee.city || "",
     postal_code: employee.postal_code || "",
+    country: employee.country || "",
+    district: employee.district || "",
     id_ssn: employee.id_ssn || "",
     emergency_contact_name: employee.emergency_contact_name || "",
     emergency_contact_phone: employee.emergency_contact_phone || "",
@@ -45,8 +47,19 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
     console.log("Submitting form with data:", formData);
     
     try {
+      // Convert status values for database consistency
+      let statusValue: 'active' | 'inactive' = formData.status as 'active' | 'inactive';
+      
+      // If the status is in Turkish format, convert it to the expected enum values
+      if (formData.status === 'aktif' || formData.status === 'izinli') {
+        statusValue = 'active';
+      } else if (formData.status === 'pasif') {
+        statusValue = 'inactive';
+      }
+      
       const updateData = {
         ...formData,
+        status: statusValue,
         updated_at: new Date().toISOString(),
       };
 
@@ -69,6 +82,7 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
       onSave({
         ...employee,
         ...formData,
+        status: statusValue,
       });
       
       toast({
