@@ -1,11 +1,7 @@
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Employee } from "../../types";
 import { User } from "lucide-react";
+import { Employee } from "../../types";
 import { EditableEmployeeDetails } from "../form/EditableEmployeeDetails";
-import { FormFields } from "../form/FormFields";
-import { useEmployeeDepartments } from "../../form/useEmployeeDepartments";
 
 interface DetailsTabContentProps {
   employee: Employee;
@@ -16,7 +12,7 @@ interface DetailsTabContentProps {
 export const DetailsTabContent = ({ 
   employee, 
   handleEmployeeUpdate,
-  isEditing: initialIsEditing
+  isEditing = false
 }: DetailsTabContentProps) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
