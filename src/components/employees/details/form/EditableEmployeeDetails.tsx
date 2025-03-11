@@ -7,9 +7,14 @@ import type { Employee } from "../../types";
 interface EditableEmployeeDetailsProps {
   employee: Employee;
   onSave: (employee: Employee) => void;
+  isEditing?: boolean;
 }
 
-export const EditableEmployeeDetails = ({ employee, onSave }: EditableEmployeeDetailsProps) => {
+export const EditableEmployeeDetails = ({ 
+  employee, 
+  onSave,
+  isEditing = true
+}: EditableEmployeeDetailsProps) => {
   const {
     formData,
     departments,
@@ -19,7 +24,7 @@ export const EditableEmployeeDetails = ({ employee, onSave }: EditableEmployeeDe
   } = useEditableEmployeeForm(employee, onSave);
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
       <div className="flex justify-end mb-6">
         <SaveButton 
           isLoading={isLoading} 
@@ -31,7 +36,7 @@ export const EditableEmployeeDetails = ({ employee, onSave }: EditableEmployeeDe
         formData={formData}
         departments={departments}
         handleInputChange={handleInputChange}
-        isEditing={true}
+        isEditing={isEditing}
       />
     </div>
   );

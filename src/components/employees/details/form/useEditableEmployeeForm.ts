@@ -16,7 +16,7 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
     position: employee.position,
     department: employee.department,
     hire_date: employee.hire_date,
-    status: employee.status,
+    status: employee.status, // Only 'active' or 'inactive'
     date_of_birth: employee.date_of_birth || "",
     gender: employee.gender || "",
     marital_status: employee.marital_status || "",
@@ -47,8 +47,13 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
     console.log("Submitting form with data:", formData);
     
     try {
+      // Ensure status is only 'active' or 'inactive'
+      const status: 'active' | 'inactive' = 
+        formData.status === 'active' ? 'active' : 'inactive';
+        
       const updateData = {
         ...formData,
+        status, // Use normalized status
         updated_at: new Date().toISOString(),
       };
 
@@ -71,6 +76,7 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
       onSave({
         ...employee,
         ...formData,
+        status: status, // Ensure status is properly typed
       });
       
       toast({
