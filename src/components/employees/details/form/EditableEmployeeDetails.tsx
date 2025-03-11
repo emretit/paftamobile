@@ -19,8 +19,8 @@ export const EditableEmployeeDetails = ({ employee, onSave }: EditableEmployeeDe
   } = useEditableEmployeeForm(employee, onSave);
 
   return (
-    <div className="animate-fade-in">
-      <div className="flex justify-end mb-4">
+    <div className="animate-fade-in bg-white rounded-xl shadow-lg border border-gray-100 p-8">
+      <div className="flex justify-end mb-6">
         <SaveButton isLoading={isLoading} onClick={handleSubmit} />
       </div>
       

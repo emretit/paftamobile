@@ -20,12 +20,13 @@ export const BasicInfoFields = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="space-y-2">
-        <Label htmlFor="first_name">Ad</Label>
+        <Label htmlFor="first_name" className="text-gray-700">Ad</Label>
         {isEditing ? (
           <Input
             id="first_name"
             value={formData.first_name || ''}
             onChange={(e) => handleInputChange?.('first_name', e.target.value)}
+            className="border-gray-300 focus:border-primary focus:ring-primary"
             required
           />
         ) : (
@@ -34,12 +35,13 @@ export const BasicInfoFields = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="last_name">Soyad</Label>
+        <Label htmlFor="last_name" className="text-gray-700">Soyad</Label>
         {isEditing ? (
           <Input
             id="last_name"
             value={formData.last_name || ''}
             onChange={(e) => handleInputChange?.('last_name', e.target.value)}
+            className="border-gray-300 focus:border-primary focus:ring-primary"
             required
           />
         ) : (

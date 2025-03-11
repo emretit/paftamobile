@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -57,6 +58,7 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
         .update({
           first_name: formData.first_name,
           last_name: formData.last_name,
+          email: formData.email,
           phone: formData.phone || null,
           position: formData.position,
           department: formData.department,
@@ -78,12 +80,14 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
 
       if (error) throw error;
 
+      // Güncellenmiş çalışan verisini oluştur
       const updatedEmployee: Employee = {
         ...employee,
         ...formData,
         status: validStatus,
       };
 
+      // onSave callback'ini çağırarak ana bileşene bilgi ver
       onSave(updatedEmployee);
       
       toast({
