@@ -1,32 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Employee } from "../types";
+import type { Employee } from "@/types/employee";
 import { useToast } from "@/components/ui/use-toast";
-
-// Helper function to transform Supabase data to Employee type
-const transformToEmployee = (item: any): Employee => {
-  let status: 'active' | 'inactive';
-  
-  if (item.status === 'active') {
-    status = 'active';
-  } else {
-    status = 'inactive';
-  }
-
-  return {
-    id: item.id,
-    first_name: item.first_name,
-    last_name: item.last_name,
-    email: item.email,
-    phone: item.phone || "",
-    position: item.position,
-    department: item.department,
-    hire_date: item.hire_date,
-    status: status,
-    avatar_url: item.avatar_url
-  };
-};
 
 export const useEmployeeData = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -44,8 +20,7 @@ export const useEmployeeData = () => {
         
       if (error) throw error;
 
-      const transformedEmployees = data ? data.map(transformToEmployee) : [];
-      setEmployees(transformedEmployees);
+      setEmployees(data as Employee[]);
     } catch (error) {
       console.error('Error fetching employees:', error);
       toast({
@@ -62,15 +37,6 @@ export const useEmployeeData = () => {
     try {
       setIsLoading(true);
       
-      // First delete related service requests
-      const { error: serviceRequestError } = await supabase
-        .from('service_requests')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000');
-      
-      if (serviceRequestError) throw serviceRequestError;
-
-      // Then delete employees
       const { error } = await supabase
         .from('employees')
         .delete()
@@ -110,12 +76,10 @@ export const useEmployeeData = () => {
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            const newEmployee = transformToEmployee(payload.new);
-            setEmployees(prev => [newEmployee, ...prev]);
+            setEmployees(prev => [payload.new as Employee, ...prev]);
           } else if (payload.eventType === 'UPDATE') {
-            const updatedEmployee = transformToEmployee(payload.new);
             setEmployees(prev => 
-              prev.map(emp => emp.id === updatedEmployee.id ? updatedEmployee : emp)
+              prev.map(emp => emp.id === payload.new.id ? payload.new as Employee : emp)
             );
           } else if (payload.eventType === 'DELETE') {
             setEmployees(prev => 

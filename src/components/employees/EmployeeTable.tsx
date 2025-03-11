@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Employee } from "./types";
+import type { Employee } from "@/types/employee";
 import { StatusBadge } from "./StatusBadge";
 import { EmployeeDetailPanel } from "./details/EmployeeDetailPanel";
 import { Skeleton } from "@/components/ui/skeleton";

@@ -1,25 +1,14 @@
 
 import { StatusBadge as GenericStatusBadge } from "@/components/ui/status-badge";
-
-type EmployeeStatus = 'active' | 'inactive';
+import type { EmployeeStatus } from "@/types/employee";
 
 interface StatusBadgeProps {
-  status: EmployeeStatus | string;
+  status: EmployeeStatus;
 }
 
 export const StatusBadge = ({ status }: StatusBadgeProps) => {
-  // Normalize status value to ensure it's one of our expected values
-  let normalizedStatus: EmployeeStatus = 'inactive';
-  
-  if (typeof status === 'string') {
-    const lowerStatus = status.toLowerCase();
-    if (lowerStatus === 'active') {
-      normalizedStatus = 'active';
-    }
-  }
-  
-  const variant = normalizedStatus === 'active' ? 'success' : 'neutral';
-  const label = normalizedStatus === 'active' ? 'Active' : 'Inactive';
+  const variant = status === 'aktif' ? 'success' : 'neutral';
+  const label = status === 'aktif' ? 'Aktif' : 'Pasif';
 
   return (
     <GenericStatusBadge

@@ -3,7 +3,7 @@ import { useState } from "react";
 import EmployeeTable from "../EmployeeTable";
 import { EmployeeGrid } from "../EmployeeGrid";
 import { FilterBar } from "../FilterBar";
-import type { Employee, ViewMode } from "../types";
+import type { Employee, ViewMode } from "@/types/employee";
 
 interface EmployeeListContentProps {
   employees: Employee[];

@@ -1,7 +1,7 @@
 
 import { List, Grid } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { ViewMode } from "../types";
+import type { ViewMode } from "@/types/employee";
 
 interface ViewModeToggleProps {
   viewMode: ViewMode;

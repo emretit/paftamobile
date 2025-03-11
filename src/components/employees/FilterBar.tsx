@@ -45,8 +45,8 @@ export const FilterBar = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tümü</SelectItem>
-                <SelectItem value="active">Aktif</SelectItem>
-                <SelectItem value="inactive">Pasif</SelectItem>
+                <SelectItem value="aktif">Aktif</SelectItem>
+                <SelectItem value="pasif">Pasif</SelectItem>
               </SelectContent>
             </Select>
           </div>
