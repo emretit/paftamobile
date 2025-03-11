@@ -70,8 +70,8 @@ export const useEmployeeForm = (initialData?: Employee, onSuccess?: () => void) 
         setIsLoading(false);
         toast({
           variant: "destructive",
-          title: "Error",
-          description: "Please check the form fields.",
+          title: "Hata",
+          description: "Lütfen form alanlarını kontrol edin.",
         });
         return;
       }
@@ -83,8 +83,27 @@ export const useEmployeeForm = (initialData?: Employee, onSuccess?: () => void) 
 
       // Prepare employee data
       const employeeData = {
-        ...formData,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email: formData.email,
+        phone: formData.phone,
+        position: formData.position,
+        department: formData.department,
+        hire_date: formData.hire_date,
+        status: formData.status,
         avatar_url: avatarUrl,
+        date_of_birth: formData.date_of_birth || null,
+        gender: formData.gender || null,
+        marital_status: formData.marital_status || null,
+        address: formData.address || null,
+        country: formData.country || null,
+        city: formData.city || null,
+        district: formData.district || null,
+        postal_code: formData.postal_code || null,
+        id_ssn: formData.id_ssn || null,
+        emergency_contact_name: formData.emergency_contact_name || null,
+        emergency_contact_phone: formData.emergency_contact_phone || null,
+        emergency_contact_relation: formData.emergency_contact_relation || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -98,8 +117,8 @@ export const useEmployeeForm = (initialData?: Employee, onSuccess?: () => void) 
 
       // Show success message and navigate
       toast({
-        title: "Success",
-        description: "Employee added successfully.",
+        title: "Başarılı",
+        description: "Çalışan başarıyla eklendi.",
       });
       
       // Either call the custom success handler or navigate
@@ -112,8 +131,8 @@ export const useEmployeeForm = (initialData?: Employee, onSuccess?: () => void) 
       console.error('Error:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to add employee.",
+        title: "Hata",
+        description: "Çalışan eklenirken bir hata oluştu.",
       });
     } finally {
       setIsLoading(false);
