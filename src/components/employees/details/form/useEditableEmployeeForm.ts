@@ -40,17 +40,21 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    // Ensure status is either 'active' or 'inactive' as required by the database constraint
-    let validStatus: 'active' | 'inactive';
+    
+    console.log("Submitting form with status:", formData.status);
+    
+    // Ensure status is either 'active' or 'inactive' for database
+    let dbStatus: 'active' | 'inactive';
     
     if (formData.status === 'active' || formData.status === 'inactive') {
-      validStatus = formData.status;
+      dbStatus = formData.status;
     } else if (formData.status === 'aktif' || formData.status === 'izinli') {
-      validStatus = 'active';
+      dbStatus = 'active';
     } else {
-      validStatus = 'inactive';
+      dbStatus = 'inactive';
     }
+    
+    console.log("Mapped status for database:", dbStatus);
     
     try {
       const { error } = await supabase
@@ -63,7 +67,7 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
           position: formData.position,
           department: formData.department,
           hire_date: formData.hire_date,
-          status: validStatus,
+          status: dbStatus,
           date_of_birth: formData.date_of_birth || null,
           gender: formData.gender || null,
           marital_status: formData.marital_status || null,
@@ -78,13 +82,18 @@ export const useEditableEmployeeForm = (employee: Employee, onSave: (employee: E
         })
         .eq('id', employee.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase update error:", error);
+        throw error;
+      }
+
+      console.log("Employee updated successfully");
 
       // Create updated employee object with the valid status
       const updatedEmployee: Employee = {
         ...employee,
         ...formData,
-        status: validStatus,
+        status: dbStatus,
       };
 
       // Call onSave to update the parent component state

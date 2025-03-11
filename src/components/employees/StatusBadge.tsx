@@ -8,8 +8,11 @@ interface StatusBadgeProps {
 }
 
 export const StatusBadge = ({ status }: StatusBadgeProps) => {
-  const variant = status === 'active' ? 'success' : 'neutral';
-  const label = status === 'active' ? 'Aktif' : 'Pasif';
+  // Ensure status is always one of the expected values
+  const normalizedStatus = status === 'active' ? 'active' : 'inactive';
+  
+  const variant = normalizedStatus === 'active' ? 'success' : 'neutral';
+  const label = normalizedStatus === 'active' ? 'Aktif' : 'Pasif';
 
   return (
     <GenericStatusBadge

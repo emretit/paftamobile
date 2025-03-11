@@ -23,10 +23,18 @@ export const useEmployeeDetails = (id?: string) => {
 
       if (error) throw error;
       
+      // Map status values from database
+      let statusValue: 'active' | 'inactive' = 'active';
+      if (data.status === 'active' || data.status === 'aktif' || data.status === 'izinli') {
+        statusValue = 'active';
+      } else if (data.status === 'inactive' || data.status === 'pasif' || data.status === 'ayrıldı') {
+        statusValue = 'inactive';
+      }
+      
       // Convert data to Employee type
       const employeeData: Employee = {
         ...data,
-        status: data.status === 'active' ? 'active' : 'inactive'
+        status: statusValue
       };
       
       setEmployee(employeeData);
@@ -62,6 +70,7 @@ export const useEmployeeDetails = (id?: string) => {
     isLoading,
     activeTab,
     setActiveTab,
-    handleEmployeeUpdate
+    handleEmployeeUpdate,
+    refreshEmployee: fetchEmployee // Export refresh function to manually trigger refresh
   };
 };
