@@ -86,12 +86,12 @@ export const useEmployeeForm = (initialData?: Employee, onSuccess?: () => void) 
         first_name: formData.first_name,
         last_name: formData.last_name,
         email: formData.email,
-        phone: formData.phone,
+        phone: formData.phone || null,
         position: formData.position,
         department: formData.department,
         hire_date: formData.hire_date,
         status: formData.status,
-        avatar_url: avatarUrl,
+        avatar_url: avatarUrl || null,
         date_of_birth: formData.date_of_birth || null,
         gender: formData.gender || null,
         marital_status: formData.marital_status || null,
@@ -103,17 +103,23 @@ export const useEmployeeForm = (initialData?: Employee, onSuccess?: () => void) 
         id_ssn: formData.id_ssn || null,
         emergency_contact_name: formData.emergency_contact_name || null,
         emergency_contact_phone: formData.emergency_contact_phone || null,
-        emergency_contact_relation: formData.emergency_contact_relation || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        emergency_contact_relation: formData.emergency_contact_relation || null
       };
 
-      // Insert into Supabase
-      const { error } = await supabase
-        .from('employees')
-        .insert([employeeData]);
+      console.log("Gönderilen çalışan verisi:", employeeData);
 
-      if (error) throw error;
+      // Insert into Supabase
+      const { data, error } = await supabase
+        .from('employees')
+        .insert([employeeData])
+        .select();
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log("Başarılı yanıt:", data);
 
       // Show success message and navigate
       toast({
