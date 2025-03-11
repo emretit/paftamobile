@@ -107,11 +107,19 @@ export const EmployeeList = () => {
     try {
       setIsLoading(true);
       
-      // Delete all employees from the database
+      // First delete related service requests
+      const { error: serviceRequestError } = await supabase
+        .from('service_requests')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+      
+      if (serviceRequestError) throw serviceRequestError;
+
+      // Then delete employees
       const { error } = await supabase
         .from('employees')
         .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Safety check to avoid deleting with an empty condition
+        .neq('id', '00000000-0000-0000-0000-000000000000');
         
       if (error) throw error;
 
