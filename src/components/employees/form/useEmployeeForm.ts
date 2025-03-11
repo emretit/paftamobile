@@ -68,8 +68,8 @@ export const useEmployeeForm = (initialData?: Employee, onSuccess?: () => void) 
         setIsLoading(false);
         toast({
           variant: "destructive",
-          title: "Hata",
-          description: "Lütfen form alanlarını kontrol ediniz.",
+          title: "Error",
+          description: "Please check the form fields.",
         });
         return;
       }
@@ -79,35 +79,39 @@ export const useEmployeeForm = (initialData?: Employee, onSuccess?: () => void) 
         avatarUrl = await uploadAvatar(selectedFile);
       }
 
+      // Prepare employee data
       const employeeData = {
         ...formData,
         avatar_url: avatarUrl,
-        status: formData.status === 'active' ? 'active' : 'inactive',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
+      // Insert into Supabase
       const { error } = await supabase
         .from('employees')
         .insert([employeeData]);
 
       if (error) throw error;
 
+      // Show success message and navigate
+      toast({
+        title: "Success",
+        description: "Employee added successfully.",
+      });
+      
+      // Either call the custom success handler or navigate
       if (onSuccess) {
         onSuccess();
       } else {
-        toast({
-          title: "Başarılı",
-          description: "Çalışan başarıyla eklendi.",
-        });
         navigate("/employees");
       }
     } catch (error) {
       console.error('Error:', error);
       toast({
         variant: "destructive",
-        title: "Hata",
-        description: "Çalışan eklenirken bir hata oluştu.",
+        title: "Error",
+        description: "Failed to add employee.",
       });
     } finally {
       setIsLoading(false);

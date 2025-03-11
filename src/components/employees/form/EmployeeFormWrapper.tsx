@@ -33,7 +33,7 @@ export const EmployeeFormWrapper = ({ initialData, onSuccess }: EmployeeFormWrap
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Information */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Temel Bilgiler</h2>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Basic Information</h2>
         
         <PersonalInfo
           formData={formData}
@@ -76,7 +76,7 @@ export const EmployeeFormWrapper = ({ initialData, onSuccess }: EmployeeFormWrap
 
       {/* Image Upload */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Profil Resmi</h2>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Profile Image</h2>
         <ImageUpload
           onFileChange={handleFileChange}
           selectedFile={selectedFile}
