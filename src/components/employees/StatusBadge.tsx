@@ -13,7 +13,7 @@ export const StatusBadge = ({ status }: StatusBadgeProps) => {
   
   if (typeof status === 'string') {
     const lowerStatus = status.toLowerCase();
-    if (lowerStatus === 'active' || lowerStatus === 'aktif' || lowerStatus === 'izinli') {
+    if (lowerStatus === 'active') {
       normalizedStatus = 'active';
     }
   }

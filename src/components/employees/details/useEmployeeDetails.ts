@@ -23,16 +23,14 @@ export const useEmployeeDetails = (id?: string) => {
 
       if (error) throw error;
       
-      // Map status values from database to ensure consistency
-      const statusValue: 'active' | 'inactive' = 
-        (data.status === 'active' || data.status === 'aktif' || data.status === 'izinli') 
-          ? 'active' 
-          : 'inactive';
+      // Ensure status is only 'active' or 'inactive'
+      const normalizedStatus: 'active' | 'inactive' = 
+        data.status === 'active' ? 'active' : 'inactive';
       
       // Convert data to Employee type
       const employeeData: Employee = {
         ...data,
-        status: statusValue
+        status: normalizedStatus
       };
       
       console.log("Fetched employee data:", employeeData);

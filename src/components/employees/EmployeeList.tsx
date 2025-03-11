@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,16 +20,12 @@ export const EmployeeList = () => {
   const { toast } = useToast();
 
   const transformToEmployee = (item: any): Employee => {
-    // Map various status values to the expected 'active' or 'inactive'
     let status: 'active' | 'inactive';
     
-    if (item.status === 'active' || item.status === 'aktif' || item.status === 'izinli') {
+    if (item.status === 'active') {
       status = 'active';
-    } else if (item.status === 'inactive' || item.status === 'pasif' || item.status === 'ayrıldı') {
-      status = 'inactive';
     } else {
-      console.warn(`Invalid status: ${item.status}, defaulting to 'active'`);
-      status = 'active';
+      status = 'inactive';
     }
 
     return {
