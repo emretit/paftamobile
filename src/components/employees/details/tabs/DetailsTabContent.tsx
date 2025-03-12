@@ -1,22 +1,17 @@
 
-import { useState } from "react";
 import { User } from "lucide-react";
 import { Employee } from "@/types/employee";
-import { EditableEmployeeDetails } from "../form/EditableEmployeeDetails";
+import { FormFields } from "../form/FormFields";
 
 interface DetailsTabContentProps {
   employee: Employee;
   handleEmployeeUpdate: (employee: Employee) => void;
-  isEditing?: boolean;
 }
 
 export const DetailsTabContent = ({ 
   employee, 
   handleEmployeeUpdate,
-  isEditing = false
 }: DetailsTabContentProps) => {
-  const [isEditMode, setIsEditMode] = useState(isEditing);
-
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex justify-between items-center mb-6">
@@ -26,13 +21,10 @@ export const DetailsTabContent = ({
         </h3>
       </div>
       
-      <EditableEmployeeDetails 
-        employee={employee} 
-        onCancel={() => setIsEditMode(false)}
-        onSuccess={() => {
-          setIsEditMode(false);
-          handleEmployeeUpdate(employee);
-        }}
+      <FormFields 
+        formData={employee}
+        departments={[{ name: employee.department }]}
+        isEditing={false}
       />
     </div>
   );
