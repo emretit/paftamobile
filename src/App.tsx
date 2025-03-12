@@ -28,6 +28,7 @@ import PurchaseManagement from "@/pages/PurchaseManagement";
 import AuthGuard from "@/components/AuthGuard";
 import Employees from "@/pages/Employees";
 import AddEmployee from "./pages/AddEmployee";
+import EmployeeDetails from "./pages/EmployeeDetails";
 
 const queryClient = new QueryClient();
 
@@ -153,6 +154,14 @@ function App() {
               </AuthGuard>
             }
           />
+          <Route
+            path="/employees/:id"
+            element={
+              <ProtectedRoute>
+                <EmployeeDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </Router>
     </QueryClientProvider>
@@ -160,3 +169,4 @@ function App() {
 }
 
 export default App;
+

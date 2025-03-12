@@ -1,4 +1,3 @@
-
 import {
   Sheet,
   SheetContent,
@@ -33,6 +32,7 @@ export const EmployeeDetailPanel = ({
 
   const handleViewDetails = () => {
     navigate(`/employees/${employee.id}`);
+    onClose();
   };
 
   const getStatusColor = (status: string) => {
@@ -46,7 +46,6 @@ export const EmployeeDetailPanel = ({
     return new Date(dateString).toLocaleDateString("tr-TR");
   };
 
-  // Get employee initials for avatar fallback
   const getInitials = () => {
     return `${employee.first_name.charAt(0)}${employee.last_name.charAt(0)}`;
   };
