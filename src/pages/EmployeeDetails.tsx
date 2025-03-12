@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import { EmployeeDetailsView } from "@/components/employees/details/EmployeeDetailsView";
 import { EmployeeDetailsLoading } from "@/components/employees/details/EmployeeDetailsLoading";
 import { EmployeeNotFound } from "@/components/employees/details/EmployeeNotFound";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";

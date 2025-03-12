@@ -39,6 +39,8 @@ export interface EmployeeSalary {
   net_salary: number;
   allowances: Record<string, any>;
   effective_date: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface EmployeeLeave {
@@ -48,7 +50,9 @@ export interface EmployeeLeave {
   start_date: string;
   end_date: string;
   status: string;
-  reason?: string;
+  reason?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface EmployeePerformance {

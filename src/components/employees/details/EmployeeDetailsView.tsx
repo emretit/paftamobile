@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,12 +11,14 @@ import {
   User, 
   Heart, 
   Clock, 
-  CreditCard, 
+  DollarSign,
   UserCheck,
   Flag
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { Employee } from "@/types/employee";
+import { EmployeeSalaryTab } from "./EmployeeSalaryTab";
+import { EmployeeLeaveTab } from "./EmployeeLeaveTab";
 
 interface EmployeeDetailsViewProps {
   employee: Employee;
@@ -103,6 +104,8 @@ export const EmployeeDetailsView = ({
           <TabsTrigger value="employment">İş Bilgileri</TabsTrigger>
           <TabsTrigger value="contact">İletişim Bilgileri</TabsTrigger>
           <TabsTrigger value="emergency">Acil Durum</TabsTrigger>
+          <TabsTrigger value="salary">Maaş Bilgileri</TabsTrigger>
+          <TabsTrigger value="leave">İzin Bilgileri</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -351,6 +354,14 @@ export const EmployeeDetailsView = ({
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="salary">
+          <EmployeeSalaryTab employee={employee} />
+        </TabsContent>
+
+        <TabsContent value="leave">
+          <EmployeeLeaveTab employee={employee} />
         </TabsContent>
       </Tabs>
     </div>
