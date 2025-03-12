@@ -6,19 +6,19 @@ import TasksTable from "./TasksTable";
 import { Task } from "@/types/task";
 
 interface TasksContentProps {
-  searchQuery: string;
-  selectedEmployee: string;
-  selectedType: string;
-  onSelectTask: (task: Task) => void;
+  searchQuery?: string;
+  selectedEmployee?: string;
+  selectedType?: string;
+  onSelectTask?: (task: Task) => void;
 }
 
 const TasksContent = ({
-  searchQuery,
-  selectedEmployee,
-  selectedType,
-  onSelectTask
+  searchQuery = "",
+  selectedEmployee = "",
+  selectedType = "",
+  onSelectTask = () => {}
 }: TasksContentProps) => {
-  const { data: tasks = [], isLoading: isTasksLoading } = useQuery({
+  const { data, isLoading: isTasksLoading } = useQuery({
     queryKey: ["tasks"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -30,11 +30,18 @@ const TasksContent = ({
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return (data || []) as Task[];
+      
+      // Add the item_type field if it doesn't exist
+      const tasksWithItemType = (data || []).map(task => ({
+        ...task,
+        item_type: task.item_type || "task"
+      })) as Task[];
+      
+      return tasksWithItemType;
     }
   });
 
-  const employeesQuery = useQuery({
+  const { data: employees = [] } = useQuery({
     queryKey: ["employees-for-tasks"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -51,7 +58,7 @@ const TasksContent = ({
     <div className="bg-white rounded-lg border shadow-sm">
       <div className="p-6">
         <TasksTable
-          tasks={tasks}
+          tasks={data || []}
           isLoading={isTasksLoading}
           onSelectTask={onSelectTask}
           searchQuery={searchQuery}

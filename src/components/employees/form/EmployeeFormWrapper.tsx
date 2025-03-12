@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PersonalInfo } from "./PersonalInfo";
@@ -13,6 +12,7 @@ interface EmployeeFormWrapperProps {
   isSaving: boolean;
   isEditMode: boolean;
   handleFormSubmit: (formData: Partial<Employee>) => Promise<void>;
+  onSuccess?: () => void;
 }
 
 export const EmployeeFormWrapper: React.FC<EmployeeFormWrapperProps> = ({
@@ -20,7 +20,8 @@ export const EmployeeFormWrapper: React.FC<EmployeeFormWrapperProps> = ({
   isLoading,
   isSaving,
   isEditMode,
-  handleFormSubmit
+  handleFormSubmit,
+  onSuccess
 }) => {
   const [formData, setFormData] = useState<Partial<Employee>>(employee || {});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -34,8 +35,9 @@ export const EmployeeFormWrapper: React.FC<EmployeeFormWrapperProps> = ({
     setSelectedFile(file);
   };
   
-  const handleSubmit = () => {
-    handleFormSubmit(formData);
+  const handleSubmit = async () => {
+    await handleFormSubmit(formData);
+    if (onSuccess) onSuccess();
   };
   
   return (

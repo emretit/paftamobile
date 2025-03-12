@@ -88,17 +88,20 @@ export const useProposals = (filters?: ProposalFilters) => {
           status = 'new'; // Default fallback
         }
 
-        // Cast the employee data to the expected type
-        const employee = item.employee ? {
-          first_name: item.employee.first_name ?? "",
-          last_name: item.employee.last_name ?? ""
-        } : null;
+        // Handle employee data with safeguards for when employee is an error object
+        let employeeData = { first_name: "", last_name: "" };
+        if (item.employee && typeof item.employee === 'object' && !('error' in item.employee)) {
+          employeeData = {
+            first_name: item.employee.first_name || "",
+            last_name: item.employee.last_name || ""
+          };
+        }
 
         return {
           ...item,
           status,
           items: parsedItems,
-          employee
+          employee: employeeData
         } as Proposal;
       });
     },

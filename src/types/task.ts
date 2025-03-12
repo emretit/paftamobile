@@ -1,8 +1,10 @@
 
 export interface TaskAssignee {
   id: string;
-  name: string;
-  avatar?: string;
+  first_name: string;
+  last_name: string;
+  avatar_url?: string;
+  name?: string;
 }
 
 export interface SubTask {
