@@ -30,15 +30,18 @@ export const useEditableEmployeeForm = ({ employee, onSuccess }: UseEditableEmpl
       const employeeToUpdate = { ...updatedEmployee };
       
       // Normalize status to match database expectations
-      if (employeeToUpdate.status === 'active') {
-        employeeToUpdate.status = 'aktif' as any;
-      } else if (employeeToUpdate.status === 'inactive') {
-        employeeToUpdate.status = 'pasif' as any;
+      // Important: The database expects 'aktif' or 'pasif', but the UI might use 'active' or 'inactive'
+      if (employeeToUpdate.status) {
+        if (employeeToUpdate.status === 'active') {
+          employeeToUpdate.status = 'aktif' as any;
+        } else if (employeeToUpdate.status === 'inactive') {
+          employeeToUpdate.status = 'pasif' as any;
+        }
       }
 
       const { error } = await supabase
         .from('employees')
-        .update(employeeToUpdate)
+        .update(employeeToUpdate as any)
         .eq('id', employee.id);
 
       if (error) throw error;

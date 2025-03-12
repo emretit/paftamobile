@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { EmployeeList } from "@/components/employees/EmployeeList";
 import { EmployeeSummaryStats } from "@/components/employees/stats/EmployeeSummaryStats";
