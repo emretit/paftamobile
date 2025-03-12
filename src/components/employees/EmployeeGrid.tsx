@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -80,7 +81,10 @@ export const EmployeeGrid = ({ employees, isLoading }: EmployeeGridProps) => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => navigate(`/employees/${employee.id}`)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/employees/${employee.id}`);
+                      }}
                       className="h-8 w-8"
                     >
                       <Eye className="h-4 w-4" />
@@ -88,7 +92,10 @@ export const EmployeeGrid = ({ employees, isLoading }: EmployeeGridProps) => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => navigate(`/employee-form/${employee.id}`)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/employee-form/${employee.id}`);
+                      }}
                       className="h-8 w-8"
                     >
                       <Pencil className="h-4 w-4" />
