@@ -16,13 +16,13 @@ import { EmergencyContactSection } from "./sections/EmergencyContactSection";
 
 const formSchema = z.object({
   // Basic Information
-  first_name: z.string().min(2, "First name must be at least 2 characters"),
-  last_name: z.string().min(2, "Last name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
+  first_name: z.string().min(2, "İsim en az 2 karakter olmalıdır"),
+  last_name: z.string().min(2, "Soyisim en az 2 karakter olmalıdır"),
+  email: z.string().email("Geçersiz e-posta adresi"),
   phone: z.string().optional(),
-  position: z.string().min(2, "Position is required"),
-  department: z.string().min(2, "Department is required"),
-  hire_date: z.string().min(1, "Hire date is required"),
+  position: z.string().min(2, "Pozisyon gereklidir"),
+  department: z.string().min(2, "Departman gereklidir"),
+  hire_date: z.string().min(1, "İşe başlama tarihi gereklidir"),
   status: z.enum(["aktif", "pasif"]).default("aktif"),
   
   // Personal Information
@@ -113,8 +113,8 @@ const SimpleEmployeeForm = () => {
       if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: "Employee created successfully",
+        title: "Başarılı!",
+        description: "Çalışan başarıyla oluşturuldu",
       });
       
       // Navigate to the employee details page
@@ -127,8 +127,8 @@ const SimpleEmployeeForm = () => {
       console.error("Error creating employee:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to create employee. Please try again.",
+        title: "Hata",
+        description: "Çalışan oluşturulurken hata oluştu. Lütfen tekrar deneyin.",
       });
     } finally {
       setIsSubmitting(false);
@@ -138,7 +138,7 @@ const SimpleEmployeeForm = () => {
   return (
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle>Add New Employee</CardTitle>
+        <CardTitle>Yeni Çalışan Ekle</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -154,10 +154,10 @@ const SimpleEmployeeForm = () => {
                 type="button"
                 onClick={() => navigate("/employees")}
               >
-                Cancel
+                İptal
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Add Employee"}
+                {isSubmitting ? "Kaydediliyor..." : "Çalışan Ekle"}
               </Button>
             </div>
           </form>
