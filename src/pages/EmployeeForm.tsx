@@ -23,7 +23,7 @@ const EmployeeForm = ({ isCollapsed, setIsCollapsed }: EmployeeFormProps) => {
   const { data: employee, isLoading, refetch } = useQuery({
     queryKey: ["employee", id],
     queryFn: async () => {
-      if (!id) throw new Error("Employee ID is required");
+      if (!id) throw new Error("Çalışan ID'si gerekli");
       const { data, error } = await supabase
         .from("employees")
         .select("*")
@@ -31,15 +31,15 @@ const EmployeeForm = ({ isCollapsed, setIsCollapsed }: EmployeeFormProps) => {
         .single();
 
       if (error) throw error;
-      if (!data) throw new Error("Employee not found");
+      if (!data) throw new Error("Çalışan bulunamadı");
       return data as Employee;
     },
     meta: {
       onError: (error: Error) => {
         toast({
           variant: "destructive",
-          title: "Error",
-          description: error.message || "Failed to load employee details",
+          title: "Hata",
+          description: error.message || "Çalışan detayları yüklenirken hata oluştu",
         });
         navigate("/employees");
       },
@@ -50,8 +50,8 @@ const EmployeeForm = ({ isCollapsed, setIsCollapsed }: EmployeeFormProps) => {
     await refetch();
     navigate(`/employees/${id}`);
     toast({
-      title: "Success",
-      description: "Employee details updated successfully",
+      title: "Başarılı",
+      description: "Çalışan bilgileri başarıyla güncellendi",
     });
   };
 
@@ -66,16 +66,16 @@ const EmployeeForm = ({ isCollapsed, setIsCollapsed }: EmployeeFormProps) => {
             onClick={() => navigate(`/employees/${id}`)}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Employee Details
+            Çalışan Detaylarına Dön
           </Button>
 
           <div className="mb-6">
-            <h1 className="text-2xl font-bold">Edit Employee</h1>
-            <p className="text-gray-500">Update employee information</p>
+            <h1 className="text-2xl font-bold">Çalışan Düzenle</h1>
+            <p className="text-gray-500">Çalışan bilgilerini güncelle</p>
           </div>
 
           {isLoading ? (
-            <div className="py-10 text-center">Loading employee data...</div>
+            <div className="py-10 text-center">Çalışan bilgileri yükleniyor...</div>
           ) : employee ? (
             <EditableEmployeeDetails
               employee={employee}
@@ -83,7 +83,7 @@ const EmployeeForm = ({ isCollapsed, setIsCollapsed }: EmployeeFormProps) => {
               onSuccess={handleSuccess}
             />
           ) : (
-            <div className="py-10 text-center">Employee not found</div>
+            <div className="py-10 text-center">Çalışan bulunamadı</div>
           )}
         </div>
       </main>

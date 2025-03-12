@@ -32,13 +32,13 @@ export const EmployeeDetailsHeader = ({ employee, onEdit }: EmployeeDetailsHeade
           </h1>
           <p className="text-gray-500">{employee.position}</p>
           <p className="text-sm text-gray-400">
-            Joined {formatDate(employee.hire_date)}
+            Katılım: {formatDate(employee.hire_date)}
           </p>
         </div>
       </div>
       <Button onClick={onEdit} variant="outline" className="gap-2">
         <Edit className="h-4 w-4" />
-        Edit Details
+        Bilgileri Düzenle
       </Button>
     </div>
   );

@@ -47,18 +47,18 @@ export const useEditableEmployeeForm = ({ employee, onSuccess }: UseEditableEmpl
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Employee details updated successfully",
+        title: "Başarılı",
+        description: "Çalışan bilgileri başarıyla güncellendi",
       });
 
       setIsEditing(false);
       onSuccess?.();
     } catch (error) {
-      console.error('Error updating employee:', error);
+      console.error('Çalışan güncellenirken hata:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to update employee details",
+        title: "Hata",
+        description: "Çalışan bilgileri güncellenirken bir hata oluştu",
       });
     } finally {
       setIsSaving(false);

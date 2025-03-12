@@ -142,13 +142,13 @@ export const BasicInfoFields = ({
                 <SelectValue placeholder="Durum seçin" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Aktif</SelectItem>
-                <SelectItem value="inactive">Pasif</SelectItem>
+                <SelectItem value="aktif">Aktif</SelectItem>
+                <SelectItem value="pasif">Pasif</SelectItem>
               </SelectContent>
             </Select>
           ) : (
             <div className="p-2 bg-gray-50 rounded-md">
-              {formData.status === 'active' ? 'Aktif' : 'Pasif'}
+              {formData.status === 'active' || formData.status === 'aktif' ? 'Aktif' : 'Pasif'}
             </div>
           )}
         </div>

@@ -19,7 +19,7 @@ interface AddressFieldsProps {
 }
 
 // Define country data
-const COUNTRIES = ["Turkey", "United States", "Germany", "United Kingdom", "France"];
+const COUNTRIES = ["Türkiye", "Amerika Birleşik Devletleri", "Almanya", "Birleşik Krallık", "Fransa"];
 
 export const AddressFields = ({
   formData,
@@ -31,9 +31,9 @@ export const AddressFields = ({
 
   // Example city data based on country selection
   useEffect(() => {
-    if (formData.country === "Turkey") {
-      setCities(["Istanbul", "Ankara", "Izmir", "Bursa", "Antalya"]);
-    } else if (formData.country === "United States") {
+    if (formData.country === "Türkiye") {
+      setCities(["İstanbul", "Ankara", "İzmir", "Bursa", "Antalya"]);
+    } else if (formData.country === "Amerika Birleşik Devletleri") {
       setCities(["New York", "Los Angeles", "Chicago", "Houston", "Phoenix"]);
     } else {
       setCities([]);
@@ -42,10 +42,10 @@ export const AddressFields = ({
 
   // Example district data based on city selection
   useEffect(() => {
-    if (formData.city === "Istanbul") {
-      setDistricts(["Besiktas", "Kadikoy", "Sisli", "Beyoglu", "Uskudar"]);
+    if (formData.city === "İstanbul") {
+      setDistricts(["Beşiktaş", "Kadıköy", "Şişli", "Beyoğlu", "Üsküdar"]);
     } else if (formData.city === "Ankara") {
-      setDistricts(["Cankaya", "Kecioren", "Yenimahalle", "Mamak", "Etimesgut"]);
+      setDistricts(["Çankaya", "Keçiören", "Yenimahalle", "Mamak", "Etimesgut"]);
     } else {
       setDistricts([]);
     }

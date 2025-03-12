@@ -23,8 +23,8 @@ export const EditableEmployeeDetails = ({
     employee,
     onSuccess: () => {
       useToast().toast({
-        title: "Success",
-        description: "Employee details updated successfully"
+        title: "Başarılı",
+        description: "Çalışan bilgileri başarıyla güncellendi"
       });
       onSuccess();
     }
@@ -42,12 +42,12 @@ export const EditableEmployeeDetails = ({
         .order('name');
       
       setDepartments(data || [
-        { name: "Engineering" },
-        { name: "Sales" },
-        { name: "Marketing" },
-        { name: "Finance" },
-        { name: "HR" },
-        { name: "Operations" }
+        { name: "Mühendislik" },
+        { name: "Satış" },
+        { name: "Pazarlama" },
+        { name: "Finans" },
+        { name: "İnsan Kaynakları" },
+        { name: "Operasyon" }
       ]);
     };
 
@@ -62,20 +62,20 @@ export const EditableEmployeeDetails = ({
     <Card className="p-6">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Edit Employee Details</h2>
+          <h2 className="text-xl font-semibold">Çalışan Bilgilerini Düzenle</h2>
           <div className="flex gap-2">
             <Button
               variant="outline"
               onClick={onCancel}
               disabled={isSaving}
             >
-              Cancel
+              İptal
             </Button>
             <Button
               onClick={() => handleSave(formData)}
               disabled={isSaving}
             >
-              {isSaving ? "Saving..." : "Save Changes"}
+              {isSaving ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
             </Button>
           </div>
         </div>
