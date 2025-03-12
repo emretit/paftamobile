@@ -1,21 +1,20 @@
 
 import { useState } from "react";
+import { Employee } from "@/types/employee";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { Employee } from "@/types/employee";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface UseEditableEmployeeFormProps {
-  employee: Employee | null;
+  employee: Employee;
   onSuccess?: () => void;
 }
 
-export const useEditableEmployeeForm = ({ 
-  employee, 
-  onSuccess 
-}: UseEditableEmployeeFormProps) => {
+export const useEditableEmployeeForm = ({ employee, onSuccess }: UseEditableEmployeeFormProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -25,31 +24,39 @@ export const useEditableEmployeeForm = ({
     setIsEditing(false);
   };
 
-  const handleSave = async (updatedData: Partial<Employee>) => {
-    if (!employee?.id) return;
-    
-    setIsSaving(true);
+  const handleSave = async (updatedEmployee: Partial<Employee>) => {
     try {
+      setIsSaving(true);
+
       const { error } = await supabase
-        .from("employees")
-        .update(updatedData)
-        .eq("id", employee.id);
+        .from('employees')
+        .update({
+          ...updatedEmployee,
+          status: updatedEmployee.status === 'active' ? 'aktif' : 
+                 updatedEmployee.status === 'inactive' ? 'pasif' : 
+                 updatedEmployee.status,
+        })
+        .eq('id', employee.id);
 
       if (error) throw error;
 
+      // Invalidate both queries
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      queryClient.invalidateQueries({ queryKey: ['employee', employee.id] });
+
       toast({
-        title: "Success",
-        description: "Employee details updated successfully.",
+        title: "Başarılı",
+        description: "Çalışan bilgileri başarıyla güncellendi",
       });
-      
+
       setIsEditing(false);
-      if (onSuccess) onSuccess();
+      onSuccess?.();
     } catch (error) {
-      console.error("Error updating employee:", error);
+      console.error('Çalışan güncellenirken hata:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to update employee details.",
+        title: "Hata",
+        description: "Çalışan bilgileri güncellenirken bir hata oluştu",
       });
     } finally {
       setIsSaving(false);

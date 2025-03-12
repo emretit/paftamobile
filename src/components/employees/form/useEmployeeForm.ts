@@ -1,103 +1,95 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { Employee } from "@/types/employee";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useEmployeeForm = () => {
-  const [employee, setEmployee] = useState<Employee | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const { id } = useParams();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const isEditMode = Boolean(id);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (id) {
-      fetchEmployee(id);
-    }
-  }, [id]);
-
-  const fetchEmployee = async (employeeId: string) => {
-    setIsLoading(true);
+  const handleSubmit = async (data: Partial<Employee>) => {
+    setIsSubmitting(true);
     try {
-      const { data, error } = await supabase
+      const employeeData = {
+        ...data,
+        status: data.status || "aktif",
+      };
+
+      const { error, data: newEmployee } = await supabase
         .from("employees")
-        .select("*")
-        .eq("id", employeeId)
+        .insert(employeeData)
+        .select()
         .single();
 
       if (error) throw error;
-      setEmployee(data as Employee);
+
+      toast({
+        title: "Başarılı!",
+        description: "Çalışan başarıyla oluşturuldu",
+      });
+
+      // Invalidate and refetch employees
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+
+      if (newEmployee?.id) {
+        navigate(`/employees/${newEmployee.id}`);
+      } else {
+        navigate("/employees");
+      }
     } catch (error) {
-      console.error("Error fetching employee:", error);
+      console.error("Error submitting employee form:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch employee details.",
+        title: "Hata",
+        description: "Çalışan oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleFormSubmit = async (formData: Partial<Employee>) => {
-    setIsSaving(true);
+  const handleUpdate = async (id: string, data: Partial<Employee>) => {
+    setIsSubmitting(true);
     try {
-      if (isEditMode && id) {
-        // Update existing employee
-        const { error } = await supabase
-          .from("employees")
-          .update(formData)
-          .eq("id", id);
+      const { error } = await supabase
+        .from("employees")
+        .update({
+          ...data,
+          status: data.status || "aktif",
+        })
+        .eq("id", id);
 
-        if (error) throw error;
+      if (error) throw error;
 
-        toast({
-          title: "Success",
-          description: "Employee updated successfully.",
-        });
-        
-        navigate(`/employees/${id}`);
-      } else {
-        // Create new employee
-        const { data, error } = await supabase
-          .from("employees")
-          .insert([formData])
-          .select();
+      toast({
+        title: "Başarılı!",
+        description: "Çalışan bilgileri güncellendi",
+      });
 
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: "Employee created successfully.",
-        });
-
-        if (data && data.length > 0) {
-          navigate(`/employees/${data[0].id}`);
-        } else {
-          navigate("/employees");
-        }
-      }
+      // Invalidate and refetch employees
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      
+      navigate(`/employees/${id}`);
     } catch (error) {
-      console.error("Error saving employee:", error);
+      console.error("Error updating employee:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to save employee details.",
+        title: "Hata",
+        description: "Çalışan güncellenirken bir hata oluştu. Lütfen tekrar deneyin.",
       });
     } finally {
-      setIsSaving(false);
+      setIsSubmitting(false);
     }
   };
 
   return {
-    employee,
-    isLoading,
-    isSaving,
-    isEditMode,
-    handleFormSubmit,
+    isSubmitting,
+    handleSubmit,
+    handleUpdate
   };
 };
