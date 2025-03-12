@@ -8,9 +8,10 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Employee } from "@/types/employee";
+import { Employee } from "@/types/task";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { Eye, Maximize, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface EmployeeDetailPanelProps {
   employee: Employee | null;
@@ -23,7 +24,13 @@ export const EmployeeDetailPanel = ({
   isOpen,
   onClose,
 }: EmployeeDetailPanelProps) => {
+  const navigate = useNavigate();
+  
   if (!employee) return null;
+
+  const handleViewDetails = () => {
+    navigate(`/employees/${employee.id}`);
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -31,11 +38,22 @@ export const EmployeeDetailPanel = ({
         <SheetHeader className="px-6 py-4 border-b">
           <div className="flex justify-between items-center">
             <SheetTitle className="text-xl">{employee.first_name} {employee.last_name}</SheetTitle>
-            <SheetClose asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <X className="h-4 w-4" />
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={handleViewDetails}
+                title="Tam görünüm"
+              >
+                <Maximize className="h-4 w-4" />
               </Button>
-            </SheetClose>
+              <SheetClose asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <X className="h-4 w-4" />
+                </Button>
+              </SheetClose>
+            </div>
           </div>
           <SheetDescription>
             {employee.position} - {employee.department}

@@ -32,12 +32,12 @@ const TasksContent = ({
       if (error) throw error;
       
       // Add the item_type field if it doesn't exist and convert to Task type
-      const tasksWithItemType = data?.map(task => ({
+      const tasksWithItemType = (data || []).map(task => ({
         ...task,
-        item_type: task.item_type || "task" 
+        item_type: task.item_type || "task"
       })) as unknown as Task[];
       
-      return tasksWithItemType || [];
+      return tasksWithItemType;
     }
   });
 

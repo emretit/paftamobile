@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Pencil } from "lucide-react";
+import { Eye, Pencil } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Employee } from "@/types/employee";
+import type { Employee } from "@/types/task";
 import { StatusBadge } from "./StatusBadge";
 import { EmployeeDetailPanel } from "./details/EmployeeDetailPanel";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -119,15 +119,28 @@ const EmployeeTable = ({ employees, isLoading }: EmployeeTableProps) => {
                   <TableCell>{new Date(employee.hire_date).toLocaleDateString("tr-TR")}</TableCell>
                   <TableCell><StatusBadge status={employee.status} /></TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => handleViewDetailsClick(e, employee.id)}
-                      className="h-8 w-8 ml-auto"
-                    >
-                      <span className="sr-only">Düzenle</span>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => handleViewDetailsClick(e, employee.id)}
+                        className="h-8 w-8"
+                        title="Görüntüle"
+                      >
+                        <span className="sr-only">Görüntüle</span>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => handleViewDetailsClick(e, employee.id)}
+                        className="h-8 w-8"
+                        title="Düzenle"
+                      >
+                        <span className="sr-only">Düzenle</span>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

@@ -1,10 +1,30 @@
-
 export interface TaskAssignee {
   id: string;
   first_name: string;
   last_name: string;
+  email: string;
+  phone?: string;
+  position: string;
+  department: string;
+  hire_date: string;
+  status: 'aktif' | 'pasif';
   avatar_url?: string;
+  avatar?: string; // Bazı bileşenler avatar kullanıyor
   name?: string;
+  date_of_birth?: string;
+  gender?: 'male' | 'female' | 'other';
+  marital_status?: 'single' | 'married' | 'divorced' | 'widowed';
+  address?: string;
+  country?: string;
+  city?: string;
+  district?: string;
+  postal_code?: string;
+  id_ssn?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  emergency_contact_relation?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface SubTask {
