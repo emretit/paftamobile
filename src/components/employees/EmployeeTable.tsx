@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -27,8 +26,7 @@ const EmployeeTable = ({ employees, isLoading }: EmployeeTableProps) => {
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
   
   const handleRowClick = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setIsDetailPanelOpen(true);
+    navigate(`/employees/${employee.id}`);
   };
 
   const handleViewDetailsClick = (e: React.MouseEvent, employeeId: string) => {
