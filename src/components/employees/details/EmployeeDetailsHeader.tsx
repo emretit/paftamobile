@@ -1,59 +1,45 @@
 
+import { Employee } from "@/types/employee";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, User, Download, Share2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Edit } from "lucide-react";
+import { formatDate } from "./utils/formatDate";
 
 interface EmployeeDetailsHeaderProps {
-  employeeId?: string;
-  employeeName?: string;
+  employee: Employee;
+  onEdit: () => void;
 }
 
-export const EmployeeDetailsHeader = ({ 
-  employeeId,
-  employeeName
-}: EmployeeDetailsHeaderProps) => {
-  const navigate = useNavigate();
-
+export const EmployeeDetailsHeader = ({ employee, onEdit }: EmployeeDetailsHeaderProps) => {
   return (
-    <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100 animate-fade-in">
-      <div className="flex items-center gap-3 mb-4 md:mb-0">
-        <Button
-          onClick={() => navigate("/employees")}
-          variant="outline"
-          size="sm"
-          className="text-gray-600 hover:text-primary hover:border-primary transition-colors group"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2 group-hover:transform group-hover:-translate-x-1 transition-transform" />
-          Çalışanlara Dön
-        </Button>
-        
-        {employeeName && (
-          <div className="hidden md:flex items-center text-gray-700 font-medium">
-            <span className="mx-2 text-gray-300">/</span>
-            <User className="w-4 h-4 mr-2 text-primary" />
-            <span className="text-lg">{employeeName}</span>
-          </div>
-        )}
+    <div className="flex items-start justify-between">
+      <div className="flex items-start gap-4">
+        <div className="h-20 w-20 rounded-full bg-gray-200 overflow-hidden">
+          {employee.avatar_url ? (
+            <img 
+              src={employee.avatar_url} 
+              alt={`${employee.first_name} ${employee.last_name}`}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-2xl font-medium text-gray-400">
+              {employee.first_name[0]}{employee.last_name[0]}
+            </div>
+          )}
+        </div>
+        <div>
+          <h1 className="text-2xl font-semibold">
+            {employee.first_name} {employee.last_name}
+          </h1>
+          <p className="text-gray-500">{employee.position}</p>
+          <p className="text-sm text-gray-400">
+            Joined {formatDate(employee.hire_date)}
+          </p>
+        </div>
       </div>
-      
-      <div className="flex gap-2 w-full md:w-auto">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="text-gray-600 hover:text-primary hover:border-primary transition-colors flex-1 md:flex-auto"
-        >
-          <Download className="w-4 h-4 mr-2" />
-          Detayları İndir
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="text-gray-600 hover:text-primary hover:border-primary transition-colors flex-1 md:flex-auto"
-        >
-          <Share2 className="w-4 h-4 mr-2" />
-          Paylaş
-        </Button>
-      </div>
+      <Button onClick={onEdit} variant="outline" className="gap-2">
+        <Edit className="h-4 w-4" />
+        Edit Details
+      </Button>
     </div>
   );
 };

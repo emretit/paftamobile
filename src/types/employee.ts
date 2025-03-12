@@ -1,4 +1,3 @@
-
 export type EmployeeStatus = 'aktif' | 'pasif';
 export type Gender = 'male' | 'female' | 'other';
 export type MaritalStatus = 'single' | 'married' | 'divorced' | 'widowed';
@@ -75,3 +74,13 @@ export interface EmployeeDocument {
 }
 
 export type ViewMode = 'table' | 'grid';
+
+export interface EmployeeFormData extends Omit<Employee, 'id' | 'created_at' | 'updated_at'> {
+  first_name: string;
+  last_name: string;
+  email: string;
+  position: string;
+  department: string;
+  hire_date: string;
+  status: EmployeeStatus;
+}
