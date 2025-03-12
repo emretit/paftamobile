@@ -8,10 +8,13 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Employee } from "@/types/task";
+import { Employee } from "@/types/employee";
 import { Button } from "@/components/ui/button";
-import { Eye, Maximize, X } from "lucide-react";
+import { Eye, Maximize, Mail, Phone, Calendar, MapPin, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface EmployeeDetailPanelProps {
   employee: Employee | null;
@@ -30,6 +33,22 @@ export const EmployeeDetailPanel = ({
 
   const handleViewDetails = () => {
     navigate(`/employees/${employee.id}`);
+  };
+
+  const getStatusColor = (status: string) => {
+    return status === "aktif" 
+      ? "bg-green-100 text-green-800 border-green-200" 
+      : "bg-red-100 text-red-800 border-red-200";
+  };
+
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("tr-TR");
+  };
+
+  // Get employee initials for avatar fallback
+  const getInitials = () => {
+    return `${employee.first_name.charAt(0)}${employee.last_name.charAt(0)}`;
   };
 
   return (
@@ -60,65 +79,168 @@ export const EmployeeDetailPanel = ({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 overflow-auto p-6">
-          <Tabs defaultValue="general" className="w-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="general">Genel Bilgiler</TabsTrigger>
-              <TabsTrigger value="personal">Kişisel Bilgiler</TabsTrigger>
-              <TabsTrigger value="salary">Maaş</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="general" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">E-posta</p>
-                  <p className="font-medium">{employee.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Telefon</p>
-                  <p className="font-medium">{employee.phone || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">İşe Başlama Tarihi</p>
-                  <p className="font-medium">{new Date(employee.hire_date).toLocaleDateString("tr-TR")}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Durum</p>
-                  <p className="font-medium">{employee.status === "aktif" ? "Aktif" : "Pasif"}</p>
-                </div>
+        <div className="flex-1 overflow-auto">
+          <div className="p-6">
+            <div className="flex items-start mb-6">
+              <Avatar className="h-16 w-16 mr-4">
+                <AvatarImage src={employee.avatar_url || undefined} alt={`${employee.first_name} ${employee.last_name}`} />
+                <AvatarFallback>{getInitials()}</AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="text-lg font-semibold">{employee.first_name} {employee.last_name}</h3>
+                <p className="text-gray-500">{employee.position}</p>
+                <Badge className={`mt-2 ${getStatusColor(employee.status)}`}>
+                  {employee.status === "aktif" ? "Aktif" : "Pasif"}
+                </Badge>
               </div>
-            </TabsContent>
+            </div>
 
-            <TabsContent value="personal" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Doğum Tarihi</p>
-                  <p className="font-medium">
-                    {employee.date_of_birth 
-                      ? new Date(employee.date_of_birth).toLocaleDateString("tr-TR") 
-                      : "-"
-                    }
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Cinsiyet</p>
-                  <p className="font-medium">{employee.gender || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Medeni Durum</p>
-                  <p className="font-medium">{employee.marital_status || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Adres</p>
-                  <p className="font-medium">{employee.address || "-"}</p>
-                </div>
-              </div>
-            </TabsContent>
+            <Tabs defaultValue="general" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="general">Genel Bilgiler</TabsTrigger>
+                <TabsTrigger value="personal">Kişisel Bilgiler</TabsTrigger>
+                <TabsTrigger value="salary">Maaş</TabsTrigger>
+                <TabsTrigger value="documents">Belgeler</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="salary" className="space-y-4">
-              <p className="text-center text-gray-500">Maaş bilgileri henüz eklenmemiş.</p>
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="general" className="space-y-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <h4 className="font-medium mb-3">İletişim Bilgileri</h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-gray-400" />
+                        <span className="font-medium">{employee.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-gray-400" />
+                        <span>{employee.phone || "-"}</span>
+                      </div>
+                      {employee.address && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-gray-400" />
+                          <span>{employee.address}</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-4">
+                    <h4 className="font-medium mb-3">İş Bilgileri</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-500">Departman</p>
+                        <p className="font-medium">{employee.department}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Pozisyon</p>
+                        <p className="font-medium">{employee.position}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">İşe Başlama Tarihi</p>
+                        <p className="font-medium flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                          {formatDate(employee.hire_date)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Kimlik/SSN</p>
+                        <p className="font-medium">{employee.id_ssn || "-"}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="personal" className="space-y-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <h4 className="font-medium mb-3">Kişisel Bilgiler</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-500">Doğum Tarihi</p>
+                        <p className="font-medium">
+                          {formatDate(employee.date_of_birth)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Cinsiyet</p>
+                        <p className="font-medium">{employee.gender || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Medeni Durum</p>
+                        <p className="font-medium">{employee.marital_status || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Ülke</p>
+                        <p className="font-medium">{employee.country || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Şehir</p>
+                        <p className="font-medium">{employee.city || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">İlçe</p>
+                        <p className="font-medium">{employee.district || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Posta Kodu</p>
+                        <p className="font-medium">{employee.postal_code || "-"}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-4">
+                    <h4 className="font-medium mb-3">Acil Durum İletişim</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-500">İsim</p>
+                        <p className="font-medium">{employee.emergency_contact_name || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Telefon</p>
+                        <p className="font-medium">{employee.emergency_contact_phone || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">İlişki</p>
+                        <p className="font-medium">{employee.emergency_contact_relation || "-"}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="salary" className="space-y-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center py-8">
+                      <h4 className="text-gray-500 mb-2">Maaş bilgileri henüz eklenmemiş</h4>
+                      <Button variant="outline" size="sm" className="mt-2">
+                        Maaş Bilgisi Ekle
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="documents" className="space-y-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center py-8">
+                      <h4 className="text-gray-500 mb-2">Belge henüz eklenmemiş</h4>
+                      <Button variant="outline" size="sm" className="mt-2">
+                        Belge Ekle
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
       </SheetContent>
     </Sheet>

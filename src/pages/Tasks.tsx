@@ -1,38 +1,32 @@
 
 import { useState } from "react";
-import DefaultLayout from "@/components/layouts/DefaultLayout";
+import Navbar from "@/components/Navbar";
 import TasksContent from "@/components/tasks/TasksContent";
-import { Task } from "@/types/task";
 
-interface TasksProps {
+interface TasksPageProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
 }
 
-const Tasks = ({ isCollapsed, setIsCollapsed }: TasksProps) => {
+const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [selectedType, setSelectedType] = useState("");
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
-  const handleSelectTask = (task: Task) => {
-    setSelectedTask(task);
-  };
 
   return (
-    <DefaultLayout 
-      isCollapsed={isCollapsed} 
-      setIsCollapsed={setIsCollapsed}
-      title="Görevler"
-      subtitle="Tüm görevleri görüntüleyin ve yönetin"
-    >
-      <TasksContent 
-        searchQuery={searchQuery}
-        selectedEmployee={selectedEmployee}
-        selectedType={selectedType}
-        onSelectTask={handleSelectTask}
-      />
-    </DefaultLayout>
+    <div className="min-h-screen bg-gray-50">
+      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
+        <div className="container mx-auto px-6 py-8">
+          <TasksContent 
+            searchQuery={searchQuery}
+            selectedEmployee={selectedEmployee}
+            selectedType={selectedType}
+            onSelectTask={() => {}}
+          />
+        </div>
+      </main>
+    </div>
   );
 };
 
