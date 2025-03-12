@@ -1,11 +1,11 @@
 
+import { useState, useEffect } from "react";
 import { Employee } from "@/types/employee";
 import { useEditableEmployeeForm } from "@/hooks/useEditableEmployeeForm";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { FormFields } from "./FormFields";
-import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EditableEmployeeDetailsProps {
@@ -22,7 +22,7 @@ export const EditableEmployeeDetails = ({
   const { isEditing, isSaving, handleEdit, handleCancel, handleSave } = useEditableEmployeeForm({
     employee,
     onSuccess: () => {
-      toast({
+      useToast().toast({
         title: "Success",
         description: "Employee details updated successfully"
       });
