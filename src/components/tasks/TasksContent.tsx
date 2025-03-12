@@ -1,9 +1,8 @@
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import TasksTable from "./TasksTable";
-import { Task } from "@/types/task";
+import type { Task } from "@/types/task";
 
 interface TasksContentProps {
   searchQuery?: string;
@@ -31,26 +30,10 @@ const TasksContent = ({
 
       if (error) throw error;
       
-      // Convert the data to Task type with item_type field
-      const tasksWithItemType = (data || []).map(task => ({
+      return (data || []).map(task => ({
         ...task,
         item_type: task.item_type || "task"
       })) as Task[];
-      
-      return tasksWithItemType;
-    }
-  });
-
-  const { data: employees = [] } = useQuery({
-    queryKey: ["employees-for-tasks"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("employees")
-        .select("id, first_name, last_name, avatar_url")
-        .eq("status", "aktif");
-
-      if (error) throw error;
-      return data || [];
     }
   });
 

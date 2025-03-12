@@ -4,52 +4,44 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Proposal } from "@/types/proposal";
 
 export const useProposals = () => {
-  const { data, isLoading, error } = useQuery<Proposal[]>({
+  const { data: proposals = [], isLoading, error } = useQuery({
     queryKey: ["proposals"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("deals")
+        .from("proposals")
         .select(`
           *,
           customer:customer_id (
-            company_name,
-            first_name,
-            last_name
+            id,
+            name
           ),
-          employee:created_by (
+          employee:employee_id (
             id,
             first_name,
             last_name
           )
         `)
-        .eq("item_type", "proposal")
-        .order("created_at", { ascending: false });
+        .order('created_at', { ascending: false });
 
-      if (error) {
-        throw new Error(error.message);
-      }
-      return data || [];
-    },
+      if (error) throw error;
+      
+      return (data || []).map(proposal => ({
+        ...proposal,
+        customer_name: proposal.customer?.name || '-',
+        created_by_name: proposal.employee ? 
+          `${proposal.employee.first_name} ${proposal.employee.last_name}` : '-',
+        created_by: {
+          id: proposal.employee?.id || '',
+          name: proposal.employee ? 
+            `${proposal.employee.first_name} ${proposal.employee.last_name}` : '-'
+        }
+      })) as Proposal[];
+    }
   });
-
-  // Format proposal data
-  const formatProposalData = (proposals: Proposal[]) => {
-    return proposals.map(item => ({
-      ...item,
-      customer_name: item.customer ? `${item.customer.company_name || item.customer.first_name + ' ' + item.customer.last_name}` : '-',
-      created_by_name: item.employee && item.employee.first_name ? `${item.employee.first_name} ${item.employee.last_name}` : '-',
-      created_by: {
-        id: item.employee?.id || '',
-        name: item.employee ? `${item.employee.first_name || ''} ${item.employee.last_name || ''}` : '-',
-      },
-    }));
-  };
-
-  const proposals = data ? formatProposalData(data) : [];
 
   return {
     proposals,
     isLoading,
-    error,
+    error
   };
 };

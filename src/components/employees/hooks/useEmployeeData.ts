@@ -1,9 +1,8 @@
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Employee } from "@/types/employee";
 import { useToast } from "@/components/ui/use-toast";
-import { useQuery } from "@tanstack/react-query";
 
 export const useEmployeeData = () => {
   const { toast } = useToast();
