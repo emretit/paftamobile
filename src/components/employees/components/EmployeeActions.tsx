@@ -1,15 +1,12 @@
 
-import { RefreshCw, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ViewModeToggle } from "./ViewModeToggle";
-import { useNavigate } from "react-router-dom";
+import { List, Grid, RotateCw } from "lucide-react";
 import type { ViewMode } from "@/types/employee";
 
 interface EmployeeActionsProps {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
   onRefresh: () => void;
-  onClearAll: () => void;
   hasEmployees: boolean;
   isLoading: boolean;
 }
@@ -18,46 +15,43 @@ export const EmployeeActions = ({
   viewMode,
   setViewMode,
   onRefresh,
-  onClearAll,
-  hasEmployees,
   isLoading
 }: EmployeeActionsProps) => {
-  const navigate = useNavigate();
-
   return (
-    <div className="flex items-center gap-2">
-      <div className="hidden sm:flex items-center border rounded-lg overflow-hidden">
-        <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
+    <div className="flex items-center space-x-2">
+      <div className="border rounded-md p-1 flex">
+        <Button
+          variant={viewMode === "table" ? "default" : "ghost"}
+          size="icon"
+          className={`h-8 w-8 ${viewMode === "table" ? "bg-red-600 hover:bg-red-700" : ""}`}
+          onClick={() => setViewMode("table")}
+          title="Liste Görünümü"
+        >
+          <List className="h-4 w-4" />
+          <span className="sr-only">Liste Görünümü</span>
+        </Button>
+        <Button
+          variant={viewMode === "grid" ? "default" : "ghost"}
+          size="icon"
+          className={`h-8 w-8 ${viewMode === "grid" ? "bg-red-600 hover:bg-red-700" : ""}`}
+          onClick={() => setViewMode("grid")}
+          title="Grid Görünümü"
+        >
+          <Grid className="h-4 w-4" />
+          <span className="sr-only">Grid Görünümü</span>
+        </Button>
       </div>
-
       <Button
         variant="outline"
         size="icon"
+        className="h-9 w-9"
         onClick={onRefresh}
         disabled={isLoading}
+        title="Yenile"
       >
-        <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+        <RotateCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+        <span className="sr-only">Yenile</span>
       </Button>
-
-      <Button 
-        variant="default" 
-        onClick={() => navigate('/add-employee')}
-        className="gap-1"
-      >
-        <Plus className="h-4 w-4" />
-        <span className="hidden sm:inline">Yeni Çalışan</span>
-      </Button>
-
-      {hasEmployees && (
-        <Button
-          variant="destructive"
-          size="icon"
-          onClick={onClearAll}
-          disabled={isLoading}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      )}
     </div>
   );
 };

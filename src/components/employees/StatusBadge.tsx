@@ -1,5 +1,5 @@
 
-import { StatusBadge as GenericStatusBadge } from "@/components/ui/status-badge";
+import { Badge } from "@/components/ui/badge";
 import type { EmployeeStatus } from "@/types/employee";
 
 interface StatusBadgeProps {
@@ -7,14 +7,31 @@ interface StatusBadgeProps {
 }
 
 export const StatusBadge = ({ status }: StatusBadgeProps) => {
-  const variant = status === 'aktif' ? 'success' : 'neutral';
-  const label = status === 'aktif' ? 'Aktif' : 'Pasif';
+  const getStatusConfig = (status: EmployeeStatus) => {
+    switch (status) {
+      case 'aktif':
+        return {
+          className: "bg-green-100 text-green-800 hover:bg-green-100 border-green-200",
+          label: "Active"
+        };
+      case 'pasif':
+        return {
+          className: "bg-red-100 text-red-800 hover:bg-red-100 border-red-200",
+          label: "Inactive"
+        };
+      default:
+        return {
+          className: "bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200",
+          label: status
+        };
+    }
+  };
+
+  const config = getStatusConfig(status);
 
   return (
-    <GenericStatusBadge
-      label={label}
-      variant={variant}
-      size="sm"
-    />
+    <Badge variant="outline" className={config.className}>
+      {config.label}
+    </Badge>
   );
 };

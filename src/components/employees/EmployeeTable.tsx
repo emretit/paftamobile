@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Employee } from "@/types/task";
+import type { Employee } from "@/types/employee";
 import { StatusBadge } from "./StatusBadge";
 import { EmployeeDetailPanel } from "./details/EmployeeDetailPanel";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -113,11 +113,13 @@ const EmployeeTable = ({ employees, isLoading }: EmployeeTableProps) => {
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="text-sm">{employee.email}</span>
-                      <span className="text-xs text-gray-500">{employee.phone}</span>
+                      <span className="text-xs text-gray-500">{employee.phone || "-"}</span>
                     </div>
                   </TableCell>
                   <TableCell>{new Date(employee.hire_date).toLocaleDateString("tr-TR")}</TableCell>
-                  <TableCell><StatusBadge status={employee.status} /></TableCell>
+                  <TableCell>
+                    <StatusBadge status={employee.status} />
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
                       <Button
@@ -133,7 +135,10 @@ const EmployeeTable = ({ employees, isLoading }: EmployeeTableProps) => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={(e) => handleViewDetailsClick(e, employee.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/employee-form/${employee.id}`);
+                        }}
                         className="h-8 w-8"
                         title="Düzenle"
                       >
