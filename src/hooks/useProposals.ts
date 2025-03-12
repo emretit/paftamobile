@@ -1,8 +1,10 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Proposal } from "@/types/proposal";
 
 export const useProposals = () => {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<Proposal[]>({
     queryKey: ["proposals"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -26,13 +28,13 @@ export const useProposals = () => {
       if (error) {
         throw new Error(error.message);
       }
-      return data;
+      return data || [];
     },
   });
 
-  // This must be part of a function in the hook that processes the proposals data
-  const formatProposalData = (data: any[]) => {
-    return data.map(item => ({
+  // Format proposal data
+  const formatProposalData = (proposals: Proposal[]) => {
+    return proposals.map(item => ({
       ...item,
       customer_name: item.customer ? `${item.customer.company_name || item.customer.first_name + ' ' + item.customer.last_name}` : '-',
       created_by_name: item.employee && item.employee.first_name ? `${item.employee.first_name} ${item.employee.last_name}` : '-',

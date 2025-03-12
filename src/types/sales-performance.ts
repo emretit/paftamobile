@@ -1,12 +1,10 @@
 
 export interface SalesPerformanceData {
-  id: string;
+  month: string;
+  total_proposals: number;
+  accepted_proposals: number;
+  total_value: number;
   employee_id: string;
   employee_name: string;
-  total_sales: number;
-  total_revenue: number;
-  sales_target: number;
   success_rate: number;
-  average_deal_size: number;
-  period: string;
 }

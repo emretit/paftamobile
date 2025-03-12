@@ -1,26 +1,35 @@
-
-import { EmployeeFormWrapper } from "./form/EmployeeFormWrapper";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { Employee } from "@/types/employee";
+import { EmployeeFormWrapper } from "./form/EmployeeFormWrapper";
 
-export const EmployeeForm = () => {
+interface EmployeeFormProps {
+  employee?: Employee;
+  isLoading?: boolean;
+}
+
+const EmployeeForm = ({ employee, isLoading = false }: EmployeeFormProps) => {
+  const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
-  const handleSuccess = () => {
-    toast({
-      title: "Başarılı",
-      description: "Çalışan başarıyla eklendi.",
-    });
-    navigate("/employees");
+  const handleFormSubmit = async (formData: Partial<Employee>) => {
+    setIsSaving(true);
+    // Simulate form submission
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    console.log("Form submitted with data:", formData);
+    setIsSaving(false);
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Yeni Çalışan Ekle</h1>
-        <EmployeeFormWrapper onSuccess={handleSuccess} />
-      </div>
-    </div>
+    <EmployeeFormWrapper
+      employee={employee}
+      isLoading={isLoading}
+      isSaving={isSaving}
+      isEditMode={!!employee}
+      handleFormSubmit={handleFormSubmit}
+      onSuccess={() => navigate("/employees")}
+    />
   );
 };
+
+export default EmployeeForm;
