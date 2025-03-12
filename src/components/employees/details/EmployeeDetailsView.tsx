@@ -25,8 +25,8 @@ export const EmployeeDetailsView = ({
   // Handle possible status difference between employee types
   const normalizedEmployee: Employee = {
     ...employee,
-    // Ensure status is valid for both types
-    status: employee.status === 'active' ? 'aktif' : employee.status === 'inactive' ? 'pasif' : employee.status,
+    // Ensure status is normalized
+    status: employee.status === 'active' || employee.status === 'aktif' ? 'aktif' : 'pasif',
   };
 
   if (isEditing) {

@@ -1,6 +1,6 @@
 
 import { TabsContent } from "@/components/ui/tabs";
-import { Employee } from "../../types";
+import { Employee } from "@/types/employee";
 import { DetailsTabContent } from "./DetailsTabContent";
 import { EmployeeSalaryTab } from "../EmployeeSalaryTab";
 import { EmployeeLeaveTab } from "../EmployeeLeaveTab";
@@ -10,13 +10,11 @@ import { EmployeeTasksTab } from "../EmployeeTasksTab";
 interface TabsContentProps {
   employee: Employee;
   handleEmployeeUpdate: (employee: Employee) => void;
-  isEditing: boolean;
 }
 
 export const EmployeeTabsContent = ({ 
   employee, 
-  handleEmployeeUpdate,
-  isEditing 
+  handleEmployeeUpdate
 }: TabsContentProps) => {
   return (
     <>
@@ -24,16 +22,15 @@ export const EmployeeTabsContent = ({
         <DetailsTabContent 
           employee={employee} 
           handleEmployeeUpdate={handleEmployeeUpdate}
-          isEditing={isEditing}
         />
       </TabsContent>
       
       <TabsContent value="salary" className="mt-6">
-        <EmployeeSalaryTab employeeId={employee.id} />
+        <EmployeeSalaryTab employee={employee} />
       </TabsContent>
       
       <TabsContent value="leave" className="mt-6">
-        <EmployeeLeaveTab employeeId={employee.id} />
+        <EmployeeLeaveTab employee={employee} />
       </TabsContent>
       
       <TabsContent value="performance" className="mt-6">

@@ -1,169 +1,117 @@
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { DollarSign, TrendingUp, BarChart2, Plus } from "lucide-react";
-import type { Employee, EmployeeSalary } from "@/types/employee";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Employee, EmployeeSalary } from "@/types/employee";
+import { Button } from "@/components/ui/button";
+import { DollarSign, PlusCircle } from "lucide-react";
 
 interface EmployeeSalaryTabProps {
   employee: Employee;
 }
 
 export const EmployeeSalaryTab = ({ employee }: EmployeeSalaryTabProps) => {
+  const [salaries, setSalaries] = useState<EmployeeSalary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  
-  const { data: salaries = [], isLoading } = useQuery({
-    queryKey: ["employee-salaries", employee.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("employee_salaries")
-        .select("*")
-        .eq("employee_id", employee.id)
-        .order("effective_date", { ascending: false });
 
-      if (error) {
+  useEffect(() => {
+    const fetchSalaries = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('employee_salaries')
+          .select('*')
+          .eq('employee_id', employee.id)
+          .order('effective_date', { ascending: false });
+
+        if (error) throw error;
+        setSalaries(data as EmployeeSalary[]);
+      } catch (error) {
+        console.error('Error fetching salary data:', error);
         toast({
           variant: "destructive",
-          title: "Hata",
-          description: "Maaş bilgileri yüklenirken bir sorun oluştu",
+          title: "Error",
+          description: "Failed to load salary information",
         });
-        return [];
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      return data as EmployeeSalary[];
-    },
-  });
+    fetchSalaries();
+  }, [employee.id, toast]);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("tr-TR");
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("tr-TR", {
-      style: "currency",
-      currency: "TRY",
-    }).format(amount);
-  };
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <DollarSign className="h-5 w-5 mr-2 text-primary" />
+            Salary Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {salaries.length > 0 ? (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium flex items-center">
-                  <DollarSign className="h-5 w-5 mr-2 text-primary" />
-                  Güncel Brüt Maaş
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{formatCurrency(salaries[0].gross_salary)}</p>
-                <p className="text-sm text-gray-500">
-                  {formatDate(salaries[0].effective_date)} tarihinden itibaren geçerli
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium flex items-center">
-                  <TrendingUp className="h-5 w-5 mr-2 text-primary" />
-                  Net Maaş
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{formatCurrency(salaries[0].net_salary)}</p>
-                <p className="text-sm text-gray-500">
-                  Vergi ve kesintiler sonrası
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium flex items-center">
-                  <BarChart2 className="h-5 w-5 mr-2 text-primary" />
-                  Maaş Geçmişi
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{salaries.length}</p>
-                <p className="text-sm text-gray-500">
-                  Toplam maaş değişikliği kaydı
-                </p>
-              </CardContent>
-            </Card>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center">
+          <DollarSign className="h-5 w-5 mr-2 text-primary" />
+          Salary Information
+        </CardTitle>
+        <Button size="sm" variant="outline" className="gap-1">
+          <PlusCircle className="h-4 w-4" />
+          Add Salary Record
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {salaries.length > 0 ? (
+          <div className="space-y-4">
+            {salaries.map((salary) => (
+              <div key={salary.id} className="border rounded-md p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-medium">Effective: {new Date(salary.effective_date).toLocaleDateString()}</h3>
+                  <span className="text-lg font-semibold">{salary.gross_salary.toLocaleString()} TL</span>
+                </div>
+                <div className="text-sm text-gray-500">
+                  <p>Net Salary: {salary.net_salary.toLocaleString()} TL</p>
+                  {Object.entries(salary.allowances || {}).length > 0 && (
+                    <div className="mt-2">
+                      <p className="font-medium">Allowances:</p>
+                      <ul className="list-disc list-inside">
+                        {Object.entries(salary.allowances).map(([key, value]) => (
+                          <li key={key}>
+                            {key}: {typeof value === 'number' ? value.toLocaleString() : value} TL
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-
-          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="border-b pb-3 flex flex-row justify-between items-center">
-              <CardTitle className="text-lg font-medium">Maaş Geçmişi</CardTitle>
-              <Button size="sm" className="bg-red-600 hover:bg-red-700">
-                <Plus className="mr-2 h-4 w-4" />
-                Yeni Maaş Ekle
-              </Button>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Geçerlilik Tarihi</TableHead>
-                    <TableHead>Brüt Maaş</TableHead>
-                    <TableHead>Net Maaş</TableHead>
-                    <TableHead>Ek Ödemeler</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {salaries.map((salary) => (
-                    <TableRow key={salary.id}>
-                      <TableCell className="font-medium">
-                        {formatDate(salary.effective_date)}
-                      </TableCell>
-                      <TableCell>{formatCurrency(salary.gross_salary)}</TableCell>
-                      <TableCell>{formatCurrency(salary.net_salary)}</TableCell>
-                      <TableCell>
-                        {Object.keys(salary.allowances || {}).length > 0
-                          ? Object.entries(salary.allowances || {}).map(([key, value]) => (
-                              <div key={key}>
-                                {key}: {formatCurrency(value as number)}
-                              </div>
-                            ))
-                          : "-"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </>
-      ) : (
-        <Card className="border-0 shadow-sm">
-          <CardContent className="flex flex-col items-center justify-center p-12">
-            <DollarSign className="h-12 w-12 text-gray-300 mb-4" />
-            <h3 className="text-xl font-medium text-gray-600 mb-2">Maaş Bilgisi Bulunamadı</h3>
-            <p className="text-gray-500 mb-6 text-center">
-              Bu çalışan için kayıtlı bir maaş bilgisi bulunmuyor.
-            </p>
-            <Button className="bg-red-600 hover:bg-red-700">
-              <Plus className="mr-2 h-4 w-4" />
-              Maaş Bilgisi Ekle
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>No salary records found for this employee.</p>
+            <Button variant="outline" className="mt-4">
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Add First Salary Record
             </Button>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
