@@ -22,10 +22,17 @@ export const EmployeeDetailsView = ({
 }: EmployeeDetailsViewProps) => {
   const [isEditing, setIsEditing] = useState(false);
 
+  // Handle possible status difference between employee types
+  const normalizedEmployee: Employee = {
+    ...employee,
+    // Ensure status is valid for both types
+    status: employee.status === 'active' ? 'aktif' : employee.status === 'inactive' ? 'pasif' : employee.status,
+  };
+
   if (isEditing) {
     return (
       <EditableEmployeeDetails 
-        employee={employee}
+        employee={normalizedEmployee}
         onCancel={() => setIsEditing(false)}
         onSuccess={() => {
           setIsEditing(false);
@@ -38,11 +45,11 @@ export const EmployeeDetailsView = ({
   return (
     <div className="space-y-6">
       <EmployeeDetailsHeader 
-        employee={employee} 
+        employee={normalizedEmployee} 
         onEdit={() => setIsEditing(true)}
       />
       <EmployeeDetailTabs
-        employee={employee}
+        employee={normalizedEmployee}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         refetch={refetch}

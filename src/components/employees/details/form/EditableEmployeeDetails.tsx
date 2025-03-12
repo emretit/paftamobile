@@ -4,7 +4,9 @@ import { useEditableEmployeeForm } from "@/hooks/useEditableEmployeeForm";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import { EmployeeForm } from "./components/EmployeeForm";
+import { FormFields } from "./FormFields";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EditableEmployeeDetailsProps {
   employee: Employee;
@@ -28,6 +30,34 @@ export const EditableEmployeeDetails = ({
     }
   });
 
+  const [formData, setFormData] = useState<Partial<Employee>>(employee);
+  const [departments, setDepartments] = useState<{ name: string }[]>([]);
+
+  // Fetch departments
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      const { data } = await supabase
+        .from('departments')
+        .select('name')
+        .order('name');
+      
+      setDepartments(data || [
+        { name: "Engineering" },
+        { name: "Sales" },
+        { name: "Marketing" },
+        { name: "Finance" },
+        { name: "HR" },
+        { name: "Operations" }
+      ]);
+    };
+
+    fetchDepartments();
+  }, []);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   return (
     <Card className="p-6">
       <div className="space-y-6">
@@ -42,19 +72,18 @@ export const EditableEmployeeDetails = ({
               Cancel
             </Button>
             <Button
-              onClick={() => handleSave(employee)}
+              onClick={() => handleSave(formData)}
               disabled={isSaving}
             >
               {isSaving ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>
-        <EmployeeForm 
-          employee={employee}
-          isEditing={isEditing}
-          isSaving={isSaving}
-          onSave={handleSave}
-          onCancel={handleCancel}
+        <FormFields 
+          formData={formData}
+          departments={departments}
+          handleInputChange={handleInputChange}
+          isEditing={true}
         />
       </div>
     </Card>
