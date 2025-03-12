@@ -27,9 +27,13 @@ export const useEditableEmployeeForm = ({ employee, onSuccess }: UseEditableEmpl
       setIsSaving(true);
 
       // Normalize status to match database expectations
-      const normalizedStatus = updatedEmployee.status === 'active' ? 'aktif' : 
-                             updatedEmployee.status === 'inactive' ? 'pasif' : 
-                             updatedEmployee.status;
+      let normalizedStatus = updatedEmployee.status;
+      
+      if (updatedEmployee.status === 'active') {
+        normalizedStatus = 'aktif';
+      } else if (updatedEmployee.status === 'inactive') {
+        normalizedStatus = 'pasif';
+      }
 
       const { error } = await supabase
         .from('employees')

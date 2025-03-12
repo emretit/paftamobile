@@ -24,7 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Employee } from "@/types/task";
 
 const formSchema = z.object({
   first_name: z.string().min(2, "First name must be at least 2 characters"),
@@ -73,9 +72,11 @@ const SimpleEmployeeForm = () => {
         status: data.status
       };
 
-      const { error } = await supabase
+      const { data: newEmployee, error } = await supabase
         .from("employees")
-        .insert(employeeData);
+        .insert(employeeData)
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -84,7 +85,12 @@ const SimpleEmployeeForm = () => {
         description: "Employee created successfully",
       });
       
-      navigate("/employees");
+      // Navigate to the employee details page instead of the list
+      if (newEmployee?.id) {
+        navigate(`/employees/${newEmployee.id}`);
+      } else {
+        navigate("/employees");
+      }
     } catch (error) {
       console.error("Error creating employee:", error);
       toast({
