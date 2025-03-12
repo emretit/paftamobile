@@ -61,7 +61,7 @@ const SimpleEmployeeForm = () => {
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("employees").insert([data]);
+      const { error } = await supabase.from("employees").insert(data);
 
       if (error) throw error;
 

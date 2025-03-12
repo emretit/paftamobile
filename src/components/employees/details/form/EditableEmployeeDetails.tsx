@@ -1,41 +1,38 @@
 
-import { useEditableEmployeeForm } from "./useEditableEmployeeForm";
+import { Employee } from "@/types/employee";
 import { SaveButton } from "./components/SaveButton";
 import { FormFields } from "./FormFields";
-import type { Employee } from "../../types";
 
 interface EditableEmployeeDetailsProps {
   employee: Employee;
   onSave: (employee: Employee) => void;
   isEditing?: boolean;
+  isSaving?: boolean;
+  handleEdit?: () => void;
+  handleCancel?: () => void;
+  handleSave: (updatedData: Partial<Employee>) => Promise<void>;
 }
 
 export const EditableEmployeeDetails = ({ 
   employee, 
   onSave,
-  isEditing = true
+  isEditing = true,
+  isSaving = false,
+  handleSave
 }: EditableEmployeeDetailsProps) => {
-  const {
-    formData,
-    departments,
-    isLoading,
-    handleInputChange,
-    handleSubmit,
-  } = useEditableEmployeeForm(employee, onSave);
-
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
       <div className="flex justify-end mb-6">
         <SaveButton 
-          isLoading={isLoading} 
-          onClick={handleSubmit} 
+          isLoading={isSaving} 
+          onClick={() => handleSave(employee)} 
         />
       </div>
       
       <FormFields
-        formData={formData}
-        departments={departments}
-        handleInputChange={handleInputChange}
+        formData={employee}
+        departments={[]}
+        handleInputChange={() => {}}
         isEditing={isEditing}
       />
     </div>

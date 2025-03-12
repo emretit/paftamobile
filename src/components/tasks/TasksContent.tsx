@@ -1,30 +1,41 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { Filter, Plus } from "lucide-react";
-import TasksFilterBar from "./filters/TasksFilterBar";
-import TasksViewToggle, { ViewType } from "./header/TasksViewToggle";
-import TasksPageHeader from "./header/TasksPageHeader";
-import TasksKanban from "./TasksKanban";
 import TasksTable from "./TasksTable";
-import TaskForm from "./TaskForm";
-import TaskDetailPanel from "./TaskDetailPanel";
-import type { Task } from "@/types/task";
+import { Task } from "@/types/task";
 
-const TasksContent = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
-  const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
-  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
-  const [activeView, setActiveView] = useState<ViewType>("kanban");
+interface TasksContentProps {
+  searchQuery: string;
+  selectedEmployee: string;
+  selectedType: string;
+  onSelectTask: (task: Task) => void;
+}
 
-  const { employees } = useQuery({
-    queryKey: ["task-assignees"],
+const TasksContent = ({
+  searchQuery,
+  selectedEmployee,
+  selectedType,
+  onSelectTask
+}: TasksContentProps) => {
+  const { data: tasks = [], isLoading: isTasksLoading } = useQuery({
+    queryKey: ["tasks"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select(`
+          *,
+          assignee:assignee_id(id, first_name, last_name, avatar_url)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return (data || []) as Task[];
+    }
+  });
+
+  const employeesQuery = useQuery({
+    queryKey: ["employees-for-tasks"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("employees")
@@ -36,85 +47,18 @@ const TasksContent = () => {
     }
   });
 
-  const handleEditTask = (task: Task) => {
-    setTaskToEdit(task);
-    setIsTaskFormOpen(true);
-  };
-
-  const handleSelectTask = (task: Task) => {
-    setSelectedTask(task);
-    setIsDetailPanelOpen(true);
-  };
-
-  const handleAddNewTask = () => {
-    setTaskToEdit(null);
-    setIsTaskFormOpen(true);
-  };
-
-  const getViewComponent = () => {
-    switch (activeView) {
-      case "table":
-        return (
-          <TasksTable
-            searchQuery={searchQuery}
-            selectedEmployee={selectedEmployee}
-            selectedType={selectedType}
-            onSelectTask={handleSelectTask}
-          />
-        );
-      case "kanban":
-      default:
-        return (
-          <TasksKanban
-            searchQuery={searchQuery}
-            selectedEmployee={selectedEmployee}
-            selectedType={selectedType}
-            onEditTask={handleEditTask}
-            onSelectTask={handleSelectTask}
-          />
-        );
-    }
-  };
-
   return (
-    <div className="p-6">
-      <TasksPageHeader
-        onAddTask={handleAddNewTask}
-        activeView={activeView}
-        setActiveView={setActiveView}
-      />
-
-      <TasksFilterBar 
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        selectedEmployee={selectedEmployee}
-        setSelectedEmployee={setSelectedEmployee}
-        selectedType={selectedType}
-        setSelectedType={setSelectedType}
-        employees={employees}
-      />
-
-      <ScrollArea className="h-[calc(100vh-280px)]">
-        {getViewComponent()}
-      </ScrollArea>
-
-      <TaskForm
-        isOpen={isTaskFormOpen}
-        onClose={() => {
-          setIsTaskFormOpen(false);
-          setTaskToEdit(null);
-        }}
-        taskToEdit={taskToEdit}
-      />
-
-      <TaskDetailPanel
-        task={selectedTask}
-        isOpen={isDetailPanelOpen}
-        onClose={() => {
-          setIsDetailPanelOpen(false);
-          setSelectedTask(null);
-        }}
-      />
+    <div className="bg-white rounded-lg border shadow-sm">
+      <div className="p-6">
+        <TasksTable
+          tasks={tasks}
+          isLoading={isTasksLoading}
+          onSelectTask={onSelectTask}
+          searchQuery={searchQuery}
+          selectedEmployee={selectedEmployee}
+          selectedType={selectedType}
+        />
+      </div>
     </div>
   );
 };

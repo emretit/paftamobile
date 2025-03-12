@@ -10,14 +10,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Employee } from "@/types/employee";
+import type { CustomerFormData } from "@/types/customer";
 
 interface RepresentativeOption {
   id: string;
   name: string;
 }
 
-const RepresentativeSelect = () => {
+interface RepresentativeSelectProps {
+  formData: CustomerFormData;
+  setFormData: (value: CustomerFormData) => void;
+}
+
+const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectProps) => {
   const { control } = useFormContext();
   const [representatives, setRepresentatives] = useState<RepresentativeOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,37 +56,36 @@ const RepresentativeSelect = () => {
     fetchRepresentatives();
   }, []);
 
+  const handleChange = (value: string) => {
+    setFormData({
+      ...formData,
+      representative: value
+    });
+  };
+
   return (
-    <FormField
-      control={control}
-      name="representative"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Temsilci</FormLabel>
-          <FormControl>
-            <Select
-              disabled={isLoading}
-              value={field.value ?? ""}
-              onValueChange={field.onChange}
-            >
-              <SelectTrigger>
-                <SelectValue 
-                  placeholder="Temsilci seçiniz"
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Seçilmedi</SelectItem>
-                {representatives.map((rep) => (
-                  <SelectItem key={rep.id} value={rep.id}>
-                    {rep.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FormControl>
-        </FormItem>
-      )}
-    />
+    <div className="space-y-2">
+      <FormLabel>Temsilci</FormLabel>
+      <Select
+        disabled={isLoading}
+        value={formData.representative ?? ""}
+        onValueChange={handleChange}
+      >
+        <SelectTrigger>
+          <SelectValue 
+            placeholder="Temsilci seçiniz"
+          />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="">Seçilmedi</SelectItem>
+          {representatives.map((rep) => (
+            <SelectItem key={rep.id} value={rep.id}>
+              {rep.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 };
 

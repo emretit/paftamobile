@@ -88,11 +88,18 @@ export const useProposals = (filters?: ProposalFilters) => {
           status = 'new'; // Default fallback
         }
 
+        // Cast the employee data to the expected type
+        const employee = item.employee ? {
+          first_name: item.employee.first_name ?? "",
+          last_name: item.employee.last_name ?? ""
+        } : null;
+
         return {
           ...item,
           status,
-          items: parsedItems
-        };
+          items: parsedItems,
+          employee
+        } as Proposal;
       });
     },
   });

@@ -1,124 +1,137 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Pencil } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import type { Task } from "@/types/task";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-interface TasksTableProps {
+import React from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Task } from "@/types/task";
+import { getPriorityColor } from "@/components/service/utils/priorityUtils";
+
+export interface TasksTableProps {
   tasks: Task[];
   isLoading: boolean;
+  onSelectTask: (task: Task) => void;
+  searchQuery?: string;
+  selectedEmployee?: string;
+  selectedType?: string;
 }
 
-const TasksTable = ({ tasks, isLoading }: TasksTableProps) => {
-  const navigate = useNavigate();
-  
+export const TasksTable = ({
+  tasks,
+  isLoading,
+  onSelectTask,
+  searchQuery = "",
+  selectedEmployee = "",
+  selectedType = ""
+}: TasksTableProps) => {
+  // Filter tasks based on search and filters
+  const filteredTasks = tasks.filter(task => {
+    const matchesSearch = 
+      task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+    const matchesEmployee = !selectedEmployee || task.assignee_id === selectedEmployee;
+    const matchesType = !selectedType || task.type === selectedType;
+    
+    return matchesSearch && matchesEmployee && matchesType;
+  });
+
   if (isLoading) {
     return (
-      <div className="rounded-md border bg-white">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Görev</TableHead>
-              <TableHead>Durum</TableHead>
-              <TableHead>Öncelik</TableHead>
-              <TableHead>Atanan</TableHead>
-              <TableHead className="text-right">İşlemler</TableHead>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Title</TableHead>
+            <TableHead>Assignee</TableHead>
+            <TableHead>Priority</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Due Date</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {[1, 2, 3, 4, 5].map((index) => (
+            <TableRow key={index}>
+              <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+              <TableCell><Skeleton className="h-8 w-8 rounded-full" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-4" /></TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, index) => (
-              <TableRow key={index}>
-                <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                <TableCell><Skeleton className="h-5 w-28" /></TableCell>
-                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                <TableCell className="text-right">
-                  <Skeleton className="h-8 w-8 rounded-md ml-auto" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+          ))}
+        </TableBody>
+      </Table>
     );
   }
 
   return (
-    <div className="rounded-md border bg-white overflow-hidden">
-      <Table>
-        <TableHeader className="bg-gray-50">
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Title</TableHead>
+          <TableHead>Assignee</TableHead>
+          <TableHead>Priority</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead>Due Date</TableHead>
+          <TableHead className="w-[50px]"></TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {filteredTasks.length === 0 ? (
           <TableRow>
-            <TableHead>Görev</TableHead>
-            <TableHead>Durum</TableHead>
-            <TableHead>Öncelik</TableHead>
-            <TableHead>Atanan</TableHead>
-            <TableHead className="text-right">İşlemler</TableHead>
+            <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+              No tasks found with the current filters
+            </TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {tasks.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center">
-                Görev bulunamadı.
+        ) : (
+          filteredTasks.map((task) => (
+            <TableRow key={task.id} onClick={() => onSelectTask(task)} className="cursor-pointer hover:bg-gray-50">
+              <TableCell className="font-medium">{task.title}</TableCell>
+              <TableCell>
+                {task.assignee ? (
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8">
+                      {task.assignee.avatar_url && (
+                        <AvatarImage src={task.assignee.avatar_url} alt={`${task.assignee.first_name} ${task.assignee.last_name}`} />
+                      )}
+                      <AvatarFallback>
+                        {task.assignee.first_name?.[0]}
+                        {task.assignee.last_name?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm">
+                      {task.assignee.first_name} {task.assignee.last_name}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-gray-500 text-sm">Unassigned</span>
+                )}
+              </TableCell>
+              <TableCell>
+                <Badge className={getPriorityColor(task.priority)}>
+                  {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline">
+                  {task.type.charAt(0).toUpperCase() + task.type.slice(1)}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                {task.due_date ? new Date(task.due_date).toLocaleDateString() : "No date"}
+              </TableCell>
+              <TableCell>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
               </TableCell>
             </TableRow>
-          ) : (
-            tasks.map((task) => (
-              <TableRow key={task.id}>
-                <TableCell className="font-medium">{task.title}</TableCell>
-                <TableCell>{task.status}</TableCell>
-                <TableCell>{task.priority}</TableCell>
-                <TableCell>
-                  {task.assignee ? (
-                    <div className="flex items-center gap-2">
-                      {task.assignee.avatar_url ? (
-                        <Avatar>
-                          <AvatarImage src={task.assignee.avatar_url} />
-                          <AvatarFallback>
-                            {task.assignee.first_name?.[0]}{task.assignee.last_name?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                      ) : (
-                        <Avatar>
-                          <AvatarFallback>
-                            {task.assignee.first_name?.[0]}{task.assignee.last_name?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                      <span>
-                        {task.assignee.first_name} {task.assignee.last_name}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground">Atanmamış</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => navigate(`/tasks/${task.id}`)}
-                    className="h-8 w-8 ml-auto"
-                  >
-                    <span className="sr-only">Düzenle</span>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+          ))
+        )}
+      </TableBody>
+    </Table>
   );
 };
 

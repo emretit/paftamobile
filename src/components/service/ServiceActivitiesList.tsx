@@ -1,66 +1,54 @@
 
+import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ServiceActivity } from "@/components/service/types/serviceActivity";
 import { ActivityCard } from "./detail/activity/ActivityCard";
-import { 
-  ActivityListLoading, 
-  ActivityListError, 
-  ActivityListEmpty 
-} from "./detail/activity/ActivityListStates";
-import { ServiceActivity } from "./types/serviceActivity";
+import { ActivityListStates } from "./detail/activity/ActivityListStates";
 
 interface ServiceActivitiesListProps {
   serviceRequestId: string;
 }
 
-export function ServiceActivitiesList({ serviceRequestId }: ServiceActivitiesListProps) {
-  const { data: activities, isLoading, isError } = useQuery({
-    queryKey: ['service-activities', serviceRequestId],
+export const ServiceActivitiesList: React.FC<ServiceActivitiesListProps> = ({ 
+  serviceRequestId 
+}) => {
+  const { data: activities, isLoading, error } = useQuery({
+    queryKey: ["service-activities", serviceRequestId],
     queryFn: async () => {
-      console.log("Fetching service activities for request:", serviceRequestId);
-      
-      const { data, error } = await supabase
-        .from('service_activities')
-        .select(`
-          *,
-          employees (
-            first_name,
-            last_name
-          )
-        `)
-        .eq('service_request_id', serviceRequestId)
-        .order('start_time', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from("service_activities")
+          .select(`
+            *,
+            materials_used,
+            technician:employee_id (id, first_name, last_name, avatar_url),
+            employees:employees(first_name, last_name)
+          `)
+          .eq("service_request_id", serviceRequestId)
+          .order("created_at", { ascending: false });
 
-      if (error) {
+        if (error) throw error;
+        
+        // Type assertion with unknown in between to avoid type error
+        return (data || []) as unknown as ServiceActivity[];
+      } catch (error) {
         console.error("Error fetching service activities:", error);
         throw error;
       }
-      
-      console.log("Service activities data:", data);
-      
-      const typedData = (data || []).map(item => ({
-        ...item,
-        materials_used: Array.isArray(item.materials_used) ? item.materials_used.map((m: any) => ({
-          name: String(m?.name || ''),
-          quantity: Number(m?.quantity || 0),
-          unit: String(m?.unit || 'adet')
-        })) : []
-      })) as ServiceActivity[];
-      
-      return typedData;
-    }
+    },
   });
 
-  if (isLoading) {
-    return <ActivityListLoading />;
+  if (isLoading || error || !activities) {
+    return <ActivityListStates isLoading={isLoading} error={error} />;
   }
 
-  if (isError) {
-    return <ActivityListError />;
-  }
-
-  if (!activities?.length) {
-    return <ActivityListEmpty />;
+  if (activities.length === 0) {
+    return (
+      <div className="text-center py-8 border rounded-lg">
+        <p className="text-gray-500">No activities recorded for this service request yet.</p>
+      </div>
+    );
   }
 
   return (
@@ -70,4 +58,4 @@ export function ServiceActivitiesList({ serviceRequestId }: ServiceActivitiesLis
       ))}
     </div>
   );
-}
+};
