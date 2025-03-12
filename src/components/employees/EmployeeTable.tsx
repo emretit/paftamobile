@@ -29,11 +29,6 @@ const EmployeeTable = ({ employees, isLoading }: EmployeeTableProps) => {
     navigate(`/employees/${employee.id}`);
   };
 
-  const handleViewDetailsClick = (e: React.MouseEvent, employeeId: string) => {
-    e.stopPropagation();
-    navigate(`/employees/${employeeId}`);
-  };
-
   if (isLoading) {
     return (
       <div className="rounded-md border bg-white">
@@ -123,7 +118,10 @@ const EmployeeTable = ({ employees, isLoading }: EmployeeTableProps) => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={(e) => handleViewDetailsClick(e, employee.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/employees/${employee.id}`);
+                        }}
                         className="h-8 w-8"
                         title="Görüntüle"
                       >

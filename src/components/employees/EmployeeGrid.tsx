@@ -1,11 +1,11 @@
-
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "./StatusBadge";
-import { Mail, Phone, Calendar } from "lucide-react";
+import { Mail, Phone, Calendar, Pencil, Eye } from "lucide-react";
 import type { Employee } from "@/types/employee";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 
 interface EmployeeGridProps {
   employees: Employee[];
@@ -58,13 +58,15 @@ export const EmployeeGrid = ({ employees, isLoading }: EmployeeGridProps) => {
         return (
           <Card 
             key={employee.id} 
-            className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => navigate(`/employees/${employee.id}`)}
+            className="overflow-hidden"
           >
             <CardContent className="p-0">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
+                  <div 
+                    className="flex items-center gap-3 cursor-pointer"
+                    onClick={() => navigate(`/employees/${employee.id}`)}
+                  >
                     <Avatar className="h-12 w-12 border">
                       <AvatarImage src={employee.avatar_url || undefined} alt={`${employee.first_name} ${employee.last_name}`} />
                       <AvatarFallback>{initials}</AvatarFallback>
@@ -74,7 +76,24 @@ export const EmployeeGrid = ({ employees, isLoading }: EmployeeGridProps) => {
                       <p className="text-sm text-gray-500">{employee.position}</p>
                     </div>
                   </div>
-                  <StatusBadge status={employee.status} />
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate(`/employees/${employee.id}`)}
+                      className="h-8 w-8"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate(`/employee-form/${employee.id}`)}
+                      className="h-8 w-8"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 
                 <div className="space-y-2 text-sm">
@@ -90,6 +109,10 @@ export const EmployeeGrid = ({ employees, isLoading }: EmployeeGridProps) => {
                     <Calendar className="h-4 w-4 text-gray-400" />
                     {new Date(employee.hire_date).toLocaleDateString("tr-TR")}
                   </p>
+                </div>
+
+                <div className="mt-4">
+                  <StatusBadge status={employee.status} />
                 </div>
               </div>
               
