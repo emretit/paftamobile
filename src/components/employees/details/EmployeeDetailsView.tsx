@@ -2,14 +2,54 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Mail, Phone, Briefcase, Building, MapPin, User, Heart, Clock } from "lucide-react";
-import type { Employee } from "../types";
+import { 
+  Calendar, 
+  Mail, 
+  Phone, 
+  Briefcase, 
+  Building, 
+  MapPin, 
+  User, 
+  Heart, 
+  Clock, 
+  CreditCard, 
+  UserCheck,
+  Flag
+} from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import type { Employee } from "@/types/employee";
 
 interface EmployeeDetailsViewProps {
   employee: Employee;
+  isLoading: boolean;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  refetch: () => void;
 }
 
-export const EmployeeDetailsView = ({ employee }: EmployeeDetailsViewProps) => {
+export const EmployeeDetailsView = ({ 
+  employee, 
+  isLoading, 
+  activeTab, 
+  setActiveTab, 
+  refetch 
+}: EmployeeDetailsViewProps) => {
+  
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("tr-TR");
+  };
+
+  const getStatusColor = (status: string) => {
+    return status === "aktif" 
+      ? "bg-green-100 text-green-800 border-green-200" 
+      : "bg-red-100 text-red-800 border-red-200";
+  };
+
+  const getInitials = () => {
+    return `${employee.first_name.charAt(0)}${employee.last_name.charAt(0)}`;
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <Card className="border-0 shadow-md bg-gradient-to-r from-white to-gray-50/80 overflow-hidden">
@@ -20,8 +60,7 @@ export const EmployeeDetailsView = ({ employee }: EmployeeDetailsViewProps) => {
               <Avatar className="h-24 w-24 border-4 border-white shadow-md">
                 <AvatarImage src={employee.avatar_url || undefined} alt={`${employee.first_name} ${employee.last_name}`} />
                 <AvatarFallback className="text-3xl bg-primary/10 text-primary">
-                  {employee.first_name[0]}
-                  {employee.last_name[0]}
+                  {getInitials()}
                 </AvatarFallback>
               </Avatar>
               <div>
@@ -33,12 +72,12 @@ export const EmployeeDetailsView = ({ employee }: EmployeeDetailsViewProps) => {
                   {employee.position}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <Badge variant={employee.status === 'active' ? 'default' : 'secondary'} className="capitalize">
-                    {employee.status === 'active' ? 'Aktif' : 'Pasif'}
+                  <Badge variant={employee.status === 'aktif' ? 'default' : 'secondary'} className={`capitalize ${getStatusColor(employee.status)}`}>
+                    {employee.status === 'aktif' ? 'Aktif' : 'Pasif'}
                   </Badge>
                   <span className="text-sm text-gray-500 flex items-center">
                     <MapPin className="h-3 w-3 inline mr-1" />
-                    İstanbul, Türkiye
+                    {employee.city || employee.country || 'Konum Bilgisi Yok'}
                   </span>
                   <span className="text-sm text-gray-500 flex items-center">
                     <Clock className="h-3 w-3 inline mr-1" />
@@ -57,66 +96,263 @@ export const EmployeeDetailsView = ({ employee }: EmployeeDetailsViewProps) => {
         </CardHeader>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border-0 shadow-md bg-white hover:shadow-lg transition-shadow">
-          <CardHeader className="border-b border-gray-100 pb-4">
-            <CardTitle className="text-lg flex items-center">
-              <User className="h-5 w-5 mr-2 text-primary" />
-              Kişisel Bilgiler
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-4">
-            <div className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
-              <Mail className="h-5 w-5 mr-3 text-gray-400" />
-              <div>
-                <p className="text-xs text-gray-500">E-posta</p>
-                <p className="text-sm font-medium">{employee.email}</p>
-              </div>
-            </div>
-            <div className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
-              <Phone className="h-5 w-5 mr-3 text-gray-400" />
-              <div>
-                <p className="text-xs text-gray-500">Telefon</p>
-                <p className="text-sm font-medium">{employee.phone || "-"}</p>
-              </div>
-            </div>
-            <div className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
-              <Calendar className="h-5 w-5 mr-3 text-gray-400" />
-              <div>
-                <p className="text-xs text-gray-500">İşe Başlama Tarihi</p>
-                <p className="text-sm font-medium">
-                  {new Date(employee.hire_date).toLocaleDateString('tr-TR')}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="general">Genel Bilgiler</TabsTrigger>
+          <TabsTrigger value="personal">Kişisel Bilgiler</TabsTrigger>
+          <TabsTrigger value="employment">İş Bilgileri</TabsTrigger>
+          <TabsTrigger value="contact">İletişim Bilgileri</TabsTrigger>
+          <TabsTrigger value="emergency">Acil Durum</TabsTrigger>
+        </TabsList>
 
-        <Card className="border-0 shadow-md bg-white hover:shadow-lg transition-shadow">
-          <CardHeader className="border-b border-gray-100 pb-4">
-            <CardTitle className="text-lg flex items-center">
-              <Building className="h-5 w-5 mr-2 text-primary" />
-              Departman Bilgileri
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-4">
-            <div className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
-              <Building className="h-5 w-5 mr-3 text-gray-400" />
-              <div>
-                <p className="text-xs text-gray-500">Departman</p>
-                <p className="text-sm font-medium">{employee.department}</p>
+        <TabsContent value="general" className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="border-b pb-3">
+              <CardTitle className="text-lg font-medium flex items-center">
+                <User className="h-5 w-5 mr-2 text-primary" />
+                Temel Bilgiler
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Ad</p>
+                  <p className="font-medium">{employee.first_name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Soyad</p>
+                  <p className="font-medium">{employee.last_name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">ID/SSN</p>
+                  <p className="font-medium">{employee.id_ssn || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Durum</p>
+                  <p className="font-medium">
+                    <Badge className={getStatusColor(employee.status)}>
+                      {employee.status === 'aktif' ? 'Aktif' : 'Pasif'}
+                    </Badge>
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
-              <Briefcase className="h-5 w-5 mr-3 text-gray-400" />
-              <div>
-                <p className="text-xs text-gray-500">Pozisyon</p>
-                <p className="text-sm font-medium">{employee.position}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="border-b pb-3">
+              <CardTitle className="text-lg font-medium flex items-center">
+                <Briefcase className="h-5 w-5 mr-2 text-primary" />
+                Pozisyon
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Departman</p>
+                  <p className="font-medium">{employee.department}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Pozisyon</p>
+                  <p className="font-medium">{employee.position}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">İşe Başlama Tarihi</p>
+                  <p className="font-medium">{formatDate(employee.hire_date)}</p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="personal" className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="border-b pb-3">
+              <CardTitle className="text-lg font-medium flex items-center">
+                <User className="h-5 w-5 mr-2 text-primary" />
+                Kişisel Bilgiler
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Doğum Tarihi</p>
+                  <p className="font-medium">{formatDate(employee.date_of_birth)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Cinsiyet</p>
+                  <p className="font-medium">{employee.gender || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Medeni Durum</p>
+                  <p className="font-medium">{employee.marital_status || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Kimlik/SSN</p>
+                  <p className="font-medium">{employee.id_ssn || "-"}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="border-b pb-3">
+              <CardTitle className="text-lg font-medium flex items-center">
+                <MapPin className="h-5 w-5 mr-2 text-primary" />
+                Adres Bilgileri
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Adres</p>
+                  <p className="font-medium">{employee.address || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Ülke</p>
+                  <p className="font-medium">{employee.country || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Şehir</p>
+                  <p className="font-medium">{employee.city || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">İlçe</p>
+                  <p className="font-medium">{employee.district || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Posta Kodu</p>
+                  <p className="font-medium">{employee.postal_code || "-"}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="employment" className="grid grid-cols-1 gap-6">
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="border-b pb-3">
+              <CardTitle className="text-lg font-medium flex items-center">
+                <Building className="h-5 w-5 mr-2 text-primary" />
+                İş ve Çalışma Bilgileri
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Departman</p>
+                  <p className="font-medium">{employee.department}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Pozisyon</p>
+                  <p className="font-medium">{employee.position}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">İşe Başlama Tarihi</p>
+                  <p className="font-medium flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                    {formatDate(employee.hire_date)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Çalışma Süresi</p>
+                  <p className="font-medium">
+                    {Math.floor((new Date().getTime() - new Date(employee.hire_date).getTime()) / (1000 * 60 * 60 * 24 * 30))} ay
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Durum</p>
+                  <p className="font-medium">
+                    <Badge className={getStatusColor(employee.status)}>
+                      {employee.status === 'aktif' ? 'Aktif' : 'Pasif'}
+                    </Badge>
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="contact" className="grid grid-cols-1 gap-6">
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="border-b pb-3">
+              <CardTitle className="text-lg font-medium flex items-center">
+                <Phone className="h-5 w-5 mr-2 text-primary" />
+                İletişim Bilgileri
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-start space-x-3">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Mail className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">E-posta</p>
+                    <p className="font-medium">{employee.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Phone className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Telefon</p>
+                    <p className="font-medium">{employee.phone || "-"}</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <MapPin className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Tam Adres</p>
+                    <p className="font-medium">
+                      {employee.address ? 
+                        `${employee.address}${employee.district ? ', ' + employee.district : ''}${employee.city ? ', ' + employee.city : ''}${employee.country ? ', ' + employee.country : ''}` 
+                        : "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="emergency" className="grid grid-cols-1 gap-6">
+          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="border-b pb-3">
+              <CardTitle className="text-lg font-medium flex items-center">
+                <UserCheck className="h-5 w-5 mr-2 text-primary" />
+                Acil Durum İrtibat Bilgileri
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              {(employee.emergency_contact_name || employee.emergency_contact_phone) ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <p className="text-sm text-gray-500">Ad Soyad</p>
+                    <p className="font-medium">{employee.emergency_contact_name || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Telefon</p>
+                    <p className="font-medium">{employee.emergency_contact_phone || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">İlişki</p>
+                    <p className="font-medium">{employee.emergency_contact_relation || "-"}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <Flag className="h-10 w-10 text-gray-300 mx-auto mb-2" />
+                  <p className="text-gray-500">Acil durum irtibat bilgisi henüz eklenmemiş</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
