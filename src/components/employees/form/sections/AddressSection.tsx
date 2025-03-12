@@ -11,7 +11,7 @@ interface AddressSectionProps {
 export const AddressSection = ({ control }: AddressSectionProps) => {
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-4">Address Information</h3>
+      <h3 className="text-lg font-semibold mb-4">Adres Bilgileri</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
           <FormField
@@ -19,9 +19,9 @@ export const AddressSection = ({ control }: AddressSectionProps) => {
             name="address"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Address</FormLabel>
+                <FormLabel>Adres</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Address" {...field} />
+                  <Textarea placeholder="Adres bilgisi" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -34,9 +34,9 @@ export const AddressSection = ({ control }: AddressSectionProps) => {
           name="country"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Country</FormLabel>
+              <FormLabel>Ülke</FormLabel>
               <FormControl>
-                <Input placeholder="Country" {...field} />
+                <Input placeholder="Ülke" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -48,9 +48,9 @@ export const AddressSection = ({ control }: AddressSectionProps) => {
           name="city"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>City</FormLabel>
+              <FormLabel>Şehir</FormLabel>
               <FormControl>
-                <Input placeholder="City" {...field} />
+                <Input placeholder="Şehir" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -62,9 +62,9 @@ export const AddressSection = ({ control }: AddressSectionProps) => {
           name="district"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>District</FormLabel>
+              <FormLabel>İlçe</FormLabel>
               <FormControl>
-                <Input placeholder="District" {...field} />
+                <Input placeholder="İlçe" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -76,9 +76,9 @@ export const AddressSection = ({ control }: AddressSectionProps) => {
           name="postal_code"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Postal Code</FormLabel>
+              <FormLabel>Posta Kodu</FormLabel>
               <FormControl>
-                <Input placeholder="Postal Code" {...field} />
+                <Input placeholder="Posta kodu" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

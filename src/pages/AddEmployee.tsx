@@ -24,12 +24,12 @@ const AddEmployee = ({ isCollapsed, setIsCollapsed }: AddEmployeeProps) => {
             onClick={() => navigate("/employees")}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Employees
+            Çalışanlara Dön
           </Button>
           
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Add New Employee</h1>
-            <p className="text-gray-500">Create a new employee record</p>
+            <h1 className="text-2xl font-bold text-gray-900">Yeni Çalışan Ekle</h1>
+            <p className="text-gray-500">Yeni bir çalışan kaydı oluşturun</p>
           </div>
           
           <SimpleEmployeeForm />

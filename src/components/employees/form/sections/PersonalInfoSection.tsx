@@ -11,14 +11,14 @@ interface PersonalInfoSectionProps {
 export const PersonalInfoSection = ({ control }: PersonalInfoSectionProps) => {
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
+      <h3 className="text-lg font-semibold mb-4">Kişisel Bilgiler</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={control}
           name="date_of_birth"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Date of Birth</FormLabel>
+              <FormLabel>Doğum Tarihi</FormLabel>
               <FormControl>
                 <Input type="date" {...field} />
               </FormControl>
@@ -32,20 +32,20 @@ export const PersonalInfoSection = ({ control }: PersonalInfoSectionProps) => {
           name="gender"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Gender</FormLabel>
+              <FormLabel>Cinsiyet</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 value={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
+                    <SelectValue placeholder="Cinsiyet seçin" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="male">Erkek</SelectItem>
+                  <SelectItem value="female">Kadın</SelectItem>
+                  <SelectItem value="other">Diğer</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -58,21 +58,21 @@ export const PersonalInfoSection = ({ control }: PersonalInfoSectionProps) => {
           name="marital_status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Marital Status</FormLabel>
+              <FormLabel>Medeni Durum</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 value={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select marital status" />
+                    <SelectValue placeholder="Medeni durum seçin" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="single">Single</SelectItem>
-                  <SelectItem value="married">Married</SelectItem>
-                  <SelectItem value="divorced">Divorced</SelectItem>
-                  <SelectItem value="widowed">Widowed</SelectItem>
+                  <SelectItem value="single">Bekar</SelectItem>
+                  <SelectItem value="married">Evli</SelectItem>
+                  <SelectItem value="divorced">Boşanmış</SelectItem>
+                  <SelectItem value="widowed">Dul</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -85,9 +85,9 @@ export const PersonalInfoSection = ({ control }: PersonalInfoSectionProps) => {
           name="id_ssn"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>National ID / SSN</FormLabel>
+              <FormLabel>TC Kimlik No / SSN</FormLabel>
               <FormControl>
-                <Input placeholder="National ID / SSN" {...field} />
+                <Input placeholder="TC Kimlik No veya SSN" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

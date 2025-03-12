@@ -11,98 +11,113 @@ interface BasicInfoSectionProps {
 export const BasicInfoSection = ({ control }: BasicInfoSectionProps) => {
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
+      <h3 className="text-lg font-semibold mb-4">Temel Bilgiler</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={control}
           name="first_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>First Name</FormLabel>
+              <FormLabel>Ad</FormLabel>
               <FormControl>
-                <Input placeholder="First name" {...field} />
+                <Input placeholder="Çalışanın adı" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={control}
           name="last_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Last Name</FormLabel>
+              <FormLabel>Soyad</FormLabel>
               <FormControl>
-                <Input placeholder="Last name" {...field} />
+                <Input placeholder="Çalışanın soyadı" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>E-posta</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="email@example.com" {...field} />
+                <Input type="email" placeholder="E-posta adresi" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={control}
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone</FormLabel>
+              <FormLabel>Telefon</FormLabel>
               <FormControl>
-                <Input placeholder="Phone number" {...field} />
+                <Input placeholder="Telefon numarası" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={control}
           name="position"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Position</FormLabel>
+              <FormLabel>Pozisyon</FormLabel>
               <FormControl>
-                <Input placeholder="Position" {...field} />
+                <Input placeholder="Çalışanın pozisyonu" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={control}
           name="department"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Department</FormLabel>
-              <FormControl>
-                <Input placeholder="Department" {...field} />
-              </FormControl>
+              <FormLabel>Departman</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Departman seçin" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Mühendislik">Mühendislik</SelectItem>
+                  <SelectItem value="Satış">Satış</SelectItem>
+                  <SelectItem value="Pazarlama">Pazarlama</SelectItem>
+                  <SelectItem value="Finans">Finans</SelectItem>
+                  <SelectItem value="İnsan Kaynakları">İnsan Kaynakları</SelectItem>
+                  <SelectItem value="Operasyon">Operasyon</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={control}
           name="hire_date"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Hire Date</FormLabel>
+              <FormLabel>İşe Başlama Tarihi</FormLabel>
               <FormControl>
                 <Input type="date" {...field} />
               </FormControl>
@@ -110,25 +125,25 @@ export const BasicInfoSection = ({ control }: BasicInfoSectionProps) => {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={control}
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Status</FormLabel>
+              <FormLabel>Durum</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder="Durum seçin" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="aktif">Active</SelectItem>
-                  <SelectItem value="pasif">Inactive</SelectItem>
+                  <SelectItem value="aktif">Aktif</SelectItem>
+                  <SelectItem value="pasif">Pasif</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

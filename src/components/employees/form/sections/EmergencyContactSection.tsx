@@ -10,16 +10,16 @@ interface EmergencyContactSectionProps {
 export const EmergencyContactSection = ({ control }: EmergencyContactSectionProps) => {
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-4">Emergency Contact</h3>
+      <h3 className="text-lg font-semibold mb-4">Acil Durum İletişim Bilgileri</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={control}
           name="emergency_contact_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Contact Name</FormLabel>
+              <FormLabel>İletişim Kişisi</FormLabel>
               <FormControl>
-                <Input placeholder="Emergency contact name" {...field} />
+                <Input placeholder="Acil durumda aranacak kişi" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -31,9 +31,9 @@ export const EmergencyContactSection = ({ control }: EmergencyContactSectionProp
           name="emergency_contact_relation"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Relationship</FormLabel>
+              <FormLabel>Yakınlık Derecesi</FormLabel>
               <FormControl>
-                <Input placeholder="Relationship" {...field} />
+                <Input placeholder="Yakınlık derecesi" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -45,9 +45,9 @@ export const EmergencyContactSection = ({ control }: EmergencyContactSectionProp
           name="emergency_contact_phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Contact Phone</FormLabel>
+              <FormLabel>İletişim Telefonu</FormLabel>
               <FormControl>
-                <Input placeholder="Emergency contact phone" {...field} />
+                <Input placeholder="Acil durum telefon numarası" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
