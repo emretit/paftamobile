@@ -88,8 +88,9 @@ export const useProposals = (filters?: ProposalFilters) => {
           status = 'new'; // Default fallback
         }
 
-        // Handle employee data with safeguards for when employee is an error object
+        // Safely handle employee data
         let employeeData = { first_name: "", last_name: "" };
+        
         if (item.employee && typeof item.employee === 'object' && !('error' in item.employee)) {
           employeeData = {
             first_name: item.employee.first_name || "",

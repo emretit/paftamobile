@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Employee } from "@/types/employee";
+import type { Employee } from "@/types/task";
 
 const formSchema = z.object({
   first_name: z.string().min(2, "First name must be at least 2 characters"),
@@ -61,7 +61,21 @@ const SimpleEmployeeForm = () => {
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("employees").insert(data);
+      // Ensure all required fields are present
+      const employeeData = {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+        phone: data.phone || null,
+        position: data.position,
+        department: data.department,
+        hire_date: data.hire_date,
+        status: data.status
+      };
+
+      const { error } = await supabase
+        .from("employees")
+        .insert(employeeData);
 
       if (error) throw error;
 
