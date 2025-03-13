@@ -41,22 +41,27 @@ export const useProposals = (filters?: {
 
       // Transform data for display
       const transformedData = data.map((proposal) => {
-        // Handle potential null employee data safely
-        const employeeName = proposal.employee 
-          ? `${proposal.employee.first_name || ''} ${proposal.employee.last_name || ''}`.trim() || '-'
-          : '-';
+        // Handle potential null employee data safely by using a type guard
+        let employeeName = '-';
+        let employeeId = null;
         
-        const employeeId = proposal.employee?.id || null;
+        if (proposal.employee && typeof proposal.employee === 'object' && 'first_name' in proposal.employee) {
+          employeeName = `${proposal.employee.first_name || ''} ${proposal.employee.last_name || ''}`.trim() || '-';
+          employeeId = proposal.employee.id || null;
+        }
         
         return {
           ...proposal,
           customer_name: proposal.customer?.name || "-",
           employee_name: employeeName,
           employee_id: employeeId,
+          // Remove the original employee object to avoid type issues
+          employee: undefined
         };
-      }) as Proposal[];
+      });
 
-      return transformedData;
+      // Use type assertion to make TypeScript happy
+      return transformedData as unknown as Proposal[];
     },
   });
 

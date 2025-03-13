@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,7 @@ import { TopBar } from "@/components/TopBar";
 import CustomerListHeader from "@/components/customers/CustomerListHeader";
 import CustomerListFilters from "@/components/customers/CustomerListFilters";
 import CustomerList from "@/components/customers/CustomerList";
+import CustomerSummaryCharts from "@/components/customers/CustomerSummaryCharts";
 import { Customer } from "@/types/customer";
 
 interface ContactsProps {
@@ -25,7 +27,7 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
       const { data, error } = await supabase
         .from('customers')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('name', { ascending: true }); // Sort by name by default
       
       if (error) {
         console.error('Error fetching customers:', error);
@@ -67,6 +69,10 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
         <TopBar />
         <div className="p-4 sm:p-8">
           <CustomerListHeader customers={customers} />
+          
+          {/* Add summary charts */}
+          <CustomerSummaryCharts customers={customers} />
+          
           <CustomerListFilters 
             search={search}
             setSearch={setSearch}
