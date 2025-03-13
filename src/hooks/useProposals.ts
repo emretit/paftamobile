@@ -34,8 +34,11 @@ export const useProposals = (filters?: ProposalFilters) => {
 
         console.log("Fetched proposals:", data);
 
-        // Return the raw data without relationship transformations
-        return data as Proposal[];
+        // Parse items JSON field to ensure it's properly typed
+        return (data || []).map(proposal => ({
+          ...proposal,
+          items: Array.isArray(proposal.items) ? proposal.items : []
+        })) as Proposal[];
       } catch (error) {
         console.error("Error in useProposals:", error);
         throw error;

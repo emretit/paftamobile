@@ -1,24 +1,17 @@
 
-import { ProposalStatus } from "@/types/proposal";
-import { statusStyles, statusLabels } from "../constants";
-import { StatusBadge as GenericStatusBadge } from "@/components/ui/status-badge";
+import { statusLabels, statusStyles } from "../constants";
 
 interface StatusBadgeProps {
-  status: ProposalStatus;
+  status: string;
 }
 
 export const StatusBadge = ({ status }: StatusBadgeProps) => {
-  const style = statusStyles[status];
+  const style = statusStyles[status] || { bg: "bg-gray-100", text: "text-gray-800" };
+  const label = statusLabels[status] || status;
   
   return (
-    <GenericStatusBadge
-      label={statusLabels[status]}
-      variant="custom"
-      customColors={{
-        bg: style.bg,
-        text: style.text
-      }}
-      size="sm"
-    />
+    <span className={`px-2 py-1 text-xs rounded-full font-medium ${style.bg} ${style.text}`}>
+      {label}
+    </span>
   );
 };

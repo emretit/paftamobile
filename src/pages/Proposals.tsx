@@ -8,6 +8,7 @@ import { ProposalActions } from "@/components/proposals/ProposalActions";
 import ProposalTable from "@/components/proposals/ProposalTable";
 import { ProposalFilters, ProposalFilters as ProposalFiltersType } from "@/components/proposals/ProposalFilters";
 import { Proposal } from "@/types/proposal";
+import { ProposalDetailSheet } from "@/components/proposals/ProposalDetailSheet";
 
 interface ProposalsProps {
   isCollapsed: boolean;
@@ -30,13 +31,23 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
   // Call useProposals without applying any filters
   const { data: proposals, isLoading, error } = useProposals();
 
+  // State for the detail sheet
+  const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
+  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
+
   const handleFilterChange = (newFilters: ProposalFiltersType) => {
     setFilters(newFilters);
     // We're not using these filters anymore
   };
 
   const handleProposalClick = (proposal: Proposal) => {
-    navigate(`/proposals/${proposal.id}`);
+    setSelectedProposal(proposal);
+    setIsDetailSheetOpen(true);
+  };
+
+  const handleCloseDetailSheet = () => {
+    setIsDetailSheetOpen(false);
+    setSelectedProposal(null);
   };
 
   return (
@@ -75,6 +86,13 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
               />
             </CardContent>
           </Card>
+          
+          {/* Proposal Detail Sheet */}
+          <ProposalDetailSheet
+            proposal={selectedProposal}
+            isOpen={isDetailSheetOpen}
+            onClose={handleCloseDetailSheet}
+          />
         </div>
       </main>
     </div>

@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Deal } from "@/types/deal";
@@ -9,10 +8,17 @@ export const formatDate = (date: Date | undefined) => {
   return format(new Date(date), 'dd.MM.yyyy', { locale: tr });
 };
 
-export const formatMoney = (amount: number) => {
-  return new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: 'TRY'
+/**
+ * Format money for display
+ */
+export const formatMoney = (amount: number, currency = "TRY") => {
+  if (!amount && amount !== 0) return "₺0";
+  
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(amount);
 };
 
