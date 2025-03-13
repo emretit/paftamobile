@@ -22,7 +22,7 @@ import {
 const crmItems = [
   { path: "/deals", icon: PieChart, label: "Fırsatlar" },
   { path: "/proposals", icon: FileText, label: "Teklifler" },
-  { path: "/proposal-create", icon: FilePlus, label: "Yeni Teklif" },  
+  { path: "/proposal-form", icon: FilePlus, label: "Yeni Teklif" },  
   { path: "/tasks", icon: ListTodo, label: "Görevler" }
 ];
 

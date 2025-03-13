@@ -20,7 +20,7 @@ export const ProposalActions = ({ proposal }: ProposalActionsProps) => {
       </div>
       <Button 
         size="sm" 
-        onClick={() => navigate("/proposal-create")}
+        onClick={() => navigate("/proposal-form")}
       >
         <Plus className="h-4 w-4 mr-2" />
         Yeni Teklif

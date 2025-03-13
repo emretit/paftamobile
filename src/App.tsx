@@ -14,7 +14,7 @@ import Suppliers from "@/pages/Suppliers";
 import SupplierDetails from "@/pages/SupplierDetails";
 import SupplierForm from "@/pages/SupplierForm";
 import Proposals from "@/pages/Proposals";
-import ProposalCreate from "@/pages/ProposalCreate";
+import ProposalForm from "@/pages/ProposalForm";
 import Deals from "@/pages/Deals";
 import DealsTable from "@/pages/DealsTable";
 import Finance from "@/pages/Finance";
@@ -105,8 +105,8 @@ function App() {
             element={<ProtectedRoute><Proposals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
           <Route
-            path="/proposal-create"
-            element={<ProtectedRoute><ProposalCreate isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+            path="/proposal-form"
+            element={<ProtectedRoute><ProposalForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
           <Route
             path="/deals"
