@@ -1,15 +1,13 @@
 
-import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Navbar from "@/components/Navbar";
+import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import CustomerFormHeader from "@/components/customers/CustomerFormHeader";
-import CustomerFormFields from "@/components/customers/CustomerFormFields";
 import { CustomerFormData } from "@/types/customer";
+import Navbar from "@/components/Navbar";
+import CustomerFormHeader from "@/components/customers/CustomerFormHeader";
+import CustomerFormContent from "@/components/customers/CustomerFormContent";
 
 interface CustomerEditProps {
   isCollapsed: boolean;
@@ -155,24 +153,14 @@ const CustomerEdit = ({ isCollapsed, setIsCollapsed }: CustomerEditProps) => {
       >
         <CustomerFormHeader id={id} />
 
-        <Card className="max-w-2xl p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <CustomerFormFields formData={formData} setFormData={setFormData} />
-
-            <div className="flex justify-end space-x-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate('/contacts')}
-              >
-                İptal
-              </Button>
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? "Güncelleniyor..." : "Güncelle"}
-              </Button>
-            </div>
-          </form>
-        </Card>
+        <CustomerFormContent 
+          formData={formData}
+          setFormData={setFormData}
+          handleSubmit={handleSubmit}
+          isPending={mutation.isPending}
+          isEdit={true}
+          onCancel={() => navigate('/contacts')}
+        />
       </main>
     </div>
   );

@@ -3,55 +3,57 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Proposal } from "@/types/proposal";
 
-export const useProposals = (filters?: any) => {
+export const useProposals = (filters?: {
+  search?: string;
+  status?: string;
+  date?: string;
+}) => {
   const { data, isLoading, error } = useQuery({
     queryKey: ["proposals", filters],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const query = supabase
         .from("proposals")
         .select(`
           *,
-          customer:customer_id (
-            id,
-            name
-          ),
-          employee:employee_id (
-            id,
-            first_name,
-            last_name
-          )
+          customer:customer_id(id, name),
+          employee:employee_id(*)
         `)
-        .order('created_at', { ascending: false });
+        .order("created_at", { ascending: false });
+
+      if (filters?.status && filters.status !== "all") {
+        query.eq("status", filters.status);
+      }
+
+      if (filters?.search) {
+        query.or(
+          `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`
+        );
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
-      
-      // Transform the data to match Proposal type
-      const formattedData = (data || []).map(proposal => {
-        // Handle null employee more safely with optional chaining and nullish coalescing
-        const employeeFirstName = proposal.employee?.first_name ?? '';
-        const employeeLastName = proposal.employee?.last_name ?? '';
-        const employeeId = proposal.employee?.id ?? '';
+
+      // Transform data for display
+      const transformedData = data.map((proposal) => {
+        // Handle potential null employee data safely
+        const employeeName = proposal.employee 
+          ? `${proposal.employee.first_name || ''} ${proposal.employee.last_name || ''}`.trim()
+          : '-';
+        
+        const employeeId = proposal.employee?.id || null;
         
         return {
           ...proposal,
-          customer_name: proposal.customer?.name || '-',
-          created_by_name: employeeFirstName || employeeLastName ? 
-            `${employeeFirstName} ${employeeLastName}`.trim() : '-',
-          created_by: {
-            id: employeeId,
-            name: employeeFirstName || employeeLastName ? 
-              `${employeeFirstName} ${employeeLastName}`.trim() : '-'
-          }
+          customer_name: proposal.customer?.name || "-",
+          employee_name: employeeName,
+          employee_id: employeeId,
         };
       });
 
-      return formattedData as unknown as Proposal[];
-    }
+      return transformedData as Proposal[];
+    },
   });
 
-  return {
-    proposals: data || [],
-    isLoading,
-    error
-  };
+  return { data, isLoading, error };
 };

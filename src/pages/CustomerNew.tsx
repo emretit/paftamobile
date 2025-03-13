@@ -1,15 +1,13 @@
 
-import Navbar from "@/components/Navbar";
-import CustomerFormHeader from "@/components/customers/CustomerFormHeader";
-import CustomerFormFields from "@/components/customers/CustomerFormFields";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerFormData } from "@/types/customer";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import Navbar from "@/components/Navbar";
+import CustomerFormHeader from "@/components/customers/CustomerFormHeader";
+import CustomerFormContent from "@/components/customers/CustomerFormContent";
 
 interface CustomerNewProps {
   isCollapsed: boolean;
@@ -60,7 +58,7 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
         .single();
 
       if (error) {
-        console.error('Müşteri ekleme hatası:', error);
+        console.error('Customer add error:', error);
         throw error;
       }
 
@@ -75,7 +73,7 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
       navigate('/contacts');
     },
     onError: (error) => {
-      console.error('Form gönderim hatası:', error);
+      console.error('Form submission error:', error);
       toast({
         title: "Hata",
         description: "Müşteri eklenirken bir hata oluştu. Lütfen tekrar deneyin.",
@@ -103,24 +101,14 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
       >
         <CustomerFormHeader />
 
-        <Card className="max-w-2xl p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <CustomerFormFields formData={formData} setFormData={setFormData} />
-
-            <div className="flex justify-end space-x-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate('/contacts')}
-              >
-                İptal
-              </Button>
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? "Kaydediliyor..." : "Kaydet"}
-              </Button>
-            </div>
-          </form>
-        </Card>
+        <CustomerFormContent 
+          formData={formData}
+          setFormData={setFormData}
+          handleSubmit={handleSubmit}
+          isPending={mutation.isPending}
+          isEdit={false}
+          onCancel={() => navigate('/contacts')}
+        />
       </main>
     </div>
   );
