@@ -25,7 +25,12 @@ const ExcelImportExport = ({ customers }: ExcelImportExportProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [progress, setProgress] = useState(0);
-  const [stats, setStats] = useState({ total: 0, success: 0, failed: 0 });
+  const [stats, setStats] = useState({ 
+    total: 0, 
+    success: 0, 
+    failed: 0, 
+    duplicates: 0 
+  });
   const queryClient = useQueryClient();
 
   const handleExport = () => {
@@ -51,11 +56,26 @@ const ExcelImportExport = ({ customers }: ExcelImportExportProps) => {
       // Parse Excel file
       const importedCustomers = await importCustomersFromExcel(selectedFile);
       
-      // Update stats for UI
-      setStats({ total: importedCustomers.length, success: 0, failed: 0 });
+      // Update stats for UI with duplicates information
+      setStats({ 
+        total: selectedFile.size > 0 ? importedCustomers.length : 0, 
+        success: 0, 
+        failed: 0, 
+        duplicates: 0
+      });
       setProgress(30);
       
-      console.log(`İçe aktarılacak toplam müşteri sayısı: ${importedCustomers.length}`);
+      console.log(`İçe aktarılacak toplam yeni müşteri sayısı: ${importedCustomers.length}`);
+      
+      if (importedCustomers.length === 0) {
+        setProgress(100);
+        setTimeout(() => {
+          setIsImportDialogOpen(false);
+          setSelectedFile(null);
+          toast.info('Tüm müşteriler zaten sisteme eklenmiş');
+        }, 1500);
+        return;
+      }
       
       // Process in batches to avoid timeout issues
       const BATCH_SIZE = 50;
@@ -100,7 +120,8 @@ const ExcelImportExport = ({ customers }: ExcelImportExportProps) => {
         setStats({
           total: importedCustomers.length,
           success: successCount,
-          failed: failedCount
+          failed: failedCount,
+          duplicates: stats.duplicates
         });
         
         const newProgress = 30 + Math.floor((i + batch.length) / importedCustomers.length * 70);
@@ -115,7 +136,7 @@ const ExcelImportExport = ({ customers }: ExcelImportExportProps) => {
         setIsImportDialogOpen(false);
         setSelectedFile(null);
         queryClient.invalidateQueries({ queryKey: ['customers'] });
-        toast.success(`${successCount} müşteri başarıyla içe aktarıldı, ${failedCount} başarısız`);
+        toast.success(`${successCount} müşteri başarıyla içe aktarıldı, ${failedCount} başarısız, ${stats.duplicates} mükerrer`);
       }, 1500);
       
     } catch (error) {
@@ -160,6 +181,9 @@ const ExcelImportExport = ({ customers }: ExcelImportExportProps) => {
             <p className="text-sm text-gray-500 mb-4">
               Lütfen bir Excel dosyası seçin. Dosya şu sütunları içermelidir: name, email, mobile_phone, office_phone, company, type, status, representative, balance, address, tax_number, tax_office.
             </p>
+            <p className="text-sm text-gray-500 mb-4">
+              Sistem, veritabanında zaten var olan müşterileri kontrol edecek ve sadece yeni müşterileri ekleyecektir.
+            </p>
             
             <input
               type="file"
@@ -179,6 +203,9 @@ const ExcelImportExport = ({ customers }: ExcelImportExportProps) => {
                 <div className="flex justify-between text-sm mb-1">
                   <span>{stats.success} başarılı</span>
                   <span>{stats.failed} başarısız</span>
+                  {stats.duplicates > 0 && (
+                    <span>{stats.duplicates} mükerrer</span>
+                  )}
                 </div>
                 <Progress value={progress} className="h-2" />
                 <p className="text-xs text-center mt-1">

@@ -2,6 +2,7 @@
 import * as XLSX from 'xlsx';
 import { Customer } from '@/types/customer';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 // Export customers to Excel
 export const exportCustomersToExcel = (customers: Customer[]) => {
@@ -39,13 +40,54 @@ export const exportCustomersToExcel = (customers: Customer[]) => {
   }
 };
 
+// Check if customer exists based on unique identifiers (name, email, tax_number)
+const checkCustomerExists = async (customer: Partial<Customer>): Promise<boolean> => {
+  // Create filters for checking duplicates
+  const filters = [];
+  
+  // Always check by name (required field)
+  filters.push(`name.ilike.${encodeURIComponent(customer.name || '')}`);
+  
+  // Check by email if available
+  if (customer.email) {
+    filters.push(`email.eq.${encodeURIComponent(customer.email)}`);
+  }
+  
+  // Check by tax_number if available (especially for corporate customers)
+  if (customer.tax_number) {
+    filters.push(`tax_number.eq.${encodeURIComponent(customer.tax_number)}`);
+  }
+
+  if (filters.length === 0) return false;
+  
+  // Build OR query string
+  const filterString = filters.join(',');
+  
+  try {
+    const { data, error } = await supabase
+      .from('customers')
+      .select('id')
+      .or(filterString);
+      
+    if (error) {
+      console.error('Error checking existing customer:', error);
+      return false;
+    }
+    
+    return data && data.length > 0;
+  } catch (err) {
+    console.error('Exception checking customer exists:', err);
+    return false;
+  }
+};
+
 // Import customers from Excel
 export const importCustomersFromExcel = async (file: File): Promise<Customer[]> => {
   return new Promise((resolve, reject) => {
     try {
       const reader = new FileReader();
       
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
           if (!e.target?.result) {
             toast.error('Dosya okunamadı');
@@ -65,14 +107,20 @@ export const importCustomersFromExcel = async (file: File): Promise<Customer[]> 
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
           console.log(`Excel'den okunan toplam kayıt sayısı: ${jsonData.length}`);
           
-          // Map the data to Customer type
-          const customers = jsonData.map((row: any, index: number) => {
+          // Map the data to Customer type and check for duplicates
+          const customersToImport: Customer[] = [];
+          const duplicates: number = 0;
+          
+          for (let index = 0; index < jsonData.length; index++) {
+            const row = jsonData[index] as any;
+            
             // Log problematic rows to help debug
             if (!row.name || typeof row.name !== 'string') {
               console.warn(`Uyarı - Satır ${index + 2}: Geçersiz isim değeri:`, row.name);
+              continue; // Skip invalid rows
             }
             
-            return {
+            const customer = {
               name: row.name || `Müşteri ${index + 1}`, // Provide a default value if name is missing
               email: row.email || null,
               mobile_phone: row.mobile_phone || null,
@@ -86,12 +134,20 @@ export const importCustomersFromExcel = async (file: File): Promise<Customer[]> 
               tax_number: row.tax_number || null,
               tax_office: row.tax_office || null
             };
-          }) as Customer[];
+            
+            // Check if customer already exists
+            const exists = await checkCustomerExists(customer);
+            
+            if (!exists) {
+              customersToImport.push(customer as Customer);
+            }
+          }
           
-          console.log(`İşlenen ve dönüştürülen müşteri sayısı: ${customers.length}`);
+          console.log(`İşlenen ve benzersiz müşteri sayısı: ${customersToImport.length}`);
+          console.log(`Mevcut sistemde bulunan müşteri sayısı: ${jsonData.length - customersToImport.length}`);
           
-          toast.success(`${customers.length} müşteri başarıyla okundu ve işleme hazır`);
-          resolve(customers);
+          toast.success(`${customersToImport.length} yeni müşteri bulundu ve içe aktarılmaya hazır`);
+          resolve(customersToImport);
         } catch (error) {
           console.error('Excel parse error:', error);
           toast.error('Excel dosyası işlenirken bir hata oluştu');
