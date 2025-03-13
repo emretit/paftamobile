@@ -23,6 +23,11 @@ export const convertCurrency = (
  * Format currency for display
  */
 export const formatCurrency = (amount: number, currency: string = "TRY") => {
+  // Check if currency is valid (might be undefined or object)
+  if (!currency || typeof currency !== 'string') {
+    currency = "TRY";
+  }
+  
   return new Intl.NumberFormat('tr-TR', { 
     style: 'currency', 
     currency: currency 

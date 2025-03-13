@@ -189,21 +189,26 @@ export const useProposalForm = () => {
   const saveDraft = useMutation({
     mutationFn: async (data: ProposalFormData) => {
       try {
+        // Filter out empty IDs to prevent database errors
+        const customerId = data.partnerType === "customer" && data.customer_id ? data.customer_id : null;
+        const supplierId = data.partnerType === "supplier" && data.supplier_id ? data.supplier_id : null;
+        const employeeId = data.employee_id ? data.employee_id : null;
+
         const proposalData: Omit<DatabaseProposal, 'items'> & { 
           items: Json
         } = {
-          title: data.title,
-          customer_id: data.partnerType === "customer" ? data.customer_id : null,
-          supplier_id: data.partnerType === "supplier" ? data.supplier_id : null,
-          employee_id: data.employee_id,
+          title: data.title || "Untitled Proposal",
+          customer_id: customerId,
+          supplier_id: supplierId,
+          employee_id: employeeId,
           status: "draft",
           total_value: calculateTotalValue(data),
           valid_until: data.validUntil?.toISOString() || null,
           payment_term: data.paymentTerm,
           internal_notes: data.internalNotes,
           items: data.items as unknown as Json,
-          discounts: data.discounts,
-          additional_charges: data.additionalCharges,
+          discounts: data.discounts || 0,
+          additional_charges: data.additionalCharges || 0,
         };
 
         const { error } = await supabase
