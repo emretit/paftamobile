@@ -51,21 +51,26 @@ export const useProposalForm = () => {
   const createProposal = useMutation({
     mutationFn: async (data: ProposalFormData) => {
       try {
+        // Filter out empty IDs to prevent database errors
+        const customerId = data.partnerType === "customer" && data.customer_id ? data.customer_id : null;
+        const supplierId = data.partnerType === "supplier" && data.supplier_id ? data.supplier_id : null;
+        const employeeId = data.employee_id ? data.employee_id : null;
+        
         const proposalData: Omit<DatabaseProposal, 'items'> & { 
           items: Json
         } = {
-          title: data.title,
-          customer_id: data.partnerType === "customer" ? data.customer_id : null,
-          supplier_id: data.partnerType === "supplier" ? data.supplier_id : null,
-          employee_id: data.employee_id,
+          title: data.title || "Untitled Proposal",
+          customer_id: customerId,
+          supplier_id: supplierId,
+          employee_id: employeeId,
           status: data.status,
           total_value: calculateTotalValue(data),
           valid_until: data.validUntil?.toISOString() || null,
           payment_term: data.paymentTerm,
           internal_notes: data.internalNotes,
           items: data.items as unknown as Json,
-          discounts: data.discounts,
-          additional_charges: data.additionalCharges,
+          discounts: data.discounts || 0,
+          additional_charges: data.additionalCharges || 0,
         };
 
         const { data: proposal, error: proposalError } = await supabase
@@ -119,21 +124,26 @@ export const useProposalForm = () => {
 
   const updateProposal = async (id: string, data: ProposalFormData) => {
     try {
+      // Filter out empty IDs to prevent database errors
+      const customerId = data.partnerType === "customer" && data.customer_id ? data.customer_id : null;
+      const supplierId = data.partnerType === "supplier" && data.supplier_id ? data.supplier_id : null;
+      const employeeId = data.employee_id ? data.employee_id : null;
+      
       const proposalData: Omit<DatabaseProposal, 'items'> & { 
         items: Json
       } = {
-        title: data.title,
-        customer_id: data.partnerType === "customer" ? data.customer_id : null,
-        supplier_id: data.partnerType === "supplier" ? data.supplier_id : null,
-        employee_id: data.employee_id,
+        title: data.title || "Untitled Proposal",
+        customer_id: customerId,
+        supplier_id: supplierId,
+        employee_id: employeeId,
         status: data.status,
         total_value: calculateTotalValue(data),
         valid_until: data.validUntil?.toISOString() || null,
         payment_term: data.paymentTerm,
         internal_notes: data.internalNotes,
         items: data.items as unknown as Json,
-        discounts: data.discounts,
-        additional_charges: data.additionalCharges,
+        discounts: data.discounts || 0,
+        additional_charges: data.additionalCharges || 0,
       };
 
       const { error: updateError } = await supabase
@@ -179,9 +189,13 @@ export const useProposalForm = () => {
       queryClient.invalidateQueries({ queryKey: ["proposals"] });
       queryClient.invalidateQueries({ queryKey: ["proposal", id] });
       
+      toast.success("Teklif başarıyla güncellendi");
+      navigate("/proposals");
+      
       return true;
     } catch (error) {
       console.error("Error updating proposal:", error);
+      toast.error("Teklif güncellenirken bir hata oluştu");
       throw error;
     }
   };
@@ -211,13 +225,17 @@ export const useProposalForm = () => {
           additional_charges: data.additionalCharges || 0,
         };
 
-        const { error } = await supabase
+        const { data: proposal, error } = await supabase
           .from("proposals")
-          .insert([proposalData]);
+          .insert([proposalData])
+          .select();
 
         if (error) throw error;
         
+        console.log("Draft proposal saved:", proposal);
+        
         queryClient.invalidateQueries({ queryKey: ["proposals"] });
+        return proposal;
       } catch (error) {
         console.error("Error in saveDraft:", error);
         throw error;
