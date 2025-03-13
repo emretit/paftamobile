@@ -4,7 +4,7 @@ import { FormProvider } from "react-hook-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Save, Send } from "lucide-react";
-import { ProposalFormProps, ProposalItem } from "@/types/proposal-form";
+import { ProposalItem } from "@/types/proposal-form";
 import ProposalHeader from "./ProposalHeader";
 import ProposalPartnerSelect from "./ProposalPartnerSelect";
 import ProposalEmployeeSelect from "./ProposalEmployeeSelect";

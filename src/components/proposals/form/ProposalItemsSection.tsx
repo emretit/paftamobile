@@ -1,360 +1,80 @@
 
-import React, { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React from "react";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Search, Plus, Trash2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { 
-  Dialog, 
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProposalItem } from "@/types/proposal-form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { v4 as uuidv4 } from "uuid";
+import { useProposalItems } from "./items/useProposalItems";
+import ProposalItemsHeader from "./items/ProposalItemsHeader";
+import ProposalItemsTable from "./items/ProposalItemsTable";
+import ProductSearchDialog from "./items/ProductSearchDialog";
+import { 
+  CURRENCY_OPTIONS, 
+  TAX_RATE_OPTIONS 
+} from "./items/proposalItemsConstants";
 
 interface ProposalItemsSectionProps {
   items: ProposalItem[];
   setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>;
 }
 
-const CURRENCY_OPTIONS = [
-  { value: "TRY", label: "₺ TRY" },
-  { value: "USD", label: "$ USD" },
-  { value: "EUR", label: "€ EUR" },
-  { value: "GBP", label: "£ GBP" },
-];
-
-const TAX_RATE_OPTIONS = [
-  { value: 0, label: "0%" },
-  { value: 1, label: "1%" },
-  { value: 8, label: "8%" },
-  { value: 10, label: "10%" },
-  { value: 18, label: "18%" },
-  { value: 20, label: "20%" },
-];
-
 const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [productDialogOpen, setProductDialogOpen] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState("TRY");
-  const [exchangeRates, setExchangeRates] = useState<{[key: string]: number}>({
-    TRY: 1,
-    USD: 32.5,
-    EUR: 35.2,
-    GBP: 41.3,
-  });
+  const {
+    selectedCurrency,
+    productDialogOpen,
+    setProductDialogOpen,
+    formatCurrency,
+    handleCurrencyChange,
+    handleAddItem,
+    handleSelectProduct,
+    handleRemoveItem,
+    handleItemChange,
+  } = useProposalItems();
 
-  // Fetch products from Supabase
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from("products")
-          .select("*")
-          .order("name");
-        
-        if (error) throw error;
-        return data || [];
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        return [];
-      }
-    },
-  });
-
-  // Filter products based on search query
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleAddItem = () => {
-    const newItem: ProposalItem = {
-      id: uuidv4(),
-      name: "",
-      quantity: 1,
-      unitPrice: 0,
-      taxRate: 18, // Default tax rate
-      totalPrice: 0,
-      currency: selectedCurrency
-    };
-    
-    setItems([...items, newItem]);
+  const onOpenProductDialog = () => setProductDialogOpen(true);
+  const onAddItem = () => handleAddItem(items, setItems);
+  
+  const onItemChange = (index: number, field: keyof ProposalItem, value: string | number) => {
+    handleItemChange(index, field, value, items, setItems);
   };
-
-  const handleSelectProduct = (product: any) => {
-    const newItem: ProposalItem = {
-      id: uuidv4(),
-      product_id: product.id,
-      name: product.name,
-      quantity: 1,
-      unitPrice: product.price || 0,
-      taxRate: 18, // Default tax rate
-      totalPrice: (product.price || 0),
-      currency: selectedCurrency
-    };
-    
-    setItems([...items, newItem]);
-    setProductDialogOpen(false);
+  
+  const onRemoveItem = (index: number) => {
+    handleRemoveItem(index, items, setItems);
   };
-
-  const handleRemoveItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
-  };
-
-  const handleItemChange = (index: number, field: keyof ProposalItem, value: string | number) => {
-    const updatedItems = [...items];
-    
-    if (field === 'quantity' || field === 'unitPrice' || field === 'taxRate') {
-      updatedItems[index][field] = Number(value);
-      
-      // Update total price
-      const quantity = updatedItems[index].quantity;
-      const unitPrice = updatedItems[index].unitPrice;
-      updatedItems[index].totalPrice = quantity * unitPrice;
-    } else if (field === 'currency') {
-      updatedItems[index].currency = value as string;
-    } else {
-      // @ts-ignore - We know the field exists
-      updatedItems[index][field] = value;
-    }
-    
-    setItems(updatedItems);
-  };
-
-  const formatCurrency = (amount: number, currency: string = "TRY") => {
-    return new Intl.NumberFormat('tr-TR', { 
-      style: 'currency', 
-      currency: currency 
-    }).format(amount);
-  };
-
-  const handleCurrencyChange = (newCurrency: string) => {
-    setSelectedCurrency(newCurrency);
-  };
-
-  // Convert between currencies if needed
-  const convertCurrency = (amount: number, fromCurrency: string, toCurrency: string) => {
-    if (fromCurrency === toCurrency) return amount;
-    
-    // Convert from source currency to TRY first (base currency)
-    const amountInTRY = amount / exchangeRates[fromCurrency];
-    
-    // Then convert from TRY to target currency
-    return amountInTRY * exchangeRates[toCurrency];
+  
+  const onSelectProduct = (product: any) => {
+    handleSelectProduct(product, items, setItems);
   };
 
   return (
     <div className="mt-8">
-      <div className="flex justify-between items-center mb-4">
-        <Label className="text-base font-medium">Ürünler ve Hizmetler</Label>
-        <div className="flex space-x-2 items-center">
-          <Select value={selectedCurrency} onValueChange={handleCurrencyChange}>
-            <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="Para Birimi" />
-            </SelectTrigger>
-            <SelectContent>
-              {CURRENCY_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" type="button" size="sm">
-                <Search className="h-4 w-4 mr-2" />
-                Ürün Ekle
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Ürün Seçimi</DialogTitle>
-              </DialogHeader>
-              <div className="mb-4">
-                <Input
-                  placeholder="Ürün adına göre ara..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <ScrollArea className="h-[300px]">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {isLoading ? (
-                    <div className="col-span-2 py-4 text-center text-muted-foreground">
-                      Ürünler yükleniyor...
-                    </div>
-                  ) : filteredProducts.length === 0 ? (
-                    <div className="col-span-2 py-4 text-center text-muted-foreground">
-                      Ürün bulunamadı
-                    </div>
-                  ) : (
-                    filteredProducts.map((product) => (
-                      <div
-                        key={product.id}
-                        className="p-3 border rounded cursor-pointer hover:bg-muted/40"
-                        onClick={() => handleSelectProduct(product)}
-                      >
-                        <div className="flex items-center space-x-3">
-                          {product.image_url ? (
-                            <img
-                              src={product.image_url}
-                              alt={product.name}
-                              className="w-10 h-10 object-cover rounded"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-muted rounded flex items-center justify-center text-muted-foreground">
-                              No img
-                            </div>
-                          )}
-                          <div>
-                            <p className="font-medium text-sm">{product.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatCurrency(product.price || 0, selectedCurrency)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </ScrollArea>
-            </DialogContent>
-          </Dialog>
-          
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleAddItem}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Manuel Ekle
-          </Button>
-        </div>
-      </div>
+      <ProposalItemsHeader 
+        selectedCurrency={selectedCurrency}
+        onCurrencyChange={handleCurrencyChange}
+        onAddItem={onAddItem}
+        onOpenProductDialog={onOpenProductDialog}
+        currencyOptions={CURRENCY_OPTIONS}
+      />
 
       <Card>
         <CardContent className="p-0">
-          <div className="min-w-full overflow-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/40">
-                  <th className="py-3 px-4 text-left font-medium">Ürün/Hizmet</th>
-                  <th className="py-3 px-4 text-right font-medium w-20">Miktar</th>
-                  <th className="py-3 px-4 text-right font-medium w-32">Birim Fiyat</th>
-                  <th className="py-3 px-4 text-right font-medium w-20">Para Birimi</th>
-                  <th className="py-3 px-4 text-right font-medium w-20">KDV %</th>
-                  <th className="py-3 px-4 text-right font-medium w-32">Toplam</th>
-                  <th className="py-3 px-4 text-center font-medium w-16"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="py-3 px-4 text-center text-muted-foreground">
-                      Henüz ürün eklenmedi. Ürün eklemek için yukarıdaki butonları kullanın.
-                    </td>
-                  </tr>
-                ) : (
-                  items.map((item, index) => (
-                    <tr key={item.id} className="border-b hover:bg-muted/20">
-                      <td className="py-3 px-4">
-                        <Input
-                          value={item.name}
-                          onChange={(e) => handleItemChange(index, "name", e.target.value)}
-                          placeholder="Ürün/Hizmet adı"
-                          className="border-0 bg-transparent focus-visible:ring-0"
-                        />
-                      </td>
-                      <td className="py-3 px-4">
-                        <Input
-                          type="number"
-                          value={item.quantity}
-                          onChange={(e) => handleItemChange(index, "quantity", e.target.value)}
-                          className="text-right border-0 bg-transparent focus-visible:ring-0"
-                        />
-                      </td>
-                      <td className="py-3 px-4">
-                        <Input
-                          type="number"
-                          value={item.unitPrice}
-                          onChange={(e) => handleItemChange(index, "unitPrice", e.target.value)}
-                          className="text-right border-0 bg-transparent focus-visible:ring-0"
-                        />
-                      </td>
-                      <td className="py-3 px-4">
-                        <Select 
-                          value={item.currency || selectedCurrency} 
-                          onValueChange={(value) => handleItemChange(index, "currency", value)}
-                        >
-                          <SelectTrigger className="border-0 bg-transparent focus-visible:ring-0 h-8 w-full">
-                            <SelectValue placeholder="Para Birimi" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {CURRENCY_OPTIONS.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="py-3 px-4">
-                        <Select 
-                          value={String(item.taxRate)} 
-                          onValueChange={(value) => handleItemChange(index, "taxRate", parseInt(value))}
-                        >
-                          <SelectTrigger className="border-0 bg-transparent focus-visible:ring-0 h-8 w-full">
-                            <SelectValue placeholder="KDV" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {TAX_RATE_OPTIONS.map((option) => (
-                              <SelectItem key={option.value} value={String(option.value)}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="py-3 px-4 text-right font-medium">
-                        {formatCurrency(item.totalPrice, item.currency || selectedCurrency)}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemoveItem(index)}
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <ProposalItemsTable
+            items={items}
+            handleItemChange={onItemChange}
+            handleRemoveItem={onRemoveItem}
+            selectedCurrency={selectedCurrency}
+            formatCurrency={formatCurrency}
+            currencyOptions={CURRENCY_OPTIONS}
+            taxRateOptions={TAX_RATE_OPTIONS}
+          />
         </CardContent>
       </Card>
+
+      <ProductSearchDialog
+        open={productDialogOpen}
+        onOpenChange={setProductDialogOpen}
+        onSelectProduct={onSelectProduct}
+        selectedCurrency={selectedCurrency}
+      />
     </div>
   );
 };

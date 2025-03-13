@@ -23,6 +23,15 @@ const ProposalFormPage = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) =>
     id
   } = useProposalFormState();
 
+  // Pass the form data to the handlers
+  const onSaveDraft = (data: any) => {
+    handleSaveDraft(data);
+  };
+
+  const onSubmit = (data: any) => {
+    handleSubmit(data);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
@@ -34,8 +43,8 @@ const ProposalFormPage = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) =>
         <div className="p-4 md:p-6">
           <ProposalFormActions
             onBack={handleBack}
-            onSaveDraft={handleSaveDraft}
-            onSubmit={handleSubmit}
+            onSaveDraft={methods.handleSubmit(onSaveDraft)}
+            onSubmit={methods.handleSubmit(onSubmit)}
             isLoading={isLoading}
           />
           
@@ -48,8 +57,8 @@ const ProposalFormPage = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) =>
             files={files}
             setFiles={setFiles}
             totalValues={totalValues}
-            onSaveDraft={handleSaveDraft}
-            onSubmit={handleSubmit}
+            onSaveDraft={onSaveDraft}
+            onSubmit={onSubmit}
             isLoading={isLoading}
           />
         </div>
