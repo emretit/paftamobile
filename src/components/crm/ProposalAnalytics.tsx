@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { useProposals } from "@/hooks/useProposals";
 
 const ProposalAnalytics = () => {
-  const { proposals } = useProposals();
+  const { data } = useProposals();
 
   // This would normally come from a hook or API call
   const chartData = useMemo(() => [
@@ -40,7 +40,7 @@ const ProposalAnalytics = () => {
   const kpis = [
     { 
       title: "Toplam Teklif", 
-      value: proposals?.length.toString() || "0", 
+      value: data?.length.toString() || "0", 
       change: "+18%", 
       positive: true, 
       color: "bg-purple-100 text-purple-800" 
@@ -68,7 +68,7 @@ const ProposalAnalytics = () => {
     },
   ];
 
-  const latestProposals = proposals?.slice(0, 3) || [];
+  const latestProposals = data?.slice(0, 3) || [];
 
   const handleDownloadReport = (format: 'pdf' | 'excel') => {
     toast.info(`${format.toUpperCase()} raporu indiriliyor...`);
@@ -76,14 +76,14 @@ const ProposalAnalytics = () => {
 
   // Calculate metrics from actual data
   const calculateMetrics = () => {
-    if (!proposals || proposals.length === 0) return null;
+    if (!data || data.length === 0) return null;
 
-    const totalProposals = proposals.length;
-    const acceptedProposals = proposals.filter(p => p.status === 'accepted').length;
-    const rejectedProposals = proposals.filter(p => p.status === 'rejected').length;
+    const totalProposals = data.length;
+    const acceptedProposals = data.filter(p => p.status === 'accepted').length;
+    const rejectedProposals = data.filter(p => p.status === 'rejected').length;
     const pendingProposals = totalProposals - acceptedProposals - rejectedProposals;
 
-    const totalValue = proposals.reduce((sum, p) => sum + p.total_value, 0);
+    const totalValue = data.reduce((sum, p) => sum + p.total_value, 0);
     const averageValue = totalValue / totalProposals || 0;
     const acceptanceRate = (acceptedProposals / totalProposals) * 100 || 0;
 

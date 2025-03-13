@@ -39,7 +39,7 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean; setI
     employeeId: null,
   });
 
-  const { proposals, isLoading } = useProposals(filters);
+  const { data, isLoading } = useProposals(filters);
 
   const handleSelectProposal = (proposal: Proposal) => {
     setSelectedProposal(proposal);
@@ -52,7 +52,7 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean; setI
         return <ProposalTable filters={filters} onProposalSelect={handleSelectProposal} />;
       case "kanban":
       default:
-        return <ProposalKanban proposals={proposals || []} onProposalSelect={handleSelectProposal} />;
+        return <ProposalKanban proposals={data || []} onProposalSelect={handleSelectProposal} />;
     }
   };
 

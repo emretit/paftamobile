@@ -7,6 +7,7 @@ export const useProposals = (filters?: {
   search?: string;
   status?: string;
   date?: string;
+  employeeId?: string | null;
 }) => {
   const { data, isLoading, error } = useQuery({
     queryKey: ["proposals", filters],
@@ -29,6 +30,10 @@ export const useProposals = (filters?: {
           `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`
         );
       }
+      
+      if (filters?.employeeId && filters.employeeId !== "all") {
+        query.eq("employee_id", filters.employeeId);
+      }
 
       const { data, error } = await query;
 
@@ -38,7 +43,7 @@ export const useProposals = (filters?: {
       const transformedData = data.map((proposal) => {
         // Handle potential null employee data safely
         const employeeName = proposal.employee 
-          ? `${proposal.employee.first_name || ''} ${proposal.employee.last_name || ''}`.trim()
+          ? `${proposal.employee.first_name || ''} ${proposal.employee.last_name || ''}`.trim() || '-'
           : '-';
         
         const employeeId = proposal.employee?.id || null;
@@ -49,9 +54,9 @@ export const useProposals = (filters?: {
           employee_name: employeeName,
           employee_id: employeeId,
         };
-      });
+      }) as Proposal[];
 
-      return transformedData as Proposal[];
+      return transformedData;
     },
   });
 

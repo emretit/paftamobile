@@ -6,18 +6,18 @@ import { useProposals } from "@/hooks/useProposals";
 import { toast } from "sonner";
 
 export const ProposalAnalytics = () => {
-  const { proposals } = useProposals();
+  const { data } = useProposals();
 
   // Calculate metrics
   const calculateMetrics = () => {
-    if (!proposals) return null;
+    if (!data) return null;
 
-    const totalProposals = proposals.length;
-    const acceptedProposals = proposals.filter(p => p.status === 'accepted').length;
-    const rejectedProposals = proposals.filter(p => p.status === 'rejected').length;
+    const totalProposals = data.length;
+    const acceptedProposals = data.filter(p => p.status === 'accepted').length;
+    const rejectedProposals = data.filter(p => p.status === 'rejected').length;
     const pendingProposals = totalProposals - acceptedProposals - rejectedProposals;
 
-    const totalValue = proposals.reduce((sum, p) => sum + p.total_value, 0);
+    const totalValue = data.reduce((sum, p) => sum + p.total_value, 0);
     const averageValue = totalValue / totalProposals || 0;
     const acceptanceRate = (acceptedProposals / totalProposals) * 100 || 0;
 

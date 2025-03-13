@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Table, TableBody } from "@/components/ui/table";
 import { useProposals } from "@/hooks/useProposals";
@@ -17,7 +18,7 @@ interface ProposalTableProps {
 }
 
 const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
-  const { proposals, isLoading } = useProposals();
+  const { data, isLoading } = useProposals(filters);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -76,7 +77,7 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
       <Table>
         <ProposalTableHeader columns={columns} />
         <TableBody>
-          {proposals?.map((proposal, index) => (
+          {data?.map((proposal, index) => (
             <ProposalTableRow
               key={proposal.id}
               proposal={proposal}
