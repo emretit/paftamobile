@@ -25,17 +25,26 @@ export const useProposals = (filters?: any) => {
 
       if (error) throw error;
       
-      return (data || []).map(proposal => ({
-        ...proposal,
-        customer_name: proposal.customer?.name || '-',
-        created_by_name: proposal.employee ? 
-          `${proposal.employee.first_name || ''} ${proposal.employee.last_name || ''}` : '-',
-        created_by: {
-          id: proposal.employee?.id || '',
-          name: proposal.employee ? 
-            `${proposal.employee.first_name || ''} ${proposal.employee.last_name || ''}` : '-'
-        }
-      })) as Proposal[];
+      return (data || []).map(proposal => {
+        // Handle the case where employee might be null or an error object
+        const employeeData = proposal.employee && 
+          typeof proposal.employee === 'object' && 
+          !('error' in proposal.employee) ? 
+          proposal.employee : 
+          { id: '', first_name: '', last_name: '' };
+        
+        return {
+          ...proposal,
+          customer_name: proposal.customer?.name || '-',
+          created_by_name: employeeData ? 
+            `${employeeData.first_name || ''} ${employeeData.last_name || ''}` : '-',
+          created_by: {
+            id: employeeData?.id || '',
+            name: employeeData ? 
+              `${employeeData.first_name || ''} ${employeeData.last_name || ''}` : '-'
+          }
+        };
+      }) as Proposal[];
     }
   });
 
