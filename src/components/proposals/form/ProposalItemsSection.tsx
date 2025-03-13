@@ -1,5 +1,4 @@
-
-import React, { useRef, useEffect } from "react";
+import React, { useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProposalItem } from "@/types/proposal-form";
 import { useProposalItems } from "./items/useProposalItems";
@@ -31,8 +30,16 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
   } = useProposalItems();
 
   const productBtnRef = useRef<HTMLButtonElement>(null);
+  const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
 
-  const onOpenProductDialog = () => setProductDialogOpen(true);
+  const onOpenProductDialog = () => {
+    if (selectedProduct) {
+      setProductDialogOpen(true);
+    } else {
+      setProductDialogOpen(true);
+    }
+  };
+  
   const onAddItem = () => handleAddItem(items, setItems);
   
   const onItemChange = (index: number, field: keyof ProposalItem, value: string | number) => {
@@ -44,9 +51,8 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
   };
   
   const onSelectProduct = (product: Product) => {
+    setSelectedProduct(product);
     handleSelectProduct(product, items, setItems);
-    // Open the dialog to edit more details if needed
-    setProductDialogOpen(true);
   };
 
   return (
@@ -80,6 +86,7 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
         onSelectProduct={(product) => handleSelectProduct(product, items, setItems)}
         selectedCurrency={selectedCurrency}
         triggerRef={productBtnRef}
+        initialSelectedProduct={selectedProduct}
       />
     </div>
   );

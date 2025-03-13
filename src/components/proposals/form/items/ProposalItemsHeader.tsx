@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, UserCircle } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import {
   Command,
   CommandEmpty,
@@ -19,7 +19,6 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/product";
@@ -75,9 +74,11 @@ const ProposalItemsHeader = ({
     }).format(amount);
   };
 
-  const handleSelectProduct = (product: any) => {
+  const handleSelectProduct = (product: Product) => {
     onSelectProduct(product);
     setOpen(false);
+    // Open the product dialog after selecting a product to edit details
+    onOpenProductDialog();
   };
 
   return (
@@ -108,51 +109,49 @@ const ProposalItemsHeader = ({
               Ürün Ekle
             </Button>
           </PopoverTrigger>
-          <Command className="w-[300px] rounded-lg border shadow-md">
-            <div className="flex items-center border-b p-2">
-              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-              <CommandInput
+          <PopoverContent className="w-80 p-0">
+            <Command>
+              <CommandInput 
                 placeholder="Ürün ara..."
                 value={searchQuery}
                 onValueChange={setSearchQuery}
-                className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
-            </div>
-            <CommandList>
-              <CommandEmpty>Sonuç bulunamadı.</CommandEmpty>
-              <CommandGroup>
-                {isLoading ? (
-                  <CommandItem disabled>Yükleniyor...</CommandItem>
-                ) : (
-                  filteredProducts.slice(0, 10).map((product) => (
+              <CommandList>
+                <CommandEmpty>Sonuç bulunamadı.</CommandEmpty>
+                <CommandGroup>
+                  {isLoading ? (
+                    <CommandItem disabled>Yükleniyor...</CommandItem>
+                  ) : (
+                    filteredProducts.slice(0, 10).map((product) => (
+                      <CommandItem
+                        key={product.id}
+                        onSelect={() => handleSelectProduct(product)}
+                        className="flex justify-between items-center"
+                      >
+                        <div className="flex flex-col">
+                          <span>{product.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {product.sku || "SKU: -"}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {formatCurrency(product.price, product.currency)}
+                        </div>
+                      </CommandItem>
+                    ))
+                  )}
+                  {filteredProducts.length > 10 && (
                     <CommandItem
-                      key={product.id}
-                      onSelect={() => handleSelectProduct(product)}
-                      className="flex justify-between items-center"
+                      onSelect={onOpenProductDialog}
+                      className="text-center text-primary"
                     >
-                      <div className="flex flex-col">
-                        <span>{product.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {product.sku || "SKU: -"}
-                        </span>
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatCurrency(product.price, product.currency)}
-                      </div>
+                      Tüm ürünleri görüntüle ({filteredProducts.length})
                     </CommandItem>
-                  ))
-                )}
-                {filteredProducts.length > 10 && (
-                  <CommandItem
-                    onSelect={onOpenProductDialog}
-                    className="text-center text-primary"
-                  >
-                    Tüm ürünleri görüntüle ({filteredProducts.length})
-                  </CommandItem>
-                )}
-              </CommandGroup>
-            </CommandList>
-          </Command>
+                  )}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
         </Popover>
         
         <Button
