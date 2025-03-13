@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,24 +6,11 @@ import { TopBar } from "@/components/TopBar";
 import CustomerListHeader from "@/components/customers/CustomerListHeader";
 import CustomerListFilters from "@/components/customers/CustomerListFilters";
 import CustomerList from "@/components/customers/CustomerList";
+import { Customer } from "@/types/customer";
 
 interface ContactsProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
-}
-
-interface Customer {
-  id: string;
-  name: string;
-  email: string | null;
-  mobile_phone: string | null;
-  office_phone: string | null;
-  company: string | null;
-  type: "bireysel" | "kurumsal";
-  status: "aktif" | "pasif" | "potansiyel";
-  representative: string | null;
-  balance: number;
-  address: string | null;
 }
 
 const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
@@ -80,7 +66,7 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
       >
         <TopBar />
         <div className="p-4 sm:p-8">
-          <CustomerListHeader />
+          <CustomerListHeader customers={customers} />
           <CustomerListFilters 
             search={search}
             setSearch={setSearch}
