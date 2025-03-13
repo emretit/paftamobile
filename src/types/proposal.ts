@@ -28,6 +28,7 @@ export interface Proposal {
   id: string;
   title: string;
   customer_id: string | null;
+  supplier_id?: string | null; // Adding this field
   employee_id: string | null;
   deal_id: string | null;
   status: ProposalStatus;
@@ -40,6 +41,8 @@ export interface Proposal {
   customer_segment: string | null;
   payment_term?: string;
   internal_notes?: string;
+  discounts?: number; // Adding this field
+  additional_charges?: number; // Adding this field
   customer?: {
     name: string;
   };

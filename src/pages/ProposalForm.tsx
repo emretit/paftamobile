@@ -70,10 +70,10 @@ const ProposalFormPage = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) =>
             paymentTerm: proposal.payment_term || "prepaid",
             status: proposal.status,
             customer_id: proposal.customer_id || "",
-            supplier_id: proposal.supplier_id || "", 
+            supplier_id: (proposal as any).supplier_id || "", 
             employee_id: proposal.employee_id || "",
-            discounts: proposal.discounts || 0, 
-            additionalCharges: proposal.additional_charges || 0, 
+            discounts: (proposal as any).discounts || 0, 
+            additionalCharges: (proposal as any).additional_charges || 0, 
             internalNotes: proposal.internal_notes || "",
           });
 

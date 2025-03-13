@@ -9,15 +9,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-} from "@/components/ui/command";
 import { useCustomerSelect } from "@/hooks/useCustomerSelect";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -156,9 +147,9 @@ const ProposalPartnerSelect = ({ partnerType }: ProposalPartnerSelectProps) => {
                               <p className="font-medium truncate">{customer.name}</p>
                               {customer.status && (
                                 <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                  customer.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                                  customer.status === "aktif" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
                                 }`}>
-                                  {customer.status === "active" ? "Aktif" : "Pasif"}
+                                  {customer.status === "aktif" ? "Aktif" : "Pasif"}
                                 </span>
                               )}
                             </div>
@@ -220,9 +211,9 @@ const ProposalPartnerSelect = ({ partnerType }: ProposalPartnerSelectProps) => {
                               <p className="font-medium truncate">{supplier.name}</p>
                               {supplier.status && (
                                 <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                  supplier.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                                  supplier.status === "aktif" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
                                 }`}>
-                                  {supplier.status === "active" ? "Aktif" : "Pasif"}
+                                  {supplier.status === "aktif" ? "Aktif" : "Pasif"}
                                 </span>
                               )}
                             </div>
