@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { ProposalTemplate } from "@/types/proposal-template";
 import { useProposalTemplates } from "@/hooks/useProposalTemplates";
-import { FileText, FileSpreadsheet, FilePlus, Package, ShoppingCart, TruckIcon } from "lucide-react";
+import { FileText, FilePlus, Tool } from "lucide-react";
 
 interface ProposalTemplateGridProps {
   onSelectTemplate: (template: ProposalTemplate) => void;
@@ -17,16 +17,8 @@ const ProposalTemplateGrid: React.FC<ProposalTemplateGridProps> = ({ onSelectTem
     switch (iconName) {
       case "file-text":
         return <FileText className="h-8 w-8 text-blue-500" />;
-      case "file-spreadsheet":
-        return <FileSpreadsheet className="h-8 w-8 text-green-500" />;
-      case "file-plus":
-        return <FilePlus className="h-8 w-8 text-purple-500" />;
-      case "package":
-        return <Package className="h-8 w-8 text-amber-500" />;
-      case "shopping-cart":
-        return <ShoppingCart className="h-8 w-8 text-red-500" />;
-      case "truck":
-        return <TruckIcon className="h-8 w-8 text-indigo-500" />;
+      case "tool":
+        return <Tool className="h-8 w-8 text-indigo-500" />;
       default:
         return <FileText className="h-8 w-8 text-gray-500" />;
     }
@@ -34,7 +26,7 @@ const ProposalTemplateGrid: React.FC<ProposalTemplateGridProps> = ({ onSelectTem
 
   if (isLoading) {
     return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {[1, 2, 3, 4, 5, 6].map(i => (
+      {[1, 2, 3].map(i => (
         <Card key={i} className="animate-pulse">
           <CardHeader className="h-24 bg-gray-200"></CardHeader>
           <CardContent className="h-20 mt-2">

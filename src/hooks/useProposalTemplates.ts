@@ -7,14 +7,14 @@ const getProposalTemplates = async (): Promise<ProposalTemplate[]> => {
   return [
     {
       id: "1",
-      name: "Standart Ürün Teklifi",
-      description: "Ürün satışları için standart teklif şablonu",
-      icon: "shopping-cart",
-      category: "Ürün",
+      name: "Standart Teklif",
+      description: "Genel kullanım için standart teklif şablonu",
+      icon: "file-text",
+      category: "Genel",
       items: [
         {
           id: "item1",
-          name: "Ürün A",
+          name: "Ürün/Hizmet",
           quantity: 1,
           unitPrice: 0,
           taxRate: 18,
@@ -22,48 +22,17 @@ const getProposalTemplates = async (): Promise<ProposalTemplate[]> => {
         }
       ],
       prefilledFields: {
-        title: "Ürün Teklifi",
+        title: "Standart Teklif",
         paymentTerm: "net30",
         validityDays: 30,
-        internalNotes: "Standart ürün teklifi şablonu"
+        internalNotes: "Standart teklif şablonu"
       }
     },
     {
       id: "2",
-      name: "Hizmet Teklifi",
-      description: "Hizmet satışları için genel teklif şablonu",
-      icon: "file-text",
-      category: "Hizmet",
-      items: [
-        {
-          id: "item1",
-          name: "Danışmanlık Hizmeti",
-          quantity: 8,
-          unitPrice: 1500,
-          taxRate: 18,
-          totalPrice: 14160
-        },
-        {
-          id: "item2",
-          name: "Proje Yönetimi",
-          quantity: 1,
-          unitPrice: 5000,
-          taxRate: 18,
-          totalPrice: 5900
-        }
-      ],
-      prefilledFields: {
-        title: "Hizmet Teklifi",
-        paymentTerm: "custom",
-        validityDays: 15,
-        internalNotes: "Standart hizmet teklifi şablonu"
-      }
-    },
-    {
-      id: "3",
       name: "Bakım Sözleşmesi",
       description: "Yıllık bakım hizmetleri için teklif şablonu",
-      icon: "truck",
+      icon: "tool",
       category: "Hizmet",
       items: [
         {
@@ -88,74 +57,6 @@ const getProposalTemplates = async (): Promise<ProposalTemplate[]> => {
         paymentTerm: "prepaid",
         validityDays: 30,
         internalNotes: "Bu bir yıllık bakım sözleşmesi şablonudur."
-      }
-    },
-    {
-      id: "4",
-      name: "Yazılım Çözümü",
-      description: "Yazılım satışı ve kurulumu için teklif şablonu",
-      icon: "file-spreadsheet",
-      category: "Ürün + Hizmet",
-      items: [
-        {
-          id: "item1",
-          name: "Yazılım Lisansı",
-          quantity: 5,
-          unitPrice: 2500,
-          taxRate: 18,
-          totalPrice: 14750
-        },
-        {
-          id: "item2",
-          name: "Kurulum ve Eğitim",
-          quantity: 1,
-          unitPrice: 7500,
-          taxRate: 18,
-          totalPrice: 8850
-        },
-        {
-          id: "item3",
-          name: "İlk Yıl Bakım",
-          quantity: 1,
-          unitPrice: 3000,
-          taxRate: 18,
-          totalPrice: 3540
-        }
-      ],
-      prefilledFields: {
-        title: "Yazılım Çözümü Teklifi",
-        paymentTerm: "net30",
-        validityDays: 30
-      }
-    },
-    {
-      id: "5",
-      name: "Donanım Satışı",
-      description: "Donanım ürünleri satışı için teklif şablonu",
-      icon: "package",
-      category: "Ürün",
-      items: [
-        {
-          id: "item1",
-          name: "Sunucu",
-          quantity: 2,
-          unitPrice: 15000,
-          taxRate: 18,
-          totalPrice: 35400
-        },
-        {
-          id: "item2",
-          name: "Network Switch",
-          quantity: 3,
-          unitPrice: 5000,
-          taxRate: 18,
-          totalPrice: 17700
-        }
-      ],
-      prefilledFields: {
-        title: "Donanım Teklifi",
-        paymentTerm: "prepaid",
-        validityDays: 15
       }
     }
   ];
