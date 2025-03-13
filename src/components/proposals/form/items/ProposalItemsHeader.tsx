@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Search, Plus } from "lucide-react";
@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverTrigger } from "@/components/ui/popover";
 
 interface ProposalItemsHeaderProps {
   selectedCurrency: string;
@@ -26,6 +27,8 @@ const ProposalItemsHeader = ({
   onOpenProductDialog,
   currencyOptions,
 }: ProposalItemsHeaderProps) => {
+  const productBtnRef = useRef<HTMLButtonElement>(null);
+
   return (
     <div className="flex justify-between items-center mb-4">
       <Label className="text-base font-medium">Ürünler ve Hizmetler</Label>
@@ -43,15 +46,19 @@ const ProposalItemsHeader = ({
           </SelectContent>
         </Select>
         
-        <Button 
-          variant="outline" 
-          type="button" 
-          size="sm"
-          onClick={onOpenProductDialog}
-        >
-          <Search className="h-4 w-4 mr-2" />
-          Ürün Ekle
-        </Button>
+        <Popover>
+          <PopoverTrigger asChild ref={productBtnRef}>
+            <Button 
+              variant="outline" 
+              type="button" 
+              size="sm"
+              onClick={() => document.dispatchEvent(new CustomEvent('open-product-dropdown'))}
+            >
+              <Search className="h-4 w-4 mr-2" />
+              Ürün Ekle
+            </Button>
+          </PopoverTrigger>
+        </Popover>
         
         <Button
           type="button"

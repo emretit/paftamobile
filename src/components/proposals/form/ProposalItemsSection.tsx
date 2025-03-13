@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProposalItem } from "@/types/proposal-form";
 import { useProposalItems } from "./items/useProposalItems";
@@ -29,6 +29,22 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
     handleRemoveItem,
     handleItemChange,
   } = useProposalItems();
+
+  const productDropdownOpen = React.useState(false);
+  const [isDropdownOpen, setDropdownOpen] = productDropdownOpen;
+  const productBtnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const handleOpenDropdown = () => {
+      setDropdownOpen(true);
+    };
+
+    document.addEventListener('open-product-dropdown', handleOpenDropdown);
+    
+    return () => {
+      document.removeEventListener('open-product-dropdown', handleOpenDropdown);
+    };
+  }, [setDropdownOpen]);
 
   const onOpenProductDialog = () => setProductDialogOpen(true);
   const onAddItem = () => handleAddItem(items, setItems);
@@ -74,6 +90,7 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
         onOpenChange={setProductDialogOpen}
         onSelectProduct={onSelectProduct}
         selectedCurrency={selectedCurrency}
+        triggerRef={productBtnRef}
       />
     </div>
   );

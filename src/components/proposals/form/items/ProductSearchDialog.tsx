@@ -10,6 +10,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/types/product";
@@ -19,17 +24,20 @@ interface ProductSearchDialogProps {
   onOpenChange: (open: boolean) => void;
   onSelectProduct: (product: Product) => void;
   selectedCurrency: string;
+  triggerRef?: React.RefObject<HTMLButtonElement>;
 }
 
 const ProductSearchDialog = ({ 
   open, 
   onOpenChange, 
   onSelectProduct,
-  selectedCurrency
+  selectedCurrency,
+  triggerRef
 }: ProductSearchDialogProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   
   // Fetch products from Supabase
   const { data: products = [], isLoading } = useQuery({
@@ -89,6 +97,7 @@ const ProductSearchDialog = ({
     };
     
     onSelectProduct(selectedProduct);
+    setDropdownOpen(false);
     onOpenChange(false);
   };
 
@@ -135,6 +144,63 @@ const ProductSearchDialog = ({
 
   return (
     <>
+      <Popover open={dropdownOpen} onOpenChange={setDropdownOpen}>
+        <PopoverContent className="w-80 p-0" align="start">
+          <div className="p-3">
+            <Input
+              placeholder="Ürün ara..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="mb-2"
+            />
+            <ScrollArea className="h-64">
+              <div className="space-y-1">
+                {isLoading ? (
+                  <div className="p-2 text-center text-muted-foreground">Ürünler yükleniyor...</div>
+                ) : filteredProducts.length === 0 ? (
+                  <div className="p-2 text-center text-muted-foreground">Ürün bulunamadı</div>
+                ) : (
+                  filteredProducts.slice(0, 10).map((product) => (
+                    <div 
+                      key={product.id}
+                      className="flex items-center justify-between p-2 hover:bg-muted rounded cursor-pointer"
+                    >
+                      <div className="flex-1" onClick={() => handleSelectProduct(product)}>
+                        <p className="font-medium text-sm">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatCurrency(product.price || 0, product.currency)}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openProductDetails(product);
+                        }}
+                      >
+                        <Info className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))
+                )}
+                {filteredProducts.length > 10 && (
+                  <div 
+                    className="p-2 text-center text-primary text-sm cursor-pointer hover:underline"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      onOpenChange(true);
+                    }}
+                  >
+                    Tüm ürünleri görüntüle ({filteredProducts.length})
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+        </PopoverContent>
+      </Popover>
+
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
