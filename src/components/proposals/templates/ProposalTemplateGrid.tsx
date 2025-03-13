@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { ProposalTemplate } from "@/types/proposal-template";
 import { useProposalTemplates } from "@/hooks/useProposalTemplates";
-import { FileText, FilePlus, Tool } from "lucide-react";
+import { FileText, FilePlus, Wrench } from "lucide-react";
 
 interface ProposalTemplateGridProps {
   onSelectTemplate: (template: ProposalTemplate) => void;
@@ -17,8 +17,8 @@ const ProposalTemplateGrid: React.FC<ProposalTemplateGridProps> = ({ onSelectTem
     switch (iconName) {
       case "file-text":
         return <FileText className="h-8 w-8 text-blue-500" />;
-      case "tool":
-        return <Tool className="h-8 w-8 text-indigo-500" />;
+      case "wrench":
+        return <Wrench className="h-8 w-8 text-indigo-500" />;
       default:
         return <FileText className="h-8 w-8 text-gray-500" />;
     }

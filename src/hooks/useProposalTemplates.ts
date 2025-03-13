@@ -32,7 +32,7 @@ const getProposalTemplates = async (): Promise<ProposalTemplate[]> => {
       id: "2",
       name: "Bakım Sözleşmesi",
       description: "Yıllık bakım hizmetleri için teklif şablonu",
-      icon: "tool",
+      icon: "wrench",
       category: "Hizmet",
       items: [
         {
