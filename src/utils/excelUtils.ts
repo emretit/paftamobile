@@ -63,24 +63,34 @@ export const importCustomersFromExcel = async (file: File): Promise<Customer[]> 
           
           // Convert to JSON
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          console.log(`Excel'den okunan toplam kayıt sayısı: ${jsonData.length}`);
           
           // Map the data to Customer type
-          const customers = jsonData.map((row: any) => ({
-            name: row.name || '',
-            email: row.email || null,
-            mobile_phone: row.mobile_phone || null,
-            office_phone: row.office_phone || null,
-            company: row.company || null,
-            type: (row.type === 'kurumsal' || row.type === 'bireysel') ? row.type : 'bireysel',
-            status: ['aktif', 'pasif', 'potansiyel'].includes(row.status) ? row.status : 'potansiyel',
-            representative: row.representative || null,
-            balance: Number(row.balance) || 0,
-            address: row.address || null,
-            tax_number: row.tax_number || null,
-            tax_office: row.tax_office || null
-          })) as Customer[];
+          const customers = jsonData.map((row: any, index: number) => {
+            // Log problematic rows to help debug
+            if (!row.name || typeof row.name !== 'string') {
+              console.warn(`Uyarı - Satır ${index + 2}: Geçersiz isim değeri:`, row.name);
+            }
+            
+            return {
+              name: row.name || `Müşteri ${index + 1}`, // Provide a default value if name is missing
+              email: row.email || null,
+              mobile_phone: row.mobile_phone || null,
+              office_phone: row.office_phone || null,
+              company: row.company || null,
+              type: (row.type === 'kurumsal' || row.type === 'bireysel') ? row.type : 'bireysel',
+              status: ['aktif', 'pasif', 'potansiyel'].includes(row.status) ? row.status : 'potansiyel',
+              representative: row.representative || null,
+              balance: Number(row.balance) || 0,
+              address: row.address || null,
+              tax_number: row.tax_number || null,
+              tax_office: row.tax_office || null
+            };
+          }) as Customer[];
           
-          toast.success(`${customers.length} müşteri başarıyla içe aktarıldı`);
+          console.log(`İşlenen ve dönüştürülen müşteri sayısı: ${customers.length}`);
+          
+          toast.success(`${customers.length} müşteri başarıyla okundu ve işleme hazır`);
           resolve(customers);
         } catch (error) {
           console.error('Excel parse error:', error);
