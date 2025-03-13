@@ -43,7 +43,7 @@ export const useProposals = (filters?: ProposalFilters) => {
             if (proposal.items) {
               // If items is an array, map it to ensure it matches ProposalItem structure
               if (Array.isArray(proposal.items)) {
-                parsedItems = proposal.items.map(item => ({
+                parsedItems = proposal.items.map((item: any) => ({
                   id: item.id || '',
                   name: item.name || '',
                   quantity: Number(item.quantity) || 0,

@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { Proposal } from "@/types/proposal";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { statusLabels, statusStyles } from "../constants";
+import { useCustomerNames } from "@/hooks/useCustomerNames";
 
 interface ProposalTableRowProps {
   proposal: Proposal;
@@ -15,6 +16,8 @@ interface ProposalTableRowProps {
 }
 
 export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: ProposalTableRowProps) => {
+  const { getCustomerName } = useCustomerNames();
+
   const getStatusBadge = (status: string) => {
     const style = statusStyles[status] || { bg: "bg-gray-100", text: "text-gray-800" };
     const label = statusLabels[status] || status;
@@ -33,7 +36,7 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
     >
       <TableCell>#{proposal.proposal_number}</TableCell>
       <TableCell>
-        {proposal.customer_id ? proposal.customer_id : "-"}
+        {proposal.customer_id ? getCustomerName(proposal.customer_id) : "-"}
       </TableCell>
       <TableCell>
         {getStatusBadge(proposal.status)}
