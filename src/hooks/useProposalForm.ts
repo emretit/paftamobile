@@ -1,15 +1,17 @@
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProposalFormData, ProposalItem } from "@/types/proposal-form";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Json } from "@/integrations/supabase/types";
+import { Proposal } from "@/types/proposal";
 
 type DatabaseProposal = {
   title: string;
   customer_id: string | null;
   supplier_id: string | null;
+  employee_id: string | null;
   status: string;
   total_value: number;
   valid_until: string | null;
@@ -23,6 +25,29 @@ type DatabaseProposal = {
 
 export const useProposalForm = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const getProposal = async (id: string): Promise<Proposal | null> => {
+    try {
+      const { data, error } = await supabase
+        .from("proposals")
+        .select("*, customer:customer_id(*), employee:employee_id(*)")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+      return data as Proposal;
+    } catch (error) {
+      console.error("Error fetching proposal:", error);
+      throw error;
+    }
+  };
+
+  const proposalQuery = (id: string) => useQuery({
+    queryKey: ["proposal", id],
+    queryFn: () => getProposal(id),
+    enabled: !!id,
+  });
 
   const createProposal = useMutation({
     mutationFn: async (data: ProposalFormData) => {
@@ -32,8 +57,9 @@ export const useProposalForm = () => {
           files: Json 
         } = {
           title: data.title,
-          customer_id: data.customer_id,
-          supplier_id: data.supplier_id,
+          customer_id: data.partnerType === "customer" ? data.customer_id : null,
+          supplier_id: data.partnerType === "supplier" ? data.supplier_id : null,
+          employee_id: data.employee_id,
           status: data.status,
           total_value: calculateTotalValue(data),
           valid_until: data.validUntil?.toISOString() || null,
@@ -53,7 +79,7 @@ export const useProposalForm = () => {
 
         if (proposalError) throw proposalError;
 
-        if (data.files.length > 0) {
+        if (data.files && data.files.length > 0) {
           const uploadPromises = data.files.map(async (file) => {
             const fileExt = file.name.split('.').pop();
             const fileName = `${proposal.id}/${Date.now()}.${fileExt}`;
@@ -84,6 +110,7 @@ export const useProposalForm = () => {
       }
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["proposals"] });
       toast.success("Teklif başarıyla oluşturuldu");
       navigate("/proposals");
     },
@@ -93,6 +120,76 @@ export const useProposalForm = () => {
     },
   });
 
+  const updateProposal = async (id: string, data: ProposalFormData) => {
+    try {
+      const proposalData: Omit<DatabaseProposal, 'items' | 'files'> & { 
+        items: Json
+      } = {
+        title: data.title,
+        customer_id: data.partnerType === "customer" ? data.customer_id : null,
+        supplier_id: data.partnerType === "supplier" ? data.supplier_id : null,
+        employee_id: data.employee_id,
+        status: data.status,
+        total_value: calculateTotalValue(data),
+        valid_until: data.validUntil?.toISOString() || null,
+        payment_term: data.paymentTerm,
+        internal_notes: data.internalNotes,
+        items: data.items as unknown as Json,
+        discounts: data.discounts,
+        additional_charges: data.additionalCharges,
+        files: [] as unknown as Json
+      };
+
+      const { error: updateError } = await supabase
+        .from("proposals")
+        .update(proposalData)
+        .eq("id", id);
+
+      if (updateError) throw updateError;
+
+      if (data.files && data.files.length > 0) {
+        // First delete existing files
+        const { error: deleteError } = await supabase
+          .storage
+          .from('proposal-files')
+          .remove([`${id}/*`]);
+
+        if (deleteError) console.warn("Error removing existing files:", deleteError);
+
+        // Upload new files
+        const uploadPromises = data.files.map(async (file) => {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${id}/${Date.now()}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase
+            .storage
+            .from('proposal-files')
+            .upload(fileName, file);
+
+          if (uploadError) throw uploadError;
+          return fileName;
+        });
+
+        const uploadedFiles = await Promise.all(uploadPromises);
+        
+        const { error: fileUpdateError } = await supabase
+          .from("proposals")
+          .update({ files: uploadedFiles })
+          .eq("id", id);
+
+        if (fileUpdateError) throw fileUpdateError;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["proposals"] });
+      queryClient.invalidateQueries({ queryKey: ["proposal", id] });
+      
+      return true;
+    } catch (error) {
+      console.error("Error updating proposal:", error);
+      throw error;
+    }
+  };
+
   const saveDraft = useMutation({
     mutationFn: async (data: ProposalFormData) => {
       try {
@@ -101,8 +198,9 @@ export const useProposalForm = () => {
           files: Json 
         } = {
           title: data.title,
-          customer_id: data.customer_id,
-          supplier_id: data.supplier_id,
+          customer_id: data.partnerType === "customer" ? data.customer_id : null,
+          supplier_id: data.partnerType === "supplier" ? data.supplier_id : null,
+          employee_id: data.employee_id,
           status: "draft",
           total_value: calculateTotalValue(data),
           valid_until: data.validUntil?.toISOString() || null,
@@ -119,6 +217,8 @@ export const useProposalForm = () => {
           .insert([proposalData]);
 
         if (error) throw error;
+        
+        queryClient.invalidateQueries({ queryKey: ["proposals"] });
       } catch (error) {
         console.error("Error in saveDraft:", error);
         throw error;
@@ -126,6 +226,7 @@ export const useProposalForm = () => {
     },
     onSuccess: () => {
       toast.success("Taslak başarıyla kaydedildi");
+      navigate("/proposals");
     },
     onError: (error) => {
       console.error("Error saving draft:", error);
@@ -136,14 +237,18 @@ export const useProposalForm = () => {
   return {
     createProposal,
     saveDraft,
+    getProposal,
+    updateProposal,
+    proposalQuery,
   };
 };
 
 const calculateTotalValue = (data: ProposalFormData): number => {
-  const itemsTotal = data.items.reduce((sum, item) => {
-    const subtotal = item.quantity * item.unitPrice;
-    const tax = subtotal * (item.taxRate / 100);
-    return sum + subtotal + tax;
+  const subtotal = data.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+  const taxAmount = data.items.reduce((sum, item) => {
+    const itemSubtotal = item.quantity * item.unitPrice;
+    return sum + (itemSubtotal * item.taxRate / 100);
   }, 0);
-  return itemsTotal + data.additionalCharges - data.discounts;
+  
+  return subtotal + taxAmount - (data.discounts || 0) + (data.additionalCharges || 0);
 };
