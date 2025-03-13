@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProposalTemplate } from "@/types/proposal-template";
-import { ProposalFormData, ProposalItem } from "@/types/proposal-form";
+import { ProposalFormData, ProposalItem, PaymentTerm } from "@/types/proposal-form";
 import ProposalItems from "@/components/proposals/form/ProposalItems";
 import { useCustomerSelect } from "@/hooks/useCustomerSelect";
 import { Calendar } from "@/components/ui/calendar";
@@ -38,7 +38,7 @@ const ProposalForm: React.FC<ProposalFormProps> = ({ template, onSaveDraft }) =>
       items: [],
       discounts: 0,
       additionalCharges: 0,
-      paymentTerm: template.prefilledFields?.paymentTerm || "prepaid",
+      paymentTerm: (template.prefilledFields?.paymentTerm as PaymentTerm) || "prepaid",
       internalNotes: template.prefilledFields?.internalNotes || "",
       status: "draft",
     },
@@ -133,7 +133,7 @@ const ProposalForm: React.FC<ProposalFormProps> = ({ template, onSaveDraft }) =>
           <div>
             <Label htmlFor="payment_term">Ödeme Koşulları</Label>
             <Select 
-              onValueChange={(value) => setValue("paymentTerm", value)}
+              onValueChange={(value: PaymentTerm) => setValue("paymentTerm", value)}
               defaultValue={template.prefilledFields?.paymentTerm || "prepaid"}
             >
               <SelectTrigger id="payment_term">
