@@ -2,7 +2,6 @@
 export type PaymentTerm = "prepaid" | "net15" | "net30" | "net60" | "custom";
 
 export interface ProposalItem {
-  [key: string]: string | number | undefined;
   id: string;
   name: string;
   quantity: number;

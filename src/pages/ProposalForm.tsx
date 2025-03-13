@@ -16,13 +16,8 @@ import ProposalDetailsSection from "@/components/proposals/form/ProposalDetailsS
 import ProposalItemsSection from "@/components/proposals/form/ProposalItemsSection";
 import ProposalAttachments from "@/components/proposals/form/ProposalAttachments";
 import ProposalSummary from "@/components/proposals/form/ProposalSummary";
-import { ProposalItem } from "@/types/proposal-form";
+import { ProposalFormProps, ProposalItem } from "@/types/proposal-form";
 import { v4 as uuidv4 } from "uuid";
-
-interface ProposalFormProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
-}
 
 const ProposalFormPage = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
   const navigate = useNavigate();
@@ -87,10 +82,16 @@ const ProposalFormPage = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) =>
 
           // Set items if available
           if (proposal.items && Array.isArray(proposal.items)) {
-            setItems(proposal.items.map(item => ({
-              ...item,
-              id: item.id || uuidv4()
-            })));
+            const convertedItems = proposal.items.map(item => ({
+              id: item.id || uuidv4(),
+              name: item.name,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice || item.unit_price, // Handle both formats
+              taxRate: item.taxRate || item.tax_rate, // Handle both formats
+              totalPrice: item.totalPrice || item.total_price, // Handle both formats
+              product_id: item.product_id
+            }));
+            setItems(convertedItems);
           }
         }
         setIsLoading(false);
@@ -114,10 +115,15 @@ const ProposalFormPage = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) =>
           
           // Set items from template
           if (template.items && template.items.length > 0) {
-            setItems(template.items.map(item => ({
-              ...item,
-              id: uuidv4()
-            })));
+            const templateItems: ProposalItem[] = template.items.map(item => ({
+              id: uuidv4(),
+              name: item.name,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              taxRate: item.taxRate,
+              totalPrice: item.quantity * item.unitPrice
+            }));
+            setItems(templateItems);
           }
         }
       }
@@ -159,6 +165,7 @@ const ProposalFormPage = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) =>
         files,
         status: "draft",
         validUntil: data.expirationDate,
+        partnerType,
       };
 
       if (id) {
@@ -187,6 +194,7 @@ const ProposalFormPage = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) =>
         files,
         status: "new",
         validUntil: data.expirationDate,
+        partnerType,
       };
 
       if (id) {

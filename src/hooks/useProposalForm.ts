@@ -20,14 +20,13 @@ type DatabaseProposal = {
   items: ProposalItem[];
   discounts: number;
   additional_charges: number;
-  files: string[];
 }
 
 export const useProposalForm = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const getProposal = async (id: string): Promise<Proposal | null> => {
+  const getProposal = async (id: string): Promise<Proposal> => {
     try {
       const { data, error } = await supabase
         .from("proposals")
@@ -36,7 +35,7 @@ export const useProposalForm = () => {
         .single();
 
       if (error) throw error;
-      return data as Proposal;
+      return data as unknown as Proposal;
     } catch (error) {
       console.error("Error fetching proposal:", error);
       throw error;
@@ -52,9 +51,8 @@ export const useProposalForm = () => {
   const createProposal = useMutation({
     mutationFn: async (data: ProposalFormData) => {
       try {
-        const proposalData: Omit<DatabaseProposal, 'items' | 'files'> & { 
-          items: Json, 
-          files: Json 
+        const proposalData: Omit<DatabaseProposal, 'items'> & { 
+          items: Json
         } = {
           title: data.title,
           customer_id: data.partnerType === "customer" ? data.customer_id : null,
@@ -68,7 +66,6 @@ export const useProposalForm = () => {
           items: data.items as unknown as Json,
           discounts: data.discounts,
           additional_charges: data.additionalCharges,
-          files: [] as unknown as Json
         };
 
         const { data: proposal, error: proposalError } = await supabase
@@ -122,7 +119,7 @@ export const useProposalForm = () => {
 
   const updateProposal = async (id: string, data: ProposalFormData) => {
     try {
-      const proposalData: Omit<DatabaseProposal, 'items' | 'files'> & { 
+      const proposalData: Omit<DatabaseProposal, 'items'> & { 
         items: Json
       } = {
         title: data.title,
@@ -137,7 +134,6 @@ export const useProposalForm = () => {
         items: data.items as unknown as Json,
         discounts: data.discounts,
         additional_charges: data.additionalCharges,
-        files: [] as unknown as Json
       };
 
       const { error: updateError } = await supabase
@@ -193,9 +189,8 @@ export const useProposalForm = () => {
   const saveDraft = useMutation({
     mutationFn: async (data: ProposalFormData) => {
       try {
-        const proposalData: Omit<DatabaseProposal, 'items' | 'files'> & { 
-          items: Json, 
-          files: Json 
+        const proposalData: Omit<DatabaseProposal, 'items'> & { 
+          items: Json
         } = {
           title: data.title,
           customer_id: data.partnerType === "customer" ? data.customer_id : null,
@@ -209,7 +204,6 @@ export const useProposalForm = () => {
           items: data.items as unknown as Json,
           discounts: data.discounts,
           additional_charges: data.additionalCharges,
-          files: [] as unknown as Json
         };
 
         const { error } = await supabase
