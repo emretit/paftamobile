@@ -53,7 +53,11 @@ const ProposalItemsHeader = ({
           .order("name");
         
         if (error) throw error;
-        return data || [];
+        // Ensure products have the suppliers property (even if null)
+        return (data || []).map(product => ({
+          ...product,
+          suppliers: null
+        }));
       } catch (error) {
         console.error("Error fetching products:", error);
         return [];
@@ -169,3 +173,4 @@ const ProposalItemsHeader = ({
 };
 
 export default ProposalItemsHeader;
+

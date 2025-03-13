@@ -1,3 +1,4 @@
+
 import React, { useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProposalItem } from "@/types/proposal-form";
@@ -33,11 +34,7 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
   const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
 
   const onOpenProductDialog = () => {
-    if (selectedProduct) {
-      setProductDialogOpen(true);
-    } else {
-      setProductDialogOpen(true);
-    }
+    setProductDialogOpen(true);
   };
   
   const onAddItem = () => handleAddItem(items, setItems);
@@ -52,7 +49,10 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
   
   const onSelectProduct = (product: Product) => {
     setSelectedProduct(product);
-    handleSelectProduct(product, items, setItems);
+  };
+  
+  const onFinalSelectProduct = (product: Product, quantity?: number, customPrice?: number) => {
+    handleSelectProduct(product, items, setItems, quantity, customPrice);
   };
 
   return (
@@ -83,7 +83,7 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
       <ProductSearchDialog
         open={productDialogOpen}
         onOpenChange={setProductDialogOpen}
-        onSelectProduct={(product) => handleSelectProduct(product, items, setItems)}
+        onSelectProduct={onFinalSelectProduct}
         selectedCurrency={selectedCurrency}
         triggerRef={productBtnRef}
         initialSelectedProduct={selectedProduct}
@@ -93,3 +93,4 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
 };
 
 export default ProposalItemsSection;
+

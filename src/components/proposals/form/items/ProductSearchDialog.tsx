@@ -13,11 +13,12 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/types/product";
+import { Label } from "@/components/ui/label";
 
 interface ProductSearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectProduct: (product: Product) => void;
+  onSelectProduct: (product: Product, quantity?: number, customPrice?: number) => void;
   selectedCurrency: string;
   triggerRef?: React.RefObject<HTMLButtonElement>;
   initialSelectedProduct?: Product | null;
@@ -34,11 +35,14 @@ const ProductSearchDialog = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [customPrice, setCustomPrice] = useState<number | undefined>(undefined);
   
   // Update selectedProduct when initialSelectedProduct changes or when dialog opens
   useEffect(() => {
     if (open && initialSelectedProduct) {
       setSelectedProduct(initialSelectedProduct);
+      setCustomPrice(initialSelectedProduct.price);
       // If we have an initial product, open the details dialog automatically
       setDetailsDialogOpen(true);
     }
@@ -51,11 +55,16 @@ const ProductSearchDialog = ({
       try {
         const { data, error } = await supabase
           .from("products")
-          .select("*, product_categories(*), suppliers(*)")
+          .select("*, product_categories(*)")
           .order("name");
         
         if (error) throw error;
-        return data || [];
+        
+        // Ensure each product has a suppliers property (even if null)
+        return (data || []).map(product => ({
+          ...product,
+          suppliers: product.suppliers || null
+        }));
       } catch (error) {
         console.error("Error fetching products:", error);
         return [];
@@ -71,12 +80,15 @@ const ProductSearchDialog = ({
   );
 
   const handleSelectProduct = (product: Product) => {
-    onSelectProduct(product);
+    onSelectProduct(product, quantity, customPrice);
     onOpenChange(false);
+    setDetailsDialogOpen(false);
   };
 
   const openProductDetails = (product: Product) => {
     setSelectedProduct(product);
+    setCustomPrice(product.price);
+    setQuantity(1);
     setDetailsDialogOpen(true);
   };
 
@@ -152,7 +164,7 @@ const ProductSearchDialog = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleSelectProduct(product)}
+                        onClick={() => openProductDetails(product)}
                         className="ml-2 whitespace-nowrap"
                       >
                         Seç
@@ -181,6 +193,7 @@ const ProductSearchDialog = ({
                   <p className="text-sm text-muted-foreground">{selectedProduct.description}</p>
                 </div>
                 
+                {/* Product details - left column */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-sm text-muted-foreground">SKU</p>
@@ -190,14 +203,17 @@ const ProductSearchDialog = ({
                     <p className="text-sm text-muted-foreground">Barkod</p>
                     <p className="font-medium">{selectedProduct.barcode || "-"}</p>
                   </div>
+                  
+                  {/* Price fields */}
                   <div>
-                    <p className="text-sm text-muted-foreground">Fiyat</p>
+                    <p className="text-sm text-muted-foreground">Satış Fiyatı</p>
                     <p className="font-medium">{formatCurrency(selectedProduct.price, selectedProduct.currency)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Alış Fiyatı</p>
                     <p className="font-medium">{selectedProduct.purchase_price ? formatCurrency(selectedProduct.purchase_price, selectedProduct.currency) : "-"}</p>
                   </div>
+                  
                   <div>
                     <p className="text-sm text-muted-foreground">Stok</p>
                     <p className="font-medium">{selectedProduct.stock_quantity} {selectedProduct.unit}</p>
@@ -218,6 +234,7 @@ const ProductSearchDialog = ({
               </div>
               
               <div className="flex flex-col space-y-4">
+                {/* Product image */}
                 {selectedProduct.image_url ? (
                   <img 
                     src={selectedProduct.image_url} 
@@ -230,6 +247,31 @@ const ProductSearchDialog = ({
                   </div>
                 )}
                 
+                {/* Quantity and custom price inputs */}
+                <div className="grid grid-cols-2 gap-4 my-4">
+                  <div>
+                    <Label htmlFor="quantity">Adet</Label>
+                    <Input 
+                      id="quantity" 
+                      type="number" 
+                      min="1" 
+                      value={quantity} 
+                      onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} 
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="price">Birim Fiyat ({selectedProduct.currency})</Label>
+                    <Input 
+                      id="price" 
+                      type="number" 
+                      min="0" 
+                      step="0.01" 
+                      value={customPrice ?? selectedProduct.price} 
+                      onChange={(e) => setCustomPrice(parseFloat(e.target.value) || 0)} 
+                    />
+                  </div>
+                </div>
+                
                 <div className="flex justify-end mt-auto">
                   <Button 
                     variant="outline" 
@@ -239,12 +281,9 @@ const ProductSearchDialog = ({
                     Kapat
                   </Button>
                   <Button 
-                    onClick={() => {
-                      handleSelectProduct(selectedProduct);
-                      setDetailsDialogOpen(false);
-                    }}
+                    onClick={() => handleSelectProduct(selectedProduct)}
                   >
-                    Bu Ürünü Seç
+                    Teklife Ekle
                   </Button>
                 </div>
               </div>
@@ -257,3 +296,4 @@ const ProductSearchDialog = ({
 };
 
 export default ProductSearchDialog;
+

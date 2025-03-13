@@ -38,10 +38,12 @@ export const useProposalItems = () => {
   const handleSelectProduct = (
     product: Product, 
     items: ProposalItem[], 
-    setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>
+    setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>,
+    quantity: number = 1,
+    customPrice?: number
   ) => {
-    // Get the product price or use the purchase_price if available
-    const price = product.price || 0;
+    // Use the custom price if provided, otherwise use the product's price
+    const price = customPrice !== undefined ? customPrice : (product.price || 0);
     
     // Convert price to the selected currency if needed
     let convertedPrice = price;
@@ -53,10 +55,10 @@ export const useProposalItems = () => {
       id: uuidv4(),
       product_id: product.id,
       name: product.name,
-      quantity: 1,
+      quantity: quantity,
       unitPrice: convertedPrice,
       taxRate: product.tax_rate || 18,
-      totalPrice: convertedPrice,
+      totalPrice: quantity * convertedPrice,
       currency: selectedCurrency
     };
     
@@ -123,3 +125,4 @@ export const useProposalItems = () => {
     convertCurrency
   };
 };
+
