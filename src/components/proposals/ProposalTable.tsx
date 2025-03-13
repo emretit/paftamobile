@@ -18,7 +18,8 @@ interface ProposalTableProps {
 }
 
 const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
-  const { data, isLoading } = useProposals(filters);
+  // Call useProposals without any filters
+  const { data, isLoading } = useProposals();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   

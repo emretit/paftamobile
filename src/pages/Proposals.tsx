@@ -15,6 +15,7 @@ interface ProposalsProps {
 }
 
 const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
+  // Set empty filters to show all proposals
   const [filters, setFilters] = useState<ProposalFiltersType>({
     search: "",
     status: "all",
@@ -26,18 +27,14 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
   });
   const navigate = useNavigate();
   
-  const { data: proposals, isLoading, error } = useProposals({
-    search: filters.search,
-    status: filters.status !== "all" ? filters.status : undefined,
-    employeeId: filters.employeeId !== null ? filters.employeeId : undefined,
-    dateRange: filters.dateRange,
-  });
+  // Call useProposals without applying any filters
+  const { data: proposals, isLoading, error } = useProposals();
 
   const handleFilterChange = (newFilters: ProposalFiltersType) => {
     setFilters(newFilters);
+    // We're not using these filters anymore
   };
 
-  // Fixed the parameter type to accept a Proposal object
   const handleProposalClick = (proposal: Proposal) => {
     navigate(`/proposals/${proposal.id}`);
   };
@@ -58,11 +55,13 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
             </p>
           </div>
 
+          {/* Commenting out the filters card
           <Card className="mb-6">
             <CardContent className="p-6">
               <ProposalFilters onFilterChange={handleFilterChange} />
             </CardContent>
           </Card>
+          */}
 
           <div className="mb-4">
             <ProposalActions proposal={null} />

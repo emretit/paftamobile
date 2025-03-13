@@ -21,6 +21,7 @@ export const useProposals = (filters?: ProposalFilters) => {
       try {
         console.log("Fetching proposals with filters:", filters);
         
+        // Basic query without filters to get all proposals
         let query = supabase.from("proposals").select(`
           *,
           customer:customer_id(*),
@@ -28,6 +29,8 @@ export const useProposals = (filters?: ProposalFilters) => {
           employee:employee_id(*)
         `);
 
+        // Commenting out all filters to display all proposals
+        /* 
         // Apply filters if provided
         if (filters) {
           // Search filter
@@ -54,6 +57,7 @@ export const useProposals = (filters?: ProposalFilters) => {
               .lte("created_at", filters.dateRange.to.toISOString());
           }
         }
+        */
 
         const { data, error } = await query;
 
