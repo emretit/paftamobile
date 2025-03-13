@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import { ProposalActions } from "@/components/proposals/ProposalActions";
 import ProposalTable from "@/components/proposals/ProposalTable";
 import { ProposalFilters, ProposalFilters as ProposalFiltersType } from "@/components/proposals/ProposalFilters";
+import { Proposal } from "@/types/proposal";
 
 interface ProposalsProps {
   isCollapsed: boolean;
@@ -36,8 +37,9 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
     setFilters(newFilters);
   };
 
-  const handleProposalClick = (id: string) => {
-    navigate(`/proposals/${id}`);
+  // Fixed the parameter type to accept a Proposal object
+  const handleProposalClick = (proposal: Proposal) => {
+    navigate(`/proposals/${proposal.id}`);
   };
 
   return (
