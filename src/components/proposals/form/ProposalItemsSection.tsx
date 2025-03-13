@@ -93,4 +93,3 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
 };
 
 export default ProposalItemsSection;
-

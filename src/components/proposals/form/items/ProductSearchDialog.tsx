@@ -2,18 +2,20 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
-import { Search, Info } from "lucide-react";
+import { Search, Info, X, Plus, Minus, Package, Tag, Warehouse } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Dialog, 
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogClose
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/types/product";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ProductSearchDialogProps {
   open: boolean;
@@ -37,6 +39,8 @@ const ProductSearchDialog = ({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [customPrice, setCustomPrice] = useState<number | undefined>(undefined);
+  const [selectedDepo, setSelectedDepo] = useState("Ana Depo");
+  const [discountRate, setDiscountRate] = useState(0);
   
   // Update selectedProduct when initialSelectedProduct changes or when dialog opens
   useEffect(() => {
@@ -60,10 +64,10 @@ const ProductSearchDialog = ({
         
         if (error) throw error;
         
-        // Ensure each product has a suppliers property (even if null)
+        // Add a suppliers property to each product (null for now)
         return (data || []).map(product => ({
           ...product,
-          suppliers: product.suppliers || null
+          suppliers: null
         }));
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -79,16 +83,19 @@ const ProductSearchDialog = ({
     (product.barcode && product.barcode.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const handleSelectProduct = (product: Product) => {
-    onSelectProduct(product, quantity, customPrice);
-    onOpenChange(false);
-    setDetailsDialogOpen(false);
+  const handleSelectProduct = () => {
+    if (selectedProduct) {
+      onSelectProduct(selectedProduct, quantity, customPrice);
+      onOpenChange(false);
+      setDetailsDialogOpen(false);
+    }
   };
 
   const openProductDetails = (product: Product) => {
     setSelectedProduct(product);
     setCustomPrice(product.price);
     setQuantity(1);
+    setDiscountRate(0);
     setDetailsDialogOpen(true);
   };
 
@@ -97,6 +104,34 @@ const ProductSearchDialog = ({
       style: 'currency', 
       currency: currency 
     }).format(amount);
+  };
+
+  const incrementQuantity = () => {
+    setQuantity(prev => prev + 1);
+  };
+
+  const decrementQuantity = () => {
+    setQuantity(prev => prev > 1 ? prev - 1 : 1);
+  };
+
+  // Calculate total with discount
+  const calculateTotal = () => {
+    if (!customPrice) return 0;
+    const total = quantity * customPrice;
+    const discount = total * (discountRate / 100);
+    return total - discount;
+  };
+
+  // Calculate VAT amount
+  const calculateVAT = () => {
+    if (!selectedProduct) return 0;
+    const subtotal = calculateTotal();
+    return subtotal * (selectedProduct.tax_rate / 100);
+  };
+
+  // Calculate final total with VAT
+  const calculateFinalTotal = () => {
+    return calculateTotal() + calculateVAT();
   };
 
   return (
@@ -140,7 +175,7 @@ const ProductSearchDialog = ({
                         />
                       ) : (
                         <div className="w-12 h-12 bg-muted rounded flex items-center justify-center text-muted-foreground">
-                          No img
+                          <Package className="h-6 w-6" />
                         </div>
                       )}
                       <div className="flex-1">
@@ -180,87 +215,82 @@ const ProductSearchDialog = ({
 
       {/* Product Details Dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Ürün Detayları</DialogTitle>
+            <DialogTitle className="text-xl font-bold">
+              {selectedProduct?.name}
+            </DialogTitle>
+            <DialogClose />
           </DialogHeader>
           
           {selectedProduct && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold">{selectedProduct.name}</h3>
-                  <p className="text-sm text-muted-foreground">{selectedProduct.description}</p>
-                </div>
-                
-                {/* Product details - left column */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-sm text-muted-foreground">SKU</p>
-                    <p className="font-medium">{selectedProduct.sku || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Barkod</p>
-                    <p className="font-medium">{selectedProduct.barcode || "-"}</p>
-                  </div>
-                  
-                  {/* Price fields */}
-                  <div>
-                    <p className="text-sm text-muted-foreground">Satış Fiyatı</p>
-                    <p className="font-medium">{formatCurrency(selectedProduct.price, selectedProduct.currency)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Alış Fiyatı</p>
-                    <p className="font-medium">{selectedProduct.purchase_price ? formatCurrency(selectedProduct.purchase_price, selectedProduct.currency) : "-"}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm text-muted-foreground">Stok</p>
-                    <p className="font-medium">{selectedProduct.stock_quantity} {selectedProduct.unit}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Vergi Oranı</p>
-                    <p className="font-medium">%{selectedProduct.tax_rate}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Kategori</p>
-                    <p className="font-medium">{selectedProduct.product_categories?.name || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Durum</p>
-                    <p className="font-medium capitalize">{selectedProduct.status}</p>
-                  </div>
-                </div>
+            <div className="space-y-6">
+              <div className="bg-emerald-100 p-4 rounded-lg">
+                <h2 className="text-lg font-semibold text-emerald-800 mb-1 break-all">
+                  {selectedProduct.name}
+                </h2>
+                {selectedProduct.description && (
+                  <p className="text-sm text-emerald-700">{selectedProduct.description}</p>
+                )}
               </div>
               
-              <div className="flex flex-col space-y-4">
-                {/* Product image */}
-                {selectedProduct.image_url ? (
-                  <img 
-                    src={selectedProduct.image_url} 
-                    alt={selectedProduct.name} 
-                    className="w-full h-64 object-contain rounded border"
-                  />
-                ) : (
-                  <div className="w-full h-64 bg-muted rounded flex items-center justify-center text-muted-foreground">
-                    Görsel Yok
-                  </div>
-                )}
-                
-                {/* Quantity and custom price inputs */}
-                <div className="grid grid-cols-2 gap-4 my-4">
-                  <div>
-                    <Label htmlFor="quantity">Adet</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="quantity" className="text-sm font-medium">Miktar</Label>
+                  <div className="flex items-center mt-1">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={decrementQuantity}
+                      className="h-8 w-8 rounded-r-none"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
                     <Input 
                       id="quantity" 
                       type="number" 
                       min="1" 
                       value={quantity} 
                       onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} 
+                      className="h-8 rounded-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={incrementQuantity}
+                      className="h-8 w-8 rounded-l-none"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
                   </div>
-                  <div>
-                    <Label htmlFor="price">Birim Fiyat ({selectedProduct.currency})</Label>
+                </div>
+                
+                <div>
+                  <Label htmlFor="depo" className="text-sm font-medium">Depo</Label>
+                  <Select 
+                    value={selectedDepo} 
+                    onValueChange={setSelectedDepo}
+                  >
+                    <SelectTrigger id="depo" className="w-full">
+                      <SelectValue placeholder="Depo seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Ana Depo">Ana Depo (8 Adet)</SelectItem>
+                      <SelectItem value="Yedek Depo">Yedek Depo (3 Adet)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="price" className="text-sm font-medium flex items-center gap-1">
+                    <Tag className="h-3.5 w-3.5" />
+                    Birim Fiyat ({selectedProduct.currency})
+                  </Label>
+                  <div className="relative mt-1">
                     <Input 
                       id="price" 
                       type="number" 
@@ -269,23 +299,73 @@ const ProductSearchDialog = ({
                       value={customPrice ?? selectedProduct.price} 
                       onChange={(e) => setCustomPrice(parseFloat(e.target.value) || 0)} 
                     />
+                    <div className="absolute right-3 top-3 opacity-70 text-sm">
+                      {selectedProduct.currency}
+                    </div>
                   </div>
+                  {selectedProduct.purchase_price && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Alış: {formatCurrency(selectedProduct.purchase_price, selectedProduct.currency)}
+                    </p>
+                  )}
                 </div>
                 
-                <div className="flex justify-end mt-auto">
-                  <Button 
-                    variant="outline" 
-                    className="mr-2"
-                    onClick={() => setDetailsDialogOpen(false)}
-                  >
-                    Kapat
-                  </Button>
-                  <Button 
-                    onClick={() => handleSelectProduct(selectedProduct)}
-                  >
-                    Teklife Ekle
-                  </Button>
+                <div>
+                  <Label htmlFor="discount" className="text-sm font-medium">İndirim Oranı (%)</Label>
+                  <div className="relative mt-1">
+                    <Input 
+                      id="discount" 
+                      type="number" 
+                      min="0" 
+                      max="100"
+                      value={discountRate} 
+                      onChange={(e) => setDiscountRate(parseFloat(e.target.value) || 0)} 
+                    />
+                    <div className="absolute right-3 top-3 opacity-70 text-sm">
+                      %
+                    </div>
+                  </div>
                 </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="notes" className="text-sm font-medium">Açıklama</Label>
+                <textarea 
+                  id="notes" 
+                  rows={3} 
+                  className="w-full mt-1 p-3 rounded-md border border-input bg-background text-sm ring-offset-background focus:outline-none focus:border-primary"
+                  placeholder="Ürün hakkında not ekleyin..."
+                />
+              </div>
+              
+              <div className="bg-muted/30 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span>Tutar</span>
+                  <span>{formatCurrency(calculateTotal(), selectedProduct.currency)}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span>KDV (%{selectedProduct.tax_rate})</span>
+                  <span>{formatCurrency(calculateVAT(), selectedProduct.currency)}</span>
+                </div>
+                <div className="border-t border-border pt-2 flex justify-between items-center font-medium">
+                  <span>TOPLAM</span>
+                  <span className="text-lg">{formatCurrency(calculateFinalTotal(), selectedProduct.currency)}</span>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 pt-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setDetailsDialogOpen(false)}
+                >
+                  İptal
+                </Button>
+                <Button 
+                  onClick={handleSelectProduct}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  Teklife Ekle
+                </Button>
               </div>
             </div>
           )}
@@ -296,4 +376,3 @@ const ProductSearchDialog = ({
 };
 
 export default ProductSearchDialog;
-
