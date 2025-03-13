@@ -1,3 +1,4 @@
+
 import { Download, FileText, TrendingUp, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DashboardCard from "@/components/DashboardCard";
@@ -5,7 +6,7 @@ import { useProposals } from "@/hooks/useProposals";
 import { toast } from "sonner";
 
 export const ProposalAnalytics = () => {
-  const { data: proposals } = useProposals();
+  const { proposals } = useProposals();
 
   // Calculate metrics
   const calculateMetrics = () => {

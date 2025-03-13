@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Proposal } from "@/types/proposal";
 
 export const useProposals = (filters?: any) => {
-  const { data: proposals = [], isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["proposals", filters],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -25,7 +25,8 @@ export const useProposals = (filters?: any) => {
 
       if (error) throw error;
       
-      return (data || []).map(proposal => {
+      // Transform the data to match Proposal type
+      const formattedData = (data || []).map(proposal => {
         // Handle the case where employee might be null or an error object
         const employeeData = proposal.employee && 
           typeof proposal.employee === 'object' && 
@@ -44,12 +45,14 @@ export const useProposals = (filters?: any) => {
               `${employeeData.first_name || ''} ${employeeData.last_name || ''}` : '-'
           }
         };
-      }) as Proposal[];
+      });
+
+      return formattedData as unknown as Proposal[];
     }
   });
 
   return {
-    proposals,
+    proposals: data || [],
     isLoading,
     error
   };

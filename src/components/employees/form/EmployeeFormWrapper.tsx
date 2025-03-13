@@ -40,7 +40,7 @@ export const EmployeeFormWrapper: React.FC<EmployeeFormWrapperProps> = ({
     gender: employee.gender || null,
     marital_status: employee.marital_status || null,
     address: employee.address || "",
-    country: employee.country || "",
+    country: employee.country || "Turkey",
     city: employee.city || "",
     district: employee.district || "",
     postal_code: employee.postal_code || "",
@@ -52,10 +52,17 @@ export const EmployeeFormWrapper: React.FC<EmployeeFormWrapperProps> = ({
   
   const [formData, setFormData] = useState<EmployeeFormData>(initialFormData);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleFormChange = (field: keyof EmployeeFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (formErrors[field]) {
+      setFormErrors(prev => {
+        const updated = { ...prev };
+        delete updated[field];
+        return updated;
+      });
+    }
   };
   
   const handleFileChange = (file: File | null) => {
@@ -67,6 +74,10 @@ export const EmployeeFormWrapper: React.FC<EmployeeFormWrapperProps> = ({
     const employeeData: Partial<Employee> = {
       ...formData,
       status: formData.status === 'active' ? 'aktif' : 'pasif', // Convert back to DB format
+      // Ensure gender is one of the allowed values or null
+      gender: formData.gender as "male" | "female" | "other" | null,
+      // Ensure marital_status is one of the allowed values or null
+      marital_status: formData.marital_status as "single" | "married" | "divorced" | "widowed" | null
     };
     
     await handleFormSubmit(employeeData);
@@ -79,19 +90,28 @@ export const EmployeeFormWrapper: React.FC<EmployeeFormWrapperProps> = ({
         <div className="space-y-8">
           <PersonalInfo
             formData={formData}
-            handleChange={handleFormChange}
-            handleFileChange={handleFileChange}
-            selectedFile={selectedFile}
+            onFormChange={handleFormChange}
+            errors={formErrors}
+            isEditMode={isEditMode}
           />
           
           <RoleInfo
             formData={formData}
-            handleChange={handleFormChange}
+            departments={[
+              { id: "1", name: "Sales" },
+              { id: "2", name: "Marketing" },
+              { id: "3", name: "HR" },
+              { id: "4", name: "Development" },
+              { id: "5", name: "Support" },
+            ]}
+            onFormChange={handleFormChange}
+            errors={formErrors}
           />
           
           <StatusInfo
             formData={formData}
-            handleChange={handleFormChange}
+            onFormChange={handleFormChange}
+            errors={formErrors}
           />
           
           <FormActions

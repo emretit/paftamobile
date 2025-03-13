@@ -16,8 +16,27 @@ export const useEmployeeForm = () => {
     setIsSubmitting(true);
     try {
       const employeeData = {
-        ...data,
+        first_name: data.first_name || "",
+        last_name: data.last_name || "",
+        email: data.email || "",
+        position: data.position || "",
+        department: data.department || "",
+        hire_date: data.hire_date || new Date().toISOString().split('T')[0],
         status: data.status || "aktif",
+        phone: data.phone || null,
+        avatar_url: data.avatar_url || null,
+        date_of_birth: data.date_of_birth || null,
+        gender: data.gender || null,
+        marital_status: data.marital_status || null,
+        address: data.address || null,
+        country: data.country || null,
+        city: data.city || null,
+        district: data.district || null,
+        postal_code: data.postal_code || null,
+        id_ssn: data.id_ssn || null,
+        emergency_contact_name: data.emergency_contact_name || null,
+        emergency_contact_phone: data.emergency_contact_phone || null,
+        emergency_contact_relation: data.emergency_contact_relation || null
       };
 
       const { error, data: newEmployee } = await supabase
@@ -56,12 +75,41 @@ export const useEmployeeForm = () => {
   const handleUpdate = async (id: string, data: Partial<Employee>) => {
     setIsSubmitting(true);
     try {
+      // Create a properly typed object for update
+      const updateData = {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+        position: data.position,
+        department: data.department,
+        hire_date: data.hire_date,
+        status: data.status === 'active' ? 'aktif' : data.status === 'inactive' ? 'pasif' : data.status,
+        phone: data.phone,
+        avatar_url: data.avatar_url,
+        date_of_birth: data.date_of_birth,
+        gender: data.gender,
+        marital_status: data.marital_status,
+        address: data.address,
+        country: data.country,
+        city: data.city,
+        district: data.district,
+        postal_code: data.postal_code,
+        id_ssn: data.id_ssn,
+        emergency_contact_name: data.emergency_contact_name,
+        emergency_contact_phone: data.emergency_contact_phone,
+        emergency_contact_relation: data.emergency_contact_relation
+      };
+
+      // Remove undefined fields
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key as keyof typeof updateData] === undefined) {
+          delete updateData[key as keyof typeof updateData];
+        }
+      });
+      
       const { error } = await supabase
         .from("employees")
-        .update({
-          ...data,
-          status: data.status || "aktif",
-        })
+        .update(updateData)
         .eq("id", id);
 
       if (error) throw error;

@@ -7,8 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Department, EmployeeFormData } from "./types";
-import { POSITIONS } from "./types";
+import type { Department, EmployeeFormData, Position } from "./types";
 
 interface RoleInfoProps {
   formData: EmployeeFormData;
@@ -18,6 +17,20 @@ interface RoleInfoProps {
 }
 
 export const RoleInfo = ({ formData, departments, onFormChange, errors }: RoleInfoProps) => {
+  // Define available positions
+  const POSITIONS: Position[] = [
+    "Manager", 
+    "Sales Representative", 
+    "Marketing Specialist", 
+    "Developer", 
+    "Designer", 
+    "HR Specialist", 
+    "Customer Support", 
+    "Admin", 
+    "Director", 
+    "Technician"
+  ];
+
   const shouldShowDepartment = formData.position !== 'Admin';
 
   return (

@@ -32,9 +32,10 @@ export const useEditableEmployeeForm = ({ employee, onSuccess }: UseEditableEmpl
         .from('employees')
         .update({
           ...updatedEmployee,
-          status: updatedEmployee.status === 'active' ? 'aktif' : 
-                 updatedEmployee.status === 'inactive' ? 'pasif' : 
-                 updatedEmployee.status,
+          // Ensure we're saving the correct status format to DB
+          status: updatedEmployee.status === 'aktif' || updatedEmployee.status === 'active' 
+            ? 'aktif' 
+            : 'pasif',
         })
         .eq('id', employee.id);
 
