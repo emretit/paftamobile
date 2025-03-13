@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { ProposalTemplate } from "@/types/proposal-template";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { useProposalForm } from "@/hooks/useProposalForm";
+import { useProposalTemplates } from "@/hooks/useProposalTemplates";
 
 interface ProposalFormProps {
   isCollapsed: boolean;
@@ -20,9 +21,37 @@ interface ProposalFormProps {
 
 const ProposalFormPage = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { data: templates, isLoading } = useProposalTemplates();
   const [selectedTemplate, setSelectedTemplate] = useState<ProposalTemplate | null>(null);
   const [activeTab, setActiveTab] = useState<string>("templates");
   const { createProposal, saveDraft } = useProposalForm();
+
+  // Auto-select template based on URL parameter
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const templateId = searchParams.get('template');
+    
+    if (templateId && templates && !isLoading) {
+      const template = templates.find(t => t.id === templateId);
+      
+      if (template) {
+        setSelectedTemplate(template);
+        setActiveTab("form");
+      } else if (templateId === "empty") {
+        // Handle empty template
+        setSelectedTemplate({
+          id: "empty",
+          name: "Boş Teklif",
+          description: "Sıfırdan yeni bir teklif oluşturun.",
+          icon: "file-plus",
+          category: "Boş",
+          items: []
+        });
+        setActiveTab("form");
+      }
+    }
+  }, [location.search, templates, isLoading]);
 
   const handleTemplateSelect = (template: ProposalTemplate) => {
     setSelectedTemplate(template);

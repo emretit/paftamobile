@@ -20,7 +20,7 @@ export const ProposalActions = ({ proposal }: ProposalActionsProps) => {
       </div>
       <Button 
         size="sm" 
-        onClick={() => navigate("/proposal-form")}
+        onClick={() => navigate("/proposal-form?template=1")} // Using standard template ID "1"
       >
         <Plus className="h-4 w-4 mr-2" />
         Yeni Teklif
