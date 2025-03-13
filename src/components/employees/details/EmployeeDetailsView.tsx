@@ -26,7 +26,8 @@ export const EmployeeDetailsView = ({
   const normalizedEmployee: Employee = {
     ...employee,
     // Ensure status is normalized - convert string to EmployeeStatus
-    status: (employee.status === "active" || employee.status === "aktif") ? "aktif" : "pasif",
+    // Use type safe string comparison rather than direct comparison
+    status: (employee.status === "aktif" || String(employee.status) === "active") ? "aktif" : "pasif",
   };
 
   if (isEditing) {

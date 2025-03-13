@@ -27,22 +27,20 @@ export const useProposals = (filters?: any) => {
       
       // Transform the data to match Proposal type
       const formattedData = (data || []).map(proposal => {
-        // Handle null employee more safely
-        const employeeData = proposal.employee && 
-          typeof proposal.employee === 'object' && 
-          !('error' in proposal.employee) ? 
-          proposal.employee : 
-          { id: '', first_name: '', last_name: '' };
+        // Handle null employee more safely with optional chaining and nullish coalescing
+        const employeeFirstName = proposal.employee?.first_name ?? '';
+        const employeeLastName = proposal.employee?.last_name ?? '';
+        const employeeId = proposal.employee?.id ?? '';
         
         return {
           ...proposal,
           customer_name: proposal.customer?.name || '-',
-          created_by_name: employeeData ? 
-            `${employeeData.first_name || ''} ${employeeData.last_name || ''}` : '-',
+          created_by_name: employeeFirstName || employeeLastName ? 
+            `${employeeFirstName} ${employeeLastName}`.trim() : '-',
           created_by: {
-            id: employeeData?.id || '',
-            name: employeeData ? 
-              `${employeeData.first_name || ''} ${employeeData.last_name || ''}` : '-'
+            id: employeeId,
+            name: employeeFirstName || employeeLastName ? 
+              `${employeeFirstName} ${employeeLastName}`.trim() : '-'
           }
         };
       });
