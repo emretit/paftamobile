@@ -38,7 +38,8 @@ export const ProposalWorkflowProgress = ({
       <div className="flex justify-between relative">
         {workflowSteps.map((step, index) => {
           const isActive = currentStepIndex >= index;
-          const style = statusStyles[step] || {};
+          // Add fallback values for style if the step doesn't exist in statusStyles
+          const style = statusStyles[step] || { bg: "bg-gray-200", text: "text-gray-500" };
           
           return (
             <div 
