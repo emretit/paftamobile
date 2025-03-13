@@ -15,7 +15,7 @@ const mapEmployeeToFormData = (employee: Employee): EmployeeFormData => {
     position: employee.position,
     department: employee.department,
     hire_date: employee.hire_date,
-    status: employee.status,
+    status: employee.status === 'aktif' ? 'active' : 'inactive', // Convert status
     avatar_url: employee.avatar_url || '',
     date_of_birth: employee.date_of_birth || '',
     gender: employee.gender || null,

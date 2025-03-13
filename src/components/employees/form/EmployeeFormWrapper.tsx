@@ -5,7 +5,8 @@ import { PersonalInfo } from "./PersonalInfo";
 import { RoleInfo } from "./RoleInfo";
 import { FormActions } from "./FormActions";
 import { StatusInfo } from "./StatusInfo";
-import { Employee, EmployeeFormData } from "@/types/employee";
+import { Employee } from "@/types/employee";
+import { EmployeeFormData } from "./types";
 
 interface EmployeeFormWrapperProps {
   employee: Employee;
@@ -33,7 +34,7 @@ export const EmployeeFormWrapper: React.FC<EmployeeFormWrapperProps> = ({
     position: employee.position,
     department: employee.department,
     hire_date: employee.hire_date,
-    status: employee.status,
+    status: employee.status === 'aktif' ? 'active' : 'inactive', // Convert status
     avatar_url: employee.avatar_url || "",
     date_of_birth: employee.date_of_birth || "",
     gender: employee.gender || null,
@@ -64,7 +65,8 @@ export const EmployeeFormWrapper: React.FC<EmployeeFormWrapperProps> = ({
   const handleSubmit = async () => {
     // Convert EmployeeFormData back to Partial<Employee> for submission
     const employeeData: Partial<Employee> = {
-      ...formData
+      ...formData,
+      status: formData.status === 'active' ? 'aktif' : 'pasif', // Convert back to DB format
     };
     
     await handleFormSubmit(employeeData);
