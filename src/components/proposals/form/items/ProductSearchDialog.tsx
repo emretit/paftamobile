@@ -9,17 +9,15 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { ProposalItem } from "@/types/proposal-form";
-import { v4 as uuidv4 } from "uuid";
+import { Product } from "@/types/product";
 
 interface ProductSearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectProduct: (product: any) => void;
+  onSelectProduct: (product: Product) => void;
   selectedCurrency: string;
 }
 
@@ -38,7 +36,7 @@ const ProductSearchDialog = ({
       try {
         const { data, error } = await supabase
           .from("products")
-          .select("*")
+          .select("*, product_categories(*), suppliers(*)")
           .order("name");
         
         if (error) throw error;
@@ -52,11 +50,14 @@ const ProductSearchDialog = ({
 
   // Filter products based on search query
   const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (product.sku && product.sku.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (product.barcode && product.barcode.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const handleSelectProduct = (product: any) => {
+  const handleSelectProduct = (product: Product) => {
     onSelectProduct(product);
+    onOpenChange(false);
   };
 
   const formatCurrency = (amount: number, currency: string = "TRY") => {
@@ -68,20 +69,21 @@ const ProductSearchDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Ürün Seçimi</DialogTitle>
         </DialogHeader>
-        <div className="mb-4">
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Ürün adına göre ara..."
+            placeholder="Ürün adı, SKU veya barkoda göre ara..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
+            className="pl-9 w-full"
           />
         </div>
-        <ScrollArea className="h-[300px]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <ScrollArea className="h-[400px]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {isLoading ? (
               <div className="col-span-2 py-4 text-center text-muted-foreground">
                 Ürünler yükleniyor...
@@ -94,28 +96,37 @@ const ProductSearchDialog = ({
               filteredProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="p-3 border rounded cursor-pointer hover:bg-muted/40"
-                  onClick={() => handleSelectProduct(product)}
+                  className="p-3 border rounded hover:bg-muted/40 flex justify-between items-center"
                 >
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-3 flex-1">
                     {product.image_url ? (
                       <img
                         src={product.image_url}
                         alt={product.name}
-                        className="w-10 h-10 object-cover rounded"
+                        className="w-12 h-12 object-cover rounded"
                       />
                     ) : (
-                      <div className="w-10 h-10 bg-muted rounded flex items-center justify-center text-muted-foreground">
+                      <div className="w-12 h-12 bg-muted rounded flex items-center justify-center text-muted-foreground">
                         No img
                       </div>
                     )}
-                    <div>
-                      <p className="font-medium text-sm">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatCurrency(product.price || 0, selectedCurrency)}
-                      </p>
+                    <div className="flex-1">
+                      <p className="font-medium">{product.name}</p>
+                      <div className="flex flex-col text-sm text-muted-foreground">
+                        <span>SKU: {product.sku || "-"}</span>
+                        <span>Fiyat: {formatCurrency(product.price || 0, product.currency)}</span>
+                        <span>Stok: {product.stock_quantity || 0}</span>
+                      </div>
                     </div>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSelectProduct(product)}
+                    className="ml-2 whitespace-nowrap"
+                  >
+                    Seç
+                  </Button>
                 </div>
               ))
             )}

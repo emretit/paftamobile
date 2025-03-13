@@ -37,4 +37,5 @@ export interface Product {
   related_products: string[];
   product_categories: ProductCategory | null;
   suppliers: Supplier | null;
+  purchase_price?: number;
 }

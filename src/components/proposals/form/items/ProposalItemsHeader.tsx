@@ -3,7 +3,6 @@ import React from "react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Search, Plus } from "lucide-react";
-import { DialogTrigger } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,

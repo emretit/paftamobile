@@ -1,6 +1,5 @@
 
 import React from "react";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProposalItem } from "@/types/proposal-form";
 import { useProposalItems } from "./items/useProposalItems";
@@ -11,6 +10,7 @@ import {
   CURRENCY_OPTIONS, 
   TAX_RATE_OPTIONS 
 } from "./items/proposalItemsConstants";
+import { Product } from "@/types/product";
 
 interface ProposalItemsSectionProps {
   items: ProposalItem[];
@@ -41,7 +41,7 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
     handleRemoveItem(index, items, setItems);
   };
   
-  const onSelectProduct = (product: any) => {
+  const onSelectProduct = (product: Product) => {
     handleSelectProduct(product, items, setItems);
   };
 

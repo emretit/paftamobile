@@ -1,10 +1,11 @@
 
 import { useState } from "react";
 import { ProposalItem } from "@/types/proposal-form";
+import { Product } from "@/types/product";
 import { v4 as uuidv4 } from "uuid";
 import { DEFAULT_EXCHANGE_RATES } from "./proposalItemsConstants";
 
-export const useProposalItems = (initialItems: ProposalItem[] = []) => {
+export const useProposalItems = () => {
   const [selectedCurrency, setSelectedCurrency] = useState("TRY");
   const [exchangeRates, setExchangeRates] = useState<{[key: string]: number}>(DEFAULT_EXCHANGE_RATES);
   const [productDialogOpen, setProductDialogOpen] = useState(false);
@@ -35,23 +36,31 @@ export const useProposalItems = (initialItems: ProposalItem[] = []) => {
   };
 
   const handleSelectProduct = (
-    product: any, 
+    product: Product, 
     items: ProposalItem[], 
     setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>
   ) => {
+    // Get the product price or use the purchase_price if available
+    const price = product.price || 0;
+    
+    // Convert price to the selected currency if needed
+    let convertedPrice = price;
+    if (product.currency !== selectedCurrency) {
+      convertedPrice = convertCurrency(price, product.currency, selectedCurrency);
+    }
+    
     const newItem: ProposalItem = {
       id: uuidv4(),
       product_id: product.id,
       name: product.name,
       quantity: 1,
-      unitPrice: product.price || 0,
-      taxRate: 18, // Default tax rate
-      totalPrice: (product.price || 0),
+      unitPrice: convertedPrice,
+      taxRate: product.tax_rate || 18,
+      totalPrice: convertedPrice,
       currency: selectedCurrency
     };
     
     setItems([...items, newItem]);
-    setProductDialogOpen(false);
   };
 
   const handleRemoveItem = (
