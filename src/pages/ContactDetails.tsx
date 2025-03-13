@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
@@ -6,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ContactHeader } from "@/components/customers/details/ContactHeader";
 import { ContactTabs } from "@/components/customers/details/ContactTabs";
+import { EditableCustomerDetails } from "@/components/customers/details/EditableCustomerDetails";
 
 interface ContactDetailsProps {
   isCollapsed: boolean;
@@ -14,8 +16,9 @@ interface ContactDetailsProps {
 
 const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) => {
   const { id } = useParams();
+  const [isEditing, setIsEditing] = useState(false);
 
-  const { data: customer, isLoading } = useQuery({
+  const { data: customer, isLoading, refetch } = useQuery({
     queryKey: ['customer', id],
     queryFn: async () => {
       if (!id) return null;
@@ -36,6 +39,19 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
     },
     enabled: !!id,
   });
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
+  const handleSuccess = async () => {
+    setIsEditing(false);
+    await refetch();
+  };
 
   if (isLoading) {
     return (
@@ -71,8 +87,18 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
       <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
         <TopBar />
         <div className="p-8">
-          <ContactHeader customer={customer} id={id} />
-          <ContactTabs customer={customer} />
+          {isEditing ? (
+            <EditableCustomerDetails 
+              customer={customer} 
+              onCancel={handleCancel} 
+              onSuccess={handleSuccess}
+            />
+          ) : (
+            <>
+              <ContactHeader customer={customer} id={id || ''} onEdit={handleEdit} />
+              <ContactTabs customer={customer} />
+            </>
+          )}
         </div>
       </main>
     </div>

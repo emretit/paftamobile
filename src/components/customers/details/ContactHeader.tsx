@@ -7,9 +7,10 @@ import { Customer } from "@/types/customer";
 interface ContactHeaderProps {
   customer: Customer;
   id: string;
+  onEdit: () => void;
 }
 
-export const ContactHeader = ({ customer, id }: ContactHeaderProps) => {
+export const ContactHeader = ({ customer, id, onEdit }: ContactHeaderProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'aktif':
@@ -46,12 +47,10 @@ export const ContactHeader = ({ customer, id }: ContactHeaderProps) => {
           </div>
         </div>
       </div>
-      <Link to={`/contacts/${id}/edit`}>
-        <Button className="flex items-center gap-2">
-          <Pencil className="h-4 w-4" />
-          Düzenle
-        </Button>
-      </Link>
+      <Button className="flex items-center gap-2" onClick={onEdit}>
+        <Pencil className="h-4 w-4" />
+        Düzenle
+      </Button>
     </div>
   );
 };
