@@ -83,7 +83,10 @@ export const useEmployeeForm = () => {
         position: data.position,
         department: data.department,
         hire_date: data.hire_date,
-        status: data.status === 'active' ? 'aktif' : data.status === 'inactive' ? 'pasif' : data.status,
+        // Fix the status type comparison
+        status: String(data.status) === 'active' ? 'aktif' : 
+                String(data.status) === 'inactive' ? 'pasif' : 
+                data.status,
         phone: data.phone,
         avatar_url: data.avatar_url,
         date_of_birth: data.date_of_birth,

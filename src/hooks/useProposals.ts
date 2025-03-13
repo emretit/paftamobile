@@ -27,7 +27,7 @@ export const useProposals = (filters?: any) => {
       
       // Transform the data to match Proposal type
       const formattedData = (data || []).map(proposal => {
-        // Handle the case where employee might be null or an error object
+        // Handle null employee more safely
         const employeeData = proposal.employee && 
           typeof proposal.employee === 'object' && 
           !('error' in proposal.employee) ? 

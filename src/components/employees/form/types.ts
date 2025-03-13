@@ -53,6 +53,19 @@ export const POSITIONS: Position[] = [
   "Technician"
 ];
 
+// Add missing exports that are used in PersonalInfoExtended
+export const GENDERS = ["male", "female", "other"];
+export const MARITAL_STATUS = ["single", "married", "divorced", "widowed"];
+
+// Add validation schema that is referenced in useFormValidation
+export const formValidationSchema = {
+  first_name: { required: true, message: "First name is required" },
+  last_name: { required: true, message: "Last name is required" },
+  email: { required: true, message: "Email is required" },
+  position: { required: true, message: "Role is required" },
+  department: { required: true, message: "Department is required" }
+};
+
 export const initialFormData: EmployeeFormData = {
   first_name: '',
   last_name: '',

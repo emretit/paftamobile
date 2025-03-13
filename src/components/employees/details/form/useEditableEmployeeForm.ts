@@ -33,7 +33,7 @@ export const useEditableEmployeeForm = ({ employee, onSuccess }: UseEditableEmpl
         .update({
           ...updatedEmployee,
           // Ensure we're saving the correct status format to DB
-          status: updatedEmployee.status === 'aktif' || updatedEmployee.status === 'active' 
+          status: updatedEmployee.status === 'aktif' || String(updatedEmployee.status) === 'active' 
             ? 'aktif' 
             : 'pasif',
         })

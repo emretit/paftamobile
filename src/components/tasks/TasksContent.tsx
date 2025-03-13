@@ -30,10 +30,11 @@ const TasksContent = ({
 
       if (error) throw error;
       
-      // Convert to Task type with explicit type casting
+      // Convert to Task type with explicit type casting and add item_type if not present
       return (data || []).map(task => ({
         ...task,
-        item_type: task.item_type || "task"
+        // Add item_type with a default value if it doesn't exist
+        item_type: task.item_type || task.type || "task"
       })) as unknown as Task[];
     }
   });
