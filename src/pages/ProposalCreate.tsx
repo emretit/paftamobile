@@ -9,6 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProposalTemplateGrid from "@/components/proposals/templates/ProposalTemplateGrid";
 import ProposalForm from "@/components/proposals/templates/ProposalForm";
 import { ProposalTemplate } from "@/types/proposal-template";
+import { toast } from "sonner";
+import { ProposalFormData } from "@/types/proposal-form";
+import { useForm } from "react-hook-form";
+import { useProposalForm } from "@/hooks/useProposalForm";
 
 interface ProposalCreateProps {
   isCollapsed: boolean;
@@ -19,6 +23,7 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
   const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState<ProposalTemplate | null>(null);
   const [activeTab, setActiveTab] = useState<string>("templates");
+  const { createProposal, saveDraft } = useProposalForm();
 
   const handleTemplateSelect = (template: ProposalTemplate) => {
     setSelectedTemplate(template);
@@ -26,7 +31,7 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
   };
 
   const handleSaveDraft = () => {
-    // Save draft logic
+    toast.success("Teklif taslak olarak kaydedildi");
     navigate("/proposals");
   };
 

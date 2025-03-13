@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -13,7 +14,6 @@ import Suppliers from "@/pages/Suppliers";
 import SupplierDetails from "@/pages/SupplierDetails";
 import SupplierForm from "@/pages/SupplierForm";
 import Proposals from "@/pages/Proposals";
-import ProposalForm from "@/pages/ProposalForm";
 import ProposalCreate from "@/pages/ProposalCreate";
 import Deals from "@/pages/Deals";
 import DealsTable from "@/pages/DealsTable";
@@ -103,10 +103,6 @@ function App() {
           <Route
             path="/proposals"
             element={<ProtectedRoute><Proposals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/proposal-form"
-            element={<ProtectedRoute><ProposalForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
           <Route
             path="/proposal-create"
