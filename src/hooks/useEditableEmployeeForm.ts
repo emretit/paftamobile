@@ -29,14 +29,10 @@ export const useEditableEmployeeForm = ({ employee, onSuccess }: UseEditableEmpl
       // Create a copy of the employee to avoid modifying the original
       const employeeToUpdate = { ...updatedEmployee };
       
-      // Normalize status to match database expectations
-      // Important: The database expects 'aktif' or 'pasif', but the UI might use 'active' or 'inactive'
+      // Normalize status to match database expectations if needed
       if (employeeToUpdate.status) {
-        if (employeeToUpdate.status === 'active') {
-          employeeToUpdate.status = 'aktif' as any;
-        } else if (employeeToUpdate.status === 'inactive') {
-          employeeToUpdate.status = 'pasif' as any;
-        }
+        // Handle any status conversion if necessary in the future
+        // No conversion needed now as we standardized on 'aktif'/'pasif'
       }
 
       const { error } = await supabase

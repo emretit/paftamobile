@@ -1,4 +1,3 @@
-
 import { useMemo } from "react";
 import { 
   AreaChart, 
@@ -19,7 +18,7 @@ import { toast } from "sonner";
 import { useProposals } from "@/hooks/useProposals";
 
 const ProposalAnalytics = () => {
-  const { data: proposals } = useProposals();
+  const { proposals } = useProposals();
 
   // This would normally come from a hook or API call
   const chartData = useMemo(() => [

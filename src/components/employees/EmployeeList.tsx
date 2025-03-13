@@ -7,7 +7,7 @@ import type { ViewMode } from "@/types/employee";
 
 export const EmployeeList = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('table');
-  const { employees, isLoading, fetchEmployees } = useEmployeeData();
+  const { employees, isLoading, refetch } = useEmployeeData();
 
   return (
     <div className="space-y-6">
@@ -16,7 +16,7 @@ export const EmployeeList = () => {
         <EmployeeActions
           viewMode={viewMode}
           setViewMode={setViewMode}
-          onRefresh={fetchEmployees}
+          onRefresh={refetch}
           hasEmployees={employees.length > 0}
           isLoading={isLoading}
         />

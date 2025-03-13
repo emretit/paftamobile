@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Table, TableBody } from "@/components/ui/table";
 import { useProposals } from "@/hooks/useProposals";
@@ -18,7 +17,7 @@ interface ProposalTableProps {
 }
 
 const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
-  const { data: proposals, isLoading } = useProposals(filters);
+  const { proposals, isLoading } = useProposals();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { Card } from "@/components/ui/card";
@@ -22,7 +21,7 @@ interface ProposalsProps {
   setIsCollapsed: (value: boolean) => void;
 }
 
-const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
+const Proposals = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean; setIsCollapsed: (value: boolean) => void }) => {
   const [activeView, setActiveView] = useState<ViewType>("table");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
@@ -40,7 +39,7 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
     employeeId: null,
   });
 
-  const { data: proposals, isLoading } = useProposals(filters);
+  const { proposals, isLoading } = useProposals(filters);
 
   const handleSelectProposal = (proposal: Proposal) => {
     setSelectedProposal(proposal);

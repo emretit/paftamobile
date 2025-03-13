@@ -30,10 +30,11 @@ const TasksContent = ({
 
       if (error) throw error;
       
+      // Convert to Task type with explicit type casting
       return (data || []).map(task => ({
         ...task,
         item_type: task.item_type || "task"
-      })) as Task[];
+      })) as unknown as Task[];
     }
   });
 
