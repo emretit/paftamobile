@@ -45,9 +45,17 @@ export const useProposals = (filters?: {
         let employeeName = '-';
         let employeeId = null;
         
-        if (proposal.employee && typeof proposal.employee === 'object' && 'first_name' in proposal.employee) {
-          employeeName = `${proposal.employee.first_name || ''} ${proposal.employee.last_name || ''}`.trim() || '-';
-          employeeId = proposal.employee.id || null;
+        if (proposal.employee && typeof proposal.employee === 'object') {
+          // Check if the necessary fields exist before accessing them
+          if ('first_name' in proposal.employee) {
+            const firstName = proposal.employee.first_name || '';
+            const lastName = proposal.employee.last_name || '';
+            employeeName = `${firstName} ${lastName}`.trim() || '-';
+          }
+          
+          if ('id' in proposal.employee) {
+            employeeId = proposal.employee.id || null;
+          }
         }
         
         return {
