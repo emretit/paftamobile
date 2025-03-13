@@ -1,7 +1,7 @@
 
+import { useParams } from "react-router-dom";
 import ProductFormWrapper from "@/components/products/form/ProductFormWrapper";
-import Navbar from "@/components/Navbar";
-import { TopBar } from "@/components/TopBar";
+import DefaultLayout from "@/components/layouts/DefaultLayout";
 
 interface ProductFormProps {
   isCollapsed: boolean;
@@ -9,18 +9,18 @@ interface ProductFormProps {
 }
 
 const ProductForm = ({ isCollapsed, setIsCollapsed }: ProductFormProps) => {
+  const { id } = useParams();
+  const title = id ? "Ürün Düzenle" : "Yeni Ürün Ekle";
+  
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <main className={`flex-1 transition-all duration-300 ${
-        isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
-      }`}>
-        <TopBar />
-        <div className="container p-6">
-          <ProductFormWrapper />
-        </div>
-      </main>
-    </div>
+    <DefaultLayout 
+      isCollapsed={isCollapsed} 
+      setIsCollapsed={setIsCollapsed}
+      title={title}
+      subtitle="Ürün bilgilerini doldurun ve kaydedin"
+    >
+      <ProductFormWrapper />
+    </DefaultLayout>
   );
 };
 
