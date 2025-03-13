@@ -27,7 +27,7 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
       const { data, error } = await supabase
         .from('customers')
         .select('*')
-        .order('name', { ascending: true }); // Sort by name by default
+        .order('balance', { ascending: false }); // Sort by balance by default
       
       if (error) {
         console.error('Error fetching customers:', error);
