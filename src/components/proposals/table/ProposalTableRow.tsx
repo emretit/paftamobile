@@ -33,26 +33,22 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
     >
       <TableCell>#{proposal.proposal_number}</TableCell>
       <TableCell>
-        {proposal.customer?.name || "-"}
+        {proposal.customer_id ? proposal.customer_id : "-"}
       </TableCell>
       <TableCell>
         {getStatusBadge(proposal.status)}
       </TableCell>
       <TableCell>
-        {proposal.employee ? (
-          <div className="flex items-center gap-2">
-            <Avatar className="h-7 w-7">
-              <AvatarFallback className="text-xs">
-                {proposal.employee.first_name?.[0]}{proposal.employee.last_name?.[0]}
-              </AvatarFallback>
-            </Avatar>
-            <span>
-              {proposal.employee.first_name} {proposal.employee.last_name}
-            </span>
-          </div>
-        ) : (
-          "-"
-        )}
+        <div className="flex items-center gap-2">
+          <Avatar className="h-7 w-7">
+            <AvatarFallback className="text-xs">
+              TE
+            </AvatarFallback>
+          </Avatar>
+          <span>
+            {proposal.employee_id || "-"}
+          </span>
+        </div>
       </TableCell>
       <TableCell className="font-medium">
         {formatMoney(proposal.total_value)}

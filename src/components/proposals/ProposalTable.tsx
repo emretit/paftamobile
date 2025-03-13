@@ -19,7 +19,7 @@ interface ProposalTableProps {
 
 const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
   // Call useProposals without any filters
-  const { data, isLoading } = useProposals();
+  const { data, isLoading, error } = useProposals();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -61,6 +61,8 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
   };
 
   const formatMoney = (amount: number) => {
+    if (!amount && amount !== 0) return "₺0";
+    
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
       currency: 'TRY',
@@ -71,6 +73,15 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
 
   if (isLoading) {
     return <ProposalTableSkeleton />;
+  }
+  
+  if (error) {
+    console.error("Error loading proposals:", error);
+    return <div className="p-4 text-center text-red-500">Veri yüklenirken bir hata oluştu.</div>;
+  }
+
+  if (!data || data.length === 0) {
+    return <div className="p-4 text-center text-gray-500">Henüz teklif bulunmamaktadır.</div>;
   }
 
   return (

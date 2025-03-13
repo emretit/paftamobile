@@ -21,43 +21,8 @@ export const useProposals = (filters?: ProposalFilters) => {
       try {
         console.log("Fetching proposals with filters:", filters);
         
-        // Basic query without filters to get all proposals
-        let query = supabase.from("proposals").select(`
-          *,
-          customer:customer_id(*),
-          supplier:supplier_id(*),
-          employee:employee_id(*)
-        `);
-
-        // Commenting out all filters to display all proposals
-        /* 
-        // Apply filters if provided
-        if (filters) {
-          // Search filter
-          if (filters.search && filters.search.trim() !== "") {
-            query = query.or(
-              `title.ilike.%${filters.search}%,proposal_number.ilike.%${filters.search}%`
-            );
-          }
-
-          // Status filter
-          if (filters.status && filters.status !== "all") {
-            query = query.eq("status", filters.status);
-          }
-
-          // Employee filter
-          if (filters.employeeId && filters.employeeId !== "all") {
-            query = query.eq("employee_id", filters.employeeId);
-          }
-
-          // Date range filter
-          if (filters.dateRange?.from && filters.dateRange?.to) {
-            query = query
-              .gte("created_at", filters.dateRange.from.toISOString())
-              .lte("created_at", filters.dateRange.to.toISOString());
-          }
-        }
-        */
+        // Simplified query that doesn't use foreign key relationships
+        let query = supabase.from("proposals").select('*');
 
         const { data, error } = await query;
 
@@ -69,17 +34,8 @@ export const useProposals = (filters?: ProposalFilters) => {
 
         console.log("Fetched proposals:", data);
 
-        // Transform the data to include formatted names
-        return (data as any[]).map((proposal) => {
-          const employee = proposal.employee;
-          const customerName = proposal.customer?.name || proposal.supplier?.name || 'N/A';
-          
-          return {
-            ...proposal,
-            employee_name: employee ? `${employee.first_name} ${employee.last_name}` : 'N/A',
-            customer_name: customerName,
-          };
-        }) as Proposal[];
+        // Return the raw data without relationship transformations
+        return data as Proposal[];
       } catch (error) {
         console.error("Error in useProposals:", error);
         throw error;
