@@ -70,9 +70,9 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
       product_id: product.id,
       name: product.name,
       quantity: 1,
-      unitPrice: product.sale_price || 0,
+      unitPrice: product.price || 0, // Changed from sale_price to price
       taxRate: 18, // Default tax rate
-      totalPrice: product.sale_price || 0,
+      totalPrice: product.price || 0, // Changed from sale_price to price
     };
     
     setItems([...items, newItem]);
@@ -148,7 +148,7 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
                         <div>
                           <p className="font-medium text-sm">{product.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(product.sale_price || 0)}
+                            {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(product.price || 0)}
                           </p>
                         </div>
                       </div>

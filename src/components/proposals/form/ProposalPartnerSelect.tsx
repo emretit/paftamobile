@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { User, Building2, Plus, Phone, Mail, MapPin } from "lucide-react";
+import { User, Building2, Plus, Phone, Mail, MapPin, Search } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -21,6 +21,9 @@ import {
 import { useCustomerSelect } from "@/hooks/useCustomerSelect";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { CustomTabs, CustomTabsList, CustomTabsTrigger, CustomTabsContent } from "@/components/ui/custom-tabs";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ProposalPartnerSelectProps {
   partnerType: "customer" | "supplier";
@@ -30,6 +33,8 @@ const ProposalPartnerSelect = ({ partnerType }: ProposalPartnerSelectProps) => {
   const navigate = useNavigate();
   const { setValue, watch } = useFormContext();
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [localPartnerType, setLocalPartnerType] = useState<"customer" | "supplier">(partnerType);
   
   const customerId = watch("customer_id");
   const supplierId = watch("supplier_id");
@@ -39,8 +44,8 @@ const ProposalPartnerSelect = ({ partnerType }: ProposalPartnerSelectProps) => {
   const selectedCustomer = customers?.find(c => c.id === customerId);
   const selectedSupplier = suppliers?.find(s => s.id === supplierId);
   
-  const handleSelectPartner = (id: string) => {
-    if (partnerType === "customer") {
+  const handleSelectPartner = (id: string, type: "customer" | "supplier") => {
+    if (type === "customer") {
       setValue("customer_id", id);
       setValue("supplier_id", "");
     } else {
@@ -50,8 +55,8 @@ const ProposalPartnerSelect = ({ partnerType }: ProposalPartnerSelectProps) => {
     setIsOpen(false);
   };
   
-  const handleCreateNew = () => {
-    navigate(partnerType === "customer" ? "/contacts/new" : "/suppliers/new");
+  const handleCreateNew = (type: "customer" | "supplier") => {
+    navigate(type === "customer" ? "/contacts/new" : "/suppliers/new");
   };
   
   const getDisplayName = () => {
@@ -65,6 +70,18 @@ const ProposalPartnerSelect = ({ partnerType }: ProposalPartnerSelectProps) => {
   };
 
   const selectedPartner = partnerType === "customer" ? selectedCustomer : selectedSupplier;
+
+  const filteredCustomers = customers?.filter(customer => 
+    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (customer.company && customer.company.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (customer.email && customer.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const filteredSuppliers = suppliers?.filter(supplier => 
+    supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (supplier.company && supplier.company.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (supplier.email && supplier.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
     <div className="space-y-3">
@@ -88,53 +105,161 @@ const ProposalPartnerSelect = ({ partnerType }: ProposalPartnerSelectProps) => {
                 )}
                 {getDisplayName()}
               </div>
-              <User className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full p-0" align="start">
-            <Command>
-              <CommandInput 
-                placeholder={`${partnerType === "customer" ? "Müşteri" : "Tedarikçi"} ara...`} 
+          <PopoverContent className="w-[400px] max-w-[90vw] p-0" align="start">
+            <div className="p-4 border-b">
+              <Input
+                placeholder="Arama..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full"
               />
-              <CommandList>
-                <CommandEmpty>Sonuç bulunamadı.</CommandEmpty>
-                <CommandGroup>
+            </div>
+            
+            <CustomTabs defaultValue={partnerType} onValueChange={(value) => setLocalPartnerType(value as "customer" | "supplier")}>
+              <div className="px-4 pt-3 pb-1">
+                <CustomTabsList className="w-full">
+                  <CustomTabsTrigger value="customer" className="flex-1">
+                    <User className="h-4 w-4 mr-2" />
+                    Müşteriler
+                  </CustomTabsTrigger>
+                  <CustomTabsTrigger value="supplier" className="flex-1">
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Tedarikçiler
+                  </CustomTabsTrigger>
+                </CustomTabsList>
+              </div>
+              
+              <CustomTabsContent value="customer" className="p-0 focus-visible:outline-none focus-visible:ring-0">
+                <ScrollArea className="h-[300px]">
                   {isLoading ? (
-                    <CommandItem disabled>Yükleniyor...</CommandItem>
+                    <div className="p-4 text-center text-muted-foreground">Yükleniyor...</div>
+                  ) : filteredCustomers?.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground">Müşteri bulunamadı</div>
                   ) : (
-                    (partnerType === "customer" ? customers : suppliers)?.map((partner) => (
-                      <CommandItem
-                        key={partner.id}
-                        onSelect={() => handleSelectPartner(partner.id)}
-                        className="flex flex-col items-start"
-                      >
-                        <div className="font-medium">{partner.name}</div>
-                        {partner.company && (
-                          <div className="text-sm text-muted-foreground">
-                            {partner.company}
+                    <div className="grid gap-1 p-2">
+                      {filteredCustomers?.map((customer) => (
+                        <div
+                          key={customer.id}
+                          className={`flex items-start p-2 cursor-pointer rounded-md hover:bg-muted/50 ${
+                            customer.id === customerId ? "bg-muted" : ""
+                          }`}
+                          onClick={() => handleSelectPartner(customer.id, "customer")}
+                        >
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-3 mt-1">
+                            {customer.name.charAt(0).toUpperCase()}
                           </div>
-                        )}
-                        {partner.email && (
-                          <div className="text-xs text-muted-foreground">
-                            {partner.email}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between">
+                              <p className="font-medium truncate">{customer.name}</p>
+                              {customer.status && (
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                  customer.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                                }`}>
+                                  {customer.status === "active" ? "Aktif" : "Pasif"}
+                                </span>
+                              )}
+                            </div>
+                            {customer.company && (
+                              <p className="text-sm text-muted-foreground truncate">{customer.company}</p>
+                            )}
+                            {customer.email && (
+                              <div className="flex items-center text-xs text-muted-foreground mt-1">
+                                <Mail className="h-3 w-3 mr-1" />
+                                <span className="truncate">{customer.email}</span>
+                              </div>
+                            )}
+                            {customer.mobile_phone && (
+                              <div className="flex items-center text-xs text-muted-foreground mt-1">
+                                <Phone className="h-3 w-3 mr-1" />
+                                <span>{customer.mobile_phone}</span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </CommandItem>
-                    ))
+                        </div>
+                      ))}
+                    </div>
                   )}
-                </CommandGroup>
-                <CommandSeparator />
-                <CommandGroup>
-                  <CommandItem
-                    onSelect={handleCreateNew}
-                    className="text-primary"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    <span>Yeni {partnerType === "customer" ? "Müşteri" : "Tedarikçi"} Ekle</span>
-                  </CommandItem>
-                </CommandGroup>
-              </CommandList>
-            </Command>
+                  <div className="p-2 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleCreateNew("customer")}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Yeni Müşteri Ekle
+                    </Button>
+                  </div>
+                </ScrollArea>
+              </CustomTabsContent>
+              
+              <CustomTabsContent value="supplier" className="p-0 focus-visible:outline-none focus-visible:ring-0">
+                <ScrollArea className="h-[300px]">
+                  {isLoading ? (
+                    <div className="p-4 text-center text-muted-foreground">Yükleniyor...</div>
+                  ) : filteredSuppliers?.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground">Tedarikçi bulunamadı</div>
+                  ) : (
+                    <div className="grid gap-1 p-2">
+                      {filteredSuppliers?.map((supplier) => (
+                        <div
+                          key={supplier.id}
+                          className={`flex items-start p-2 cursor-pointer rounded-md hover:bg-muted/50 ${
+                            supplier.id === supplierId ? "bg-muted" : ""
+                          }`}
+                          onClick={() => handleSelectPartner(supplier.id, "supplier")}
+                        >
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-3 mt-1">
+                            <Building2 className="h-4 w-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between">
+                              <p className="font-medium truncate">{supplier.name}</p>
+                              {supplier.status && (
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                  supplier.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                                }`}>
+                                  {supplier.status === "active" ? "Aktif" : "Pasif"}
+                                </span>
+                              )}
+                            </div>
+                            {supplier.company && (
+                              <p className="text-sm text-muted-foreground truncate">{supplier.company}</p>
+                            )}
+                            {supplier.email && (
+                              <div className="flex items-center text-xs text-muted-foreground mt-1">
+                                <Mail className="h-3 w-3 mr-1" />
+                                <span className="truncate">{supplier.email}</span>
+                              </div>
+                            )}
+                            {supplier.mobile_phone && (
+                              <div className="flex items-center text-xs text-muted-foreground mt-1">
+                                <Phone className="h-3 w-3 mr-1" />
+                                <span>{supplier.mobile_phone}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="p-2 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleCreateNew("supplier")}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Yeni Tedarikçi Ekle
+                    </Button>
+                  </div>
+                </ScrollArea>
+              </CustomTabsContent>
+            </CustomTabs>
           </PopoverContent>
         </Popover>
       </div>

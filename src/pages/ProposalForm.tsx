@@ -70,10 +70,10 @@ const ProposalFormPage = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) =>
             paymentTerm: proposal.payment_term || "prepaid",
             status: proposal.status,
             customer_id: proposal.customer_id || "",
-            supplier_id: proposal.supplier_id || "",
+            supplier_id: proposal.supplier_id || "", 
             employee_id: proposal.employee_id || "",
-            discounts: proposal.discounts || 0,
-            additionalCharges: proposal.additional_charges || 0,
+            discounts: proposal.discounts || 0, 
+            additionalCharges: proposal.additional_charges || 0, 
             internalNotes: proposal.internal_notes || "",
           });
 
@@ -82,7 +82,7 @@ const ProposalFormPage = ({ isCollapsed, setIsCollapsed }: ProposalFormProps) =>
 
           // Set items if available
           if (proposal.items && Array.isArray(proposal.items)) {
-            const convertedItems = proposal.items.map(item => ({
+            const convertedItems = proposal.items.map((item: any) => ({
               id: item.id || uuidv4(),
               name: item.name,
               quantity: item.quantity,
