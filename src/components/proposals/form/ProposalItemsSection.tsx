@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,13 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProposalItem } from "@/types/proposal-form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { v4 as uuidv4 } from "uuid";
 
 interface ProposalItemsSectionProps {
@@ -23,12 +30,35 @@ interface ProposalItemsSectionProps {
   setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>;
 }
 
+const CURRENCY_OPTIONS = [
+  { value: "TRY", label: "₺ TRY" },
+  { value: "USD", label: "$ USD" },
+  { value: "EUR", label: "€ EUR" },
+  { value: "GBP", label: "£ GBP" },
+];
+
+const TAX_RATE_OPTIONS = [
+  { value: 0, label: "0%" },
+  { value: 1, label: "1%" },
+  { value: 8, label: "8%" },
+  { value: 10, label: "10%" },
+  { value: 18, label: "18%" },
+  { value: 20, label: "20%" },
+];
+
 const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [productDialogOpen, setProductDialogOpen] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState("TRY");
+  const [exchangeRates, setExchangeRates] = useState<{[key: string]: number}>({
+    TRY: 1,
+    USD: 32.5,
+    EUR: 35.2,
+    GBP: 41.3,
+  });
 
   // Fetch products from Supabase
-  const { data: products = [] } = useQuery({
+  const { data: products = [], isLoading } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
       try {
@@ -59,6 +89,7 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
       unitPrice: 0,
       taxRate: 18, // Default tax rate
       totalPrice: 0,
+      currency: selectedCurrency
     };
     
     setItems([...items, newItem]);
@@ -70,9 +101,10 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
       product_id: product.id,
       name: product.name,
       quantity: 1,
-      unitPrice: product.price || 0, // Changed from sale_price to price
+      unitPrice: product.price || 0,
       taxRate: 18, // Default tax rate
-      totalPrice: product.price || 0, // Changed from sale_price to price
+      totalPrice: (product.price || 0),
+      currency: selectedCurrency
     };
     
     setItems([...items, newItem]);
@@ -93,6 +125,8 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
       const quantity = updatedItems[index].quantity;
       const unitPrice = updatedItems[index].unitPrice;
       updatedItems[index].totalPrice = quantity * unitPrice;
+    } else if (field === 'currency') {
+      updatedItems[index].currency = value as string;
     } else {
       // @ts-ignore - We know the field exists
       updatedItems[index][field] = value;
@@ -101,11 +135,46 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
     setItems(updatedItems);
   };
 
+  const formatCurrency = (amount: number, currency: string = "TRY") => {
+    return new Intl.NumberFormat('tr-TR', { 
+      style: 'currency', 
+      currency: currency 
+    }).format(amount);
+  };
+
+  const handleCurrencyChange = (newCurrency: string) => {
+    setSelectedCurrency(newCurrency);
+  };
+
+  // Convert between currencies if needed
+  const convertCurrency = (amount: number, fromCurrency: string, toCurrency: string) => {
+    if (fromCurrency === toCurrency) return amount;
+    
+    // Convert from source currency to TRY first (base currency)
+    const amountInTRY = amount / exchangeRates[fromCurrency];
+    
+    // Then convert from TRY to target currency
+    return amountInTRY * exchangeRates[toCurrency];
+  };
+
   return (
     <div className="mt-8">
       <div className="flex justify-between items-center mb-4">
         <Label className="text-base font-medium">Ürünler ve Hizmetler</Label>
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 items-center">
+          <Select value={selectedCurrency} onValueChange={handleCurrencyChange}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Para Birimi" />
+            </SelectTrigger>
+            <SelectContent>
+              {CURRENCY_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
           <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" type="button" size="sm">
@@ -127,33 +196,43 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
               </div>
               <ScrollArea className="h-[300px]">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {filteredProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="p-3 border rounded cursor-pointer hover:bg-muted/40"
-                      onClick={() => handleSelectProduct(product)}
-                    >
-                      <div className="flex items-center space-x-3">
-                        {product.image_url ? (
-                          <img
-                            src={product.image_url}
-                            alt={product.name}
-                            className="w-10 h-10 object-cover rounded"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 bg-muted rounded flex items-center justify-center text-muted-foreground">
-                            No img
+                  {isLoading ? (
+                    <div className="col-span-2 py-4 text-center text-muted-foreground">
+                      Ürünler yükleniyor...
+                    </div>
+                  ) : filteredProducts.length === 0 ? (
+                    <div className="col-span-2 py-4 text-center text-muted-foreground">
+                      Ürün bulunamadı
+                    </div>
+                  ) : (
+                    filteredProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        className="p-3 border rounded cursor-pointer hover:bg-muted/40"
+                        onClick={() => handleSelectProduct(product)}
+                      >
+                        <div className="flex items-center space-x-3">
+                          {product.image_url ? (
+                            <img
+                              src={product.image_url}
+                              alt={product.name}
+                              className="w-10 h-10 object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-muted rounded flex items-center justify-center text-muted-foreground">
+                              No img
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium text-sm">{product.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatCurrency(product.price || 0, selectedCurrency)}
+                            </p>
                           </div>
-                        )}
-                        <div>
-                          <p className="font-medium text-sm">{product.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(product.price || 0)}
-                          </p>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </ScrollArea>
             </DialogContent>
@@ -180,6 +259,7 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
                   <th className="py-3 px-4 text-left font-medium">Ürün/Hizmet</th>
                   <th className="py-3 px-4 text-right font-medium w-20">Miktar</th>
                   <th className="py-3 px-4 text-right font-medium w-32">Birim Fiyat</th>
+                  <th className="py-3 px-4 text-right font-medium w-20">Para Birimi</th>
                   <th className="py-3 px-4 text-right font-medium w-20">KDV %</th>
                   <th className="py-3 px-4 text-right font-medium w-32">Toplam</th>
                   <th className="py-3 px-4 text-center font-medium w-16"></th>
@@ -188,7 +268,7 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
               <tbody>
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-3 px-4 text-center text-muted-foreground">
+                    <td colSpan={7} className="py-3 px-4 text-center text-muted-foreground">
                       Henüz ürün eklenmedi. Ürün eklemek için yukarıdaki butonları kullanın.
                     </td>
                   </tr>
@@ -220,15 +300,41 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
                         />
                       </td>
                       <td className="py-3 px-4">
-                        <Input
-                          type="number"
-                          value={item.taxRate}
-                          onChange={(e) => handleItemChange(index, "taxRate", e.target.value)}
-                          className="text-right border-0 bg-transparent focus-visible:ring-0"
-                        />
+                        <Select 
+                          value={item.currency || selectedCurrency} 
+                          onValueChange={(value) => handleItemChange(index, "currency", value)}
+                        >
+                          <SelectTrigger className="border-0 bg-transparent focus-visible:ring-0 h-8 w-full">
+                            <SelectValue placeholder="Para Birimi" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CURRENCY_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="py-3 px-4">
+                        <Select 
+                          value={String(item.taxRate)} 
+                          onValueChange={(value) => handleItemChange(index, "taxRate", parseInt(value))}
+                        >
+                          <SelectTrigger className="border-0 bg-transparent focus-visible:ring-0 h-8 w-full">
+                            <SelectValue placeholder="KDV" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TAX_RATE_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={String(option.value)}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </td>
                       <td className="py-3 px-4 text-right font-medium">
-                        {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(item.totalPrice)}
+                        {formatCurrency(item.totalPrice, item.currency || selectedCurrency)}
                       </td>
                       <td className="py-3 px-4 text-center">
                         <Button

@@ -22,6 +22,7 @@ export interface ProposalItem {
   unit_price: number;
   tax_rate: number;
   total_price: number;
+  currency?: string;
 }
 
 export interface Proposal {
@@ -43,6 +44,7 @@ export interface Proposal {
   internal_notes?: string;
   discounts?: number; // Adding this field
   additional_charges?: number; // Adding this field
+  currency?: string; // Adding currency field
   customer?: {
     name: string;
   };

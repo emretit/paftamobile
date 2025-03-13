@@ -9,6 +9,7 @@ export interface ProposalItem {
   taxRate: number;
   totalPrice: number;
   product_id?: string; // Optional product reference
+  currency?: string; // Currency for this specific item
 }
 
 export interface ProposalFormData {
@@ -28,6 +29,7 @@ export interface ProposalFormData {
   internalNotes: string;
   files: File[];
   status: "draft" | "new" | "review" | "negotiation" | "accepted" | "rejected";
+  currency?: string; // Default currency for the proposal
 }
 
 export interface ProposalFormProps {
