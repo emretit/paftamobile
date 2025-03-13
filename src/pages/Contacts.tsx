@@ -27,8 +27,7 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('customers')
-        .select('*')
-        .order('balance', { ascending: false }); // Default sort by balance
+        .select('*');
       
       if (error) {
         console.error('Error fetching customers:', error);
@@ -59,6 +58,7 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
       valueA = a.name.toLowerCase();
       valueB = b.name.toLowerCase();
     } else if (sortField === "company") {
+      // Handle null company values safely for sorting
       valueA = (a.company || '').toLowerCase();
       valueB = (b.company || '').toLowerCase();
     } else { // balance
@@ -81,7 +81,8 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
     } else {
       // New field, set direction based on field
       setSortField(field);
-      setSortDirection(field === "balance" ? "desc" : "asc"); // Default desc for balance, asc for text
+      // Text fields default to asc, numeric to desc
+      setSortDirection(field === "balance" ? "desc" : "asc");
     }
   };
 
