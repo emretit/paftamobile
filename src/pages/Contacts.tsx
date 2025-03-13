@@ -19,6 +19,7 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [sortField, setSortField] = useState<"name" | "balance" | "company">("balance");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   const { data: customers, isLoading } = useQuery({
@@ -27,7 +28,7 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
       const { data, error } = await supabase
         .from('customers')
         .select('*')
-        .order('balance', { ascending: false }); // Sort by balance by default
+        .order('balance', { ascending: false }); // Default sort by balance
       
       if (error) {
         console.error('Error fetching customers:', error);
@@ -51,12 +52,38 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
   });
 
   const sortedCustomers = filteredCustomers?.sort((a, b) => {
+    let valueA, valueB;
+    
+    // Determine values to compare based on sort field
+    if (sortField === "name") {
+      valueA = a.name.toLowerCase();
+      valueB = b.name.toLowerCase();
+    } else if (sortField === "company") {
+      valueA = (a.company || '').toLowerCase();
+      valueB = (b.company || '').toLowerCase();
+    } else { // balance
+      valueA = a.balance;
+      valueB = b.balance;
+    }
+    
+    // Compare values based on sort direction
     if (sortDirection === "asc") {
-      return a.balance - b.balance;
+      return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
     } else {
-      return b.balance - a.balance;
+      return valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
     }
   });
+
+  const handleSort = (field: "name" | "balance" | "company") => {
+    if (field === sortField) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // New field, set direction based on field
+      setSortField(field);
+      setSortDirection(field === "balance" ? "desc" : "asc"); // Default desc for balance, asc for text
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white flex relative">
@@ -84,8 +111,9 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
           <CustomerList 
             customers={sortedCustomers}
             isLoading={isLoading}
+            sortField={sortField}
             sortDirection={sortDirection}
-            onSortDirectionChange={setSortDirection}
+            onSortFieldChange={handleSort}
           />
         </div>
       </main>

@@ -29,21 +29,34 @@ interface Customer {
 interface CustomerListProps {
   customers: Customer[] | undefined;
   isLoading: boolean;
+  sortField: "name" | "balance" | "company";
   sortDirection: "asc" | "desc";
-  onSortDirectionChange: (direction: "asc" | "desc") => void;
+  onSortFieldChange: (field: "name" | "balance" | "company") => void;
 }
 
-const CustomerList = ({ customers, isLoading, sortDirection, onSortDirectionChange }: CustomerListProps) => {
-  const toggleSort = () => {
-    onSortDirectionChange(sortDirection === "asc" ? "desc" : "asc");
-  };
-
+const CustomerList = ({ 
+  customers, 
+  isLoading, 
+  sortField, 
+  sortDirection, 
+  onSortFieldChange 
+}: CustomerListProps) => {
   return (
     <Card className="overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Şirket/Müşteri</TableHead>
+            <TableHead>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 flex items-center gap-1 -ml-3 hover:bg-gray-100"
+                onClick={() => onSortFieldChange("company")}
+              >
+                Şirket/Müşteri
+                <ArrowUpDown className={`h-4 w-4 ${sortField === "company" ? "opacity-100" : "opacity-50"}`} />
+              </Button>
+            </TableHead>
             <TableHead>Yetkili Kişi</TableHead>
             <TableHead>İletişim</TableHead>
             <TableHead>Tip</TableHead>
@@ -54,10 +67,10 @@ const CustomerList = ({ customers, isLoading, sortDirection, onSortDirectionChan
                 variant="ghost"
                 size="sm"
                 className="h-8 flex items-center gap-1 -ml-3 hover:bg-gray-100"
-                onClick={toggleSort}
+                onClick={() => onSortFieldChange("balance")}
               >
                 Bakiye
-                <ArrowUpDown className="h-4 w-4" />
+                <ArrowUpDown className={`h-4 w-4 ${sortField === "balance" ? "opacity-100" : "opacity-50"}`} />
               </Button>
             </TableHead>
             <TableHead className="text-right">İşlemler</TableHead>
