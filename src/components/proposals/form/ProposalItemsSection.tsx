@@ -5,7 +5,7 @@ import { ProposalItem } from "@/types/proposal-form";
 import { useProposalItems } from "./items/useProposalItems";
 import ProposalItemsHeader from "./items/ProposalItemsHeader";
 import ProposalItemsTable from "./items/ProposalItemsTable";
-import ProductSearchDialog from "./items/ProductSearchDialog";
+import ProductSearchDialog from "./items/product-dialog/ProductSearchDialog";
 import { 
   CURRENCY_OPTIONS, 
   TAX_RATE_OPTIONS 
