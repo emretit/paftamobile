@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { initialFormData, type EmployeeFormData } from "../types";
-import type { Employee } from "../../types";
+import type { Employee } from "@/types/employee";
 import { useFormValidation } from "../useFormValidation";
 import { useImageUpload } from "../useImageUpload";
 
@@ -18,10 +18,10 @@ const mapEmployeeToFormData = (employee: Employee): EmployeeFormData => {
     status: employee.status,
     avatar_url: employee.avatar_url || '',
     date_of_birth: employee.date_of_birth || '',
-    gender: employee.gender || '',
-    marital_status: employee.marital_status || '',
+    gender: employee.gender || null,
+    marital_status: employee.marital_status || null,
     address: employee.address || '',
-    country: employee.country || '',
+    country: employee.country || 'Turkey',
     city: employee.city || '',
     district: employee.district || '',
     postal_code: employee.postal_code || '',

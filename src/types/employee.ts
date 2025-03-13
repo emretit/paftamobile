@@ -43,23 +43,23 @@ export interface EmployeeFormData {
   department: string;
   hire_date: string;
   status: EmployeeStatus;
-  phone?: string | null;
-  avatar_url?: string | null;
-  date_of_birth?: string | null;
-  gender?: 'male' | 'female' | 'other' | null;
-  marital_status?: 'single' | 'married' | 'divorced' | 'widowed' | null;
-  address?: string | null;
-  country?: string | null;
-  city?: string | null;
-  district?: string | null;
-  postal_code?: string | null;
-  id_ssn?: string | null;
-  emergency_contact_name?: string | null;
-  emergency_contact_phone?: string | null;
-  emergency_contact_relation?: string | null;
+  phone: string;
+  avatar_url: string;
+  date_of_birth: string;
+  gender: 'male' | 'female' | 'other' | null;
+  marital_status: 'single' | 'married' | 'divorced' | 'widowed' | null;
+  address: string;
+  country: string;
+  city: string;
+  district: string;
+  postal_code: string;
+  id_ssn: string;
+  emergency_contact_name: string;
+  emergency_contact_phone: string;
+  emergency_contact_relation: string;
 }
 
-// Add these types to fix the missing imports
+// Add these types to support components that use them
 export interface EmployeeLeave {
   id: string;
   employee_id: string;
@@ -68,15 +68,19 @@ export interface EmployeeLeave {
   end_date: string;
   status: string;
   notes?: string;
+  reason?: string;
   created_at?: string;
 }
 
 export interface EmployeeSalary {
   id: string;
   employee_id: string;
+  effective_date: string;
   amount: number;
   currency: string;
-  effective_date: string;
   type: string;
+  gross_salary?: number;
+  net_salary?: number;
+  allowances?: any;
   created_at?: string;
 }
