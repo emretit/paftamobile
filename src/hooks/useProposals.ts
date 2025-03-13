@@ -1,74 +1,71 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Proposal } from "@/types/proposal";
+import { Proposal } from "@/types/proposal";
 
-export const useProposals = (filters?: {
+interface ProposalFilters {
   search?: string;
   status?: string;
-  date?: string;
-  employeeId?: string | null;
-}) => {
-  const { data, isLoading, error } = useQuery({
+  employeeId?: string;
+  dateRange?: {
+    from: Date | null;
+    to: Date | null;
+  };
+}
+
+export const useProposals = (filters?: ProposalFilters) => {
+  return useQuery({
     queryKey: ["proposals", filters],
     queryFn: async () => {
-      const query = supabase
-        .from("proposals")
-        .select(`
-          *,
-          customer:customer_id(id, name),
-          employee:employee_id(*)
-        `)
-        .order("created_at", { ascending: false });
+      let query = supabase.from("proposals").select(`
+        *,
+        customers(name, company),
+        suppliers(name, company),
+        employees(first_name, last_name)
+      `);
 
-      if (filters?.status && filters.status !== "all") {
-        query.eq("status", filters.status);
-      }
+      // Apply filters if provided
+      if (filters) {
+        // Search filter
+        if (filters.search && filters.search.trim() !== "") {
+          query = query.or(
+            `proposal_number.ilike.%${filters.search}%,title.ilike.%${filters.search}%`
+          );
+        }
 
-      if (filters?.search) {
-        query.or(
-          `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`
-        );
-      }
-      
-      if (filters?.employeeId && filters.employeeId !== "all") {
-        query.eq("employee_id", filters.employeeId);
+        // Status filter
+        if (filters.status) {
+          query = query.eq("status", filters.status);
+        }
+
+        // Employee filter
+        if (filters.employeeId) {
+          query = query.eq("employee_id", filters.employeeId);
+        }
+
+        // Date range filter
+        if (filters.dateRange?.from && filters.dateRange?.to) {
+          query = query
+            .gte("created_at", filters.dateRange.from.toISOString())
+            .lte("created_at", filters.dateRange.to.toISOString());
+        }
       }
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      // Transform data for display
-      const transformedData = data.map((proposal) => {
-        // Handle potential null employee data safely
-        let employeeName = '-';
-        let employeeId = null;
-        
-        // Check if employee exists and is not null
-        if (proposal.employee && typeof proposal.employee === 'object') {
-          const employee = proposal.employee;
-          // Use nullish coalescing to safely access properties
-          const firstName = employee?.first_name ?? '';
-          const lastName = employee?.last_name ?? '';
-          employeeName = firstName && lastName ? `${firstName} ${lastName}`.trim() : '-';
-          employeeId = employee?.id ?? null;
-        }
-        
+      // Transform the data to include formatted names
+      return (data as any[]).map((proposal) => {
+        const employee = proposal.employees;
         return {
           ...proposal,
-          customer_name: proposal.customer?.name || "-",
-          employee_name: employeeName,
-          employee_id: employeeId,
-          // Remove the original employee object to avoid type issues
-          employee: undefined
+          employee_name: employee ? `${employee.first_name} ${employee.last_name}` : 'N/A',
+          customer_name: proposal.customers?.name || proposal.suppliers?.name || 'N/A',
         };
-      });
-
-      // Use type assertion to make TypeScript happy
-      return transformedData as unknown as Proposal[];
+      }) as Proposal[];
     },
   });
-
-  return { data, isLoading, error };
 };

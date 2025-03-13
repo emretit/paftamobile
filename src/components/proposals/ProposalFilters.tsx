@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Filter, CalendarRange } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,10 +20,6 @@ import {
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
-interface ProposalFiltersProps {
-  onFilterChange: (filters: ProposalFilters) => void;
-}
-
 export interface ProposalFilters {
   search: string;
   status: string;
@@ -36,6 +32,10 @@ export interface ProposalFilters {
     field: string;
     direction: 'asc' | 'desc';
   };
+}
+
+interface ProposalFiltersProps {
+  onFilterChange: (filters: ProposalFilters) => void;
 }
 
 export const ProposalFilters = ({ onFilterChange }: ProposalFiltersProps) => {

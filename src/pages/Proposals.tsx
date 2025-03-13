@@ -5,40 +5,39 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useProposals } from "@/hooks/useProposals";
 import Navbar from "@/components/Navbar";
 import { ProposalActions } from "@/components/proposals/ProposalActions";
-import { ProposalTable } from "@/components/proposals/ProposalTable";
-import { ProposalFilters } from "@/components/proposals/ProposalFilters";
+import ProposalTable from "@/components/proposals/ProposalTable";
+import { ProposalFilters, ProposalFilters as ProposalFiltersType } from "@/components/proposals/ProposalFilters";
 
-const Proposals = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [employeeFilter, setEmployeeFilter] = useState("all");
+interface ProposalsProps {
+  isCollapsed: boolean;
+  setIsCollapsed: (value: boolean) => void;
+}
+
+const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
+  const [filters, setFilters] = useState<ProposalFiltersType>({
+    search: "",
+    status: "all",
+    dateRange: {
+      from: null,
+      to: null,
+    },
+    employeeId: null,
+  });
   const navigate = useNavigate();
   
   const { data: proposals, isLoading, error } = useProposals({
-    search: searchQuery,
-    status: statusFilter !== "all" ? statusFilter : undefined,
-    employeeId: employeeFilter !== "all" ? employeeFilter : undefined,
+    search: filters.search,
+    status: filters.status !== "all" ? filters.status : undefined,
+    employeeId: filters.employeeId !== null ? filters.employeeId : undefined,
+    dateRange: filters.dateRange,
   });
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
-
-  const handleFilterChange = (status: string) => {
-    setStatusFilter(status);
-  };
-
-  const handleEmployeeChange = (employeeId: string) => {
-    setEmployeeFilter(employeeId);
+  const handleFilterChange = (newFilters: ProposalFiltersType) => {
+    setFilters(newFilters);
   };
 
   const handleProposalClick = (id: string) => {
     navigate(`/proposals/${id}`);
-  };
-
-  const handleNewProposal = () => {
-    navigate("/proposal-create");
   };
 
   return (
@@ -59,11 +58,7 @@ const Proposals = () => {
 
           <Card className="mb-6">
             <CardContent className="p-6">
-              <ProposalFilters 
-                onSearch={handleSearch} 
-                onStatusChange={handleFilterChange}
-                onEmployeeChange={handleEmployeeChange}
-              />
+              <ProposalFilters onFilterChange={handleFilterChange} />
             </CardContent>
           </Card>
 
@@ -73,11 +68,9 @@ const Proposals = () => {
 
           <Card>
             <CardContent className="p-0">
-              <ProposalTable
-                proposals={proposals}
-                isLoading={isLoading}
-                error={error}
-                onProposalClick={handleProposalClick}
+              <ProposalTable 
+                filters={filters} 
+                onProposalSelect={handleProposalClick} 
               />
             </CardContent>
           </Card>
