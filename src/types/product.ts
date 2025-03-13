@@ -15,7 +15,7 @@ export interface Product {
   id: string;
   name: string;
   description: string | null;
-  formatted_description: any;
+  formatted_description?: any; // Making it optional with ?
   sku: string | null;
   barcode: string | null;
   price: number;
@@ -33,8 +33,8 @@ export interface Product {
   image_url: string | null;
   created_at: string;
   updated_at: string;
-  last_purchase_date: string | null;
-  related_products: string[];
+  last_purchase_date?: string | null; // Making it optional with ?
+  related_products?: string[]; // Making it optional with ?
   product_categories: ProductCategory | null;
   suppliers: Supplier | null;
   purchase_price?: number;

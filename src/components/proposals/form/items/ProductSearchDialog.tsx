@@ -55,8 +55,38 @@ const ProductSearchDialog = ({
     (product.barcode && product.barcode.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const handleSelectProduct = (product: Product) => {
-    onSelectProduct(product);
+  const handleSelectProduct = (product: any) => {
+    // Create a product object that conforms to our Product interface
+    const selectedProduct: Product = {
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      formatted_description: product.formatted_description || null,
+      sku: product.sku,
+      barcode: product.barcode,
+      price: product.price || 0,
+      discount_price: product.discount_price,
+      currency: product.currency || "TRY",
+      tax_rate: product.tax_rate || 18,
+      stock_quantity: product.stock_quantity || 0,
+      min_stock_level: product.min_stock_level || 0,
+      unit: product.unit || "piece",
+      category_id: product.category_id || "",
+      category_type: product.category_type || "product",
+      product_type: product.product_type || "physical",
+      status: product.status || "active",
+      is_active: product.is_active !== undefined ? product.is_active : true,
+      image_url: product.image_url,
+      created_at: product.created_at,
+      updated_at: product.updated_at,
+      last_purchase_date: product.last_purchase_date || null,
+      related_products: product.related_products || [],
+      product_categories: product.product_categories,
+      suppliers: product.suppliers,
+      purchase_price: product.purchase_price,
+    };
+    
+    onSelectProduct(selectedProduct);
     onOpenChange(false);
   };
 
