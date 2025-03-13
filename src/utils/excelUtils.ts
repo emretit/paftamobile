@@ -46,7 +46,11 @@ const checkCustomerExists = async (customer: Partial<Customer>): Promise<boolean
   const filters = [];
   
   // Always check by name (required field)
-  filters.push(`name.ilike.${encodeURIComponent(customer.name || '')}`);
+  if (customer.name) {
+    filters.push(`name.ilike.${encodeURIComponent(customer.name)}`);
+  } else {
+    return false; // Name is required, so if it's missing, we can't check
+  }
   
   // Check by email if available
   if (customer.email) {
@@ -81,8 +85,23 @@ const checkCustomerExists = async (customer: Partial<Customer>): Promise<boolean
   }
 };
 
+// Validate customer data before import
+const validateCustomerData = (customer: Partial<Customer>): { isValid: boolean; missingFields: string[] } => {
+  const missingFields: string[] = [];
+  
+  // Check required fields
+  if (!customer.name) missingFields.push('name');
+  if (!customer.type) missingFields.push('type');
+  if (!customer.status) missingFields.push('status');
+  
+  return {
+    isValid: missingFields.length === 0,
+    missingFields
+  };
+};
+
 // Import customers from Excel
-export const importCustomersFromExcel = async (file: File): Promise<Customer[]> => {
+export const importCustomersFromExcel = async (file: File): Promise<{ customers: Customer[]; invalidRows: number; duplicates: number }> => {
   return new Promise((resolve, reject) => {
     try {
       const reader = new FileReader();
@@ -109,7 +128,8 @@ export const importCustomersFromExcel = async (file: File): Promise<Customer[]> 
           
           // Map the data to Customer type and check for duplicates
           const customersToImport: Customer[] = [];
-          const duplicates: number = 0;
+          let duplicatesCount = 0;
+          let invalidRowsCount = 0;
           
           for (let index = 0; index < jsonData.length; index++) {
             const row = jsonData[index] as any;
@@ -117,11 +137,12 @@ export const importCustomersFromExcel = async (file: File): Promise<Customer[]> 
             // Log problematic rows to help debug
             if (!row.name || typeof row.name !== 'string') {
               console.warn(`Uyarı - Satır ${index + 2}: Geçersiz isim değeri:`, row.name);
+              invalidRowsCount++;
               continue; // Skip invalid rows
             }
             
             const customer = {
-              name: row.name || `Müşteri ${index + 1}`, // Provide a default value if name is missing
+              name: row.name || '',
               email: row.email || null,
               mobile_phone: row.mobile_phone || null,
               office_phone: row.office_phone || null,
@@ -135,19 +156,33 @@ export const importCustomersFromExcel = async (file: File): Promise<Customer[]> 
               tax_office: row.tax_office || null
             };
             
+            // Validate customer data
+            const validation = validateCustomerData(customer);
+            if (!validation.isValid) {
+              console.warn(`Uyarı - Satır ${index + 2}: Eksik zorunlu alanlar: ${validation.missingFields.join(', ')}`);
+              invalidRowsCount++;
+              continue;
+            }
+            
             // Check if customer already exists
             const exists = await checkCustomerExists(customer);
             
             if (!exists) {
               customersToImport.push(customer as Customer);
+            } else {
+              duplicatesCount++;
             }
           }
           
           console.log(`İşlenen ve benzersiz müşteri sayısı: ${customersToImport.length}`);
-          console.log(`Mevcut sistemde bulunan müşteri sayısı: ${jsonData.length - customersToImport.length}`);
+          console.log(`Mevcut sistemde bulunan müşteri sayısı: ${duplicatesCount}`);
+          console.log(`Geçersiz veri içeren satır sayısı: ${invalidRowsCount}`);
           
-          toast.success(`${customersToImport.length} yeni müşteri bulundu ve içe aktarılmaya hazır`);
-          resolve(customersToImport);
+          resolve({ 
+            customers: customersToImport, 
+            duplicates: duplicatesCount,
+            invalidRows: invalidRowsCount
+          });
         } catch (error) {
           console.error('Excel parse error:', error);
           toast.error('Excel dosyası işlenirken bir hata oluştu');

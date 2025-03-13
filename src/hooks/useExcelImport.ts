@@ -14,7 +14,8 @@ export const useExcelImport = (onClose: () => void) => {
     total: 0, 
     success: 0, 
     failed: 0, 
-    duplicates: 0 
+    duplicates: 0,
+    invalidRows: 0 
   });
   const queryClient = useQueryClient();
 
@@ -35,25 +36,34 @@ export const useExcelImport = (onClose: () => void) => {
       setProgress(10);
       
       // Parse Excel file
-      const importedCustomers = await importCustomersFromExcel(selectedFile);
+      const { customers: importedCustomers, duplicates, invalidRows } = await importCustomersFromExcel(selectedFile);
       
       // Update stats for UI with duplicates information
       setStats({ 
-        total: selectedFile.size > 0 ? importedCustomers.length : 0, 
+        total: selectedFile.size > 0 ? importedCustomers.length + duplicates + invalidRows : 0, 
         success: 0, 
         failed: 0, 
-        duplicates: 0
+        duplicates,
+        invalidRows
       });
       setProgress(30);
       
       console.log(`İçe aktarılacak toplam yeni müşteri sayısı: ${importedCustomers.length}`);
+      console.log(`Mükerrer müşteri sayısı: ${duplicates}`);
+      console.log(`Geçersiz satır sayısı: ${invalidRows}`);
       
       if (importedCustomers.length === 0) {
         setProgress(100);
         setTimeout(() => {
           onClose();
           setSelectedFile(null);
-          toast.info('Tüm müşteriler zaten sisteme eklenmiş');
+          if (duplicates > 0 && invalidRows === 0) {
+            toast.info('Tüm müşteriler zaten sisteme eklenmiş');
+          } else if (invalidRows > 0 && duplicates === 0) {
+            toast.error(`${invalidRows} satır geçersiz veri içeriyor. Hiçbir müşteri içe aktarılamadı.`);
+          } else if (invalidRows > 0 && duplicates > 0) {
+            toast.error(`${duplicates} müşteri zaten mevcut ve ${invalidRows} satır geçersiz veri içeriyor.`);
+          }
         }, 1500);
         return;
       }
@@ -99,10 +109,11 @@ export const useExcelImport = (onClose: () => void) => {
         
         // Update stats and progress
         setStats({
-          total: importedCustomers.length,
+          total: importedCustomers.length + duplicates + invalidRows,
           success: successCount,
           failed: failedCount,
-          duplicates: stats.duplicates
+          duplicates,
+          invalidRows
         });
         
         const newProgress = 30 + Math.floor((i + batch.length) / importedCustomers.length * 70);
@@ -117,7 +128,19 @@ export const useExcelImport = (onClose: () => void) => {
         onClose();
         setSelectedFile(null);
         queryClient.invalidateQueries({ queryKey: ['customers'] });
-        toast.success(`${successCount} müşteri başarıyla içe aktarıldı, ${failedCount} başarısız, ${stats.duplicates} mükerrer`);
+        
+        let message = `${successCount} müşteri başarıyla içe aktarıldı`;
+        if (failedCount > 0) message += `, ${failedCount} başarısız`;
+        if (stats.duplicates > 0) message += `, ${stats.duplicates} mükerrer`;
+        if (stats.invalidRows > 0) message += `, ${stats.invalidRows} geçersiz veri`;
+        
+        if (successCount > 0) {
+          toast.success(message);
+        } else if (failedCount > 0) {
+          toast.error(message);
+        } else {
+          toast.info(message);
+        }
       }, 1500);
       
     } catch (error) {

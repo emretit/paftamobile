@@ -34,7 +34,7 @@ const ImportDialog = ({ isOpen, setIsOpen }: ImportDialogProps) => {
         
         <div className="py-4">
           <p className="text-sm text-gray-500 mb-4">
-            Lütfen bir Excel dosyası seçin. Dosya şu sütunları içermelidir: name, email, mobile_phone, office_phone, company, type, status, representative, balance, address, tax_number, tax_office.
+            Lütfen bir Excel dosyası seçin. Dosya şu sütunları içermelidir: <strong>name</strong> (zorunlu), <strong>type</strong> (zorunlu), <strong>status</strong> (zorunlu), email, mobile_phone, office_phone, company, representative, balance, address, tax_number, tax_office.
           </p>
           <p className="text-sm text-gray-500 mb-4">
             Sistem, veritabanında zaten var olan müşterileri kontrol edecek ve sadece yeni müşterileri ekleyecektir.
@@ -60,6 +60,9 @@ const ImportDialog = ({ isOpen, setIsOpen }: ImportDialogProps) => {
                 <span>{stats.failed} başarısız</span>
                 {stats.duplicates > 0 && (
                   <span>{stats.duplicates} mükerrer</span>
+                )}
+                {stats.invalidRows > 0 && (
+                  <span>{stats.invalidRows} geçersiz</span>
                 )}
               </div>
               <Progress value={progress} className="h-2" />
