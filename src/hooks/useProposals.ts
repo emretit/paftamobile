@@ -48,11 +48,12 @@ export const useProposals = (filters?: {
         // Check if employee exists and is not null
         if (proposal.employee && typeof proposal.employee === 'object') {
           const employee = proposal.employee;
-          const firstName = employee?.first_name || '';
-          const lastName = employee?.last_name || '';
+          // Use optional chaining to safely access employee properties
+          const firstName = employee?.first_name ?? '';
+          const lastName = employee?.last_name ?? '';
           employeeName = `${firstName} ${lastName}`.trim() || '-';
           
-          employeeId = employee?.id || null;
+          employeeId = employee?.id ?? null;
         }
         
         return {
