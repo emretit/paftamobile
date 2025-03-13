@@ -30,21 +30,7 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
     handleItemChange,
   } = useProposalItems();
 
-  const productDropdownOpen = React.useState(false);
-  const [isDropdownOpen, setDropdownOpen] = productDropdownOpen;
   const productBtnRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    const handleOpenDropdown = () => {
-      setDropdownOpen(true);
-    };
-
-    document.addEventListener('open-product-dropdown', handleOpenDropdown);
-    
-    return () => {
-      document.removeEventListener('open-product-dropdown', handleOpenDropdown);
-    };
-  }, [setDropdownOpen]);
 
   const onOpenProductDialog = () => setProductDialogOpen(true);
   const onAddItem = () => handleAddItem(items, setItems);
@@ -59,6 +45,8 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
   
   const onSelectProduct = (product: Product) => {
     handleSelectProduct(product, items, setItems);
+    // Open the dialog to edit more details if needed
+    setProductDialogOpen(true);
   };
 
   return (
@@ -68,6 +56,7 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
         onCurrencyChange={handleCurrencyChange}
         onAddItem={onAddItem}
         onOpenProductDialog={onOpenProductDialog}
+        onSelectProduct={onSelectProduct}
         currencyOptions={CURRENCY_OPTIONS}
       />
 
@@ -88,7 +77,7 @@ const ProposalItemsSection = ({ items, setItems }: ProposalItemsSectionProps) =>
       <ProductSearchDialog
         open={productDialogOpen}
         onOpenChange={setProductDialogOpen}
-        onSelectProduct={onSelectProduct}
+        onSelectProduct={(product) => handleSelectProduct(product, items, setItems)}
         selectedCurrency={selectedCurrency}
         triggerRef={productBtnRef}
       />
