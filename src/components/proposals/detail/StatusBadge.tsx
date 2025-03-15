@@ -14,7 +14,6 @@ export const StatusBadge = ({ status }: StatusBadgeProps) => {
   
   switch (status) {
     case "discovery_scheduled":
-    case "discovery_done":
     case "meeting_completed":
       statusText = "Discovery Done";
       statusIcon = "🔎";

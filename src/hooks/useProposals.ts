@@ -81,11 +81,26 @@ export const useProposals = (filters?: ProposalFilters) => {
             // If there's an error parsing, use an empty array
           }
           
+          // Handle potential null or undefined employee data
+          const safeEmployee = proposal.employee || null;
+          let employeeData = {
+            first_name: "",
+            last_name: ""
+          };
+          
+          if (safeEmployee && typeof safeEmployee === 'object' && !('error' in safeEmployee)) {
+            employeeData = {
+              first_name: safeEmployee.first_name || "",
+              last_name: safeEmployee.last_name || ""
+            };
+          }
+          
           // Return a properly typed Proposal object
           return {
             ...proposal,
-            items: parsedItems
-          } as Proposal;
+            items: parsedItems,
+            employee: employeeData
+          } as unknown as Proposal;
         });
       } catch (error) {
         console.error("Error in useProposals:", error);
