@@ -1,6 +1,4 @@
 
-import { Column } from "./types";
-
 export interface ProposalFilters {
   search?: string;
   status?: string;
@@ -17,4 +15,11 @@ export interface ProposalFiltersProps {
   onDateRangeChange?: (range: any) => void;
   selectedStatus: string;
   onFilterChange?: (filters: ProposalFilters) => void;
+}
+
+export interface Column {
+  id: string;
+  label: string;
+  visible: boolean;
+  sortable?: boolean;
 }
