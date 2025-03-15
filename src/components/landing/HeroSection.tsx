@@ -37,7 +37,7 @@ const HeroSection = () => {
         <div className="mt-10 flex justify-center gap-4 flex-col sm:flex-row">
           {isLoggedIn ? (
             <>
-              <Link to="/employees">
+              <Link to="/crm">
                 <Button size="lg" className="px-8">
                   Dashboard'a Git
                 </Button>
