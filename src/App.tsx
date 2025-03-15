@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -31,6 +30,7 @@ import Employees from "@/pages/Employees";
 import AddEmployee from "./pages/AddEmployee";
 import EmployeeDetails from "./pages/EmployeeDetails";
 import EmployeeForm from "./pages/EmployeeForm";
+import AddProposal from "./pages/AddProposal";
 
 const queryClient = new QueryClient();
 
@@ -108,7 +108,10 @@ function App() {
             path="/proposal-form"
             element={<ProtectedRoute><ProposalForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
-          {/* Yeni Route'lar */}
+          <Route
+            path="/proposals/new"
+            element={<ProtectedRoute><AddProposal isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
           <Route
             path="/proposals/:id"
             element={<ProtectedRoute><ProposalForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}

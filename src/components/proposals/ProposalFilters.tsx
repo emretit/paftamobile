@@ -1,7 +1,8 @@
 
-import { useState, useEffect } from "react";
-import { Search, Filter, CalendarRange } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -10,132 +11,70 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
-import { tr } from "date-fns/locale";
-
-export interface ProposalFilters {
-  search: string;
-  status: string;
-  dateRange: {
-    from: Date | null;
-    to: Date | null;
-  };
-  employeeId: string | null;
-  sortBy?: {
-    field: string;
-    direction: 'asc' | 'desc';
-  };
-}
+import { statusStyles } from "./constants";
+import { Plus } from "lucide-react";
 
 interface ProposalFiltersProps {
-  onFilterChange: (filters: ProposalFilters) => void;
+  onSearchChange: (value: string) => void;
+  onStatusChange: (status: string) => void;
+  onDateRangeChange?: (range: any) => void;
+  selectedStatus: string;
 }
 
-export const ProposalFilters = ({ onFilterChange }: ProposalFiltersProps) => {
-  const [filters, setFilters] = useState<ProposalFilters>({
-    search: "",
-    status: "all",
-    dateRange: {
-      from: null,
-      to: null,
-    },
-    employeeId: null,
-  });
+export const ProposalFilters = ({
+  onSearchChange,
+  onStatusChange,
+  onDateRangeChange,
+  selectedStatus,
+}: ProposalFiltersProps) => {
+  const [searchValue, setSearchValue] = useState("");
 
-  const handleFilterChange = (key: keyof ProposalFilters, value: any) => {
-    const newFilters = { ...filters, [key]: value };
-    setFilters(newFilters);
-    onFilterChange(newFilters);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(e.target.value);
+    onSearchChange(e.target.value);
   };
 
   return (
-    <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm border">
-      <div className="flex flex-col sm:flex-row gap-4">
-        {/* Search Input */}
-        <div className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Teklif no, müşteri adı veya temsilci ile arama yapın..."
-              value={filters.search}
-              onChange={(e) => handleFilterChange("search", e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 items-end">
+      <div>
+        <Label htmlFor="search">Teklif Ara</Label>
+        <Input
+          id="search"
+          placeholder="Teklif ara..."
+          value={searchValue}
+          onChange={handleSearchChange}
+        />
+      </div>
 
-        {/* Status Filter */}
-        <div className="w-full sm:w-[200px]">
-          <Select
-            value={filters.status}
-            onValueChange={(value) => handleFilterChange("status", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Durum" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tümü</SelectItem>
-              <SelectItem value="draft">Taslak</SelectItem>
-              <SelectItem value="new">Yeni</SelectItem>
-              <SelectItem value="sent">Gönderildi</SelectItem>
-              <SelectItem value="review">İncelemede</SelectItem>
-              <SelectItem value="negotiation">Görüşmede</SelectItem>
-              <SelectItem value="approved">Onaylandı</SelectItem>
-              <SelectItem value="rejected">Reddedildi</SelectItem>
-              <SelectItem value="expired">Süresi Doldu</SelectItem>
-              <SelectItem value="accepted">Kabul Edildi</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div>
+        <Label htmlFor="status">Durum</Label>
+        <Select
+          value={selectedStatus}
+          onValueChange={(value) => onStatusChange(value)}
+        >
+          <SelectTrigger id="status">
+            <SelectValue placeholder="Tüm durumlar" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tüm durumlar</SelectItem>
+            <SelectItem value="discovery_scheduled">🔎 Discovery</SelectItem>
+            <SelectItem value="meeting_completed">👥 Meeting Completed</SelectItem>
+            <SelectItem value="sent">📤 Sent</SelectItem>
+            <SelectItem value="negotiation">🔄 Negotiation</SelectItem>
+            <SelectItem value="approved">✅ Approved</SelectItem>
+            <SelectItem value="rejected">❌ Rejected</SelectItem>
+            <SelectItem value="converted_to_order">📦 Ordered</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-        {/* Date Range Filter */}
-        <div className="w-full sm:w-auto">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full sm:w-auto justify-start">
-                <CalendarRange className="mr-2 h-4 w-4" />
-                {filters.dateRange.from ? (
-                  filters.dateRange.to ? (
-                    <>
-                      {format(filters.dateRange.from, "dd MMM", { locale: tr })} -{" "}
-                      {format(filters.dateRange.to, "dd MMM, yyyy", { locale: tr })}
-                    </>
-                  ) : (
-                    format(filters.dateRange.from, "dd MMM, yyyy", { locale: tr })
-                  )
-                ) : (
-                  "Tarih Aralığı"
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={filters.dateRange.from}
-                selected={{
-                  from: filters.dateRange.from,
-                  to: filters.dateRange.to,
-                }}
-                onSelect={(range) => {
-                  handleFilterChange("dateRange", {
-                    from: range?.from || null,
-                    to: range?.to || null,
-                  });
-                }}
-                numberOfMonths={2}
-                locale={tr}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+      <div className="md:col-span-3 lg:col-span-2 flex justify-end">
+        <Button asChild>
+          <Link to="/proposals/new" className="flex items-center">
+            <Plus className="mr-2 h-4 w-4" />
+            Add New Proposal
+          </Link>
+        </Button>
       </div>
     </div>
   );
