@@ -24,13 +24,11 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
   const queryClient = useQueryClient();
   
   const [columns] = useState<Column[]>([
-    { id: "proposal_number", label: "Teklif No", visible: true, sortable: true },
+    { id: "title", label: "Teklif Adı", visible: true, sortable: true },
     { id: "customer_id", label: "Müşteri", visible: true },
     { id: "status", label: "Durum", visible: true },
-    { id: "employee_id", label: "Satış Temsilcisi", visible: true },
     { id: "total_value", label: "Toplam Tutar", visible: true, sortable: true },
     { id: "created_at", label: "Oluşturma Tarihi", visible: true, sortable: true },
-    { id: "valid_until", label: "Geçerlilik", visible: true },
     { id: "actions", label: "İşlemler", visible: true },
   ]);
 

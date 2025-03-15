@@ -21,8 +21,30 @@ export const useProposals = (filters?: ProposalFilters) => {
       try {
         console.log("Fetching proposals with filters:", filters);
         
-        // Simplified query that doesn't use foreign key relationships
-        let query = supabase.from("proposals").select('*');
+        let query = supabase.from("proposals").select(`
+          *,
+          customer:customers(name, company),
+          employee:employees(first_name, last_name)
+        `);
+
+        // Apply filters if provided
+        if (filters?.search) {
+          query = query.or(`title.ilike.%${filters.search}%,proposal_number.eq.${parseInt(filters.search) || 0}`);
+        }
+
+        if (filters?.status && filters.status !== 'all') {
+          query = query.eq('status', filters.status);
+        }
+
+        if (filters?.employeeId) {
+          query = query.eq('employee_id', filters.employeeId);
+        }
+
+        if (filters?.dateRange?.from && filters?.dateRange?.to) {
+          query = query
+            .gte('created_at', filters.dateRange.from.toISOString())
+            .lte('created_at', filters.dateRange.to.toISOString());
+        }
 
         const { data, error } = await query;
 

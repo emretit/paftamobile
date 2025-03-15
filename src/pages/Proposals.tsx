@@ -29,7 +29,7 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
   const navigate = useNavigate();
   
   // Call useProposals without applying any filters
-  const { data: proposals, isLoading, error } = useProposals();
+  const { data: proposals } = useProposals();
 
   // State for the detail sheet
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
@@ -37,7 +37,6 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
 
   const handleFilterChange = (newFilters: ProposalFiltersType) => {
     setFilters(newFilters);
-    // We're not using these filters anymore
   };
 
   const handleProposalClick = (proposal: Proposal) => {
@@ -66,13 +65,11 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
             </p>
           </div>
 
-          {/* Commenting out the filters card
           <Card className="mb-6">
             <CardContent className="p-6">
               <ProposalFilters onFilterChange={handleFilterChange} />
             </CardContent>
           </Card>
-          */}
 
           <div className="mb-4">
             <ProposalActions proposal={null} />

@@ -36,33 +36,18 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
       className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} cursor-pointer hover:bg-gray-100`}
       onClick={() => onSelect(proposal)}
     >
-      <TableCell>#{proposal.proposal_number}</TableCell>
+      <TableCell>{proposal.title || `Teklif #${proposal.proposal_number}`}</TableCell>
       <TableCell>
         {proposal.customer_id ? getCustomerName(proposal.customer_id) : "-"}
       </TableCell>
       <TableCell>
         {getStatusBadge(proposal.status)}
       </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2">
-          <Avatar className="h-7 w-7">
-            <AvatarFallback className="text-xs">
-              {getEmployeeName(proposal.employee_id).split(' ').map(name => name[0]).join('').substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <span>
-            {getEmployeeName(proposal.employee_id)}
-          </span>
-        </div>
-      </TableCell>
       <TableCell className="font-medium">
         {formatMoney(proposal.total_value)}
       </TableCell>
       <TableCell>
         {proposal.created_at ? format(new Date(proposal.created_at), "dd.MM.yyyy") : "-"}
-      </TableCell>
-      <TableCell>
-        {proposal.valid_until ? format(new Date(proposal.valid_until), "dd.MM.yyyy") : "-"}
       </TableCell>
       <TableCell onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-center">
