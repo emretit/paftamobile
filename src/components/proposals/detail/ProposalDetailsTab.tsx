@@ -11,6 +11,7 @@ import { ProposalWorkflowProgress } from "./ProposalWorkflowProgress";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { Card } from "@/components/ui/card";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -60,13 +61,15 @@ export const ProposalDetailsTab = ({
   };
 
   return (
-    <div className="space-y-6 py-4">
+    <div className="space-y-6">
       {/* Workflow progress section */}
-      <ProposalWorkflowProgress 
-        currentStatus={proposal.status as ProposalStatus}
-        onStatusChange={onStatusChange}
-        isUpdating={isUpdating}
-      />
+      <Card className="p-4">
+        <ProposalWorkflowProgress 
+          currentStatus={proposal.status as ProposalStatus}
+          onStatusChange={onStatusChange}
+          isUpdating={isUpdating}
+        />
+      </Card>
       
       <Separator className="my-6" />
       
@@ -80,7 +83,7 @@ export const ProposalDetailsTab = ({
               <FormItem>
                 <FormLabel>Teklif Başlığı</FormLabel>
                 <FormControl>
-                  <Input placeholder="Teklif başlığı" {...field} readOnly />
+                  <Input placeholder="Teklif başlığı" {...field} readOnly className="bg-gray-50" />
                 </FormControl>
               </FormItem>
             )}
@@ -97,6 +100,7 @@ export const ProposalDetailsTab = ({
                     <Input 
                       type="text" 
                       readOnly
+                      className="bg-gray-50"
                       value={formatMoney(field.value)}
                     />
                   </FormControl>
@@ -109,6 +113,7 @@ export const ProposalDetailsTab = ({
               <Input 
                 type="text" 
                 readOnly
+                className="bg-gray-50"
                 value={formatDate(proposal.valid_until)}
               />
             </div>
@@ -130,6 +135,10 @@ export const ProposalDetailsTab = ({
               </FormItem>
             )}
           />
+          
+          <div className="pt-4">
+            <Button type="button" className="w-full">Notları Kaydet</Button>
+          </div>
         </form>
       </Form>
     </div>
