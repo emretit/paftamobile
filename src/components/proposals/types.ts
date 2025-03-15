@@ -14,7 +14,7 @@ export interface ProposalFiltersProps {
   onStatusChange: (status: string) => void;
   onDateRangeChange?: (range: any) => void;
   selectedStatus: string;
-  onFilterChange?: (filters: ProposalFilters) => void;
+  onFilterChange: (filters: ProposalFilters) => void;
 }
 
 export interface Column {

@@ -57,11 +57,11 @@ export const useProposals = (filters?: ProposalFilters) => {
           return {
             ...item,
             customer: item.customer || null,
-            employee: {
+            employee: safeEmployee ? {
               id: safeEmployee.id,
               first_name: safeEmployee.first_name || "Unassigned",
               last_name: safeEmployee.last_name || ""
-            }
+            } : null
           };
         });
       } catch (error) {

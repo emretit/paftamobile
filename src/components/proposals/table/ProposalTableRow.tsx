@@ -3,6 +3,7 @@ import { TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { format } from "date-fns";
+import { tr } from "date-fns/locale";
 import { Proposal } from "@/types/proposal";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { statusLabels, statusStyles } from "../constants";
@@ -21,8 +22,8 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
   const { getEmployeeName } = useEmployeeNames();
 
   const getStatusBadge = (status: string) => {
-    const style = statusStyles[status] || { bg: "bg-gray-100", text: "text-gray-800" };
-    const label = statusLabels[status] || status;
+    const style = statusStyles[status as keyof typeof statusStyles] || { bg: "bg-gray-100", text: "text-gray-800" };
+    const label = statusLabels[status as keyof typeof statusLabels] || status;
     
     return (
       <span className={`px-2 py-1 text-xs rounded-full font-medium ${style.bg} ${style.text}`}>
@@ -31,23 +32,34 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
     );
   };
 
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return "-";
+    try {
+      return format(new Date(dateString), "dd.MM.yyyy", { locale: tr });
+    } catch (error) {
+      return "-";
+    }
+  };
+
   return (
     <TableRow 
       className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} cursor-pointer hover:bg-gray-100`}
       onClick={() => onSelect(proposal)}
     >
-      <TableCell>{proposal.title || `Teklif #${proposal.proposal_number}`}</TableCell>
-      <TableCell>
-        {proposal.customer_id ? getCustomerName(proposal.customer_id) : "-"}
-      </TableCell>
+      <TableCell>#{proposal.proposal_number || "-"}</TableCell>
+      <TableCell>{proposal.customer_id ? getCustomerName(proposal.customer_id) : "-"}</TableCell>
       <TableCell>
         {getStatusBadge(proposal.status)}
       </TableCell>
+      <TableCell>{proposal.employee_id ? getEmployeeName(proposal.employee_id) : "-"}</TableCell>
       <TableCell className="font-medium">
         {formatMoney(proposal.total_value)}
       </TableCell>
       <TableCell>
-        {proposal.created_at ? format(new Date(proposal.created_at), "dd.MM.yyyy") : "-"}
+        {formatDate(proposal.created_at)}
+      </TableCell>
+      <TableCell>
+        {formatDate(proposal.valid_until)}
       </TableCell>
       <TableCell onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-center">

@@ -11,6 +11,7 @@ import { Column } from "./types";
 import { ProposalTableHeader } from "./table/ProposalTableHeader";
 import { ProposalTableRow } from "./table/ProposalTableRow";
 import { ProposalTableSkeleton } from "./table/ProposalTableSkeleton";
+import { Input } from "@/components/ui/input";
 
 interface ProposalTableProps {
   filters: ProposalFilters;
@@ -18,17 +19,20 @@ interface ProposalTableProps {
 }
 
 const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
-  // Call useProposals without any filters
-  const { data, isLoading, error } = useProposals();
+  // Call useProposals with filters now
+  const { data, isLoading, error } = useProposals(filters);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [searchQuery, setSearchQuery] = useState("");
   
   const [columns] = useState<Column[]>([
-    { id: "title", label: "Teklif Adı", visible: true, sortable: true },
+    { id: "proposal_number", label: "Teklif No", visible: true },
     { id: "customer_id", label: "Müşteri", visible: true },
     { id: "status", label: "Durum", visible: true },
+    { id: "employee_id", label: "Satış Temsilcisi", visible: true },
     { id: "total_value", label: "Toplam Tutar", visible: true, sortable: true },
     { id: "created_at", label: "Oluşturma Tarihi", visible: true, sortable: true },
+    { id: "valid_until", label: "Geçerlilik", visible: true },
     { id: "actions", label: "İşlemler", visible: true },
   ]);
 
@@ -82,22 +86,50 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
     return <div className="p-4 text-center text-gray-500">Henüz teklif bulunmamaktadır.</div>;
   }
 
+  // Filter proposals based on the search query
+  const filteredProposals = searchQuery.trim() === "" 
+    ? data 
+    : data.filter((proposal) => 
+        proposal.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        proposal.proposal_number?.toString().includes(searchQuery)
+      );
+
   return (
-    <div className="w-full overflow-x-auto">
-      <Table>
-        <ProposalTableHeader columns={columns} />
-        <TableBody>
-          {data?.map((proposal, index) => (
-            <ProposalTableRow
-              key={proposal.id}
-              proposal={proposal}
-              index={index}
-              formatMoney={formatMoney}
-              onSelect={onProposalSelect}
-            />
-          ))}
-        </TableBody>
-      </Table>
+    <div className="w-full">
+      <div className="flex justify-between items-center p-4 border-b">
+        <Input
+          className="max-w-sm"
+          placeholder="Teklif ara..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <div className="flex space-x-2">
+          <select className="px-2 py-1 border rounded text-sm">
+            <option value="all">Tümü</option>
+            <option value="this-month">Bu Ay</option>
+            <option value="last-month">Geçen Ay</option>
+          </select>
+          <select className="px-2 py-1 border rounded text-sm">
+            <option value="all">Tümü</option>
+          </select>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <Table>
+          <ProposalTableHeader columns={columns} />
+          <TableBody>
+            {filteredProposals.map((proposal, index) => (
+              <ProposalTableRow
+                key={proposal.id}
+                proposal={proposal}
+                index={index}
+                formatMoney={formatMoney}
+                onSelect={onProposalSelect}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };

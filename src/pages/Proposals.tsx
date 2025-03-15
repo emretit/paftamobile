@@ -4,12 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { useProposals } from "@/hooks/useProposals";
 import Navbar from "@/components/Navbar";
-import { ProposalActions } from "@/components/proposals/ProposalActions";
-import ProposalTable from "@/components/proposals/ProposalTable";
+import { Button } from "@/components/ui/button";
 import { ProposalFilters } from "@/components/proposals/ProposalFilters";
 import { ProposalFilters as ProposalFiltersType } from "@/components/proposals/types";
-import { Proposal } from "@/types/proposal";
+import { ProposalAnalytics } from "@/components/proposals/ProposalAnalytics";
+import ProposalTable from "@/components/proposals/ProposalTable";
 import { ProposalDetailSheet } from "@/components/proposals/ProposalDetailSheet";
+import { Proposal } from "@/types/proposal";
+import { Plus, LayoutGrid, Table, Filter } from "lucide-react";
 
 interface ProposalsProps {
   isCollapsed: boolean;
@@ -28,9 +30,10 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
     employeeId: null,
   });
   const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
   
-  // Call useProposals without applying any filters
-  const { data: proposals } = useProposals();
+  // Call useProposals with filters
+  const { data: proposals } = useProposals(filters);
 
   // State for the detail sheet
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
@@ -62,10 +65,50 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-gray-900">Teklifler</h1>
             <p className="text-gray-600 mt-1">
-              Müşteri ve tedarikçi tekliflerinizi yönetin
+              Tüm teklifleri görüntüleyin ve yönetin
             </p>
           </div>
 
+          {/* View mode and actions */}
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex space-x-2">
+              <Button 
+                variant={viewMode === "kanban" ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setViewMode("kanban")}
+              >
+                <LayoutGrid className="h-4 w-4 mr-2" />
+                Kanban
+              </Button>
+              <Button 
+                variant={viewMode === "table" ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setViewMode("table")}
+              >
+                <Table className="h-4 w-4 mr-2" />
+                Tablo
+              </Button>
+              <Button variant="outline" size="sm">
+                <Filter className="h-4 w-4 mr-2" />
+                Filtrele
+              </Button>
+            </div>
+            <Button 
+              size="sm" 
+              onClick={() => navigate("/proposals/new")}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Teklif Ekle
+            </Button>
+          </div>
+
+          {/* Analytics component */}
+          <div className="mb-6">
+            <h2 className="text-xl font-bold mb-4">Teklif Analizi</h2>
+            <ProposalAnalytics />
+          </div>
+
+          {/* Filters */}
           <Card className="mb-6">
             <CardContent className="p-6">
               <ProposalFilters 
@@ -77,10 +120,7 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
             </CardContent>
           </Card>
 
-          <div className="mb-4">
-            <ProposalActions proposal={null} />
-          </div>
-
+          {/* Table View */}
           <Card>
             <CardContent className="p-0">
               <ProposalTable 
