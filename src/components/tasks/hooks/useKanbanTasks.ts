@@ -16,12 +16,8 @@ export const useKanbanTasks = (
   const { data, isLoading, error } = useQuery({
     queryKey: ["tasks", searchQuery, selectedEmployee, selectedType],
     queryFn: async () => {
-      let query = supabase
-        .from('tasks')
-        .select(`
-          *,
-          assignee:assignee_id(id, name:first_name, avatar_url)
-        `);
+      // First, build the base query with filters
+      let query = supabase.from('tasks').select('*');
 
       if (searchQuery) {
         query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
@@ -39,18 +35,45 @@ export const useKanbanTasks = (
         }
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
+      const { data: tasksData, error } = await query;
       
-      // Convert the data to Task type
-      return data.map((item: any) => ({
-        ...item,
+      if (error) {
+        console.error("Error fetching tasks:", error);
+        throw error;
+      }
+      
+      // If we have employees referenced, fetch them separately
+      const assigneeIds = tasksData
+        .filter(task => task.assignee_id)
+        .map(task => task.assignee_id);
+      
+      let employees = {};
+      
+      if (assigneeIds.length > 0) {
+        const { data: employeesData, error: employeesError } = await supabase
+          .from("employees")
+          .select("id, first_name, last_name, avatar_url")
+          .in("id", assigneeIds);
+          
+        if (employeesError) {
+          console.error("Error fetching employees:", employeesError);
+        } else if (employeesData) {
+          employees = employeesData.reduce((acc, emp) => {
+            acc[emp.id] = {
+              id: emp.id,
+              name: `${emp.first_name} ${emp.last_name}`,
+              avatar: emp.avatar_url
+            };
+            return acc;
+          }, {});
+        }
+      }
+
+      // Map tasks with their assignees
+      return tasksData.map(task => ({
+        ...task,
         item_type: 'task', // Set default value
-        assignee: item.assignee ? {
-          id: item.assignee.id,
-          name: item.assignee.name,
-          avatar: item.assignee.avatar_url
-        } : undefined
+        assignee: task.assignee_id ? employees[task.assignee_id] : undefined
       })) as Task[];
     }
   });

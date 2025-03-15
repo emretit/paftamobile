@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import TasksTable from "./TasksTable";
 import type { Task } from "@/types/task";
+import { useTaskRealtime } from "./hooks/useTaskRealtime";
 
 interface TasksContentProps {
   searchQuery?: string;
@@ -17,25 +18,60 @@ const TasksContent = ({
   selectedType = "",
   onSelectTask = () => {}
 }: TasksContentProps) => {
+  // Use the realtime hook to listen for task changes
+  useTaskRealtime();
+
   const { data, isLoading: isTasksLoading } = useQuery({
     queryKey: ["tasks"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First, fetch tasks without the join
+      const { data: tasksData, error } = await supabase
         .from("tasks")
-        .select(`
-          *,
-          assignee:assignee_id(id, first_name, last_name, avatar_url)
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching tasks:", error);
+        throw error;
+      }
       
-      // Convert to Task type with explicit type casting and add item_type if not present
-      return (data || []).map(task => ({
-        ...task,
-        // Add item_type based on type field if it doesn't exist
-        item_type: task.type || "task" // Use the task's type or default to "task"
-      })) as unknown as Task[];
+      // If we have employees referenced, fetch them separately
+      const assigneeIds = tasksData
+        .filter(task => task.assignee_id)
+        .map(task => task.assignee_id);
+      
+      let employees = {};
+      
+      if (assigneeIds.length > 0) {
+        const { data: employeesData, error: employeesError } = await supabase
+          .from("employees")
+          .select("id, first_name, last_name, avatar_url")
+          .in("id", assigneeIds);
+          
+        if (employeesError) {
+          console.error("Error fetching employees:", employeesError);
+        } else if (employeesData) {
+          employees = employeesData.reduce((acc, emp) => {
+            acc[emp.id] = emp;
+            return acc;
+          }, {});
+        }
+      }
+
+      // Map tasks with their assignees
+      return tasksData.map(task => {
+        const assignee = task.assignee_id ? employees[task.assignee_id] : null;
+        return {
+          ...task,
+          item_type: task.type || "task", // Add item_type based on type field if needed
+          assignee: assignee ? {
+            id: assignee.id,
+            first_name: assignee.first_name,
+            last_name: assignee.last_name,
+            avatar_url: assignee.avatar_url
+          } : undefined
+        } as Task;
+      });
     }
   });
 
