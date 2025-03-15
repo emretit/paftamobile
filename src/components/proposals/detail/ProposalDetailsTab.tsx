@@ -12,10 +12,6 @@ import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Card } from "@/components/ui/card";
-import { Save } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -30,14 +26,15 @@ interface ProposalDetailsTabProps {
   proposal: Proposal;
   onStatusChange: (status: ProposalStatus) => void;
   isUpdating: boolean;
+  onNotesChange: (notes: string) => void;
 }
 
 export const ProposalDetailsTab = ({ 
   proposal, 
   onStatusChange,
-  isUpdating
+  isUpdating,
+  onNotesChange
 }: ProposalDetailsTabProps) => {
-  const queryClient = useQueryClient();
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -49,30 +46,8 @@ export const ProposalDetailsTab = ({
     }
   });
   
-  const updateNotesMutation = useMutation({
-    mutationFn: async (data: { internal_notes: string }) => {
-      const { error } = await supabase
-        .from("proposals")
-        .update({ internal_notes: data.internal_notes })
-        .eq("id", proposal.id);
-        
-      if (error) throw error;
-      return true;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["proposals"] });
-      queryClient.invalidateQueries({ queryKey: ["proposal", proposal.id] });
-      toast.success("Notlar başarıyla kaydedildi");
-    },
-    onError: (error) => {
-      console.error("Error updating notes:", error);
-      toast.error("Notlar kaydedilirken bir hata oluştu");
-    }
-  });
-  
-  const handleSaveNotes = () => {
-    const internal_notes = form.getValues("internal_notes");
-    updateNotesMutation.mutate({ internal_notes });
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onNotesChange(e.target.value);
   };
 
   const formatDate = (date: string | null | undefined) => {
@@ -162,29 +137,15 @@ export const ProposalDetailsTab = ({
                     placeholder="Teklif hakkında açıklama veya notlar..." 
                     className="min-h-[120px]" 
                     {...field} 
+                    onChange={(e) => {
+                      field.onChange(e);
+                      handleNotesChange(e);
+                    }}
                   />
                 </FormControl>
               </FormItem>
             )}
           />
-          
-          <div className="pt-4">
-            <Button 
-              type="button" 
-              className="w-full"
-              onClick={handleSaveNotes}
-              disabled={updateNotesMutation.isPending}
-            >
-              {updateNotesMutation.isPending ? (
-                "Kaydediliyor..."
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Notları Kaydet
-                </>
-              )}
-            </Button>
-          </div>
         </form>
       </Form>
     </div>

@@ -12,6 +12,9 @@ import { useProposalStatusUpdate } from "@/hooks/useProposalStatusUpdate";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { CalendarIcon, ClockIcon, User2Icon, DollarSign, X, Save } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ProposalDetailSheetProps {
   proposal: Proposal | null;
@@ -24,7 +27,8 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
   const [activeTab, setActiveTab] = useState("details");
   const { updateProposalStatus, isUpdating } = useProposalStatusUpdate();
   const [hasChanges, setHasChanges] = useState(false);
-
+  const queryClient = useQueryClient();
+  
   useEffect(() => {
     if (proposal) {
       setFormData(proposal);
@@ -39,14 +43,15 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
     const updatedData = { ...formData, status };
     setFormData(updatedData);
     setHasChanges(true);
+  };
+  
+  const handleNotesChange = (notes: string) => {
+    if (!formData) return;
     
-    // Call the mutation to update the server
-    if (formData.id) {
-      updateProposalStatus.mutate({ 
-        proposalId: formData.id, 
-        status 
-      });
-    }
+    // Update local state immediately for responsive UI
+    const updatedData = { ...formData, internal_notes: notes };
+    setFormData(updatedData);
+    setHasChanges(true);
   };
 
   const formatDate = (date: string | null | undefined) => {
@@ -66,16 +71,39 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
     }).format(amount);
   };
 
+  // Mutation to update both status and notes
+  const updateProposalMutation = useMutation({
+    mutationFn: async ({ id, status, notes }: { id: string, status: string, notes: string | null }) => {
+      const { error } = await supabase
+        .from("proposals")
+        .update({ 
+          status: status,
+          internal_notes: notes 
+        })
+        .eq("id", id);
+        
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["proposals"] });
+      queryClient.invalidateQueries({ queryKey: ["proposal", formData?.id] });
+      toast.success("Teklif başarıyla güncellendi");
+      setHasChanges(false);
+    },
+    onError: (error) => {
+      console.error("Error updating proposal:", error);
+      toast.error("Teklif güncellenirken bir hata oluştu");
+    }
+  });
+
   const handleSaveChanges = () => {
     if (!formData || !formData.id) return;
     
-    updateProposalStatus.mutate({ 
-      proposalId: formData.id, 
-      status: formData.status 
-    }, {
-      onSuccess: () => {
-        setHasChanges(false);
-      }
+    updateProposalMutation.mutate({ 
+      id: formData.id, 
+      status: formData.status,
+      notes: formData.internal_notes
     });
   };
 
@@ -140,6 +168,7 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
                 proposal={formData} 
                 onStatusChange={handleStatusChange} 
                 isUpdating={isUpdating}
+                onNotesChange={handleNotesChange}
               />
             </TabsContent>
 
@@ -157,7 +186,7 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
               <Button 
                 className="w-full" 
                 onClick={handleSaveChanges}
-                disabled={isUpdating}
+                disabled={updateProposalMutation.isPending}
               >
                 <Save className="mr-2 h-4 w-4" />
                 Değişiklikleri Kaydet
