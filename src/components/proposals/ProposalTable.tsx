@@ -6,7 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Proposal, ProposalStatus } from "@/types/proposal";
-import { ProposalFilters } from "./ProposalFilters";
+import { ProposalFilters } from "./types";
 import { Column } from "./types";
 import { ProposalTableHeader } from "./table/ProposalTableHeader";
 import { ProposalTableRow } from "./table/ProposalTableRow";

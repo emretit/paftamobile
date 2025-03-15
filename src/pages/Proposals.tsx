@@ -6,7 +6,8 @@ import { useProposals } from "@/hooks/useProposals";
 import Navbar from "@/components/Navbar";
 import { ProposalActions } from "@/components/proposals/ProposalActions";
 import ProposalTable from "@/components/proposals/ProposalTable";
-import { ProposalFilters, ProposalFilters as ProposalFiltersType } from "@/components/proposals/ProposalFilters";
+import { ProposalFilters } from "@/components/proposals/ProposalFilters";
+import { ProposalFilters as ProposalFiltersType } from "@/components/proposals/types";
 import { Proposal } from "@/types/proposal";
 import { ProposalDetailSheet } from "@/components/proposals/ProposalDetailSheet";
 
@@ -67,7 +68,12 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
 
           <Card className="mb-6">
             <CardContent className="p-6">
-              <ProposalFilters onFilterChange={handleFilterChange} />
+              <ProposalFilters 
+                onSearchChange={(value) => handleFilterChange({...filters, search: value})}
+                onStatusChange={(status) => handleFilterChange({...filters, status})}
+                selectedStatus={filters.status || "all"}
+                onFilterChange={handleFilterChange}
+              />
             </CardContent>
           </Card>
 

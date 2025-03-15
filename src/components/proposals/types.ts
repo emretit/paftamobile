@@ -1,9 +1,20 @@
 
-import { Proposal } from "@/types/proposal";
+import { Column } from "./types";
 
-export interface Column {
-  id: keyof Proposal | 'actions';
-  label: string;
-  visible: boolean;
-  sortable?: boolean;
+export interface ProposalFilters {
+  search?: string;
+  status?: string;
+  employeeId?: string | null;
+  dateRange?: {
+    from: Date | null;
+    to: Date | null;
+  };
+}
+
+export interface ProposalFiltersProps {
+  onSearchChange: (value: string) => void;
+  onStatusChange: (status: string) => void;
+  onDateRangeChange?: (range: any) => void;
+  selectedStatus: string;
+  onFilterChange?: (filters: ProposalFilters) => void;
 }

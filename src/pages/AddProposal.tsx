@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { ProposalForm } from "@/components/proposals/form/ProposalForm";
-import { DefaultLayout } from "@/components/layouts/DefaultLayout";
+import DefaultLayout from "@/components/layouts/DefaultLayout";
 
 interface AddProposalProps {
   isCollapsed: boolean;

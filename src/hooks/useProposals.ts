@@ -3,16 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Proposal, ProposalItem } from "@/types/proposal";
 import { toast } from "sonner";
-
-interface ProposalFilters {
-  search?: string;
-  status?: string;
-  employeeId?: string;
-  dateRange?: {
-    from: Date | null;
-    to: Date | null;
-  };
-}
+import { ProposalFilters } from "@/components/proposals/types";
 
 export const useProposals = (filters?: ProposalFilters) => {
   return useQuery({
@@ -88,11 +79,14 @@ export const useProposals = (filters?: ProposalFilters) => {
             last_name: ""
           };
           
-          if (safeEmployee && typeof safeEmployee === 'object' && !('error' in safeEmployee)) {
-            employeeData = {
-              first_name: safeEmployee.first_name || "",
-              last_name: safeEmployee.last_name || ""
-            };
+          if (safeEmployee && typeof safeEmployee === 'object') {
+            // Check if it's an error object
+            if (!('error' in safeEmployee)) {
+              employeeData = {
+                first_name: safeEmployee.first_name || "",
+                last_name: safeEmployee.last_name || ""
+              };
+            }
           }
           
           // Return a properly typed Proposal object

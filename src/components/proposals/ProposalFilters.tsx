@@ -13,25 +13,40 @@ import {
 } from "@/components/ui/select";
 import { statusStyles } from "./constants";
 import { Plus } from "lucide-react";
-
-interface ProposalFiltersProps {
-  onSearchChange: (value: string) => void;
-  onStatusChange: (status: string) => void;
-  onDateRangeChange?: (range: any) => void;
-  selectedStatus: string;
-}
+import { ProposalFiltersProps } from "./types";
 
 export const ProposalFilters = ({
   onSearchChange,
   onStatusChange,
   onDateRangeChange,
   selectedStatus,
+  onFilterChange,
 }: ProposalFiltersProps) => {
   const [searchValue, setSearchValue] = useState("");
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
     onSearchChange(e.target.value);
+    
+    // Call the combined filter change if it exists
+    if (onFilterChange) {
+      onFilterChange({
+        search: e.target.value,
+        status: selectedStatus !== 'all' ? selectedStatus : undefined
+      });
+    }
+  };
+  
+  const handleStatusChange = (value: string) => {
+    onStatusChange(value);
+    
+    // Call the combined filter change if it exists
+    if (onFilterChange) {
+      onFilterChange({
+        search: searchValue,
+        status: value !== 'all' ? value : undefined
+      });
+    }
   };
 
   return (
@@ -50,7 +65,7 @@ export const ProposalFilters = ({
         <Label htmlFor="status">Durum</Label>
         <Select
           value={selectedStatus}
-          onValueChange={(value) => onStatusChange(value)}
+          onValueChange={handleStatusChange}
         >
           <SelectTrigger id="status">
             <SelectValue placeholder="Tüm durumlar" />
