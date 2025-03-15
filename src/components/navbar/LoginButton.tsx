@@ -27,7 +27,7 @@ const LoginButton = () => {
 
   const handleClick = () => {
     if (isLoggedIn) {
-      navigate("/crm"); // Navigate to dashboard if logged in
+      navigate("/crm"); // Always navigate to dashboard if logged in
     } else {
       navigate("/auth"); // Navigate to auth if not logged in
     }
