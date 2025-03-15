@@ -40,7 +40,7 @@ export const workflowStages: { status: ProposalStatus; label: string }[] = [
   { status: 'discovery_scheduled', label: 'Planlandı' },
   { status: 'meeting_completed', label: 'Keşif Tamamlandı' },
   { status: 'quote_in_progress', label: 'Hazırlanıyor' },
-  { status: 'quote_sent', label: 'Gönderildi' },
+  { status: 'sent', label: 'Gönderildi' },
   { status: 'negotiation', label: 'Müzakerede' }
 ];
 

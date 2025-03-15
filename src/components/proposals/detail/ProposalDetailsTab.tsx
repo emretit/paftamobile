@@ -7,7 +7,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ProposalStatus, Proposal } from "@/types/proposal";
-import { ProposalStatusSelector } from "./ProposalStatusSelector";
+import { ProposalWorkflowProgress } from "./ProposalWorkflowProgress";
+import { Separator } from "@/components/ui/separator";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -39,69 +42,96 @@ export const ProposalDetailsTab = ({
     }
   });
 
-  const onSubmit = (data: FormValues) => {
-    // This is handled at the parent component level
-    console.log("Form submitted:", data);
+  const formatDate = (date: string | null | undefined) => {
+    if (!date) return "-";
+    try {
+      return format(new Date(date), "dd.MM.yyyy", { locale: tr });
+    } catch (error) {
+      return "-";
+    }
+  };
+
+  const formatMoney = (amount: number) => {
+    return new Intl.NumberFormat('tr-TR', {
+      style: 'currency',
+      currency: 'TRY',
+      minimumFractionDigits: 2
+    }).format(amount);
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-6">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Teklif Başlığı</FormLabel>
-              <FormControl>
-                <Input placeholder="Teklif başlığı" {...field} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+    <div className="space-y-6 py-4">
+      {/* Workflow progress section */}
+      <ProposalWorkflowProgress 
+        currentStatus={proposal.status as ProposalStatus}
+        onStatusChange={onStatusChange}
+        isUpdating={isUpdating}
+      />
+      
+      <Separator className="my-6" />
+      
+      {/* Form fields section */}
+      <Form {...form}>
+        <form className="space-y-4">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Teklif Başlığı</FormLabel>
+                <FormControl>
+                  <Input placeholder="Teklif başlığı" {...field} readOnly />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="total_value"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Toplam Tutar (₺)</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="0.00" 
-                  {...field}
-                  value={field.value}
-                  onChange={e => field.onChange(Number(e.target.value))} 
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="total_value"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Toplam Tutar</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="text" 
+                      readOnly
+                      value={formatMoney(field.value)}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <div className="space-y-2">
+              <FormLabel>Geçerlilik Tarihi</FormLabel>
+              <Input 
+                type="text" 
+                readOnly
+                value={formatDate(proposal.valid_until)}
+              />
+            </div>
+          </div>
 
-        <FormField
-          control={form.control}
-          name="internal_notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Açıklama / Notlar</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Teklif hakkında açıklama veya notlar..." 
-                  className="min-h-[120px]" 
-                  {...field} 
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        <ProposalStatusSelector 
-          currentStatus={proposal.status as ProposalStatus} 
-          onStatusChange={onStatusChange}
-          isUpdating={isUpdating}
-        />
-      </form>
-    </Form>
+          <FormField
+            control={form.control}
+            name="internal_notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Açıklama / Notlar</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Teklif hakkında açıklama veya notlar..." 
+                    className="min-h-[120px]" 
+                    {...field} 
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
+    </div>
   );
 };
