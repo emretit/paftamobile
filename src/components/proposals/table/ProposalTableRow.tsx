@@ -7,6 +7,7 @@ import { Proposal } from "@/types/proposal";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { statusLabels, statusStyles } from "../constants";
 import { useCustomerNames } from "@/hooks/useCustomerNames";
+import { useEmployeeNames } from "@/hooks/useEmployeeNames";
 
 interface ProposalTableRowProps {
   proposal: Proposal;
@@ -17,6 +18,7 @@ interface ProposalTableRowProps {
 
 export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: ProposalTableRowProps) => {
   const { getCustomerName } = useCustomerNames();
+  const { getEmployeeName } = useEmployeeNames();
 
   const getStatusBadge = (status: string) => {
     const style = statusStyles[status] || { bg: "bg-gray-100", text: "text-gray-800" };
@@ -45,11 +47,11 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
         <div className="flex items-center gap-2">
           <Avatar className="h-7 w-7">
             <AvatarFallback className="text-xs">
-              TE
+              {getEmployeeName(proposal.employee_id).split(' ').map(name => name[0]).join('').substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <span>
-            {proposal.employee_id || "-"}
+            {getEmployeeName(proposal.employee_id)}
           </span>
         </div>
       </TableCell>
