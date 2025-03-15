@@ -61,82 +61,80 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}
       >
-        <div className="p-6">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Teklifler</h1>
-            <p className="text-gray-600 mt-1">
-              Tüm teklifleri görüntüleyin ve yönetin
-            </p>
-          </div>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">Teklifler</h1>
+          <p className="text-gray-600 mt-1">
+            Tüm teklifleri görüntüleyin ve yönetin
+          </p>
+        </div>
 
-          {/* View mode and actions */}
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex space-x-2">
-              <Button 
-                variant={viewMode === "kanban" ? "default" : "outline"} 
-                size="sm"
-                onClick={() => setViewMode("kanban")}
-              >
-                <LayoutGrid className="h-4 w-4 mr-2" />
-                Kanban
-              </Button>
-              <Button 
-                variant={viewMode === "table" ? "default" : "outline"} 
-                size="sm"
-                onClick={() => setViewMode("table")}
-              >
-                <Table className="h-4 w-4 mr-2" />
-                Tablo
-              </Button>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filtrele
-              </Button>
-            </div>
+        {/* View mode and actions */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex space-x-2">
             <Button 
-              size="sm" 
-              onClick={() => navigate("/proposals/new")}
+              variant={viewMode === "kanban" ? "default" : "outline"} 
+              size="sm"
+              onClick={() => setViewMode("kanban")}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Teklif Ekle
+              <LayoutGrid className="h-4 w-4 mr-2" />
+              Kanban
+            </Button>
+            <Button 
+              variant={viewMode === "table" ? "default" : "outline"} 
+              size="sm"
+              onClick={() => setViewMode("table")}
+            >
+              <Table className="h-4 w-4 mr-2" />
+              Tablo
+            </Button>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filtrele
             </Button>
           </div>
-
-          {/* Analytics component */}
-          <div className="mb-6">
-            <h2 className="text-xl font-bold mb-4">Teklif Analizi</h2>
-            <ProposalAnalytics />
-          </div>
-
-          {/* Filters */}
-          <Card className="mb-6">
-            <CardContent className="p-6">
-              <ProposalFilters 
-                onSearchChange={(value) => handleFilterChange({...filters, search: value})}
-                onStatusChange={(status) => handleFilterChange({...filters, status})}
-                selectedStatus={filters.status || "all"}
-                onFilterChange={handleFilterChange}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Table View */}
-          <Card>
-            <CardContent className="p-0">
-              <ProposalTable 
-                filters={filters} 
-                onProposalSelect={handleProposalClick} 
-              />
-            </CardContent>
-          </Card>
-          
-          {/* Proposal Detail Sheet */}
-          <ProposalDetailSheet
-            proposal={selectedProposal}
-            isOpen={isDetailSheetOpen}
-            onClose={handleCloseDetailSheet}
-          />
+          <Button 
+            size="sm" 
+            onClick={() => navigate("/proposals/new")}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Teklif Ekle
+          </Button>
         </div>
+
+        {/* Analytics component */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold mb-4">Teklif Analizi</h2>
+          <ProposalAnalytics />
+        </div>
+
+        {/* Filters */}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <ProposalFilters 
+              onSearchChange={(value) => handleFilterChange({...filters, search: value})}
+              onStatusChange={(status) => handleFilterChange({...filters, status})}
+              selectedStatus={filters.status || "all"}
+              onFilterChange={handleFilterChange}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Table View */}
+        <Card>
+          <CardContent className="p-0">
+            <ProposalTable 
+              filters={filters} 
+              onProposalSelect={handleProposalClick} 
+            />
+          </CardContent>
+        </Card>
+        
+        {/* Proposal Detail Sheet */}
+        <ProposalDetailSheet
+          proposal={selectedProposal}
+          isOpen={isDetailSheetOpen}
+          onClose={handleCloseDetailSheet}
+        />
       </main>
     </div>
   );
