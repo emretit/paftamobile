@@ -8,6 +8,7 @@ import { Proposal } from "@/types/proposal";
 import { StatusBadge } from "../detail/StatusBadge";
 import { useCustomerNames } from "@/hooks/useCustomerNames";
 import { useEmployeeNames } from "@/hooks/useEmployeeNames";
+import { useNavigate } from "react-router-dom";
 
 interface ProposalTableRowProps {
   proposal: Proposal;
@@ -19,6 +20,7 @@ interface ProposalTableRowProps {
 export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: ProposalTableRowProps) => {
   const { getCustomerName } = useCustomerNames();
   const { getEmployeeName } = useEmployeeNames();
+  const navigate = useNavigate();
 
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "-";
@@ -56,7 +58,7 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
             size="icon"
             onClick={(e) => {
               e.stopPropagation();
-              window.location.href = `/proposals/edit/${proposal.id}`;
+              navigate(`/proposals/detail/${proposal.id}`);
             }}
           >
             <Pencil className="h-4 w-4" />

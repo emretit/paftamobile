@@ -33,6 +33,7 @@ import EmployeeDetails from "./pages/EmployeeDetails";
 import EmployeeForm from "./pages/EmployeeForm";
 import AddProposal from "./pages/AddProposal";
 import Dashboard from "./pages/Dashboard";
+import ProposalDetails from "./pages/ProposalDetails";
 
 const queryClient = new QueryClient();
 
@@ -125,6 +126,10 @@ function App() {
           <Route
             path="/proposals/edit/:id"
             element={<ProtectedRoute><ProposalForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/proposals/detail/:id"
+            element={<ProtectedRoute><ProposalDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
           <Route
             path="/deals"
