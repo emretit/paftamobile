@@ -14,9 +14,15 @@ const allStatuses: ProposalStatus[] = [
   "review",
   "sent",
   "negotiation",
+  "approved",
   "accepted",
   "rejected",
-  "expired"
+  "expired",
+  "discovery_scheduled",
+  "meeting_completed",
+  "quote_in_progress",
+  "quote_sent",
+  "converted_to_order"
 ];
 
 interface ProposalStatusSelectorProps {

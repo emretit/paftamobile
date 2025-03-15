@@ -28,16 +28,16 @@ export const statusLabels: Record<ProposalStatus, string> = {
   accepted: 'Kabul Edildi',
   rejected: 'Reddedildi',
   expired: 'Süresi Doldu',
-  discovery_scheduled: 'Planlandı',
+  discovery_scheduled: 'Keşif Planlandı',
   meeting_completed: 'Keşif Tamamlandı',
   quote_in_progress: 'Hazırlanıyor',
-  quote_sent: 'Gönderildi',
+  quote_sent: 'Teklif Gönderildi',
   converted_to_order: 'Sipariş Oldu'
 };
 
 // Define the status workflow stages with simplified terms
 export const workflowSteps: { status: ProposalStatus; label: string }[] = [
-  { status: 'discovery_scheduled', label: 'Planlandı' },
+  { status: 'discovery_scheduled', label: 'Keşif Planlandı' },
   { status: 'meeting_completed', label: 'Keşif Tamamlandı' },
   { status: 'quote_in_progress', label: 'Hazırlanıyor' },
   { status: 'sent', label: 'Gönderildi' },

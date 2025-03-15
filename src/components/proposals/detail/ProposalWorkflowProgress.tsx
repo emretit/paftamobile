@@ -73,7 +73,7 @@ export const ProposalWorkflowProgress = ({
                   )}
                 </div>
                 <span 
-                  className={`text-xs mt-2 font-medium text-center max-w-[60px]
+                  className={`text-xs mt-2 font-medium text-center max-w-[70px]
                     ${isCurrent 
                       ? 'text-blue-600' 
                       : isActive 
@@ -123,7 +123,7 @@ export const ProposalWorkflowProgress = ({
                   <Check className="w-4 h-4 text-green-600" />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium">Onaylandı</p>
+                  <p className="font-medium">{statusLabels.approved}</p>
                 </div>
               </div>
             </Button>
@@ -139,7 +139,7 @@ export const ProposalWorkflowProgress = ({
                   <X className="w-4 h-4 text-red-600" />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium">Reddedildi</p>
+                  <p className="font-medium">{statusLabels.rejected}</p>
                 </div>
               </div>
             </Button>
@@ -155,7 +155,7 @@ export const ProposalWorkflowProgress = ({
                   <Check className="w-4 h-4 text-indigo-600" />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium">Sipariş Oldu</p>
+                  <p className="font-medium">{statusLabels.converted_to_order}</p>
                 </div>
               </div>
             </Button>
