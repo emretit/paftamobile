@@ -2,7 +2,18 @@
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Employee } from "@/types/task";
+
+// Using the more complete Employee type from types/employee.ts
+interface TaskFilterEmployee {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email?: string;
+  position?: string;
+  department?: string;
+  hire_date?: string;
+  status?: string;
+}
 
 interface TasksFilterBarProps {
   searchQuery: string;
@@ -11,7 +22,7 @@ interface TasksFilterBarProps {
   setSelectedEmployee: (value: string | null) => void;
   selectedType: string | null;
   setSelectedType: (value: string | null) => void;
-  employees?: Employee[];
+  employees?: TaskFilterEmployee[];
 }
 
 const TasksFilterBar = ({

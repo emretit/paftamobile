@@ -24,12 +24,12 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   // Fetch employees for filter dropdown
-  const { data: employees } = useQuery({
+  const { data: employeesData } = useQuery({
     queryKey: ["employees"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("employees")
-        .select("id, first_name, last_name")
+        .select("id, first_name, last_name, email, position, department, hire_date, status")
         .eq("status", "aktif");
       
       if (error) throw error;
@@ -65,7 +65,7 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
             setSelectedEmployee={setSelectedEmployee}
             selectedType={selectedType}
             setSelectedType={setSelectedType}
-            employees={employees}
+            employees={employeesData}
           />
           
           {viewType === "table" ? (
