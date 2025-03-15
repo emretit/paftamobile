@@ -1,3 +1,4 @@
+
 import { 
   LayoutDashboard, 
   Users, 
@@ -31,7 +32,7 @@ const productsItems = [
 ];
 
 export const navItems = [
-  { path: "/", icon: LayoutDashboard, label: "Gösterge Paneli" },
+  { path: "/crm", icon: LayoutDashboard, label: "Gösterge Paneli" },
   {
     category: "CRM",
     icon: Briefcase,
