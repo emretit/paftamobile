@@ -32,7 +32,7 @@ const productsItems = [
 ];
 
 export const navItems = [
-  { path: "/crm", icon: LayoutDashboard, label: "Gösterge Paneli" },
+  { path: "/dashboard", icon: LayoutDashboard, label: "Gösterge Paneli" },
   {
     category: "CRM",
     icon: Briefcase,
