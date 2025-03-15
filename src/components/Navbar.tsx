@@ -32,6 +32,11 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
     }
   };
 
+  // Helper function to check if an item is CRM-related
+  const isCrmItem = (path: string) => {
+    return path === "/crm" || path === "/deals" || path === "/proposals" || path === "/tasks";
+  };
+
   return (
     <aside
       className={`fixed left-0 top-0 h-screen z-20 transition-all duration-300 ${
@@ -46,6 +51,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
             if ('category' in item) {
               const isExpanded = expandedCategories.includes(item.category);
               const Icon = item.icon;
+              const isCrmCategory = item.category === "CRM";
               return (
                 <div key={item.category}>
                   <button
@@ -53,15 +59,22 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
                     className={cn(
                       "flex items-center w-full h-11 px-3 rounded-md",
                       !isCollapsed && "justify-between",
+                      isCrmCategory && "border-l-2 border-blue-400 mt-2", // Add divider for CRM category
                       isActive(item.path || '') 
                         ? "bg-primary/10 text-primary font-medium" 
                         : "text-gray-300 hover:bg-gray-800 hover:text-white"
                     )}
                   >
                     <div className="flex items-center">
-                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <Icon className={cn(
+                        "h-5 w-5 flex-shrink-0",
+                        isCrmCategory && "text-blue-400" // Highlight CRM category icon
+                      )} />
                       {!isCollapsed && (
-                        <span className="ml-3 text-sm font-medium">{item.category}</span>
+                        <span className={cn(
+                          "ml-3 text-sm font-medium",
+                          isCrmCategory && "text-blue-400" // Highlight CRM category text
+                        )}>{item.category}</span>
                       )}
                     </div>
                     {!isCollapsed && (
@@ -78,6 +91,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
                           label={subItem.label}
                           isActive={isActive(subItem.path)}
                           isCollapsed={isCollapsed}
+                          isCrmButton={isCrmCategory} // Set isCrmButton for CRM subitems
                         />
                       ))}
                     </div>
@@ -93,6 +107,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
                 label={item.label}
                 isActive={isActive(item.path)}
                 isCollapsed={isCollapsed}
+                isCrmButton={isCrmItem(item.path)} // Set isCrmButton based on path
               />
             );
           })}
@@ -107,6 +122,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
             label={settingsItem.label}
             isActive={isActive(settingsItem.path)}
             isCollapsed={isCollapsed}
+            isCrmButton={false}
           />
         </div>
       </nav>
