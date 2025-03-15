@@ -11,7 +11,7 @@ import { StatusBadge } from "./detail/StatusBadge";
 import { useProposalStatusUpdate } from "@/hooks/useProposalStatusUpdate";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { CalendarIcon, ClockIcon, User2Icon, DollarSign, X } from "lucide-react";
+import { CalendarIcon, ClockIcon, User2Icon, DollarSign, X, Save } from "lucide-react";
 
 interface ProposalDetailSheetProps {
   proposal: Proposal | null;
@@ -23,10 +23,12 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
   const [formData, setFormData] = useState<Proposal | null>(null);
   const [activeTab, setActiveTab] = useState("details");
   const { updateProposalStatus, isUpdating } = useProposalStatusUpdate();
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     if (proposal) {
       setFormData(proposal);
+      setHasChanges(false);
     }
   }, [proposal]);
 
@@ -36,6 +38,7 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
     // Update local state immediately for responsive UI
     const updatedData = { ...formData, status };
     setFormData(updatedData);
+    setHasChanges(true);
     
     // Call the mutation to update the server
     if (formData.id) {
@@ -61,6 +64,19 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
       currency: 'TRY',
       minimumFractionDigits: 2
     }).format(amount);
+  };
+
+  const handleSaveChanges = () => {
+    if (!formData || !formData.id) return;
+    
+    updateProposalStatus.mutate({ 
+      proposalId: formData.id, 
+      status: formData.status 
+    }, {
+      onSuccess: () => {
+        setHasChanges(false);
+      }
+    });
   };
 
   if (!formData) return null;
@@ -135,6 +151,19 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
               <ProposalNotesTab proposal={formData} />
             </TabsContent>
           </Tabs>
+          
+          {hasChanges && (
+            <div className="mt-4">
+              <Button 
+                className="w-full" 
+                onClick={handleSaveChanges}
+                disabled={isUpdating}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Değişiklikleri Kaydet
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="sticky bottom-0 bg-white border-t p-4 mt-auto">
