@@ -95,7 +95,7 @@ export const useSalesInvoices = () => {
       throw error;
     }
     
-    return data as SalesInvoice[];
+    return data as unknown as SalesInvoice[];
   };
 
   const fetchInvoiceById = async (id: string): Promise<SalesInvoice> => {
@@ -113,7 +113,7 @@ export const useSalesInvoices = () => {
       throw error;
     }
 
-    return data as SalesInvoice;
+    return data as unknown as SalesInvoice;
   };
   
   const fetchInvoiceItems = async (invoiceId: string): Promise<SalesInvoiceItem[]> => {
@@ -130,7 +130,7 @@ export const useSalesInvoices = () => {
       throw error;
     }
 
-    return data as SalesInvoiceItem[];
+    return data as unknown as SalesInvoiceItem[];
   };
 
   const createInvoice = async (invoiceData: Partial<SalesInvoice>, items: Partial<SalesInvoiceItem>[]) => {
@@ -150,7 +150,7 @@ export const useSalesInvoices = () => {
     if (items.length > 0) {
       const itemsWithInvoiceId = items.map(item => ({
         ...item,
-        fatura_id: invoice.id
+        fatura_id: (invoice as any).id
       }));
 
       const { error: itemsError } = await supabase
