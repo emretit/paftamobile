@@ -1,73 +1,107 @@
 
-import { Proposal, ProposalStatus } from "@/types/proposal";
-import { ProposalWorkflowProgress } from "./ProposalWorkflowProgress";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { ProposalStatus, Proposal } from "@/types/proposal";
 import { ProposalStatusSelector } from "./ProposalStatusSelector";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+const formSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  total_value: z.number().min(0, "Amount must be positive"),
+  internal_notes: z.string().optional(),
+  status: z.string()
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface ProposalDetailsTabProps {
   proposal: Proposal;
   onStatusChange: (status: ProposalStatus) => void;
-  isUpdating?: boolean;
+  isUpdating: boolean;
 }
 
 export const ProposalDetailsTab = ({ 
   proposal, 
   onStatusChange,
-  isUpdating = false
+  isUpdating
 }: ProposalDetailsTabProps) => {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: proposal.title,
+      total_value: proposal.total_value,
+      internal_notes: proposal.internal_notes || "",
+      status: proposal.status
+    }
+  });
+
+  const onSubmit = (data: FormValues) => {
+    // This is handled at the parent component level
+    console.log("Form submitted:", data);
+  };
+
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-medium">Teklif Durumu</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Workflow progress visualization */}
-          <div className="mb-6">
-            <ProposalWorkflowProgress 
-              currentStatus={proposal.status} 
-              onStatusChange={onStatusChange} 
-            />
-          </div>
-          
-          <div className="border-t pt-6">
-            <ProposalStatusSelector 
-              currentStatus={proposal.status} 
-              onStatusChange={onStatusChange}
-              isUpdating={isUpdating}
-            />
-          </div>
-        </CardContent>
-      </Card>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-6">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Teklif Başlığı</FormLabel>
+              <FormControl>
+                <Input placeholder="Teklif başlığı" {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">Ödeme Koşulları</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600">
-              {proposal.payment_term || 'Belirtilmemiş'}
-            </p>
-          </CardContent>
-        </Card>
+        <FormField
+          control={form.control}
+          name="total_value"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Toplam Tutar (₺)</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  placeholder="0.00" 
+                  {...field}
+                  value={field.value}
+                  onChange={e => field.onChange(Number(e.target.value))} 
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
 
-        {proposal.employee && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-medium">Satış Temsilcisi</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium">
-                  {proposal.employee.first_name?.charAt(0)}{proposal.employee.last_name?.charAt(0)}
-                </div>
-                <span className="text-sm">{proposal.employee.first_name} {proposal.employee.last_name}</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </div>
+        <FormField
+          control={form.control}
+          name="internal_notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Açıklama / Notlar</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Teklif hakkında açıklama veya notlar..." 
+                  className="min-h-[120px]" 
+                  {...field} 
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <ProposalStatusSelector 
+          currentStatus={proposal.status as ProposalStatus} 
+          onStatusChange={onStatusChange}
+          isUpdating={isUpdating}
+        />
+      </form>
+    </Form>
   );
 };

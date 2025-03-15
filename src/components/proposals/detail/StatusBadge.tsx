@@ -1,17 +1,45 @@
 
-import { statusLabels, statusStyles } from "../constants";
+import { statusStyles } from "../constants";
+import { ProposalStatus } from "@/types/proposal";
 
 interface StatusBadgeProps {
-  status: string;
+  status: ProposalStatus;
 }
 
 export const StatusBadge = ({ status }: StatusBadgeProps) => {
   const style = statusStyles[status] || { bg: "bg-gray-100", text: "text-gray-800" };
-  const label = statusLabels[status] || status;
+  
+  let statusText = "";
+  let statusIcon = "";
+  
+  switch (status) {
+    case "discovery_scheduled":
+    case "discovery_done":
+    case "meeting_completed":
+      statusText = "Discovery Done";
+      statusIcon = "🔎";
+      break;
+    case "approved":
+      statusText = "Approved";
+      statusIcon = "✅";
+      break;
+    case "rejected":
+      statusText = "Rejected";
+      statusIcon = "❌";
+      break;
+    case "converted_to_order":
+      statusText = "Ordered";
+      statusIcon = "📦";
+      break;
+    default:
+      statusText = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
+      break;
+  }
   
   return (
-    <span className={`px-2 py-1 text-xs rounded-full font-medium ${style.bg} ${style.text}`}>
-      {label}
+    <span className={`px-3 py-1 rounded-full font-medium ${style.bg} ${style.text} flex items-center gap-1 text-sm`}>
+      {statusIcon && <span>{statusIcon}</span>}
+      {statusText}
     </span>
   );
 };
