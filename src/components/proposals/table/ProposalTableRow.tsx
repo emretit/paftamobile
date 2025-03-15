@@ -5,7 +5,6 @@ import { Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Proposal } from "@/types/proposal";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { statusLabels, statusStyles } from "../constants";
 import { useCustomerNames } from "@/hooks/useCustomerNames";
 import { useEmployeeNames } from "@/hooks/useEmployeeNames";

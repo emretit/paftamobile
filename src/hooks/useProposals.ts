@@ -14,11 +14,7 @@ export const useProposals = (filters?: ProposalFilters) => {
         // Start building the query
         let query = supabase
           .from("proposals")
-          .select(`
-            *,
-            customer:customer_id(*),
-            employee:employee_id(*)
-          `);
+          .select("*");
         
         // Apply filters if provided
         if (filters) {
@@ -49,18 +45,41 @@ export const useProposals = (filters?: ProposalFilters) => {
           throw error;
         }
         
+        // Fetch customers and employees separately since the join is causing issues
+        const customerIds = data.filter(p => p.customer_id).map(p => p.customer_id);
+        const employeeIds = data.filter(p => p.employee_id).map(p => p.employee_id);
+        
+        let customers = [];
+        let employees = [];
+        
+        if (customerIds.length > 0) {
+          const { data: customersData } = await supabase
+            .from("customers")
+            .select("*")
+            .in("id", customerIds);
+          customers = customersData || [];
+        }
+        
+        if (employeeIds.length > 0) {
+          const { data: employeesData } = await supabase
+            .from("employees")
+            .select("*")
+            .in("id", employeeIds);
+          employees = employeesData || [];
+        }
+        
         // Transform data to match the Proposal type
         return data.map((item: any) => {
-          // Check if employee data exists and is valid
-          const safeEmployee = item.employee || { id: null, first_name: "Unassigned", last_name: "" };
+          const customer = customers.find(c => c.id === item.customer_id);
+          const employee = employees.find(e => e.id === item.employee_id);
           
           return {
             ...item,
-            customer: item.customer || null,
-            employee: safeEmployee ? {
-              id: safeEmployee.id,
-              first_name: safeEmployee.first_name || "Unassigned",
-              last_name: safeEmployee.last_name || ""
+            customer: customer || null,
+            employee: employee ? {
+              id: employee.id,
+              first_name: employee.first_name || "Atanmamış",
+              last_name: employee.last_name || ""
             } : null
           };
         });

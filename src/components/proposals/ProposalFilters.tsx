@@ -72,13 +72,14 @@ export const ProposalFilters = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tüm durumlar</SelectItem>
-            <SelectItem value="discovery_scheduled">🔎 Discovery</SelectItem>
-            <SelectItem value="meeting_completed">👥 Meeting Completed</SelectItem>
-            <SelectItem value="sent">📤 Sent</SelectItem>
-            <SelectItem value="negotiation">🔄 Negotiation</SelectItem>
-            <SelectItem value="approved">✅ Approved</SelectItem>
-            <SelectItem value="rejected">❌ Rejected</SelectItem>
-            <SelectItem value="converted_to_order">📦 Ordered</SelectItem>
+            <SelectItem value="draft">🔄 Taslak</SelectItem>
+            <SelectItem value="discovery_scheduled">🔎 İlk Görüşme</SelectItem>
+            <SelectItem value="meeting_completed">👥 Görüşme Tamamlandı</SelectItem>
+            <SelectItem value="sent">📤 Gönderildi</SelectItem>
+            <SelectItem value="negotiation">🔄 Müzakere</SelectItem>
+            <SelectItem value="approved">✅ Onaylandı</SelectItem>
+            <SelectItem value="rejected">❌ Reddedildi</SelectItem>
+            <SelectItem value="converted_to_order">📦 Siparişe Dönüştü</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -87,7 +88,7 @@ export const ProposalFilters = ({
         <Button asChild>
           <Link to="/proposals/new" className="flex items-center">
             <Plus className="mr-2 h-4 w-4" />
-            Add New Proposal
+            Yeni Teklif Ekle
           </Link>
         </Button>
       </div>
