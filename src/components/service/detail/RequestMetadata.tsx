@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { getPriorityColor, getPriorityText } from "../utils/priorityUtils";
+import { getPriorityColor, getPriorityLabel } from "../utils/priorityUtils";
 
 interface RequestMetadataProps {
   priority: string;
@@ -17,7 +17,7 @@ export const RequestMetadata: React.FC<RequestMetadataProps> = ({ priority, serv
           variant="secondary" 
           className={`${getPriorityColor(priority)} border`}
         >
-          {getPriorityText(priority)}
+          {getPriorityLabel(priority)}
         </Badge>
       </div>
       <div className="bg-muted/40 p-4 rounded-lg">
