@@ -65,7 +65,7 @@ export const useSalesInvoices = () => {
 
   const fetchInvoices = async (): Promise<SalesInvoice[]> => {
     let query = supabase
-      .from("sales_invoices")
+      .from("sales_invoices" as any)
       .select(`
         *,
         customer:musteri_id(name, tax_number, company)
@@ -95,12 +95,12 @@ export const useSalesInvoices = () => {
       throw error;
     }
     
-    return data;
+    return data as SalesInvoice[];
   };
 
   const fetchInvoiceById = async (id: string): Promise<SalesInvoice> => {
     const { data, error } = await supabase
-      .from("sales_invoices")
+      .from("sales_invoices" as any)
       .select(`
         *,
         customer:musteri_id(name, tax_number, company)
@@ -113,12 +113,12 @@ export const useSalesInvoices = () => {
       throw error;
     }
 
-    return data;
+    return data as SalesInvoice;
   };
   
   const fetchInvoiceItems = async (invoiceId: string): Promise<SalesInvoiceItem[]> => {
     const { data, error } = await supabase
-      .from("sales_invoice_items")
+      .from("sales_invoice_items" as any)
       .select(`
         *,
         product:urun_id(name, sku)
@@ -130,13 +130,13 @@ export const useSalesInvoices = () => {
       throw error;
     }
 
-    return data;
+    return data as SalesInvoiceItem[];
   };
 
   const createInvoice = async (invoiceData: Partial<SalesInvoice>, items: Partial<SalesInvoiceItem>[]) => {
     // First create the invoice
     const { data: invoice, error: invoiceError } = await supabase
-      .from("sales_invoices")
+      .from("sales_invoices" as any)
       .insert([invoiceData])
       .select()
       .single();
@@ -154,7 +154,7 @@ export const useSalesInvoices = () => {
       }));
 
       const { error: itemsError } = await supabase
-        .from("sales_invoice_items")
+        .from("sales_invoice_items" as any)
         .insert(itemsWithInvoiceId);
 
       if (itemsError) {
@@ -169,7 +169,7 @@ export const useSalesInvoices = () => {
 
   const updateInvoice = async ({ id, data }: { id: string, data: Partial<SalesInvoice> }) => {
     const { error } = await supabase
-      .from("sales_invoices")
+      .from("sales_invoices" as any)
       .update(data)
       .eq("id", id);
 
@@ -185,7 +185,7 @@ export const useSalesInvoices = () => {
   const recordPayment = async ({ id, amount }: { id: string, amount: number }) => {
     // Get current invoice
     const { data: invoice, error: fetchError } = await supabase
-      .from("sales_invoices")
+      .from("sales_invoices" as any)
       .select("*")
       .eq("id", id)
       .single();
@@ -196,10 +196,11 @@ export const useSalesInvoices = () => {
     }
     
     // Calculate new paid amount and status
-    const newPaidAmount = parseFloat(String(invoice.odenen_tutar)) + amount;
+    const typedInvoice = invoice as unknown as SalesInvoice;
+    const newPaidAmount = parseFloat(String(typedInvoice.odenen_tutar)) + amount;
     let newStatus = 'odenmedi';
     
-    if (newPaidAmount >= parseFloat(String(invoice.toplam_tutar))) {
+    if (newPaidAmount >= parseFloat(String(typedInvoice.toplam_tutar))) {
       newStatus = 'odendi';
     } else if (newPaidAmount > 0) {
       newStatus = 'kismi_odendi';
@@ -207,11 +208,11 @@ export const useSalesInvoices = () => {
     
     // Update invoice
     const { error: updateError } = await supabase
-      .from("sales_invoices")
+      .from("sales_invoices" as any)
       .update({
         odenen_tutar: newPaidAmount,
         odeme_durumu: newStatus
-      })
+      } as any)
       .eq("id", id);
     
     if (updateError) {
@@ -225,7 +226,7 @@ export const useSalesInvoices = () => {
 
   const deleteInvoice = async (id: string) => {
     const { error } = await supabase
-      .from("sales_invoices")
+      .from("sales_invoices" as any)
       .delete()
       .eq("id", id);
 
