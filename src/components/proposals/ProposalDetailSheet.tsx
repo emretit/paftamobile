@@ -21,6 +21,7 @@ interface ProposalDetailSheetProps {
 
 export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetailSheetProps) => {
   const [formData, setFormData] = useState<Proposal | null>(null);
+  const [activeTab, setActiveTab] = useState("details");
   const { updateProposalStatus, isUpdating } = useProposalStatusUpdate();
 
   useEffect(() => {
@@ -105,17 +106,19 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
             </div>
 
             <div className="border-t pt-4">
-              <TabsList className="grid grid-cols-3 w-full">
-                <TabsTrigger value="details" className="rounded-md">Detaylar</TabsTrigger>
-                <TabsTrigger value="items" className="rounded-md">Kalemler</TabsTrigger>
-                <TabsTrigger value="notes" className="rounded-md">Notlar</TabsTrigger>
-              </TabsList>
+              <Tabs defaultValue="details" className="w-full" value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid grid-cols-3 w-full">
+                  <TabsTrigger value="details">Detaylar</TabsTrigger>
+                  <TabsTrigger value="items">Kalemler</TabsTrigger>
+                  <TabsTrigger value="notes">Notlar</TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
           </div>
         </div>
 
-        <Tabs defaultValue="details" className="w-full">
-          <div className="p-6 pt-2">
+        <div className="p-6 pt-2">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsContent value="details" className="mt-0 p-0">
               <ProposalDetailsTab 
                 proposal={formData} 
@@ -131,8 +134,8 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
             <TabsContent value="notes" className="mt-0 p-0">
               <ProposalNotesTab proposal={formData} />
             </TabsContent>
-          </div>
-        </Tabs>
+          </Tabs>
+        </div>
 
         <div className="sticky bottom-0 bg-white border-t p-4 mt-auto">
           <Button variant="outline" onClick={onClose} className="w-full">Kapat</Button>

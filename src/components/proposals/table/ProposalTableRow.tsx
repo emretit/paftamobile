@@ -5,7 +5,7 @@ import { Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Proposal } from "@/types/proposal";
-import { statusLabels, statusStyles } from "../constants";
+import { StatusBadge } from "../detail/StatusBadge";
 import { useCustomerNames } from "@/hooks/useCustomerNames";
 import { useEmployeeNames } from "@/hooks/useEmployeeNames";
 
@@ -19,17 +19,6 @@ interface ProposalTableRowProps {
 export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: ProposalTableRowProps) => {
   const { getCustomerName } = useCustomerNames();
   const { getEmployeeName } = useEmployeeNames();
-
-  const getStatusBadge = (status: string) => {
-    const style = statusStyles[status as keyof typeof statusStyles] || { bg: "bg-gray-100", text: "text-gray-800" };
-    const label = statusLabels[status as keyof typeof statusLabels] || status;
-    
-    return (
-      <span className={`px-2 py-1 text-xs rounded-full font-medium ${style.bg} ${style.text}`}>
-        {label}
-      </span>
-    );
-  };
 
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "-";
@@ -48,7 +37,7 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
       <TableCell>#{proposal.proposal_number || "-"}</TableCell>
       <TableCell>{proposal.customer_id ? getCustomerName(proposal.customer_id) : "-"}</TableCell>
       <TableCell>
-        {getStatusBadge(proposal.status)}
+        <StatusBadge status={proposal.status} />
       </TableCell>
       <TableCell>{proposal.employee_id ? getEmployeeName(proposal.employee_id) : "-"}</TableCell>
       <TableCell className="font-medium">
