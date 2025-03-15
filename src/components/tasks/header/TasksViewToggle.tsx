@@ -1,9 +1,8 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid, Table as TableIcon } from "lucide-react";
+import { LayoutGrid, List } from "lucide-react";
 
-export type ViewType = "kanban" | "table";
+export type ViewType = "table" | "kanban";
 
 interface TasksViewToggleProps {
   activeView: ViewType;
@@ -12,24 +11,26 @@ interface TasksViewToggleProps {
 
 const TasksViewToggle = ({ activeView, setActiveView }: TasksViewToggleProps) => {
   return (
-    <div className="bg-white border rounded-md p-1 flex items-center">
-      <Button 
-        variant={activeView === "kanban" ? "default" : "ghost"} 
+    <div className="flex rounded-md overflow-hidden border">
+      <Button
+        type="button"
+        variant={activeView === "table" ? "default" : "ghost"}
         size="sm"
+        className="rounded-none"
+        onClick={() => setActiveView("table")}
+      >
+        <List className="h-4 w-4 mr-2" />
+        Liste
+      </Button>
+      <Button
+        type="button"
+        variant={activeView === "kanban" ? "default" : "ghost"}
+        size="sm"
+        className="rounded-none"
         onClick={() => setActiveView("kanban")}
-        className="px-3"
       >
         <LayoutGrid className="h-4 w-4 mr-2" />
         Kanban
-      </Button>
-      <Button 
-        variant={activeView === "table" ? "default" : "ghost"} 
-        size="sm"
-        onClick={() => setActiveView("table")}
-        className="px-3"
-      >
-        <TableIcon className="h-4 w-4 mr-2" />
-        Tablo
       </Button>
     </div>
   );
