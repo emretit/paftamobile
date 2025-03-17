@@ -7,12 +7,12 @@ import DealsHeader from "@/components/deals/DealsHeader";
 import DealsKanban from "@/components/deals/DealsKanban";
 import { useDeals } from "@/hooks/useDeals";
 
-interface DealsProps {
+interface OpportunitiesProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
 }
 
-const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
+const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
   const {
     deals,
     selectedDeal,
@@ -62,4 +62,4 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
   );
 };
 
-export default Deals;
+export default Opportunities;
