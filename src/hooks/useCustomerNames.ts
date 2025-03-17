@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useCustomerNames = () => {
-  const { data: customers = [] } = useQuery({
+  const { data: customers = [], isLoading } = useQuery({
     queryKey: ["customers"],
     queryFn: async () => {
       try {
@@ -27,5 +27,5 @@ export const useCustomerNames = () => {
     return customer ? (customer.company ? `${customer.company} (${customer.name})` : customer.name) : "-";
   };
 
-  return { customers, getCustomerName };
+  return { customers, getCustomerName, isLoading };
 };

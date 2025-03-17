@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -99,7 +100,7 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
         // Transform any potential 'files' field to 'attachments' for compatibility
         const transformedData = data.map(item => ({
           ...item,
-          attachments: item.files || []
+          attachments: item.files ? (typeof item.files === 'string' ? JSON.parse(item.files) : item.files) : []
         }));
         
         return transformedData as unknown as Proposal[];

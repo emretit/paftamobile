@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { Proposal, ProposalAttachment } from "@/types/proposal";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,7 @@ export const ProposalAttachmentsTab = ({
       const { error } = await supabase
         .from('proposals')
         .update({
-          files: [...currentAttachments, ...newAttachments]
+          files: JSON.stringify([...currentAttachments, ...newAttachments])
         })
         .eq('id', proposal.id);
         
@@ -111,7 +112,7 @@ export const ProposalAttachmentsTab = ({
       const { error } = await supabase
         .from('proposals')
         .update({
-          files: updatedAttachments
+          files: JSON.stringify(updatedAttachments)
         })
         .eq('id', proposal.id);
         

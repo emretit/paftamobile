@@ -53,7 +53,7 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
         // Transform any potential 'files' field to 'attachments' for compatibility
         const transformedData = {
           ...data,
-          attachments: data.files || []
+          attachments: data.files ? (typeof data.files === 'string' ? JSON.parse(data.files) : data.files) : []
         };
         
         return transformedData as unknown as Proposal;
@@ -283,7 +283,7 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
                     Kaydet
                   </Button>
                   
-                  {currentStatus !== 'gonderildi' && (
+                  {currentStatus !== 'gonderildi' as ProposalStatus && (
                     <Button 
                       onClick={() => {
                         setCurrentStatus('gonderildi' as ProposalStatus);

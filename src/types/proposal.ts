@@ -79,10 +79,7 @@ export interface Proposal {
     name?: string;
   } | null;
   items?: ProposalItem[];
-  // Map attachments to files for backward compatibility
-  get attachments(): ProposalAttachment[] {
-    return this.files || [];
-  }
+  attachments?: ProposalAttachment[];
 }
 
 export interface SalesPerformanceData {
