@@ -46,3 +46,16 @@ export const simplifiedProposalStatuses: ProposalStatusType[] = [
   "pending",
   "sent"
 ];
+
+// Workflow steps for the proposal process
+export const workflowSteps = [
+  { status: 'draft', label: 'Taslak' },
+  { status: 'preparing', label: 'Hazırlanıyor' },
+  { status: 'pending', label: 'Onay Bekliyor' },
+  { status: 'sent', label: 'Gönderildi' },
+  { status: 'negotiation', label: 'Müzakerede' },
+  { status: 'accepted', label: 'Kabul Edildi' }
+];
+
+// Status values that represent final stages of a proposal
+export const finalStages = ['accepted', 'rejected', 'expired', 'converted_to_order'];
