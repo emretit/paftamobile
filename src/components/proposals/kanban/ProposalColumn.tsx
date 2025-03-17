@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Droppable } from '@hello-pangea/dnd';
+import { LucideIcon } from 'lucide-react';
 import { Proposal } from '@/types/proposal';
 import ProposalCard from './ProposalCard';
 
@@ -8,14 +9,16 @@ interface ProposalColumnProps {
   id: string;
   title: string;
   proposals: Proposal[];
-  onProposalClick: (proposal: Proposal) => void;
+  onSelect?: (proposal: Proposal) => void;
+  icon?: LucideIcon;
 }
 
 const ProposalColumn = ({
   id,
   title,
   proposals,
-  onProposalClick
+  onSelect,
+  icon: Icon
 }: ProposalColumnProps) => {
   return (
     <Droppable droppableId={id}>
@@ -31,11 +34,12 @@ const ProposalColumn = ({
             <ProposalCard
               key={proposal.id}
               proposal={proposal}
-              onClick={onProposalClick}
+              onClick={() => onSelect && onSelect(proposal)}
             />
           ))}
           {proposals.length === 0 && (
             <div className="flex flex-col items-center justify-center h-32 border border-dashed border-gray-300 rounded-md mt-2">
+              {Icon && <Icon className="h-5 w-5 text-gray-400 mb-2" />}
               <p className="text-gray-500 text-sm">Bu durumda teklif yok</p>
             </div>
           )}

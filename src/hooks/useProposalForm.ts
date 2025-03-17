@@ -68,8 +68,9 @@ export const useProposalForm = () => {
           id: uuidv4(),
         }));
 
+        // Use proposals_items instead of proposal_items
         const { error: itemsError } = await supabase
-          .from('proposal_items')
+          .from('proposals_items')
           .insert(itemsWithProposalId);
 
         if (itemsError) throw itemsError;

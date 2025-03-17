@@ -44,7 +44,7 @@ export const useProposals = (filters?: ProposalFilters) => {
       }
       
       // Map the database fields to match our Proposal type
-      return data.map((item) => {
+      return data.map((item: any) => {
         return {
           id: item.id,
           title: item.title,
@@ -53,18 +53,18 @@ export const useProposals = (filters?: ProposalFilters) => {
           employee_id: item.employee_id,
           status: item.status,
           total_value: item.total_amount || 0,
-          sent_date: item.sent_at,
+          sent_date: item.sent_date,
           valid_until: item.valid_until,
           created_at: item.created_at,
           updated_at: item.updated_at,
-          proposal_number: item.number,
-          payment_terms: item.payment_terms,
-          delivery_terms: item.delivery_terms,
-          notes: item.notes,
-          internal_notes: item.internal_notes,
-          currency: item.currency,
-          discounts: item.discounts,
-          additional_charges: item.additional_charges,
+          proposal_number: parseInt(item.number) || 0,
+          payment_terms: item.payment_terms || "",
+          delivery_terms: item.delivery_terms || "",
+          notes: item.notes || "",
+          internal_notes: item.internal_notes || "",
+          currency: item.currency || "TRY",
+          discounts: item.discounts || 0,
+          additional_charges: item.additional_charges || 0,
           customer: item.customer,
           employee: item.employee,
           items: Array.isArray(item.items) ? item.items : [],

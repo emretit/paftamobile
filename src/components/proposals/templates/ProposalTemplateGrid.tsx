@@ -3,96 +3,44 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProposalTemplate } from "@/types/proposal-template";
-import { FileText, FileCheck, Clock, Users, Package } from "lucide-react";
+import { FileText, BarChart3, Users, Building, Package } from "lucide-react";
 
 interface ProposalTemplateGridProps {
-  templates: ProposalTemplate[];
   onSelectTemplate: (template: ProposalTemplate) => void;
+  templates?: ProposalTemplate[];
 }
 
-// Sample template data
-const sampleTemplates: ProposalTemplate[] = [
-  {
-    id: "1",
-    name: "Standart Hizmet Teklifi",
-    description: "Genel hizmetler için standart teklif şablonu",
-    templateType: "service",
-    templateFeatures: ["Detaylı hizmet açıklamaları", "Standart ödeme koşulları", "Profesyonel görünüm"]
-  },
-  {
-    id: "2",
-    name: "Ürün Satış Teklifi",
-    description: "Ürün satışları için kapsamlı teklif şablonu",
-    templateType: "product",
-    templateFeatures: ["Ürün özellikleri", "Miktar ve fiyat tablosu", "Teslimat şartları"]
-  },
-  {
-    id: "3",
-    name: "Bakım Anlaşması",
-    description: "Düzenli bakım hizmetleri için teklif şablonu",
-    templateType: "maintenance",
-    templateFeatures: ["Bakım programı", "SLA detayları", "Periyodik kontroller", "Yedek parça politikası"]
-  },
-  {
-    id: "4",
-    name: "Kurumsal Çözüm Teklifi",
-    description: "Büyük kurumsal müşteriler için özel teklif şablonu",
-    templateType: "corporate",
-    templateFeatures: ["Kapsamlı çözüm açıklaması", "Proje takvimi", "Referanslar", "Özel fiyatlandırma"]
-  }
-];
-
-const ProposalTemplateGrid: React.FC<ProposalTemplateGridProps> = ({ onSelectTemplate }) => {
-  // Function to get icon based on template type
-  const getTemplateIcon = (type: string) => {
-    switch (type) {
-      case "service":
-        return <FileCheck className="h-10 w-10 text-blue-500" />;
-      case "product":
-        return <Package className="h-10 w-10 text-green-500" />;
-      case "maintenance":
-        return <Clock className="h-10 w-10 text-orange-500" />;
-      case "corporate":
-        return <Users className="h-10 w-10 text-purple-500" />;
-      default:
-        return <FileText className="h-10 w-10 text-gray-500" />;
-    }
-  };
-
+const ProposalTemplateGrid: React.FC<ProposalTemplateGridProps> = ({ 
+  onSelectTemplate,
+  templates = defaultTemplates
+}) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {sampleTemplates.map((template) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {templates.map((template) => (
         <Card key={template.id} className="overflow-hidden">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
+              <CardTitle className="text-lg">{template.name}</CardTitle>
               {getTemplateIcon(template.templateType)}
-              <Button variant="ghost" size="sm">
-                Önizle
-              </Button>
             </div>
-            <CardTitle className="text-lg mt-2">{template.name}</CardTitle>
             <CardDescription>{template.description}</CardDescription>
           </CardHeader>
-          <CardContent className="pb-2">
-            <ul className="text-sm space-y-1 text-gray-600">
-              {template.templateFeatures.slice(0, 3).map((feature, index) => (
-                <li key={index} className="flex items-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-gray-400 mr-2"></div>
-                  {feature}
-                </li>
+          
+          <CardContent className="pb-3">
+            <div className="space-y-1">
+              {template.templateFeatures.map((feature, index) => (
+                <div key={index} className="flex items-center gap-2 text-sm">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                  <span>{feature}</span>
+                </div>
               ))}
-              {template.templateFeatures.length > 3 && (
-                <li className="text-xs text-gray-500 italic">
-                  +{template.templateFeatures.length - 3} daha fazla özellik
-                </li>
-              )}
-            </ul>
+            </div>
           </CardContent>
+          
           <CardFooter>
-            <Button
+            <Button 
+              onClick={() => onSelectTemplate(template)} 
               className="w-full"
-              variant="default"
-              onClick={() => onSelectTemplate(template)}
             >
               Bu Şablonu Kullan
             </Button>
@@ -102,5 +50,78 @@ const ProposalTemplateGrid: React.FC<ProposalTemplateGridProps> = ({ onSelectTem
     </div>
   );
 };
+
+// Helper function to get the appropriate icon based on template type
+const getTemplateIcon = (type: string) => {
+  switch (type) {
+    case "product":
+      return <Package className="h-5 w-5 text-blue-500" />;
+    case "service":
+      return <FileText className="h-5 w-5 text-green-500" />;
+    case "consulting":
+      return <BarChart3 className="h-5 w-5 text-purple-500" />;
+    case "company":
+      return <Building className="h-5 w-5 text-red-500" />;
+    case "enterprise":
+      return <Users className="h-5 w-5 text-orange-500" />;
+    default:
+      return <FileText className="h-5 w-5 text-gray-500" />;
+  }
+};
+
+// Default templates data
+const defaultTemplates: ProposalTemplate[] = [
+  {
+    id: "template-1",
+    name: "Ürün Teklifi",
+    description: "Standart ürün satışı için teklif şablonu",
+    templateType: "product",
+    templateFeatures: [
+      "Ürün listeleri için optimize edilmiş",
+      "KDV dahil/hariç seçeneği",
+      "İskonto alanları"
+    ],
+    items: [],
+    prefilledFields: {
+      title: "Ürün Teklifi",
+      validityDays: 30,
+      paymentTerm: "prepaid"
+    }
+  },
+  {
+    id: "template-2",
+    name: "Hizmet Teklifi",
+    description: "Danışmanlık ve hizmet sunumu için teklif şablonu",
+    templateType: "service",
+    templateFeatures: [
+      "Saatlik hizmet bedeli formatında",
+      "Proje zaman çizelgesi alanı",
+      "Hizmet koşulları dahil"
+    ],
+    items: [],
+    prefilledFields: {
+      title: "Hizmet Teklifi",
+      validityDays: 15,
+      paymentTerm: "net30"
+    }
+  },
+  {
+    id: "template-3",
+    name: "Kurumsal Teklif",
+    description: "Kurumsal müşteriler için kapsamlı teklif şablonu",
+    templateType: "enterprise",
+    templateFeatures: [
+      "Kurumsal müşteriler için özelleştirilmiş",
+      "Detaylı ödeme planı",
+      "Kurumsal sözleşme maddeleri"
+    ],
+    items: [],
+    prefilledFields: {
+      title: "Kurumsal Çözüm Teklifi",
+      validityDays: 45,
+      paymentTerm: "net60"
+    }
+  }
+];
 
 export default ProposalTemplateGrid;

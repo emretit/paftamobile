@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { ProposalTemplate } from "@/types/proposal-template";
-import { ProposalFormData, ProposalItem } from "@/types/proposal-form";
+import { ProposalFormData } from "@/types/proposal-form";
+import { ProposalItem } from "@/types/proposal";
 import { Button } from "@/components/ui/button";
 import ProposalTemplateFormHeader from "./ProposalTemplateFormHeader";
 import ProposalTemplateFormDetails from "./ProposalTemplateFormDetails";
@@ -27,19 +28,18 @@ const ProposalTemplateForm: React.FC<ProposalTemplateFormProps> = ({ template, o
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<ProposalFormData>({
     defaultValues: {
       title: template.prefilledFields?.title || "",
-      customer_id: null,
+      customer_id: undefined,
       items: [],
+      paymentTerm: template.prefilledFields?.paymentTerm || "prepaid",
+      internalNotes: template.prefilledFields?.internalNotes || "",
       discounts: 0,
       additionalCharges: 0,
-      paymentTerm: (template.prefilledFields?.paymentTerm as any) || "prepaid",
-      internalNotes: template.prefilledFields?.internalNotes || "",
-      status: "draft",
     },
   });
 
   useEffect(() => {
     // Initialize items from template
-    if (template.items.length > 0) {
+    if (template.items && template.items.length > 0) {
       const initialItems = template.items.map(item => ({
         ...item,
         id: crypto.randomUUID(),
@@ -52,10 +52,14 @@ const ProposalTemplateForm: React.FC<ProposalTemplateFormProps> = ({ template, o
     const formData = {
       ...data,
       items,
-      validUntil,
+      valid_until: validUntil ? validUntil.toISOString() : undefined,
     };
     console.log("Form data to be submitted:", formData);
     onSaveDraft();
+  };
+  
+  const handleItemsChange = (newItems: ProposalItem[]) => {
+    setItems(newItems);
   };
 
   return (
@@ -80,7 +84,7 @@ const ProposalTemplateForm: React.FC<ProposalTemplateFormProps> = ({ template, o
       
       <ProposalTemplateItems 
         items={items}
-        setItems={setItems}
+        onItemsChange={handleItemsChange}
       />
       
       <ProposalTemplateNotes 
