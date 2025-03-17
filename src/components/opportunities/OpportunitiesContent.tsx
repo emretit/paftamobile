@@ -25,9 +25,6 @@ const OpportunitiesContent = ({
 }: OpportunitiesContentProps) => {
   const { toast } = useToast();
 
-  // Flatten the opportunities for table view
-  const flattenedOpportunities = Object.values(opportunities).flat();
-
   if (error) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -40,7 +37,7 @@ const OpportunitiesContent = ({
     <div className="bg-white rounded-lg border shadow-sm">
       <div className="p-6">
         <OpportunitiesTable
-          opportunities={flattenedOpportunities}
+          opportunities={opportunities}
           isLoading={isLoading}
           onSelectOpportunity={onSelectOpportunity}
           searchQuery={searchQuery}

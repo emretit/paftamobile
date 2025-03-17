@@ -97,6 +97,9 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
     setSelectedOpportunities([]);
   };
 
+  // Convert grouped opportunities to flat array for list view
+  const flattenedOpportunities = Object.values(groupedOpportunities).flat();
+
   return (
     <DefaultLayout 
       isCollapsed={isCollapsed} 
@@ -156,7 +159,7 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
             </TabsContent>
             <TabsContent value="list" className="mt-0">
               <OpportunitiesContent
-                opportunities={groupedOpportunities}
+                opportunities={flattenedOpportunities}
                 isLoading={isLoading}
                 error={error}
                 onSelectOpportunity={handleOpportunityClick}
