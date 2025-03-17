@@ -1,7 +1,6 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import OpportunityTasks from "./OpportunityTasks";
 import { DealHeader } from "./components/DealHeader";
 import { DealMainInfo } from "./components/DealMainInfo";
 import { DealDates } from "./components/DealDates";
@@ -64,17 +63,6 @@ const DealDetailsModal = ({ deal, isOpen, onClose }: DealDetailsModalProps) => {
               onEdit={handleEdit}
               onSave={handleSave}
               onChange={handleChange}
-            />
-
-            <OpportunityTasks
-              opportunity={deal}
-              tasks={tasks}
-              onEditTask={(task) => {
-                console.log('Edit task:', task);
-              }}
-              onSelectTask={(task) => {
-                console.log('Select task:', task);
-              }}
             />
           </div>
         </ScrollArea>
