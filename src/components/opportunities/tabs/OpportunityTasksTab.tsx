@@ -31,13 +31,11 @@ const OpportunityTasksTab = ({ opportunityId }: OpportunityTasksTabProps) => {
 
       if (error) throw error;
       
-      // Add the required item_type property based on the type field
-      const tasksWithItemType = data.map(task => ({
+      // Transform the data to match the Task type
+      return data.map(task => ({
         ...task,
-        item_type: task.type || "task" // Add item_type based on type field
+        item_type: 'opportunity' // Set item_type for opportunity-related tasks
       })) as Task[];
-      
-      return tasksWithItemType;
     }
   });
 
