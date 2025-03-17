@@ -8,6 +8,7 @@ import { Plus } from "lucide-react";
 import TaskForm from "@/components/tasks/TaskForm";
 import { Task } from "@/types/task";
 import TaskCard from "@/components/tasks/TaskCard";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface OpportunityTasksTabProps {
   opportunityId: string;
@@ -89,7 +90,7 @@ const OpportunityTasksTab = ({ opportunityId }: OpportunityTasksTabProps) => {
             <TaskCard 
               key={task.id} 
               task={task} 
-              onEdit={handleOpenTaskForm}
+              onEdit={() => handleOpenTaskForm(task)}
             />
           ))
         ) : (
@@ -97,11 +98,17 @@ const OpportunityTasksTab = ({ opportunityId }: OpportunityTasksTabProps) => {
         )}
       </div>
       
-      <TaskForm 
-        isOpen={isTaskModalOpen}
-        onClose={handleCloseTaskForm}
-        taskToEdit={selectedTask}
-      />
+      <Dialog open={isTaskModalOpen} onOpenChange={setIsTaskModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{selectedTask ? "Görevi Düzenle" : "Yeni Görev"}</DialogTitle>
+          </DialogHeader>
+          <TaskForm 
+            task={selectedTask || undefined} 
+            onClose={handleCloseTaskForm} 
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,174 +1,87 @@
 
-import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Link as LinkIcon, Trash2, Pencil } from "lucide-react";
-import { format, isPast } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import type { Task } from "@/types/task";
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Task } from '@/types/task';
+import { Calendar, CheckCircle2, Clock } from 'lucide-react';
+import { format } from 'date-fns';
+import { getPriorityColor } from '@/components/deals/utils/colorUtils';
+import { useTechnicianNames } from '@/components/service/hooks/useTechnicianNames';
 
 interface TaskCardProps {
   task: Task;
-  onEdit?: (task: Task) => void;
-  onSelect?: (task: Task) => void;
+  onEdit?: () => void;
+  onSelect?: () => void;
 }
 
 const TaskCard = ({ task, onEdit, onSelect }: TaskCardProps) => {
-  const queryClient = useQueryClient();
-
-  const deleteTaskMutation = useMutation({
-    mutationFn: async (taskId: string) => {
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', taskId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Görev başarıyla silindi');
-    },
-    onError: (error) => {
-      toast.error('Görev silinirken bir hata oluştu');
-      console.error('Error deleting task:', error);
-    }
-  });
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-100/80 text-red-700";
-      case "medium":
-        return "bg-[#FEF7CD] text-yellow-700";
-      case "low":
-        return "bg-[#F2FCE2] text-green-700";
-      default:
-        return "bg-gray-100 text-gray-700";
+  const { getTechnicianName } = useTechnicianNames();
+  
+  const handleClick = () => {
+    if (onSelect) {
+      onSelect();
+    } else if (onEdit) {
+      onEdit();
     }
   };
-
-  const getTypeLabel = (type: string) => {
-    const labels = {
-      opportunity: "Fırsat",
-      proposal: "Teklif",
-      general: "Genel",
-    };
-    return labels[type as keyof typeof labels] || type;
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "border-l-[#9b87f5]";
-      case "in_progress":
-        return "border-l-[#0EA5E9]";
-      default:
-        return "border-l-gray-300";
+  
+  const formatDate = (date?: string) => {
+    if (!date) return null;
+    try {
+      return format(new Date(date), 'dd MMM yyyy');
+    } catch (e) {
+      return null;
     }
   };
-
-  const isOverdue = task.due_date && isPast(new Date(task.due_date)) && task.status !== "completed";
-
+  
+  // Handle subtasks
+  let completedSubtasks = 0;
+  let totalSubtasks = 0;
+  
+  if (task.subtasks && Array.isArray(task.subtasks)) {
+    totalSubtasks = task.subtasks.length;
+    completedSubtasks = task.subtasks.filter(subtask => subtask.completed).length;
+  }
+  
   return (
     <Card 
-      className={cn(
-        "p-4 hover:shadow-md transition-all duration-200 bg-white border border-border/50 hover:border-[#9b87f5]/30 group cursor-pointer",
-        getStatusColor(task.status)
-      )}
-      onClick={() => onSelect?.(task)}
+      className="cursor-pointer hover:shadow-md transition-shadow duration-200"
+      onClick={handleClick}
     >
-      <div className="flex flex-col gap-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-2">
-            <div onClick={(e) => e.stopPropagation()} className="cursor-pointer">
-              <h3 className="font-medium text-gray-900 group-hover:text-[#9b87f5] transition-colors">
-                {task.title}
-              </h3>
-              {task.description && (
-                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
-              )}
-            </div>
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="font-medium text-gray-900 truncate mr-2">{task.title}</h3>
+          <div className={`px-2 py-1 rounded-full text-xs ${getPriorityColor(task.priority)}`}>
+            {task.priority === 'high' ? 'Yüksek' : task.priority === 'medium' ? 'Orta' : 'Düşük'}
           </div>
-          <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(task.priority)}`}>
-            {task.priority === "high" ? "Yüksek" : task.priority === "medium" ? "Orta" : "Düşük"}
-          </span>
         </div>
-
-        <div className="flex flex-wrap items-center gap-3 mt-2">
-          {task.assignee && (
-            <div className="flex items-center gap-2">
-              <Avatar className="h-6 w-6">
-                <AvatarImage src={task.assignee.avatar_url} />
-                <AvatarFallback>
-                  {task.assignee.first_name?.[0]}
-                  {task.assignee.last_name?.[0]}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm text-gray-600">
-                {task.assignee.first_name} {task.assignee.last_name}
-              </span>
+        
+        {task.description && (
+          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{task.description}</p>
+        )}
+        
+        <div className="flex flex-col space-y-2">
+          {task.assignee_id && (
+            <div className="flex items-center text-xs text-gray-500">
+              <span className="font-medium mr-1">Görevli:</span>
+              {getTechnicianName(task.assignee_id)}
             </div>
           )}
-
-          {task.type !== 'general' && (
-            <span className="inline-flex items-center px-2 py-1 bg-[#F1F0FB] text-[#7E69AB] rounded-full text-xs font-medium">
-              {getTypeLabel(task.type)}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between mt-2">
+          
           {task.due_date && (
-            <div className={cn(
-              "flex items-center gap-1 text-xs",
-              isOverdue ? "text-red-600 font-medium" : "text-gray-500"
-            )}>
-              <Calendar className="h-3 w-3" />
-              <span>{format(new Date(task.due_date), 'dd MMM yyyy')}</span>
-              {isOverdue && <span className="text-red-600 ml-1">(Gecikmiş)</span>}
+            <div className="flex items-center text-xs text-gray-500">
+              <Clock className="h-3 w-3 mr-1" />
+              <span>{formatDate(task.due_date)}</span>
             </div>
           )}
-
-          <div className="flex items-center gap-2">
-            {task.related_item_id && (
-              <div className="flex items-center gap-1 text-xs text-[#9b87f5]">
-                <LinkIcon className="h-3 w-3" />
-                <span>{task.related_item_title}</span>
-              </div>
-            )}
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 hover:bg-[#F1F0FB] hover:text-[#9b87f5]"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit?.(task);
-                }}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (confirm('Bu görevi silmek istediğinizden emin misiniz?')) {
-                    deleteTaskMutation.mutate(task.id);
-                  }
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+          
+          {totalSubtasks > 0 && (
+            <div className="flex items-center text-xs text-gray-500">
+              <CheckCircle2 className="h-3 w-3 mr-1" />
+              <span>{completedSubtasks}/{totalSubtasks} alt görev tamamlandı</span>
             </div>
-          </div>
+          )}
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 };

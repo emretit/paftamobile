@@ -1,7 +1,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Task, TaskStatus, TaskPriority, TaskType } from "@/types/task";
+import { Task, TaskStatus, TaskPriority, TaskType, SubTask } from "@/types/task";
 import { mockCrmService } from "@/services/mockCrmService";
 
 export const useTaskMutations = () => {
@@ -35,7 +35,8 @@ export const useTaskMutations = () => {
   });
 
   const updateTaskMutation = useMutation({
-    mutationFn: async (id: string, updates: Partial<Task>) => {
+    mutationFn: async (updatedTask: Partial<Task> & { id: string }) => {
+      const { id, ...updates } = updatedTask;
       const { data, error } = await mockCrmService.updateTask(id, updates);
       if (error) throw error;
       return data;
@@ -71,8 +72,8 @@ export const useTaskMutations = () => {
     return createTaskMutation.mutateAsync(taskData);
   };
 
-  const updateTask = async (id: string, updates: Partial<Task>) => {
-    return updateTaskMutation.mutateAsync(id, updates);
+  const updateTask = async (updatedTask: Partial<Task> & { id: string }) => {
+    return updateTaskMutation.mutateAsync(updatedTask);
   };
 
   const deleteTask = async (id: string) => {
@@ -83,5 +84,8 @@ export const useTaskMutations = () => {
     createTask,
     updateTask,
     deleteTask,
+    createTaskMutation,
+    updateTaskMutation,
+    deleteTaskMutation
   };
 };
