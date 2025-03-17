@@ -1,5 +1,5 @@
 
-// Opportunity tipi ve ilgili tanımlamalar
+// Empty CRM types file after DB cleanup
 export type OpportunityStatus = 
   | 'new'               // Yeni
   | 'first_contact'     // İlk Görüşme 
@@ -41,7 +41,7 @@ export const opportunityStatusColors: Record<OpportunityStatus, string> = {
 };
 
 // Contact history entries for opportunities
-export interface ContactHistoryEntry {
+export interface ContactHistoryItem {
   id: string;
   date: string;
   contact_type: "call" | "email" | "meeting" | "other";
@@ -82,7 +82,7 @@ export interface Opportunity {
   updated_at: string;
   expected_close_date?: string;
   notes?: string;
-  contact_history?: ContactHistoryEntry[];
+  contact_history?: ContactHistoryItem[];
   
   // Joined relations
   customer?: Customer;

@@ -1,5 +1,5 @@
 
-// Task types
+// Task types only contain empty types after cleanup
 export type TaskStatus = "todo" | "in_progress" | "completed" | "postponed";
 export type TaskPriority = "low" | "medium" | "high";
 export type TaskType = "opportunity" | "proposal" | "general" | "call" | "meeting" | "follow_up";
@@ -26,6 +26,7 @@ export const taskTypeLabels: Record<TaskType, string> = {
   follow_up: "Takip"
 };
 
+// Empty interfaces after DB tables removal
 export interface SubTask {
   id: string;
   title: string;
@@ -57,7 +58,7 @@ export interface Task {
   };
 }
 
-// Tasks state type for Kanban view
+// Tasks state type for Kanban view (placeholder for now)
 export interface TasksState {
   todo: Task[];
   in_progress: Task[];

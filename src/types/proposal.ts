@@ -1,5 +1,5 @@
 
-// Proposal types
+// Placeholder for proposal types after DB cleanup
 export type ProposalStatus = 
   | 'draft'
   | 'pending_approval'
@@ -69,4 +69,12 @@ export interface Proposal {
     email?: string;
   } | null;
   items?: ProposalItem[];
+}
+
+export interface ProposalAttachment {
+  id: string;
+  name: string;
+  size: number;
+  uploaded_at: string;
+  url: string;
 }
