@@ -39,9 +39,9 @@ const TasksContent = ({
       const employeeIds = tasksData
         .filter(task => task.assignee_id || task.assigned_to)
         .map(task => task.assignee_id || task.assigned_to)
-        .filter(Boolean);
+        .filter(Boolean) as string[];
       
-      let employees = {};
+      let employees: Record<string, any> = {};
       
       if (employeeIds.length > 0) {
         const { data: employeesData, error: employeesError } = await supabase
@@ -52,7 +52,7 @@ const TasksContent = ({
         if (employeesError) {
           console.error("Error fetching employees:", employeesError);
         } else if (employeesData) {
-          employees = employeesData.reduce((acc, emp) => {
+          employees = employeesData.reduce((acc: Record<string, any>, emp: any) => {
             acc[emp.id] = emp;
             return acc;
           }, {});
@@ -63,7 +63,7 @@ const TasksContent = ({
       const now = new Date();
       
       // Map tasks with their assignees and ensure they have the required type property
-      return tasksData.map(task => {
+      return tasksData.map((task: any) => {
         // Create a normalized task object with all required properties
         const normalizedTask = {
           ...task,

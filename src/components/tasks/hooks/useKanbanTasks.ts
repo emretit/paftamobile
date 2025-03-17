@@ -45,11 +45,11 @@ export const useKanbanTasks = ({
 
       // If we have employees referenced, fetch them separately
       const employeeIds = tasksData
-        .filter(task => task.assignee_id || task.assigned_to)
-        .map(task => task.assignee_id || task.assigned_to)
-        .filter(Boolean);
+        .filter((task: any) => task.assignee_id || task.assigned_to)
+        .map((task: any) => task.assignee_id || task.assigned_to)
+        .filter(Boolean) as string[];
       
-      let employees = {};
+      let employees: Record<string, any> = {};
       
       if (employeeIds.length > 0) {
         const { data: employeesData, error: employeesError } = await supabase
@@ -60,7 +60,7 @@ export const useKanbanTasks = ({
         if (employeesError) {
           console.error("Error fetching employees:", employeesError);
         } else if (employeesData) {
-          employees = employeesData.reduce((acc, emp) => {
+          employees = employeesData.reduce((acc: Record<string, any>, emp: any) => {
             acc[emp.id] = emp;
             return acc;
           }, {});
@@ -68,7 +68,7 @@ export const useKanbanTasks = ({
       }
 
       // Transform tasks to include overdue status and ensure type property
-      return tasksData.map(task => {
+      return tasksData.map((task: any) => {
         // Create a normalized task object with all required properties
         const normalizedTask = {
           ...task,
