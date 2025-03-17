@@ -50,14 +50,14 @@ const OpportunityFilterBar = ({
         </Select>
         
         <Select 
-          value={priorityFilter || ""} 
-          onValueChange={(value) => setPriorityFilter(value === "" ? null : value)}
+          value={priorityFilter || "all"} 
+          onValueChange={(value) => setPriorityFilter(value === "all" ? null : value)}
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Öncelik Seçin" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tüm Öncelikler</SelectItem>
+            <SelectItem value="all">Tüm Öncelikler</SelectItem>
             <SelectItem value="high">Yüksek</SelectItem>
             <SelectItem value="medium">Orta</SelectItem>
             <SelectItem value="low">Düşük</SelectItem>

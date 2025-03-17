@@ -32,8 +32,8 @@ export const TasksTable = ({
       task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
       
-    const matchesEmployee = !selectedEmployee || task.assignee_id === selectedEmployee;
-    const matchesType = !selectedType || task.type === selectedType;
+    const matchesEmployee = !selectedEmployee || selectedEmployee === "all" || task.assignee_id === selectedEmployee;
+    const matchesType = !selectedType || selectedType === "all" || task.type === selectedType;
     
     return matchesSearch && matchesEmployee && matchesType;
   });

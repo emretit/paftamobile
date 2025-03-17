@@ -75,7 +75,9 @@ export const useKanbanTasks = ({
           // Always ensure assignee_id exists
           assignee_id: task.assignee_id || task.assigned_to,
           // Always ensure type property exists
-          type: (task.type || task.related_item_type || "general") as TaskType
+          type: (task.type || task.related_item_type || "general") as TaskType,
+          // Ensure status is a valid TaskStatus, default to 'todo'
+          status: task.status || 'todo'
         };
         
         const assigneeId = normalizedTask.assignee_id;
@@ -106,10 +108,13 @@ export const useKanbanTasks = ({
           (task.description || "").toLowerCase().includes(searchQuery.toLowerCase());
         
         const matchesEmployee = !selectedEmployee || 
+          selectedEmployee === "all" ||
           task.assignee_id === selectedEmployee || 
           task.assigned_to === selectedEmployee;
         
-        const matchesType = !selectedType || task.type === selectedType;
+        const matchesType = !selectedType || 
+          selectedType === "all" || 
+          task.type === selectedType;
         
         return matchesSearch && matchesEmployee && matchesType;
       });
@@ -128,7 +133,7 @@ export const useKanbanTasks = ({
           groupedTasks[status].push(task);
         } else {
           // Default to todo for any unrecognized status
-          groupedTasks.todo.push(task);
+          groupedTasks.todo.push({...task, status: 'todo'});
         }
       });
 

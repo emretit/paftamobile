@@ -66,7 +66,7 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
                 <SelectValue placeholder="Tüm çalışanlar" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tüm çalışanlar</SelectItem>
+                <SelectItem value="all">Tüm çalışanlar</SelectItem>
                 {/* Employee options would be added here */}
               </SelectContent>
             </Select>
@@ -78,7 +78,7 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
                 <SelectValue placeholder="Tüm görev tipleri" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tüm görev tipleri</SelectItem>
+                <SelectItem value="all">Tüm görev tipleri</SelectItem>
                 <SelectItem value="general">Genel</SelectItem>
                 <SelectItem value="opportunity">Fırsat</SelectItem>
                 <SelectItem value="proposal">Teklif</SelectItem>

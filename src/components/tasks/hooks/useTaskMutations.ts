@@ -1,128 +1,58 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Task, TaskStatus, TaskPriority, TaskType, SubTask } from "@/types/task";
-import * as mockCrmService from "@/services/mockCrmService";
-
-interface CreateTaskData {
-  title: string;
-  description?: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  type: TaskType;
-  assigned_to?: string;
-  assignee_id?: string;
-  due_date?: string;
-  related_item_id?: string;
-  related_item_title?: string;
-  related_item_type?: string;
-  subtasks?: SubTask[];
-}
-
-interface UpdateTaskData {
-  id: string;
-  title?: string;
-  description?: string; 
-  status?: TaskStatus;
-  priority?: TaskPriority;
-  type?: TaskType;
-  assigned_to?: string;
-  assignee_id?: string;
-  due_date?: string;
-  related_item_id?: string;
-  related_item_title?: string;
-  related_item_type?: string;
-  subtasks?: SubTask[];
-}
+import { Task } from "@/types/task";
 
 export const useTaskMutations = () => {
   const queryClient = useQueryClient();
 
-  const createTaskMutation = useMutation({
-    mutationFn: async (taskData: CreateTaskData) => {
-      // Add created_at and updated_at fields
-      const fullTaskData = {
-        ...taskData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      
-      // Handle subtasks as a separate property
-      const taskWithSubtasksProcessed = {
-        ...fullTaskData,
-        subtasks: fullTaskData.subtasks 
-          ? JSON.stringify(fullTaskData.subtasks) 
-          : undefined
-      };
-      
-      const { data, error } = await mockCrmService.mockTasksAPI.createTask(taskWithSubtasksProcessed as any);
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Görev başarıyla oluşturuldu");
-    },
-    onError: (error) => {
-      console.error("Error creating task:", error);
-      toast.error("Görev oluşturulurken bir hata oluştu");
-    },
-  });
+  const updateTask = useMutation({
+    mutationFn: async (data: Partial<Task>) => {
+      if (!data.id) throw new Error("Task ID is required");
 
-  const updateTaskMutation = useMutation({
-    mutationFn: async (updatedTask: UpdateTaskData) => {
-      const { id, ...updates } = updatedTask;
-      
-      // Update the updated_at timestamp
-      const updatesWithTimestamp = {
-        ...updates,
-        updated_at: new Date().toISOString(),
-      };
-      
-      // Handle subtasks as a separate property
-      const updatesWithSubtasksProcessed = {
-        ...updatesWithTimestamp,
-        subtasks: updatesWithTimestamp.subtasks 
-          ? JSON.stringify(updatesWithTimestamp.subtasks) 
-          : undefined
-      };
-      
-      const { data, error } = await mockCrmService.mockTasksAPI.updateTask(id, updatesWithSubtasksProcessed as any);
+      const { data: updatedTask, error } = await supabase
+        .from("tasks")
+        .update(data)
+        .eq("id", data.id)
+        .select()
+        .single();
+
       if (error) throw error;
-      return data;
+      return updatedTask;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Görev başarıyla güncellendi");
+      toast.success("Task updated successfully");
     },
     onError: (error) => {
       console.error("Error updating task:", error);
-      toast.error("Görev güncellenirken bir hata oluştu");
+      toast.error("Failed to update task");
     },
   });
 
-  const deleteTaskMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { success, error } = await mockCrmService.mockTasksAPI.deleteTask(id);
+  const deleteTask = useMutation({
+    mutationFn: async (taskId: string) => {
+      const { error } = await supabase
+        .from("tasks")
+        .delete()
+        .eq("id", taskId);
+
       if (error) throw error;
-      return success;
+      return taskId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Görev başarıyla silindi");
+      toast.success("Task deleted successfully");
     },
     onError: (error) => {
       console.error("Error deleting task:", error);
-      toast.error("Görev silinirken bir hata oluştu");
+      toast.error("Failed to delete task");
     },
   });
 
   return {
-    createTask: createTaskMutation.mutateAsync,
-    updateTask: updateTaskMutation.mutateAsync,
-    deleteTask: deleteTaskMutation.mutateAsync,
-    createTaskMutation,
-    updateTaskMutation,
-    deleteTaskMutation
+    updateTask,
+    deleteTask,
   };
 };
