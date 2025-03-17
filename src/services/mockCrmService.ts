@@ -1,3 +1,4 @@
+
 import { Opportunity, ContactHistoryItem } from "@/types/crm";
 import { Task } from "@/types/task";
 
@@ -352,4 +353,19 @@ export const mockCrmService = {
   mockTasksAPI,
   updateTask,
   deleteTask
+};
+
+// Default export for backward compatibility
+export {
+  getOpportunities,
+  createOpportunity,
+  updateOpportunity,
+  deleteOpportunity,
+  getOpportunityById,
+  addContactHistory,
+  getOpportunityContactHistory,
+  getTasks,
+  updateTask,
+  deleteTask,
+  mockTasksAPI
 };

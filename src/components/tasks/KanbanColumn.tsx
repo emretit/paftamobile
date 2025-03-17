@@ -34,16 +34,13 @@ const KanbanColumn = ({
           >
             {tasks.length > 0 ? (
               tasks.map((task, index) => (
-                <div 
-                  key={task.id} 
-                  className="mb-2"
-                >
-                  <TaskCard
-                    task={task}
-                    onEdit={() => onTaskEdit(task)}
-                    onSelect={onTaskSelect ? () => onTaskSelect(task) : undefined}
-                  />
-                </div>
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  index={index}
+                  onEdit={() => onTaskEdit(task)}
+                  onSelect={onTaskSelect ? () => onTaskSelect(task) : undefined}
+                />
               ))
             ) : (
               <div className="text-center py-6 text-gray-400 text-sm">

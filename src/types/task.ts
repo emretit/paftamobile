@@ -3,7 +3,7 @@ export type TaskStatus = 'todo' | 'in_progress' | 'completed' | 'postponed';
 
 export type TaskPriority = 'low' | 'medium' | 'high';
 
-export type TaskType = 'general' | 'call' | 'meeting' | 'follow_up' | 'proposal' | 'opportunity';
+export type TaskType = 'general' | 'call' | 'meeting' | 'follow_up' | 'proposal' | 'opportunity' | 'reminder';
 
 export interface SubTask {
   id: string;

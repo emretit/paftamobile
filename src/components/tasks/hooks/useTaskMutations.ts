@@ -10,10 +10,11 @@ interface CreateTaskData {
   status: TaskStatus;
   priority: TaskPriority;
   type: TaskType;
-  assignee_id?: string;
+  assigned_to?: string;
   due_date?: string;
   related_item_id?: string;
   related_item_title?: string;
+  related_item_type?: string;
   subtasks?: SubTask[];
 }
 
@@ -24,10 +25,11 @@ interface UpdateTaskData {
   status?: TaskStatus;
   priority?: TaskPriority;
   type?: TaskType;
-  assignee_id?: string;
+  assigned_to?: string;
   due_date?: string;
   related_item_id?: string;
   related_item_title?: string;
+  related_item_type?: string;
   subtasks?: SubTask[];
 }
 

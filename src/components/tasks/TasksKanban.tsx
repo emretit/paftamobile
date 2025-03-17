@@ -24,7 +24,7 @@ export const TasksKanban = ({
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
-  const { tasks, setTasksState } = useKanbanTasks({
+  const { tasks, setTasksState, isLoading, error } = useKanbanTasks({
     searchQuery,
     selectedEmployee,
     selectedType
@@ -87,6 +87,22 @@ export const TasksKanban = ({
     setSelectedTask(null);
     setIsDialogOpen(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-gray-500">Görevler yükleniyor...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-red-500">Görevler yüklenirken bir hata oluştu.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full">
