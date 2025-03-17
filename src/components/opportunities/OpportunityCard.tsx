@@ -11,10 +11,11 @@ interface OpportunityCardProps {
   opportunity: Opportunity;
   index: number;
   onClick: () => void;
+  onSelect?: () => void;
   isSelected?: boolean;
 }
 
-const OpportunityCard = ({ opportunity, index, onClick, isSelected = false }: OpportunityCardProps) => {
+const OpportunityCard = ({ opportunity, index, onClick, onSelect, isSelected = false }: OpportunityCardProps) => {
   return (
     <Draggable draggableId={opportunity.id} index={index}>
       {(provided, snapshot) => (

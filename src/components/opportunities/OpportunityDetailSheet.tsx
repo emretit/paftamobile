@@ -69,7 +69,7 @@ export const OpportunityDetailSheet = ({
         await createTaskForOpportunity(
           opportunity.id,
           opportunity.title,
-          opportunity.status as OpportunityStatus,
+          result.status,
           opportunity.employee_id
         );
       }

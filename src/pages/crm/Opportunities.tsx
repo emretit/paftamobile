@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,7 +64,7 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesPageProps) 
             <Button
               variant="default"
               className="bg-red-800 hover:bg-red-900 text-white"
-              onClick={handleCreateOpportunity}
+              onClick={() => handleCreateOpportunity()}
             >
               <Plus className="mr-2 h-4 w-4" />
               Yeni Fırsat
@@ -133,14 +132,13 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesPageProps) 
               <div className="text-center py-10 text-red-600">Bir hata oluştu.</div>
             ) : (
               <div className="pb-10 overflow-x-auto">
-                <DragDropContext onDragEnd={handleDragEnd}>
-                  <OpportunitiesKanban
-                    opportunities={opportunities}
-                    onOpportunityClick={handleOpportunityClick}
-                    onOpportunitySelect={setSelectedItems}
-                    selectedOpportunities={selectedItems}
-                  />
-                </DragDropContext>
+                <OpportunitiesKanban
+                  opportunities={opportunities}
+                  onDragEnd={handleDragEnd}
+                  onOpportunityClick={handleOpportunityClick}
+                  onOpportunitySelect={setSelectedItems}
+                  selectedOpportunities={selectedItems}
+                />
               </div>
             )}
           </TabsContent>

@@ -37,6 +37,7 @@ const OpportunityColumn = ({
               opportunity={opportunity}
               index={index}
               onClick={() => onOpportunityClick(opportunity)}
+              onSelect={onOpportunitySelect ? () => onOpportunitySelect(opportunity) : undefined}
               isSelected={selectedOpportunities.some(o => o.id === opportunity.id)}
             />
           ))}

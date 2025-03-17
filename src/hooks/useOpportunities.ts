@@ -188,14 +188,19 @@ export const useOpportunities = (
   
   // Create a new opportunity
   const createOpportunityMutation = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await mockOpportunitiesAPI.createOpportunity({
+    mutationFn: async (opportunityData: Partial<Opportunity> = {}) => {
+      const defaultData = {
         title: "Yeni Fırsat",
-        status: "new",
+        status: "new" as OpportunityStatus,
         priority: "medium",
         value: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
+      };
+      
+      const { data, error } = await mockOpportunitiesAPI.createOpportunity({
+        ...defaultData,
+        ...opportunityData
       });
       
       if (error) throw error;
@@ -215,8 +220,56 @@ export const useOpportunities = (
     }
   });
   
-  const handleCreateOpportunity = () => {
-    createOpportunityMutation.mutate();
+  const handleCreateOpportunity = (opportunityData?: Partial<Opportunity>) => {
+    createOpportunityMutation.mutate(opportunityData);
+  };
+  
+  // Update an opportunity
+  const handleUpdateOpportunity = async (
+    id: string,
+    data: Partial<Opportunity>
+  ): Promise<Opportunity | null> => {
+    try {
+      const { data: updatedOpportunity, error } = await mockOpportunitiesAPI.updateOpportunity(id, data);
+      
+      if (error) throw error;
+      
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      toast.success('Fırsat güncellendi');
+      
+      return updatedOpportunity as Opportunity;
+    } catch (error) {
+      toast.error('Fırsat güncellenirken bir hata oluştu');
+      console.error('Error updating opportunity:', error);
+      return null;
+    }
+  };
+  
+  // Delete an opportunity
+  const handleDeleteOpportunity = async (id: string): Promise<boolean> => {
+    try {
+      const { error } = await mockOpportunitiesAPI.deleteOpportunity(id);
+      
+      if (error) throw error;
+      
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      toast.success('Fırsat silindi');
+      
+      // Close detail panel if the deleted opportunity was selected
+      if (selectedOpportunity?.id === id) {
+        setSelectedOpportunity(null);
+        setIsDetailOpen(false);
+      }
+      
+      // Remove from selected items if present
+      setSelectedItems(prev => prev.filter(o => o.id !== id));
+      
+      return true;
+    } catch (error) {
+      toast.error('Fırsat silinirken bir hata oluştu');
+      console.error('Error deleting opportunity:', error);
+      return false;
+    }
   };
   
   return {
@@ -230,6 +283,8 @@ export const useOpportunities = (
     selectedItems,
     setSelectedItems,
     handleDragEnd,
-    handleCreateOpportunity
+    handleCreateOpportunity,
+    handleUpdateOpportunity,
+    handleDeleteOpportunity
   };
 };
