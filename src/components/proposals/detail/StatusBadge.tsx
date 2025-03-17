@@ -1,45 +1,53 @@
 
-import React from "react";
-import { ProposalStatusShared } from "@/types/shared-types";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { statusStyles } from "../constants";
+import { ProposalStatus } from "@/types/proposal";
 
 interface StatusBadgeProps {
-  status: ProposalStatusShared | string;
+  status: ProposalStatus;
+  size?: "sm" | "lg";
   className?: string;
 }
 
-const statusColors: Record<string, string> = {
-  draft: "bg-gray-100 text-gray-800",
-  hazirlaniyor: "bg-gray-100 text-gray-800",
-  pending_approval: "bg-amber-100 text-amber-800",
-  onay_bekliyor: "bg-amber-100 text-amber-800",
-  sent: "bg-blue-100 text-blue-800",
-  gonderildi: "bg-blue-100 text-blue-800",
-  accepted: "bg-green-100 text-green-800",
-  rejected: "bg-red-100 text-red-800",
-  expired: "bg-gray-100 text-gray-800"
-};
-
-const statusLabels: Record<string, string> = {
-  draft: "Taslak",
-  hazirlaniyor: "Hazırlanıyor",
-  pending_approval: "Onay Bekliyor",
-  onay_bekliyor: "Onay Bekliyor",
-  sent: "Gönderildi",
-  gonderildi: "Gönderildi",
-  accepted: "Kabul Edildi",
-  rejected: "Reddedildi",
-  expired: "Süresi Doldu"
-};
-
-const StatusBadge = ({ status, className }: StatusBadgeProps) => {
-  const color = statusColors[status] || "bg-gray-100 text-gray-800";
-  const label = statusLabels[status] || status;
-
+const StatusBadge = ({ status, size = "sm", className }: StatusBadgeProps) => {
+  const statusStyle = statusStyles[status] || "bg-gray-100 text-gray-800";
+  
+  let displayText = "";
+  switch (status) {
+    case "draft":
+      displayText = "Taslak";
+      break;
+    case "pending_approval":
+      displayText = "Onay Bekliyor";
+      break;
+    case "sent":
+      displayText = "Gönderildi";
+      break;
+    case "accepted":
+      displayText = "Kabul Edildi";
+      break;
+    case "rejected":
+      displayText = "Reddedildi";
+      break;
+    case "expired":
+      displayText = "Süresi Dolmuş";
+      break;
+    default:
+      displayText = status;
+  }
+  
   return (
-    <span className={cn("px-2 py-1 rounded-full text-xs font-medium", color, className)}>
-      {label}
-    </span>
+    <Badge
+      variant="secondary"
+      className={cn(
+        statusStyle,
+        size === "lg" ? "px-3 py-1 text-sm" : "px-2 py-0.5 text-xs",
+        className
+      )}
+    >
+      {displayText}
+    </Badge>
   );
 };
 

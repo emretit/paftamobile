@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -49,7 +49,24 @@ interface TaskFormProps {
 
 export const TaskForm = ({ task, onClose }: TaskFormProps) => {
   const { createTask, updateTask } = useTaskMutations();
-  const [subtasks, setSubtasks] = useState<SubTask[]>(task?.subtasks || []);
+  
+  // Parse subtasks from string if needed
+  const parseSubtasks = (task?: Task): SubTask[] => {
+    if (!task || !task.subtasks) return [];
+    
+    if (typeof task.subtasks === 'string') {
+      try {
+        return JSON.parse(task.subtasks);
+      } catch (e) {
+        console.error("Error parsing subtasks string:", e);
+        return [];
+      }
+    }
+    
+    return task.subtasks;
+  };
+  
+  const [subtasks, setSubtasks] = useState<SubTask[]>(parseSubtasks(task));
   
   const form = useForm<z.infer<typeof taskSchema>>({
     resolver: zodResolver(taskSchema),
@@ -72,13 +89,13 @@ export const TaskForm = ({ task, onClose }: TaskFormProps) => {
         await updateTask({
           id: task.id,
           ...values,
-          subtasks: JSON.stringify(subtasks)
+          subtasks
         });
         toast.success("Görev güncellendi");
       } else {
         await createTask({
           ...values,
-          subtasks: JSON.stringify(subtasks)
+          subtasks
         });
         toast.success("Görev oluşturuldu");
       }

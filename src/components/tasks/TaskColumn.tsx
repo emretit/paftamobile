@@ -33,7 +33,11 @@ const TaskColumn = ({ id, title, icon: Icon, tasks, onEdit, onSelect }: TaskColu
                   {...provided.dragHandleProps}
                   className={snapshot.isDragging ? "shadow-lg" : ""}
                 >
-                  <TaskCard task={task} onEdit={onEdit} onSelect={onSelect} />
+                  <TaskCard 
+                    task={task} 
+                    onEdit={onEdit ? () => onEdit(task) : undefined} 
+                    onSelect={onSelect ? () => onSelect(task) : undefined} 
+                  />
                 </div>
               )}
             </Draggable>

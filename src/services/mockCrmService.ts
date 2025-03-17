@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskStatus, TaskPriority, TaskType } from "@/types/task";
-import { Deal } from "@/types/deal";
 import { Opportunity, OpportunityStatus, OpportunityPriority } from "@/types/crm";
 import { ProposalStatusShared } from "@/types/shared-types";
 import { toast } from "sonner";
@@ -95,6 +94,14 @@ export const mockTasksAPI = {
   // Create a new task
   createTask: async (taskData: Partial<Task>) => {
     try {
+      // Ensure title is present
+      if (!taskData.title) {
+        return { 
+          data: null, 
+          error: new Error("Task title is required") 
+        };
+      }
+      
       // Try to create task in Supabase
       const { data, error } = await supabase.from("tasks").insert([taskData]).select();
       
@@ -305,6 +312,13 @@ export const mockOpportunitiesAPI = {
   // Create a new opportunity
   createOpportunity: async (newOpportunity: Partial<Opportunity>) => {
     try {
+      if (!newOpportunity.title) {
+        return {
+          data: null,
+          error: new Error("Opportunity title is required")
+        };
+      }
+      
       // Try to create opportunity in Supabase
       const { data, error } = await supabase
         .from("opportunities")
@@ -397,16 +411,6 @@ export const mockOpportunitiesAPI = {
   }
 };
 
-// Mock service for dealing with deals (legacy - now using opportunities)
-export const mockDealsAPI = {
-  // Forward all calls to opportunities API
-  getDeal: (id: string) => mockOpportunitiesAPI.getOpportunity(id),
-  getDeals: () => mockOpportunitiesAPI.getOpportunities(),
-  updateDeal: (id: string, updates: any) => mockOpportunitiesAPI.updateOpportunity(id, updates),
-  createDeal: (newDeal: any) => mockOpportunitiesAPI.createOpportunity(newDeal),
-  deleteDeal: (id: string) => mockOpportunitiesAPI.deleteOpportunity(id)
-};
-
 // Unified mock CRM service
 export const mockCrmService = {
   // Tasks
@@ -425,9 +429,9 @@ export const mockCrmService = {
   updateOpportunityBasedOnProposal: mockOpportunitiesAPI.updateOpportunityBasedOnProposal,
   
   // Deals (legacy API - redirects to opportunities)
-  getDeal: mockDealsAPI.getDeal,
-  getDeals: mockDealsAPI.getDeals,
-  updateDeal: mockDealsAPI.updateDeal,
-  createDeal: mockDealsAPI.createDeal,
-  deleteDeal: mockDealsAPI.deleteDeal
+  getDeal: mockOpportunitiesAPI.getOpportunity,
+  getDeals: mockOpportunitiesAPI.getOpportunities,
+  updateDeal: mockOpportunitiesAPI.updateOpportunity,
+  createDeal: mockOpportunitiesAPI.createOpportunity,
+  deleteDeal: mockOpportunitiesAPI.deleteOpportunity
 };

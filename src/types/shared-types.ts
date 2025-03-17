@@ -11,7 +11,9 @@ export type ProposalStatusShared =
   | "expired"
   | "gonderildi"  // Turkish variant
   | "onay_bekliyor" // Turkish variant
-  | "hazirlaniyor"; // Turkish variant
+  | "hazirlaniyor" // Turkish variant
+  | "preparing" // English variant added for compatibility
+  | "pending"; // English variant added for compatibility
 
 // Map opportunity/deal status to proposal status when needed
 export const mapOpportunityToProposalStatus = (status: string): ProposalStatusShared => {

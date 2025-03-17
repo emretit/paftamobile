@@ -52,7 +52,7 @@ export const createProposalFollowUpTask = async (
       status: "todo" as TaskStatus,
       priority: "medium" as TaskPriority,
       type: "follow_up" as TaskType,
-      assignee_id: employeeId || null,
+      assignee_id: employeeId || undefined,
       due_date: dueDate.toISOString(),
       related_item_id: proposalId,
       related_item_title: `Teklif #${proposal.proposal_number}`
@@ -101,5 +101,80 @@ export const updateOpportunityOnProposalStatusChange = async (
   } catch (error) {
     console.error("Error updating opportunity from proposal status:", error);
     throw error;
+  }
+};
+
+/**
+ * Creates a task for an opportunity based on its status
+ */
+export const createTaskForOpportunity = async (
+  opportunityId: string,
+  opportunityTitle: string,
+  status: OpportunityStatus,
+  employeeId?: string
+) => {
+  try {
+    // Define task details based on opportunity status
+    let taskTitle = "";
+    let taskDescription = "";
+    let dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 3); // Default 3 days from now
+    let taskType: TaskType = "opportunity";
+    let taskPriority: TaskPriority = "medium";
+
+    switch (status) {
+      case "new":
+        taskTitle = "İlk görüşme planla";
+        taskDescription = `Yeni fırsat için ilk görüşme planla - ${opportunityTitle}`;
+        break;
+      case "first_contact":
+        taskTitle = "Müşteriyi ara";
+        taskDescription = `İlk görüşme sonrası takip - ${opportunityTitle}`;
+        break;
+      case "site_visit":
+        taskTitle = "Teklif hazırla";
+        taskDescription = `Saha ziyareti sonrası teklif hazırla - ${opportunityTitle}`;
+        taskPriority = "high";
+        break;
+      case "preparing_proposal":
+        taskTitle = "Teklifi gönder";
+        taskDescription = `Hazırlanan teklifi kontrol et ve gönder - ${opportunityTitle}`;
+        taskPriority = "high";
+        break;
+      case "proposal_sent":
+        taskTitle = "Teklif takibi yap";
+        taskDescription = `Gönderilen teklifi takip et - ${opportunityTitle}`;
+        taskType = "follow_up";
+        dueDate.setDate(dueDate.getDate() + 2); // 2 days from now
+        break;
+      case "accepted":
+        taskTitle = "Satış sonrası işlemler";
+        taskDescription = `Kabul edilen fırsat için sonraki adımları planla - ${opportunityTitle}`;
+        taskType = "general";
+        break;
+      default:
+        // No task for other statuses
+        return;
+    }
+
+    // Create task
+    const taskData = {
+      title: taskTitle,
+      description: taskDescription,
+      status: "todo" as TaskStatus,
+      priority: taskPriority,
+      type: taskType,
+      assignee_id: employeeId,
+      due_date: dueDate.toISOString(),
+      related_item_id: opportunityId,
+      related_item_title: opportunityTitle
+    };
+
+    await mockCrmService.createTask(taskData);
+    
+    console.log(`Created task "${taskTitle}" for opportunity ${opportunityId}`);
+  } catch (error) {
+    console.error("Error creating opportunity task:", error);
+    // Don't throw, just log the error to prevent blocking the main workflow
   }
 };

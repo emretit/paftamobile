@@ -12,10 +12,10 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import TaskCard from "../tasks/TaskCard";
 import type { Task } from "@/types/task";
-import type { Deal } from "@/types/deal";
+import type { Opportunity } from "@/types/crm";
 
 interface OpportunityTasksProps {
-  opportunity: Deal;
+  opportunity: Opportunity;
   tasks: Task[];
   onEditTask?: (task: Task) => void;
   onSelectTask?: (task: Task) => void;
@@ -55,6 +55,18 @@ const OpportunityTasks = ({ opportunity, tasks, onEditTask, onSelectTask }: Oppo
     } catch (error) {
       console.error('Error creating task:', error);
       toast.error('Görev oluşturulurken bir hata oluştu');
+    }
+  };
+
+  const handleTaskEdit = (task: Task) => {
+    if (onEditTask) {
+      onEditTask(task);
+    }
+  };
+
+  const handleTaskSelect = (task: Task) => {
+    if (onSelectTask) {
+      onSelectTask(task);
     }
   };
 
@@ -129,8 +141,8 @@ const OpportunityTasks = ({ opportunity, tasks, onEditTask, onSelectTask }: Oppo
             <TaskCard
               key={task.id}
               task={task}
-              onEdit={onEditTask}
-              onSelect={onSelectTask}
+              onEdit={() => handleTaskEdit(task)}
+              onSelect={() => handleTaskSelect(task)}
             />
           ))
         )}

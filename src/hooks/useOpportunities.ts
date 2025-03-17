@@ -5,11 +5,11 @@ import { toast } from "sonner";
 import { DropResult } from "@hello-pangea/dnd";
 import { Opportunity, OpportunityStatus, OpportunityExtended } from "@/types/crm";
 import { createTaskForOpportunity } from "@/services/crmWorkflowService";
-import { crmSupabase as supabase, mockOpportunitiesAPI } from "@/services/mockCrmService";
+import { mockOpportunitiesAPI } from "@/services/mockCrmService";
 
-interface OpportunitiesState {
-  [key: string]: OpportunityExtended[];
-}
+export type OpportunitiesState = {
+  [key in OpportunityStatus]?: OpportunityExtended[];
+};
 
 export const useOpportunities = (
   searchQuery?: string,
@@ -57,16 +57,16 @@ export const useOpportunities = (
   useEffect(() => {
     if (data) {
       const grouped = data.reduce((acc, opportunity) => {
-        const status = opportunity.status;
+        const status = opportunity.status as OpportunityStatus;
         if (!acc[status]) {
           acc[status] = [];
         }
-        acc[status].push(opportunity);
+        acc[status]?.push(opportunity);
         return acc;
       }, {} as OpportunitiesState);
       
       // Ensure all statuses exist in the state
-      const newState = {
+      const newState: OpportunitiesState = {
         new: grouped.new || [],
         first_contact: grouped.first_contact || [],
         site_visit: grouped.site_visit || [],
@@ -95,12 +95,14 @@ export const useOpportunities = (
       const opportunity = result.data as OpportunityExtended;
       
       // Generate task based on the new status
-      await createTaskForOpportunity(
-        opportunity.id,
-        opportunity.title,
-        opportunity.status,
-        opportunity.employee_id
-      );
+      if (opportunity) {
+        await createTaskForOpportunity(
+          opportunity.id,
+          opportunity.title,
+          opportunity.status as OpportunityStatus,
+          opportunity.employee_id
+        );
+      }
       
       toast.success('Fırsat durumu güncellendi');
     },
@@ -110,16 +112,18 @@ export const useOpportunities = (
       
       // Revert the local state to maintain UI consistency
       setOpportunities(prev => {
-        const item = prev[variables.status].find(o => o.id === variables.id);
+        const item = prev[variables.status]?.find(o => o.id === variables.id);
         if (item) {
           // Remove from current column
-          const updatedCurrentColumn = prev[variables.status].filter(o => o.id !== variables.id);
+          const updatedCurrentColumn = prev[variables.status]?.filter(o => o.id !== variables.id) || [];
           
           // Add back to the original column
+          const updatedPreviousColumn = [...(prev[variables.previousStatus] || []), {...item, status: variables.previousStatus}];
+          
           return {
             ...prev,
             [variables.status]: updatedCurrentColumn,
-            [variables.previousStatus]: [...prev[variables.previousStatus], {...item, status: variables.previousStatus}]
+            [variables.previousStatus]: updatedPreviousColumn
           };
         }
         return prev;
@@ -148,7 +152,7 @@ export const useOpportunities = (
     const destinationStatus = destination.droppableId as OpportunityStatus;
     
     // Find the item being moved
-    const item = opportunities[sourceStatus].find(o => o.id === draggableId);
+    const item = opportunities[sourceStatus]?.find(o => o.id === draggableId);
     
     if (!item) return;
     
@@ -156,16 +160,25 @@ export const useOpportunities = (
     const newState = { ...opportunities };
     
     // Remove item from source column
-    newState[sourceStatus] = newState[sourceStatus].filter(o => o.id !== draggableId);
+    newState[sourceStatus] = newState[sourceStatus]?.filter(o => o.id !== draggableId) || [];
     
     // Add item to destination column with updated status
     const updatedItem = { ...item, status: destinationStatus };
-    newState[destinationStatus] = [...newState[destinationStatus], updatedItem];
     
-    // Update local state for immediate feedback
+    if (!newState[destinationStatus]) {
+      newState[destinationStatus] = [];
+    }
+    
+    newState[destinationStatus] = [
+      ...(newState[destinationStatus] || []).slice(0, destination.index),
+      updatedItem,
+      ...(newState[destinationStatus] || []).slice(destination.index)
+    ];
+    
+    // Update local state
     setOpportunities(newState);
     
-    // Update in the database
+    // Persist to database
     updateOpportunityMutation.mutate({
       id: draggableId,
       status: destinationStatus,
@@ -173,80 +186,16 @@ export const useOpportunities = (
     });
   };
   
-  const handleSelectOpportunity = (opportunity: OpportunityExtended) => {
-    setSelectedOpportunity(opportunity);
-    setIsDetailOpen(true);
-  };
-  
-  const handleSelectItem = (opportunity: OpportunityExtended) => {
-    setSelectedItems(prev => {
-      const isSelected = prev.some(o => o.id === opportunity.id);
-      if (isSelected) {
-        return prev.filter(o => o.id !== opportunity.id);
-      }
-      return [...prev, opportunity];
-    });
-  };
-  
-  const handleBulkStatusUpdate = (opportunities: OpportunityExtended[], newStatus: OpportunityStatus) => {
-    // First update the UI
-    setOpportunities(prev => {
-      const newState = { ...prev };
-      
-      opportunities.forEach(opportunity => {
-        const oldStatus = opportunity.status;
-        
-        // Remove from current column
-        newState[oldStatus] = newState[oldStatus].filter(o => o.id !== opportunity.id);
-        
-        // Add to the new column with updated status
-        newState[newStatus] = [...newState[newStatus], { ...opportunity, status: newStatus }];
-      });
-      
-      return newState;
-    });
-    
-    // Then update in the database (in sequence to avoid race conditions)
-    const updateSequentially = async () => {
-      for (const opportunity of opportunities) {
-        try {
-          const { error } = await mockOpportunitiesAPI.updateOpportunity(opportunity.id, { status: newStatus });
-            
-          if (error) throw error;
-          
-          // Generate task based on the new status
-          await createTaskForOpportunity(
-            opportunity.id,
-            opportunity.title,
-            newStatus,
-            opportunity.employee_id
-          );
-        } catch (error) {
-          console.error('Error updating opportunity:', error);
-          toast.error(`Fırsat güncellenirken bir hata oluştu: ${opportunity.title}`);
-        }
-      }
-      
-      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
-      toast.success('Seçili fırsatlar güncellendi');
-    };
-    
-    updateSequentially();
-    setSelectedItems([]);
-  };
-  
   return {
     opportunities,
     isLoading,
     error,
     selectedOpportunity,
+    setSelectedOpportunity,
     isDetailOpen,
-    selectedItems,
-    handleDragEnd,
-    handleSelectOpportunity,
-    handleSelectItem,
-    handleBulkStatusUpdate,
     setIsDetailOpen,
-    setSelectedItems
+    selectedItems,
+    setSelectedItems,
+    handleDragEnd
   };
 };

@@ -28,3 +28,16 @@ export const getTaskStatusColor = (status: string) => {
   };
   return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-700";
 };
+
+export const getOpportunityStatusColor = (status: string) => {
+  const colors = {
+    new: "bg-blue-100 text-blue-800",
+    first_contact: "bg-purple-100 text-purple-800",
+    site_visit: "bg-yellow-100 text-yellow-800",
+    preparing_proposal: "bg-orange-100 text-orange-800",
+    proposal_sent: "bg-indigo-100 text-indigo-800",
+    accepted: "bg-green-100 text-green-800",
+    lost: "bg-red-100 text-red-800"
+  };
+  return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-700";
+};

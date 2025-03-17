@@ -1,378 +1,297 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
-import { TopBar } from "@/components/TopBar";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Proposal, ProposalStatus } from "@/types/proposal";
-import { ArrowLeft, Edit, Send, Printer, Trash, Save } from "lucide-react";
-import { useProposalStatusUpdate } from "@/hooks/useProposalStatusUpdate";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { ProposalDetailsTab } from "@/components/proposals/detail/ProposalDetailsTab";
-import { ProposalItemsTab } from "@/components/proposals/detail/ProposalItemsTab";
-import { ProposalNotesTab } from "@/components/proposals/detail/ProposalNotesTab";
-import { ProposalAttachmentsTab } from "@/components/proposals/detail/ProposalAttachmentsTab";
-import { primaryProposalStatuses, statusLabels } from "@/components/proposals/constants";
+import { ArrowLeft, Clock, Loader2, UserCheck, Building, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import StatusBadge from "@/components/proposals/detail/StatusBadge";
+import { Proposal, ProposalStatus } from "@/types/proposal";
 import { ProposalStatusShared } from "@/types/shared-types";
+import StatusBadge from "@/components/proposals/detail/StatusBadge";
+import ProposalItems from "@/components/proposals/detail/ProposalItems";
+import ProposalAttachments from "@/components/proposals/detail/ProposalAttachments";
+import { proposalStatusLabels } from "@/components/proposals/constants";
+import { cn } from "@/lib/utils";
 
-interface ProposalDetailsProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
-}
-
-const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) => {
+const ProposalDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [currentStatus, setCurrentStatus] = useState<ProposalStatus | null>(null);
-  const statusUpdate = useProposalStatusUpdate(id || "", proposal?.opportunity_id);
+  const [status, setStatus] = useState<ProposalStatus>("draft");
   
-  const { data: proposal, isLoading, error } = useQuery({
-    queryKey: ['proposal', id],
+  // Fetch proposal details
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["proposal", id],
     queryFn: async () => {
-      try {
-        const { data: proposalData, error: proposalError } = await supabase
-          .from('proposals')
-          .select('*')
-          .eq('id', id)
-          .single();
-          
-        if (proposalError) throw proposalError;
+      const { data: proposal, error } = await supabase
+        .from("proposals")
+        .select(`
+          *,
+          customer:customer_id(*),
+          employee:employee_id(*)
+        `)
+        .eq("id", id)
+        .single();
         
-        let customerData = null;
-        if (proposalData.customer_id) {
-          const { data: customer, error: customerError } = await supabase
-            .from('customers')
-            .select('*')
-            .eq('id', proposalData.customer_id)
-            .single();
-            
-          if (!customerError) {
-            customerData = customer;
-          }
-        }
-        
-        let employeeData = null;
-        if (proposalData.employee_id) {
-          const { data: employee, error: employeeError } = await supabase
-            .from('employees')
-            .select('*')
-            .eq('id', proposalData.employee_id)
-            .single();
-            
-          if (!employeeError) {
-            employeeData = employee;
-          }
-        }
-        
-        const transformedData = {
-          ...proposalData,
-          customer: customerData,
-          employee: employeeData ? {
-            id: employeeData.id,
-            first_name: employeeData.first_name,
-            last_name: employeeData.last_name,
-            email: employeeData.email
-          } : null,
-          attachments: proposalData.files ? (typeof proposalData.files === 'string' ? JSON.parse(proposalData.files) : proposalData.files) : []
-        };
-        
-        return transformedData as unknown as Proposal;
-      } catch (error) {
-        console.error('Error fetching proposal:', error);
-        throw error;
+      if (error) throw error;
+      
+      // Initialize status state with current proposal status
+      if (proposal) {
+        setStatus(proposal.status as ProposalStatus);
       }
+      
+      return proposal as Proposal;
     },
-    enabled: !!id
   });
   
-  useEffect(() => {
-    if (!id) return;
-    
-    const channel = supabase
-      .channel(`proposal-${id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'proposals',
-          filter: `id=eq.${id}`
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['proposal', id] });
-        }
-      )
-      .subscribe();
+  // Status update mutation
+  const statusMutation = useMutation<ProposalStatus, Error, ProposalStatus>({
+    mutationFn: async (newStatus: ProposalStatus) => {
+      const { error } = await supabase
+        .from("proposals")
+        .update({ status: newStatus })
+        .eq("id", id);
+        
+      if (error) throw error;
       
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [id, queryClient]);
-  
-  useEffect(() => {
-    if (proposal && proposal.status !== currentStatus) {
-      setCurrentStatus(proposal.status as ProposalStatus);
-    }
-  }, [proposal]);
-  
-  const handleStatusChange = (newStatus: string) => {
-    setCurrentStatus(newStatus as ProposalStatus);
-  };
-  
-  const handleSaveStatus = async () => {
-    if (!proposal || !currentStatus || currentStatus === proposal.status) return;
-    
-    try {
-      await statusUpdate.mutateAsync(currentStatus);
-    } catch (error) {
+      return newStatus;
+    },
+    onSuccess: (newStatus) => {
+      queryClient.invalidateQueries({ queryKey: ["proposal", id] });
+      toast.success(`Teklif durumu güncellendi: ${proposalStatusLabels[newStatus]}`);
+    },
+    onError: (error) => {
       toast.error("Durum güncellenirken bir hata oluştu");
-      console.error("Error updating status:", error);
+      console.error("Error updating proposal status:", error);
+      // Reset status to current proposal status
+      if (data) setStatus(data.status as ProposalStatus);
     }
-  };
+  });
   
-  const formatDate = (date: string | null | undefined) => {
-    if (!date) return "-";
-    try {
-      return format(new Date(date), "dd MMMM yyyy", { locale: tr });
-    } catch (error) {
-      return "-";
-    }
+  const handleStatusChange = (newStatus: ProposalStatus) => {
+    if (newStatus === status) return;
+    
+    setStatus(newStatus);
+    statusMutation.mutate(newStatus);
   };
   
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
-        <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-        <main
-          className={`flex-1 transition-all duration-300 ${
-            isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
-          }`}
-        >
-          <TopBar />
-          <div className="p-6">
-            <div className="h-8 bg-gray-200 animate-pulse rounded w-1/3 mb-4"></div>
-            <div className="h-6 bg-gray-200 animate-pulse rounded w-1/4 mb-6"></div>
-            <Card className="border-red-100 shadow-sm">
-              <CardContent className="p-6">
-                <div className="space-y-6">
-                  <div className="h-12 bg-gray-200 animate-pulse rounded"></div>
-                  <div className="h-32 bg-gray-200 animate-pulse rounded"></div>
-                  <div className="h-32 bg-gray-200 animate-pulse rounded"></div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </main>
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-12 w-12 animate-spin text-gray-400" />
       </div>
     );
   }
   
-  if (error || !proposal) {
+  if (error || !data) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
-        <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-        <main
-          className={`flex-1 transition-all duration-300 ${
-            isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
-          }`}
-        >
-          <TopBar />
-          <div className="p-6">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/proposals')}
-              className="mb-6 border-red-200 text-red-700 hover:bg-red-50"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Geri Dön
-            </Button>
-            
-            <Card className="border-red-100 shadow-sm">
-              <CardContent className="p-6 text-center">
-                <h3 className="text-lg font-medium text-red-800 mb-2">Teklif bulunamadı</h3>
-                <p className="text-gray-500 mb-4">İstediğiniz teklif bulunamadı veya erişim iznine sahip değilsiniz.</p>
-                <Button 
-                  onClick={() => navigate('/proposals')}
-                  className="bg-red-800 hover:bg-red-900"
-                >
-                  Teklifler Sayfasına Dön
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </main>
+      <div className="p-8 text-center">
+        <h2 className="text-2xl font-bold text-red-600 mb-4">Teklif bulunamadı</h2>
+        <p className="text-gray-600 mb-6">
+          İstediğiniz teklif detaylarına ulaşılamadı. Teklif silinmiş veya erişim yetkiniz olmayabilir.
+        </p>
+        <Button onClick={() => navigate("/proposals")}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Tekliflere Dön
+        </Button>
       </div>
     );
   }
+  
+  const proposal = data;
+  const formattedTotal = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: proposal.currency || 'TRY' })
+    .format(proposal.total_value);
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex">
-      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <main
-        className={`flex-1 transition-all duration-300 ${
-          isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
-        }`}
-      >
-        <TopBar />
-        <div className="p-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <div>
-              <div className="flex items-center gap-3">
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  onClick={() => navigate('/proposals')}
-                  className="border-red-200 text-red-700 hover:bg-red-50"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <h1 className="text-2xl font-bold text-red-900">{proposal.title}</h1>
-                <StatusBadge status={proposal.status} />
-              </div>
-              <div className="flex items-center gap-2 mt-2 text-gray-500">
-                <span>Teklif #{proposal.proposal_number}</span>
-                <span>•</span>
-                <span>Oluşturma: {formatDate(proposal.created_at)}</span>
-                {proposal.sent_date && (
-                  <>
-                    <span>•</span>
-                    <span>Gönderim: {formatDate(proposal.sent_date)}</span>
-                  </>
-                )}
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2 self-end md:self-auto">
-              <Button 
-                variant="outline"
-                className="border-red-200 text-red-700 hover:bg-red-50"
-              >
-                <Printer className="mr-2 h-4 w-4" />
-                Yazdır
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => navigate(`/proposals/edit/${proposal.id}`)}
-                className="border-red-200 text-red-700 hover:bg-red-50"
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Düzenle
-              </Button>
-            </div>
-          </div>
-          
-          <Card className="mb-6 border-red-100 shadow-sm bg-gradient-to-r from-red-50 to-white">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div className="flex-1 max-w-md">
-                  <h3 className="text-sm font-medium text-red-800 mb-2">Teklif Durumu</h3>
-                  <Select 
-                    value={currentStatus || proposal.status} 
-                    onValueChange={handleStatusChange}
-                    disabled={isUpdating}
-                  >
-                    <SelectTrigger className="w-full border-red-200 focus:ring-red-200">
-                      <SelectValue placeholder="Durum seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {primaryProposalStatuses.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {statusLabels[status]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex items-center justify-between mb-6">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate("/proposals")}
+          className="flex items-center text-gray-600"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Tekliflere Dön
+        </Button>
+        
+        <div className="flex items-center space-x-3">
+          <span className="text-sm text-gray-500 mr-2">Teklif Durumu:</span>
+          <StatusBadge status={status} size="lg" />
+          <select
+            value={status}
+            onChange={(e) => handleStatusChange(e.target.value as ProposalStatus)}
+            className="border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+            disabled={statusMutation.isPending}
+          >
+            {Object.entries(proposalStatusLabels).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+          {statusMutation.isPending && (
+            <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+          )}
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2">
+          <Card className="mb-6">
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-2xl font-bold">{proposal.title}</CardTitle>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Teklif #{proposal.proposal_number}
+                  </div>
                 </div>
-                
-                <div className="flex gap-2 self-end md:self-auto">
-                  <Button 
-                    variant="outline"
-                    onClick={handleSaveStatus}
-                    disabled={isUpdating || currentStatus === proposal.status}
-                    className="border-red-200 text-red-700 hover:bg-red-50"
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    Kaydet
-                  </Button>
-                  
-                  {currentStatus !== ('gonderildi' as ProposalStatusShared) && (
-                    <Button 
-                      onClick={() => {
-                        setCurrentStatus('gonderildi' as ProposalStatusShared);
-                        setTimeout(() => {
-                          handleSaveStatus();
-                        }, 100);
-                      }}
-                      disabled={isUpdating || currentStatus === ('gonderildi' as ProposalStatusShared)}
-                      className="bg-red-800 hover:bg-red-900"
-                    >
-                      <Send className="mr-2 h-4 w-4" />
-                      Teklifi Gönder
-                    </Button>
-                  )}
+                <div className="text-right">
+                  <div className="text-xl font-bold">{formattedTotal}</div>
+                  <div className="text-sm text-gray-500">
+                    {proposal.currency || "TRY"}
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-red-100 shadow-sm">
-            <CardContent className="p-6">
-              <Tabs defaultValue="details" className="w-full">
-                <TabsList className="grid grid-cols-4 mb-6 bg-red-100/50">
-                  <TabsTrigger 
-                    value="details"
-                    className="data-[state=active]:bg-red-200 data-[state=active]:text-red-900"
-                  >
-                    Detaylar
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="items"
-                    className="data-[state=active]:bg-red-200 data-[state=active]:text-red-900"
-                  >
-                    Ürünler
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="notes"
-                    className="data-[state=active]:bg-red-200 data-[state=active]:text-red-900"
-                  >
-                    Notlar
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="attachments"
-                    className="data-[state=active]:bg-red-200 data-[state=active]:text-red-900"
-                  >
-                    Ekler
-                  </TabsTrigger>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row md:justify-between gap-4 mt-4">
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center text-sm">
+                    <UserCheck className="h-4 w-4 mr-2 text-gray-500" />
+                    <span className="font-medium">Sorumlu:</span>
+                    <span className="ml-2">
+                      {proposal.employee ? 
+                        `${proposal.employee.first_name} ${proposal.employee.last_name}` : 
+                        "Atanmamış"}
+                    </span>
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <Building className="h-4 w-4 mr-2 text-gray-500" />
+                    <span className="font-medium">Müşteri:</span>
+                    <span className="ml-2">
+                      {proposal.customer ? 
+                        proposal.customer.name : 
+                        "Belirtilmemiş"}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center text-sm">
+                    <CalendarDays className="h-4 w-4 mr-2 text-gray-500" />
+                    <span className="font-medium">Oluşturma:</span>
+                    <span className="ml-2">
+                      {format(new Date(proposal.created_at), 'PPP', { locale: tr })}
+                    </span>
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <Clock className="h-4 w-4 mr-2 text-gray-500" />
+                    <span className="font-medium">Geçerlilik:</span>
+                    <span className={cn("ml-2", 
+                      proposal.valid_until && new Date(proposal.valid_until) < new Date() ? 
+                      "text-red-600 font-medium" : ""
+                    )}>
+                      {proposal.valid_until ? 
+                        format(new Date(proposal.valid_until), 'PPP', { locale: tr }) : 
+                        "Belirtilmemiş"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <Separator className="my-6" />
+              
+              <Tabs defaultValue="items">
+                <TabsList className="mb-6">
+                  <TabsTrigger value="items">Kalemler</TabsTrigger>
+                  <TabsTrigger value="files">Dosyalar</TabsTrigger>
+                  <TabsTrigger value="notes">Notlar</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="details">
-                  <ProposalDetailsTab proposal={proposal} />
+                <TabsContent value="items" className="space-y-4">
+                  <ProposalItems proposalId={proposal.id} />
                 </TabsContent>
                 
-                <TabsContent value="items">
-                  <ProposalItemsTab proposal={proposal} />
+                <TabsContent value="files">
+                  <ProposalAttachments 
+                    proposalId={proposal.id} 
+                    attachments={proposal.attachments || []} 
+                  />
                 </TabsContent>
                 
                 <TabsContent value="notes">
-                  <ProposalNotesTab proposal={proposal} />
-                </TabsContent>
-                
-                <TabsContent value="attachments">
-                  <ProposalAttachmentsTab proposal={proposal} />
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    {proposal.internal_notes ? (
+                      <p className="whitespace-pre-line">{proposal.internal_notes}</p>
+                    ) : (
+                      <p className="text-gray-500 italic">Bu teklif için not eklenmemiş.</p>
+                    )}
+                  </div>
                 </TabsContent>
               </Tabs>
             </CardContent>
           </Card>
         </div>
-      </main>
+        
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Hızlı İşlemler</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button 
+                className="w-full justify-start"
+                disabled={statusMutation.isPending}
+                onClick={() => handleStatusChange('draft' as ProposalStatus)}
+              >
+                <span className="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
+                Taslak
+              </Button>
+              
+              <Button 
+                className="w-full justify-start"
+                disabled={statusMutation.isPending}
+                onClick={() => handleStatusChange('pending_approval' as ProposalStatus)}
+              >
+                <span className="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
+                Onay Bekliyor
+              </Button>
+              
+              <Button 
+                className="w-full justify-start"
+                disabled={statusMutation.isPending}
+                onClick={() => handleStatusChange('sent' as ProposalStatus)}
+              >
+                <span className="w-2 h-2 rounded-full bg-indigo-500 mr-2"></span>
+                Gönderildi
+              </Button>
+              
+              <Button 
+                className="w-full justify-start bg-green-600 hover:bg-green-700"
+                disabled={statusMutation.isPending}
+                onClick={() => handleStatusChange('accepted' as ProposalStatus)}
+              >
+                <span className="w-2 h-2 rounded-full bg-white mr-2"></span>
+                Kabul Edildi
+              </Button>
+              
+              <Button 
+                variant="outline"
+                className="w-full justify-start text-red-600 border-red-300 hover:bg-red-50"
+                disabled={statusMutation.isPending}
+                onClick={() => handleStatusChange('rejected' as ProposalStatus)}
+              >
+                <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
+                Reddedildi
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

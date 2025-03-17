@@ -12,12 +12,14 @@ interface TasksKanbanProps {
   searchQuery?: string;
   selectedEmployee?: string | null;
   selectedType?: string | null;
+  onSelectTask?: (task: Task) => void;
 }
 
 export const TasksKanban = ({ 
   searchQuery, 
   selectedEmployee, 
-  selectedType 
+  selectedType,
+  onSelectTask
 }: TasksKanbanProps) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -65,7 +67,10 @@ export const TasksKanban = ({
 
     // Update task status in database
     try {
-      await updateTask(task.id, { status: targetStatus });
+      await updateTask({
+        id: task.id,
+        status: targetStatus
+      });
     } catch (error) {
       console.error("Error updating task status:", error);
       // Revert to original state on error
@@ -92,24 +97,28 @@ export const TasksKanban = ({
             title="Yapılacak"
             tasks={tasks.todo}
             onTaskEdit={handleTaskEdit}
+            onTaskSelect={onSelectTask}
           />
           <KanbanColumn
             id="in_progress"
             title="Devam Ediyor"
             tasks={tasks.in_progress}
             onTaskEdit={handleTaskEdit}
+            onTaskSelect={onSelectTask}
           />
           <KanbanColumn
             id="completed"
             title="Tamamlandı"
             tasks={tasks.completed}
             onTaskEdit={handleTaskEdit}
+            onTaskSelect={onSelectTask}
           />
           <KanbanColumn
             id="postponed"
             title="Ertelendi"
             tasks={tasks.postponed}
             onTaskEdit={handleTaskEdit}
+            onTaskSelect={onSelectTask}
           />
         </div>
       </DragDropContext>
