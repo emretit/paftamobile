@@ -24,18 +24,28 @@ const OpportunityTasksTab = ({ opportunityId }: OpportunityTasksTabProps) => {
         .from('tasks')
         .select(`
           *,
-          assignee:assignee_id(id, first_name, last_name, avatar_url)
+          assignee:assignee_id(id, first_name, last_name, email, phone, position, department, status, avatar_url)
         `)
         .eq('related_item_id', opportunityId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      // Transform the data to match the Task type
-      return data.map(task => ({
-        ...task,
-        item_type: 'opportunity' // Set item_type for opportunity-related tasks
-      })) as Task[];
+      // Transform the data to match the Task type structure
+      return data.map(task => {
+        const assignee = task.assignee ? {
+          ...task.assignee,
+          // Add any missing required properties from TaskAssignee
+          name: `${task.assignee.first_name} ${task.assignee.last_name}`,
+          avatar: task.assignee.avatar_url
+        } : undefined;
+
+        return {
+          ...task,
+          item_type: 'opportunity' as const, // Set item_type for opportunity-related tasks
+          assignee: assignee
+        };
+      }) as Task[];
     }
   });
 
