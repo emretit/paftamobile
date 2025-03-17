@@ -69,12 +69,12 @@ export const useKanbanTasks = ({
 
       // Transform tasks to include overdue status and ensure type property
       return tasksData.map(task => {
-        // Normalize task object to ensure it has required properties
+        // Create a normalized task object with all required properties
         const normalizedTask = {
           ...task,
-          // Ensure assignee_id exists (use assigned_to as fallback)
+          // Always ensure assignee_id exists
           assignee_id: task.assignee_id || task.assigned_to,
-          // Ensure type property exists
+          // Always ensure type property exists
           type: (task.type || task.related_item_type || "general") as TaskType
         };
         
