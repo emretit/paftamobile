@@ -25,110 +25,122 @@ import AddEmployee from "./pages/AddEmployee";
 import EmployeeDetails from "./pages/EmployeeDetails";
 import EmployeeForm from "./pages/EmployeeForm";
 import Dashboard from "./pages/Dashboard";
+import PurchaseManagement from "@/pages/PurchaseManagement";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  const [isCollapsed, setIsCollapsed] = useState(window.innerWidth < 1024);
+function App() {
+  const [isCollapsed, setIsCollapsed] = useState(true);
+
+  const PublicRoute = ({ children }: { children: React.ReactNode }) => children;
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => (
+    <AuthGuard>{children}</AuthGuard>
+  );
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route
-          path="/dashboard"
-          element={<AuthGuard><Dashboard isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/products"
-          element={<AuthGuard><Products isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/product-form"
-          element={<AuthGuard><ProductForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/product-form/:id"
-          element={<AuthGuard><ProductForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/product-details/:id"
-          element={<AuthGuard><ProductDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/contacts"
-          element={<AuthGuard><Contacts isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/contacts/new"
-          element={<AuthGuard><CustomerForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/contacts/:id"
-          element={<AuthGuard><ContactDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/contacts/:id/edit"
-          element={<AuthGuard><CustomerEdit isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/suppliers"
-          element={<AuthGuard><Suppliers isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/supplier/:id"
-          element={<AuthGuard><SupplierDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/supplier-form"
-          element={<AuthGuard><SupplierForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/supplier-form/:id"
-          element={<AuthGuard><SupplierForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        
-        <Route
-          path="/employees"
-          element={<AuthGuard><Employees isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/add-employee"
-          element={<AuthGuard><AddEmployee isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-         <Route
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <Routes>
+          <Route path="/" element={<PublicRoute><Index /></PublicRoute>} />
+          <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+          <Route
+            path="/dashboard"
+            element={<ProtectedRoute><Dashboard isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/products"
+            element={<ProtectedRoute><Products isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/product-form"
+            element={<ProtectedRoute><ProductForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/product-form/:id"
+            element={<ProtectedRoute><ProductForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/product-details/:id"
+            element={<ProtectedRoute><ProductDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/contacts"
+            element={<ProtectedRoute><Contacts isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/contacts/new"
+            element={<ProtectedRoute><CustomerForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/contacts/:id"
+            element={<ProtectedRoute><ContactDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/contacts/:id/edit"
+            element={<ProtectedRoute><CustomerEdit isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/suppliers"
+            element={<ProtectedRoute><Suppliers isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/supplier/:id"
+            element={<ProtectedRoute><SupplierDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/supplier-form"
+            element={<ProtectedRoute><SupplierForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/supplier-form/:id"
+            element={<ProtectedRoute><SupplierForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          
+          <Route
+            path="/employees"
+            element={<ProtectedRoute><Employees isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/add-employee"
+            element={<ProtectedRoute><AddEmployee isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
             path="/employees/:id"
-            element={<AuthGuard><EmployeeDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
+            element={<ProtectedRoute><EmployeeDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
           <Route
             path="/employee-form/:id"
-            element={<AuthGuard><EmployeeForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
+            element={<ProtectedRoute><EmployeeForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
-        
-        <Route
-          path="/finance"
-          element={<AuthGuard><Finance isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/service"
-          element={<AuthGuard><Service isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/settings"
-          element={<AuthGuard><Settings isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/purchase-invoices"
-          element={<AuthGuard><PurchaseInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-        <Route
-          path="/sales-invoices"
-          element={<AuthGuard><SalesInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></AuthGuard>}
-        />
-      </Routes>
-    </Router>
+          
+          <Route
+            path="/finance"
+            element={<ProtectedRoute><Finance isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/service"
+            element={<ProtectedRoute><Service isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/settings"
+            element={<ProtectedRoute><Settings isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/purchase-invoices"
+            element={<ProtectedRoute><PurchaseInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/sales-invoices"
+            element={<ProtectedRoute><SalesInvoices isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/purchase-management"
+            element={<ProtectedRoute><PurchaseManagement isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+        </Routes>
+      </Router>
+    </QueryClientProvider>
   );
-};
+}
 
 export default App;
