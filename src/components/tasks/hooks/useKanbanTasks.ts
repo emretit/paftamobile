@@ -76,6 +76,8 @@ export const useKanbanTasks = ({
         
         return {
           ...task,
+          // Make sure assignee_id is populated
+          assignee_id: assigneeId,
           // Ensure type property exists
           type: (task.type || task.related_item_type || "general") as TaskType,
           isOverdue,

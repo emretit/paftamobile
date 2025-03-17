@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
@@ -10,7 +9,6 @@ import {
 import { Task, TaskStatus, TaskPriority, TaskType, SubTask } from "@/types/task";
 import { Proposal } from "@/types/proposal";
 
-// Mock data until Supabase tables are created
 const mockOpportunities: Opportunity[] = [
   {
     id: uuidv4(),
@@ -155,15 +153,9 @@ const mockProposals: Proposal[] = [
   }
 ];
 
-// CRM API Service
 export const crmService = {
-  // Get all opportunities
   getOpportunities: async () => {
     try {
-      // In production, we would use Supabase
-      // const { data, error } = await supabase.from('opportunities').select('*');
-      
-      // For now, return mock data
       return { data: mockOpportunities, error: null };
     } catch (error) {
       console.error("Error fetching opportunities:", error);
@@ -171,13 +163,8 @@ export const crmService = {
     }
   },
 
-  // Get a single opportunity by ID
   getOpportunity: async (id: string) => {
     try {
-      // In production, we would use Supabase
-      // const { data, error } = await supabase.from('opportunities').select('*').eq('id', id).single();
-      
-      // For now, return mock data
       const opportunity = mockOpportunities.find(o => o.id === id);
       return { data: opportunity || null, error: opportunity ? null : new Error('Opportunity not found') };
     } catch (error) {
@@ -186,7 +173,6 @@ export const crmService = {
     }
   },
   
-  // Create a new opportunity
   createOpportunity: async (opportunityData: Partial<Opportunity>) => {
     try {
       const newOpportunity: Opportunity = {
@@ -205,13 +191,8 @@ export const crmService = {
         contact_history: opportunityData.contact_history || []
       };
       
-      // In production, we would use Supabase
-      // const { data, error } = await supabase.from('opportunities').insert(newOpportunity).select();
-      
-      // For now, add to mock data
       mockOpportunities.push(newOpportunity);
       
-      // Create default first task for the new opportunity
       if (newOpportunity.id) {
         crmService.createTask({
           title: "İlk görüşmeyi yap ve ziyaret planla",
@@ -233,7 +214,6 @@ export const crmService = {
     }
   },
   
-  // Update an opportunity
   updateOpportunity: async (id: string, opportunityData: Partial<Opportunity>) => {
     try {
       const index = mockOpportunities.findIndex(o => o.id === id);
@@ -243,7 +223,6 @@ export const crmService = {
       
       const prevStatus = mockOpportunities[index].status;
       
-      // Update the opportunity in our mock data
       mockOpportunities[index] = {
         ...mockOpportunities[index],
         ...opportunityData,
@@ -252,22 +231,14 @@ export const crmService = {
       
       const updatedOpportunity = mockOpportunities[index];
       
-      // If status changed, create appropriate task
       if (prevStatus !== opportunityData.status && opportunityData.status) {
-        await this.createTaskForStatusChange(
+        await crmService.createTaskForStatusChange(
           updatedOpportunity.id,
           updatedOpportunity.title,
           opportunityData.status as OpportunityStatus,
           updatedOpportunity.employee_id
         );
       }
-      
-      // In production, we would use Supabase
-      // const { data, error } = await supabase
-      //   .from('opportunities')
-      //   .update({ ...opportunityData, updated_at: new Date().toISOString() })
-      //   .eq('id', id)
-      //   .select();
       
       return { data: updatedOpportunity, error: null };
     } catch (error) {
@@ -276,7 +247,6 @@ export const crmService = {
     }
   },
   
-  // Add contact history entry to an opportunity
   addContactHistory: async (opportunityId: string, entry: Omit<ContactHistoryItem, 'id'>) => {
     try {
       const index = mockOpportunities.findIndex(o => o.id === opportunityId);
@@ -296,12 +266,6 @@ export const crmService = {
       
       mockOpportunities[index].contact_history?.push(contactHistoryItem);
       
-      // In production, we would use Supabase functions to append to the JSONB array
-      // const { data, error } = await supabase.rpc('add_contact_history', {
-      //   p_opportunity_id: opportunityId,
-      //   p_contact_entry: contactHistoryItem
-      // });
-      
       return { data: contactHistoryItem, error: null };
     } catch (error) {
       console.error(`Error adding contact history to opportunity ${opportunityId}:`, error);
@@ -309,7 +273,6 @@ export const crmService = {
     }
   },
   
-  // Delete an opportunity
   deleteOpportunity: async (id: string) => {
     try {
       const index = mockOpportunities.findIndex(o => o.id === id);
@@ -319,9 +282,6 @@ export const crmService = {
       
       mockOpportunities.splice(index, 1);
       
-      // In production, we would use Supabase
-      // const { data, error } = await supabase.from('opportunities').delete().eq('id', id);
-      
       return { data: { id }, error: null };
     } catch (error) {
       console.error(`Error deleting opportunity ${id}:`, error);
@@ -329,7 +289,6 @@ export const crmService = {
     }
   },
   
-  // Create a task based on opportunity status change
   createTaskForStatusChange: async (
     opportunityId: string,
     opportunityTitle: string,
@@ -382,13 +341,8 @@ export const crmService = {
     return await crmService.createTask(taskData);
   },
   
-  // Get all tasks
   getTasks: async () => {
     try {
-      // In production, we would use Supabase
-      // const { data, error } = await supabase.from('tasks').select('*');
-      
-      // For now, return mock data
       return { data: mockTasks, error: null };
     } catch (error) {
       console.error("Error fetching tasks:", error);
@@ -396,17 +350,8 @@ export const crmService = {
     }
   },
   
-  // Get tasks for a specific opportunity
   getTasksForOpportunity: async (opportunityId: string) => {
     try {
-      // In production, we would use Supabase
-      // const { data, error } = await supabase
-      //   .from('tasks')
-      //   .select('*')
-      //   .eq('related_item_id', opportunityId)
-      //   .eq('type', 'opportunity');
-      
-      // For now, filter mock data
       const filteredTasks = mockTasks.filter(
         task => task.related_item_id === opportunityId && task.type === 'opportunity'
       );
@@ -418,16 +363,14 @@ export const crmService = {
     }
   },
   
-  // Create a new task
   createTask: async (taskData: Partial<Task>) => {
     try {
       const taskId = uuidv4();
       
-      // Prepare subtasks if any
       const subtasks = taskData.subtasks 
         ? taskData.subtasks.map(subtask => ({
             ...subtask,
-            task_id: taskId // Ensure task_id is set
+            task_id: taskId
           }))
         : [];
       
@@ -448,10 +391,6 @@ export const crmService = {
         subtasks: subtasks
       };
       
-      // In production, we would use Supabase
-      // const { data, error } = await supabase.from('tasks').insert(newTask).select();
-      
-      // For now, add to mock data
       mockTasks.push(newTask);
       
       return { data: newTask, error: null };
@@ -461,7 +400,6 @@ export const crmService = {
     }
   },
   
-  // Update a task
   updateTask: async (id: string, taskData: Partial<Task>) => {
     try {
       const index = mockTasks.findIndex(t => t.id === id);
@@ -469,7 +407,6 @@ export const crmService = {
         return { data: null, error: new Error('Task not found') };
       }
       
-      // Process subtasks if needed
       if (taskData.subtasks) {
         taskData.subtasks = taskData.subtasks.map(subtask => ({
           ...subtask,
@@ -477,19 +414,11 @@ export const crmService = {
         }));
       }
       
-      // Update the task in our mock data
       mockTasks[index] = {
         ...mockTasks[index],
         ...taskData,
         updated_at: new Date().toISOString()
       };
-      
-      // In production, we would use Supabase
-      // const { data, error } = await supabase
-      //   .from('tasks')
-      //   .update({ ...taskData, updated_at: new Date().toISOString() })
-      //   .eq('id', id)
-      //   .select();
       
       return { data: mockTasks[index], error: null };
     } catch (error) {
@@ -498,7 +427,6 @@ export const crmService = {
     }
   },
   
-  // Delete a task
   deleteTask: async (id: string) => {
     try {
       const index = mockTasks.findIndex(t => t.id === id);
@@ -508,23 +436,15 @@ export const crmService = {
       
       mockTasks.splice(index, 1);
       
-      // In production, we would use Supabase
-      // const { data, error } = await supabase.from('tasks').delete().eq('id', id);
-      
       return { data: { id }, error: null };
     } catch (error) {
       console.error(`Error deleting task ${id}:`, error);
       return { data: null, error };
     }
   },
-
-  // Get all proposals
+  
   getProposals: async () => {
     try {
-      // In production, we would use Supabase
-      // const { data, error } = await supabase.from('proposals').select('*');
-      
-      // For now, return mock data
       return { data: mockProposals, error: null };
     } catch (error) {
       console.error("Error fetching proposals:", error);
@@ -532,13 +452,8 @@ export const crmService = {
     }
   },
   
-  // Get a single proposal by ID
   getProposal: async (id: string) => {
     try {
-      // In production, we would use Supabase
-      // const { data, error } = await supabase.from('proposals').select('*').eq('id', id).single();
-      
-      // For now, return mock data
       const proposal = mockProposals.find(p => p.id === id);
       return { data: proposal || null, error: proposal ? null : new Error('Proposal not found') };
     } catch (error) {
@@ -547,7 +462,6 @@ export const crmService = {
     }
   },
   
-  // Create a new proposal
   createProposal: async (proposalData: Partial<Proposal>) => {
     try {
       const newProposal: Proposal = {
@@ -567,20 +481,15 @@ export const crmService = {
         items: proposalData.items || []
       };
       
-      // In production, we would use Supabase
-      // const { data, error } = await supabase.from('proposals').insert(newProposal).select();
-      
-      // For now, add to mock data
       mockProposals.push(newProposal);
       
-      // If this proposal is linked to an opportunity, update the opportunity status
       if (newProposal.opportunity_id) {
         const opportunity = mockOpportunities.find(o => o.id === newProposal.opportunity_id);
         if (opportunity) {
           if (newProposal.status === 'draft' || newProposal.status === 'pending_approval') {
-            this.updateOpportunity(opportunity.id, { status: 'preparing_proposal' });
+            crmService.updateOpportunity(opportunity.id, { status: 'preparing_proposal' });
           } else if (newProposal.status === 'sent') {
-            this.updateOpportunity(opportunity.id, { status: 'proposal_sent' });
+            crmService.updateOpportunity(opportunity.id, { status: 'proposal_sent' });
           }
         }
       }
@@ -592,7 +501,6 @@ export const crmService = {
     }
   },
   
-  // Update a proposal
   updateProposal: async (id: string, proposalData: Partial<Proposal>) => {
     try {
       const index = mockProposals.findIndex(p => p.id === id);
@@ -602,7 +510,6 @@ export const crmService = {
       
       const prevStatus = mockProposals[index].status;
       
-      // Update the proposal in our mock data
       mockProposals[index] = {
         ...mockProposals[index],
         ...proposalData,
@@ -611,26 +518,19 @@ export const crmService = {
       
       const updatedProposal = mockProposals[index];
       
-      // If status changed, update the related opportunity status
       if (prevStatus !== proposalData.status && proposalData.status && updatedProposal.opportunity_id) {
-        const opportunity = mockOpportunities.find(o => o.id === updatedProposal.opportunity_id);
-        if (opportunity) {
+        const opportunityIndex = mockOpportunities.findIndex(o => o.id === updatedProposal.opportunity_id);
+        if (opportunityIndex >= 0) {
+          const opportunity = mockOpportunities[opportunityIndex];
           if (proposalData.status === 'sent') {
-            this.updateOpportunity(opportunity.id, { status: 'proposal_sent' });
+            crmService.updateOpportunity(opportunity.id, { status: 'proposal_sent' });
           } else if (proposalData.status === 'accepted') {
-            this.updateOpportunity(opportunity.id, { status: 'accepted' });
+            crmService.updateOpportunity(opportunity.id, { status: 'accepted' });
           } else if (proposalData.status === 'rejected') {
-            this.updateOpportunity(opportunity.id, { status: 'lost' });
+            crmService.updateOpportunity(opportunity.id, { status: 'lost' });
           }
         }
       }
-      
-      // In production, we would use Supabase
-      // const { data, error } = await supabase
-      //   .from('proposals')
-      //   .update({ ...proposalData, updated_at: new Date().toISOString() })
-      //   .eq('id', id)
-      //   .select();
       
       return { data: updatedProposal, error: null };
     } catch (error) {
@@ -639,7 +539,6 @@ export const crmService = {
     }
   },
   
-  // Delete a proposal
   deleteProposal: async (id: string) => {
     try {
       const index = mockProposals.findIndex(p => p.id === id);
@@ -648,9 +547,6 @@ export const crmService = {
       }
       
       mockProposals.splice(index, 1);
-      
-      // In production, we would use Supabase
-      // const { data, error } = await supabase.from('proposals').delete().eq('id', id);
       
       return { data: { id }, error: null };
     } catch (error) {
