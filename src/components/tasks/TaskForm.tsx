@@ -1,129 +1,98 @@
 
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { Task, TaskType, TaskStatus, TaskPriority } from "@/types/task";
+
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { Task, TaskType, TaskPriority } from "@/types/task";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface TaskFormProps {
   task?: Task;
   onClose: () => void;
 }
 
-const taskFormSchema = z.object({
-  title: z.string().min(1, { message: "Title is required" }),
-  description: z.string().optional(),
-  status: z.enum(["todo", "in_progress", "completed", "postponed"]),
-  priority: z.enum(["low", "medium", "high"]),
-  type: z.enum(["general", "call", "meeting", "follow_up", "proposal", "opportunity", "reminder", "email"]),
-  due_date: z.date().optional().nullable(),
-  assignee_id: z.string().optional().nullable(),
-});
+type FormValues = {
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  type: TaskType;
+  assignee_id?: string;
+  due_date?: Date;
+};
 
-type TaskFormValues = z.infer<typeof taskFormSchema>;
-
-const TaskForm = ({ task, onClose }: TaskFormProps) => {
-  const [dueDate, setDueDate] = useState<Date | undefined>(
-    task?.due_date ? new Date(task.due_date) : undefined
-  );
-  const [employees, setEmployees] = useState<any[]>([]);
+export default function TaskForm({ task, onClose }: TaskFormProps) {
   const queryClient = useQueryClient();
-
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<TaskFormValues>({
-    resolver: zodResolver(taskFormSchema),
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormValues>({
     defaultValues: {
       title: task?.title || "",
       description: task?.description || "",
       status: task?.status || "todo",
       priority: task?.priority || "medium",
       type: task?.type || "general",
-      due_date: task?.due_date ? new Date(task.due_date) : null,
-      assignee_id: task?.assignee_id || task?.assigned_to || null,
-    },
+      assignee_id: task?.assignee_id || undefined,
+      due_date: task?.due_date ? new Date(task.due_date) : undefined,
+    }
   });
 
-  // Watch form values
-  const watchedStatus = watch("status");
-  const watchedPriority = watch("priority");
-  const watchedType = watch("type");
-  const watchedAssignee = watch("assignee_id");
-
-  // Fetch employees for assignee selection
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("employees")
-          .select("id, first_name, last_name, avatar_url")
-          .order("first_name", { ascending: true });
-
-        if (error) throw error;
-        setEmployees(data || []);
-      } catch (error) {
-        console.error("Error fetching employees:", error);
-        toast.error("Failed to load employees");
-      }
-    };
-
-    fetchEmployees();
-  }, []);
-
-  // Create task mutation
   const createTaskMutation = useMutation({
-    mutationFn: async (formData: TaskFormValues) => {
+    mutationFn: async (data: FormValues) => {
+      // Format the data for the API
       const taskData = {
-        ...formData,
-        due_date: formData.due_date ? formData.due_date.toISOString() : null,
-        assignee_id: formData.assignee_id || null,
-        assigned_to: formData.assignee_id || null, // For compatibility
+        title: data.title,
+        description: data.description || null,
+        status: data.status,
+        priority: data.priority,
+        type: data.type,
+        assignee_id: data.assignee_id || null,
+        due_date: data.due_date ? data.due_date.toISOString() : null,
       };
 
-      const { data, error } = await supabase
+      const { data: newTask, error } = await supabase
         .from("tasks")
-        .insert([taskData])
+        .insert(taskData)
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return newTask;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Task created successfully");
+      toast.success("Görev başarıyla oluşturuldu");
       onClose();
     },
     onError: (error) => {
       console.error("Error creating task:", error);
-      toast.error("Failed to create task");
+      toast.error("Görev oluşturulurken bir hata oluştu");
     },
   });
 
-  // Update task mutation
   const updateTaskMutation = useMutation({
-    mutationFn: async (formData: TaskFormValues) => {
-      if (!task) throw new Error("Task ID is missing for update");
+    mutationFn: async (data: FormValues) => {
+      if (!task) throw new Error("Task is required for update");
 
+      // Format the data for the API
       const taskData = {
-        ...formData,
-        due_date: formData.due_date ? formData.due_date.toISOString() : null,
-        assignee_id: formData.assignee_id || null,
-        assigned_to: formData.assignee_id || null, // For compatibility
+        title: data.title,
+        description: data.description || null,
+        status: data.status,
+        priority: data.priority,
+        type: data.type,
+        assignee_id: data.assignee_id || null,
+        due_date: data.due_date ? data.due_date.toISOString() : null,
       };
 
-      const { data, error } = await supabase
+      const { data: updatedTask, error } = await supabase
         .from("tasks")
         .update(taskData)
         .eq("id", task.id)
@@ -131,180 +100,150 @@ const TaskForm = ({ task, onClose }: TaskFormProps) => {
         .single();
 
       if (error) throw error;
-      return data;
+      return updatedTask;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Task updated successfully");
+      toast.success("Görev başarıyla güncellendi");
       onClose();
     },
     onError: (error) => {
       console.error("Error updating task:", error);
-      toast.error("Failed to update task");
+      toast.error("Görev güncellenirken bir hata oluştu");
     },
   });
 
-  const onSubmit = (data: TaskFormValues) => {
-    if (task) {
-      updateTaskMutation.mutate(data);
-    } else {
-      createTaskMutation.mutate(data);
+  const onSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
+    try {
+      if (task) {
+        await updateTaskMutation.mutateAsync(data);
+      } else {
+        await createTaskMutation.mutateAsync(data);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <DialogHeader>
-        <DialogTitle>{task ? "Edit Task" : "Create New Task"}</DialogTitle>
-      </DialogHeader>
-
-      <div className="space-y-4 py-4">
-        <div className="space-y-2">
-          <Label htmlFor="title">Title</Label>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold mb-4">
+          {task ? "Görevi Düzenle" : "Yeni Görev"}
+        </h2>
+      </div>
+      
+      <div className="space-y-4">
+        <div className="grid gap-2">
+          <Label htmlFor="title">Başlık</Label>
           <Input
             id="title"
-            {...register("title")}
-            className={errors.title ? "border-red-500" : ""}
+            placeholder="Görev başlığı"
+            {...register("title", { required: "Başlık zorunludur" })}
           />
           {errors.title && (
             <p className="text-sm text-red-500">{errors.title.message}</p>
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
+        <div className="grid gap-2">
+          <Label htmlFor="description">Açıklama</Label>
           <Textarea
             id="description"
-            {...register("description")}
+            placeholder="Görev açıklaması"
             rows={3}
+            {...register("description")}
           />
         </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select
-              value={watchedStatus}
-              onValueChange={(value) => setValue("status", value as any)}
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="status">Durum</Label>
+            <Select 
+              value={watch("status")} 
+              onValueChange={(value) => setValue("status", value as TaskStatus)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select status" />
+                <SelectValue placeholder="Durum seçin" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todo">To Do</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="postponed">Postponed</SelectItem>
+                <SelectItem value="todo">Yapılacak</SelectItem>
+                <SelectItem value="in_progress">Devam Ediyor</SelectItem>
+                <SelectItem value="completed">Tamamlandı</SelectItem>
+                <SelectItem value="postponed">Ertelendi</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="priority">Priority</Label>
-            <Select
-              value={watchedPriority}
+          
+          <div className="grid gap-2">
+            <Label htmlFor="priority">Öncelik</Label>
+            <Select 
+              value={watch("priority")} 
               onValueChange={(value) => setValue("priority", value as TaskPriority)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select priority" />
+                <SelectValue placeholder="Öncelik seçin" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="type">Type</Label>
-            <Select
-              value={watchedType}
-              onValueChange={(value) => setValue("type", value as TaskType)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="general">General</SelectItem>
-                <SelectItem value="call">Call</SelectItem>
-                <SelectItem value="meeting">Meeting</SelectItem>
-                <SelectItem value="follow_up">Follow Up</SelectItem>
-                <SelectItem value="proposal">Proposal</SelectItem>
-                <SelectItem value="opportunity">Opportunity</SelectItem>
-                <SelectItem value="reminder">Reminder</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="due_date">Due Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dueDate ? format(dueDate, "PPP") : "Select date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={dueDate}
-                  onSelect={(date) => {
-                    setDueDate(date);
-                    setValue("due_date", date);
-                  }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div className="space-y-2 col-span-2">
-            <Label htmlFor="assignee">Assignee</Label>
-            <Select
-              value={watchedAssignee || ""}
-              onValueChange={(value) => {
-                setValue("assignee_id", value === "unassigned" ? null : value);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select assignee" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="unassigned">Unassigned</SelectItem>
-                {employees.map((employee) => (
-                  <SelectItem key={employee.id} value={employee.id}>
-                    {employee.first_name} {employee.last_name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="low">Düşük</SelectItem>
+                <SelectItem value="medium">Orta</SelectItem>
+                <SelectItem value="high">Yüksek</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="type">Tür</Label>
+            <Select 
+              value={watch("type")} 
+              onValueChange={(value) => setValue("type", value as TaskType)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Tür seçin" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="general">Genel</SelectItem>
+                <SelectItem value="call">Arama</SelectItem>
+                <SelectItem value="meeting">Toplantı</SelectItem>
+                <SelectItem value="follow_up">Takip</SelectItem>
+                <SelectItem value="proposal">Teklif</SelectItem>
+                <SelectItem value="opportunity">Fırsat</SelectItem>
+                <SelectItem value="reminder">Hatırlatma</SelectItem>
+                <SelectItem value="email">E-posta</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="due_date">Bitiş Tarihi</Label>
+            <DatePicker 
+              selected={watch("due_date")} 
+              onSelect={(date) => setValue("due_date", date)} 
+              placeholder="Bitiş tarihi seçin" 
+            />
+          </div>
+        </div>
       </div>
-
-      <div className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={onClose} type="button">
-          Cancel
+      
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onClose} 
+          disabled={isSubmitting}
+        >
+          İptal
         </Button>
         <Button 
           type="submit" 
-          disabled={createTaskMutation.isPending || updateTaskMutation.isPending}
+          disabled={isSubmitting}
         >
-          {createTaskMutation.isPending || updateTaskMutation.isPending
-            ? "Saving..."
-            : task
-            ? "Update Task"
-            : "Create Task"}
+          {isSubmitting ? "Kaydediliyor..." : task ? "Güncelle" : "Oluştur"}
         </Button>
       </div>
     </form>
   );
-};
-
-export default TaskForm;
+}

@@ -7,7 +7,7 @@ import { Task, TaskStatus, TaskType, TaskWithOverdue } from "@/types/task";
 interface UseKanbanTasksProps {
   searchQuery?: string;
   selectedEmployee?: string | null;
-  selectedType?: TaskType | null;
+  selectedType?: string | null;
 }
 
 interface TasksState {
@@ -114,7 +114,7 @@ export const useKanbanTasks = ({
         
         const matchesType = !selectedType || 
           selectedType === "all" || 
-          task.type === selectedType;
+          task.type === (selectedType as TaskType);
         
         return matchesSearch && matchesEmployee && matchesType;
       });

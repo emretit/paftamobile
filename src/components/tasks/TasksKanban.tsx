@@ -7,6 +7,7 @@ import { useTaskMutations } from "./hooks/useTaskMutations";
 import KanbanColumn from "./KanbanColumn";
 import TaskForm from "./TaskForm";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ListTodo, Clock, CheckCircle2, Hourglass } from "lucide-react";
 
 interface TasksKanbanProps {
   searchQuery?: string;
@@ -14,6 +15,13 @@ interface TasksKanbanProps {
   selectedType?: string | null;
   onSelectTask?: (task: Task) => void;
 }
+
+const columns = [
+  { id: "todo", title: "Yapılacak", icon: ListTodo, color: "bg-blue-600" },
+  { id: "in_progress", title: "Devam Ediyor", icon: Clock, color: "bg-purple-600" },
+  { id: "completed", title: "Tamamlandı", icon: CheckCircle2, color: "bg-green-600" },
+  { id: "postponed", title: "Ertelendi", icon: Hourglass, color: "bg-amber-600" }
+];
 
 export const TasksKanban = ({ 
   searchQuery, 
@@ -30,7 +38,7 @@ export const TasksKanban = ({
   const { tasks, setTasksState, isLoading, error } = useKanbanTasks({
     searchQuery,
     selectedEmployee,
-    selectedType: typedSelectedType
+    selectedType: selectedType
   });
   
   const { updateTask } = useTaskMutations();
@@ -70,7 +78,7 @@ export const TasksKanban = ({
 
     // Update task status in database
     try {
-      await updateTask({
+      await updateTask.mutateAsync({
         id: task.id,
         status: targetStatus
       });
@@ -110,35 +118,24 @@ export const TasksKanban = ({
   return (
     <div className="h-full">
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <KanbanColumn
-            id="todo"
-            title="Yapılacak"
-            tasks={tasks.todo}
-            onTaskEdit={handleTaskEdit}
-            onTaskSelect={onSelectTask}
-          />
-          <KanbanColumn
-            id="in_progress"
-            title="Devam Ediyor"
-            tasks={tasks.in_progress}
-            onTaskEdit={handleTaskEdit}
-            onTaskSelect={onSelectTask}
-          />
-          <KanbanColumn
-            id="completed"
-            title="Tamamlandı"
-            tasks={tasks.completed}
-            onTaskEdit={handleTaskEdit}
-            onTaskSelect={onSelectTask}
-          />
-          <KanbanColumn
-            id="postponed"
-            title="Ertelendi"
-            tasks={tasks.postponed}
-            onTaskEdit={handleTaskEdit}
-            onTaskSelect={onSelectTask}
-          />
+        <div className="flex overflow-x-auto gap-4 pb-4">
+          {columns.map((column) => (
+            <div key={column.id} className="flex-none min-w-[300px]">
+              <div className="flex items-center gap-2 mb-3">
+                <div className={`h-3 w-3 rounded-full ${column.color}`}></div>
+                <h2 className="font-semibold text-gray-900">
+                  {column.title} ({tasks[column.id as keyof typeof tasks]?.length || 0})
+                </h2>
+              </div>
+              <KanbanColumn
+                id={column.id}
+                title={column.title}
+                tasks={tasks[column.id as keyof typeof tasks]}
+                onTaskEdit={handleTaskEdit}
+                onTaskSelect={onSelectTask}
+              />
+            </div>
+          ))}
         </div>
       </DragDropContext>
 

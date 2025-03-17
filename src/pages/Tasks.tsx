@@ -20,8 +20,8 @@ interface TasksPageProps {
 const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedEmployee, setSelectedEmployee] = useState("");
-  const [selectedType, setSelectedType] = useState("");
+  const [selectedEmployee, setSelectedEmployee] = useState("all");
+  const [selectedType, setSelectedType] = useState("all");
   const [activeView, setActiveView] = useState("list");
   
   const queryClient = useQueryClient();
