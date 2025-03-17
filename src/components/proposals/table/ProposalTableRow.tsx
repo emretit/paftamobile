@@ -41,7 +41,7 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
         )}
       </TableCell>
       <TableCell>
-        <StatusBadge status={proposal.status} />
+        <StatusBadge status={proposal.status as any} />
       </TableCell>
       <TableCell>{formatDate(proposal.created_at)}</TableCell>
       <TableCell>{formatDate(proposal.valid_until)}</TableCell>

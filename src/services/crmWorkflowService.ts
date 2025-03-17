@@ -2,7 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskStatus, TaskPriority, TaskType } from "@/types/task";
 import { v4 as uuidv4 } from "uuid";
-import { mockOpportunitiesAPI } from "./mockCrmService";
 import { Opportunity, OpportunityStatus } from "@/types/crm";
 import { ProposalStatusShared } from "@/types/shared-types";
 import { toast } from "sonner";
@@ -83,19 +82,24 @@ export const createTaskForOpportunity = async (
       due_date: dueDate.toISOString(),
       related_item_id: opportunityId,
       related_item_title: opportunityTitle,
-      assignee_id: assigneeId,
+      related_item_type: "opportunity",
+      assigned_to: assigneeId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
     
-    // Use the mockCrmService to create the task
-    const { data, error } = await mockOpportunitiesAPI.createTask(taskData);
+    // Create the task in the database
+    const { data, error } = await supabase
+      .from("tasks")
+      .insert(taskData)
+      .select()
+      .single();
     
     if (error) throw error;
     
     toast.success(`"${taskTitle}" görevi oluşturuldu`);
     
-    return data as Task;
+    return data as unknown as Task;
   } catch (error) {
     console.error("Error creating task for opportunity:", error);
     toast.error("Görev oluşturulurken bir hata oluştu");
@@ -126,6 +130,15 @@ export const updateOpportunityOnProposalChange = async (
       opportunityId = data.opportunity_id;
     }
     
+    // Get opportunity details to use for task creation
+    const { data: opportunity, error: oppError } = await supabase
+      .from("opportunities")
+      .select("*")
+      .eq("id", opportunityId)
+      .single();
+      
+    if (oppError) throw oppError;
+    
     // Map proposal status to opportunity status
     let opportunityStatus: OpportunityStatus | null = null;
     
@@ -150,12 +163,22 @@ export const updateOpportunityOnProposalChange = async (
     if (!opportunityStatus) return false;
     
     // Update the opportunity status
-    const { data, error } = await mockOpportunitiesAPI.updateOpportunity(
-      opportunityId,
-      { status: opportunityStatus }
-    );
+    const { error } = await supabase
+      .from("opportunities")
+      .update({ status: opportunityStatus })
+      .eq("id", opportunityId);
     
     if (error) throw error;
+    
+    // If the proposal was sent, create a follow-up task
+    if (proposalStatus === "sent") {
+      await createTaskForOpportunity(
+        opportunityId,
+        opportunity.title,
+        "proposal_sent",
+        opportunity.employee_id
+      );
+    }
     
     return true;
   } catch (error) {
@@ -164,7 +187,9 @@ export const updateOpportunityOnProposalChange = async (
   }
 };
 
-export default {
+export const crmWorkflowService = {
   createTaskForOpportunity,
   updateOpportunityOnProposalChange
 };
+
+export default crmWorkflowService;

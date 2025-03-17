@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,13 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProposalFilters } from "@/components/proposals/types";
 import { ProposalDetailSheet } from "@/components/proposals/ProposalDetailSheet";
-import { Proposal, ProposalStatus } from "@/types/proposal";
+import { Proposal } from "@/types/proposal";
 import { Plus, Filter, Table as TableIcon, LayoutGrid, Search, FileText } from "lucide-react";
 import { Table, TableBody } from "@/components/ui/table";
 import { ProposalTableHeader } from "@/components/proposals/table/ProposalTableHeader";
 import { ProposalTableRow } from "@/components/proposals/table/ProposalTableRow";
 import { ProposalTableSkeleton } from "@/components/proposals/table/ProposalTableSkeleton";
 import { Column } from "@/components/proposals/types";
+import ProposalTable from "@/components/proposals/ProposalTable";
 
 interface ProposalsProps {
   isCollapsed: boolean;
@@ -57,107 +59,10 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
       supabase.removeChannel(channel);
     };
   }, [queryClient]);
-  
-  // Fetch proposals with filters
-  const { data: proposals, isLoading, error } = useQuery({
-    queryKey: ['proposals', filters],
-    queryFn: async () => {
-      try {
-        console.info("Fetching proposals with filters:", filters);
-        
-        // Start building the query
-        let query = supabase
-          .from("proposals")
-          .select("*");
-        
-        // Apply filters if provided
-        if (filters) {
-          if (filters.search) {
-            query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
-          }
-          
-          if (filters.status && filters.status !== 'all') {
-            query = query.eq('status', filters.status);
-          }
-          
-          if (filters.employeeId) {
-            query = query.eq('employee_id', filters.employeeId);
-          }
-          
-          if (filters.dateRange && filters.dateRange.from && filters.dateRange.to) {
-            const fromDate = filters.dateRange.from.toISOString();
-            const toDate = filters.dateRange.to.toISOString();
-            query = query.gte('created_at', fromDate).lte('created_at', toDate);
-          }
-        }
-        
-        // Execute the query
-        const { data, error } = await query;
-        
-        if (error) {
-          console.error("Error fetching proposals:", error);
-          throw error;
-        }
-        
-        // Fetch customers and employees separately since the join is causing issues
-        const customerIds = data.filter(p => p.customer_id).map(p => p.customer_id);
-        const employeeIds = data.filter(p => p.employee_id).map(p => p.employee_id);
-        
-        let customers = [];
-        let employees = [];
-        
-        if (customerIds.length > 0) {
-          const { data: customersData } = await supabase
-            .from("customers")
-            .select("*")
-            .in("id", customerIds);
-          customers = customersData || [];
-        }
-        
-        if (employeeIds.length > 0) {
-          const { data: employeesData } = await supabase
-            .from("employees")
-            .select("*")
-            .in("id", employeeIds);
-          employees = employeesData || [];
-        }
-        
-        // Transform data to match the Proposal type
-        return data.map((item: any) => {
-          const customer = customers.find(c => c.id === item.customer_id);
-          const employee = employees.find(e => e.id === item.employee_id);
-          
-          return {
-            ...item,
-            customer: customer || null,
-            employee: employee ? {
-              id: employee.id,
-              first_name: employee.first_name || "Atanmamış",
-              last_name: employee.last_name || ""
-            } : null,
-            attachments: item.files ? (typeof item.files === 'string' ? JSON.parse(item.files) : item.files) : []
-          };
-        });
-      } catch (error) {
-        console.error("Error in useProposals:", error);
-        throw error;
-      }
-    }
-  });
 
   // State for the detail sheet
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
-
-  const columns: Column[] = [
-    { id: "proposal_number", label: "Teklif No", visible: true },
-    { id: "customer", label: "Müşteri", visible: true },
-    { id: "status", label: "Durum", visible: true },
-    { id: "created_at", label: "Oluşturma Tarihi", visible: true, sortable: true },
-    { id: "valid_until", label: "Geçerlilik", visible: true },
-    { id: "total_value", label: "Toplam Tutar", visible: true, sortable: true },
-    { id: "actions", label: "İşlemler", visible: true },
-  ];
 
   const handleProposalClick = (proposal: Proposal) => {
     setSelectedProposal(proposal);
@@ -167,17 +72,6 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFilters({ ...filters, search: searchText });
-  };
-
-  const formatMoney = (amount: number) => {
-    if (!amount && amount !== 0) return "₺0";
-    
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
   };
 
   return (
@@ -264,26 +158,26 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
                   Tümü
                 </Button>
                 <Button 
-                  variant={filters.status === "hazirlaniyor" ? "default" : "outline"}
+                  variant={filters.status === "draft" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setFilters({...filters, status: "hazirlaniyor"})}
-                  className={filters.status === "hazirlaniyor" ? "bg-red-800 hover:bg-red-900" : "border-red-200 text-red-700 hover:bg-red-50"}
+                  onClick={() => setFilters({...filters, status: "draft"})}
+                  className={filters.status === "draft" ? "bg-red-800 hover:bg-red-900" : "border-red-200 text-red-700 hover:bg-red-50"}
                 >
                   Hazırlanıyor
                 </Button>
                 <Button 
-                  variant={filters.status === "onay_bekliyor" ? "default" : "outline"}
+                  variant={filters.status === "pending_approval" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setFilters({...filters, status: "onay_bekliyor"})}
-                  className={filters.status === "onay_bekliyor" ? "bg-red-800 hover:bg-red-900" : "border-red-200 text-red-700 hover:bg-red-50"}
+                  onClick={() => setFilters({...filters, status: "pending_approval"})}
+                  className={filters.status === "pending_approval" ? "bg-red-800 hover:bg-red-900" : "border-red-200 text-red-700 hover:bg-red-50"}
                 >
                   Onay Bekliyor
                 </Button>
                 <Button 
-                  variant={filters.status === "gonderildi" ? "default" : "outline"}
+                  variant={filters.status === "sent" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setFilters({...filters, status: "gonderildi"})}
-                  className={filters.status === "gonderildi" ? "bg-red-800 hover:bg-red-900" : "border-red-200 text-red-700 hover:bg-red-50"}
+                  onClick={() => setFilters({...filters, status: "sent"})}
+                  className={filters.status === "sent" ? "bg-red-800 hover:bg-red-900" : "border-red-200 text-red-700 hover:bg-red-50"}
                 >
                   Gönderildi
                 </Button>
@@ -302,55 +196,24 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
           {/* Table View */}
           <Card className="border-red-100 shadow-sm overflow-hidden">
             <CardContent className="p-0">
-              {isLoading ? (
-                <ProposalTableSkeleton />
-              ) : error ? (
-                <div className="p-6 text-center text-red-500">
-                  Veri yüklenirken bir hata oluştu.
-                </div>
-              ) : !proposals || proposals.length === 0 ? (
-                <div className="p-12 text-center">
-                  <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                    <FileText className="h-8 w-8 text-red-800" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-1">Teklif Bulunamadı</h3>
-                  <p className="text-gray-500 mb-6">Kriterlerinize uygun teklif bulunamadı veya hiç teklif oluşturulmamış.</p>
-                  <Button 
-                    onClick={() => navigate("/proposals/new")}
-                    className="bg-red-800 hover:bg-red-900"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Yeni Teklif Oluştur
-                  </Button>
-                </div>
-              ) : (
-                <Table>
-                  <ProposalTableHeader columns={columns} />
-                  <TableBody>
-                    {proposals.map((proposal, index) => (
-                      <ProposalTableRow
-                        key={proposal.id}
-                        proposal={proposal}
-                        index={index}
-                        formatMoney={formatMoney}
-                        onSelect={handleProposalClick}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+              <ProposalTable 
+                filters={filters}
+                onProposalSelect={handleProposalClick}
+              />
             </CardContent>
           </Card>
           
           {/* Proposal Detail Sheet */}
-          <ProposalDetailSheet
-            proposal={selectedProposal}
-            isOpen={isDetailSheetOpen}
-            onClose={() => {
-              setIsDetailSheetOpen(false);
-              setSelectedProposal(null);
-            }}
-          />
+          {selectedProposal && (
+            <ProposalDetailSheet
+              proposal={selectedProposal}
+              isOpen={isDetailSheetOpen}
+              onClose={() => {
+                setIsDetailSheetOpen(false);
+                setSelectedProposal(null);
+              }}
+            />
+          )}
         </div>
       </main>
     </div>

@@ -10,9 +10,16 @@ export const useKanbanTasks = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ["tasks"],
     queryFn: async () => {
-      const { data, error } = await mockCrmService.mockTasksAPI.getTasks();
+      const { data, error } = await mockCrmService.getTasks();
       if (error) throw error;
-      return data as Task[];
+
+      // Add the 'type' property to each task to satisfy the Task interface
+      const tasksWithType = data.map((task: any) => ({
+        ...task,
+        type: task.related_item_type || "general"
+      }));
+      
+      return tasksWithType as Task[];
     }
   });
   
@@ -22,8 +29,16 @@ export const useKanbanTasks = () => {
     }
   }, [data]);
   
+  // Group tasks by status for Kanban view
+  const groupedTasks = {
+    todo: tasks.filter(task => task.status === 'todo'),
+    in_progress: tasks.filter(task => task.status === 'in_progress'),
+    completed: tasks.filter(task => task.status === 'completed'),
+    postponed: tasks.filter(task => task.status === 'postponed')
+  };
+  
   return {
-    tasks,
+    tasks: groupedTasks, 
     isLoading,
     error
   };

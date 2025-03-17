@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -62,13 +63,13 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
   if (!proposal) return null;
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="sm:max-w-md md:max-w-lg">
         <SheetHeader>
           <SheetTitle className="text-xl font-bold">
             {proposal.title}
             <div className="mt-1">
-              <StatusBadge status={currentStatus || proposal.status} />
+              <StatusBadge status={currentStatus || proposal.status as any} />
             </div>
           </SheetTitle>
         </SheetHeader>

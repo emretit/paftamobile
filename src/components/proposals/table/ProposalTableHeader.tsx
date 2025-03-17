@@ -1,44 +1,34 @@
 
-import { TableHeader, TableRow, TableHead } from "@/components/ui/table";
+import React from 'react';
+import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Column } from "../types";
-import { ArrowUpDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowDown, ArrowUp } from 'lucide-react';
 
 interface ProposalTableHeaderProps {
   columns: Column[];
-  sortable?: boolean;
-  onSort?: (columnId: string) => void;
-  sortColumn?: string;
-  sortDirection?: 'asc' | 'desc';
 }
 
-export const ProposalTableHeader = ({ 
-  columns, 
-  sortable = false,
-  onSort,
-  sortColumn,
-  sortDirection
-}: ProposalTableHeaderProps) => {
-  const visibleColumns = columns.filter(col => col.visible);
-  
+export const ProposalTableHeader = ({ columns }: ProposalTableHeaderProps) => {
   return (
-    <TableHeader className="bg-red-50 text-red-950">
+    <TableHeader>
       <TableRow>
-        {visibleColumns.map((column) => (
-          <TableHead key={column.id} className="font-semibold">
-            {column.sortable && sortable ? (
-              <Button
-                variant="ghost"
-                onClick={() => onSort && onSort(column.id)}
-                className="flex items-center gap-1 py-0 h-auto hover:bg-red-100/50 hover:text-red-900 -ml-3"
-              >
-                {column.label}
-                <ArrowUpDown className="h-3 w-3 text-red-800" />
-              </Button>
-            ) : (
-              column.label
-            )}
-          </TableHead>
+        {columns.map((column) => (
+          column.visible && (
+            <TableHead 
+              key={column.id}
+              className={column.sortable ? 'cursor-pointer select-none' : ''}
+            >
+              <div className="flex items-center space-x-1">
+                <span>{column.label}</span>
+                {column.sortable && (
+                  <div className="flex flex-col ml-1">
+                    <ArrowUp className="h-3 w-3 text-gray-400" />
+                    <ArrowDown className="h-3 w-3 text-gray-400 -mt-1" />
+                  </div>
+                )}
+              </div>
+            </TableHead>
+          )
         ))}
       </TableRow>
     </TableHeader>

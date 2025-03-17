@@ -1,16 +1,34 @@
-import { v4 as uuidv4 } from "uuid";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
+import { Task, TaskPriority, TaskStatus } from '@/types/task';
+import { Proposal, ProposalStatus } from '@/types/proposal';
 import { 
   Opportunity, 
   OpportunityStatus, 
-  OpportunityPriority, 
-  ContactHistoryItem 
-} from "@/types/crm";
-import { Task, TaskStatus, TaskPriority, TaskType, SubTask } from "@/types/task";
-import { Customer, Employee } from "@/types/shared-types";
+  ContactHistoryItem,
+  OpportunityPriority
+} from '@/types/crm';
+import { v4 as uuidv4 } from 'uuid';
 
-// Mock data with real identifiers from the database
+// Get all tasks
+export const getTasks = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select(`
+        *,
+        assignee:assigned_to(id, first_name, last_name, avatar_url)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    return { data: [], error };
+  }
+};
+
 export const mockOpportunitiesAPI = {
   async getOpportunities() {
     try {
@@ -330,9 +348,9 @@ export const mockTasksAPI = {
         .from('tasks')
         .select(`
           *,
-          assignee:assignee_id(*)
+          assignee:assigned_to(id, first_name, last_name, avatar_url)
         `)
-        .order('due_date', { ascending: true });
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.error("Error fetching tasks:", error);
@@ -419,3 +437,4 @@ export const mockTasksAPI = {
     }
   }
 };
+

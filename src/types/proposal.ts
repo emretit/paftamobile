@@ -53,6 +53,10 @@ export interface Proposal {
   payment_terms?: string;
   delivery_terms?: string;
   notes?: string;
+  internal_notes?: string;
+  currency?: string;
+  discounts?: number;
+  additional_charges?: number;
   
   // Joined relations
   customer?: {
@@ -69,6 +73,7 @@ export interface Proposal {
     email?: string;
   } | null;
   items?: ProposalItem[];
+  attachments?: ProposalAttachment[];
 }
 
 export interface ProposalAttachment {
@@ -77,4 +82,5 @@ export interface ProposalAttachment {
   size: number;
   uploaded_at: string;
   url: string;
+  type?: string;
 }
