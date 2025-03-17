@@ -3,7 +3,7 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { ProposalItem } from "@/types/proposal-form";
+import { ProposalItem } from "@/types/proposal";
 import {
   Select,
   SelectContent,
@@ -14,7 +14,7 @@ import {
 
 interface ProposalItemsTableProps {
   items: ProposalItem[];
-  handleItemChange: (index: number, field: keyof ProposalItem, value: string | number) => void;
+  handleItemChange: (index: number, field: keyof ProposalItem | 'currency', value: string | number) => void;
   handleRemoveItem: (index: number) => void;
   selectedCurrency: string;
   formatCurrency: (amount: number, currency?: string) => string;
@@ -74,14 +74,14 @@ const ProposalItemsTable = ({
                 <td className="py-3 px-4">
                   <Input
                     type="number"
-                    value={item.unitPrice}
-                    onChange={(e) => handleItemChange(index, "unitPrice", e.target.value)}
+                    value={item.unit_price}
+                    onChange={(e) => handleItemChange(index, "unit_price", e.target.value)}
                     className="text-right border-0 bg-transparent focus-visible:ring-0"
                   />
                 </td>
                 <td className="py-3 px-4">
                   <Select 
-                    value={item.currency || selectedCurrency} 
+                    value={(item as any).currency || selectedCurrency} 
                     onValueChange={(value) => handleItemChange(index, "currency", value)}
                   >
                     <SelectTrigger className="border-0 bg-transparent focus-visible:ring-0 h-8 w-full">
@@ -98,8 +98,8 @@ const ProposalItemsTable = ({
                 </td>
                 <td className="py-3 px-4">
                   <Select 
-                    value={String(item.taxRate)} 
-                    onValueChange={(value) => handleItemChange(index, "taxRate", parseInt(value))}
+                    value={String(item.tax_rate)} 
+                    onValueChange={(value) => handleItemChange(index, "tax_rate", parseInt(value))}
                   >
                     <SelectTrigger className="border-0 bg-transparent focus-visible:ring-0 h-8 w-full">
                       <SelectValue placeholder="KDV" />
@@ -114,7 +114,7 @@ const ProposalItemsTable = ({
                   </Select>
                 </td>
                 <td className="py-3 px-4 text-right font-medium">
-                  {formatCurrency(item.totalPrice, item.currency || selectedCurrency)}
+                  {formatCurrency(item.total_price, (item as any).currency || selectedCurrency)}
                 </td>
                 <td className="py-3 px-4 text-center">
                   <Button

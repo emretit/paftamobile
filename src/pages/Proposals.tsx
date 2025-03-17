@@ -1,10 +1,11 @@
+
 import { useState } from "react";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { ProposalTable } from "@/components/proposals/ProposalTable";
+import ProposalTable from "@/components/proposals/ProposalTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProposalKanban } from "@/components/proposals/ProposalKanban";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -95,14 +96,18 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
           </TabsContent>
           <TabsContent value="kanban" className="mt-0">
             <ProposalKanban
-              searchQuery={searchQuery}
-              status={selectedStatus}
               onSelectProposal={handleRowClick}
             />
           </TabsContent>
         </Tabs>
       </div>
-      <ProposalDetailSheet proposal={selectedProposal} open={!!selectedProposal} onClose={handleClose} />
+      {selectedProposal && (
+        <ProposalDetailSheet 
+          proposal={selectedProposal} 
+          open={!!selectedProposal} 
+          handleClose={handleClose} 
+        />
+      )}
     </DefaultLayout>
   );
 };

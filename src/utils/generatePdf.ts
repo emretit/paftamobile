@@ -22,7 +22,6 @@ export const generateProposalPdf = (data: ProposalFormData, customer: Customer) 
   doc.text(`Teklif No: ${Date.now()}`, 20, 72);
   doc.text(`Tarih: ${new Date().toLocaleDateString('tr-TR')}`, 20, 80);
   if (data.valid_until) {
-    // Using valid_until instead of validUntil
     doc.text(`Geçerlilik: ${new Date(data.valid_until).toLocaleDateString('tr-TR')}`, 20, 88);
   }
 
@@ -30,9 +29,9 @@ export const generateProposalPdf = (data: ProposalFormData, customer: Customer) 
   const tableData = data.items.map((item: ProposalItem) => [
     item.name,
     item.quantity.toString(),
-    `₺${item.unitPrice.toFixed(2)}`,
-    `%${item.taxRate}`,
-    `₺${item.totalPrice.toFixed(2)}`
+    `₺${item.unit_price.toFixed(2)}`,
+    `%${item.tax_rate}`,
+    `₺${item.total_price.toFixed(2)}`
   ]);
 
   autoTable(doc, {

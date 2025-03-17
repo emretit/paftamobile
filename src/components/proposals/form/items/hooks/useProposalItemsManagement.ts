@@ -1,6 +1,6 @@
 
 import { Product } from "@/types/product";
-import { ProposalItem } from "@/types/proposal-form";
+import { ProposalItem } from "@/types/proposal";
 import { v4 as uuidv4 } from "uuid";
 import { convertCurrency } from "../utils/currencyUtils";
 
@@ -9,13 +9,13 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
     items: ProposalItem[], 
     setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>
   ) => {
-    const newItem: ProposalItem = {
+    const newItem: ProposalItem & { currency?: string } = {
       id: uuidv4(),
       name: "",
       quantity: 1,
-      unitPrice: 0,
-      taxRate: 18, // Default tax rate
-      totalPrice: 0,
+      unit_price: 0,
+      tax_rate: 18, // Default tax rate
+      total_price: 0,
       currency: selectedCurrency
     };
     
@@ -38,14 +38,14 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       convertedPrice = convertCurrency(price, product.currency, selectedCurrency, exchangeRates);
     }
     
-    const newItem: ProposalItem = {
+    const newItem: ProposalItem & { currency?: string, product_id?: string } = {
       id: uuidv4(),
       product_id: product.id,
       name: product.name,
       quantity: quantity,
-      unitPrice: convertedPrice,
-      taxRate: product.tax_rate || 18,
-      totalPrice: quantity * convertedPrice,
+      unit_price: convertedPrice,
+      tax_rate: product.tax_rate || 18,
+      total_price: quantity * convertedPrice,
       currency: selectedCurrency
     };
     
@@ -62,25 +62,39 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
 
   const handleItemChange = (
     index: number, 
-    field: keyof ProposalItem, 
+    field: keyof ProposalItem | 'currency' | 'unitPrice' | 'taxRate' | 'totalPrice', 
     value: string | number,
     items: ProposalItem[],
     setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>
   ) => {
     const updatedItems = [...items];
+    const itemWithExtras = updatedItems[index] as ProposalItem & { 
+      currency?: string, 
+      unitPrice?: number, 
+      taxRate?: number, 
+      totalPrice?: number 
+    };
     
-    if (field === 'quantity' || field === 'unitPrice' || field === 'taxRate') {
-      updatedItems[index][field] = Number(value);
+    if (field === 'quantity' || field === 'unit_price' || field === 'unitPrice' || field === 'tax_rate' || field === 'taxRate') {
+      // Handle snake_case to camelCase mapping
+      if (field === 'unitPrice') {
+        itemWithExtras.unit_price = Number(value);
+      } else if (field === 'taxRate') {
+        itemWithExtras.tax_rate = Number(value);
+      } else {
+        // @ts-ignore - field exists on ProposalItem
+        itemWithExtras[field] = Number(value);
+      }
       
       // Update total price
-      const quantity = updatedItems[index].quantity;
-      const unitPrice = updatedItems[index].unitPrice;
-      updatedItems[index].totalPrice = quantity * unitPrice;
+      const quantity = itemWithExtras.quantity;
+      const unitPrice = itemWithExtras.unit_price;
+      itemWithExtras.total_price = quantity * unitPrice;
     } else if (field === 'currency') {
-      updatedItems[index].currency = value as string;
+      itemWithExtras.currency = value as string;
     } else {
       // @ts-ignore - We know the field exists
-      updatedItems[index][field] = value;
+      itemWithExtras[field] = value;
     }
     
     setItems(updatedItems);

@@ -68,20 +68,14 @@ export const useProposalForm = () => {
           id: uuidv4(),
         }));
 
-        // Using the correct table name 'proposals_items'
-        // We need to check if this table exists in the DB schema
-        // If not, we may need to use another table or create this table
-        const { error: itemsError } = await supabase
-          .from('proposals_items')
-          .insert(itemsWithProposalId);
+        // Add items as items field directly on the proposal
+        const { error: updateError } = await supabase
+          .from('proposals')
+          .update({ items: itemsWithProposalId })
+          .eq('id', newProposal.id);
 
-        if (itemsError) {
-          console.error('Error inserting proposal items:', itemsError);
-          // Fallback to adding items as JSON to the proposals table
-          await supabase
-            .from('proposals')
-            .update({ items: itemsWithProposalId })
-            .eq('id', newProposal.id);
+        if (updateError) {
+          console.error('Error adding proposal items:', updateError);
         }
       }
 

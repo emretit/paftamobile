@@ -17,8 +17,8 @@ export interface ProposalFormData {
   additionalCharges?: number;
 }
 
-// Export the ProposalItem type
-export { ProposalItem } from "./proposal";
+// Export the ProposalItem type (using export type for isolatedModules)
+export type { ProposalItem } from "./proposal";
 
 // Adding the PaymentTerm type that's missing
 export type PaymentTerm = "prepaid" | "net15" | "net30" | "net60" | "custom";
