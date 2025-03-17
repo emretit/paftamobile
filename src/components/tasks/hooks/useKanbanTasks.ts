@@ -13,13 +13,13 @@ export const useKanbanTasks = () => {
       const { data, error } = await mockCrmService.getTasks();
       if (error) throw error;
 
-      // Add the 'type' property to each task to satisfy the Task interface
+      // Make sure all tasks have the required 'type' property
       const tasksWithType = data.map((task: any) => ({
         ...task,
-        type: task.related_item_type || "general"
-      }));
+        type: task.type || task.related_item_type || "general"
+      })) as Task[];
       
-      return tasksWithType as Task[];
+      return tasksWithType;
     }
   });
   

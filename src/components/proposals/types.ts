@@ -16,3 +16,10 @@ export interface ProposalFilters {
   employeeId?: string;
   customerId?: string;
 }
+
+export interface ProposalTableHeaderProps {
+  columns: Column[];
+  sortField?: string;
+  sortDirection?: 'asc' | 'desc';
+  onSort?: (fieldId: string) => void;
+}

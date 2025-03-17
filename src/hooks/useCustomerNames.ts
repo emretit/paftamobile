@@ -9,7 +9,7 @@ interface Customer {
 }
 
 export const useCustomerNames = () => {
-  const { data: customers, isLoading, error } = useQuery({
+  const { data: customers = [], isLoading, error } = useQuery({
     queryKey: ["customer-names"],
     queryFn: async () => {
       try {
@@ -28,9 +28,16 @@ export const useCustomerNames = () => {
     }
   });
   
+  const getCustomerName = (customerId?: string) => {
+    if (!customerId || !customers) return "-";
+    const customer = customers.find(c => c.id === customerId);
+    return customer ? customer.name : "-";
+  };
+  
   return {
     customers,
     isLoading,
-    error
+    error,
+    getCustomerName
   };
 };

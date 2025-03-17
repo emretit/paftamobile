@@ -27,6 +27,9 @@ import EmployeeForm from "./pages/EmployeeForm";
 import Dashboard from "./pages/Dashboard";
 import PurchaseManagement from "@/pages/PurchaseManagement";
 import Opportunities from "@/pages/crm/Opportunities";
+import Proposals from "@/pages/Proposals";
+import ProposalDetails from "@/pages/ProposalDetails";
+import ProposalCreate from "@/pages/ProposalCreate";
 
 const queryClient = new QueryClient();
 
@@ -139,6 +142,18 @@ function App() {
           <Route
             path="/opportunities"
             element={<ProtectedRoute><Opportunities isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/proposals"
+            element={<ProtectedRoute><Proposals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/proposals/new"
+            element={<ProtectedRoute><ProposalCreate isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/proposals/:id"
+            element={<ProtectedRoute><ProposalDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
         </Routes>
       </Router>
