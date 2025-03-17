@@ -43,8 +43,6 @@ export const opportunityStatusColors: Record<OpportunityStatus, string> = {
 // Proposal status options
 export type ProposalStatus = "draft" | "pending_approval" | "sent" | "accepted" | "rejected" | "expired";
 
-export type ProposalStatusType = ProposalStatus; // Alias for backward compatibility
-
 // Employee object structure from database
 export interface Employee {
   id: string;
@@ -63,14 +61,18 @@ export interface Customer {
   phone?: string;
 }
 
-// Extended opportunity fields for UI display
-export interface OpportunityExtended extends Opportunity {
-  customer_name?: string;
+// For contact history entries
+export interface ContactHistoryEntry {
+  id: string;
+  date: string;
+  contact_type: "call" | "email" | "meeting" | "other";
+  notes: string;
+  employee_id?: string;
   employee_name?: string;
-  currency?: string;
-  proposal_id?: string;
-  contact_history?: ContactHistoryEntry[];
 }
+
+// Alias for backward compatibility in existing code
+export type ContactHistoryItem = ContactHistoryEntry;
 
 // Opportunity object structure
 export interface Opportunity {
@@ -91,20 +93,20 @@ export interface Opportunity {
   // Joined relations
   customer?: Customer;
   employee?: Employee;
-}
-
-// For task types that are related to opportunities
-export type CrmTaskType = "opportunity" | "proposal" | "general";
-
-// For contact history entries
-export interface ContactHistoryEntry {
-  id: string;
-  date: string;
-  contact_type: "call" | "email" | "meeting" | "other";
-  notes: string;
-  employee_id?: string;
+  
+  // Additional fields needed for UI
+  customer_name?: string;
   employee_name?: string;
+  currency?: string;
+  proposal_id?: string;
+  contact_history?: ContactHistoryEntry[];
 }
 
-// Alias for backward compatibility in existing code
-export type ContactHistoryItem = ContactHistoryEntry;
+// Extended opportunity fields for UI display
+export interface OpportunityExtended extends Opportunity {
+  customer_name?: string;
+  employee_name?: string;
+  currency?: string;
+  proposal_id?: string;
+  contact_history?: ContactHistoryEntry[];
+}

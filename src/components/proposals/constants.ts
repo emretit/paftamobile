@@ -20,3 +20,10 @@ export const proposalStatusColors: Record<ProposalStatus, string> = {
   rejected: "bg-red-100 text-red-800",
   expired: "bg-amber-100 text-amber-800"
 };
+
+// Additional exports needed for other components
+export const statusLabels = proposalStatusLabels;
+export const statusStyles = proposalStatusColors;
+export const primaryProposalStatuses: ProposalStatus[] = ["draft", "pending_approval", "sent", "accepted"];
+export const workflowSteps: ProposalStatus[] = ["draft", "pending_approval", "sent", "accepted"];
+export const finalStages: ProposalStatus[] = ["accepted", "rejected", "expired"];

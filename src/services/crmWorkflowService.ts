@@ -1,145 +1,99 @@
 
-import { OpportunityStatus } from "@/types/crm";
-import { TaskPriority } from "@/types/task";
-import { addDays, format } from "date-fns";
-import { crmSupabase as supabase } from "@/services/mockCrmService";
+import { supabase } from "@/integrations/supabase/client";
+import { OpportunityStatus, OpportunityExtended } from "@/types/crm";
+import { Task, TaskStatus } from "@/types/task";
+import { crmSupabase, mockOpportunitiesAPI } from "./mockCrmService";
 
-/**
- * Create a task for an opportunity based on its status
- */
+// This function creates relevant tasks based on opportunity status changes
 export const createTaskForOpportunity = async (
   opportunityId: string,
   opportunityTitle: string,
   status: OpportunityStatus,
   assigneeId?: string
-) => {
+): Promise<void> => {
   let taskTitle = "";
-  let taskDescription = "";
-  let priority: TaskPriority = "medium";
-  let dueDate = addDays(new Date(), 3);
-
-  // Set task details based on opportunity status
+  let taskDescription = `Related to: ${opportunityTitle}`;
+  
+  // Define task title based on the new status
   switch (status) {
     case "new":
       taskTitle = "İlk görüşmeyi yap ve ziyaret planla";
-      taskDescription = `Yeni fırsat için ilk görüşmeyi gerçekleştir: ${opportunityTitle}`;
-      dueDate = addDays(new Date(), 2);
-      priority = "high";
       break;
-
     case "first_contact":
       taskTitle = "Ziyaret Yap ve raporla";
-      taskDescription = `İlk görüşmesi yapılan fırsat için saha ziyareti planla: ${opportunityTitle}`;
-      dueDate = addDays(new Date(), 5);
-      priority = "medium";
       break;
-
     case "site_visit":
       taskTitle = "Teklif Hazırla";
-      taskDescription = `Saha ziyareti yapılan fırsat için teklif hazırla: ${opportunityTitle}`;
-      dueDate = addDays(new Date(), 3);
-      priority = "high";
       break;
-
+    case "preparing_proposal":
+      taskTitle = "Teklifi tamamla ve gönder";
+      break;
     case "proposal_sent":
       taskTitle = "Teklif Takibini Yap";
-      taskDescription = `Gönderilen teklif için takip çağrısı yap: ${opportunityTitle}`;
-      dueDate = addDays(new Date(), 7);
-      priority = "medium";
       break;
-
     case "accepted":
       taskTitle = "Satış Sözleşmesi Hazırla";
-      taskDescription = `Kabul edilen fırsat için satış sözleşmesi hazırla: ${opportunityTitle}`;
-      dueDate = addDays(new Date(), 2);
-      priority = "high";
       break;
-
     case "lost":
       taskTitle = "Fırsatı Kapat ve Kaybetme Nedeni Raporla";
-      taskDescription = `Kaybedilen fırsat için kapanış raporu hazırla: ${opportunityTitle}`;
-      dueDate = addDays(new Date(), 1);
-      priority = "low";
       break;
-
     default:
-      // Don't create a task for other statuses
-      return;
+      taskTitle = `Fırsat takibi: ${opportunityTitle}`;
   }
-
+  
+  // Create task in database
   try {
-    // Format due date for database
-    const formattedDueDate = format(dueDate, "yyyy-MM-dd");
-
-    // Create task
-    const { error } = await supabase.from("tasks").insert([
-      {
+    const { error } = await supabase
+      .from('tasks')
+      .insert([{
         title: taskTitle,
         description: taskDescription,
-        status: "todo",
-        priority,
+        status: "todo" as TaskStatus,
+        priority: "medium",
         type: "opportunity",
         assignee_id: assigneeId,
-        due_date: formattedDueDate,
+        due_date: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(), // Due in 2 days
         related_item_id: opportunityId,
         related_item_title: opportunityTitle
-      }
-    ]);
-
+      }]);
+      
     if (error) throw error;
   } catch (error) {
-    console.error("Error creating task for opportunity:", error);
+    console.error('Error creating task:', error);
+    throw error;
   }
 };
 
-/**
- * Update opportunity status when proposal status changes
- */
-export const updateOpportunityOnProposalStatusChange = async (
-  proposalId: string,
+// Function to update related tasks when an opportunity's status changes
+export const updateRelatedTasks = async (
   opportunityId: string,
-  proposalStatus: string
-) => {
+  status: OpportunityStatus
+): Promise<void> => {
   try {
-    let opportunityStatus: OpportunityStatus | null = null;
-
-    // Map proposal status to opportunity status
-    if (proposalStatus === "sent") {
-      opportunityStatus = "proposal_sent";
-    } else if (proposalStatus === "accepted") {
-      opportunityStatus = "accepted";
-    } else if (proposalStatus === "rejected") {
-      opportunityStatus = "lost";
+    const { data: opportunity } = await mockOpportunitiesAPI.getOpportunity(opportunityId);
+    
+    if (!opportunity) {
+      throw new Error('Opportunity not found');
     }
-
-    // Only update opportunity if we have a valid status mapping
-    if (opportunityStatus) {
-      // Fetch the opportunity to get required data
-      const { data: opportunity, error: fetchError } = await supabase
-        .from('opportunities')
-        .select('*')
-        .eq("id", opportunityId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      // Update the opportunity status
-      const { error } = await supabase
-        .from('opportunities')
-        .update({ status: opportunityStatus })
-        .eq("id", opportunityId);
-
-      if (error) throw error;
-
-      // Create a follow-up task based on the new status
-      await createTaskForOpportunity(
-        opportunityId,
-        opportunity.title,
-        opportunityStatus,
-        opportunity.employee_id
-      );
-    }
+    
+    // Mark existing tasks as completed if they're not already
+    const { error: updateError } = await supabase
+      .from('tasks')
+      .update({ status: 'completed' as TaskStatus })
+      .eq('related_item_id', opportunityId)
+      .eq('status', 'todo');
+      
+    if (updateError) throw updateError;
+    
+    // Create new task for the new status
+    await createTaskForOpportunity(
+      opportunity.id,
+      opportunity.title,
+      status,
+      opportunity.employee_id
+    );
   } catch (error) {
-    console.error("Error updating opportunity after proposal status change:", error);
+    console.error('Error updating related tasks:', error);
+    throw error;
   }
 };
