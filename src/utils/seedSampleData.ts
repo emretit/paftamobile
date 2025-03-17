@@ -94,8 +94,8 @@ export const seedOpportunities = async () => {
           company: 'ABC Teknoloji',
           email: 'info@abcteknoloji.com',
           mobile_phone: '5321234567',
-          type: 'kurumsal',
-          status: 'aktif'
+          type: 'kurumsal' as const,
+          status: 'aktif' as const
         },
         {
           id: uuidv4(),
@@ -103,8 +103,8 @@ export const seedOpportunities = async () => {
           company: 'XYZ Sanayi',
           email: 'info@xyzsanayi.com',
           mobile_phone: '5331234567',
-          type: 'kurumsal',
-          status: 'aktif'
+          type: 'kurumsal' as const,
+          status: 'aktif' as const
         },
         {
           id: uuidv4(),
@@ -112,8 +112,8 @@ export const seedOpportunities = async () => {
           company: 'Yılmaz Danışmanlık',
           email: 'mehmet@yilmazdanismanlik.com',
           mobile_phone: '5351234567',
-          type: 'bireysel',
-          status: 'potansiyel'
+          type: 'bireysel' as const,
+          status: 'potansiyel' as const
         }
       ];
       
@@ -139,7 +139,7 @@ export const seedOpportunities = async () => {
           position: 'Satış Uzmanı',
           department: 'Satış',
           hire_date: '2022-01-15',
-          status: 'aktif'
+          status: 'aktif' as const
         },
         {
           id: uuidv4(),
@@ -150,7 +150,7 @@ export const seedOpportunities = async () => {
           position: 'Satış Müdürü',
           department: 'Satış',
           hire_date: '2020-03-10',
-          status: 'aktif'
+          status: 'aktif' as const
         }
       ];
       
@@ -312,8 +312,8 @@ export const seedAllData = async () => {
           company: 'ABC Teknoloji',
           email: 'info@abcteknoloji.com',
           mobile_phone: '5321234567',
-          type: 'kurumsal',
-          status: 'aktif'
+          type: 'kurumsal' as const,
+          status: 'aktif' as const
         },
         {
           id: uuidv4(),
@@ -321,8 +321,8 @@ export const seedAllData = async () => {
           company: 'XYZ Sanayi',
           email: 'info@xyzsanayi.com',
           mobile_phone: '5331234567',
-          type: 'kurumsal',
-          status: 'aktif'
+          type: 'kurumsal' as const,
+          status: 'aktif' as const
         },
         {
           id: uuidv4(),
@@ -330,8 +330,8 @@ export const seedAllData = async () => {
           company: 'Yılmaz Danışmanlık',
           email: 'mehmet@yilmazdanismanlik.com',
           mobile_phone: '5351234567',
-          type: 'bireysel',
-          status: 'potansiyel'
+          type: 'bireysel' as const,
+          status: 'potansiyel' as const
         }
       ];
       
@@ -354,7 +354,7 @@ export const seedAllData = async () => {
           position: 'Satış Uzmanı',
           department: 'Satış',
           hire_date: '2022-01-15',
-          status: 'aktif'
+          status: 'aktif' as const
         },
         {
           id: uuidv4(),
@@ -365,7 +365,7 @@ export const seedAllData = async () => {
           position: 'Satış Müdürü',
           department: 'Satış',
           hire_date: '2020-03-10',
-          status: 'aktif'
+          status: 'aktif' as const
         }
       ];
       
