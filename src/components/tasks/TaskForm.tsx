@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -50,20 +49,19 @@ interface TaskFormProps {
 export const TaskForm = ({ task, onClose }: TaskFormProps) => {
   const { createTask, updateTask } = useTaskMutations();
   
-  // Parse subtasks from string if needed
   const parseSubtasks = (task?: Task): SubTask[] => {
     if (!task || !task.subtasks) return [];
     
     if (typeof task.subtasks === 'string') {
       try {
-        return JSON.parse(task.subtasks);
+        return JSON.parse(task.subtasks as string);
       } catch (e) {
         console.error("Error parsing subtasks string:", e);
         return [];
       }
     }
     
-    return task.subtasks;
+    return task.subtasks as SubTask[];
   };
   
   const [subtasks, setSubtasks] = useState<SubTask[]>(parseSubtasks(task));
@@ -88,13 +86,29 @@ export const TaskForm = ({ task, onClose }: TaskFormProps) => {
       if (task) {
         await updateTask({
           id: task.id,
-          ...values,
+          title: values.title,
+          description: values.description,
+          status: values.status as TaskStatus,
+          priority: values.priority as TaskPriority,
+          type: values.type as TaskType,
+          assignee_id: values.assignee_id,
+          due_date: values.due_date,
+          related_item_id: values.related_item_id,
+          related_item_title: values.related_item_title,
           subtasks
         });
         toast.success("Görev güncellendi");
       } else {
         await createTask({
-          ...values,
+          title: values.title,
+          description: values.description,
+          status: values.status as TaskStatus,
+          priority: values.priority as TaskPriority,
+          type: values.type as TaskType,
+          assignee_id: values.assignee_id,
+          due_date: values.due_date,
+          related_item_id: values.related_item_id,
+          related_item_title: values.related_item_title,
           subtasks
         });
         toast.success("Görev oluşturuldu");
@@ -109,7 +123,6 @@ export const TaskForm = ({ task, onClose }: TaskFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {/* Task Title */}
         <FormField
           control={form.control}
           name="title"
@@ -124,7 +137,6 @@ export const TaskForm = ({ task, onClose }: TaskFormProps) => {
           )}
         />
 
-        {/* Task Description */}
         <FormField
           control={form.control}
           name="description"
@@ -139,7 +151,6 @@ export const TaskForm = ({ task, onClose }: TaskFormProps) => {
           )}
         />
 
-        {/* Task Status */}
         <FormField
           control={form.control}
           name="status"
@@ -167,7 +178,6 @@ export const TaskForm = ({ task, onClose }: TaskFormProps) => {
           )}
         />
 
-        {/* Task Priority */}
         <FormField
           control={form.control}
           name="priority"
@@ -194,7 +204,6 @@ export const TaskForm = ({ task, onClose }: TaskFormProps) => {
           )}
         />
 
-        {/* Task Type */}
         <FormField
           control={form.control}
           name="type"
@@ -225,19 +234,16 @@ export const TaskForm = ({ task, onClose }: TaskFormProps) => {
           )}
         />
 
-        {/* Task Assignee */}
         <TaskAssigneeSelect
           form={form}
           defaultValue={task?.assignee_id}
         />
 
-        {/* Task Due Date */}
         <TaskDatePicker
           form={form}
           defaultValue={task?.due_date}
         />
 
-        {/* Related Item */}
         <TaskRelatedItem
           form={form}
           taskType={form.watch("type") as TaskType}
@@ -247,13 +253,11 @@ export const TaskForm = ({ task, onClose }: TaskFormProps) => {
 
         <Separator />
 
-        {/* Subtasks */}
         <TaskSubtaskList
           subtasks={subtasks}
           onChange={setSubtasks}
         />
 
-        {/* Form Actions */}
         <div className="flex justify-end space-x-2">
           <Button variant="outline" onClick={onClose} type="button">
             İptal

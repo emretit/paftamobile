@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { mockDealsAPI, mockOpportunitiesAPI } from "@/services/mockCrmService";
+import { mockCrmService } from "@/services/mockCrmService";
 import OpportunitiesSummary from "@/components/crm/OpportunitiesSummary";
 
 interface CrmDashboardProps {
@@ -15,7 +16,7 @@ const CrmDashboard = ({ isCollapsed, setIsCollapsed }: CrmDashboardProps) => {
   const { data: deals, isLoading: dealsLoading } = useQuery({
     queryKey: ["deals"],
     queryFn: async () => {
-      const { data } = await mockDealsAPI.getDeals();
+      const { data } = await mockCrmService.getDeals();
       return data || [];
     },
   });
@@ -23,7 +24,7 @@ const CrmDashboard = ({ isCollapsed, setIsCollapsed }: CrmDashboardProps) => {
   const { data: opportunities, isLoading: opportunitiesLoading } = useQuery({
     queryKey: ["opportunities"],
     queryFn: async () => {
-      const { data } = await mockOpportunitiesAPI.getOpportunities();
+      const { data } = await mockCrmService.getOpportunities();
       return data || [];
     },
   });

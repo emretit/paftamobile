@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -22,10 +21,9 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
   const [currentStatus, setCurrentStatus] = useState<ProposalStatusShared | null>(null);
   const { mutateAsync, isLoading, error } = useProposalStatusUpdate(proposal?.id || "");
   
-  // Update local status when proposal changes
   useEffect(() => {
     if (proposal) {
-      setCurrentStatus(proposal.status as ProposalStatusShared);
+      setCurrentStatus(proposal.status as unknown as ProposalStatusShared);
     }
   }, [proposal]);
 
@@ -37,8 +35,9 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
       await mutateAsync(newStatus);
     } catch (error) {
       console.error("Failed to update status:", error);
-      // Reset to previous status on error
-      setCurrentStatus(proposal.status as ProposalStatusShared);
+      if (proposal) {
+        setCurrentStatus(proposal.status as unknown as ProposalStatusShared);
+      }
     }
   };
 
@@ -76,13 +75,11 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
         
         <ScrollArea className="mt-6 h-[calc(100vh-120px)] pr-4">
           <div className="space-y-6">
-            {/* Proposal Details */}
             <div>
               <h3 className="text-sm font-medium mb-2">Teklif Numarası</h3>
               <p>#{proposal.proposal_number}</p>
             </div>
             
-            {/* Customer Details */}
             {proposal.customer && (
               <div>
                 <h3 className="text-sm font-medium mb-2">Müşteri</h3>
@@ -96,7 +93,6 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
               </div>
             )}
             
-            {/* Dates */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <h3 className="text-sm font-medium mb-2">Oluşturulma Tarihi</h3>
@@ -108,13 +104,11 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
               </div>
             </div>
             
-            {/* Financial Details */}
             <div>
               <h3 className="text-sm font-medium mb-2">Toplam Tutar</h3>
               <p className="text-lg font-bold">{formatMoney(proposal.total_value)}</p>
             </div>
             
-            {/* Actions */}
             <div className="space-y-3 pt-4">
               <Button 
                 className="w-full" 
@@ -126,8 +120,8 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
               <div className="grid grid-cols-2 gap-2">
                 <Button 
                   variant="outline" 
-                  onClick={() => handleStatusChange("gonderildi" as ProposalStatusShared)}
-                  disabled={isLoading || currentStatus === "gonderildi"}
+                  onClick={() => handleStatusChange("sent" as ProposalStatusShared)}
+                  disabled={isLoading || currentStatus === "sent"}
                 >
                   Gönderildi Olarak İşaretle
                 </Button>

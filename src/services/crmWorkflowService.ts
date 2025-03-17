@@ -1,180 +1,145 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskStatus, TaskPriority, TaskType } from "@/types/task";
+import { Task, TaskStatus, TaskPriority } from "@/types/task";
+import { v4 as uuidv4 } from "uuid";
+import { mockCrmService } from "./mockCrmService";
+import { Opportunity } from "@/types/crm";
 import { ProposalStatusShared } from "@/types/shared-types";
-import { Opportunity, OpportunityStatus } from "@/types/crm";
-import { mockCrmService } from "@/services/mockCrmService";
+import { toast } from "sonner";
 
-/**
- * Creates a follow-up task when a proposal status changes
- */
-export const createProposalFollowUpTask = async (
-  proposalId: string,
-  status: ProposalStatusShared,
-  customerId?: string,
-  employeeId?: string
-) => {
-  try {
-    // Get proposal details
-    const { data: proposal, error: proposalError } = await supabase
-      .from("proposals")
-      .select("*")
-      .eq("id", proposalId)
-      .single();
-
-    if (proposalError) throw proposalError;
-
-    // Define task details based on proposal status
-    let taskTitle = "";
-    let taskDescription = "";
-    let dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 2); // Default 2 days from now
-
-    switch (status) {
-      case "sent":
-      case "gonderildi":
-        taskTitle = "Teklif takibi yapın";
-        taskDescription = `Teklif gönderildi, müşteri ile iletişime geçin - Teklif #${proposal.proposal_number}`;
-        break;
-      case "accepted":
-        taskTitle = "Kabul edilen teklif işlemleri";
-        taskDescription = `Müşteri teklifinizi kabul etti, sözleşme hazırlayın - Teklif #${proposal.proposal_number}`;
-        break;
-      default:
-        // No task needed for other statuses
-        return;
-    }
-
-    // Create a task
-    await mockCrmService.createTask({
-      title: taskTitle,
-      description: taskDescription,
-      status: "todo" as TaskStatus,
-      priority: "medium" as TaskPriority,
-      type: "follow_up" as TaskType,
-      assignee_id: employeeId || undefined,
-      due_date: dueDate.toISOString(),
-      related_item_id: proposalId,
-      related_item_title: `Teklif #${proposal.proposal_number}`
-    });
-
-    console.log(`Created follow-up task for proposal ${proposalId} with status ${status}`);
-  } catch (error) {
-    console.error("Error creating proposal follow-up task:", error);
-    throw error;
-  }
-};
-
-/**
- * Updates an opportunity when proposal status changes
- */
-export const updateOpportunityOnProposalStatusChange = async (
-  proposalId: string, 
-  proposalStatus: ProposalStatusShared, 
-  opportunityId: string
-) => {
-  try {
-    // Map proposal status to opportunity status
-    let opportunityStatus: OpportunityStatus;
-    
-    switch (proposalStatus) {
-      case "sent":
-      case "gonderildi":
-        opportunityStatus = "proposal_sent";
-        break;
-      case "accepted":
-        opportunityStatus = "accepted";
-        break;
-      case "rejected":
-        opportunityStatus = "lost";
-        break;
-      default:
-        opportunityStatus = "preparing_proposal";
-    }
-    
-    // Update the opportunity status
-    await mockCrmService.updateOpportunity(opportunityId, { 
-      status: opportunityStatus 
-    });
-    
-    console.log(`Updated opportunity ${opportunityId} status to ${opportunityStatus} based on proposal ${proposalId}`);
-  } catch (error) {
-    console.error("Error updating opportunity from proposal status:", error);
-    throw error;
-  }
-};
-
-/**
- * Creates a task for an opportunity based on its status
- */
+// Helper function to create a task for an opportunity
 export const createTaskForOpportunity = async (
   opportunityId: string,
   opportunityTitle: string,
-  status: OpportunityStatus,
-  employeeId?: string
-) => {
+  taskTitle: string,
+  description: string = "",
+  status: TaskStatus = "todo",
+  priority: TaskPriority = "medium",
+  dueDate?: Date
+): Promise<Task | null> => {
   try {
-    // Define task details based on opportunity status
-    let taskTitle = "";
-    let taskDescription = "";
-    let dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 3); // Default 3 days from now
-    let taskType: TaskType = "opportunity";
-    let taskPriority: TaskPriority = "medium";
-
-    switch (status) {
-      case "new":
-        taskTitle = "İlk görüşme planla";
-        taskDescription = `Yeni fırsat için ilk görüşme planla - ${opportunityTitle}`;
-        break;
-      case "first_contact":
-        taskTitle = "Müşteriyi ara";
-        taskDescription = `İlk görüşme sonrası takip - ${opportunityTitle}`;
-        break;
-      case "site_visit":
-        taskTitle = "Teklif hazırla";
-        taskDescription = `Saha ziyareti sonrası teklif hazırla - ${opportunityTitle}`;
-        taskPriority = "high";
-        break;
-      case "preparing_proposal":
-        taskTitle = "Teklifi gönder";
-        taskDescription = `Hazırlanan teklifi kontrol et ve gönder - ${opportunityTitle}`;
-        taskPriority = "high";
-        break;
-      case "proposal_sent":
-        taskTitle = "Teklif takibi yap";
-        taskDescription = `Gönderilen teklifi takip et - ${opportunityTitle}`;
-        taskType = "follow_up";
-        dueDate.setDate(dueDate.getDate() + 2); // 2 days from now
-        break;
-      case "accepted":
-        taskTitle = "Satış sonrası işlemler";
-        taskDescription = `Kabul edilen fırsat için sonraki adımları planla - ${opportunityTitle}`;
-        taskType = "general";
-        break;
-      default:
-        // No task for other statuses
-        return;
+    // Validate inputs
+    if (!opportunityId || !opportunityTitle || !taskTitle) {
+      throw new Error("Missing required parameters");
     }
 
-    // Create task
+    // Create new task data
     const taskData = {
+      id: uuidv4(),
       title: taskTitle,
-      description: taskDescription,
-      status: "todo" as TaskStatus,
-      priority: taskPriority,
-      type: taskType,
-      assignee_id: employeeId,
-      due_date: dueDate.toISOString(),
+      description,
+      status,
+      priority,
+      type: "opportunity",
+      due_date: dueDate ? dueDate.toISOString() : undefined,
       related_item_id: opportunityId,
-      related_item_title: opportunityTitle
+      related_item_title: opportunityTitle,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
-    await mockCrmService.createTask(taskData);
+    // Use the mockCrmService to create the task
+    const { data, error } = await mockCrmService.createTask(taskData);
+    if (error) throw error;
     
-    console.log(`Created task "${taskTitle}" for opportunity ${opportunityId}`);
+    return data as Task;
   } catch (error) {
-    console.error("Error creating opportunity task:", error);
-    // Don't throw, just log the error to prevent blocking the main workflow
+    console.error("Error creating task for opportunity:", error);
+    toast.error("Failed to create task for opportunity");
+    return null;
   }
+};
+
+// Helper function to update opportunity status when proposal status changes
+export const updateOpportunityOnProposalChange = async (
+  proposalId: string, 
+  proposalStatus: ProposalStatusShared, 
+  opportunityId?: string
+): Promise<boolean> => {
+  try {
+    // If no opportunityId was provided, try to find it
+    if (!opportunityId) {
+      const { data, error } = await supabase
+        .from("proposals")
+        .select("opportunity_id")
+        .eq("id", proposalId)
+        .single();
+      
+      if (error || !data.opportunity_id) {
+        console.warn("No opportunity linked to this proposal");
+        return false;
+      }
+      
+      opportunityId = data.opportunity_id;
+    }
+    
+    // Update the opportunity status based on the proposal status
+    const result = await mockCrmService.updateOpportunityBasedOnProposal(
+      proposalId,
+      proposalStatus,
+      opportunityId
+    );
+    
+    return result.success;
+  } catch (error) {
+    console.error("Error updating opportunity based on proposal change:", error);
+    return false;
+  }
+};
+
+// Sync supabase with the mockCrmService
+export const syncSupabaseWithMockData = async () => {
+  try {
+    // Get all tasks from mockCrmService
+    const { data: mockTasks } = await mockCrmService.getTasks();
+    
+    if (mockTasks && mockTasks.length > 0) {
+      // Get all tasks from Supabase
+      const { data: supabaseTasks } = await supabase.from("tasks").select("*");
+      
+      // Find tasks that exist in mock but not in Supabase
+      const tasksToAdd = mockTasks.filter(mockTask => 
+        !supabaseTasks?.some(supTask => supTask.id === mockTask.id)
+      );
+      
+      // Insert missing tasks into Supabase
+      if (tasksToAdd.length > 0) {
+        const { error } = await supabase.from("tasks").insert(tasksToAdd);
+        if (error) console.error("Error syncing tasks:", error);
+      }
+    }
+    
+    // Similar logic for opportunities
+    const { data: mockOpportunities } = await mockCrmService.getOpportunities();
+    
+    if (mockOpportunities && mockOpportunities.length > 0) {
+      const { data: supabaseOpportunities } = await supabase.from("opportunities").select("*");
+      
+      const opportunitiesToAdd = mockOpportunities.filter(mockOpp => 
+        !supabaseOpportunities?.some(supOpp => supOpp.id === mockOpp.id)
+      );
+      
+      if (opportunitiesToAdd.length > 0) {
+        // Need to convert contact_history to string for Supabase
+        const preparedOpportunities = opportunitiesToAdd.map(opp => ({
+          ...opp,
+          contact_history: opp.contact_history ? JSON.stringify(opp.contact_history) : null
+        }));
+        
+        const { error } = await supabase.from("opportunities").insert(preparedOpportunities);
+        if (error) console.error("Error syncing opportunities:", error);
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error syncing mock data with Supabase:", error);
+    return false;
+  }
+};
+
+export default {
+  createTaskForOpportunity,
+  updateOpportunityOnProposalChange,
+  syncSupabaseWithMockData
 };

@@ -1,45 +1,42 @@
 
-import { useState } from "react";
-import { Calendar } from "@/components/ui/calendar";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface TaskDatePickerProps {
   form: UseFormReturn<any>;
   defaultValue?: string;
 }
 
-const TaskDatePicker = ({ form }: TaskDatePickerProps) => {
-  const [date, setDate] = useState<Date | undefined>(
-    form.getValues("due_date") ? new Date(form.getValues("due_date")) : undefined
-  );
-
+const TaskDatePicker = ({ form, defaultValue }: TaskDatePickerProps) => {
   return (
     <FormField
       control={form.control}
       name="due_date"
       render={({ field }) => (
         <FormItem className="flex flex-col">
-          <FormLabel>Bitiş Tarihi</FormLabel>
+          <FormLabel>Son Tarih</FormLabel>
           <Popover>
             <PopoverTrigger asChild>
               <FormControl>
                 <Button
-                  variant={"outline"}
+                  variant="outline"
                   className={cn(
                     "w-full pl-3 text-left font-normal",
                     !field.value && "text-muted-foreground"
                   )}
                 >
                   {field.value ? (
-                    format(new Date(field.value), "PP")
+                    format(new Date(field.value), "PPP", { locale: tr })
                   ) : (
-                    <span>Tarih seçin</span>
+                    <span>Tarih Seçin</span>
                   )}
                   <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                 </Button>
@@ -48,14 +45,9 @@ const TaskDatePicker = ({ form }: TaskDatePickerProps) => {
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={date}
-                onSelect={(newDate) => {
-                  setDate(newDate);
-                  if (newDate) {
-                    field.onChange(newDate.toISOString());
-                  } else {
-                    field.onChange(undefined);
-                  }
+                selected={field.value ? new Date(field.value) : undefined}
+                onSelect={(date) => {
+                  field.onChange(date ? date.toISOString() : undefined);
                 }}
                 initialFocus
               />

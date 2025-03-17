@@ -4,6 +4,7 @@ export type ProposalStatus =
   | 'onay_bekliyor'
   | 'gonderildi'
   | 'draft'
+  | 'pending_approval'  // Adding this to match shared types
   | 'new'
   | 'review'
   | 'sent'
@@ -29,6 +30,7 @@ export interface ProposalItem {
   total_price: number;
   currency?: string;
   product_id?: string;
+  proposal_id?: string;
 }
 
 export interface ProposalAttachment {
@@ -38,6 +40,7 @@ export interface ProposalAttachment {
   type: string;
   url: string;
   uploaded_at: string;
+  proposal_id?: string;
 }
 
 export interface Proposal {

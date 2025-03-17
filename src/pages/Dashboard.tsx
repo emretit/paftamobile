@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { mockDealsAPI } from "@/services/mockCrmService";
+import { mockCrmService } from "@/services/mockCrmService";
 
 interface DashboardProps {
   isCollapsed: boolean;
@@ -14,7 +15,7 @@ const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
   const { data: deals, isLoading: dealsLoading } = useQuery({
     queryKey: ["deals"],
     queryFn: async () => {
-      const { data } = await mockDealsAPI.getDeals();
+      const { data } = await mockCrmService.getDeals();
       return data || [];
     },
   });

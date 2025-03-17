@@ -36,13 +36,14 @@ export const useTaskMutations = () => {
 
   const createTaskMutation = useMutation({
     mutationFn: async (taskData: CreateTaskData) => {
-      // Handle subtasks serialization
-      const serializedData = {
+      // Handle subtasks as a separate property (convert to JSON string)
+      const taskWithSubtasksAsString = {
         ...taskData,
-        subtasks: taskData.subtasks ? JSON.stringify(taskData.subtasks) : undefined
+        // Only include subtasks in serialized form if they exist
+        ...(taskData.subtasks ? { subtasks: JSON.stringify(taskData.subtasks) } : {})
       };
       
-      const { data, error } = await mockCrmService.createTask(serializedData);
+      const { data, error } = await mockCrmService.createTask(taskWithSubtasksAsString);
       if (error) throw error;
       return data;
     },
@@ -60,13 +61,14 @@ export const useTaskMutations = () => {
     mutationFn: async (updatedTask: UpdateTaskData) => {
       const { id, ...updates } = updatedTask;
       
-      // Handle subtasks serialization
-      const serializedUpdates = {
+      // Handle subtasks as a separate property (convert to JSON string)
+      const updatesWithSubtasksAsString = {
         ...updates,
-        subtasks: updates.subtasks ? JSON.stringify(updates.subtasks) : undefined
+        // Only include subtasks in serialized form if they exist
+        ...(updates.subtasks ? { subtasks: JSON.stringify(updates.subtasks) } : {})
       };
       
-      const { data, error } = await mockCrmService.updateTask(id, serializedUpdates);
+      const { data, error } = await mockCrmService.updateTask(id, updatesWithSubtasksAsString);
       if (error) throw error;
       return data;
     },

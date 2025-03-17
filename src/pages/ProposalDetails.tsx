@@ -19,16 +19,24 @@ import ProposalAttachments from "@/components/proposals/detail/ProposalAttachmen
 import { proposalStatusLabels } from "@/components/proposals/constants";
 import { cn } from "@/lib/utils";
 
-const ProposalDetails = () => {
+interface ProposalDetailsProps {
+  isCollapsed: boolean;
+  setIsCollapsed: (value: boolean) => void;
+}
+
+const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<ProposalStatus>("draft");
+  const [isUpdating, setIsUpdating] = useState(false);
   
   // Fetch proposal details
   const { data, isLoading, error } = useQuery({
     queryKey: ["proposal", id],
     queryFn: async () => {
+      if (!id) throw new Error("No proposal ID provided");
+      
       const { data: proposal, error } = await supabase
         .from("proposals")
         .select(`
@@ -46,13 +54,14 @@ const ProposalDetails = () => {
         setStatus(proposal.status as ProposalStatus);
       }
       
-      return proposal as Proposal;
+      return proposal as unknown as Proposal;
     },
   });
   
   // Status update mutation
-  const statusMutation = useMutation<ProposalStatus, Error, ProposalStatus>({
+  const statusMutation = useMutation({
     mutationFn: async (newStatus: ProposalStatus) => {
+      setIsUpdating(true);
       const { error } = await supabase
         .from("proposals")
         .update({ status: newStatus })
@@ -64,13 +73,15 @@ const ProposalDetails = () => {
     },
     onSuccess: (newStatus) => {
       queryClient.invalidateQueries({ queryKey: ["proposal", id] });
-      toast.success(`Teklif durumu güncellendi: ${proposalStatusLabels[newStatus]}`);
+      toast.success(`Teklif durumu güncellendi: ${proposalStatusLabels[newStatus as keyof typeof proposalStatusLabels]}`);
+      setIsUpdating(false);
     },
     onError: (error) => {
       toast.error("Durum güncellenirken bir hata oluştu");
       console.error("Error updating proposal status:", error);
       // Reset status to current proposal status
       if (data) setStatus(data.status as ProposalStatus);
+      setIsUpdating(false);
     }
   });
   
@@ -127,13 +138,13 @@ const ProposalDetails = () => {
             value={status}
             onChange={(e) => handleStatusChange(e.target.value as ProposalStatus)}
             className="border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-            disabled={statusMutation.isPending}
+            disabled={isUpdating}
           >
             {Object.entries(proposalStatusLabels).map(([value, label]) => (
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
-          {statusMutation.isPending && (
+          {isUpdating && (
             <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
           )}
         </div>
@@ -245,7 +256,7 @@ const ProposalDetails = () => {
             <CardContent className="space-y-4">
               <Button 
                 className="w-full justify-start"
-                disabled={statusMutation.isPending}
+                disabled={isUpdating}
                 onClick={() => handleStatusChange('draft' as ProposalStatus)}
               >
                 <span className="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
@@ -254,7 +265,7 @@ const ProposalDetails = () => {
               
               <Button 
                 className="w-full justify-start"
-                disabled={statusMutation.isPending}
+                disabled={isUpdating}
                 onClick={() => handleStatusChange('pending_approval' as ProposalStatus)}
               >
                 <span className="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
@@ -263,7 +274,7 @@ const ProposalDetails = () => {
               
               <Button 
                 className="w-full justify-start"
-                disabled={statusMutation.isPending}
+                disabled={isUpdating}
                 onClick={() => handleStatusChange('sent' as ProposalStatus)}
               >
                 <span className="w-2 h-2 rounded-full bg-indigo-500 mr-2"></span>
@@ -272,7 +283,7 @@ const ProposalDetails = () => {
               
               <Button 
                 className="w-full justify-start bg-green-600 hover:bg-green-700"
-                disabled={statusMutation.isPending}
+                disabled={isUpdating}
                 onClick={() => handleStatusChange('accepted' as ProposalStatus)}
               >
                 <span className="w-2 h-2 rounded-full bg-white mr-2"></span>
@@ -282,7 +293,7 @@ const ProposalDetails = () => {
               <Button 
                 variant="outline"
                 className="w-full justify-start text-red-600 border-red-300 hover:bg-red-50"
-                disabled={statusMutation.isPending}
+                disabled={isUpdating}
                 onClick={() => handleStatusChange('rejected' as ProposalStatus)}
               >
                 <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>

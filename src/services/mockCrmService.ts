@@ -1,9 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskStatus, TaskPriority, TaskType } from "@/types/task";
+import { Task, TaskStatus, TaskPriority, TaskType, SubTask } from "@/types/task";
 import { Opportunity, OpportunityStatus, OpportunityPriority } from "@/types/crm";
 import { ProposalStatusShared } from "@/types/shared-types";
 import { toast } from "sonner";
+
+// Define a type for JSON data
+type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
 
 // Sample data for mock services
 const mockTasks: Task[] = [
@@ -103,7 +106,10 @@ export const mockTasksAPI = {
       }
       
       // Try to create task in Supabase
-      const { data, error } = await supabase.from("tasks").insert([taskData]).select();
+      const { data, error } = await supabase
+        .from("tasks")
+        .insert([taskData])
+        .select();
       
       if (error) {
         console.error("Error creating task in Supabase:", error);
@@ -280,10 +286,18 @@ export const mockOpportunitiesAPI = {
   // Update an opportunity
   updateOpportunity: async (id: string, updates: Partial<Opportunity>) => {
     try {
+      // Convert contact_history to string for Supabase if it exists
+      const processedUpdates = { 
+        ...updates,
+        ...(updates.contact_history ? { 
+          contact_history: JSON.stringify(updates.contact_history) 
+        } : {})
+      };
+      
       // Try to update opportunity in Supabase
       const { data, error } = await supabase
         .from("opportunities")
-        .update(updates)
+        .update(processedUpdates)
         .eq("id", id)
         .select();
       
@@ -319,10 +333,18 @@ export const mockOpportunitiesAPI = {
         };
       }
       
+      // Convert contact_history to string for Supabase if it exists
+      const processedOpportunity = {
+        ...newOpportunity,
+        ...(newOpportunity.contact_history ? { 
+          contact_history: JSON.stringify(newOpportunity.contact_history) 
+        } : {})
+      };
+      
       // Try to create opportunity in Supabase
       const { data, error } = await supabase
         .from("opportunities")
-        .insert([newOpportunity])
+        .insert([processedOpportunity])
         .select();
       
       if (error) {

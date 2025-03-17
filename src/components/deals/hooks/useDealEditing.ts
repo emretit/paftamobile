@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Deal } from "@/types/deal";
-import { mockDealsAPI } from "@/services/mockCrmService";
+import { mockCrmService } from "@/services/mockCrmService";
 
 export const useDealEditing = (initialDeal: Deal) => {
   const [editingFields, setEditingFields] = useState<Record<string, boolean>>({});
@@ -21,7 +21,8 @@ export const useDealEditing = (initialDeal: Deal) => {
       const value = editValues[field];
       if (value === undefined) return;
 
-      const { error } = await mockDealsAPI.updateDeal(initialDeal.id, { [field]: value });
+      // Use mockCrmService.updateDeal instead of mockDealsAPI
+      const { error } = await mockCrmService.updateDeal(initialDeal.id, { [field]: value });
 
       if (error) throw error;
 
