@@ -13,13 +13,17 @@ export const useTaskMutations = (
 
   const createTaskMutation = useMutation({
     mutationFn: async (data: { formData: FormData; subtasks: SubTask[] }) => {
+      // Store the task data but handle subtasks as JSON
+      const taskData = {
+        ...data.formData,
+        status: 'todo',
+        // Store subtasks as a JSON field
+        subtasks: JSON.stringify(data.subtasks)
+      };
+
       const { data: task, error } = await supabase
         .from('tasks')
-        .insert([{
-          ...data.formData,
-          status: 'todo',
-          subtasks: data.subtasks
-        }])
+        .insert([taskData])
         .select()
         .single();
 
@@ -41,12 +45,16 @@ export const useTaskMutations = (
     mutationFn: async (data: { formData: FormData; subtasks: SubTask[] }) => {
       if (!taskToEdit?.id) throw new Error('Task ID is required for updates');
 
+      // Store the task data but handle subtasks as JSON
+      const taskData = {
+        ...data.formData,
+        // Store subtasks as a JSON field
+        subtasks: JSON.stringify(data.subtasks)
+      };
+
       const { data: task, error } = await supabase
         .from('tasks')
-        .update({
-          ...data.formData,
-          subtasks: data.subtasks
-        })
+        .update(taskData)
         .eq('id', taskToEdit.id)
         .select()
         .single();

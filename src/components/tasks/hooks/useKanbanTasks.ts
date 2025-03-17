@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { Task } from "@/types/task";
+import type { Task, TaskType } from "@/types/task";
 
 export const useKanbanTasks = (
   searchQuery: string,
@@ -29,9 +29,11 @@ export const useKanbanTasks = (
 
       if (selectedType) {
         // Check if selectedType is a valid task type
-        const validTypes = ['opportunity', 'proposal', 'general'];
-        if (validTypes.includes(selectedType)) {
-          query = query.eq('type', selectedType as Task['type']);
+        const validTypes: TaskType[] = [
+          'general', 'meeting', 'follow_up', 'call', 'email', 'opportunity', 'proposal'
+        ];
+        if (validTypes.includes(selectedType as TaskType)) {
+          query = query.eq('type', selectedType as TaskType);
         }
       }
 
@@ -61,20 +63,34 @@ export const useKanbanTasks = (
           employees = employeesData.reduce((acc, emp) => {
             acc[emp.id] = {
               id: emp.id,
-              name: `${emp.first_name} ${emp.last_name}`,
-              avatar: emp.avatar_url
+              first_name: emp.first_name,
+              last_name: emp.last_name,
+              avatar_url: emp.avatar_url
             };
             return acc;
           }, {});
         }
       }
 
-      // Map tasks with their assignees
-      return tasksData.map(task => ({
-        ...task,
-        item_type: 'task', // Set default value
-        assignee: task.assignee_id ? employees[task.assignee_id] : undefined
-      })) as Task[];
+      // Map tasks with their assignees and parse subtasks if stored as JSON string
+      return tasksData.map(task => {
+        let parsedSubtasks;
+        if (task.subtasks && typeof task.subtasks === 'string') {
+          try {
+            parsedSubtasks = JSON.parse(task.subtasks);
+          } catch (e) {
+            console.error('Error parsing subtasks JSON:', e);
+            parsedSubtasks = [];
+          }
+        }
+
+        return {
+          ...task,
+          item_type: 'task',
+          subtasks: parsedSubtasks || task.subtasks,
+          assignee: task.assignee_id ? employees[task.assignee_id] : undefined
+        } as Task;
+      });
     }
   });
 

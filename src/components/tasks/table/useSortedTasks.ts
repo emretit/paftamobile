@@ -60,8 +60,8 @@ export const useSortedTasks = (
             valueB = priorityOrder[b.priority];
             break;
           case "assignee":
-            valueA = a.assignee?.name || "";
-            valueB = b.assignee?.name || "";
+            valueA = a.assignee ? `${a.assignee.first_name} ${a.assignee.last_name}` : "";
+            valueB = b.assignee ? `${b.assignee.first_name} ${b.assignee.last_name}` : "";
             break;
           default:
             valueA = a.title.toLowerCase();

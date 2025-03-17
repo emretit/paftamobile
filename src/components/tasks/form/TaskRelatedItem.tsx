@@ -5,6 +5,7 @@ import { UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { FormData } from "./types";
+import type { TaskType } from "@/types/task";
 
 interface TaskRelatedItemProps {
   watch: UseFormWatch<FormData>;
@@ -26,7 +27,14 @@ const TaskRelatedItem = ({ watch, setValue }: TaskRelatedItemProps) => {
     }
   });
 
-  if (watch("type") === "general") return null;
+  // Early return if the task type is not one that relates to other entities
+  if (watch("type") === "general" || 
+      watch("type") === "meeting" || 
+      watch("type") === "follow_up" || 
+      watch("type") === "call" || 
+      watch("type") === "email") {
+    return null;
+  }
 
   return (
     <div className="space-y-2">

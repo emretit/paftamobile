@@ -71,10 +71,15 @@ const TaskTableRow = ({
         {task.assignee ? (
           <div className="flex items-center space-x-2">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={task.assignee.avatar} />
-              <AvatarFallback>{task.assignee.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={task.assignee.avatar_url} />
+              <AvatarFallback>
+                {task.assignee.first_name?.[0]}
+                {task.assignee.last_name?.[0]}
+              </AvatarFallback>
             </Avatar>
-            <span className="text-sm">{task.assignee.name}</span>
+            <span className="text-sm">
+              {task.assignee.first_name} {task.assignee.last_name}
+            </span>
           </div>
         ) : (
           <span className="text-gray-400">-</span>
