@@ -3,11 +3,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProposalStatus } from "@/types/crm";
+import { updateOpportunityOnProposalStatusChange } from "@/services/crmWorkflowService";
 
 export const useProposalStatusUpdate = (proposalId: string, opportunityId?: string) => {
   const queryClient = useQueryClient();
 
-  const updateProposalStatus = useMutation({
+  return useMutation({
     mutationFn: async (newStatus: ProposalStatus) => {
       const { error } = await supabase
         .from("proposals")
@@ -16,32 +17,13 @@ export const useProposalStatusUpdate = (proposalId: string, opportunityId?: stri
 
       if (error) throw error;
 
-      // Since we don't have updateOpportunityOnProposalStatusChange yet, 
-      // let's implement it inline for now
+      // Update the related opportunity if it exists
       if (opportunityId) {
-        let opportunityStatus;
-        
-        switch (newStatus) {
-          case "sent":
-            opportunityStatus = "proposal_sent";
-            break;
-          case "accepted":
-            opportunityStatus = "accepted";
-            break;
-          case "rejected":
-            opportunityStatus = "lost";
-            break;
-        }
-        
-        if (opportunityStatus) {
-          const { error: oppError } = await supabase
-            .from("opportunities")
-            .update({ status: opportunityStatus })
-            .eq("id", opportunityId);
-            
-          if (oppError) {
-            console.error("Error updating opportunity status:", oppError);
-          }
+        try {
+          await updateOpportunityOnProposalStatusChange(proposalId, newStatus, opportunityId);
+        } catch (err) {
+          console.error("Error updating opportunity:", err);
+          // Don't fail the whole operation if this part fails
         }
       }
 
@@ -56,6 +38,4 @@ export const useProposalStatusUpdate = (proposalId: string, opportunityId?: stri
       console.error("Error updating proposal status:", error);
     },
   });
-
-  return updateProposalStatus;
 };

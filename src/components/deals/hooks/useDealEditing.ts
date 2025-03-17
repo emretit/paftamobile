@@ -1,8 +1,8 @@
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Deal } from "@/types/deal";
+import { mockDealsAPI } from "@/services/mockCrmService";
 
 export const useDealEditing = (initialDeal: Deal) => {
   const [editingFields, setEditingFields] = useState<Record<string, boolean>>({});
@@ -21,10 +21,7 @@ export const useDealEditing = (initialDeal: Deal) => {
       const value = editValues[field];
       if (value === undefined) return;
 
-      const { error } = await supabase
-        .from('deals')
-        .update({ [field]: value })
-        .eq('id', initialDeal.id);
+      const { error } = await mockDealsAPI.updateDeal(initialDeal.id, { [field]: value });
 
       if (error) throw error;
 

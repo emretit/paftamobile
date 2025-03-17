@@ -1,105 +1,93 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskStatus } from "@/types/task";
+import { Task, TasksState } from "@/types/task";
+import { mockTasksAPI } from "@/services/mockCrmService";
 
-interface TasksState {
-  [key: string]: Task[];
+interface UseKanbanTasksParams {
+  searchQuery?: string;
+  selectedEmployee?: string | null;
+  selectedType?: string | null;
 }
 
-export const useKanbanTasks = (
-  selectedTaskType: string | null,
-  searchQuery: string,
-  userId?: string
-) => {
-  const [tasksState, setTasksState] = useState<TasksState>({
+export const useKanbanTasks = ({
+  searchQuery = "",
+  selectedEmployee = null,
+  selectedType = null,
+}: UseKanbanTasksParams) => {
+  const [tasks, setTasks] = useState<TasksState>({
     todo: [],
     in_progress: [],
     completed: [],
-    postponed: []
+    postponed: [],
   });
-  
-  // Fetch tasks from Supabase
-  const { data: tasks, isLoading, error } = useQuery({
-    queryKey: ["tasks", selectedTaskType, searchQuery, userId],
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["tasks"],
     queryFn: async () => {
-      let query = supabase.from("tasks").select("*");
-
-      // Filter by task type if specified
-      if (selectedTaskType && selectedTaskType !== "all") {
-        // Convert the string to a valid TaskType
-        const taskType = selectedTaskType === "meeting" || 
-                         selectedTaskType === "call" || 
-                         selectedTaskType === "email" || 
-                         selectedTaskType === "follow_up" || 
-                         selectedTaskType === "general" || 
-                         selectedTaskType === "opportunity" || 
-                         selectedTaskType === "proposal" 
-                          ? selectedTaskType 
-                          : "general";
-                          
-        query = query.eq("type", taskType);
-      }
-
-      // Filter by search query
-      if (searchQuery) {
-        query = query.or(
-          `title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`
-        );
-      }
-
-      // Filter by user if specified
-      if (userId) {
-        query = query.eq("assignee_id", userId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      
-      // Add empty subtasks array if not present
-      return (data as Task[]).map(task => ({
-        ...task,
-        subtasks: task.subtasks || []
-      }));
-    }
+      const { data } = await mockTasksAPI.getTasks();
+      return data || [];
+    },
   });
 
-  // Group tasks by status
   useEffect(() => {
-    if (tasks) {
-      const grouped = tasks.reduce((acc, task) => {
-        const status = task.status;
-        if (!acc[status]) {
-          acc[status] = [];
-        }
-        
-        // Ensure subtasks exists
-        const taskWithSubtasks = {
-          ...task,
-          subtasks: task.subtasks || []
-        };
-        
-        acc[status].push(taskWithSubtasks);
-        return acc;
-      }, {} as TasksState);
+    if (!data) return;
 
-      // Ensure all status keys exist in the state
-      const newState = {
-        todo: grouped.todo || [],
-        in_progress: grouped.in_progress || [],
-        completed: grouped.completed || [],
-        postponed: grouped.postponed || []
+    const tasksMap: TasksState = {
+      todo: [],
+      in_progress: [],
+      completed: [],
+      postponed: [],
+    };
+
+    data.forEach((task: Task) => {
+      if (tasksMap[task.status]) {
+        tasksMap[task.status].push(task);
+      } else {
+        tasksMap.todo.push(task);
+      }
+    });
+
+    setTasks(tasksMap);
+  }, [data]);
+
+  const filterTasks = useCallback(
+    (
+      tasks: TasksState,
+      searchQuery?: string,
+      selectedEmployee?: string | null,
+      selectedType?: string | null
+    ): TasksState => {
+      const filtered: TasksState = {
+        todo: [],
+        in_progress: [],
+        completed: [],
+        postponed: [],
       };
 
-      setTasksState(newState);
-    }
-  }, [tasks]);
+      // Apply filters to each status category
+      Object.entries(tasks).forEach(([status, statusTasks]) => {
+        filtered[status as keyof TasksState] = statusTasks.filter((task) => {
+          // Filter by search query
+          const matchesSearch =
+            !searchQuery ||
+            task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            task.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-  return {
-    tasks: tasksState,
-    isLoading,
-    error
-  };
+          // Filter by employee
+          const matchesEmployee = !selectedEmployee || task.assignee_id === selectedEmployee;
+
+          // Filter by type
+          const matchesType = !selectedType || task.type === selectedType;
+
+          return matchesSearch && matchesEmployee && matchesType;
+        });
+      });
+
+      return filtered;
+    },
+    []
+  );
+
+  return { tasks, isLoading, error, filterTasks };
 };

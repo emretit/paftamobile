@@ -1,8 +1,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Task, TaskStatus, TaskType } from "@/types/task";
+import { mockTasksAPI } from "@/services/mockCrmService";
 
 export const useTaskMutations = () => {
   const queryClient = useQueryClient();
@@ -26,7 +26,7 @@ export const useTaskMutations = () => {
       const taskToCreate = {
         ...taskFields,
         status: "todo" as TaskStatus,
-        // Only include these explicitly allowed types to match the DB schema
+        // Validate task type
         type: (taskFields.type === "opportunity" || 
                taskFields.type === "proposal" || 
                taskFields.type === "general" || 
@@ -36,23 +36,9 @@ export const useTaskMutations = () => {
                taskFields.type === "follow_up") ? taskFields.type : "general"
       };
       
-      const { data, error } = await supabase
-        .from("tasks")
-        .insert([taskToCreate])
-        .select()
-        .single();
+      const { data, error } = await mockTasksAPI.createTask(taskToCreate);
 
       if (error) throw error;
-
-      // If subtasks were provided, add them
-      if (subtasks) {
-        const parsedSubtasks = JSON.parse(subtasks);
-        if (parsedSubtasks.length > 0) {
-          // Add subtasks logic would go here
-          console.log("Would add subtasks:", parsedSubtasks);
-        }
-      }
-
       return data;
     },
     onSuccess: () => {
@@ -74,27 +60,7 @@ export const useTaskMutations = () => {
       id: string;
       updates: Partial<Task>;
     }) => {
-      // Handle type compatibility
-      let taskUpdates = {...updates};
-      
-      // Ensure type field is compatible with database
-      if (updates.type) {
-        taskUpdates.type = (updates.type === "opportunity" || 
-                           updates.type === "proposal" || 
-                           updates.type === "general" || 
-                           updates.type === "meeting" || 
-                           updates.type === "call" || 
-                           updates.type === "email" || 
-                           updates.type === "follow_up") ? updates.type : "general";
-      }
-      
-      const { data, error } = await supabase
-        .from("tasks")
-        .update(taskUpdates)
-        .eq("id", id)
-        .select()
-        .single();
-
+      const { data, error } = await mockTasksAPI.updateTask(id, updates);
       if (error) throw error;
       return data;
     },
@@ -111,7 +77,7 @@ export const useTaskMutations = () => {
   // Delete a task
   const deleteTask = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("tasks").delete().eq("id", id);
+      const { error } = await mockTasksAPI.deleteTask?.(id) || { error: null };
       if (error) throw error;
       return id;
     },

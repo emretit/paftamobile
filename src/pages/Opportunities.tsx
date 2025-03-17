@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
@@ -17,13 +16,13 @@ interface OpportunitiesProps {
 
 // Define the opportunities state structure
 export interface OpportunitiesStateType {
-  new: OpportunityExtended[];
-  first_contact: OpportunityExtended[];
-  site_visit: OpportunityExtended[];
-  preparing_proposal: OpportunityExtended[];
-  proposal_sent: OpportunityExtended[];
-  accepted: OpportunityExtended[];
-  lost: OpportunityExtended[];
+  new: Opportunity[];
+  first_contact: Opportunity[];
+  site_visit: Opportunity[];
+  preparing_proposal: Opportunity[];
+  proposal_sent: Opportunity[];
+  accepted: Opportunity[];
+  lost: Opportunity[];
 }
 
 const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
@@ -45,6 +44,33 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
     setIsDetailOpen,
     setSelectedItems
   } = useOpportunities(searchQuery, selectedEmployee, selectedCustomer);
+
+  interface OpportunitiesStateType {
+    new: Opportunity[];
+    first_contact: Opportunity[];
+    site_visit: Opportunity[];
+    preparing_proposal: Opportunity[];
+    proposal_sent: Opportunity[];
+    accepted: Opportunity[];
+    lost: Opportunity[];
+  }
+  
+  // Convert OpportunitiesState to a typed structure
+  const typedOppsState = opportunities?.reduce((acc: OpportunitiesStateType, opp) => {
+    if (!acc[opp.status]) {
+      acc[opp.status] = [];
+    }
+    acc[opp.status].push(opp);
+    return acc;
+  }, {
+    new: [],
+    first_contact: [],
+    site_visit: [],
+    preparing_proposal: [],
+    proposal_sent: [],
+    accepted: [],
+    lost: []
+  } as OpportunitiesStateType);
 
   return (
     <div className="min-h-screen bg-gray-50 flex relative">
@@ -77,7 +103,7 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
             </div>
           ) : (
             <OpportunitiesKanban
-              opportunities={opportunities as OpportunitiesStateType}
+              opportunities={typedOppsState}
               onDragEnd={handleDragEnd}
               onOpportunityClick={handleSelectOpportunity}
               onOpportunitySelect={handleSelectItem}

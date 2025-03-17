@@ -59,6 +59,54 @@ let opportunities: OpportunityExtended[] = [
   }
 ];
 
+// Mock deals data (since we don't have a "deals" table in Supabase yet)
+let deals = [
+  {
+    id: "1",
+    title: "Enterprise Deal",
+    value: 150000,
+    status: "new",
+    customerName: "Acme Corporation",
+    employeeName: "John Doe",
+    priority: "high"
+  },
+  {
+    id: "2",
+    title: "Cloud Migration Deal",
+    value: 85000,
+    status: "negotiation",
+    customerName: "TechStart Inc.",
+    employeeName: "Jane Smith",
+    priority: "medium"
+  },
+  {
+    id: "3",
+    title: "Security Assessment Deal",
+    value: 45000,
+    status: "follow_up",
+    customerName: "Secure Systems Ltd.",
+    employeeName: "John Doe",
+    priority: "high"
+  }
+];
+
+// Mock tasks data
+let tasks = [
+  {
+    id: "1",
+    title: "Call Client",
+    description: "Make initial call to discuss requirements",
+    status: "todo",
+    priority: "medium",
+    type: "call",
+    assignee_id: "e1",
+    due_date: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    subtasks: []
+  }
+];
+
 // Mock API functions that mimic Supabase calls
 export const mockOpportunitiesAPI = {
   // Get all opportunities
@@ -150,6 +198,67 @@ export const mockOpportunitiesAPI = {
   }
 };
 
+// Mock deals API
+export const mockDealsAPI = {
+  getDeals: async () => {
+    return { data: deals, error: null };
+  },
+  
+  getDealCountsByStatus: async () => {
+    const counts: {status: string, count: number}[] = [];
+    const statusCounts = deals.reduce((acc, deal) => {
+      acc[deal.status] = (acc[deal.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    Object.entries(statusCounts).forEach(([status, count]) => {
+      counts.push({ status, count });
+    });
+    
+    return { data: counts, error: null };
+  },
+  
+  updateDeal: async (id: string, updates: any) => {
+    const index = deals.findIndex(deal => deal.id === id);
+    if (index === -1) {
+      return { error: new Error('Deal not found') };
+    }
+    
+    deals[index] = { ...deals[index], ...updates };
+    return { data: deals[index], error: null };
+  }
+};
+
+// Mock tasks API
+export const mockTasksAPI = {
+  getTasks: async () => {
+    return { data: tasks, error: null };
+  },
+  
+  createTask: async (taskData: any) => {
+    const newTask = {
+      id: `task-${Date.now()}`,
+      ...taskData,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      subtasks: taskData.subtasks || []
+    };
+    
+    tasks.push(newTask);
+    return { data: newTask, error: null };
+  },
+  
+  updateTask: async (id: string, updates: any) => {
+    const index = tasks.findIndex(task => task.id === id);
+    if (index === -1) {
+      return { error: new Error('Task not found') };
+    }
+    
+    tasks[index] = { ...tasks[index], ...updates, updated_at: new Date().toISOString() };
+    return { data: tasks[index], error: null };
+  }
+};
+
 // Export patched supabase object that replaces calls to non-existent tables with mock implementations
 export const crmSupabase = {
   ...supabase,
@@ -186,9 +295,62 @@ export const crmSupabase = {
           })
         })
       };
+    } else if (table === 'deals') {
+      return {
+        select: (query?: string) => {
+          return {
+            eq: (field: string, value: any) => {
+              const deal = deals.find(d => d[field as keyof typeof d] === value);
+              return { data: deal, error: null };
+            },
+            count: async (options?: { head?: boolean }) => {
+              return { count: deals.length, error: null };
+            },
+            single: async () => {
+              const deal = deals[0];
+              return { data: deal, error: null };
+            }
+          };
+        },
+        update: (updates: any) => ({
+          eq: (field: string, value: any) => mockDealsAPI.updateDeal(value, updates)
+        })
+      };
+    } else if (table === 'tasks') {
+      return {
+        select: () => {
+          return {
+            data: tasks,
+            error: null
+          };
+        },
+        insert: (newTask: any) => {
+          return mockTasksAPI.createTask(Array.isArray(newTask) ? newTask[0] : newTask);
+        },
+        update: (updates: any) => ({
+          eq: (field: string, value: any) => mockTasksAPI.updateTask(value, updates)
+        }),
+        delete: () => ({
+          eq: (field: string, value: any) => {
+            const index = tasks.findIndex(task => task[field as keyof typeof task] === value);
+            if (index !== -1) {
+              tasks.splice(index, 1);
+            }
+            return { error: null };
+          }
+        })
+      };
     }
     
     // Return the real supabase implementation for other tables
     return supabase.from(table);
+  },
+  rpc: (func: string, params?: any) => {
+    if (func === 'get_deal_counts_by_status') {
+      return mockDealsAPI.getDealCountsByStatus();
+    }
+    
+    // Fall back to actual supabase RPC
+    return supabase.rpc(func, params);
   }
 };

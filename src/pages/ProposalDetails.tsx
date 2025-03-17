@@ -19,7 +19,7 @@ import { ProposalAttachmentsTab } from "@/components/proposals/detail/ProposalAt
 import { primaryProposalStatuses, statusLabels } from "@/components/proposals/constants";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { StatusBadge } from "@/components/proposals/detail/StatusBadge";
+import StatusBadge from "@/components/proposals/detail/StatusBadge";
 
 interface ProposalDetailsProps {
   isCollapsed: boolean;
@@ -31,7 +31,7 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [currentStatus, setCurrentStatus] = useState<ProposalStatus | null>(null);
-  const { updateProposalStatus, isUpdating } = useProposalStatusUpdate();
+  const statusUpdate = useProposalStatusUpdate(id || "");
   
   // Fetch the proposal data
   const { data: proposal, isLoading, error } = useQuery({
@@ -137,11 +137,7 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
     if (!proposal || !currentStatus || currentStatus === proposal.status) return;
     
     try {
-      await updateProposalStatus.mutateAsync({
-        proposalId: proposal.id,
-        status: currentStatus,
-        opportunityId: proposal.opportunity_id
-      });
+      await statusUpdate.mutateAsync(currentStatus);
     } catch (error) {
       toast.error("Durum güncellenirken bir hata oluştu");
       console.error("Error updating status:", error);

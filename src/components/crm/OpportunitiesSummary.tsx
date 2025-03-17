@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { mockDealsAPI } from "@/services/mockCrmService";
 
 interface DealCount {
   status: string;
@@ -43,27 +43,25 @@ const OpportunitiesSummary = () => {
         setLoading(true);
         
         // Get total deals count
-        const { count: totalCount, error: totalError } = await supabase
-          .from('deals')
-          .select('*', { count: 'exact', head: true });
-          
-        if (totalError) throw totalError;
+        const { data: deals } = await mockDealsAPI.getDeals();
+        const totalCount = deals?.length || 0;
         
-        // Get deals by status using the database function
-        const { data, error } = await supabase
-          .rpc('get_deal_counts_by_status') as { data: DealStatusCount[] | null, error: Error | null };
+        // Get deals by status
+        const { data } = await mockDealsAPI.getDealCountsByStatus();
+        
+        if (data) {
+          const formattedData: DealCount[] = data.map((item: DealStatusCount) => ({
+            status: item.status,
+            count: Number(item.count),
+            label: statusLabels[item.status] || item.status,
+            color: statusColors[item.status] || "bg-gray-500"
+          }));
           
-        if (error) {
-          // Fallback if the RPC function doesn't work
-          const { data: rawData, error: queryError } = await supabase
-            .from('deals')
-            .select('status');
-            
-          if (queryError) throw queryError;
-          
-          // Process the data manually
+          setDealStats(formattedData);
+        } else {
+          // Fallback if RPC function doesn't work
           const statusCounts: Record<string, number> = {};
-          rawData.forEach(deal => {
+          deals?.forEach(deal => {
             statusCounts[deal.status] = (statusCounts[deal.status] || 0) + 1;
           });
           
@@ -75,19 +73,9 @@ const OpportunitiesSummary = () => {
           }));
           
           setDealStats(formattedData);
-        } else {
-          // If RPC function worked
-          const formattedData: DealCount[] = (data as DealStatusCount[]).map((item: DealStatusCount) => ({
-            status: item.status,
-            count: Number(item.count),
-            label: statusLabels[item.status] || item.status,
-            color: statusColors[item.status] || "bg-gray-500"
-          }));
-          
-          setDealStats(formattedData);
         }
         
-        setTotalDeals(totalCount || 0);
+        setTotalDeals(totalCount);
       } catch (error) {
         console.error('Error fetching deal stats:', error);
         toast.error('Fırsat bilgileri yüklenemedi');

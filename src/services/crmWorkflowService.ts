@@ -1,8 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { OpportunityStatus, OpportunityExtended } from "@/types/crm";
-import { Task, TaskStatus } from "@/types/task";
-import { crmSupabase, mockOpportunitiesAPI } from "./mockCrmService";
+import { Task, TaskStatus, TaskPriority } from "@/types/task";
+import { mockOpportunitiesAPI, crmSupabase } from "./mockCrmService";
 
 // This function creates relevant tasks based on opportunity status changes
 export const createTaskForOpportunity = async (
@@ -47,7 +47,7 @@ export const createTaskForOpportunity = async (
       title: taskTitle,
       description: taskDescription,
       status: "todo" as TaskStatus,
-      priority: "medium",
+      priority: "medium" as TaskPriority,
       type: "opportunity",
       assignee_id: assigneeId,
       due_date: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(), // Due in 2 days
@@ -55,11 +55,7 @@ export const createTaskForOpportunity = async (
       related_item_title: opportunityTitle
     };
     
-    const { error } = await supabase
-      .from('tasks')
-      .insert([taskData]);
-      
-    if (error) throw error;
+    await mockOpportunitiesAPI.createTask?.(taskData);
   } catch (error) {
     console.error('Error creating task:', error);
     throw error;
@@ -79,13 +75,22 @@ export const updateRelatedTasks = async (
     }
     
     // Mark existing tasks as completed if they're not already
-    const { error: updateError } = await supabase
-      .from('tasks')
-      .update({ status: 'completed' as TaskStatus })
-      .eq('related_item_id', opportunityId)
-      .eq('status', 'todo');
-      
-    if (updateError) throw updateError;
+    try {
+      const { data: tasks } = await crmSupabase.from('tasks')
+        .select('*')
+        .eq('related_item_id', opportunityId)
+        .eq('status', 'todo');
+        
+      if (tasks && tasks.length > 0) {
+        for (const task of tasks) {
+          await crmSupabase.from('tasks')
+            .update({ status: 'completed' })
+            .eq('id', task.id);
+        }
+      }
+    } catch (err) {
+      console.error('Error updating existing tasks:', err);
+    }
     
     // Create new task for the new status
     await createTaskForOpportunity(

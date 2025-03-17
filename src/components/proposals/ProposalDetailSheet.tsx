@@ -7,7 +7,7 @@ import { Proposal, ProposalStatus } from "@/types/proposal";
 import { ProposalDetailsTab } from "./detail/ProposalDetailsTab";
 import { ProposalItemsTab } from "./detail/ProposalItemsTab";
 import { ProposalNotesTab } from "./detail/ProposalNotesTab";
-import { StatusBadge } from "./detail/StatusBadge";
+import StatusBadge from "./detail/StatusBadge";
 import { useProposalStatusUpdate } from "@/hooks/useProposalStatusUpdate";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Maximize2, Save } from "lucide-react";
@@ -24,7 +24,7 @@ interface ProposalDetailSheetProps {
 
 export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetailSheetProps) => {
   const [currentStatus, setCurrentStatus] = useState<ProposalStatus | null>(null);
-  const { updateProposalStatus, isUpdating } = useProposalStatusUpdate();
+  const statusUpdate = useProposalStatusUpdate(proposal?.id || "", proposal?.opportunity_id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -41,11 +41,7 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
     if (!proposal || !currentStatus || currentStatus === proposal.status) return;
     
     try {
-      await updateProposalStatus.mutateAsync({
-        proposalId: proposal.id,
-        status: currentStatus,
-        opportunityId: proposal.opportunity_id
-      });
+      await statusUpdate.mutateAsync(currentStatus);
     } catch (error) {
       toast.error("Durum güncellenirken bir hata oluştu");
       console.error("Error updating status:", error);
@@ -90,7 +86,7 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
               <Select 
                 value={currentStatus || proposal.status} 
                 onValueChange={handleStatusChange}
-                disabled={isUpdating}
+                disabled={statusUpdate.isPending}
               >
                 <SelectTrigger className="w-full border-red-200 focus:ring-red-200">
                   <SelectValue placeholder="Durum seçin" />
@@ -106,7 +102,7 @@ export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetai
             </div>
             <Button 
               onClick={handleSaveStatus}
-              disabled={isUpdating || currentStatus === proposal.status}
+              disabled={statusUpdate.isPending || currentStatus === proposal.status}
               className="bg-red-800 text-white hover:bg-red-900"
             >
               <Save className="mr-2 h-4 w-4" />

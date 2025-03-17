@@ -3,16 +3,15 @@ import { useState, useEffect } from "react";
 import { UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { FormData } from "./types";
+import { FormData } from "./types";
+import { mockOpportunitiesAPI, mockDealsAPI } from "@/services/mockCrmService";
 
 interface TaskRelatedItemProps {
   watch: UseFormWatch<FormData>;
@@ -20,110 +19,94 @@ interface TaskRelatedItemProps {
 }
 
 const TaskRelatedItem = ({ watch, setValue }: TaskRelatedItemProps) => {
-  const [selectedSource, setSelectedSource] = useState<string | null>(null);
-  const [itemsAvailable, setItemsAvailable] = useState<{ id: string, title: string }[]>([]);
-  
-  const currentTaskType = watch("type");
-  
-  // Effect to reset when task type changes
+  const [relatedItems, setRelatedItems] = useState<{ id: string; title: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const type = watch("type");
+
   useEffect(() => {
-    setValue("related_item_id", undefined);
-    setValue("related_item_title", undefined);
-    setSelectedSource(null);
-    
-    if (currentTaskType === "opportunity") {
-      setSelectedSource("opportunities");
-    } else if (currentTaskType === "proposal") {
-      setSelectedSource("proposals");
-    } else if (currentTaskType === "follow_up" || currentTaskType === "meeting") {
-      setSelectedSource("customers");
-    } else {
-      setSelectedSource(null);
-    }
-  }, [currentTaskType, setValue]);
-  
-  // Fetch related items based on selected source
-  const { data, isLoading } = useQuery({
-    queryKey: ["relatedItems", selectedSource],
-    queryFn: async () => {
-      if (!selectedSource) return [];
-      
-      let query;
-      if (selectedSource === "opportunities") {
-        const { data, error } = await supabase
-          .from('deals')  // Assuming 'deals' is the table name for opportunities
-          .select('id, title');
-        
-        if (error) throw error;
-        return data;
-      } else if (selectedSource === "proposals") {
-        const { data, error } = await supabase
-          .from('proposals')
-          .select('id, title');
-        
-        if (error) throw error;
-        return data;
-      } else if (selectedSource === "customers") {
-        const { data, error } = await supabase
-          .from('customers')
-          .select('id, name');
-        
-        if (error) throw error;
-        return data.map(customer => ({
-          id: customer.id,
-          title: customer.name // Map customer name to title for consistent interface
-        }));
+    const fetchRelatedItems = async () => {
+      setIsLoading(true);
+      try {
+        if (type === "opportunity") {
+          const { data } = await mockOpportunitiesAPI.getOpportunities();
+          if (data) {
+            const items = data.map((opp) => ({
+              id: opp.id,
+              title: opp.title,
+            }));
+            setRelatedItems(items);
+          }
+        } else if (type === "proposal") {
+          // For this example, we'll mock proposal data
+          setRelatedItems([
+            { id: "p1", title: "Software Proposal" },
+            { id: "p2", title: "Hardware Proposal" },
+            { id: "p3", title: "Consulting Proposal" },
+          ]);
+        } else {
+          setRelatedItems([]);
+        }
+      } catch (error) {
+        console.error("Error fetching related items:", error);
+        setRelatedItems([]);
+      } finally {
+        setIsLoading(false);
       }
-      
-      return [];
-    },
-    enabled: !!selectedSource
-  });
-  
-  useEffect(() => {
-    if (data) {
-      setItemsAvailable(data);
+    };
+
+    if (type === "opportunity" || type === "proposal") {
+      fetchRelatedItems();
+    } else {
+      setRelatedItems([]);
+      setValue("related_item_id", undefined);
+      setValue("related_item_title", undefined);
     }
-  }, [data]);
-  
+  }, [type, setValue]);
+
   const handleRelatedItemChange = (id: string) => {
     setValue("related_item_id", id);
-    const selectedItem = itemsAvailable.find(item => item.id === id);
-    if (selectedItem) {
-      setValue("related_item_title", selectedItem.title);
+    const item = relatedItems.find((item) => item.id === id);
+    if (item) {
+      setValue("related_item_title", item.title);
     }
   };
-  
-  if (!selectedSource) return null;
-  
+
+  if (!["opportunity", "proposal"].includes(type)) {
+    return null;
+  }
+
   return (
-    <div className="space-y-2">
-      <Label htmlFor="related_item">İlgili {
-        selectedSource === "opportunities" ? "Fırsat" : 
-        selectedSource === "proposals" ? "Teklif" : 
-        selectedSource === "customers" ? "Müşteri" : "Öğe"
-      }</Label>
-      <Select
-        value={watch("related_item_id") || ""}
-        onValueChange={handleRelatedItemChange}
-      >
-        <SelectTrigger id="related_item">
-          <SelectValue placeholder={
-            isLoading 
-              ? "Yükleniyor..." 
-              : `İlgili ${selectedSource === "opportunities" ? "fırsat" : 
-                 selectedSource === "proposals" ? "teklif" : 
-                 selectedSource === "customers" ? "müşteri" : "öğe"} seçin`
-          } />
-        </SelectTrigger>
-        <SelectContent>
-          {itemsAvailable.map(item => (
-            <SelectItem key={item.id} value={item.id}>
-              {item.title}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="related_item">
+          {type === "opportunity" ? "İlgili Fırsat" : "İlgili Teklif"}
+        </Label>
+        <Select
+          onValueChange={handleRelatedItemChange}
+          disabled={isLoading || relatedItems.length === 0}
+        >
+          <SelectTrigger id="related_item">
+            <SelectValue placeholder={isLoading ? "Yükleniyor..." : "Seçiniz..."} />
+          </SelectTrigger>
+          <SelectContent>
+            {relatedItems.map((item) => (
+              <SelectItem key={item.id} value={item.id}>
+                {item.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {watch("related_item_id") && (
+        <div>
+          <Input
+            type="hidden"
+            id="related_item_title"
+            {...{ name: "related_item_title" }}
+          />
+        </div>
+      )}
     </div>
   );
 };

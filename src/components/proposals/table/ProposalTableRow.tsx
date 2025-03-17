@@ -1,13 +1,11 @@
 
-import { TableRow, TableCell } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Pencil, Eye } from "lucide-react";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { Proposal } from "@/types/proposal";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Proposal } from "@/types/proposal";
-import { StatusBadge } from "../detail/StatusBadge";
-import { useCustomerNames } from "@/hooks/useCustomerNames";
-import { useNavigate } from "react-router-dom";
+import { Eye, MoreHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import StatusBadge from "../detail/StatusBadge";
 
 interface ProposalTableRowProps {
   proposal: Proposal;
@@ -17,60 +15,49 @@ interface ProposalTableRowProps {
 }
 
 export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: ProposalTableRowProps) => {
-  const { getCustomerName } = useCustomerNames();
-  const navigate = useNavigate();
-
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return "-";
+  const formatDate = (date: string | null | undefined) => {
+    if (!date) return "-";
+    
     try {
-      return format(new Date(dateString), "dd.MM.yyyy", { locale: tr });
-    } catch (error) {
+      return format(new Date(date), "dd MMM yyyy", { locale: tr });
+    } catch {
       return "-";
     }
   };
-
+  
   return (
-    <TableRow 
-      className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} cursor-pointer group hover:bg-red-50/30 transition-colors`}
-      onClick={() => onSelect(proposal)}
-    >
-      <TableCell className="font-medium">#{proposal.proposal_number || "-"}</TableCell>
-      <TableCell>{proposal.customer_id ? getCustomerName(proposal.customer_id) : "-"}</TableCell>
+    <TableRow className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+      <TableCell className="font-medium">#{proposal.proposal_number}</TableCell>
+      <TableCell>
+        {proposal.customer ? (
+          <div>
+            <div className="font-medium">{proposal.customer.name}</div>
+            {proposal.customer.company && (
+              <div className="text-xs text-muted-foreground">{proposal.customer.company}</div>
+            )}
+          </div>
+        ) : (
+          <span className="text-muted-foreground">Müşteri yok</span>
+        )}
+      </TableCell>
       <TableCell>
         <StatusBadge status={proposal.status} />
       </TableCell>
+      <TableCell>{formatDate(proposal.created_at)}</TableCell>
+      <TableCell>{formatDate(proposal.valid_until)}</TableCell>
+      <TableCell className="font-medium">{formatMoney(proposal.total_value)}</TableCell>
       <TableCell>
-        {formatDate(proposal.created_at)}
-      </TableCell>
-      <TableCell>
-        {formatDate(proposal.valid_until)}
-      </TableCell>
-      <TableCell className="font-medium">
-        {formatMoney(proposal.total_value)}
-      </TableCell>
-      <TableCell onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex justify-end">
           <Button
             variant="ghost"
             size="icon"
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/proposals/detail/${proposal.id}`);
-            }}
+            onClick={() => onSelect(proposal)}
+            className="h-8 w-8"
           >
-            <Eye className="h-4 w-4 text-red-800" />
+            <Eye className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/proposals/edit/${proposal.id}`);
-            }}
-          >
-            <Pencil className="h-4 w-4 text-red-800" />
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <MoreHorizontal className="h-4 w-4" />
           </Button>
         </div>
       </TableCell>

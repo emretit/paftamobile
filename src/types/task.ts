@@ -44,3 +44,11 @@ export interface Task {
   // Used for drag and drop identification
   item_type?: string;
 }
+
+// Define TasksState interface for use in components
+export interface TasksState {
+  todo: Task[];
+  in_progress: Task[];
+  completed: Task[];
+  postponed: Task[];
+}

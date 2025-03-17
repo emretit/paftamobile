@@ -1,98 +1,113 @@
 
-import { Check, Clock, X } from "lucide-react";
+import { ArrowRight, Check, Clock, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { statusStyles, statusLabels, workflowSteps, finalStages } from "../constants";
 import { ProposalStatus } from "@/types/crm";
 
 interface ProposalWorkflowProgressProps {
   currentStatus: ProposalStatus;
+  className?: string;
 }
 
-const ProposalWorkflowProgress = ({ currentStatus }: ProposalWorkflowProgressProps) => {
-  // Check if proposal is in a final stage
-  const isFinalStage = finalStages.includes(currentStatus);
-  
-  // Get index of current step in workflow
+const ProposalWorkflowProgress = ({
+  currentStatus,
+  className,
+}: ProposalWorkflowProgressProps) => {
+  // Find the index of the current status in the workflow
   const currentStepIndex = workflowSteps.indexOf(currentStatus);
   
-  // Generate step components based on workflow steps
-  const getSteps = () => {
-    return workflowSteps.map((step, index) => {
-      // Determine if step is complete based on its position in workflow
-      const isComplete = index < currentStepIndex;
-      // Determine if step is current
-      const isCurrent = step === currentStatus;
-      // If in a final stage and not current step, get opacity based on completion
-      const opacity = isFinalStage && !isCurrent ? (isComplete ? "opacity-100" : "opacity-30") : "";
-      
-      return (
-        <div 
-          key={step} 
-          className={`flex-1 ${opacity}`}
-        >
-          <div className="relative flex items-center justify-center">
-            <div 
-              className={`w-10 h-10 rounded-full flex items-center justify-center ${statusStyles[step]}`}
-            >
-              {isComplete ? (
-                <Check className="h-5 w-5" />
-              ) : isCurrent ? (
-                <Clock className="h-5 w-5" />
-              ) : (
-                <div className="w-3 h-3 bg-current rounded-full opacity-50" />
-              )}
-            </div>
-            {index < workflowSteps.length - 1 && (
-              <div 
-                className={`h-[2px] absolute left-[50%] right-0 top-[50%] -translate-y-1/2 ${
-                  index < currentStepIndex ? "bg-green-500" : "bg-gray-200"
-                }`}
-              />
-            )}
-          </div>
-          <div className="text-xs text-center mt-2">
-            {statusLabels[step]}
-          </div>
-        </div>
-      );
-    });
-  };
+  // Check if the status is one of the final stages (accepted, rejected, expired)
+  const isFinalStage = finalStages.includes(currentStatus);
   
-  // Final stage logic (accepted, rejected, expired)
-  const getFinalStage = () => {
-    if (!isFinalStage) return null;
-    
-    return (
-      <div className="mt-8 flex items-center justify-center">
-        <div 
-          className={`px-4 py-2 rounded-full text-sm font-medium ${statusStyles[currentStatus]}`}
-        >
-          {currentStatus === "accepted" ? (
-            <div className="flex items-center">
-              <Check className="mr-2 h-4 w-4" />
-              Teklif Kabul Edildi
-            </div>
-          ) : currentStatus === "rejected" ? (
-            <div className="flex items-center">
-              <X className="mr-2 h-4 w-4" />
-              Teklif Reddedildi
-            </div>
-          ) : (
-            <div className="flex items-center">
-              <Clock className="mr-2 h-4 w-4" />
-              Teklif Süresi Doldu
-            </div>
-          )}
-        </div>
-      </div>
-    );
+  // Determine the variant (success, error, warning) for final stages
+  const getFinalStageVariant = (status: ProposalStatus) => {
+    switch (status) {
+      case "accepted":
+        return {
+          icon: <Check className="h-5 w-5 text-green-600" />,
+          label: "Teklif Kabul Edildi",
+          message: "Teklif müşteri tarafından kabul edildi."
+        };
+      case "rejected":
+        return {
+          icon: <X className="h-5 w-5 text-red-600" />,
+          label: "Teklif Reddedildi",
+          message: "Teklif müşteri tarafından reddedildi."
+        };
+      case "expired":
+        return {
+          icon: <Clock className="h-5 w-5 text-amber-600" />,
+          label: "Teklif Süresi Doldu",
+          message: "Teklif geçerlilik süresi doldu."
+        };
+      default:
+        return {
+          icon: <Check className="h-5 w-5 text-green-600" />,
+          label: statusLabels[currentStatus],
+          message: ""
+        };
+    }
   };
   
   return (
-    <div className="mb-6">
-      <div className="flex items-center">
-        {getSteps()}
-      </div>
-      {getFinalStage()}
+    <div className={cn("space-y-4", className)}>
+      {isFinalStage ? (
+        // Final stage view (Accepted, Rejected, Expired)
+        <div className="bg-gray-50 p-4 rounded-lg border">
+          <div className="flex items-center">
+            {getFinalStageVariant(currentStatus).icon}
+            <span className="ml-2 font-medium">{getFinalStageVariant(currentStatus).label}</span>
+          </div>
+          {getFinalStageVariant(currentStatus).message && (
+            <p className="mt-2 text-sm text-gray-600">{getFinalStageVariant(currentStatus).message}</p>
+          )}
+        </div>
+      ) : (
+        // Workflow progress view
+        <div className="flex items-center space-x-2">
+          {workflowSteps.map((step, index) => {
+            const isPast = index < currentStepIndex;
+            const isCurrent = index === currentStepIndex;
+            const isFuture = index > currentStepIndex;
+            
+            return (
+              <React.Fragment key={step}>
+                <div className="flex flex-col items-center">
+                  <div 
+                    className={cn(
+                      "w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium",
+                      isPast && "bg-green-100 text-green-800",
+                      isCurrent && statusStyles[currentStatus],
+                      isFuture && "bg-gray-100 text-gray-500"
+                    )}
+                  >
+                    {isPast ? <Check className="h-3 w-3" /> : index + 1}
+                  </div>
+                  <span 
+                    className={cn(
+                      "text-xs mt-1",
+                      isPast && "text-green-800",
+                      isCurrent && "font-medium",
+                      isFuture && "text-gray-500"
+                    )}
+                  >
+                    {statusLabels[step]}
+                  </span>
+                </div>
+                
+                {index < workflowSteps.length - 1 && (
+                  <ArrowRight 
+                    className={cn(
+                      "h-4 w-4",
+                      index < currentStepIndex ? "text-green-500" : "text-gray-300"
+                    )} 
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

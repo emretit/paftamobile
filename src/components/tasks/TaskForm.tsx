@@ -52,18 +52,31 @@ const TaskForm = ({ isOpen, onClose, taskToEdit }: TaskFormProps) => {
     defaultValues
   });
 
+  const { createTask, updateTask } = useTaskMutations();
+
   const handleSuccess = () => {
     onClose();
     reset();
   };
 
-  const { createTaskMutation, updateTaskMutation } = useTaskMutations(handleSuccess, taskToEdit);
-
   const onSubmit = (formData: FormData) => {
     if (taskToEdit) {
-      updateTaskMutation.mutate({ formData, subtasks });
+      updateTask.mutate({
+        id: taskToEdit.id,
+        updates: {
+          ...formData,
+          subtasks: JSON.stringify(subtasks)
+        }
+      }, {
+        onSuccess: handleSuccess
+      });
     } else {
-      createTaskMutation.mutate({ formData, subtasks });
+      createTask.mutate({
+        ...formData,
+        subtasks: JSON.stringify(subtasks)
+      }, {
+        onSuccess: handleSuccess
+      });
     }
   };
   
