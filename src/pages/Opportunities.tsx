@@ -1,11 +1,13 @@
 
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
-import DealDetailsModal from "@/components/deals/DealDetailsModal";
-import DealBulkActions from "@/components/deals/DealBulkActions";
-import DealsHeader from "@/components/deals/DealsHeader";
-import DealsKanban from "@/components/deals/DealsKanban";
-import { useDeals } from "@/hooks/useDeals";
+import OpportunitiesHeader from "@/components/opportunities/OpportunitiesHeader";
+import OpportunitiesKanban from "@/components/opportunities/OpportunitiesKanban";
+import OpportunityDetailSheet from "@/components/opportunities/OpportunityDetailSheet";
+import OpportunityBulkActions from "@/components/opportunities/OpportunityBulkActions";
+import OpportunityFilters from "@/components/opportunities/OpportunityFilters";
+import { useOpportunities } from "@/hooks/useOpportunities";
 
 interface OpportunitiesProps {
   isCollapsed: boolean;
@@ -13,18 +15,24 @@ interface OpportunitiesProps {
 }
 
 const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
+  
   const {
-    deals,
-    selectedDeal,
-    isModalOpen,
-    selectedDeals,
+    opportunities,
+    isLoading,
+    error,
+    selectedOpportunity,
+    isDetailOpen,
+    selectedItems,
     handleDragEnd,
-    handleDealClick,
-    handleDealSelect,
+    handleSelectOpportunity,
+    handleSelectItem,
     handleBulkStatusUpdate,
-    setIsModalOpen,
-    setSelectedDeals,
-  } = useDeals();
+    setIsDetailOpen,
+    setSelectedItems
+  } = useOpportunities(searchQuery, selectedEmployee, selectedCustomer);
 
   return (
     <div className="min-h-screen bg-gray-50 flex relative">
@@ -36,25 +44,45 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
       >
         <TopBar />
         <div className="p-6">
-          <DealsHeader />
-          <DealsKanban
-            deals={deals}
-            onDragEnd={handleDragEnd}
-            onDealClick={handleDealClick}
-            onDealSelect={handleDealSelect}
-            selectedDeals={selectedDeals}
+          <OpportunitiesHeader />
+          
+          <OpportunityFilters 
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            selectedEmployee={selectedEmployee}
+            setSelectedEmployee={setSelectedEmployee}
+            selectedCustomer={selectedCustomer}
+            setSelectedCustomer={setSelectedCustomer}
           />
           
-          <DealDetailsModal
-            deal={selectedDeal}
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
+          {isLoading ? (
+            <div className="flex justify-center items-center h-96">
+              <p>Yükleniyor...</p>
+            </div>
+          ) : error ? (
+            <div className="flex justify-center items-center h-96 text-red-500">
+              <p>Fırsatlar yüklenirken bir hata oluştu.</p>
+            </div>
+          ) : (
+            <OpportunitiesKanban
+              opportunities={opportunities}
+              onDragEnd={handleDragEnd}
+              onOpportunityClick={handleSelectOpportunity}
+              onOpportunitySelect={handleSelectItem}
+              selectedOpportunities={selectedItems}
+            />
+          )}
+          
+          <OpportunityDetailSheet
+            opportunity={selectedOpportunity}
+            isOpen={isDetailOpen}
+            onClose={() => setIsDetailOpen(false)}
           />
 
-          <DealBulkActions
-            selectedDeals={selectedDeals}
+          <OpportunityBulkActions
+            selectedOpportunities={selectedItems}
             onUpdateStatus={handleBulkStatusUpdate}
-            onClearSelection={() => setSelectedDeals([])}
+            onClearSelection={() => setSelectedItems([])}
           />
         </div>
       </main>

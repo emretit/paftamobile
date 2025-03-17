@@ -70,21 +70,20 @@ export const useKanbanTasks = (
       // Map tasks with their assignees and parse subtasks if stored as JSON string
       return tasksData.map(task => {
         // Parse subtasks if stored as string
-        let parsedSubtasks = undefined;
+        let parsedSubtasks = [];
         
         if (task.subtasks && typeof task.subtasks === 'string') {
           try {
             parsedSubtasks = JSON.parse(task.subtasks);
           } catch (e) {
             console.error('Error parsing subtasks JSON:', e);
-            parsedSubtasks = [];
           }
         }
 
         return {
           ...task,
           item_type: 'task',
-          subtasks: parsedSubtasks || [],
+          subtasks: parsedSubtasks,
           assignee: task.assignee_id ? employees[task.assignee_id] : undefined
         } as Task;
       });

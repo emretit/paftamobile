@@ -5,6 +5,7 @@ import { UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { FormData } from "./types";
+import type { TaskType } from "@/types/task";
 
 interface TaskRelatedItemProps {
   watch: UseFormWatch<FormData>;
@@ -27,11 +28,12 @@ const TaskRelatedItem = ({ watch, setValue }: TaskRelatedItemProps) => {
   });
 
   // Early return if the task type is not one that relates to other entities
-  if (watch("type") === "general" || 
-      watch("type") === "meeting" || 
-      watch("type") === "follow_up" || 
-      watch("type") === "call" || 
-      watch("type") === "email") {
+  const taskType = watch("type") as TaskType;
+  if (taskType === "general" || 
+      taskType === "meeting" || 
+      taskType === "follow_up" || 
+      taskType === "call" || 
+      taskType === "email") {
     return null;
   }
 
@@ -56,12 +58,12 @@ const TaskRelatedItem = ({ watch, setValue }: TaskRelatedItemProps) => {
           <SelectValue placeholder="İlişkili öğe seçin" />
         </SelectTrigger>
         <SelectContent>
-          {watch("type") === "opportunity" && relatedItems?.opportunities.map((opp) => (
+          {taskType === "opportunity" && relatedItems?.opportunities.map((opp) => (
             <SelectItem key={opp.id} value={`opportunity:${opp.id}`}>
               {opp.title}
             </SelectItem>
           ))}
-          {watch("type") === "proposal" && relatedItems?.proposals.map((prop) => (
+          {taskType === "proposal" && relatedItems?.proposals.map((prop) => (
             <SelectItem key={prop.id} value={`proposal:${prop.id}`}>
               {prop.title}
             </SelectItem>
