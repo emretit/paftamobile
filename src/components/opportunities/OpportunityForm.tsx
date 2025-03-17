@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -18,6 +17,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { createTaskForOpportunity } from "@/services/crmWorkflowService";
+import { mockOpportunitiesAPI } from "@/services/mockCrmService";
 
 interface OpportunityFormProps {
   isOpen: boolean;
@@ -74,22 +74,16 @@ const OpportunityForm = ({ isOpen, onClose, opportunityToEdit }: OpportunityForm
       
       if (opportunityToEdit) {
         // Update existing
-        const { data: updatedOpportunity, error } = await supabase
-          .from('opportunities')
-          .update(newOpportunity)
-          .eq('id', opportunityToEdit.id)
-          .select()
-          .single();
+        const { data: updatedOpportunity, error } = await mockOpportunitiesAPI.updateOpportunity(
+          opportunityToEdit.id, 
+          newOpportunity
+        );
           
         if (error) throw error;
         return updatedOpportunity;
       } else {
         // Create new
-        const { data: createdOpportunity, error } = await supabase
-          .from('opportunities')
-          .insert([newOpportunity])
-          .select()
-          .single();
+        const { data: createdOpportunity, error } = await mockOpportunitiesAPI.createOpportunity(newOpportunity);
           
         if (error) throw error;
         return createdOpportunity;
@@ -100,7 +94,7 @@ const OpportunityForm = ({ isOpen, onClose, opportunityToEdit }: OpportunityForm
       toast.success(opportunityToEdit ? 'Fırsat güncellendi' : 'Fırsat oluşturuldu');
       
       // For new opportunities, create an initial task
-      if (!opportunityToEdit) {
+      if (!opportunityToEdit && data) {
         await createTaskForOpportunity(
           data.id,
           data.title,

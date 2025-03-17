@@ -8,10 +8,22 @@ import OpportunityDetailSheet from "@/components/opportunities/OpportunityDetail
 import OpportunityBulkActions from "@/components/opportunities/OpportunityBulkActions";
 import OpportunityFilters from "@/components/opportunities/OpportunityFilters";
 import { useOpportunities } from "@/hooks/useOpportunities";
+import { OpportunityExtended } from "@/types/crm";
 
 interface OpportunitiesProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
+}
+
+// Define the opportunities state structure
+export interface OpportunitiesStateType {
+  new: OpportunityExtended[];
+  first_contact: OpportunityExtended[];
+  site_visit: OpportunityExtended[];
+  preparing_proposal: OpportunityExtended[];
+  proposal_sent: OpportunityExtended[];
+  accepted: OpportunityExtended[];
+  lost: OpportunityExtended[];
 }
 
 const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
@@ -65,7 +77,7 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
             </div>
           ) : (
             <OpportunitiesKanban
-              opportunities={opportunities}
+              opportunities={opportunities as OpportunitiesStateType}
               onDragEnd={handleDragEnd}
               onOpportunityClick={handleSelectOpportunity}
               onOpportunitySelect={handleSelectItem}

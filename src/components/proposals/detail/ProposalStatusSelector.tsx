@@ -1,91 +1,104 @@
 
-import { useState } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useRef, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { statusLabels, statusStyles, primaryProposalStatuses } from "../constants";
-import { ProposalStatus } from "@/types/proposal";
+import { ArrowRightIcon, SaveIcon } from "lucide-react";
+import { proposalStatusLabels, statusStyles, primaryProposalStatuses } from "../constants";
+import { ProposalStatus } from "@/types/crm";
 
 interface ProposalStatusSelectorProps {
   currentStatus: ProposalStatus;
   onStatusChange: (status: ProposalStatus) => void;
-  isUpdating?: boolean;
+  isLoading?: boolean;
 }
 
-export const ProposalStatusSelector = ({ 
-  currentStatus, 
+const ProposalStatusSelector = ({
+  currentStatus,
   onStatusChange,
-  isUpdating = false
+  isLoading = false
 }: ProposalStatusSelectorProps) => {
-  const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState<ProposalStatus>(currentStatus);
+  const [isEditing, setIsEditing] = useState(false);
+  const previousStatus = useRef(currentStatus);
 
-  // Define the statuses that should be shown in the selector
-  const availableStatuses: ProposalStatus[] = [
-    ...primaryProposalStatuses,
-    "accepted",
-    "rejected",
-    "expired", 
-    "converted_to_order"
-  ];
+  const handleStatusChange = (newStatus: string) => {
+    setStatus(newStatus as ProposalStatus);
+    setIsEditing(true);
+  };
 
-  const handleSelect = (selectedStatus: ProposalStatus) => {
-    if (selectedStatus !== currentStatus) {
-      onStatusChange(selectedStatus);
-    }
-    setOpen(false);
+  const handleStatusSave = () => {
+    onStatusChange(status);
+    setIsEditing(false);
+    previousStatus.current = status;
+  };
+
+  const handleCancel = () => {
+    setStatus(previousStatus.current);
+    setIsEditing(false);
   };
 
   return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium">Teklif Durumu</label>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+    <div className="flex items-center space-x-2">
+      <Select value={status} onValueChange={handleStatusChange} disabled={isLoading}>
+        <SelectTrigger className="w-[180px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {primaryProposalStatuses.map((status) => (
+            <SelectItem key={status} value={status}>
+              <div className="flex items-center">
+                <span
+                  className={`w-2 h-2 rounded-full mr-2 ${
+                    statusStyles[status].split(" ")[0]
+                  }`}
+                />
+                <span>{proposalStatusLabels[status]}</span>
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {isEditing ? (
+        <div className="flex space-x-2">
           <Button
+            size="sm"
             variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between"
-            disabled={isUpdating}
+            onClick={handleCancel}
+            className="h-8"
           >
-            <div className="flex items-center">
-              <span 
-                className={`w-2 h-2 rounded-full mr-2 ${statusStyles[currentStatus]?.bg || "bg-gray-400"}`}
-              />
-              {statusLabels[currentStatus] || currentStatus}
-            </div>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            İptal
           </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-full p-0">
-          <Command>
-            <CommandInput placeholder="Durum arayın..." />
-            <CommandEmpty>Sonuç bulunamadı.</CommandEmpty>
-            <CommandGroup>
-              {availableStatuses.map((status) => (
-                <CommandItem
-                  key={status}
-                  value={status}
-                  onSelect={() => handleSelect(status)}
-                  className="flex items-center"
-                >
-                  <span 
-                    className={`w-2 h-2 rounded-full mr-2 ${statusStyles[status]?.bg || "bg-gray-400"}`}
-                  />
-                  {statusLabels[status] || status}
-                  <Check
-                    className={cn(
-                      "ml-auto h-4 w-4",
-                      currentStatus === status ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </Command>
-        </PopoverContent>
-      </Popover>
+          <Button
+            size="sm"
+            onClick={handleStatusSave}
+            disabled={isLoading}
+            className="h-8"
+          >
+            <SaveIcon className="mr-1 h-3 w-3" />
+            Kaydet
+          </Button>
+        </div>
+      ) : (
+        status !== currentStatus && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleStatusSave}
+            className="h-8"
+          >
+            <ArrowRightIcon className="h-3 w-3" />
+          </Button>
+        )
+      )}
     </div>
   );
 };
+
+export default ProposalStatusSelector;

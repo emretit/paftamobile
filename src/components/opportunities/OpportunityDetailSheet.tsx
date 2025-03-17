@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Maximize2, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +16,7 @@ import OpportunityBasicInfo from "./tabs/OpportunityBasicInfo";
 import OpportunityContactHistory from "./tabs/OpportunityContactHistory";
 import OpportunityTasksTab from "./tabs/OpportunityTasksTab";
 import { createTaskForOpportunity } from "@/services/crmWorkflowService";
+import { mockOpportunitiesAPI } from "@/services/mockCrmService";
 
 interface OpportunityDetailSheetProps {
   opportunity: Opportunity | null;
@@ -56,10 +56,7 @@ export const OpportunityDetailSheet = ({
         updateData.status = status;
       }
       
-      const { error } = await supabase
-        .from('opportunities')
-        .update(updateData)
-        .eq('id', id);
+      const { error } = await mockOpportunitiesAPI.updateOpportunity(id, updateData);
         
       if (error) throw error;
       

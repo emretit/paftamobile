@@ -25,3 +25,13 @@ export interface Deal {
   notes?: string;
   internalComments?: string;
 }
+
+// Add mapping to make DealStatus compatible with OpportunityStatus
+export const dealToOpportunityStatus = (dealStatus: DealStatus): OpportunityStatus => {
+  switch (dealStatus) {
+    case "negotiation": return "preparing_proposal";
+    case "follow_up": return "proposal_sent";
+    case "won": return "accepted";
+    default: return dealStatus as OpportunityStatus;
+  }
+};

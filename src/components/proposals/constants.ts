@@ -21,7 +21,7 @@ export const proposalStatusColors: Record<ProposalStatus, string> = {
   expired: "bg-amber-100 text-amber-800"
 };
 
-// Additional exports needed for other components
+// Export alias for backward compatibility
 export const statusLabels = proposalStatusLabels;
 export const statusStyles = proposalStatusColors;
 export const primaryProposalStatuses: ProposalStatus[] = ["draft", "pending_approval", "sent", "accepted"];

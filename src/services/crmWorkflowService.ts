@@ -43,19 +43,21 @@ export const createTaskForOpportunity = async (
   
   // Create task in database
   try {
+    const taskData = {
+      title: taskTitle,
+      description: taskDescription,
+      status: "todo" as TaskStatus,
+      priority: "medium",
+      type: "opportunity",
+      assignee_id: assigneeId,
+      due_date: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(), // Due in 2 days
+      related_item_id: opportunityId,
+      related_item_title: opportunityTitle
+    };
+    
     const { error } = await supabase
       .from('tasks')
-      .insert([{
-        title: taskTitle,
-        description: taskDescription,
-        status: "todo" as TaskStatus,
-        priority: "medium",
-        type: "opportunity",
-        assignee_id: assigneeId,
-        due_date: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(), // Due in 2 days
-        related_item_id: opportunityId,
-        related_item_title: opportunityTitle
-      }]);
+      .insert([taskData]);
       
     if (error) throw error;
   } catch (error) {
@@ -95,5 +97,41 @@ export const updateRelatedTasks = async (
   } catch (error) {
     console.error('Error updating related tasks:', error);
     throw error;
+  }
+};
+
+// Export function to update opportunity on proposal status change
+export const updateOpportunityOnProposalStatusChange = async (
+  proposalId: string,
+  status: string,
+  opportunityId?: string
+): Promise<void> => {
+  if (!opportunityId) return;
+  
+  try {
+    let opportunityStatus: OpportunityStatus | undefined;
+    
+    // Map proposal status to corresponding opportunity status
+    switch (status) {
+      case "sent":
+        opportunityStatus = "proposal_sent";
+        break;
+      case "accepted":
+        opportunityStatus = "accepted";
+        break;
+      case "rejected":
+        opportunityStatus = "lost";
+        break;
+      default:
+        // No need to update for other statuses
+        return;
+    }
+    
+    if (opportunityStatus) {
+      await mockOpportunitiesAPI.updateOpportunity(opportunityId, { status: opportunityStatus });
+      await updateRelatedTasks(opportunityId, opportunityStatus);
+    }
+  } catch (error) {
+    console.error('Error updating opportunity on proposal status change:', error);
   }
 };
