@@ -35,6 +35,7 @@ export interface Task {
     avatar_url?: string;
   };
   opportunity_id?: string;
+  isOverdue?: boolean;
 }
 
 export interface TaskWithOverdue extends Task {

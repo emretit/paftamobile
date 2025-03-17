@@ -1,7 +1,7 @@
 
 import { TaskPriority } from "@/types/task";
 
-export const getPriorityColor = (priority: TaskPriority): string => {
+export const getPriorityColor = (priority: TaskPriority | string): string => {
   switch (priority) {
     case "high":
       return "bg-red-100 text-red-800";
@@ -14,7 +14,7 @@ export const getPriorityColor = (priority: TaskPriority): string => {
   }
 };
 
-export const getPriorityLabel = (priority: TaskPriority): string => {
+export const getPriorityLabel = (priority: TaskPriority | string): string => {
   switch (priority) {
     case "high":
       return "Yüksek";

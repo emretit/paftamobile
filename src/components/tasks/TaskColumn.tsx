@@ -2,13 +2,13 @@
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { LucideIcon } from "lucide-react";
 import TaskCard from "./TaskCard";
-import type { Task } from "@/types/task";
+import type { Task, TaskWithOverdue } from "@/types/task";
 
 interface TaskColumnProps {
   id: string;
   title: string;
   icon: LucideIcon;
-  tasks: Task[];
+  tasks: Task[] | TaskWithOverdue[];
   onEdit?: (task: Task) => void;
   onSelect?: (task: Task) => void;
 }
@@ -34,7 +34,7 @@ const TaskColumn = ({ id, title, icon: Icon, tasks, onEdit, onSelect }: TaskColu
                   className={snapshot.isDragging ? "shadow-lg" : ""}
                 >
                   <TaskCard 
-                    task={task}
+                    task={task as TaskWithOverdue}
                     index={index}
                     onEdit={onEdit ? () => onEdit(task) : undefined} 
                     onSelect={onSelect ? () => onSelect(task) : undefined} 
