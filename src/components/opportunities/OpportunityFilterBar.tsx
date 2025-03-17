@@ -1,7 +1,8 @@
 
-import React from 'react';
-import { Search } from "lucide-react";
+import React from "react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Filter } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OpportunityStatus, opportunityStatusLabels } from "@/types/crm";
 
@@ -20,27 +21,21 @@ const OpportunityFilterBar = ({
   statusFilter,
   setStatusFilter,
   priorityFilter,
-  setPriorityFilter
+  setPriorityFilter,
 }: OpportunityFilterBarProps) => {
   return (
-    <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-      <div className="relative w-full md:w-auto max-w-sm">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+    <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-gray-50 p-4 rounded-lg">
+      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
         <Input
           placeholder="Fırsat ara..."
-          className="pl-10 w-full"
           value={filterKeyword}
           onChange={(e) => setFilterKeyword(e.target.value)}
+          className="max-w-xs"
         />
-      </div>
-      
-      <div className="flex flex-wrap gap-3 w-full md:w-auto">
-        <Select
-          value={statusFilter}
-          onValueChange={(value) => setStatusFilter(value as OpportunityStatus | "all")}
-        >
+        
+        <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as OpportunityStatus | "all")}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Durum" />
+            <SelectValue placeholder="Tüm Durumlar" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tüm Durumlar</SelectItem>
@@ -54,12 +49,12 @@ const OpportunityFilterBar = ({
           </SelectContent>
         </Select>
         
-        <Select
-          value={priorityFilter || ""}
+        <Select 
+          value={priorityFilter || ""} 
           onValueChange={(value) => setPriorityFilter(value === "" ? null : value)}
         >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Öncelik" />
+            <SelectValue placeholder="Öncelik Seçin" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">Tüm Öncelikler</SelectItem>
@@ -69,6 +64,11 @@ const OpportunityFilterBar = ({
           </SelectContent>
         </Select>
       </div>
+      
+      <Button variant="outline" className="sm:ml-auto">
+        <Filter className="mr-2 h-4 w-4" />
+        Filtreler
+      </Button>
     </div>
   );
 };
