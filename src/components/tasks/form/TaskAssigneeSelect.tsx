@@ -1,14 +1,16 @@
 
 import { useState, useEffect } from "react";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UseFormReturn } from "react-hook-form";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
+import { UseFormReturn } from "react-hook-form";
 
 interface Employee {
   id: string;
   first_name: string;
   last_name: string;
+  avatar_url?: string;
 }
 
 interface TaskAssigneeSelectProps {
@@ -18,22 +20,23 @@ interface TaskAssigneeSelectProps {
 
 const TaskAssigneeSelect = ({ form, defaultValue }: TaskAssigneeSelectProps) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
+        setIsLoading(true);
         const { data, error } = await supabase
           .from("employees")
-          .select("id, first_name, last_name")
-          .eq("status", "active");
-        
+          .select("id, first_name, last_name, avatar_url")
+          .eq("status", "aktif"); // Use "aktif" instead of "active"
+
         if (error) throw error;
         setEmployees(data || []);
       } catch (error) {
         console.error("Error fetching employees:", error);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -46,31 +49,40 @@ const TaskAssigneeSelect = ({ form, defaultValue }: TaskAssigneeSelectProps) => 
       name="assignee_id"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Sorumlu</FormLabel>
+          <FormLabel>Atanan Kişi</FormLabel>
           <Select
+            disabled={isLoading}
             onValueChange={field.onChange}
-            defaultValue={field.value}
+            defaultValue={defaultValue || field.value}
           >
-            <FormControl>
-              <SelectTrigger>
-                <SelectValue placeholder="Sorumlu seçin" />
-              </SelectTrigger>
-            </FormControl>
+            <SelectTrigger>
+              <SelectValue 
+                placeholder={isLoading ? "Yükleniyor..." : "Atanacak kişiyi seçin"} 
+              />
+            </SelectTrigger>
             <SelectContent>
-              {loading ? (
-                <SelectItem value="" disabled>Yükleniyor...</SelectItem>
-              ) : employees.length === 0 ? (
-                <SelectItem value="" disabled>Çalışan bulunamadı</SelectItem>
-              ) : (
-                employees.map((employee) => (
-                  <SelectItem key={employee.id} value={employee.id}>
+              <SelectItem value="">Atanmamış</SelectItem>
+              {employees.map((employee) => (
+                <SelectItem key={employee.id} value={employee.id}>
+                  <div className="flex items-center">
+                    <Avatar className="h-6 w-6 mr-2">
+                      {employee.avatar_url && (
+                        <AvatarImage 
+                          src={employee.avatar_url} 
+                          alt={`${employee.first_name} ${employee.last_name}`} 
+                        />
+                      )}
+                      <AvatarFallback>
+                        {employee.first_name[0]}
+                        {employee.last_name[0]}
+                      </AvatarFallback>
+                    </Avatar>
                     {employee.first_name} {employee.last_name}
-                  </SelectItem>
-                ))
-              )}
+                  </div>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          <FormMessage />
         </FormItem>
       )}
     />

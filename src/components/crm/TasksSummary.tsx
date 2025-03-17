@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, isPast, isToday } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Task, TaskType } from "@/types/task";
+import { Task, TaskStatus, TaskType } from "@/types/task";
 
 interface TaskWithOverdue extends Task {
   isOverdue: boolean;
@@ -43,9 +42,13 @@ const TasksSummary = () => {
           
           return {
             ...task,
-            type: task.type || 'general' as TaskType, // Ensure type property exists
+            status: (task.status || 'todo') as TaskStatus,
+            priority: (task.priority || 'medium') as TaskPriority,
+            type: (task.type || 'general') as TaskType,
+            created_at: task.created_at || new Date().toISOString(),
+            updated_at: task.updated_at || new Date().toISOString(),
             isOverdue
-          };
+          } as TaskWithOverdue;
         });
         
         setTasks(formattedData);

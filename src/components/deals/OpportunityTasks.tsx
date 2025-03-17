@@ -137,10 +137,11 @@ const OpportunityTasks = ({ opportunity, tasks, onEditTask, onSelectTask }: Oppo
         {tasks.length === 0 ? (
           <p className="text-sm text-gray-500">Henüz görev eklenmemiş</p>
         ) : (
-          tasks.map((task) => (
+          tasks.map((task, index) => (
             <TaskCard
               key={task.id}
               task={task}
+              index={index}
               onEdit={() => handleTaskEdit(task)}
               onSelect={() => handleTaskSelect(task)}
             />

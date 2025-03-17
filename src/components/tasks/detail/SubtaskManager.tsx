@@ -24,7 +24,7 @@ export const SubtaskManager = ({ task, onUpdate }: SubtaskManagerProps) => {
       id: uuidv4(),
       title: newSubtask.trim(),
       completed: false,
-      created_at: new Date().toISOString()
+      task_id: task.id
     };
     
     const currentSubtasks = task.subtasks || [];

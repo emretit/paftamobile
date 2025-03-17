@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { usePipelineItems } from "./hooks/usePipelineItems";
 import { filterItems } from "./utils/filterItems";
@@ -89,7 +88,7 @@ export const UnifiedPipeline = ({
         <div key={column.id} className="bg-slate-50 rounded-lg p-4">
           <h3 className="font-semibold text-md mb-4">{column.name}</h3>
           
-          {filteredItems.filter(item => item.status === column.id).map(item => (
+          {filteredItems.filter(item => item.status === column.id).map((item, index) => (
             <div key={`${item.id}`} className="mb-2">
               {/* Check if item is a Deal by looking for the value property */}
               {'value' in item ? (
@@ -102,6 +101,7 @@ export const UnifiedPipeline = ({
               ) : (
                 <TaskCard
                   task={item as Task}
+                  index={index}
                   onEdit={() => {}}
                   onSelect={() => {}}
                 />

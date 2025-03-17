@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
-import { Task, TaskStatus } from "@/types/task";
+import { Task, TaskStatus, TaskType } from "@/types/task";
 import { useKanbanTasks } from "./hooks/useKanbanTasks";
 import { useTaskMutations } from "./hooks/useTaskMutations";
 import KanbanColumn from "./KanbanColumn";
@@ -24,10 +24,13 @@ export const TasksKanban = ({
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
+  // Convert selectedType to TaskType or null
+  const typedSelectedType = selectedType as TaskType | null;
+  
   const { tasks, setTasksState, isLoading, error } = useKanbanTasks({
     searchQuery,
     selectedEmployee,
-    selectedType
+    selectedType: typedSelectedType
   });
   
   const { updateTask } = useTaskMutations();

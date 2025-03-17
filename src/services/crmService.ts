@@ -7,8 +7,8 @@ import {
   OpportunityStatus, 
   ContactHistoryItem 
 } from "@/types/crm";
-import { Task, TaskStatus, TaskPriority, TaskType } from "@/types/task";
-import { Proposal, ProposalStatus } from "@/types/proposal";
+import { Task, TaskStatus, TaskPriority, TaskType, SubTask } from "@/types/task";
+import { Proposal } from "@/types/proposal";
 
 // Mock data until Supabase tables are created
 const mockOpportunities: Opportunity[] = [
@@ -77,25 +77,27 @@ const mockTasks: Task[] = [
     id: uuidv4(),
     title: "İlk görüşmeyi yap ve ziyaret planla",
     description: "Acme Corp. ile ilk toplantı",
-    status: "todo",
-    priority: "high",
-    type: "meeting",
+    status: "todo" as TaskStatus,
+    priority: "high" as TaskPriority,
+    type: "meeting" as TaskType,
     assignee_id: "1",
     due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-    related_item_id: mockOpportunities[0].id,
-    related_item_title: mockOpportunities[0].title,
+    related_item_id: mockOpportunities[0]?.id,
+    related_item_title: mockOpportunities[0]?.title,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     subtasks: [
       {
         id: uuidv4(),
         title: "Toplantı gündemini hazırla",
-        completed: true
+        completed: true,
+        task_id: "parent_task_id"
       },
       {
         id: uuidv4(),
         title: "Ürün demosunu hazırla",
-        completed: false
+        completed: false,
+        task_id: "parent_task_id"
       }
     ]
   },
@@ -103,13 +105,13 @@ const mockTasks: Task[] = [
     id: uuidv4(),
     title: "Teklif Hazırla",
     description: "Teknik A.Ş. için danışmanlık teklifi",
-    status: "in_progress",
-    priority: "medium",
-    type: "proposal",
+    status: "in_progress" as TaskStatus,
+    priority: "medium" as TaskPriority,
+    type: "proposal" as TaskType,
     assignee_id: "2",
     due_date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
-    related_item_id: mockOpportunities[1].id,
-    related_item_title: mockOpportunities[1].title,
+    related_item_id: mockOpportunities[1]?.id,
+    related_item_title: mockOpportunities[1]?.title,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     subtasks: []
@@ -210,17 +212,19 @@ export const crmService = {
       mockOpportunities.push(newOpportunity);
       
       // Create default first task for the new opportunity
-      this.createTask({
-        title: "İlk görüşmeyi yap ve ziyaret planla",
-        description: `${newOpportunity.title} için ilk görüşme`,
-        status: "todo",
-        priority: "medium",
-        type: "meeting",
-        assignee_id: newOpportunity.employee_id,
-        due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        related_item_id: newOpportunity.id,
-        related_item_title: newOpportunity.title
-      });
+      if (newOpportunity.id) {
+        crmService.createTask({
+          title: "İlk görüşmeyi yap ve ziyaret planla",
+          description: `${newOpportunity.title} için ilk görüşme`,
+          status: "todo" as TaskStatus,
+          priority: "medium" as TaskPriority,
+          type: "meeting" as TaskType,
+          assignee_id: newOpportunity.employee_id,
+          due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+          related_item_id: newOpportunity.id,
+          related_item_title: newOpportunity.title
+        });
+      }
       
       return { data: newOpportunity, error: null };
     } catch (error) {
@@ -336,9 +340,9 @@ export const crmService = {
       related_item_id: opportunityId,
       related_item_title: opportunityTitle,
       assignee_id: assigneeId,
-      status: "todo",
-      priority: "medium",
-      type: "opportunity"
+      status: "todo" as TaskStatus,
+      priority: "medium" as TaskPriority,
+      type: "opportunity" as TaskType
     };
     
     switch (newStatus) {
@@ -353,12 +357,12 @@ export const crmService = {
       case "site_visit":
         taskData.title = "Teklif hazırla";
         taskData.description = `${opportunityTitle} için teklif hazırla`;
-        taskData.type = "proposal";
+        taskData.type = "proposal" as TaskType;
         break;
       case "preparing_proposal":
         taskData.title = "Teklif onayı al";
         taskData.description = `${opportunityTitle} için hazırlanan teklifi kontrol et ve onaya sun`;
-        taskData.type = "proposal";
+        taskData.type = "proposal" as TaskType;
         break;
       case "proposal_sent":
         taskData.title = "Teklif takibini yap";
@@ -375,7 +379,7 @@ export const crmService = {
         break;
     }
     
-    return await this.createTask(taskData);
+    return await crmService.createTask(taskData);
   },
   
   // Get all tasks
@@ -417,20 +421,31 @@ export const crmService = {
   // Create a new task
   createTask: async (taskData: Partial<Task>) => {
     try {
+      const taskId = uuidv4();
+      
+      // Prepare subtasks if any
+      const subtasks = taskData.subtasks 
+        ? taskData.subtasks.map(subtask => ({
+            ...subtask,
+            task_id: taskId // Ensure task_id is set
+          }))
+        : [];
+      
       const newTask: Task = {
-        id: uuidv4(),
+        id: taskId,
         title: taskData.title || 'New Task',
         description: taskData.description || '',
-        status: taskData.status || 'todo',
-        priority: taskData.priority || 'medium',
-        type: taskData.type || 'general',
+        status: taskData.status || 'todo' as TaskStatus,
+        priority: taskData.priority || 'medium' as TaskPriority,
+        type: taskData.type || 'general' as TaskType,
         assignee_id: taskData.assignee_id,
+        assigned_to: taskData.assigned_to,
         due_date: taskData.due_date,
         related_item_id: taskData.related_item_id,
         related_item_title: taskData.related_item_title,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        subtasks: taskData.subtasks || []
+        subtasks: subtasks
       };
       
       // In production, we would use Supabase
@@ -452,6 +467,14 @@ export const crmService = {
       const index = mockTasks.findIndex(t => t.id === id);
       if (index === -1) {
         return { data: null, error: new Error('Task not found') };
+      }
+      
+      // Process subtasks if needed
+      if (taskData.subtasks) {
+        taskData.subtasks = taskData.subtasks.map(subtask => ({
+          ...subtask,
+          task_id: id
+        }));
       }
       
       // Update the task in our mock data

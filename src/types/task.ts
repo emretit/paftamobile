@@ -9,8 +9,8 @@ export interface SubTask {
   id: string;
   title: string;
   completed: boolean;
-  task_id: string;
-  // No created_at property here
+  task_id?: string; // Make task_id optional
+  // created_at is not part of the interface
 }
 
 export interface Task {

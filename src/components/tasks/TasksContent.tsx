@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import TasksTable from "./TasksTable";
-import type { Task } from "@/types/task";
+import type { Task, TaskType } from "@/types/task";
 import { useTaskRealtime } from "./hooks/useTaskRealtime";
 
 interface TasksContentProps {
@@ -37,8 +37,9 @@ const TasksContent = ({
       
       // If we have employees referenced, fetch them separately
       const assigneeIds = tasksData
-        .filter(task => task.assignee_id)
-        .map(task => task.assignee_id);
+        .filter(task => task.assignee_id || task.assigned_to)
+        .map(task => task.assignee_id || task.assigned_to)
+        .filter(Boolean);
       
       let employees = {};
       
@@ -58,12 +59,15 @@ const TasksContent = ({
         }
       }
 
-      // Map tasks with their assignees
+      // Map tasks with their assignees and ensure they have the required type property
       return tasksData.map(task => {
-        const assignee = task.assignee_id ? employees[task.assignee_id] : null;
+        const assigneeId = task.assignee_id || task.assigned_to;
+        const assignee = assigneeId ? employees[assigneeId] : null;
+        
         return {
           ...task,
-          item_type: task.type || "task", // Add item_type based on type field if needed
+          // Ensure type property exists
+          type: (task.type || task.related_item_type || "general") as TaskType,
           assignee: assignee ? {
             id: assignee.id,
             first_name: assignee.first_name,
