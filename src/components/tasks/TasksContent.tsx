@@ -37,8 +37,8 @@ const TasksContent = ({
       
       // If we have employees referenced, fetch them separately
       const employeeIds = tasksData
-        .filter(task => task.assignee_id || task.assigned_to)
-        .map(task => task.assignee_id || task.assigned_to)
+        .filter(task => task.assigned_to)
+        .map(task => task.assigned_to)
         .filter(Boolean) as string[];
       
       let employees: Record<string, any> = {};
@@ -62,24 +62,20 @@ const TasksContent = ({
       // Process due dates to check for overdue tasks
       const now = new Date();
       
-      // Map tasks with their assignees and ensure they have the required type property
+      // Map tasks with their assignees
       return tasksData.map((task: any) => {
-        // Create a normalized task object with all required properties
-        const normalizedTask = {
-          ...task,
-          // Ensure assignee_id exists by mapping from assigned_to if needed
-          assignee_id: task.assignee_id || task.assigned_to,
-          // Always ensure type property exists
-          type: (task.type || task.related_item_type || "general") as TaskType
-        };
-        
-        const assigneeId = normalizedTask.assignee_id;
+        const assigneeId = task.assigned_to;
         const assignee = assigneeId ? employees[assigneeId] : null;
-        const dueDate = normalizedTask.due_date ? new Date(normalizedTask.due_date) : null;
+        const dueDate = task.due_date ? new Date(task.due_date) : null;
         const isOverdue = dueDate ? dueDate < now : false;
         
+        // Ensure the type property is always set
+        const taskType = task.type || task.related_item_type || "general";
+        
         return {
-          ...normalizedTask,
+          ...task,
+          assignee_id: task.assigned_to, // Map assigned_to to assignee_id for compatibility
+          type: taskType as TaskType,
           isOverdue,
           assignee: assignee ? {
             id: assignee.id,

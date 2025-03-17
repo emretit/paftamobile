@@ -89,14 +89,13 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
         <Tabs value={activeView} className="w-full">
           <TabsContent value="list" className="mt-0">
             <ProposalTable
-              searchQuery={searchQuery}
-              status={selectedStatus}
-              onRowClick={handleRowClick}
+              filters={{ status: selectedStatus, search: searchQuery }}
+              onProposalSelect={handleRowClick}
             />
           </TabsContent>
           <TabsContent value="kanban" className="mt-0">
             <ProposalKanban
-              onSelectProposal={handleRowClick}
+              onSelect={handleRowClick}
             />
           </TabsContent>
         </Tabs>
@@ -105,7 +104,7 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
         <ProposalDetailSheet 
           proposal={selectedProposal} 
           open={!!selectedProposal} 
-          handleClose={handleClose} 
+          onClose={handleClose} 
         />
       )}
     </DefaultLayout>

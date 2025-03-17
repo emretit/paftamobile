@@ -1,10 +1,8 @@
-
-import { useState, useEffect } from 'react';
-import { Users, ShoppingBag, DollarSign, BarChart3 } from 'lucide-react';
-import DefaultLayout from '@/components/layouts/DefaultLayout';
-import DashboardCard from '@/components/DashboardCard';
-import DashboardBarChart from '@/components/DashboardBarChart';
-import { supabase } from '@/integrations/supabase/client';
+import React from "react";
+import DefaultLayout from "@/components/layouts/DefaultLayout";
+import ChartWrapper from "@/components/ui/chart-wrapper";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface DashboardProps {
   isCollapsed: boolean;
@@ -12,118 +10,93 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
-  const [stats, setStats] = useState({
-    customers: 0,
-    employees: 0,
-    products: 0,
-    revenue: 0,
-  });
-
-  // Sample data for chart
-  const chartData = [
-    { name: 'Ocak', total: 1200 },
-    { name: 'Şubat', total: 1900 },
-    { name: 'Mart', total: 1500 },
-    { name: 'Nisan', total: 2400 },
-    { name: 'Mayıs', total: 2800 },
-    { name: 'Haziran', total: 1900 },
+  const cardData = [
+    {
+      title: "Toplam Müşteri",
+      value: "124",
+      icon: "users",
+      change: "+12%",
+      changeType: "increase",
+    },
+    {
+      title: "Açık Task",
+      value: "87",
+      icon: "tasks",
+      change: "-5%",
+      changeType: "decrease",
+    },
+    {
+      title: "Bekleyen Ödeme",
+      value: "₺14.500",
+      icon: "money",
+      change: "+22%",
+      changeType: "increase",
+    },
   ];
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch customers count
-        const { count: customersCount } = await supabase
-          .from('customers')
-          .select('*', { count: 'exact', head: true });
-
-        // Fetch employees count
-        const { count: employeesCount } = await supabase
-          .from('employees')
-          .select('*', { count: 'exact', head: true });
-
-        // Fetch products count
-        const { count: productsCount } = await supabase
-          .from('products')
-          .select('*', { count: 'exact', head: true });
-
-        setStats({
-          customers: customersCount || 0,
-          employees: employeesCount || 0,
-          products: productsCount || 0,
-          revenue: 145000, // Sample data
-        });
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
+  
   return (
     <DefaultLayout
       isCollapsed={isCollapsed}
       setIsCollapsed={setIsCollapsed}
       title="Dashboard"
-      subtitle="Manage your business activities"
+      subtitle="Genel bakış ve özet"
     >
-      <div className="grid gap-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <DashboardCard
-            title="Toplam Müşteri"
-            value={stats.customers}
-            icon={<Users className="h-5 w-5" />}
-          />
-          <DashboardCard
-            title="Toplam Çalışan"
-            value={stats.employees}
-            icon={<Users className="h-5 w-5" />}
-          />
-          <DashboardCard
-            title="Toplam Ürün"
-            value={stats.products}
-            icon={<ShoppingBag className="h-5 w-5" />}
-          />
-          <DashboardCard
-            title="Toplam Gelir"
-            value={new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(stats.revenue)}
-            icon={<DollarSign className="h-5 w-5" />}
-          />
+      <div className="container mx-auto px-4 py-6">
+        <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {cardData.map((card, index) => (
+            <Card key={index}>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  {card.title}
+                  <Avatar>
+                    <AvatarImage src={`/icons/${card.icon}.svg`} alt={card.title} />
+                    <AvatarFallback>{card.title.substring(0, 2)}</AvatarFallback>
+                  </Avatar>
+                </CardTitle>
+                <CardDescription>
+                  <span className="text-2xl font-bold">{card.value}</span>
+                  <span
+                    className={`ml-2 text-sm ${
+                      card.changeType === "increase" ? "text-green-500" : "text-red-500"
+                    }`}
+                  >
+                    {card.change}
+                  </span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent></CardContent>
+            </Card>
+          ))}
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <DashboardBarChart 
-            title="Aylık Gelir"
-            data={chartData}
+        
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ChartWrapper
+            title="Satışlar"
+            data={[
+              { name: "Ocak", total: 4000 },
+              { name: "Şubat", total: 3000 },
+              { name: "Mart", total: 2000 },
+              { name: "Nisan", total: 2780 },
+              { name: "Mayıs", total: 1890 },
+              { name: "Haziran", total: 2390 },
+            ]}
             dataKey="total"
           />
-          <div className="bg-white p-6 rounded-lg border shadow-sm">
-            <h3 className="text-lg font-medium mb-4">Son Aktiviteler</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <div>
-                  <p className="font-medium">Yeni sipariş oluşturuldu</p>
-                  <p className="text-sm text-gray-500">Acme Ltd. şirketi</p>
-                </div>
-                <p className="text-xs text-gray-500">12 dakika önce</p>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <div>
-                  <p className="font-medium">Müşteri kaydı yapıldı</p>
-                  <p className="text-sm text-gray-500">Mehmet Yılmaz</p>
-                </div>
-                <p className="text-xs text-gray-500">2 saat önce</p>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <div>
-                  <p className="font-medium">Satış tamamlandı</p>
-                  <p className="text-sm text-gray-500">Teknik A.Ş. - ₺24,500</p>
-                </div>
-                <p className="text-xs text-gray-500">Dün</p>
-              </div>
-            </div>
-          </div>
+          
+          <ChartWrapper
+            title="Gelir Gider"
+            data={[
+              { name: "Ocak", total: 4000 },
+              { name: "Şubat", total: 3000 },
+              { name: "Mart", total: 2000 },
+              { name: "Nisan", total: 2780 },
+              { name: "Mayıs", total: 1890 },
+              { name: "Haziran", total: 2390 },
+            ]}
+            dataKey="total"
+          />
         </div>
       </div>
     </DefaultLayout>
