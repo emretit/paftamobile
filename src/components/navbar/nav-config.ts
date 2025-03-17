@@ -14,13 +14,16 @@ import {
   Briefcase,
   ListTodo,
   ShoppingCart,
-  UserCircle
+  UserCircle,
+  GitBranch,
+  Lightbulb
 } from "lucide-react";
 
 // Define the CRM category items
 const crmItems = [
-  { path: "/deals", icon: PieChart, label: "Fırsatlar" },
+  { path: "/opportunities", icon: Lightbulb, label: "Fırsatlar" },
   { path: "/proposals", icon: FileText, label: "Teklifler" },
+  { path: "/deals", icon: PieChart, label: "Satışlar" },
   { path: "/tasks", icon: ListTodo, label: "Görevler" }
 ];
 

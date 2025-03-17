@@ -34,6 +34,7 @@ import EmployeeForm from "./pages/EmployeeForm";
 import AddProposal from "./pages/AddProposal";
 import Dashboard from "./pages/Dashboard";
 import ProposalDetails from "./pages/ProposalDetails";
+import Opportunities from "./pages/Opportunities";
 
 const queryClient = new QueryClient();
 
@@ -106,6 +107,10 @@ function App() {
           <Route
             path="/crm"
             element={<ProtectedRoute><CrmDashboard isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/opportunities"
+            element={<ProtectedRoute><Opportunities isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
           <Route
             path="/proposals"

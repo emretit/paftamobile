@@ -11,6 +11,7 @@ import { StatusBadge } from "./detail/StatusBadge";
 import { useProposals } from "@/hooks/useProposals";
 import { Maximize2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface ProposalDetailSheetProps {
   proposal: Proposal | null;
@@ -20,30 +21,40 @@ interface ProposalDetailSheetProps {
 
 export const ProposalDetailSheet = ({ proposal, isOpen, onClose }: ProposalDetailSheetProps) => {
   const [isUpdating, setIsUpdating] = useState(false);
-  const { updateProposal } = useProposals({ status: "all" });
+  const { data, refetch } = useProposals({ status: "all" });
   const navigate = useNavigate();
 
-  const handleStatusChange = async (newStatus: ProposalStatus) => {
-    if (!proposal) return;
-    
+  const updateProposal = async (id: string, newStatus: ProposalStatus, notes?: string) => {
     setIsUpdating(true);
     try {
-      await updateProposal(proposal.id, newStatus);
+      const { error } = await supabase
+        .from('proposals')
+        .update({ 
+          status: newStatus,
+          ...(notes && { internal_notes: notes })
+        })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      toast.success('Teklif başarıyla güncellendi');
+      refetch();
     } catch (error) {
       console.error("Error updating proposal status:", error);
+      toast.error('Teklif güncellenirken bir hata oluştu');
     } finally {
       setIsUpdating(false);
     }
   };
 
+  const handleStatusChange = async (newStatus: ProposalStatus) => {
+    if (!proposal) return;
+    await updateProposal(proposal.id, newStatus);
+  };
+
   const handleNotesChange = async (notes: string) => {
     if (!proposal) return;
-    
-    try {
-      await updateProposal(proposal.id, proposal.status as ProposalStatus, notes);
-    } catch (error) {
-      console.error("Error updating proposal notes:", error);
-    }
+    await updateProposal(proposal.id, proposal.status as ProposalStatus, notes);
   };
 
   const handleViewFullDetails = () => {

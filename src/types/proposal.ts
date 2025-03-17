@@ -13,7 +13,9 @@ export type ProposalStatus =
   | 'quote_in_progress'
   | 'quote_sent'
   | 'approved'
-  | 'converted_to_order';
+  | 'converted_to_order'
+  | 'preparing'
+  | 'pending';
 
 export interface ProposalItem {
   id: string;
@@ -29,9 +31,10 @@ export interface Proposal {
   id: string;
   title: string;
   customer_id: string | null;
-  supplier_id?: string | null; // Adding this field
+  supplier_id?: string | null;
   employee_id: string | null;
   deal_id: string | null;
+  opportunity_id?: string | null;
   status: ProposalStatus;
   total_value: number;
   sent_date: string | null;
@@ -42,9 +45,9 @@ export interface Proposal {
   customer_segment: string | null;
   payment_term?: string;
   internal_notes?: string;
-  discounts?: number; // Adding this field
-  additional_charges?: number; // Adding this field
-  currency?: string; // Adding currency field
+  discounts?: number;
+  additional_charges?: number;
+  currency?: string;
   customer?: {
     name: string;
   };
@@ -53,6 +56,14 @@ export interface Proposal {
     last_name: string;
   };
   items?: ProposalItem[];
+  warranty_terms?: string;
+  delivery_terms?: string;
+  files?: Array<{
+    name: string;
+    url: string;
+    size: number;
+    type: string;
+  }>;
 }
 
 export interface SalesPerformanceData {
