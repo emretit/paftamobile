@@ -26,10 +26,6 @@ import EmployeeDetails from "./pages/EmployeeDetails";
 import EmployeeForm from "./pages/EmployeeForm";
 import Dashboard from "./pages/Dashboard";
 import PurchaseManagement from "@/pages/PurchaseManagement";
-import Opportunities from "@/pages/crm/Opportunities";
-import Proposals from "@/pages/Proposals";
-import ProposalDetails from "@/pages/ProposalDetails";
-import ProposalCreate from "@/pages/ProposalCreate";
 
 const queryClient = new QueryClient();
 
@@ -99,6 +95,7 @@ function App() {
             path="/supplier-form/:id"
             element={<ProtectedRoute><SupplierForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
+          
           <Route
             path="/employees"
             element={<ProtectedRoute><Employees isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
@@ -115,6 +112,7 @@ function App() {
             path="/employee-form/:id"
             element={<ProtectedRoute><EmployeeForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
+          
           <Route
             path="/finance"
             element={<ProtectedRoute><Finance isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
@@ -138,22 +136,6 @@ function App() {
           <Route
             path="/purchase-management"
             element={<ProtectedRoute><PurchaseManagement isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/opportunities"
-            element={<ProtectedRoute><Opportunities isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/proposals"
-            element={<ProtectedRoute><Proposals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/proposals/new"
-            element={<ProtectedRoute><ProposalCreate isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/proposals/:id"
-            element={<ProtectedRoute><ProposalDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
         </Routes>
       </Router>
