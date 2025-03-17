@@ -887,89 +887,63 @@ export type Database = {
       }
       opportunities: {
         Row: {
-          actual_value: number | null
           contact_history: Json | null
           created_at: string | null
           customer_id: string | null
-          department: string | null
           description: string | null
           employee_id: string | null
-          estimated_value: number | null
           expected_close_date: string | null
           id: string
-          internal_comments: string | null
-          last_contact_date: string | null
-          next_steps: Json | null
           notes: string | null
-          priority: Database["public"]["Enums"]["deal_priority"]
-          product_services: Json | null
-          proposal_date: string | null
-          proposal_files: Json | null
-          reminders: Json | null
-          status: Database["public"]["Enums"]["deal_status"]
+          priority: string
+          status: string
           title: string
           updated_at: string | null
-          validity_period: unknown | null
           value: number
         }
         Insert: {
-          actual_value?: number | null
           contact_history?: Json | null
           created_at?: string | null
           customer_id?: string | null
-          department?: string | null
           description?: string | null
           employee_id?: string | null
-          estimated_value?: number | null
           expected_close_date?: string | null
           id?: string
-          internal_comments?: string | null
-          last_contact_date?: string | null
-          next_steps?: Json | null
           notes?: string | null
-          priority?: Database["public"]["Enums"]["deal_priority"]
-          product_services?: Json | null
-          proposal_date?: string | null
-          proposal_files?: Json | null
-          reminders?: Json | null
-          status?: Database["public"]["Enums"]["deal_status"]
+          priority?: string
+          status?: string
           title: string
           updated_at?: string | null
-          validity_period?: unknown | null
           value?: number
         }
         Update: {
-          actual_value?: number | null
           contact_history?: Json | null
           created_at?: string | null
           customer_id?: string | null
-          department?: string | null
           description?: string | null
           employee_id?: string | null
-          estimated_value?: number | null
           expected_close_date?: string | null
           id?: string
-          internal_comments?: string | null
-          last_contact_date?: string | null
-          next_steps?: Json | null
           notes?: string | null
-          priority?: Database["public"]["Enums"]["deal_priority"]
-          product_services?: Json | null
-          proposal_date?: string | null
-          proposal_files?: Json | null
-          reminders?: Json | null
-          status?: Database["public"]["Enums"]["deal_status"]
+          priority?: string
+          status?: string
           title?: string
           updated_at?: string | null
-          validity_period?: unknown | null
           value?: number
         }
         Relationships: [
           {
-            foreignKeyName: "deals_customer_id_fkey"
+            foreignKeyName: "opportunities_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
         ]
@@ -1231,9 +1205,9 @@ export type Database = {
       proposal_items: {
         Row: {
           created_at: string | null
+          description: string | null
           id: string
           name: string
-          product_id: string | null
           proposal_id: string | null
           quantity: number
           tax_rate: number
@@ -1243,9 +1217,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          description?: string | null
           id?: string
           name: string
-          product_id?: string | null
           proposal_id?: string | null
           quantity?: number
           tax_rate?: number
@@ -1255,9 +1229,9 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          description?: string | null
           id?: string
           name?: string
-          product_id?: string | null
           proposal_id?: string | null
           quantity?: number
           tax_rate?: number
@@ -1266,13 +1240,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "proposal_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "proposal_items_proposal_id_fkey"
             columns: ["proposal_id"]
@@ -1284,72 +1251,51 @@ export type Database = {
       }
       proposals: {
         Row: {
-          additional_charges: number | null
           created_at: string | null
           customer_id: string | null
-          customer_segment: string | null
-          deal_id: string | null
-          discounts: number | null
+          delivery_terms: string | null
           employee_id: string | null
-          files: Json | null
           id: string
-          internal_notes: string | null
-          items: Json | null
-          last_modified_at: string | null
-          last_modified_by: string | null
-          payment_term: string | null
+          notes: string | null
+          opportunity_id: string | null
+          payment_terms: string | null
           proposal_number: number
           sent_date: string | null
-          status: string | null
-          supplier_id: string | null
+          status: string
           title: string
           total_value: number
           updated_at: string | null
           valid_until: string | null
         }
         Insert: {
-          additional_charges?: number | null
           created_at?: string | null
           customer_id?: string | null
-          customer_segment?: string | null
-          deal_id?: string | null
-          discounts?: number | null
+          delivery_terms?: string | null
           employee_id?: string | null
-          files?: Json | null
           id?: string
-          internal_notes?: string | null
-          items?: Json | null
-          last_modified_at?: string | null
-          last_modified_by?: string | null
-          payment_term?: string | null
+          notes?: string | null
+          opportunity_id?: string | null
+          payment_terms?: string | null
           proposal_number?: number
           sent_date?: string | null
-          status?: string | null
-          supplier_id?: string | null
+          status?: string
           title: string
           total_value?: number
           updated_at?: string | null
           valid_until?: string | null
         }
         Update: {
-          additional_charges?: number | null
           created_at?: string | null
           customer_id?: string | null
-          customer_segment?: string | null
-          deal_id?: string | null
-          discounts?: number | null
+          delivery_terms?: string | null
           employee_id?: string | null
-          files?: Json | null
           id?: string
-          internal_notes?: string | null
-          items?: Json | null
-          last_modified_at?: string | null
-          last_modified_by?: string | null
-          payment_term?: string | null
+          notes?: string | null
+          opportunity_id?: string | null
+          payment_terms?: string | null
           proposal_number?: number
           sent_date?: string | null
-          status?: string | null
-          supplier_id?: string | null
+          status?: string
           title?: string
           total_value?: number
           updated_at?: string | null
@@ -1364,17 +1310,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "proposals_deal_id_fkey"
-            columns: ["deal_id"]
+            foreignKeyName: "proposals_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: "opportunities"
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "proposals_supplier_id_fkey"
-            columns: ["supplier_id"]
+            foreignKeyName: "proposals_opportunity_id_fkey"
+            columns: ["opportunity_id"]
             isOneToOne: false
-            referencedRelation: "suppliers"
+            referencedRelation: "opportunities"
             referencedColumns: ["id"]
           },
         ]
@@ -1893,12 +1839,13 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
-          priority: Database["public"]["Enums"]["task_priority"]
+          priority: string
           related_item_id: string | null
           related_item_title: string | null
-          status: Database["public"]["Enums"]["task_status"]
+          status: string
+          subtasks: Json | null
           title: string
-          type: Database["public"]["Enums"]["task_type"]
+          type: string
           updated_at: string | null
         }
         Insert: {
@@ -1907,12 +1854,13 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
-          priority?: Database["public"]["Enums"]["task_priority"]
+          priority?: string
           related_item_id?: string | null
           related_item_title?: string | null
-          status?: Database["public"]["Enums"]["task_status"]
+          status?: string
+          subtasks?: Json | null
           title: string
-          type?: Database["public"]["Enums"]["task_type"]
+          type?: string
           updated_at?: string | null
         }
         Update: {
@@ -1921,15 +1869,24 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
-          priority?: Database["public"]["Enums"]["task_priority"]
+          priority?: string
           related_item_id?: string | null
           related_item_title?: string | null
-          status?: Database["public"]["Enums"]["task_status"]
+          status?: string
+          subtasks?: Json | null
           title?: string
-          type?: Database["public"]["Enums"]["task_type"]
+          type?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

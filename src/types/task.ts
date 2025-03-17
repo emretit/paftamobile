@@ -1,26 +1,41 @@
 
-// Define the status options for tasks
+// Task types
 export type TaskStatus = "todo" | "in_progress" | "completed" | "postponed";
-
-// Define the priority levels for tasks
 export type TaskPriority = "low" | "medium" | "high";
+export type TaskType = "opportunity" | "proposal" | "general" | "call" | "meeting" | "follow_up";
 
-// Define the types of tasks - extending with new types
-export type TaskType = "opportunity" | "proposal" | "general" | "email" | "meeting" | "call" | "follow_up";
+export const taskStatusLabels: Record<TaskStatus, string> = {
+  todo: "Yapılacak",
+  in_progress: "Devam Ediyor",
+  completed: "Tamamlandı",
+  postponed: "Ertelendi"
+};
 
-// Define the structure for subtasks
+export const taskPriorityLabels: Record<TaskPriority, string> = {
+  low: "Düşük",
+  medium: "Orta",
+  high: "Yüksek"
+};
+
+export const taskTypeLabels: Record<TaskType, string> = {
+  opportunity: "Fırsat",
+  proposal: "Teklif",
+  general: "Genel",
+  call: "Arama",
+  meeting: "Toplantı",
+  follow_up: "Takip"
+};
+
 export interface SubTask {
   id: string;
   title: string;
   completed: boolean;
-  created_at: string;
 }
 
-// Define the main Task interface
 export interface Task {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   status: TaskStatus;
   priority: TaskPriority;
   type: TaskType;
@@ -40,12 +55,9 @@ export interface Task {
     email?: string;
     avatar_url?: string;
   };
-  
-  // Used for drag and drop identification
-  item_type?: string;
 }
 
-// Define TasksState interface for use in components
+// Tasks state type for Kanban view
 export interface TasksState {
   todo: Task[];
   in_progress: Task[];

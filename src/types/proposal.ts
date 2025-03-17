@@ -1,72 +1,60 @@
 
+// Proposal types
 export type ProposalStatus = 
-  | 'hazirlaniyor'
-  | 'onay_bekliyor'
-  | 'gonderildi'
   | 'draft'
-  | 'pending_approval'  // Adding this to match shared types
-  | 'new'
-  | 'review'
+  | 'pending_approval'
   | 'sent'
-  | 'negotiation'
   | 'accepted'
   | 'rejected'
-  | 'expired'
-  | 'discovery_scheduled'
-  | 'meeting_completed'
-  | 'quote_in_progress'
-  | 'quote_sent'
-  | 'approved'
-  | 'converted_to_order'
-  | 'preparing'
-  | 'pending';
+  | 'expired';
+
+export const proposalStatusLabels: Record<ProposalStatus, string> = {
+  draft: "Taslak",
+  pending_approval: "Onay Bekliyor",
+  sent: "Gönderildi",
+  accepted: "Kabul Edildi",
+  rejected: "Reddedildi",
+  expired: "Süresi Dolmuş"
+};
+
+export const proposalStatusColors: Record<ProposalStatus, string> = {
+  draft: "bg-gray-100 text-gray-800",
+  pending_approval: "bg-yellow-100 text-yellow-800",
+  sent: "bg-blue-100 text-blue-800",
+  accepted: "bg-green-100 text-green-800",
+  rejected: "bg-red-100 text-red-800",
+  expired: "bg-orange-100 text-orange-800"
+};
 
 export interface ProposalItem {
   id: string;
   name: string;
+  description?: string;
   quantity: number;
   unit_price: number;
   tax_rate: number;
   total_price: number;
-  currency?: string;
-  product_id?: string;
-  proposal_id?: string;
-}
-
-export interface ProposalAttachment {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  url: string;
-  uploaded_at: string;
   proposal_id?: string;
 }
 
 export interface Proposal {
   id: string;
   title: string;
-  customer_id: string | null;
-  supplier_id?: string | null;
-  employee_id: string | null;
-  deal_id: string | null;
+  customer_id?: string | null;
   opportunity_id?: string | null;
+  employee_id?: string | null;
   status: ProposalStatus;
   total_value: number;
-  sent_date: string | null;
-  valid_until: string | null;
+  sent_date?: string | null;
+  valid_until?: string | null;
   created_at: string;
   updated_at: string;
   proposal_number: number;
-  customer_segment: string | null;
-  payment_term?: string;
-  internal_notes?: string;
-  discounts?: number;
-  additional_charges?: number;
-  warranty_terms?: string;
+  payment_terms?: string;
   delivery_terms?: string;
-  currency?: string;
-  files?: any; // This corresponds to the files JSONB field in Supabase
+  notes?: string;
+  
+  // Joined relations
   customer?: {
     id: string;
     name: string;
@@ -79,18 +67,6 @@ export interface Proposal {
     first_name: string;
     last_name: string;
     email?: string;
-    name?: string;
   } | null;
   items?: ProposalItem[];
-  attachments?: ProposalAttachment[];
-}
-
-export interface SalesPerformanceData {
-  month: string;
-  total_proposals: number;
-  accepted_proposals: number;
-  total_value: number;
-  employee_id: string;
-  employee_name: string;
-  success_rate: number;
 }

@@ -1,15 +1,15 @@
 
-// Define opportunity status options matching our requirements
+// Opportunity tipi ve ilgili tanımlamalar
 export type OpportunityStatus = 
-  | "new"               // Yeni
-  | "first_contact"     // İlk Görüşme 
-  | "site_visit"        // Ziyaret Yapıldı
-  | "preparing_proposal" // Teklif Hazırlanıyor
-  | "proposal_sent"     // Teklif Gönderildi
-  | "accepted"          // Kabul Edildi
-  | "lost";             // Kaybedildi
+  | 'new'               // Yeni
+  | 'first_contact'     // İlk Görüşme 
+  | 'site_visit'        // Ziyaret Yapıldı
+  | 'preparing_proposal' // Teklif Hazırlanıyor
+  | 'proposal_sent'     // Teklif Gönderildi
+  | 'accepted'          // Kabul Edildi
+  | 'lost';             // Kaybedildi
 
-export type OpportunityPriority = "low" | "medium" | "high";
+export type OpportunityPriority = 'low' | 'medium' | 'high';
 
 // Map opportunity status to user-friendly labels
 export const opportunityStatusLabels: Record<OpportunityStatus, string> = {
@@ -40,16 +40,14 @@ export const opportunityStatusColors: Record<OpportunityStatus, string> = {
   lost: "bg-red-100 text-red-800"
 };
 
-// Proposal status options
-export type ProposalStatus = "draft" | "pending_approval" | "sent" | "accepted" | "rejected" | "expired";
-
-// Employee object structure from database
-export interface Employee {
+// Contact history entries for opportunities
+export interface ContactHistoryEntry {
   id: string;
-  first_name: string;
-  last_name: string;
-  email?: string;
-  avatar_url?: string;
+  date: string;
+  contact_type: "call" | "email" | "meeting" | "other";
+  notes: string;
+  employee_id?: string;
+  employee_name?: string;
 }
 
 // Customer object structure from database
@@ -61,18 +59,14 @@ export interface Customer {
   phone?: string;
 }
 
-// For contact history entries
-export interface ContactHistoryEntry {
+// Employee object structure from database
+export interface Employee {
   id: string;
-  date: string;
-  contact_type: "call" | "email" | "meeting" | "other";
-  notes: string;
-  employee_id?: string;
-  employee_name?: string;
+  first_name: string;
+  last_name: string;
+  email?: string;
+  avatar_url?: string;
 }
-
-// Alias for backward compatibility in existing code
-export type ContactHistoryItem = ContactHistoryEntry;
 
 // Opportunity object structure
 export interface Opportunity {
@@ -87,26 +81,10 @@ export interface Opportunity {
   created_at: string;
   updated_at: string;
   expected_close_date?: string;
-  last_contact_date?: string;
   notes?: string;
+  contact_history?: ContactHistoryEntry[];
   
   // Joined relations
   customer?: Customer;
   employee?: Employee;
-  
-  // Additional fields needed for UI
-  customer_name?: string;
-  employee_name?: string;
-  currency?: string;
-  proposal_id?: string;
-  contact_history?: ContactHistoryEntry[];
-}
-
-// Extended opportunity fields for UI display
-export interface OpportunityExtended extends Opportunity {
-  customer_name?: string;
-  employee_name?: string;
-  currency?: string;
-  proposal_id?: string;
-  contact_history?: ContactHistoryEntry[];
 }

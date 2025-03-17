@@ -1,126 +1,90 @@
 
-import { useState } from "react";
-import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { Plus } from "lucide-react";
+import { useOpportunities } from "@/hooks/useOpportunities";
 import OpportunitiesKanban from "@/components/opportunities/OpportunitiesKanban";
-import OpportunityFilters from "@/components/opportunities/OpportunityFilters";
-import OpportunityDetailSheet from "@/components/opportunities/OpportunityDetailSheet";
-import OpportunityForm from "@/components/opportunities/OpportunityForm";
-import OpportunityBulkActions from "@/components/opportunities/OpportunityBulkActions";
-import { Opportunity, OpportunityStatus } from "@/types/crm";
+import OpportunityFilterBar from "@/components/opportunities/OpportunityFilterBar";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OpportunitiesPageProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
 }
 
-type OpportunitiesStateType = {
-  new: Opportunity[];
-  first_contact: Opportunity[];
-  site_visit: Opportunity[];
-  preparing_proposal: Opportunity[];
-  proposal_sent: Opportunity[];
-  accepted: Opportunity[];
-  lost: Opportunity[];
-};
-
 const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesPageProps) => {
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
-  const [selectedOpportunities, setSelectedOpportunities] = useState<Opportunity[]>([]);
+  const [employees, setEmployees] = useState<{id: string; name: string}[]>([]);
+  const [customers, setCustomers] = useState<{id: string; name: string}[]>([]);
   
-  // Sample data - in real app would be fetched from API
-  const [opportunities, setOpportunities] = useState<OpportunitiesStateType>({
-    new: [
-      {
-        id: "1",
-        title: "Enterprise Software Solution",
-        status: "new",
-        priority: "high",
-        value: 75000,
-        customer_id: "1",
-        employee_id: "1",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        customer_name: "Tech Corp",
-        employee_name: "John Smith"
-      }
-    ],
-    first_contact: [],
-    site_visit: [],
-    preparing_proposal: [],
-    proposal_sent: [],
-    accepted: [],
-    lost: []
-  });
+  const {
+    opportunities,
+    isLoading,
+    error,
+    selectedOpportunity,
+    setSelectedOpportunity,
+    isDetailOpen,
+    setIsDetailOpen,
+    selectedItems,
+    setSelectedItems,
+    handleDragEnd,
+    handleCreateOpportunity,
+    handleUpdateOpportunity,
+    handleDeleteOpportunity
+  } = useOpportunities(searchQuery, selectedEmployee, selectedCustomer);
 
-  const handleDragEnd = (result: DropResult) => {
-    const { source, destination, draggableId } = result;
-    
-    if (!destination) return;
-    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
-    
-    // Create a copy of the current opportunities state
-    const newOpportunities = { ...opportunities };
-    
-    // Find the opportunity in the source column
-    const sourceStatus = source.droppableId as OpportunityStatus;
-    const opportunity = opportunities[sourceStatus].find(o => o.id === draggableId);
-    
-    if (!opportunity) return;
-    
-    // Remove from source and add to destination
-    newOpportunities[sourceStatus] = newOpportunities[sourceStatus].filter(o => o.id !== draggableId);
-    
-    const destStatus = destination.droppableId as OpportunityStatus;
-    const updatedOpportunity = { ...opportunity, status: destStatus };
-    
-    newOpportunities[destStatus] = [
-      ...newOpportunities[destStatus].slice(0, destination.index),
-      updatedOpportunity,
-      ...newOpportunities[destStatus].slice(destination.index)
-    ];
-    
-    setOpportunities(newOpportunities);
-    toast.success(`${opportunity.title} durumu güncellendi: ${destStatus.replace('_', ' ')}`);
+  // Fetch employees and customers for filters
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      const { data, error } = await supabase
+        .from("employees")
+        .select("id, first_name, last_name");
+      
+      if (!error && data) {
+        setEmployees(
+          data.map(emp => ({
+            id: emp.id,
+            name: `${emp.first_name} ${emp.last_name}`
+          }))
+        );
+      }
+    };
+
+    const fetchCustomers = async () => {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, name");
+      
+      if (!error && data) {
+        setCustomers(
+          data.map(customer => ({
+            id: customer.id,
+            name: customer.name
+          }))
+        );
+      }
+    };
+
+    fetchEmployees();
+    fetchCustomers();
+  }, []);
+
+  const handleOpportunityClick = (opportunity: any) => {
+    setSelectedOpportunity(opportunity);
+    setIsDetailOpen(true);
   };
 
-  const handleOpportunitySelect = (opportunity: Opportunity) => {
-    setSelectedOpportunities(prev => {
+  const handleOpportunitySelect = (opportunity: any) => {
+    setSelectedItems(prev => {
       if (prev.some(o => o.id === opportunity.id)) {
         return prev.filter(o => o.id !== opportunity.id);
       }
       return [...prev, opportunity];
     });
-  };
-
-  const handleOpportunityClick = (opportunity: Opportunity) => {
-    setSelectedOpportunity(opportunity);
-    setIsDetailOpen(true);
-  };
-
-  const handleBulkStatusUpdate = (opportunities: Opportunity[], newStatus: OpportunityStatus) => {
-    setOpportunities(prev => {
-      const next = { ...prev };
-      
-      opportunities.forEach(opportunity => {
-        const currentStatus = opportunity.status as OpportunityStatus;
-        next[currentStatus] = next[currentStatus].filter(o => o.id !== opportunity.id);
-        next[newStatus] = [...next[newStatus], { ...opportunity, status: newStatus }];
-      });
-      
-      return next;
-    });
-    
-    setSelectedOpportunities([]);
-    toast.success(`${opportunities.length} fırsat durumu güncellendi`);
   };
 
   return (
@@ -142,49 +106,44 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesPageProps) 
             </div>
             
             <Button 
-              onClick={() => setIsFormOpen(true)}
+              onClick={() => {
+                // Add new opportunity functionality here
+              }}
               className="bg-red-800 hover:bg-red-900 text-white"
             >
+              <Plus className="h-4 w-4 mr-2" />
               Yeni Fırsat
             </Button>
           </div>
           
-          <OpportunityFilters
+          <OpportunityFilterBar
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             selectedEmployee={selectedEmployee}
             setSelectedEmployee={setSelectedEmployee}
             selectedCustomer={selectedCustomer}
             setSelectedCustomer={setSelectedCustomer}
+            employees={employees}
+            customers={customers}
           />
           
-          <OpportunitiesKanban
-            opportunities={opportunities as any}
-            onDragEnd={handleDragEnd}
-            onOpportunityClick={handleOpportunityClick}
-            onOpportunitySelect={handleOpportunitySelect}
-            selectedOpportunities={selectedOpportunities}
-          />
-          
-          <OpportunityDetailSheet
-            opportunity={selectedOpportunity}
-            isOpen={isDetailOpen}
-            onClose={() => {
-              setIsDetailOpen(false);
-              setSelectedOpportunity(null);
-            }}
-          />
-          
-          <OpportunityForm
-            isOpen={isFormOpen}
-            onClose={() => setIsFormOpen(false)}
-          />
-          
-          <OpportunityBulkActions
-            selectedOpportunities={selectedOpportunities}
-            onUpdateStatus={handleBulkStatusUpdate}
-            onClearSelection={() => setSelectedOpportunities([])}
-          />
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <p>Yükleniyor...</p>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg">
+              <p>Fırsatlar yüklenirken bir hata oluştu. Lütfen sayfayı yenileyip tekrar deneyin.</p>
+            </div>
+          ) : (
+            <OpportunitiesKanban
+              opportunities={opportunities}
+              onDragEnd={handleDragEnd}
+              onOpportunityClick={handleOpportunityClick}
+              onOpportunitySelect={handleOpportunitySelect}
+              selectedOpportunities={selectedItems}
+            />
+          )}
         </div>
       </main>
     </div>

@@ -1,11 +1,10 @@
 
-import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Opportunity, opportunityPriorityLabels } from "@/types/crm";
-import { CalendarIcon, User, Building, ExternalLink } from "lucide-react";
+import { CalendarIcon, User, Building } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface OpportunityCardProps {
   opportunity: Opportunity;
@@ -15,15 +14,15 @@ interface OpportunityCardProps {
 }
 
 const priorityColorMap = {
-  high: "bg-red-100 text-red-800 border-red-200 hover:bg-red-200",
-  medium: "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200",
-  low: "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200"
+  high: "bg-red-100 text-red-800 border-red-200",
+  medium: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  low: "bg-blue-100 text-blue-800 border-blue-200"
 };
 
-const formatMoney = (amount: number, currency = "₺") => {
+const formatMoney = (amount: number) => {
   return new Intl.NumberFormat('tr-TR', {
     style: 'currency',
-    currency: currency === '₺' ? 'TRY' : currency,
+    currency: 'TRY',
     minimumFractionDigits: 0
   }).format(amount);
 };
@@ -34,7 +33,7 @@ const OpportunityCard = ({
   onSelect, 
   isSelected = false 
 }: OpportunityCardProps) => {
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleClick = () => {
     onClick(opportunity);
   };
 
@@ -74,21 +73,23 @@ const OpportunityCard = ({
       </div>
 
       <div className="text-lg font-semibold text-gray-900 mb-3">
-        {formatMoney(opportunity.value, opportunity.currency)}
+        {formatMoney(opportunity.value)}
       </div>
 
       <div className="flex flex-col space-y-2 text-sm text-gray-600">
         <div className="flex items-center gap-2">
           <Building className="h-4 w-4 text-gray-400" />
           <span className="truncate max-w-[230px]">
-            {opportunity.customer_name || "Atanmamış"}
+            {opportunity.customer?.name || "Atanmamış"}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           <User className="h-4 w-4 text-gray-400" />
           <span className="truncate max-w-[230px]">
-            {opportunity.employee_name || "Atanmamış"}
+            {opportunity.employee ? 
+              `${opportunity.employee.first_name} ${opportunity.employee.last_name}` : 
+              "Atanmamış"}
           </span>
         </div>
 
@@ -101,19 +102,6 @@ const OpportunityCard = ({
           </div>
         )}
       </div>
-
-      {opportunity.proposal_id && (
-        <div className="mt-3 pt-2 border-t border-gray-100">
-          <a 
-            href={`/proposals/detail/${opportunity.proposal_id}`}
-            className="text-xs flex items-center gap-1 text-red-700 hover:text-red-800"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <ExternalLink className="h-3 w-3" />
-            Bağlantılı teklifi görüntüle
-          </a>
-        </div>
-      )}
     </div>
   );
 };
