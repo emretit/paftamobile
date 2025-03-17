@@ -67,7 +67,7 @@ const TasksContent = ({
         // Create a normalized task object with all required properties
         const normalizedTask = {
           ...task,
-          // Always ensure assignee_id exists
+          // Ensure assignee_id exists by mapping from assigned_to if needed
           assignee_id: task.assignee_id || task.assigned_to,
           // Always ensure type property exists
           type: (task.type || task.related_item_type || "general") as TaskType
