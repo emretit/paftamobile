@@ -24,7 +24,7 @@ export const useProposals = (filters?: ProposalFilters) => {
       
       // Apply search filter if specified
       if (filters?.search) {
-        query = query.or(`title.ilike.%${filters.search}%,proposal_number.ilike.%${filters.search}%`);
+        query = query.or(`title.ilike.%${filters.search}%,number.ilike.%${filters.search}%`);
       }
       
       // Apply date range filter if specified
@@ -43,7 +43,34 @@ export const useProposals = (filters?: ProposalFilters) => {
         throw error;
       }
       
-      return data as Proposal[];
+      // Map the database fields to match our Proposal type
+      return data.map((item) => {
+        return {
+          id: item.id,
+          title: item.title,
+          customer_id: item.customer_id,
+          opportunity_id: item.opportunity_id,
+          employee_id: item.employee_id,
+          status: item.status,
+          total_value: item.total_amount || 0,
+          sent_date: item.sent_at,
+          valid_until: item.valid_until,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+          proposal_number: item.number,
+          payment_terms: item.payment_terms,
+          delivery_terms: item.delivery_terms,
+          notes: item.notes,
+          internal_notes: item.internal_notes,
+          currency: item.currency,
+          discounts: item.discounts,
+          additional_charges: item.additional_charges,
+          customer: item.customer,
+          employee: item.employee,
+          items: Array.isArray(item.items) ? item.items : [],
+          attachments: Array.isArray(item.attachments) ? item.attachments : []
+        } as Proposal;
+      });
     }
   });
 

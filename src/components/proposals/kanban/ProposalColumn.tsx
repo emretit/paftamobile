@@ -1,48 +1,45 @@
 
-import { Droppable, Draggable } from "@hello-pangea/dnd";
-import { LucideIcon } from "lucide-react";
-import ProposalCard from "./ProposalCard";
-import type { Proposal } from "@/types/proposal";
+import React from 'react';
+import { Droppable } from '@hello-pangea/dnd';
+import { Proposal } from '@/types/proposal';
+import ProposalCard from './ProposalCard';
 
 interface ProposalColumnProps {
   id: string;
   title: string;
-  icon: LucideIcon;
   proposals: Proposal[];
-  onSelect: (proposal: Proposal) => void;
+  onProposalClick: (proposal: Proposal) => void;
 }
 
-const ProposalColumn = ({ id, title, icon: Icon, proposals, onSelect }: ProposalColumnProps) => {
+const ProposalColumn = ({
+  id,
+  title,
+  proposals,
+  onProposalClick
+}: ProposalColumnProps) => {
   return (
     <Droppable droppableId={id}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
+          className={`min-h-[500px] w-full p-3 rounded-md ${
+            snapshot.isDraggingOver ? 'bg-red-50' : 'bg-gray-50'
+          } transition-colors duration-200`}
           {...provided.droppableProps}
-          className={`space-y-4 min-h-[500px] p-4 rounded-lg ${
-            snapshot.isDraggingOver ? "bg-gray-100/80" : "bg-gray-50/50"
-          }`}
         >
           {proposals.map((proposal, index) => (
-            <Draggable key={proposal.id} draggableId={proposal.id} index={index}>
-              {(provided, snapshot) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.draggableProps}
-                  {...provided.dragHandleProps}
-                  className={snapshot.isDragging ? "shadow-lg" : ""}
-                >
-                  <ProposalCard proposal={proposal} onSelect={onSelect} />
-                </div>
-              )}
-            </Draggable>
+            <ProposalCard
+              key={proposal.id}
+              proposal={proposal}
+              onClick={onProposalClick}
+            />
           ))}
-          {provided.placeholder}
           {proposals.length === 0 && (
-            <div className="text-center py-8 text-gray-500 text-sm">
-              Bu sütunda teklif yok
+            <div className="flex flex-col items-center justify-center h-32 border border-dashed border-gray-300 rounded-md mt-2">
+              <p className="text-gray-500 text-sm">Bu durumda teklif yok</p>
             </div>
           )}
+          {provided.placeholder}
         </div>
       )}
     </Droppable>

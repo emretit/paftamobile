@@ -10,7 +10,39 @@ interface ProposalTemplateGridProps {
   onSelectTemplate: (template: ProposalTemplate) => void;
 }
 
-const ProposalTemplateGrid: React.FC<ProposalTemplateGridProps> = ({ templates, onSelectTemplate }) => {
+// Sample template data
+const sampleTemplates: ProposalTemplate[] = [
+  {
+    id: "1",
+    name: "Standart Hizmet Teklifi",
+    description: "Genel hizmetler için standart teklif şablonu",
+    templateType: "service",
+    templateFeatures: ["Detaylı hizmet açıklamaları", "Standart ödeme koşulları", "Profesyonel görünüm"]
+  },
+  {
+    id: "2",
+    name: "Ürün Satış Teklifi",
+    description: "Ürün satışları için kapsamlı teklif şablonu",
+    templateType: "product",
+    templateFeatures: ["Ürün özellikleri", "Miktar ve fiyat tablosu", "Teslimat şartları"]
+  },
+  {
+    id: "3",
+    name: "Bakım Anlaşması",
+    description: "Düzenli bakım hizmetleri için teklif şablonu",
+    templateType: "maintenance",
+    templateFeatures: ["Bakım programı", "SLA detayları", "Periyodik kontroller", "Yedek parça politikası"]
+  },
+  {
+    id: "4",
+    name: "Kurumsal Çözüm Teklifi",
+    description: "Büyük kurumsal müşteriler için özel teklif şablonu",
+    templateType: "corporate",
+    templateFeatures: ["Kapsamlı çözüm açıklaması", "Proje takvimi", "Referanslar", "Özel fiyatlandırma"]
+  }
+];
+
+const ProposalTemplateGrid: React.FC<ProposalTemplateGridProps> = ({ onSelectTemplate }) => {
   // Function to get icon based on template type
   const getTemplateIcon = (type: string) => {
     switch (type) {
@@ -27,22 +59,13 @@ const ProposalTemplateGrid: React.FC<ProposalTemplateGridProps> = ({ templates, 
     }
   };
 
-  if (templates.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <FileText className="h-12 w-12 mx-auto text-gray-400" />
-        <p className="mt-4 text-gray-500">Henüz teklif şablonu eklenmemiş</p>
-      </div>
-    );
-  }
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {templates.map((template) => (
+      {sampleTemplates.map((template) => (
         <Card key={template.id} className="overflow-hidden">
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start">
-              {getTemplateIcon(template.type)}
+              {getTemplateIcon(template.templateType)}
               <Button variant="ghost" size="sm">
                 Önizle
               </Button>
@@ -52,15 +75,15 @@ const ProposalTemplateGrid: React.FC<ProposalTemplateGridProps> = ({ templates, 
           </CardHeader>
           <CardContent className="pb-2">
             <ul className="text-sm space-y-1 text-gray-600">
-              {template.features.slice(0, 3).map((feature, index) => (
+              {template.templateFeatures.slice(0, 3).map((feature, index) => (
                 <li key={index} className="flex items-center">
                   <div className="w-1.5 h-1.5 rounded-full bg-gray-400 mr-2"></div>
                   {feature}
                 </li>
               ))}
-              {template.features.length > 3 && (
+              {template.templateFeatures.length > 3 && (
                 <li className="text-xs text-gray-500 italic">
-                  +{template.features.length - 3} daha fazla özellik
+                  +{template.templateFeatures.length - 3} daha fazla özellik
                 </li>
               )}
             </ul>

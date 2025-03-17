@@ -1,141 +1,123 @@
 
 import React from "react";
 import { useForm } from "react-hook-form";
-import { useToast } from "@/components/ui/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { ContactHistoryItem } from "@/types/crm";
+
+const formSchema = z.object({
+  contact_type: z.enum(["call", "email", "meeting", "other"]),
+  date: z.string().min(1, "Tarih zorunludur"),
+  notes: z.string().min(1, "Not zorunludur")
+});
 
 interface NewContactFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  opportunityId?: string;
+  opportunityId: string;
+  onSubmit: (newContact: Omit<ContactHistoryItem, "id">) => Promise<void>;
+  onCancel: () => void;
 }
 
-const NewContactForm: React.FC<NewContactFormProps> = ({ isOpen, onClose, opportunityId }) => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+const NewContactForm: React.FC<NewContactFormProps> = ({ opportunityId, onSubmit, onCancel }) => {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      first_name: "",
-      last_name: "",
-      email: "",
-      phone: "",
-      position: "",
-      type: "primary"
+      contact_type: "call",
+      date: new Date().toISOString().split("T")[0],
+      notes: ""
     }
   });
 
-  const onSubmit = async (data: any) => {
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const { error } = await supabase
-        .from("contacts")
-        .insert({
-          ...data,
-          opportunity_id: opportunityId,
-          created_at: new Date().toISOString()
-        });
+      // Create new contact history entry
+      const newContact: Omit<ContactHistoryItem, "id"> = {
+        contact_type: values.contact_type as "call" | "email" | "meeting" | "other",
+        date: values.date,
+        notes: values.notes,
+        employee_name: "Mevcut Kullanıcı" // This would be replaced with actual user data
+      };
 
-      if (error) throw error;
-
-      toast({
-        title: "Başarılı!",
-        description: "Yeni kontak başarıyla eklendi.",
-        className: "bg-green-50 border-green-200",
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["opportunity-contacts"] });
-      reset();
-      onClose();
+      await onSubmit(newContact);
+      form.reset();
+      
     } catch (error) {
       console.error("Error adding contact:", error);
-      toast({
-        title: "Hata!",
-        description: "Kontak eklenirken bir hata oluştu.",
-        variant: "destructive",
-      });
+      toast.error("İletişim kaydedilemedi");
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Yeni Kontak Ekle</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="first_name">Ad</Label>
-              <Input id="first_name" {...register("first_name", { required: "Ad gerekli" })} />
-              {errors.first_name && <p className="text-red-500 text-xs">{errors.first_name.message?.toString()}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="last_name">Soyad</Label>
-              <Input id="last_name" {...register("last_name", { required: "Soyad gerekli" })} />
-              {errors.last_name && <p className="text-red-500 text-xs">{errors.last_name.message?.toString()}</p>}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">E-posta</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                {...register("email", { 
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: "Geçersiz e-posta adresi"
-                  }
-                })} 
-              />
-              {errors.email && <p className="text-red-500 text-xs">{errors.email.message?.toString()}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefon</Label>
-              <Input id="phone" {...register("phone")} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="position">Pozisyon</Label>
-              <Input id="position" {...register("position")} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="type">Kontak Tipi</Label>
-              <Select defaultValue="primary" {...register("type")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Tip seçin" />
-                </SelectTrigger>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="contact_type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>İletişim Tipi</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="İletişim tipi seçin" />
+                  </SelectTrigger>
+                </FormControl>
                 <SelectContent>
-                  <SelectItem value="primary">Birincil</SelectItem>
-                  <SelectItem value="secondary">İkincil</SelectItem>
-                  <SelectItem value="decision_maker">Karar Verici</SelectItem>
-                  <SelectItem value="influencer">Etkileyici</SelectItem>
+                  <SelectItem value="call">Arama</SelectItem>
+                  <SelectItem value="email">E-posta</SelectItem>
+                  <SelectItem value="meeting">Toplantı</SelectItem>
                   <SelectItem value="other">Diğer</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-          </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
-              İptal
-            </Button>
-            <Button type="submit">Kaydet</Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <FormField
+          control={form.control}
+          name="date"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tarih</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notlar</FormLabel>
+              <FormControl>
+                <Textarea {...field} placeholder="İletişim detaylarını girin" rows={4} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end space-x-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            İptal
+          </Button>
+          <Button type="submit">
+            Kaydet
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };
 

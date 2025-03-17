@@ -1,192 +1,175 @@
 
-import React from "react";
-import { ProposalItem } from "@/types/proposal-form";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Plus, X, DollarSign } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, Trash2 } from "lucide-react";
+import { v4 as uuidv4 } from "uuid";
+import { ProposalItem } from "@/types/proposal";
 
 interface ProposalTemplateItemsProps {
   items: ProposalItem[];
-  setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>;
+  onItemsChange: (items: ProposalItem[]) => void;
 }
 
-const ProposalTemplateItems: React.FC<ProposalTemplateItemsProps> = ({ items, setItems }) => {
+const ProposalTemplateItems: React.FC<ProposalTemplateItemsProps> = ({ items, onItemsChange }) => {
   const addItem = () => {
-    setItems([
-      ...items,
-      {
-        id: crypto.randomUUID(),
-        name: "",
-        description: "",
-        quantity: 1,
-        unit: "adet",
-        price: 0,
-        tax_rate: 18,
-      },
-    ]);
+    const newItem = {
+      id: uuidv4(),
+      name: "",
+      quantity: 1,
+      unit_price: 0,
+      tax_rate: 18,
+      total_price: 0,
+    };
+    
+    onItemsChange([...items, newItem]);
   };
 
   const removeItem = (id: string) => {
-    setItems(items.filter((item) => item.id !== id));
+    onItemsChange(items.filter(item => item.id !== id));
   };
 
   const updateItem = (id: string, field: keyof ProposalItem, value: any) => {
-    setItems(
-      items.map((item) => {
-        if (item.id === id) {
-          return { ...item, [field]: field === "price" || field === "quantity" || field === "tax_rate" ? Number(value) : value };
+    const updatedItems = items.map(item => {
+      if (item.id === id) {
+        const updatedItem = { ...item, [field]: value };
+        
+        // Recalculate total if quantity, unit_price, or tax_rate changed
+        if (field === "quantity" || field === "unit_price" || field === "tax_rate") {
+          const quantity = Number(updatedItem.quantity);
+          const unitPrice = Number(updatedItem.unit_price);
+          const taxRate = Number(updatedItem.tax_rate);
+          
+          updatedItem.total_price = quantity * unitPrice * (1 + taxRate / 100);
         }
-        return item;
-      })
-    );
-  };
-
-  const calculateItemTotal = (item: ProposalItem) => {
-    return item.price * item.quantity;
-  };
-
-  const calculateSubtotal = () => {
-    return items.reduce((total, item) => total + calculateItemTotal(item), 0);
+        
+        return updatedItem;
+      }
+      return item;
+    });
+    
+    onItemsChange(updatedItems);
   };
 
   const formatMoney = (amount: number) => {
-    return new Intl.NumberFormat("tr-TR", {
-      style: "currency",
-      currency: "TRY",
+    return new Intl.NumberFormat('tr-TR', {
+      style: 'currency',
+      currency: 'TRY',
       minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(amount);
   };
 
+  const calculateSubtotal = () => {
+    return items.reduce((sum, item) => sum + Number(item.total_price), 0);
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Ürün ve Hizmetler</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {items.length === 0 ? (
-            <div className="text-center py-6 text-gray-500">
-              <p>Henüz ürün eklenmemiş</p>
-              <Button 
-                variant="outline" 
-                className="mt-2"
-                onClick={addItem}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Ürün Ekle
-              </Button>
-            </div>
-          ) : (
-            <div>
-              {items.map((item) => (
-                <div key={item.id} className="border p-4 rounded-md mb-4 relative">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-2 top-2 h-6 w-6"
-                    onClick={() => removeItem(item.id)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-lg font-medium">Teklif Kalemleri</h3>
+        <Button onClick={addItem} size="sm" variant="outline">
+          <Plus className="h-4 w-4 mr-2" />
+          Kalem Ekle
+        </Button>
+      </div>
+      
+      <div className="border rounded-md overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[250px]">Ürün/Hizmet</TableHead>
+              <TableHead>Adet</TableHead>
+              <TableHead>Birim Fiyat</TableHead>
+              <TableHead>Vergi %</TableHead>
+              <TableHead className="text-right">Toplam</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                  Henüz teklif kalemi eklenmemiş
+                </TableCell>
+              </TableRow>
+            ) : (
+              <>
+                {items.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <Input
+                        value={item.name}
+                        onChange={(e) => updateItem(item.id, "name", e.target.value)}
+                        placeholder="Ürün/Hizmet adı"
+                        className="max-w-[250px]"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => updateItem(item.id, "quantity", parseInt(e.target.value))}
+                        className="w-20"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.unit_price}
+                        onChange={(e) => updateItem(item.id, "unit_price", parseFloat(e.target.value))}
+                        className="w-28"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={item.tax_rate}
+                        onChange={(e) => updateItem(item.id, "tax_rate", parseFloat(e.target.value))}
+                        className="w-20"
+                      />
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatMoney(item.total_price)}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeItem(item.id)}
+                        className="h-8 w-8 p-0 text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Sil</span>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <Label htmlFor={`item-name-${item.id}`}>Ürün/Hizmet Adı</Label>
-                        <Input
-                          id={`item-name-${item.id}`}
-                          value={item.name}
-                          onChange={(e) => updateItem(item.id, "name", e.target.value)}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor={`item-description-${item.id}`}>Açıklama</Label>
-                        <Input
-                          id={`item-description-${item.id}`}
-                          value={item.description}
-                          onChange={(e) => updateItem(item.id, "description", e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-4">
-                      <div>
-                        <Label htmlFor={`item-quantity-${item.id}`}>Miktar</Label>
-                        <Input
-                          id={`item-quantity-${item.id}`}
-                          type="number"
-                          min="1"
-                          value={item.quantity}
-                          onChange={(e) => updateItem(item.id, "quantity", e.target.value)}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor={`item-unit-${item.id}`}>Birim</Label>
-                        <Input
-                          id={`item-unit-${item.id}`}
-                          value={item.unit}
-                          onChange={(e) => updateItem(item.id, "unit", e.target.value)}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor={`item-price-${item.id}`}>Birim Fiyat (₺)</Label>
-                        <Input
-                          id={`item-price-${item.id}`}
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={item.price}
-                          onChange={(e) => updateItem(item.id, "price", e.target.value)}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor={`item-tax-${item.id}`}>KDV (%)</Label>
-                        <Input
-                          id={`item-tax-${item.id}`}
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={item.tax_rate}
-                          onChange={(e) => updateItem(item.id, "tax_rate", e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="text-right font-medium">
-                      Toplam: {formatMoney(calculateItemTotal(item))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <Button 
-                type="button"
-                variant="outline" 
-                className="w-full mt-2"
-                onClick={addItem}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Başka Ürün Ekle
-              </Button>
-
-              <div className="mt-6 border-t pt-4">
-                <div className="flex justify-between items-center py-2">
-                  <span>Ara Toplam:</span>
-                  <span>{formatMoney(calculateSubtotal())}</span>
-                </div>
-              </div>
-            </div>
-          )}
+      <div className="flex justify-end">
+        <div className="space-y-1 min-w-[200px]">
+          <div className="flex justify-between text-sm">
+            <span>Ara Toplam:</span>
+            <span>{formatMoney(calculateSubtotal())}</span>
+          </div>
+          <div className="flex justify-between font-medium">
+            <span>Toplam:</span>
+            <span>{formatMoney(calculateSubtotal())}</span>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

@@ -4,10 +4,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Opportunity } from "@/types/crm";
+import { Opportunity, opportunityStatusLabels, opportunityStatusColors, opportunityPriorityLabels } from "@/types/crm";
 import { format } from "date-fns";
 import { tr } from 'date-fns/locale';
-import { Edit, User, Calendar, DollarSign, BarChart } from "lucide-react";
+import { Edit, User, Calendar, DollarSign, Clipboard } from "lucide-react";
 
 interface OpportunityDetailSheetProps {
   opportunity: Opportunity;
@@ -23,41 +23,6 @@ const OpportunityDetailSheet: React.FC<OpportunityDetailSheetProps> = ({
   onUpdate
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  
-  const getStatusText = (status: string) => {
-    switch(status) {
-      case "new": return "Yeni";
-      case "first_contact": return "İlk Görüşme";
-      case "site_visit": return "Saha Ziyareti";
-      case "preparing_proposal": return "Teklif Hazırlama";
-      case "proposal_sent": return "Teklif Gönderildi";
-      case "accepted": return "Kazanıldı";
-      case "lost": return "Kaybedildi";
-      default: return status;
-    }
-  };
-  
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case "new": return "bg-blue-100 text-blue-800";
-      case "first_contact": return "bg-purple-100 text-purple-800";
-      case "site_visit": return "bg-indigo-100 text-indigo-800";
-      case "preparing_proposal": return "bg-yellow-100 text-yellow-800";
-      case "proposal_sent": return "bg-orange-100 text-orange-800";
-      case "accepted": return "bg-green-100 text-green-800";
-      case "lost": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-  
-  const getPriorityColor = (priority: string) => {
-    switch(priority) {
-      case "low": return "bg-blue-100 text-blue-800";
-      case "medium": return "bg-yellow-100 text-yellow-800";
-      case "high": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
   
   const formatMoney = (amount: number) => {
     if (!amount && amount !== 0) return "₺0";
@@ -76,13 +41,15 @@ const OpportunityDetailSheet: React.FC<OpportunityDetailSheetProps> = ({
         <SheetHeader>
           <SheetTitle className="pr-10">{opportunity.title}</SheetTitle>
           <div className="flex space-x-2 mt-1">
-            <Badge className={getStatusColor(opportunity.status)}>
-              {getStatusText(opportunity.status)}
+            <Badge className={opportunityStatusColors[opportunity.status]}>
+              {opportunityStatusLabels[opportunity.status]}
             </Badge>
-            <Badge className={getPriorityColor(opportunity.priority)}>
-              {opportunity.priority === "low" && "Düşük"}
-              {opportunity.priority === "medium" && "Orta"}
-              {opportunity.priority === "high" && "Yüksek"}
+            <Badge className={
+              opportunity.priority === "high" ? "bg-red-100 text-red-800" : 
+              opportunity.priority === "medium" ? "bg-yellow-100 text-yellow-800" : 
+              "bg-blue-100 text-blue-800"
+            }>
+              {opportunityPriorityLabels[opportunity.priority]}
             </Badge>
           </div>
         </SheetHeader>
@@ -126,16 +93,6 @@ const OpportunityDetailSheet: React.FC<OpportunityDetailSheetProps> = ({
                   </div>
                 )}
                 
-                {opportunity.probability && (
-                  <div className="flex items-center">
-                    <BarChart className="h-5 w-5 mr-2 text-gray-500" />
-                    <div>
-                      <p className="text-sm font-medium">Kazanma Olasılığı</p>
-                      <p className="text-sm text-gray-500">%{opportunity.probability}</p>
-                    </div>
-                  </div>
-                )}
-                
                 {opportunity.description && (
                   <div className="pt-2">
                     <p className="text-sm font-medium">Açıklama</p>
@@ -157,6 +114,33 @@ const OpportunityDetailSheet: React.FC<OpportunityDetailSheetProps> = ({
                 <p>Oluşturulma: {format(new Date(opportunity.created_at), "PPP", { locale: tr })}</p>
                 <p>Son Güncelleme: {format(new Date(opportunity.updated_at), "PPP", { locale: tr })}</p>
               </div>
+              
+              {opportunity.contact_history && opportunity.contact_history.length > 0 ? (
+                <div className="mt-4">
+                  <p className="text-sm font-medium mb-2">İletişim Geçmişi</p>
+                  <div className="space-y-3">
+                    {opportunity.contact_history.map((contact, index) => (
+                      <div key={contact.id || index} className="border rounded-md p-3">
+                        <div className="flex justify-between">
+                          <p className="text-sm font-medium">
+                            {contact.contact_type === "call" && "Arama"}
+                            {contact.contact_type === "email" && "E-posta"}
+                            {contact.contact_type === "meeting" && "Toplantı"}
+                            {contact.contact_type === "other" && "Diğer"}
+                          </p>
+                          <p className="text-xs text-gray-500">{contact.date}</p>
+                        </div>
+                        <p className="text-sm mt-1">{contact.notes}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500 mt-4">
+                  <Clipboard className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                  <p>Henüz iletişim geçmişi yok</p>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>

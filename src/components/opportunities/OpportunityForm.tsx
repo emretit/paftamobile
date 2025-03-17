@@ -1,165 +1,260 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
-import { useToast } from "@/components/ui/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { tr } from 'date-fns/locale';
+import { tr } from "date-fns/locale";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Opportunity, OpportunityPriority, OpportunityStatus } from "@/types/crm";
+import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+const formSchema = z.object({
+  title: z.string().min(3, "Başlık en az 3 karakter olmalıdır"),
+  customer_id: z.string().optional(),
+  description: z.string().optional(),
+  status: z.string().min(1, "Durum seçmelisiniz"),
+  priority: z.string().min(1, "Öncelik seçmelisiniz"),
+  value: z.coerce.number().min(0, "Değer 0'dan büyük olmalıdır").optional(),
+  expected_close_date: z.date().optional(),
+  notes: z.string().optional()
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface OpportunityFormProps {
-  isOpen: boolean;
-  onClose: () => void;
+  initialData?: Partial<Opportunity>;
+  customers?: { id: string; name: string }[];
+  onSubmit: (data: FormValues) => Promise<void>;
+  onCancel: () => void;
 }
 
-const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) => {
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+const OpportunityForm: React.FC<OpportunityFormProps> = ({
+  initialData,
+  customers = [],
+  onSubmit,
+  onCancel
+}) => {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
-      value: "",
-      description: "",
-      status: "new",
-      priority: "medium",
-      customer_id: "",
-      employee_id: ""
+      title: initialData?.title || "",
+      customer_id: initialData?.customer_id || undefined,
+      description: initialData?.description || "",
+      status: initialData?.status || "new",
+      priority: initialData?.priority || "medium",
+      value: initialData?.value || undefined,
+      expected_close_date: initialData?.expected_close_date ? new Date(initialData.expected_close_date) : undefined,
+      notes: initialData?.notes || ""
     }
   });
 
-  const onSubmit = async (data: any) => {
-    try {
-      const { error } = await supabase
-        .from("opportunities")
-        .insert({
-          ...data,
-          expected_close_date: date?.toISOString(),
-          value: Number(data.value),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Başarılı!",
-        description: "Yeni fırsat başarıyla eklendi.",
-        className: "bg-green-50 border-green-200",
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["opportunities"] });
-      reset();
-      onClose();
-    } catch (error) {
-      console.error("Error adding opportunity:", error);
-      toast({
-        title: "Hata!",
-        description: "Fırsat eklenirken bir hata oluştu.",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Yeni Fırsat Ekle</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Fırsat Adı</Label>
-              <Input id="title" {...register("title", { required: "Fırsat adı gerekli" })} />
-              {errors.title && <p className="text-red-500 text-xs">{errors.title.message?.toString()}</p>}
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="value">Tahmini Değer (₺)</Label>
-                <Input id="value" type="number" {...register("value")} />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Tahmini Kapanış Tarihi</Label>
+    <DialogContent className="sm:max-w-[625px]">
+      <DialogHeader>
+        <DialogTitle>
+          {initialData?.id ? "Fırsatı Düzenle" : "Yeni Fırsat Ekle"}
+        </DialogTitle>
+      </DialogHeader>
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Başlık</FormLabel>
+                <FormControl>
+                  <Input placeholder="Fırsat başlığını girin" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Durum</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Durum seçin" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="new">Yeni</SelectItem>
+                      <SelectItem value="first_contact">İlk Görüşme</SelectItem>
+                      <SelectItem value="site_visit">Ziyaret Yapıldı</SelectItem>
+                      <SelectItem value="preparing_proposal">Teklif Hazırlama</SelectItem>
+                      <SelectItem value="proposal_sent">Teklif Gönderildi</SelectItem>
+                      <SelectItem value="accepted">Kazanıldı</SelectItem>
+                      <SelectItem value="lost">Kaybedildi</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="priority"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Öncelik</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Öncelik seçin" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="low">Düşük</SelectItem>
+                      <SelectItem value="medium">Orta</SelectItem>
+                      <SelectItem value="high">Yüksek</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="customer_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Müşteri</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Müşteri seçin" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {customers.map(customer => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="value"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tahmini Değer</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="0" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <FormField
+            control={form.control}
+            name="expected_close_date"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Tahmini Kapanış Tarihi</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, "PPP", { locale: tr }) : "Tarih seçin"}
-                    </Button>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP", { locale: tr })
+                        ) : (
+                          <span>Tarih seçin</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
+                  <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={date}
-                      onSelect={setDate}
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date < new Date(new Date().setHours(0, 0, 0, 0))
+                      }
+                      initialFocus
                     />
                   </PopoverContent>
                 </Popover>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="status">Durum</Label>
-                <Select defaultValue="new" {...register("status")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Durum seçin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="new">Yeni</SelectItem>
-                    <SelectItem value="first_contact">İlk Görüşme</SelectItem>
-                    <SelectItem value="site_visit">Saha Ziyareti</SelectItem>
-                    <SelectItem value="preparing_proposal">Teklif Hazırlama</SelectItem>
-                    <SelectItem value="proposal_sent">Teklif Gönderildi</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="priority">Öncelik</Label>
-                <Select defaultValue="medium" {...register("priority")}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Öncelik seçin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Düşük</SelectItem>
-                    <SelectItem value="medium">Orta</SelectItem>
-                    <SelectItem value="high">Yüksek</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Açıklama</Label>
-              <Textarea id="description" {...register("description")} />
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onClose}>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Açıklama</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Fırsat açıklaması" {...field} rows={3} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notlar</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Ek notlar" {...field} rows={3} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onCancel}>
               İptal
             </Button>
-            <Button type="submit">Kaydet</Button>
-          </div>
+            <Button type="submit">
+              {initialData?.id ? "Güncelle" : "Oluştur"}
+            </Button>
+          </DialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </Form>
+    </DialogContent>
   );
 };
 

@@ -1,20 +1,10 @@
 
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Opportunity, OpportunityStatus, OpportunitiesState } from "@/types/crm";
 import { DropResult } from "@hello-pangea/dnd";
-import { Opportunity, OpportunityStatus } from "@/types/crm";
 import { useToast } from "@/components/ui/use-toast";
-
-interface OpportunityState {
-  new: Opportunity[];
-  first_contact: Opportunity[];
-  site_visit: Opportunity[];
-  preparing_proposal: Opportunity[];
-  proposal_sent: Opportunity[];
-  accepted: Opportunity[];
-  lost: Opportunity[];
-}
 
 export const useOpportunities = () => {
   const { toast } = useToast();
@@ -22,8 +12,8 @@ export const useOpportunities = () => {
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  // Fetch opportunities
-  const { data, isLoading, error } = useQuery({
+  // Fetch all opportunities
+  const { data: opportunitiesData, isLoading, error } = useQuery({
     queryKey: ["opportunities"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -31,7 +21,7 @@ export const useOpportunities = () => {
         .select(`
           *,
           customer:customer_id (*),
-          assigned_to:employee_id (id, first_name, last_name, avatar_url)
+          employee:employee_id (*)
         `)
         .order("updated_at", { ascending: false });
 
@@ -40,118 +30,129 @@ export const useOpportunities = () => {
         throw error;
       }
 
-      // Group by status
-      const grouped: OpportunityState = {
-        new: [],
-        first_contact: [],
-        site_visit: [],
-        preparing_proposal: [],
-        proposal_sent: [],
-        accepted: [],
-        lost: [],
-      };
-
-      data.forEach((opp) => {
-        if (grouped[opp.status as keyof OpportunityState]) {
-          grouped[opp.status as keyof OpportunityState].push(opp as Opportunity);
+      // Transform the data to match our Opportunity type
+      return data.map((item: any) => {
+        // Parse contact_history from JSON if needed
+        let contactHistory = [];
+        try {
+          if (item.contact_history) {
+            contactHistory = typeof item.contact_history === 'string' 
+              ? JSON.parse(item.contact_history) 
+              : item.contact_history;
+          }
+        } catch (e) {
+          console.error("Error parsing contact history:", e);
+          contactHistory = [];
         }
-      });
 
-      return grouped;
-    },
+        return {
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          status: item.status,
+          priority: item.priority,
+          value: item.value,
+          customer_id: item.customer_id,
+          employee_id: item.employee_id,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+          expected_close_date: item.expected_close_date,
+          notes: item.notes,
+          contact_history: contactHistory,
+          customer: item.customer,
+          employee: item.employee
+        } as Opportunity;
+      });
+    }
   });
 
-  const handleDragEnd = async (result: DropResult) => {
-    const { destination, source, draggableId } = result;
+  // Group opportunities by status
+  const opportunities: OpportunitiesState = {
+    new: [],
+    first_contact: [],
+    site_visit: [],
+    preparing_proposal: [],
+    proposal_sent: [],
+    accepted: [],
+    lost: [],
+  };
 
-    // Dropped outside the droppable area
-    if (!destination) return;
+  if (opportunitiesData) {
+    opportunitiesData.forEach((opportunity) => {
+      if (opportunity.status in opportunities) {
+        opportunities[opportunity.status as OpportunityStatus].push(opportunity);
+      }
+    });
+  }
 
-    // Dropped in the same position
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
-
-    // Get all statuses as an array of keys from the OpportunityState type
-    const statuses = Object.keys(data || {}) as OpportunityStatus[];
-    
-    // Find the opportunity that was dragged
-    const opportunity = data?.[source.droppableId as OpportunityStatus]?.find(
-      (opp) => opp.id === draggableId
-    );
-
-    if (!opportunity) return;
-
-    // Destination status is the droppableId
-    const newStatus = destination.droppableId as OpportunityStatus;
-
-    // Update local state optimistically
-    const newData = { ...data } as OpportunityState;
-    
-    // Remove from source
-    newData[source.droppableId as OpportunityStatus] = 
-      newData[source.droppableId as OpportunityStatus].filter(
-        (opp) => opp.id !== draggableId
-      );
-    
-    // Add to destination
-    const updatedOpportunity = { ...opportunity, status: newStatus };
-    
-    newData[newStatus] = [
-      ...newData[newStatus].slice(0, destination.index),
-      updatedOpportunity,
-      ...newData[newStatus].slice(destination.index)
-    ];
-
-    // Update opportunity status in database
-    try {
+  // Handle drag and drop updates
+  const updateOpportunityMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: OpportunityStatus }) => {
       const { error } = await supabase
         .from("opportunities")
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq("id", draggableId);
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq("id", id);
 
       if (error) throw error;
-
-      // Invalidate queries to refetch data
+      return { id, status };
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["opportunities"] });
-
       toast({
         title: "Fırsat güncellendi",
         description: "Fırsat durumu başarıyla güncellendi",
-        className: "bg-green-50 border-green-200",
       });
-    } catch (error) {
-      console.error("Error updating opportunity status:", error);
+    },
+    onError: (error) => {
+      console.error("Error updating opportunity:", error);
       toast({
         title: "Hata",
-        description: "Fırsat durumu güncellenirken bir hata oluştu",
+        description: "Fırsat güncellenirken bir hata oluştu",
         variant: "destructive",
       });
+    },
+  });
+
+  const handleDragEnd = (result: DropResult) => {
+    const { destination, source, draggableId } = result;
+
+    // Drop outside valid area or same status
+    if (!destination || destination.droppableId === source.droppableId) {
+      return;
     }
+
+    // Update opportunity status
+    updateOpportunityMutation.mutate({
+      id: draggableId,
+      status: destination.droppableId as OpportunityStatus,
+    });
   };
 
-  const handleUpdateOpportunity = async (opportunity: Partial<Opportunity> & { id: string }) => {
+  // Handle other opportunity updates
+  const handleUpdateOpportunity = async (
+    opportunity: Partial<Opportunity> & { id: string }
+  ) => {
     try {
+      const updateData: any = { ...opportunity };
+      delete updateData.customer;
+      delete updateData.employee;
+      
+      // Handle contact_history as JSON
+      if (updateData.contact_history) {
+        updateData.contact_history = JSON.stringify(updateData.contact_history);
+      }
+
       const { error } = await supabase
         .from("opportunities")
-        .update({
-          ...opportunity,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq("id", opportunity.id);
 
       if (error) throw error;
 
-      // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: ["opportunities"] });
-
       toast({
         title: "Fırsat güncellendi",
         description: "Fırsat başarıyla güncellendi",
-        className: "bg-green-50 border-green-200",
       });
 
       return true;
@@ -167,15 +168,7 @@ export const useOpportunities = () => {
   };
 
   return {
-    opportunities: data || {
-      new: [],
-      first_contact: [],
-      site_visit: [],
-      preparing_proposal: [],
-      proposal_sent: [],
-      accepted: [],
-      lost: [],
-    },
+    opportunities,
     isLoading,
     error,
     handleDragEnd,
@@ -183,6 +176,6 @@ export const useOpportunities = () => {
     selectedOpportunity,
     setSelectedOpportunity,
     isDetailOpen,
-    setIsDetailOpen
+    setIsDetailOpen,
   };
 };

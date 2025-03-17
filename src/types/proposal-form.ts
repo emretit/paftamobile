@@ -1,38 +1,14 @@
 
-export type PaymentTerm = "prepaid" | "net15" | "net30" | "net60" | "custom";
-
-export interface ProposalItem {
-  id: string;
-  name: string;
-  quantity: number;
-  unitPrice: number;
-  taxRate: number;
-  totalPrice: number;
-  product_id?: string; // Optional product reference
-  currency?: string; // Currency for this specific item
-}
+import { ProposalItem } from "./proposal";
 
 export interface ProposalFormData {
   title: string;
-  proposalNumber?: number;
-  proposalDate: Date;
-  expirationDate?: Date;
-  validUntil?: Date;
-  partnerType: "customer" | "supplier";
-  customer_id: string;
-  supplier_id: string;
-  employee_id: string;
-  items: ProposalItem[];
-  discounts: number;
-  additionalCharges: number;
-  paymentTerm: PaymentTerm;
-  internalNotes: string;
-  files: File[];
-  status: "draft" | "new" | "review" | "negotiation" | "accepted" | "rejected";
-  currency?: string; // Default currency for the proposal
-}
-
-export interface ProposalFormProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
+  customer_id?: string;
+  employee_id?: string;
+  opportunity_id?: string;
+  items?: ProposalItem[];
+  valid_until?: string;
+  payment_terms?: string;
+  delivery_terms?: string;
+  notes?: string;
 }

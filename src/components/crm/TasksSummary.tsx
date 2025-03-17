@@ -19,8 +19,7 @@ const TasksSummary = () => {
         .from("tasks")
         .select("id")
         .lt("due_date", today.toISOString())
-        .neq("status", "completed")
-        .count();
+        .neq("status", "completed");
       
       if (totalError || overdueError) {
         console.error("Error fetching task stats:", totalError || overdueError);
@@ -29,7 +28,7 @@ const TasksSummary = () => {
       
       return {
         total: totalTasks?.length || 0,
-        overdue: overdueTasks?.[0]?.count || 0,
+        overdue: overdueTasks?.length || 0,
         completed: totalTasks?.filter(t => t.status === "completed")?.length || 0,
         inProgress: totalTasks?.filter(t => t.status === "in_progress")?.length || 0,
         todo: totalTasks?.filter(t => t.status === "todo")?.length || 0,
