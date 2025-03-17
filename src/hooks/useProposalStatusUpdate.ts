@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProposalStatus } from "@/types/proposal";
 import { toast } from "sonner";
+import { statusLabels } from "@/components/proposals/constants";
 
 interface StatusUpdateParams {
   proposalId: string;
@@ -42,11 +43,7 @@ export const useProposalStatusUpdate = () => {
         queryClient.invalidateQueries({ queryKey: ['opportunities'] });
       }
       
-      const statusLabel = variables.status === 'hazirlaniyor' 
-        ? 'Hazırlanıyor' 
-        : variables.status === 'onay_bekliyor' 
-          ? 'Onay Bekliyor' 
-          : 'Gönderildi';
+      const statusLabel = statusLabels[variables.status] || variables.status;
       
       toast.success(`Teklif durumu başarıyla "${statusLabel}" olarak güncellendi`);
     },

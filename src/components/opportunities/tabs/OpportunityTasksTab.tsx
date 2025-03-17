@@ -1,11 +1,11 @@
+
 import { useState } from "react";
 import { Calendar, Loader2, Plus, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { TaskPriorityBadge } from "@/components/tasks/TaskPriorityBadge";
-import { TaskStatusBadge } from "@/components/tasks/TaskStatusBadge";
-import { TaskDetailSheet } from "@/components/tasks/TaskDetailSheet";
-import { Task } from "@/components/tasks/types";
-import { formatDate } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import TaskDetailSheet from "@/components/tasks/TaskDetailSheet";
+import { Task } from "@/types/task";
+import { format } from "date-fns";
 
 interface OpportunityTasksTabProps {
   opportunity: any;
@@ -25,6 +25,55 @@ export const OpportunityTasksTab = ({ opportunity }: OpportunityTasksTabProps) =
   const handleCloseTaskDetail = () => {
     setIsTaskDetailOpen(false);
     setSelectedTask(null);
+  };
+
+  const getTaskPriorityBadge = (priority: string) => {
+    const colors = {
+      low: "bg-blue-100 text-blue-800 border-blue-200",
+      medium: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      high: "bg-red-100 text-red-800 border-red-200"
+    };
+    const labels = {
+      low: "Düşük",
+      medium: "Orta",
+      high: "Yüksek"
+    };
+    
+    return (
+      <Badge className={`${colors[priority as keyof typeof colors] || "bg-gray-100 text-gray-800"}`}>
+        {labels[priority as keyof typeof labels] || priority}
+      </Badge>
+    );
+  };
+
+  const getTaskStatusBadge = (status: string) => {
+    const colors = {
+      todo: "bg-gray-100 text-gray-800 border-gray-200",
+      in_progress: "bg-blue-100 text-blue-800 border-blue-200",
+      completed: "bg-green-100 text-green-800 border-green-200",
+      postponed: "bg-yellow-100 text-yellow-800 border-yellow-200"
+    };
+    const labels = {
+      todo: "Yapılacak",
+      in_progress: "Devam Ediyor",
+      completed: "Tamamlandı",
+      postponed: "Ertelendi"
+    };
+    
+    return (
+      <Badge className={`${colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800"}`}>
+        {labels[status as keyof typeof labels] || status}
+      </Badge>
+    );
+  };
+
+  const formatTaskDate = (date: string) => {
+    if (!date) return "";
+    try {
+      return format(new Date(date), "dd.MM.yyyy");
+    } catch (error) {
+      return "";
+    }
   };
 
   return (
@@ -59,8 +108,8 @@ export const OpportunityTasksTab = ({ opportunity }: OpportunityTasksTabProps) =
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="font-medium text-gray-900">{task.title}</h4>
                   <div className="flex items-center gap-2">
-                    <TaskPriorityBadge priority={task.priority} />
-                    <TaskStatusBadge status={task.status} />
+                    {getTaskPriorityBadge(task.priority)}
+                    {getTaskStatusBadge(task.status)}
                   </div>
                 </div>
                 <div className="flex justify-between items-center text-sm text-gray-500">
@@ -68,7 +117,7 @@ export const OpportunityTasksTab = ({ opportunity }: OpportunityTasksTabProps) =
                     {task.due_date ? (
                       <div className="flex items-center">
                         <Calendar className="h-3.5 w-3.5 mr-1.5" />
-                        {formatDate(task.due_date)}
+                        {formatTaskDate(task.due_date)}
                       </div>
                     ) : null}
                   </div>

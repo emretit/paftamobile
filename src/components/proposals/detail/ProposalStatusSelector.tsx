@@ -5,25 +5,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { statusLabels, statusStyles } from "../constants";
+import { statusLabels, statusStyles, primaryProposalStatuses } from "../constants";
 import { ProposalStatus } from "@/types/proposal";
-
-const allStatuses: ProposalStatus[] = [
-  "draft",
-  "new",
-  "review",
-  "sent",
-  "negotiation",
-  "approved",
-  "accepted",
-  "rejected",
-  "expired",
-  "discovery_scheduled",
-  "meeting_completed",
-  "quote_in_progress",
-  "quote_sent",
-  "converted_to_order"
-];
 
 interface ProposalStatusSelectorProps {
   currentStatus: ProposalStatus;
@@ -37,6 +20,15 @@ export const ProposalStatusSelector = ({
   isUpdating = false
 }: ProposalStatusSelectorProps) => {
   const [open, setOpen] = useState(false);
+
+  // Define the statuses that should be shown in the selector
+  const availableStatuses: ProposalStatus[] = [
+    ...primaryProposalStatuses,
+    "accepted",
+    "rejected",
+    "expired", 
+    "converted_to_order"
+  ];
 
   const handleSelect = (selectedStatus: ProposalStatus) => {
     if (selectedStatus !== currentStatus) {
@@ -71,7 +63,7 @@ export const ProposalStatusSelector = ({
             <CommandInput placeholder="Durum arayın..." />
             <CommandEmpty>Sonuç bulunamadı.</CommandEmpty>
             <CommandGroup>
-              {allStatuses.map((status) => (
+              {availableStatuses.map((status) => (
                 <CommandItem
                   key={status}
                   value={status}

@@ -11,9 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { statusStyles } from "./constants";
+import { statusLabels } from "./constants";
 import { Plus } from "lucide-react";
 import { ProposalFiltersProps } from "./types";
+import { ProposalStatus } from "@/types/proposal";
 
 export const ProposalFilters = ({
   onSearchChange,
@@ -49,6 +50,18 @@ export const ProposalFilters = ({
     }
   };
 
+  // List of statuses to show in the filter dropdown
+  const filterStatuses: Array<{value: string, label: string}> = [
+    { value: 'all', label: 'Tüm durumlar' },
+    { value: 'hazirlaniyor', label: '🔄 Hazırlanıyor' },
+    { value: 'onay_bekliyor', label: '👥 Onay Bekliyor' },
+    { value: 'gonderildi', label: '📤 Gönderildi' },
+    { value: 'accepted', label: '✅ Kabul Edildi' },
+    { value: 'rejected', label: '❌ Reddedildi' },
+    { value: 'expired', label: '⏱️ Süresi Doldu' },
+    { value: 'converted_to_order', label: '📦 Siparişe Dönüştü' }
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 items-end">
       <div>
@@ -71,15 +84,11 @@ export const ProposalFilters = ({
             <SelectValue placeholder="Tüm durumlar" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tüm durumlar</SelectItem>
-            <SelectItem value="draft">🔄 Taslak</SelectItem>
-            <SelectItem value="discovery_scheduled">🔎 İlk Görüşme</SelectItem>
-            <SelectItem value="meeting_completed">👥 Görüşme Tamamlandı</SelectItem>
-            <SelectItem value="sent">📤 Gönderildi</SelectItem>
-            <SelectItem value="negotiation">🔄 Müzakere</SelectItem>
-            <SelectItem value="approved">✅ Onaylandı</SelectItem>
-            <SelectItem value="rejected">❌ Reddedildi</SelectItem>
-            <SelectItem value="converted_to_order">📦 Siparişe Dönüştü</SelectItem>
+            {filterStatuses.map((status) => (
+              <SelectItem key={status.value} value={status.value}>
+                {status.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
