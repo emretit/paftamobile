@@ -1,95 +1,83 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Task, TaskStatus, TaskType } from "@/types/task";
-import { mockTasksAPI } from "@/services/mockCrmService";
+import { Task, TaskStatus, TaskPriority, TaskType } from "@/types/task";
+import { mockCrmService } from "@/services/mockCrmService";
 
 export const useTaskMutations = () => {
   const queryClient = useQueryClient();
 
-  // Create a new task
-  const createTask = useMutation({
+  const createTaskMutation = useMutation({
     mutationFn: async (taskData: {
       title: string;
-      description: string;
-      priority: string;
+      description?: string;
+      status: TaskStatus;
+      priority: TaskPriority;
       type: TaskType;
       assignee_id?: string;
       due_date?: string;
       related_item_id?: string;
       related_item_title?: string;
-      subtasks?: string; // Serialized JSON of subtasks
+      subtasks?: string;
     }) => {
-      const { subtasks, ...taskFields } = taskData;
-      
-      // For database submission we need to convert the type
-      const taskToCreate = {
-        ...taskFields,
-        status: "todo" as TaskStatus,
-        // Validate task type
-        type: (taskFields.type === "opportunity" || 
-               taskFields.type === "proposal" || 
-               taskFields.type === "general" || 
-               taskFields.type === "meeting" || 
-               taskFields.type === "call" || 
-               taskFields.type === "email" || 
-               taskFields.type === "follow_up") ? taskFields.type : "general"
-      };
-      
-      const { data, error } = await mockTasksAPI.createTask(taskToCreate);
-
+      const { data, error } = await mockCrmService.createTask(taskData);
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Görev oluşturuldu");
+      toast.success("Görev başarıyla oluşturuldu");
     },
-    onError: (error: Error) => {
-      toast.error("Görev oluşturulurken bir hata oluştu");
+    onError: (error) => {
       console.error("Error creating task:", error);
+      toast.error("Görev oluşturulurken bir hata oluştu");
     },
   });
 
-  // Update an existing task
-  const updateTask = useMutation({
-    mutationFn: async ({
-      id,
-      updates,
-    }: {
-      id: string;
-      updates: Partial<Task>;
-    }) => {
-      const { data, error } = await mockTasksAPI.updateTask(id, updates);
+  const updateTaskMutation = useMutation({
+    mutationFn: async (id: string, updates: Partial<Task>) => {
+      const { data, error } = await mockCrmService.updateTask(id, updates);
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Görev güncellendi");
+      toast.success("Görev başarıyla güncellendi");
     },
-    onError: (error: Error) => {
-      toast.error("Görev güncellenirken bir hata oluştu");
+    onError: (error) => {
       console.error("Error updating task:", error);
+      toast.error("Görev güncellenirken bir hata oluştu");
     },
   });
 
-  // Delete a task
-  const deleteTask = useMutation({
+  const deleteTaskMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await mockTasksAPI.deleteTask?.(id) || { error: null };
+      const { success, error } = await mockCrmService.deleteTask(id);
       if (error) throw error;
-      return id;
+      return success;
     },
-    onSuccess: (id) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Görev silindi");
+      toast.success("Görev başarıyla silindi");
     },
-    onError: (error: Error) => {
-      toast.error("Görev silinirken bir hata oluştu");
+    onError: (error) => {
       console.error("Error deleting task:", error);
+      toast.error("Görev silinirken bir hata oluştu");
     },
   });
+
+  // Wrapper functions to simplify usage
+  const createTask = async (taskData: any) => {
+    return createTaskMutation.mutateAsync(taskData);
+  };
+
+  const updateTask = async (id: string, updates: Partial<Task>) => {
+    return updateTaskMutation.mutateAsync(id, updates);
+  };
+
+  const deleteTask = async (id: string) => {
+    return deleteTaskMutation.mutateAsync(id);
+  };
 
   return {
     createTask,

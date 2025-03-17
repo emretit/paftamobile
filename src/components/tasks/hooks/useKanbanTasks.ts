@@ -1,8 +1,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Task, TasksState } from "@/types/task";
-import { mockTasksAPI } from "@/services/mockCrmService";
+import { Task, TasksState, TaskStatus } from "@/types/task";
+import { mockCrmService } from "@/services/mockCrmService";
 
 interface UseKanbanTasksParams {
   searchQuery?: string;
@@ -15,7 +15,7 @@ export const useKanbanTasks = ({
   selectedEmployee = null,
   selectedType = null,
 }: UseKanbanTasksParams) => {
-  const [tasks, setTasks] = useState<TasksState>({
+  const [tasksState, setTasksState] = useState<TasksState>({
     todo: [],
     in_progress: [],
     completed: [],
@@ -25,7 +25,7 @@ export const useKanbanTasks = ({
   const { data, isLoading, error } = useQuery({
     queryKey: ["tasks"],
     queryFn: async () => {
-      const { data } = await mockTasksAPI.getTasks();
+      const { data } = await mockCrmService.getTasks();
       return data || [];
     },
   });
@@ -40,20 +40,29 @@ export const useKanbanTasks = ({
       postponed: [],
     };
 
-    data.forEach((task: Task) => {
-      if (tasksMap[task.status]) {
-        tasksMap[task.status].push(task);
+    // Process data and handle subtasks from string format if needed
+    data.forEach((task: any) => {
+      const processedTask: Task = {
+        ...task,
+        status: task.status as TaskStatus,
+        subtasks: typeof task.subtasks === 'string' 
+          ? JSON.parse(task.subtasks || '[]') 
+          : (task.subtasks || [])
+      };
+
+      if (tasksMap[processedTask.status]) {
+        tasksMap[processedTask.status].push(processedTask);
       } else {
-        tasksMap.todo.push(task);
+        tasksMap.todo.push(processedTask);
       }
     });
 
-    setTasks(tasksMap);
+    setTasksState(tasksMap);
   }, [data]);
 
   const filterTasks = useCallback(
     (
-      tasks: TasksState,
+      tasksState: TasksState,
       searchQuery?: string,
       selectedEmployee?: string | null,
       selectedType?: string | null
@@ -66,13 +75,13 @@ export const useKanbanTasks = ({
       };
 
       // Apply filters to each status category
-      Object.entries(tasks).forEach(([status, statusTasks]) => {
+      Object.entries(tasksState).forEach(([status, statusTasks]) => {
         filtered[status as keyof TasksState] = statusTasks.filter((task) => {
           // Filter by search query
           const matchesSearch =
             !searchQuery ||
             task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            task.description.toLowerCase().includes(searchQuery.toLowerCase());
+            (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
 
           // Filter by employee
           const matchesEmployee = !selectedEmployee || task.assignee_id === selectedEmployee;
@@ -88,6 +97,20 @@ export const useKanbanTasks = ({
     },
     []
   );
+  
+  // Apply all active filters to the tasks
+  const filteredTasks = filterTasks(
+    tasksState,
+    searchQuery,
+    selectedEmployee,
+    selectedType
+  );
 
-  return { tasks, isLoading, error, filterTasks };
+  return { 
+    tasks: filteredTasks, 
+    isLoading, 
+    error,
+    setTasksState,
+    filterTasks
+  };
 };

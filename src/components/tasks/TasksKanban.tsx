@@ -1,125 +1,125 @@
 
-import { useState, useCallback } from "react";
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { Task } from "@/types/task";
-import { Card, CardContent } from "@/components/ui/card";
-import { KanbanColumn } from "./KanbanColumn";
-import { useTaskMutations } from "./hooks/useTaskMutations";
+import { useState } from "react";
+import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import { Task, TaskStatus } from "@/types/task";
 import { useKanbanTasks } from "./hooks/useKanbanTasks";
+import { useTaskMutations } from "./hooks/useTaskMutations";
+import KanbanColumn from "./KanbanColumn";
+import TaskForm from "./TaskForm";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface TasksKanbanProps {
-  searchQuery: string;
-  selectedEmployee: string | null;
-  selectedType: string | null;
-  onSelectTask: (task: Task) => void;
+  searchQuery?: string;
+  selectedEmployee?: string | null;
+  selectedType?: string | null;
 }
 
-const TasksKanban = ({
-  searchQuery,
-  selectedEmployee,
-  selectedType,
-  onSelectTask,
+export const TasksKanban = ({ 
+  searchQuery, 
+  selectedEmployee, 
+  selectedType 
 }: TasksKanbanProps) => {
-  const { updateTask } = useTaskMutations();
-  const { tasks, isLoading, error, filterTasks } = useKanbanTasks({
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const { tasks, setTasksState } = useKanbanTasks({
     searchQuery,
     selectedEmployee,
     selectedType
   });
   
-  const [filteredTasks, setFilteredTasks] = useState(tasks);
-  
-  // Apply filters when dependencies change
-  useState(() => {
-    setFilteredTasks(filterTasks(tasks, searchQuery, selectedEmployee, selectedType));
-  });
+  const { updateTask } = useTaskMutations();
 
-  const handleDragEnd = useCallback(
-    (result: any) => {
-      const { destination, source, draggableId } = result;
+  const handleDragEnd = async (result: DropResult) => {
+    const { source, destination, draggableId } = result;
 
-      // Dropped outside a droppable area
-      if (!destination) return;
+    // Dropped outside the list
+    if (!destination) return;
 
-      // Dropped in the same place
-      if (
-        destination.droppableId === source.droppableId &&
-        destination.index === source.index
-      )
-        return;
+    // Dropped in the same position
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) return;
 
-      // Find the task
-      const taskId = draggableId;
-      const newStatus = destination.droppableId;
+    // Find the task that was dragged
+    const status = source.droppableId as TaskStatus;
+    const targetStatus = destination.droppableId as TaskStatus;
+    const taskIndex = tasks[status].findIndex(t => t.id === draggableId);
+    
+    if (taskIndex === -1) return;
+    
+    const task = tasks[status][taskIndex];
 
-      // Update task status
-      updateTask.mutate({
-        id: taskId,
-        updates: { status: newStatus },
-      });
-    },
-    [updateTask]
-  );
+    // Update task status in local state
+    const newTasksState = { ...tasks };
+    newTasksState[status] = newTasksState[status].filter(t => t.id !== task.id);
+    const updatedTask = { ...task, status: targetStatus };
+    newTasksState[targetStatus] = [
+      ...newTasksState[targetStatus].slice(0, destination.index),
+      updatedTask,
+      ...newTasksState[targetStatus].slice(destination.index)
+    ];
+    
+    setTasksState(newTasksState);
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-4">
-              <div className="h-6 bg-gray-200 animate-pulse rounded-md mb-4"></div>
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, j) => (
-                  <div key={j} className="h-20 bg-gray-100 animate-pulse rounded-md"></div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
+    // Update task status in database
+    try {
+      await updateTask(task.id, { status: targetStatus });
+    } catch (error) {
+      console.error("Error updating task status:", error);
+      // Revert to original state on error
+      setTasksState(tasks);
+    }
+  };
 
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
+  const handleTaskEdit = (task: Task) => {
+    setSelectedTask(task);
+    setIsDialogOpen(true);
+  };
 
-  const columns = {
-    todo: filteredTasks.todo || [],
-    in_progress: filteredTasks.in_progress || [],
-    completed: filteredTasks.completed || [],
-    postponed: filteredTasks.postponed || []
+  const handleDialogClose = () => {
+    setSelectedTask(null);
+    setIsDialogOpen(false);
   };
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <KanbanColumn
-          title="Yapılacak"
-          tasks={columns.todo}
-          id="todo"
-          onSelectTask={onSelectTask}
-        />
-        <KanbanColumn
-          title="Devam Ediyor"
-          tasks={columns.in_progress}
-          id="in_progress"
-          onSelectTask={onSelectTask}
-        />
-        <KanbanColumn
-          title="Tamamlandı"
-          tasks={columns.completed}
-          id="completed"
-          onSelectTask={onSelectTask}
-        />
-        <KanbanColumn
-          title="Ertelendi"
-          tasks={columns.postponed}
-          id="postponed"
-          onSelectTask={onSelectTask}
-        />
-      </div>
-    </DragDropContext>
+    <div className="h-full">
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KanbanColumn
+            id="todo"
+            title="Yapılacak"
+            tasks={tasks.todo}
+            onTaskEdit={handleTaskEdit}
+          />
+          <KanbanColumn
+            id="in_progress"
+            title="Devam Ediyor"
+            tasks={tasks.in_progress}
+            onTaskEdit={handleTaskEdit}
+          />
+          <KanbanColumn
+            id="completed"
+            title="Tamamlandı"
+            tasks={tasks.completed}
+            onTaskEdit={handleTaskEdit}
+          />
+          <KanbanColumn
+            id="postponed"
+            title="Ertelendi"
+            tasks={tasks.postponed}
+            onTaskEdit={handleTaskEdit}
+          />
+        </div>
+      </DragDropContext>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <TaskForm task={selectedTask || undefined} onClose={handleDialogClose} />
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

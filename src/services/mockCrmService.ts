@@ -1,356 +1,433 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Opportunity, OpportunityStatus, OpportunityExtended, ContactHistoryEntry } from "@/types/crm";
-import { Task } from "@/types/task";
+import { Task, TaskStatus, TaskPriority, TaskType } from "@/types/task";
+import { Deal } from "@/types/deal";
+import { Opportunity, OpportunityStatus, OpportunityPriority } from "@/types/crm";
+import { ProposalStatusShared } from "@/types/shared-types";
+import { toast } from "sonner";
 
-// This is a temporary mock service to handle CRM operations
-// until the actual Supabase tables are created
-
-// Mock data storage
-let opportunities: OpportunityExtended[] = [
+// Sample data for mock services
+const mockTasks: Task[] = [
   {
     id: "1",
-    title: "Enterprise Software Implementation",
-    description: "Implementation of custom ERP solution",
-    status: "new",
-    priority: "high",
-    value: 150000,
-    customer_id: "c1",
-    employee_id: "e1",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    expected_close_date: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString(),
-    customer_name: "Acme Corporation",
-    employee_name: "John Doe",
-    currency: "₺",
-    contact_history: []
-  },
-  {
-    id: "2",
-    title: "Cloud Migration Project",
-    description: "Migrating on-premise servers to cloud",
-    status: "first_contact",
-    priority: "medium",
-    value: 85000,
-    customer_id: "c2",
-    employee_id: "e2",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    customer_name: "TechStart Inc.",
-    employee_name: "Jane Smith",
-    currency: "₺",
-    contact_history: []
-  },
-  {
-    id: "3",
-    title: "Security Assessment",
-    description: "Complete security audit and improvement plan",
-    status: "site_visit",
-    priority: "high",
-    value: 45000,
-    customer_id: "c3",
-    employee_id: "e1",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    customer_name: "Secure Systems Ltd.",
-    employee_name: "John Doe",
-    currency: "₺",
-    contact_history: []
-  }
-];
-
-// Mock deals data (since we don't have a "deals" table in Supabase yet)
-let deals = [
-  {
-    id: "1",
-    title: "Enterprise Deal",
-    value: 150000,
-    status: "new",
-    customerName: "Acme Corporation",
-    employeeName: "John Doe",
-    priority: "high"
-  },
-  {
-    id: "2",
-    title: "Cloud Migration Deal",
-    value: 85000,
-    status: "negotiation",
-    customerName: "TechStart Inc.",
-    employeeName: "Jane Smith",
-    priority: "medium"
-  },
-  {
-    id: "3",
-    title: "Security Assessment Deal",
-    value: 45000,
-    status: "follow_up",
-    customerName: "Secure Systems Ltd.",
-    employeeName: "John Doe",
-    priority: "high"
-  }
-];
-
-// Mock tasks data
-let tasks = [
-  {
-    id: "1",
-    title: "Call Client",
-    description: "Make initial call to discuss requirements",
+    title: "Contact new lead",
+    description: "Follow up with the new lead from website",
     status: "todo",
+    priority: "high",
+    type: "general",
+    assignee_id: "1",
+    due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    subtasks: []
+  },
+  {
+    id: "2",
+    title: "Prepare proposal",
+    description: "Prepare proposal for Tech Corp",
+    status: "in_progress",
     priority: "medium",
-    type: "call",
-    assignee_id: "e1",
-    due_date: new Date().toISOString(),
+    type: "proposal",
+    assignee_id: "2",
+    due_date: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     subtasks: []
   }
 ];
 
-// Mock API functions that mimic Supabase calls
+// Mock opportunities
+const mockOpportunities: Opportunity[] = [
+  {
+    id: "1",
+    title: "Enterprise Software Package",
+    description: "Complete enterprise software solution",
+    status: "new",
+    priority: "high",
+    value: 50000,
+    customer_id: "1",
+    employee_id: "1",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    expected_close_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    last_contact_date: new Date().toISOString(),
+    customer_name: "Tech Corp",
+    employee_name: "John Smith"
+  },
+  {
+    id: "2",
+    title: "Cloud Migration Project",
+    description: "Migrate on-premise infrastructure to cloud",
+    status: "proposal_sent",
+    priority: "medium",
+    value: 35000,
+    customer_id: "2",
+    employee_id: "1",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    expected_close_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+    last_contact_date: new Date().toISOString(),
+    customer_name: "Acme Inc",
+    employee_name: "John Smith"
+  }
+];
+
+// Mock CRM service for tasks
+export const mockTasksAPI = {
+  // Get all tasks
+  getTasks: async () => {
+    try {
+      // Try to get real tasks from Supabase
+      const { data, error } = await supabase.from("tasks").select("*");
+      
+      if (error) {
+        console.error("Error fetching tasks from Supabase:", error);
+        return { data: mockTasks, error: null };
+      }
+      
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error in getTasks:", error);
+      return { data: mockTasks, error };
+    }
+  },
+  
+  // Create a new task
+  createTask: async (taskData: Partial<Task>) => {
+    try {
+      // Try to create task in Supabase
+      const { data, error } = await supabase.from("tasks").insert([taskData]).select();
+      
+      if (error) {
+        console.error("Error creating task in Supabase:", error);
+        // Fall back to mock data
+        const newTask = {
+          id: `mock-${Date.now()}`,
+          ...taskData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as Task;
+        
+        mockTasks.push(newTask);
+        return { data: [newTask], error: null };
+      }
+      
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error in createTask:", error);
+      return { data: null, error };
+    }
+  },
+  
+  // Update a task
+  updateTask: async (id: string, updates: Partial<Task>) => {
+    try {
+      // Try to update task in Supabase
+      const { data, error } = await supabase
+        .from("tasks")
+        .update(updates)
+        .eq("id", id)
+        .select();
+      
+      if (error) {
+        console.error("Error updating task in Supabase:", error);
+        // Fall back to mock data
+        const index = mockTasks.findIndex(task => task.id === id);
+        if (index !== -1) {
+          mockTasks[index] = { ...mockTasks[index], ...updates, updated_at: new Date().toISOString() };
+          return { data: [mockTasks[index]], error: null };
+        }
+        return { data: null, error: new Error("Task not found") };
+      }
+      
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error in updateTask:", error);
+      return { data: null, error };
+    }
+  },
+
+  // Delete a task
+  deleteTask: async (id: string) => {
+    try {
+      // Try to delete task in Supabase
+      const { error } = await supabase.from("tasks").delete().eq("id", id);
+      
+      if (error) {
+        console.error("Error deleting task in Supabase:", error);
+        // Fall back to mock data
+        const index = mockTasks.findIndex(task => task.id === id);
+        if (index !== -1) {
+          mockTasks.splice(index, 1);
+          return { success: true, error: null };
+        }
+        return { success: false, error: new Error("Task not found") };
+      }
+      
+      return { success: true, error: null };
+    } catch (error) {
+      console.error("Error in deleteTask:", error);
+      return { success: false, error };
+    }
+  }
+};
+
+// Mock CRM service for opportunities
 export const mockOpportunitiesAPI = {
   // Get all opportunities
   getOpportunities: async () => {
-    return { data: opportunities, error: null };
+    try {
+      // Try to get real opportunities from Supabase
+      const { data, error } = await supabase.from("opportunities").select("*");
+      
+      if (error) {
+        console.error("Error fetching opportunities from Supabase:", error);
+        return { data: mockOpportunities, error: null };
+      }
+      
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error in getOpportunities:", error);
+      return { data: mockOpportunities, error };
+    }
   },
   
   // Filter opportunities
   filterOpportunities: async (query: string, employeeId?: string, customerId?: string) => {
-    let filteredOpps = [...opportunities];
-    
-    if (query) {
-      filteredOpps = filteredOpps.filter(
-        opp => opp.title.toLowerCase().includes(query.toLowerCase()) || 
-               (opp.description && opp.description.toLowerCase().includes(query.toLowerCase()))
-      );
+    try {
+      // Use real filter if possible
+      let dbQuery = supabase.from("opportunities").select("*");
+      
+      if (query) {
+        dbQuery = dbQuery.or(`title.ilike.%${query}%,description.ilike.%${query}%`);
+      }
+      
+      if (employeeId) {
+        dbQuery = dbQuery.eq("employee_id", employeeId);
+      }
+      
+      if (customerId) {
+        dbQuery = dbQuery.eq("customer_id", customerId);
+      }
+      
+      const { data, error } = await dbQuery;
+      
+      if (error) {
+        console.error("Error filtering opportunities in Supabase:", error);
+        // Fall back to mock filtering
+        let filtered = mockOpportunities;
+        
+        if (query) {
+          const lowerQuery = query.toLowerCase();
+          filtered = filtered.filter(opp => 
+            opp.title.toLowerCase().includes(lowerQuery) || 
+            (opp.description && opp.description.toLowerCase().includes(lowerQuery))
+          );
+        }
+        
+        if (employeeId) {
+          filtered = filtered.filter(opp => opp.employee_id === employeeId);
+        }
+        
+        if (customerId) {
+          filtered = filtered.filter(opp => opp.customer_id === customerId);
+        }
+        
+        return { data: filtered, error: null };
+      }
+      
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error in filterOpportunities:", error);
+      return { data: [], error };
     }
-    
-    if (employeeId) {
-      filteredOpps = filteredOpps.filter(opp => opp.employee_id === employeeId);
-    }
-    
-    if (customerId) {
-      filteredOpps = filteredOpps.filter(opp => opp.customer_id === customerId);
-    }
-    
-    return { data: filteredOpps, error: null };
   },
   
-  // Get single opportunity
+  // Get an opportunity by ID
   getOpportunity: async (id: string) => {
-    const opportunity = opportunities.find(opp => opp.id === id);
-    return { data: opportunity, error: opportunity ? null : new Error('Opportunity not found') };
-  },
-  
-  // Update opportunity
-  updateOpportunity: async (id: string, updates: Partial<OpportunityExtended>) => {
-    const index = opportunities.findIndex(opp => opp.id === id);
-    if (index === -1) {
-      return { data: null, error: new Error('Opportunity not found') };
+    try {
+      // Try to get real opportunity from Supabase
+      const { data, error } = await supabase
+        .from("opportunities")
+        .select("*")
+        .eq("id", id)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching opportunity from Supabase:", error);
+        // Fall back to mock data
+        const opportunity = mockOpportunities.find(opp => opp.id === id);
+        if (!opportunity) {
+          return { data: null, error: new Error("Opportunity not found") };
+        }
+        return { data: opportunity, error: null };
+      }
+      
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error in getOpportunity:", error);
+      return { data: null, error };
     }
-    
-    opportunities[index] = {
-      ...opportunities[index],
-      ...updates,
-      updated_at: new Date().toISOString()
-    };
-    
-    return { data: opportunities[index], error: null };
   },
   
-  // Create opportunity
-  createOpportunity: async (newOpportunity: Partial<OpportunityExtended>) => {
-    const createdOpp: OpportunityExtended = {
-      id: `opp-${Date.now()}`,
-      title: newOpportunity.title || 'New Opportunity',
-      description: newOpportunity.description,
-      status: newOpportunity.status || 'new',
-      priority: newOpportunity.priority || 'medium',
-      value: newOpportunity.value || 0,
-      customer_id: newOpportunity.customer_id,
-      employee_id: newOpportunity.employee_id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      expected_close_date: newOpportunity.expected_close_date,
-      last_contact_date: newOpportunity.last_contact_date,
-      notes: newOpportunity.notes,
-      customer_name: newOpportunity.customer_name,
-      employee_name: newOpportunity.employee_name,
-      currency: newOpportunity.currency || "₺",
-      contact_history: newOpportunity.contact_history || []
-    };
-    
-    opportunities.push(createdOpp);
-    return { data: createdOpp, error: null };
-  },
-  
-  // Update contact history
-  updateContactHistory: async (opportunityId: string, contactHistory: ContactHistoryEntry[]) => {
-    const index = opportunities.findIndex(opp => opp.id === opportunityId);
-    if (index === -1) {
-      return { data: null, error: new Error('Opportunity not found') };
+  // Update an opportunity
+  updateOpportunity: async (id: string, updates: Partial<Opportunity>) => {
+    try {
+      // Try to update opportunity in Supabase
+      const { data, error } = await supabase
+        .from("opportunities")
+        .update(updates)
+        .eq("id", id)
+        .select();
+      
+      if (error) {
+        console.error("Error updating opportunity in Supabase:", error);
+        // Fall back to mock data
+        const index = mockOpportunities.findIndex(opp => opp.id === id);
+        if (index !== -1) {
+          mockOpportunities[index] = { 
+            ...mockOpportunities[index], 
+            ...updates, 
+            updated_at: new Date().toISOString() 
+          };
+          return { data: mockOpportunities[index], error: null };
+        }
+        return { data: null, error: new Error("Opportunity not found") };
+      }
+      
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error in updateOpportunity:", error);
+      return { data: null, error };
     }
-    
-    opportunities[index].contact_history = contactHistory;
-    opportunities[index].updated_at = new Date().toISOString();
-    
-    return { data: opportunities[index], error: null };
+  },
+  
+  // Create a new opportunity
+  createOpportunity: async (newOpportunity: Partial<Opportunity>) => {
+    try {
+      // Try to create opportunity in Supabase
+      const { data, error } = await supabase
+        .from("opportunities")
+        .insert([newOpportunity])
+        .select();
+      
+      if (error) {
+        console.error("Error creating opportunity in Supabase:", error);
+        // Fall back to mock data
+        const opportunity = {
+          id: `mock-${Date.now()}`,
+          ...newOpportunity,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as Opportunity;
+        
+        mockOpportunities.push(opportunity);
+        return { data: opportunity, error: null };
+      }
+      
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error in createOpportunity:", error);
+      return { data: null, error };
+    }
+  },
+  
+  // Delete an opportunity
+  deleteOpportunity: async (id: string) => {
+    try {
+      // Try to delete opportunity in Supabase
+      const { error } = await supabase.from("opportunities").delete().eq("id", id);
+      
+      if (error) {
+        console.error("Error deleting opportunity in Supabase:", error);
+        // Fall back to mock data
+        const index = mockOpportunities.findIndex(opp => opp.id === id);
+        if (index !== -1) {
+          mockOpportunities.splice(index, 1);
+          return { success: true, error: null };
+        }
+        return { success: false, error: new Error("Opportunity not found") };
+      }
+      
+      return { success: true, error: null };
+    } catch (error) {
+      console.error("Error in deleteOpportunity:", error);
+      return { success: false, error };
+    }
+  },
+
+  // Update opportunity based on proposal changes
+  updateOpportunityBasedOnProposal: async (
+    proposalId: string, 
+    proposalStatus: ProposalStatusShared, 
+    opportunityId: string
+  ) => {
+    try {
+      // Map proposal status to opportunity status
+      let opportunityStatus: OpportunityStatus;
+      
+      switch (proposalStatus) {
+        case "sent":
+        case "gonderildi":
+          opportunityStatus = "proposal_sent";
+          break;
+        case "accepted":
+          opportunityStatus = "accepted";
+          break;
+        case "rejected":
+          opportunityStatus = "lost";
+          break;
+        default:
+          opportunityStatus = "preparing_proposal";
+      }
+      
+      const result = await mockOpportunitiesAPI.updateOpportunity(opportunityId, { 
+        status: opportunityStatus 
+      });
+      
+      if (result.error) {
+        throw result.error;
+      }
+      
+      return { success: true, error: null };
+    } catch (error) {
+      console.error("Error updating opportunity based on proposal:", error);
+      return { success: false, error };
+    }
   }
 };
 
-// Mock deals API
+// Mock service for dealing with deals (legacy - now using opportunities)
 export const mockDealsAPI = {
-  getDeals: async () => {
-    return { data: deals, error: null };
-  },
-  
-  getDealCountsByStatus: async () => {
-    const counts: {status: string, count: number}[] = [];
-    const statusCounts = deals.reduce((acc, deal) => {
-      acc[deal.status] = (acc[deal.status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
-    Object.entries(statusCounts).forEach(([status, count]) => {
-      counts.push({ status, count });
-    });
-    
-    return { data: counts, error: null };
-  },
-  
-  updateDeal: async (id: string, updates: any) => {
-    const index = deals.findIndex(deal => deal.id === id);
-    if (index === -1) {
-      return { error: new Error('Deal not found') };
-    }
-    
-    deals[index] = { ...deals[index], ...updates };
-    return { data: deals[index], error: null };
-  }
+  // Forward all calls to opportunities API
+  getDeal: (id: string) => mockOpportunitiesAPI.getOpportunity(id),
+  getDeals: () => mockOpportunitiesAPI.getOpportunities(),
+  updateDeal: (id: string, updates: any) => mockOpportunitiesAPI.updateOpportunity(id, updates),
+  createDeal: (newDeal: any) => mockOpportunitiesAPI.createOpportunity(newDeal),
+  deleteDeal: (id: string) => mockOpportunitiesAPI.deleteOpportunity(id)
 };
 
-// Mock tasks API
-export const mockTasksAPI = {
-  getTasks: async () => {
-    return { data: tasks, error: null };
-  },
+// Unified mock CRM service
+export const mockCrmService = {
+  // Tasks
+  getTasks: mockTasksAPI.getTasks,
+  createTask: mockTasksAPI.createTask,
+  updateTask: mockTasksAPI.updateTask,
+  deleteTask: mockTasksAPI.deleteTask,
   
-  createTask: async (taskData: any) => {
-    const newTask = {
-      id: `task-${Date.now()}`,
-      ...taskData,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      subtasks: taskData.subtasks || []
-    };
-    
-    tasks.push(newTask);
-    return { data: newTask, error: null };
-  },
+  // Opportunities
+  getOpportunities: mockOpportunitiesAPI.getOpportunities,
+  filterOpportunities: mockOpportunitiesAPI.filterOpportunities,
+  getOpportunity: mockOpportunitiesAPI.getOpportunity,
+  updateOpportunity: mockOpportunitiesAPI.updateOpportunity,
+  createOpportunity: mockOpportunitiesAPI.createOpportunity,
+  deleteOpportunity: mockOpportunitiesAPI.deleteOpportunity,
+  updateOpportunityBasedOnProposal: mockOpportunitiesAPI.updateOpportunityBasedOnProposal,
   
-  updateTask: async (id: string, updates: any) => {
-    const index = tasks.findIndex(task => task.id === id);
-    if (index === -1) {
-      return { error: new Error('Task not found') };
-    }
-    
-    tasks[index] = { ...tasks[index], ...updates, updated_at: new Date().toISOString() };
-    return { data: tasks[index], error: null };
-  }
-};
-
-// Export patched supabase object that replaces calls to non-existent tables with mock implementations
-export const crmSupabase = {
-  ...supabase,
-  from: (table: string) => {
-    if (table === 'opportunities') {
-      return {
-        select: (query?: string) => ({
-          eq: (field: string, value: any) => ({
-            single: async () => {
-              const opportunity = opportunities.find(opp => opp[field as keyof OpportunityExtended] === value);
-              return { data: opportunity, error: opportunity ? null : new Error('Opportunity not found') };
-            }
-          }),
-          or: (query: string) => ({
-            eq: (field: string, value: any) => mockOpportunitiesAPI.filterOpportunities(query, field === 'employee_id' ? value : undefined, field === 'customer_id' ? value : undefined)
-          }),
-          eq: (field: string, value: any) => mockOpportunitiesAPI.filterOpportunities('', field === 'employee_id' ? value : undefined, field === 'customer_id' ? value : undefined)
-        }),
-        update: (updates: Partial<OpportunityExtended>) => ({
-          eq: (field: string, value: any) => {
-            const opportunity = opportunities.find(opp => opp[field as keyof OpportunityExtended] === value);
-            if (!opportunity) {
-              return { data: null, error: new Error('Opportunity not found') };
-            }
-            return mockOpportunitiesAPI.updateOpportunity(opportunity.id, updates);
-          }
-        }),
-        insert: (newOpportunities: Partial<OpportunityExtended>[]) => ({
-          select: () => ({
-            single: async () => {
-              const createdOpp = await mockOpportunitiesAPI.createOpportunity(newOpportunities[0]);
-              return createdOpp;
-            }
-          })
-        })
-      };
-    } else if (table === 'deals') {
-      return {
-        select: (query?: string) => {
-          return {
-            eq: (field: string, value: any) => {
-              const deal = deals.find(d => d[field as keyof typeof d] === value);
-              return { data: deal, error: null };
-            },
-            count: async (options?: { head?: boolean }) => {
-              return { count: deals.length, error: null };
-            },
-            single: async () => {
-              const deal = deals[0];
-              return { data: deal, error: null };
-            }
-          };
-        },
-        update: (updates: any) => ({
-          eq: (field: string, value: any) => mockDealsAPI.updateDeal(value, updates)
-        })
-      };
-    } else if (table === 'tasks') {
-      return {
-        select: () => {
-          return {
-            data: tasks,
-            error: null
-          };
-        },
-        insert: (newTask: any) => {
-          return mockTasksAPI.createTask(Array.isArray(newTask) ? newTask[0] : newTask);
-        },
-        update: (updates: any) => ({
-          eq: (field: string, value: any) => mockTasksAPI.updateTask(value, updates)
-        }),
-        delete: () => ({
-          eq: (field: string, value: any) => {
-            const index = tasks.findIndex(task => task[field as keyof typeof task] === value);
-            if (index !== -1) {
-              tasks.splice(index, 1);
-            }
-            return { error: null };
-          }
-        })
-      };
-    }
-    
-    // Return the real supabase implementation for other tables
-    return supabase.from(table);
-  },
-  rpc: (func: string, params?: any) => {
-    if (func === 'get_deal_counts_by_status') {
-      return mockDealsAPI.getDealCountsByStatus();
-    }
-    
-    // Fall back to actual supabase RPC
-    return supabase.rpc(func, params);
-  }
+  // Deals (legacy API - redirects to opportunities)
+  getDeal: mockDealsAPI.getDeal,
+  getDeals: mockDealsAPI.getDeals,
+  updateDeal: mockDealsAPI.updateDeal,
+  createDeal: mockDealsAPI.createDeal,
+  deleteDeal: mockDealsAPI.deleteDeal
 };

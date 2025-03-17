@@ -2,14 +2,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ProposalStatus } from "@/types/crm";
-import { updateOpportunityOnProposalStatusChange } from "@/services/crmWorkflowService";
+import { ProposalStatusShared } from "@/types/shared-types";
+import { mockCrmService } from "@/services/mockCrmService";
 
 export const useProposalStatusUpdate = (proposalId: string, opportunityId?: string) => {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (newStatus: ProposalStatus) => {
+  const mutation = useMutation({
+    mutationFn: async (newStatus: ProposalStatusShared) => {
       const { error } = await supabase
         .from("proposals")
         .update({ status: newStatus })
@@ -20,7 +20,7 @@ export const useProposalStatusUpdate = (proposalId: string, opportunityId?: stri
       // Update the related opportunity if it exists
       if (opportunityId) {
         try {
-          await updateOpportunityOnProposalStatusChange(proposalId, newStatus, opportunityId);
+          await mockCrmService.updateOpportunityBasedOnProposal(proposalId, newStatus, opportunityId);
         } catch (err) {
           console.error("Error updating opportunity:", err);
           // Don't fail the whole operation if this part fails
@@ -38,4 +38,10 @@ export const useProposalStatusUpdate = (proposalId: string, opportunityId?: stri
       console.error("Error updating proposal status:", error);
     },
   });
+  
+  return {
+    mutateAsync: mutation.mutateAsync,
+    isLoading: mutation.isPending,
+    error: mutation.error
+  };
 };

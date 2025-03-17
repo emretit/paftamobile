@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,7 @@ import { primaryProposalStatuses, statusLabels } from "@/components/proposals/co
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import StatusBadge from "@/components/proposals/detail/StatusBadge";
+import { ProposalStatusShared } from "@/types/shared-types";
 
 interface ProposalDetailsProps {
   isCollapsed: boolean;
@@ -31,14 +32,12 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [currentStatus, setCurrentStatus] = useState<ProposalStatus | null>(null);
-  const statusUpdate = useProposalStatusUpdate(id || "");
+  const statusUpdate = useProposalStatusUpdate(id || "", proposal?.opportunity_id);
   
-  // Fetch the proposal data
   const { data: proposal, isLoading, error } = useQuery({
     queryKey: ['proposal', id],
     queryFn: async () => {
       try {
-        // First get the proposal
         const { data: proposalData, error: proposalError } = await supabase
           .from('proposals')
           .select('*')
@@ -47,7 +46,6 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
           
         if (proposalError) throw proposalError;
         
-        // Fetch related customer if exists
         let customerData = null;
         if (proposalData.customer_id) {
           const { data: customer, error: customerError } = await supabase
@@ -61,7 +59,6 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
           }
         }
         
-        // Fetch related employee if exists
         let employeeData = null;
         if (proposalData.employee_id) {
           const { data: employee, error: employeeError } = await supabase
@@ -75,7 +72,6 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
           }
         }
         
-        // Transform any potential 'files' field to 'attachments' for compatibility
         const transformedData = {
           ...proposalData,
           customer: customerData,
@@ -97,7 +93,6 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
     enabled: !!id
   });
   
-  // Set up realtime subscription for this specific proposal
   useEffect(() => {
     if (!id) return;
     
@@ -122,7 +117,6 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
     };
   }, [id, queryClient]);
   
-  // Update local status state when proposal data changes
   useEffect(() => {
     if (proposal && proposal.status !== currentStatus) {
       setCurrentStatus(proposal.status as ProposalStatus);
@@ -229,7 +223,6 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
       >
         <TopBar />
         <div className="p-6">
-          {/* Header with back button */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <div>
               <div className="flex items-center gap-3">
@@ -276,7 +269,6 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
             </div>
           </div>
           
-          {/* Status change section */}
           <Card className="mb-6 border-red-100 shadow-sm bg-gradient-to-r from-red-50 to-white">
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -311,15 +303,15 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
                     Kaydet
                   </Button>
                   
-                  {currentStatus !== ('gonderildi' as ProposalStatus) && (
+                  {currentStatus !== ('gonderildi' as ProposalStatusShared) && (
                     <Button 
                       onClick={() => {
-                        setCurrentStatus('gonderildi' as ProposalStatus);
+                        setCurrentStatus('gonderildi' as ProposalStatusShared);
                         setTimeout(() => {
                           handleSaveStatus();
                         }, 100);
                       }}
-                      disabled={isUpdating || currentStatus === ('gonderildi' as ProposalStatus)}
+                      disabled={isUpdating || currentStatus === ('gonderildi' as ProposalStatusShared)}
                       className="bg-red-800 hover:bg-red-900"
                     >
                       <Send className="mr-2 h-4 w-4" />
@@ -331,7 +323,6 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
             </CardContent>
           </Card>
           
-          {/* Tabs */}
           <Card className="border-red-100 shadow-sm">
             <CardContent className="p-6">
               <Tabs defaultValue="details" className="w-full">
