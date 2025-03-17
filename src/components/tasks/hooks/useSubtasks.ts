@@ -14,7 +14,7 @@ export const useSubtasks = (initialSubtasks: SubTask[] = []) => {
       id: uuidv4(),
       title: newSubtask.trim(),
       completed: false,
-      created_at: new Date().toISOString()
+      task_id: ""
     };
     
     setSubtasks(prev => [...prev, newSubtaskItem]);

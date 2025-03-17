@@ -29,7 +29,7 @@ const TaskAssigneeSelect = ({ form, defaultValue }: TaskAssigneeSelectProps) => 
         const { data, error } = await supabase
           .from("employees")
           .select("id, first_name, last_name, avatar_url")
-          .eq("status", "aktif"); // Use "aktif" instead of "active"
+          .eq("status", "aktif"); // Using "aktif" status
 
         if (error) throw error;
         setEmployees(data || []);

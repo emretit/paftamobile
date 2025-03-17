@@ -36,18 +36,18 @@ const TasksContent = ({
       }
       
       // If we have employees referenced, fetch them separately
-      const assigneeIds = tasksData
-        .filter(task => task.assignee_id || task.assigned_to)
-        .map(task => task.assignee_id || task.assigned_to)
+      const employeeIds = tasksData
+        .filter(task => task.assigned_to)
+        .map(task => task.assigned_to)
         .filter(Boolean);
       
       let employees = {};
       
-      if (assigneeIds.length > 0) {
+      if (employeeIds.length > 0) {
         const { data: employeesData, error: employeesError } = await supabase
           .from("employees")
           .select("id, first_name, last_name, avatar_url")
-          .in("id", assigneeIds);
+          .in("id", employeeIds);
           
         if (employeesError) {
           console.error("Error fetching employees:", employeesError);
@@ -61,7 +61,7 @@ const TasksContent = ({
 
       // Map tasks with their assignees and ensure they have the required type property
       return tasksData.map(task => {
-        const assigneeId = task.assignee_id || task.assigned_to;
+        const assigneeId = task.assigned_to;
         const assignee = assigneeId ? employees[assigneeId] : null;
         
         return {

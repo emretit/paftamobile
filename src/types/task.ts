@@ -9,8 +9,7 @@ export interface SubTask {
   id: string;
   title: string;
   completed: boolean;
-  task_id?: string; // Make task_id optional
-  // created_at is not part of the interface
+  task_id?: string;
 }
 
 export interface Task {
@@ -21,8 +20,8 @@ export interface Task {
   priority: TaskPriority;
   type: TaskType;
   due_date?: string;
-  assigned_to?: string;  // Keep this for backward compatibility
-  assignee_id?: string;  // Add this for new components
+  assigned_to?: string;
+  assignee_id?: string;
   related_item_id?: string;
   related_item_title?: string;
   related_item_type?: string;
@@ -35,4 +34,9 @@ export interface Task {
     last_name: string;
     avatar_url?: string;
   };
+  opportunity_id?: string;
+}
+
+export interface TaskWithOverdue extends Task {
+  isOverdue: boolean;
 }
