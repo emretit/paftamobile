@@ -1,4 +1,3 @@
-
 // Placeholder for proposal types after DB cleanup
 export type ProposalStatus = 
   | 'draft'

@@ -1,5 +1,5 @@
+// Task types - CRM modülü kaldırıldı
 
-// Task types only contain empty types after cleanup
 export type TaskStatus = "todo" | "in_progress" | "completed" | "postponed";
 export type TaskPriority = "low" | "medium" | "high";
 export type TaskType = "opportunity" | "proposal" | "general" | "call" | "meeting" | "follow_up";

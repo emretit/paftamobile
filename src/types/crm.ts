@@ -1,4 +1,3 @@
-
 // Empty CRM types file after DB cleanup
 export type OpportunityStatus = 
   | 'new'               // Yeni
