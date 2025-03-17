@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { DropResult } from "@hello-pangea/dnd";
-import { Opportunity, OpportunityStatus } from "@/types/crm";
+import { Opportunity, OpportunityStatus, OpportunityPriority } from "@/types/crm";
 import { createTaskForOpportunity } from "@/services/crmWorkflowService";
-import { mockOpportunitiesAPI } from "@/services/mockCrmService";
+import * as mockCrmService from "@/services/mockCrmService";
 
 export type OpportunitiesState = {
   [key in OpportunityStatus]: Opportunity[];
@@ -39,13 +39,13 @@ export const useOpportunities = (
       let filteredData;
 
       if (searchQuery || selectedEmployee || selectedCustomer) {
-        filteredData = await mockOpportunitiesAPI.filterOpportunities(
+        filteredData = await mockCrmService.mockOpportunitiesAPI.filterOpportunities(
           searchQuery || '',
           selectedEmployee || undefined,
           selectedCustomer || undefined
         );
       } else {
-        filteredData = await mockOpportunitiesAPI.getOpportunities();
+        filteredData = await mockCrmService.mockOpportunitiesAPI.getOpportunities();
       }
       
       if (filteredData.error) throw filteredData.error;
@@ -83,7 +83,7 @@ export const useOpportunities = (
   // Handle drag and drop
   const updateOpportunityMutation = useMutation({
     mutationFn: async ({ id, status, previousStatus }: { id: string; status: OpportunityStatus; previousStatus: OpportunityStatus }) => {
-      const { data, error } = await mockOpportunitiesAPI.updateOpportunity(id, { status });
+      const { data, error } = await mockCrmService.mockOpportunitiesAPI.updateOpportunity(id, { status });
       
       if (error) throw error;
       
@@ -192,13 +192,13 @@ export const useOpportunities = (
       const defaultData = {
         title: "Yeni Fırsat",
         status: "new" as OpportunityStatus,
-        priority: "medium",
+        priority: "medium" as OpportunityPriority,
         value: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
       
-      const { data, error } = await mockOpportunitiesAPI.createOpportunity({
+      const { data, error } = await mockCrmService.mockOpportunitiesAPI.createOpportunity({
         ...defaultData,
         ...opportunityData
       });
@@ -230,7 +230,7 @@ export const useOpportunities = (
     data: Partial<Opportunity>
   ): Promise<Opportunity | null> => {
     try {
-      const { data: updatedOpportunity, error } = await mockOpportunitiesAPI.updateOpportunity(id, data);
+      const { data: updatedOpportunity, error } = await mockCrmService.mockOpportunitiesAPI.updateOpportunity(id, data);
       
       if (error) throw error;
       
@@ -248,7 +248,7 @@ export const useOpportunities = (
   // Delete an opportunity
   const handleDeleteOpportunity = async (id: string): Promise<boolean> => {
     try {
-      const { error } = await mockOpportunitiesAPI.deleteOpportunity(id);
+      const { error } = await mockCrmService.mockOpportunitiesAPI.deleteOpportunity(id);
       
       if (error) throw error;
       

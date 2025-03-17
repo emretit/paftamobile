@@ -2,7 +2,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Task, TaskStatus, TaskPriority, TaskType, SubTask } from "@/types/task";
-import { mockCrmService } from "@/services/mockCrmService";
+import * as mockCrmService from "@/services/mockCrmService";
 
 interface CreateTaskData {
   title: string;
@@ -43,7 +43,7 @@ export const useTaskMutations = () => {
         ...(taskData.subtasks ? { subtasks: JSON.stringify(taskData.subtasks) } : {})
       };
       
-      const { data, error } = await mockCrmService.createTask(taskWithSubtasksAsString);
+      const { data, error } = await mockCrmService.mockTasksAPI.createTask(taskWithSubtasksAsString);
       if (error) throw error;
       return data;
     },
@@ -112,9 +112,9 @@ export const useTaskMutations = () => {
   };
 
   return {
-    createTask,
-    updateTask,
-    deleteTask,
+    createTask: createTaskMutation.mutateAsync,
+    updateTask: updateTaskMutation.mutateAsync,
+    deleteTask: deleteTaskMutation.mutateAsync,
     createTaskMutation,
     updateTaskMutation,
     deleteTaskMutation

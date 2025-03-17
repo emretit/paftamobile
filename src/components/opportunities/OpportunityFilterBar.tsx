@@ -1,89 +1,71 @@
 
-import { useState } from "react";
+import React from 'react';
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { 
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { Search, Filter } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { OpportunityStatus, opportunityStatusLabels } from "@/types/crm";
 
 interface OpportunityFilterBarProps {
-  searchQuery: string;
-  setSearchQuery: (value: string) => void;
-  selectedEmployee: string | null;
-  setSelectedEmployee: (value: string | null) => void;
-  selectedCustomer: string | null;
-  setSelectedCustomer: (value: string | null) => void;
-  employees: { id: string; name: string }[];
-  customers: { id: string; name: string }[];
+  filterKeyword: string;
+  setFilterKeyword: (value: string) => void;
+  statusFilter: OpportunityStatus | "all";
+  setStatusFilter: (value: OpportunityStatus | "all") => void;
+  priorityFilter: string | null;
+  setPriorityFilter: (value: string | null) => void;
 }
 
 const OpportunityFilterBar = ({
-  searchQuery,
-  setSearchQuery,
-  selectedEmployee,
-  setSelectedEmployee,
-  selectedCustomer,
-  setSelectedCustomer,
-  employees,
-  customers
+  filterKeyword,
+  setFilterKeyword,
+  statusFilter,
+  setStatusFilter,
+  priorityFilter,
+  setPriorityFilter
 }: OpportunityFilterBarProps) => {
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="col-span-1 md:col-span-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              type="search"
-              placeholder="Fırsatlarda ara..."
-              className="pl-8"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-
+    <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+      <div className="relative w-full md:w-auto max-w-sm">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+        <Input
+          placeholder="Fırsat ara..."
+          className="pl-10 w-full"
+          value={filterKeyword}
+          onChange={(e) => setFilterKeyword(e.target.value)}
+        />
+      </div>
+      
+      <div className="flex flex-wrap gap-3 w-full md:w-auto">
         <Select
-          value={selectedEmployee || ""}
-          onValueChange={(value) => setSelectedEmployee(value || null)}
+          value={statusFilter}
+          onValueChange={(value) => setStatusFilter(value as OpportunityStatus | "all")}
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Satış Temsilcisi" />
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Durum" />
           </SelectTrigger>
           <SelectContent>
-            <SelectGroup>
-              <SelectItem value="">Tüm Satış Temsilcileri</SelectItem>
-              {employees.map((employee) => (
-                <SelectItem key={employee.id} value={employee.id}>
-                  {employee.name}
-                </SelectItem>
-              ))}
-            </SelectGroup>
+            <SelectItem value="all">Tüm Durumlar</SelectItem>
+            <SelectItem value="new">Yeni</SelectItem>
+            <SelectItem value="first_contact">İlk Görüşme</SelectItem>
+            <SelectItem value="site_visit">Ziyaret Yapıldı</SelectItem>
+            <SelectItem value="preparing_proposal">Teklif Hazırlanıyor</SelectItem>
+            <SelectItem value="proposal_sent">Teklif Gönderildi</SelectItem>
+            <SelectItem value="accepted">Kabul Edildi</SelectItem>
+            <SelectItem value="lost">Kaybedildi</SelectItem>
           </SelectContent>
         </Select>
-
+        
         <Select
-          value={selectedCustomer || ""}
-          onValueChange={(value) => setSelectedCustomer(value || null)}
+          value={priorityFilter || ""}
+          onValueChange={(value) => setPriorityFilter(value === "" ? null : value)}
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Müşteri" />
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Öncelik" />
           </SelectTrigger>
           <SelectContent>
-            <SelectGroup>
-              <SelectItem value="">Tüm Müşteriler</SelectItem>
-              {customers.map((customer) => (
-                <SelectItem key={customer.id} value={customer.id}>
-                  {customer.name}
-                </SelectItem>
-              ))}
-            </SelectGroup>
+            <SelectItem value="">Tüm Öncelikler</SelectItem>
+            <SelectItem value="high">Yüksek</SelectItem>
+            <SelectItem value="medium">Orta</SelectItem>
+            <SelectItem value="low">Düşük</SelectItem>
           </SelectContent>
         </Select>
       </div>

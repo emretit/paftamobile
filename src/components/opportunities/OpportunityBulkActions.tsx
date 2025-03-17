@@ -1,78 +1,109 @@
 
-import { useState } from "react";
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { CheckCircle, Circle, ChevronDown, X } from "lucide-react";
-import { Opportunity, OpportunityStatus } from "@/types/crm";
-import { Badge } from "@/components/ui/badge";
+import { Trash2, X, FileText, UserPlus, MessageSquare } from "lucide-react";
+import { Opportunity } from '@/types/crm';
+import { useToast } from '@/components/ui/use-toast';
 
 interface OpportunityBulkActionsProps {
   selectedOpportunities: Opportunity[];
-  onUpdateStatus: (opportunities: Opportunity[], newStatus: OpportunityStatus) => void;
   onClearSelection: () => void;
 }
 
 const OpportunityBulkActions = ({
   selectedOpportunities,
-  onUpdateStatus,
   onClearSelection
 }: OpportunityBulkActionsProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  if (selectedOpportunities.length === 0) return null;
+  const { toast } = useToast();
+  
+  const handleDelete = () => {
+    // In a real app, this would delete the selected opportunities
+    toast({
+      title: "Silme işlemi",
+      description: `${selectedOpportunities.length} fırsat silindi.`,
+    });
+    onClearSelection();
+  };
+  
+  const handleExport = () => {
+    toast({
+      title: "Dışa aktarma",
+      description: `${selectedOpportunities.length} fırsat dışa aktarıldı.`,
+    });
+  };
+  
+  const handleAssign = () => {
+    toast({
+      title: "Atama işlemi",
+      description: `${selectedOpportunities.length} fırsat atanmaya hazır.`,
+    });
+  };
+  
+  const handleCreateTask = () => {
+    toast({
+      title: "Görev oluştur",
+      description: `${selectedOpportunities.length} fırsat için görev oluşturulacak.`,
+    });
+  };
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-3 z-50 flex items-center gap-3 border border-gray-200 dark:border-gray-700">
-      <Badge variant="outline" className="px-2 py-1">
-        {selectedOpportunities.length} seçili
-      </Badge>
+    <div className="bg-gray-100 p-3 rounded-lg flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <span className="font-medium text-gray-700">
+          {selectedOpportunities.length} fırsat seçildi
+        </span>
+      </div>
       
-      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="text-sm">
-            Durum Güncelle <ChevronDown className="ml-2 h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => onUpdateStatus(selectedOpportunities, "new")}>
-            <Circle className="mr-2 h-4 w-4 text-blue-500" />
-            Yeni
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onUpdateStatus(selectedOpportunities, "first_contact")}>
-            <Circle className="mr-2 h-4 w-4 text-purple-500" />
-            İlk Görüşme
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onUpdateStatus(selectedOpportunities, "site_visit")}>
-            <Circle className="mr-2 h-4 w-4 text-yellow-500" />
-            Ziyaret Yapıldı
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onUpdateStatus(selectedOpportunities, "preparing_proposal")}>
-            <Circle className="mr-2 h-4 w-4 text-orange-500" />
-            Teklif Hazırlanıyor
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onUpdateStatus(selectedOpportunities, "proposal_sent")}>
-            <Circle className="mr-2 h-4 w-4 text-indigo-500" />
-            Teklif Gönderildi
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onUpdateStatus(selectedOpportunities, "accepted")}>
-            <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-            Kabul Edildi
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onUpdateStatus(selectedOpportunities, "lost")}>
-            <X className="mr-2 h-4 w-4 text-red-500" />
-            Kaybedildi
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      
-      <Button variant="ghost" size="sm" onClick={onClearSelection}>
-        <X className="h-4 w-4 mr-1" /> Seçimi Temizle
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleCreateTask}
+          className="flex items-center gap-1"
+        >
+          <MessageSquare className="h-4 w-4" />
+          <span className="hidden sm:inline">Görev Oluştur</span>
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleAssign}
+          className="flex items-center gap-1"
+        >
+          <UserPlus className="h-4 w-4" />
+          <span className="hidden sm:inline">Ata</span>
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleExport}
+          className="flex items-center gap-1"
+        >
+          <FileText className="h-4 w-4" />
+          <span className="hidden sm:inline">Dışa Aktar</span>
+        </Button>
+        
+        <Button 
+          variant="destructive" 
+          size="sm"
+          onClick={handleDelete}
+          className="flex items-center gap-1"
+        >
+          <Trash2 className="h-4 w-4" />
+          <span className="hidden sm:inline">Sil</span>
+        </Button>
+        
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={onClearSelection}
+          className="flex items-center"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 };

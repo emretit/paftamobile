@@ -19,15 +19,17 @@ interface OpportunitiesProps {
 const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
   const { toast } = useToast();
   const { 
-    data: opportunitiesData,
+    opportunities,
     isLoading, 
     error,
-    updateOpportunityStatus,
-    invalidateOpportunities
+    handleDragEnd,
+    handleUpdateOpportunity,
+    selectedOpportunity,
+    setSelectedOpportunity,
+    isDetailOpen,
+    setIsDetailOpen
   } = useOpportunities();
   
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedOpportunities, setSelectedOpportunities] = useState<Opportunity[]>([]);
   const [filterKeyword, setFilterKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState<OpportunityStatus | "all">("all");
@@ -35,26 +37,26 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
   
   // Group opportunities by status
   const groupedOpportunities = {
-    new: (opportunitiesData || [])
-      .filter(opp => opp.status === "new" && filterOpportunity(opp))
+    new: (opportunities.new || [])
+      .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    first_contact: (opportunitiesData || [])
-      .filter(opp => opp.status === "first_contact" && filterOpportunity(opp))
+    first_contact: (opportunities.first_contact || [])
+      .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    site_visit: (opportunitiesData || [])
-      .filter(opp => opp.status === "site_visit" && filterOpportunity(opp))
+    site_visit: (opportunities.site_visit || [])
+      .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    preparing_proposal: (opportunitiesData || [])
-      .filter(opp => opp.status === "preparing_proposal" && filterOpportunity(opp))
+    preparing_proposal: (opportunities.preparing_proposal || [])
+      .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    proposal_sent: (opportunitiesData || [])
-      .filter(opp => opp.status === "proposal_sent" && filterOpportunity(opp))
+    proposal_sent: (opportunities.proposal_sent || [])
+      .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    accepted: (opportunitiesData || [])
-      .filter(opp => opp.status === "accepted" && filterOpportunity(opp))
+    accepted: (opportunities.accepted || [])
+      .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    lost: (opportunitiesData || [])
-      .filter(opp => opp.status === "lost" && filterOpportunity(opp))
+    lost: (opportunities.lost || [])
+      .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
   };
   
@@ -74,45 +76,6 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
     return keywordMatch && statusMatch && priorityMatch;
   }
 
-  const handleDragEnd = async (result: DropResult) => {
-    const { destination, source, draggableId } = result;
-    
-    // Dropped outside the list
-    if (!destination) return;
-    
-    // Dropped in the same place
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
-    
-    // Find the opportunity
-    const opportunity = opportunitiesData?.find(opp => opp.id === draggableId);
-    if (!opportunity) return;
-    
-    // Update opportunity status
-    try {
-      await updateOpportunityStatus(
-        opportunity.id, 
-        destination.droppableId as OpportunityStatus
-      );
-      
-      toast({
-        title: "Durum güncellendi",
-        description: `Fırsat durumu "${destination.droppableId}" olarak değiştirildi.`,
-      });
-    } catch (error) {
-      console.error("Error updating opportunity status:", error);
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Fırsat durumu güncellenirken bir hata oluştu.",
-      });
-    }
-  };
-  
   const handleOpportunityClick = (opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity);
     setIsDetailOpen(true);
@@ -142,8 +105,8 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
         <OpportunitiesHeader />
         
         <OpportunityFilterBar 
-          keyword={filterKeyword}
-          setKeyword={setFilterKeyword}
+          filterKeyword={filterKeyword}
+          setFilterKeyword={setFilterKeyword}
           statusFilter={statusFilter}
           setStatusFilter={setStatusFilter}
           priorityFilter={priorityFilter}
@@ -152,7 +115,7 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
         
         {selectedOpportunities.length > 0 && (
           <OpportunityBulkActions 
-            selectedCount={selectedOpportunities.length}
+            selectedOpportunities={selectedOpportunities}
             onClearSelection={handleClearSelection}
           />
         )}
@@ -184,9 +147,7 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
             setIsDetailOpen(false);
             setTimeout(() => setSelectedOpportunity(null), 300);
           }}
-          onOpportunityUpdate={() => {
-            invalidateOpportunities();
-          }}
+          onUpdate={handleUpdateOpportunity}
         />
       )}
     </DefaultLayout>

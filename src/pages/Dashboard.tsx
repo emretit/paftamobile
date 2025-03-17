@@ -1,10 +1,10 @@
-
-import { useState, useEffect } from "react";
-import Navbar from "@/components/Navbar";
-import { TopBar } from "@/components/TopBar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Card } from "@/components/ui/card";
+import DefaultLayout from "@/components/layouts/DefaultLayout";
+import DashboardChart from "@/components/DashboardChart";
+import DashboardCard from "@/components/DashboardCard";
+import * as mockCrmService from "@/services/mockCrmService";
 import { useQuery } from "@tanstack/react-query";
-import { mockCrmService } from "@/services/mockCrmService";
 
 interface DashboardProps {
   isCollapsed: boolean;
@@ -12,82 +12,72 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
-  const { data: deals, isLoading: dealsLoading } = useQuery({
-    queryKey: ["deals"],
+  const [salesData, setSalesData] = useState([
+    { name: "Ocak", total: 2400 },
+    { name: "Şubat", total: 1398 },
+    { name: "Mart", total: 9800 },
+    { name: "Nisan", total: 3908 },
+    { name: "Mayıs", total: 4800 },
+    { name: "Haziran", total: 3800 },
+  ]);
+
+  const { data: opportunities, isLoading: opportunitiesLoading, error: opportunitiesError } = useQuery({
+    queryKey: ["opportunities"],
     queryFn: async () => {
-      const { data } = await mockCrmService.getDeals();
-      return data || [];
+      const { data, error } = await mockCrmService.mockOpportunitiesAPI.getOpportunities();
+      if (error) throw error;
+      return data;
     },
   });
 
+  const totalOpportunities = opportunities ? opportunities.length : 0;
+  const acceptedOpportunities = opportunities ? opportunities.filter(opp => opp.status === 'accepted').length : 0;
+
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <main
-        className={`flex-1 transition-all duration-300 ${
-          isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
-        }`}
-      >
-        <TopBar />
-        <div className="p-6">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600 mt-1">
-              Genel bakış ve önemli bilgiler
-            </p>
+    <DefaultLayout isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} title="Dashboard" subtitle="Genel Bakış">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <DashboardCard title="Toplam Satış Fırsatları" value={totalOpportunities} />
+        <DashboardCard title="Kabul Edilen Fırsatlar" value={acceptedOpportunities} />
+        <DashboardCard title="Aktif Kullanıcılar" value={32} />
+        <DashboardCard title="Yeni Müşteriler" value={12} />
+      </div>
+
+      <Card className="mb-6">
+        <DashboardChart title="Aylık Satışlar" data={salesData} dataKey="total" />
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <div className="p-4">
+            <h3 className="text-lg font-semibold mb-2">Son Satış Fırsatları</h3>
+            {opportunitiesLoading ? (
+              <div>Yükleniyor...</div>
+            ) : opportunitiesError ? (
+              <div>Fırsatlar yüklenirken bir hata oluştu.</div>
+            ) : (
+              <ul>
+                {opportunities && opportunities.slice(0, 5).map((opportunity) => (
+                  <li key={opportunity.id} className="py-2 border-b">
+                    {opportunity.title}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
+        </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="border-gray-100 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">
-                  Toplam Satış Fırsatları
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {dealsLoading ? (
-                  <p>Yükleniyor...</p>
-                ) : (
-                  <p className="text-2xl font-bold text-blue-600">
-                    {deals?.length || 0}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="border-gray-100 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">
-                  Ortalama Fırsat Değeri
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {dealsLoading ? (
-                  <p>Yükleniyor...</p>
-                ) : (
-                  <p className="text-2xl font-bold text-green-600">
-                    ₺
-                    {deals?.reduce((acc, deal) => acc + deal.value, 0) /
-                      (deals?.length || 1)}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="border-gray-100 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">
-                  Bekleyen Görevler
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-orange-600">12</p>
-              </CardContent>
-            </Card>
+        <Card>
+          <div className="p-4">
+            <h3 className="text-lg font-semibold mb-2">Açık Taskler</h3>
+            <ul>
+              <li className="py-2 border-b">Task 1</li>
+              <li className="py-2 border-b">Task 2</li>
+              <li className="py-2 border-b">Task 3</li>
+            </ul>
           </div>
-        </div>
-      </main>
-    </div>
+        </Card>
+      </div>
+    </DefaultLayout>
   );
 };
 
