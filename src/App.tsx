@@ -26,13 +26,6 @@ import EmployeeDetails from "./pages/EmployeeDetails";
 import EmployeeForm from "./pages/EmployeeForm";
 import Dashboard from "./pages/Dashboard";
 import PurchaseManagement from "@/pages/PurchaseManagement";
-import Opportunities from "@/pages/crm/Opportunities";
-import Proposals from "@/pages/crm/Proposals";
-import Tasks from "@/pages/crm/Tasks";
-import OpportunityDetails from "@/pages/crm/OpportunityDetails";
-import ProposalDetails from "@/pages/crm/ProposalDetails";
-import ProposalForm from "@/pages/crm/ProposalForm";
-import TaskDetails from "@/pages/crm/TaskDetails";
 
 const queryClient = new QueryClient();
 
@@ -141,40 +134,6 @@ function App() {
           <Route
             path="/purchase-management"
             element={<ProtectedRoute><PurchaseManagement isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          
-          {/* CRM Module Routes */}
-          <Route
-            path="/opportunities"
-            element={<ProtectedRoute><Opportunities isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/opportunities/:id"
-            element={<ProtectedRoute><OpportunityDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/proposals"
-            element={<ProtectedRoute><Proposals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/proposals/:id"
-            element={<ProtectedRoute><ProposalDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/proposal-form"
-            element={<ProtectedRoute><ProposalForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/proposal-form/:id"
-            element={<ProtectedRoute><ProposalForm isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/tasks"
-            element={<ProtectedRoute><Tasks isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/tasks/:id"
-            element={<ProtectedRoute><TaskDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
         </Routes>
       </Router>
