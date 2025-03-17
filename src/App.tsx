@@ -135,6 +135,8 @@ function App() {
             path="/purchase-management"
             element={<ProtectedRoute><PurchaseManagement isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
+          
+          {/* CRM routes will be added later - for now, we're just setting up the navigation */}
         </Routes>
       </Router>
     </QueryClientProvider>

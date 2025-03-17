@@ -14,6 +14,25 @@ interface NavbarProps {
   setIsCollapsed: (value: boolean) => void;
 }
 
+interface NavItem {
+  path: string;
+  icon: React.ElementType;
+  label: string;
+}
+
+interface CategoryItem {
+  category: string;
+  icon: React.ElementType;
+  path: string;
+  items: NavItem[];
+}
+
+type NavItemOrCategory = NavItem | CategoryItem;
+
+const isCategory = (item: NavItemOrCategory): item is CategoryItem => {
+  return 'category' in item && 'items' in item;
+};
+
 const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -43,7 +62,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
         
         <div className="flex-1 overflow-auto">
           {navItems.map((item, index) => {
-            if ('category' in item) {
+            if (isCategory(item)) {
               const isExpanded = expandedCategories.includes(item.category);
               const Icon = item.icon;
               return (
@@ -54,7 +73,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
                       "flex items-center w-full h-11 px-3 rounded-md",
                       !isCollapsed && "justify-between",
                       "border-l-2 border-primary mt-2",
-                      isActive(item.path || '') 
+                      isActive(item.path) 
                         ? "bg-primary/10 text-primary font-medium" 
                         : "text-gray-300 hover:bg-gray-800 hover:text-white"
                     )}
@@ -75,7 +94,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
                       isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
                     )}
                   </button>
-                  {isExpanded && !isCollapsed && item.items && (
+                  {isExpanded && !isCollapsed && (
                     <div className="ml-4 mt-1 space-y-1">
                       {item.items.map((subItem) => (
                         <NavLink
