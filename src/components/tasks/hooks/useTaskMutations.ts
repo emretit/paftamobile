@@ -16,7 +16,7 @@ export const useTaskMutations = (
       // Store the task data but handle subtasks as JSON
       const taskData = {
         ...data.formData,
-        status: 'todo',
+        status: 'todo' as const,
         // Store subtasks as a JSON field
         subtasks: JSON.stringify(data.subtasks)
       };

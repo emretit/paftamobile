@@ -28,13 +28,8 @@ export const useKanbanTasks = (
       }
 
       if (selectedType) {
-        // Check if selectedType is a valid task type
-        const validTypes: TaskType[] = [
-          'general', 'meeting', 'follow_up', 'call', 'email', 'opportunity', 'proposal'
-        ];
-        if (validTypes.includes(selectedType as TaskType)) {
-          query = query.eq('type', selectedType as TaskType);
-        }
+        // Cast selectedType to TaskType to ensure type safety
+        query = query.eq('type', selectedType);
       }
 
       const { data: tasksData, error } = await query;
@@ -74,7 +69,9 @@ export const useKanbanTasks = (
 
       // Map tasks with their assignees and parse subtasks if stored as JSON string
       return tasksData.map(task => {
-        let parsedSubtasks;
+        // Parse subtasks if stored as string
+        let parsedSubtasks = undefined;
+        
         if (task.subtasks && typeof task.subtasks === 'string') {
           try {
             parsedSubtasks = JSON.parse(task.subtasks);
@@ -87,7 +84,7 @@ export const useKanbanTasks = (
         return {
           ...task,
           item_type: 'task',
-          subtasks: parsedSubtasks || task.subtasks,
+          subtasks: parsedSubtasks || [],
           assignee: task.assignee_id ? employees[task.assignee_id] : undefined
         } as Task;
       });

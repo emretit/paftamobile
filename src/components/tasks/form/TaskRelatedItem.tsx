@@ -5,7 +5,6 @@ import { UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { FormData } from "./types";
-import type { TaskType } from "@/types/task";
 
 interface TaskRelatedItemProps {
   watch: UseFormWatch<FormData>;
