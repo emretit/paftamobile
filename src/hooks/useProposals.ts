@@ -80,7 +80,8 @@ export const useProposals = (filters?: ProposalFilters) => {
               id: employee.id,
               first_name: employee.first_name || "Atanmamış",
               last_name: employee.last_name || ""
-            } : null
+            } : null,
+            attachments: item.files ? (typeof item.files === 'string' ? JSON.parse(item.files) : item.files) : []
           };
         });
       } catch (error) {

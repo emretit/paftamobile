@@ -1,138 +1,99 @@
-
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Task } from "@/types/task";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import TaskCard from "../../tasks/TaskCard";
 import { useState } from "react";
-import NewTaskForm from "../../tasks/NewTaskForm";
+import { Calendar, Loader2, Plus, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TaskPriorityBadge } from "@/components/tasks/TaskPriorityBadge";
+import { TaskStatusBadge } from "@/components/tasks/TaskStatusBadge";
+import { TaskDetailSheet } from "@/components/tasks/TaskDetailSheet";
+import { Task } from "@/components/tasks/types";
+import { formatDate } from "@/lib/utils";
 
 interface OpportunityTasksTabProps {
-  opportunityId: string;
+  opportunity: any;
 }
 
-const OpportunityTasksTab = ({ opportunityId }: OpportunityTasksTabProps) => {
-  const [showNewTaskForm, setShowNewTaskForm] = useState(false);
+export const OpportunityTasksTab = ({ opportunity }: OpportunityTasksTabProps) => {
+  const [isTaskDetailOpen, setIsTaskDetailOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const tasks = opportunity?.tasks || [];
+  const isLoading = false;
 
-  // Fetch tasks related to this opportunity
-  const { data: tasks, isLoading, error, refetch } = useQuery({
-    queryKey: ['tasks', 'opportunity', opportunityId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select(`
-          *,
-          assignee:assignee_id(id, first_name, last_name, email, phone, position, department, status, avatar_url)
-        `)
-        .eq('related_item_id', opportunityId)
-        .order('created_at', { ascending: false });
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setIsTaskDetailOpen(true);
+  };
 
-      if (error) throw error;
-      
-      // Transform the data to match the Task type structure
-      return data.map(task => {
-        let taskAssignee = null;
-        
-        // Check if assignee exists and has expected properties
-        if (task.assignee && typeof task.assignee === 'object' && !('error' in task.assignee)) {
-          const assignee = task.assignee as any;
-          // Additional null check before accessing properties
-          if (assignee && assignee.first_name && assignee.last_name) {
-            taskAssignee = {
-              id: assignee.id,
-              first_name: assignee.first_name,
-              last_name: assignee.last_name,
-              email: assignee.email,
-              phone: assignee.phone,
-              position: assignee.position,
-              department: assignee.department,
-              status: assignee.status,
-              name: `${assignee.first_name} ${assignee.last_name}`,
-              avatar: assignee.avatar_url
-            };
-          }
-        }
-
-        return {
-          ...task,
-          item_type: 'opportunity' as const, // Set item_type for opportunity-related tasks
-          assignee: taskAssignee
-        };
-      }) as Task[];
-    }
-  });
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-10 bg-gray-200 rounded w-1/3"></div>
-            <div className="h-24 bg-gray-200 rounded"></div>
-            <div className="h-24 bg-gray-200 rounded"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <p className="text-red-500">Görevler yüklenirken bir hata oluştu</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const handleCloseTaskDetail = () => {
+    setIsTaskDetailOpen(false);
+    setSelectedTask(null);
+  };
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium">Görevler</h3>
-          <Button 
-            size="sm" 
-            onClick={() => setShowNewTaskForm(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Görev Ekle
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Görevler</h3>
+        <Button size="sm">
+          <Plus className="h-4 w-4 mr-2" />
+          Yeni Görev Ekle
+        </Button>
+      </div>
 
-        {showNewTaskForm && (
-          <div className="mb-4">
-            <NewTaskForm 
-              relatedItemId={opportunityId}
-              relatedItemTitle="Fırsat"
-              onSuccess={() => {
-                setShowNewTaskForm(false);
-                refetch();
-              }}
-              onCancel={() => setShowNewTaskForm(false)}
-            />
+      {/* Tasks list */}
+      <div className="space-y-4">
+        {isLoading ? (
+          <div className="text-center py-8">
+            <Loader2 className="h-5 w-5 mx-auto animate-spin text-gray-500" />
+            <p className="text-sm text-gray-500 mt-2">Görevler yükleniyor...</p>
+          </div>
+        ) : tasks.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <p>Bu fırsat için henüz bir görev oluşturulmamış.</p>
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {tasks.map((task) => (
+              <div
+                key={task.id}
+                className="p-4 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer"
+                onClick={() => handleTaskClick(task)}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="font-medium text-gray-900">{task.title}</h4>
+                  <div className="flex items-center gap-2">
+                    <TaskPriorityBadge priority={task.priority} />
+                    <TaskStatusBadge status={task.status} />
+                  </div>
+                </div>
+                <div className="flex justify-between items-center text-sm text-gray-500">
+                  <div>
+                    {task.due_date ? (
+                      <div className="flex items-center">
+                        <Calendar className="h-3.5 w-3.5 mr-1.5" />
+                        {formatDate(task.due_date)}
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center">
+                    <User className="h-3.5 w-3.5 mr-1.5" />
+                    {task.assignee ? (task.assignee.first_name ? `${task.assignee.first_name} ${task.assignee.last_name || ''}` : 'Atanmamış') : 'Atanmamış'}
+                  </div>
+                </div>
+                {task.description && (
+                  <p className="mt-2 text-sm text-gray-600 line-clamp-2">
+                    {task.description}
+                  </p>
+                )}
+              </div>
+            ))}
           </div>
         )}
+      </div>
 
-        <div className="space-y-3">
-          {tasks && tasks.length > 0 ? (
-            tasks.map(task => (
-              <TaskCard 
-                key={task.id} 
-                task={task} 
-                onEdit={() => {}} 
-                onSelect={() => {}}
-              />
-            ))
-          ) : (
-            <p className="text-center py-6 text-gray-500">Bu fırsatla ilgili görev bulunmamaktadır</p>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+      {/* Task Detail Sheet */}
+      <TaskDetailSheet
+        isOpen={isTaskDetailOpen}
+        onClose={handleCloseTaskDetail}
+        task={selectedTask}
+      />
+    </div>
   );
 };
-
-export default OpportunityTasksTab;

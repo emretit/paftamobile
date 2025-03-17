@@ -38,22 +38,54 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
     queryKey: ['proposal', id],
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
+        // First get the proposal
+        const { data: proposalData, error: proposalError } = await supabase
           .from('proposals')
-          .select(`
-            *,
-            customer:customer_id(id, name, company, email, phone),
-            employee:employee_id(id, first_name, last_name, email)
-          `)
+          .select('*')
           .eq('id', id)
           .single();
           
-        if (error) throw error;
+        if (proposalError) throw proposalError;
+        
+        // Fetch related customer if exists
+        let customerData = null;
+        if (proposalData.customer_id) {
+          const { data: customer, error: customerError } = await supabase
+            .from('customers')
+            .select('*')
+            .eq('id', proposalData.customer_id)
+            .single();
+            
+          if (!customerError) {
+            customerData = customer;
+          }
+        }
+        
+        // Fetch related employee if exists
+        let employeeData = null;
+        if (proposalData.employee_id) {
+          const { data: employee, error: employeeError } = await supabase
+            .from('employees')
+            .select('*')
+            .eq('id', proposalData.employee_id)
+            .single();
+            
+          if (!employeeError) {
+            employeeData = employee;
+          }
+        }
         
         // Transform any potential 'files' field to 'attachments' for compatibility
         const transformedData = {
-          ...data,
-          attachments: data.files ? (typeof data.files === 'string' ? JSON.parse(data.files) : data.files) : []
+          ...proposalData,
+          customer: customerData,
+          employee: employeeData ? {
+            id: employeeData.id,
+            first_name: employeeData.first_name,
+            last_name: employeeData.last_name,
+            email: employeeData.email
+          } : null,
+          attachments: proposalData.files ? (typeof proposalData.files === 'string' ? JSON.parse(proposalData.files) : proposalData.files) : []
         };
         
         return transformedData as unknown as Proposal;
@@ -283,7 +315,7 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
                     Kaydet
                   </Button>
                   
-                  {currentStatus !== 'gonderildi' as ProposalStatus && (
+                  {currentStatus !== ('gonderildi' as ProposalStatus) && (
                     <Button 
                       onClick={() => {
                         setCurrentStatus('gonderildi' as ProposalStatus);
@@ -291,7 +323,7 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
                           handleSaveStatus();
                         }, 100);
                       }}
-                      disabled={isUpdating || currentStatus === 'gonderildi' as ProposalStatus}
+                      disabled={isUpdating || currentStatus === ('gonderildi' as ProposalStatus)}
                       className="bg-red-800 hover:bg-red-900"
                     >
                       <Send className="mr-2 h-4 w-4" />

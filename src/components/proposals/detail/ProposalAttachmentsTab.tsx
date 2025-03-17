@@ -64,7 +64,7 @@ export const ProposalAttachmentsTab = ({
       // Get current attachments or initialize empty array
       const currentAttachments = proposal.attachments || [];
       
-      // Update proposal with new attachments
+      // Need to update the 'files' field in the database since that's what Supabase stores
       const { error } = await supabase
         .from('proposals')
         .update({
