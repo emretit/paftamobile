@@ -75,7 +75,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
                       isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
                     )}
                   </button>
-                  {isExpanded && !isCollapsed && (
+                  {isExpanded && !isCollapsed && item.items && (
                     <div className="ml-4 mt-1 space-y-1">
                       {item.items.map((subItem) => (
                         <NavLink

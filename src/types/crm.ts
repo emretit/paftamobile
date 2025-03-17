@@ -1,4 +1,5 @@
-// Empty CRM types file after DB cleanup
+
+// CRM Types: Opportunities
 export type OpportunityStatus = 
   | 'new'               // Yeni
   | 'first_contact'     // İlk Görüşme 
@@ -86,4 +87,15 @@ export interface Opportunity {
   // Joined relations
   customer?: Customer;
   employee?: Employee;
+}
+
+// Opportunities state type for Kanban view
+export interface OpportunitiesState {
+  new: Opportunity[];
+  first_contact: Opportunity[];
+  site_visit: Opportunity[];
+  preparing_proposal: Opportunity[];
+  proposal_sent: Opportunity[];
+  accepted: Opportunity[];
+  lost: Opportunity[];
 }

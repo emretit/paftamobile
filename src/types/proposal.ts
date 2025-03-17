@@ -1,4 +1,5 @@
-// Placeholder for proposal types after DB cleanup
+
+// Proposal types
 export type ProposalStatus = 
   | 'draft'
   | 'pending_approval'

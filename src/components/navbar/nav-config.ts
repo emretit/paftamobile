@@ -10,7 +10,10 @@ import {
   Package,
   Settings,
   ShoppingCart,
-  UserCircle
+  UserCircle,
+  Briefcase,
+  FileText,
+  CheckSquare
 } from "lucide-react";
 
 export const navItems = [
@@ -23,7 +26,17 @@ export const navItems = [
   { path: "/purchase-management", icon: ShoppingCart, label: "Satın Alma" },
   { path: "/service", icon: Wrench, label: "Servis" },
   { path: "/purchase-invoices", icon: FileDown, label: "Alış Faturaları" },
-  { path: "/sales-invoices", icon: FileUp, label: "Satış Faturaları" }
+  { path: "/sales-invoices", icon: FileUp, label: "Satış Faturaları" },
+  { 
+    category: "CRM", 
+    icon: Briefcase,
+    path: "/opportunities",
+    items: [
+      { path: "/opportunities", icon: Briefcase, label: "Fırsatlar" },
+      { path: "/proposals", icon: FileText, label: "Teklifler" },
+      { path: "/tasks", icon: CheckSquare, label: "Görevler" }
+    ]
+  }
 ];
 
 export const settingsItem = {

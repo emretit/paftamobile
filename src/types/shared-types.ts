@@ -1,4 +1,5 @@
-// Shared type definitions will be placed here in the future
+
+// Shared type definitions
 export type ProposalStatusShared = 
   | 'draft'
   | 'pending_approval'
