@@ -1,53 +1,49 @@
 
-import React from 'react';
-import { Droppable } from '@hello-pangea/dnd';
-import { Task } from '@/types/task';
-import TaskCard from './TaskCard';
+import { Droppable } from "@hello-pangea/dnd";
+import { TaskWithOverdue } from "@/types/task";
+import TaskCard from "./TaskCard";
 
 interface KanbanColumnProps {
   id: string;
   title: string;
-  tasks: Task[];
-  onTaskEdit: (task: Task) => void;
-  onTaskSelect?: (task: Task) => void;
+  tasks: TaskWithOverdue[];
+  onTaskEdit?: (task: TaskWithOverdue) => void;
+  onTaskSelect?: (task: TaskWithOverdue) => void;
 }
 
-const KanbanColumn = ({
-  id,
-  title,
-  tasks,
-  onTaskEdit,
-  onTaskSelect
-}: KanbanColumnProps) => {
+const KanbanColumn = ({ id, title, tasks, onTaskEdit, onTaskSelect }: KanbanColumnProps) => {
   return (
-    <div className="flex flex-col h-full">
-      <h3 className="font-medium text-sm mb-3 text-gray-500">{title} ({tasks.length})</h3>
+    <div className="h-full flex flex-col">
+      <div className="mb-3">
+        <h3 className="font-medium text-gray-700">
+          {title} ({tasks.length})
+        </h3>
+      </div>
       
       <Droppable droppableId={id}>
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
-            className={`flex-1 p-2 rounded-md overflow-y-auto min-h-[500px] ${
-              snapshot.isDraggingOver ? 'bg-gray-100' : 'bg-gray-50'
-            }`}
+            className={`flex-1 p-2 min-h-[400px] rounded-md ${
+              snapshot.isDraggingOver ? "bg-gray-100" : "bg-gray-50"
+            } overflow-y-auto space-y-2`}
             {...provided.droppableProps}
           >
-            {tasks.length > 0 ? (
-              tasks.map((task, index) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  index={index}
-                  onEdit={() => onTaskEdit(task)}
-                  onSelect={onTaskSelect ? () => onTaskSelect(task) : undefined}
-                />
-              ))
-            ) : (
-              <div className="text-center py-6 text-gray-400 text-sm">
+            {tasks.map((task, index) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                index={index}
+                onEdit={onTaskEdit ? () => onTaskEdit(task) : undefined}
+                onSelect={onTaskSelect ? () => onTaskSelect(task) : undefined}
+              />
+            ))}
+            {provided.placeholder}
+            {tasks.length === 0 && (
+              <div className="h-full flex items-center justify-center text-gray-400 text-sm">
                 Bu durumda görev yok
               </div>
             )}
-            {provided.placeholder}
           </div>
         )}
       </Droppable>

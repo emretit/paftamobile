@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import TasksTable from "./TasksTable";
-import type { Task, TaskType } from "@/types/task";
+import type { Task, TaskType, TaskWithOverdue } from "@/types/task";
 import { useTaskRealtime } from "./hooks/useTaskRealtime";
 
 interface TasksContentProps {
@@ -37,8 +37,8 @@ const TasksContent = ({
       
       // If we have employees referenced, fetch them separately
       const employeeIds = tasksData
-        .filter(task => task.assigned_to)
-        .map(task => task.assigned_to)
+        .filter(task => task.assignee_id || task.assigned_to)
+        .map(task => task.assignee_id || task.assigned_to)
         .filter(Boolean);
       
       let employees = {};
@@ -59,22 +59,28 @@ const TasksContent = ({
         }
       }
 
+      // Process due dates to check for overdue tasks
+      const now = new Date();
+      
       // Map tasks with their assignees and ensure they have the required type property
       return tasksData.map(task => {
-        const assigneeId = task.assigned_to;
+        const assigneeId = task.assignee_id || task.assigned_to;
         const assignee = assigneeId ? employees[assigneeId] : null;
+        const dueDate = task.due_date ? new Date(task.due_date) : null;
+        const isOverdue = dueDate ? dueDate < now : false;
         
         return {
           ...task,
           // Ensure type property exists
           type: (task.type || task.related_item_type || "general") as TaskType,
+          isOverdue,
           assignee: assignee ? {
             id: assignee.id,
             first_name: assignee.first_name,
             last_name: assignee.last_name,
             avatar_url: assignee.avatar_url
           } : undefined
-        } as Task;
+        } as TaskWithOverdue;
       });
     }
   });

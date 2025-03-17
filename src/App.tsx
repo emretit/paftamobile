@@ -26,6 +26,7 @@ import EmployeeDetails from "./pages/EmployeeDetails";
 import EmployeeForm from "./pages/EmployeeForm";
 import Dashboard from "./pages/Dashboard";
 import PurchaseManagement from "@/pages/PurchaseManagement";
+import Tasks from "@/pages/Tasks";
 
 const queryClient = new QueryClient();
 
@@ -136,6 +137,10 @@ function App() {
           <Route
             path="/purchase-management"
             element={<ProtectedRoute><PurchaseManagement isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/tasks"
+            element={<ProtectedRoute><Tasks isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
         </Routes>
       </Router>
