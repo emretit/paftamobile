@@ -38,11 +38,18 @@ export const useTaskMutations = () => {
 
   const createTaskMutation = useMutation({
     mutationFn: async (taskData: CreateTaskData) => {
+      // Add created_at and updated_at fields
+      const fullTaskData = {
+        ...taskData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      
       // Handle subtasks as a separate property (convert to JSON string)
       const taskWithSubtasksAsString = {
-        ...taskData,
+        ...fullTaskData,
         // Only include subtasks in serialized form if they exist
-        ...(taskData.subtasks ? { subtasks: JSON.stringify(taskData.subtasks) } : {})
+        ...(fullTaskData.subtasks ? { subtasks: JSON.stringify(fullTaskData.subtasks) } : {})
       };
       
       const { data, error } = await mockCrmService.mockTasksAPI.createTask(taskWithSubtasksAsString);
@@ -63,11 +70,17 @@ export const useTaskMutations = () => {
     mutationFn: async (updatedTask: UpdateTaskData) => {
       const { id, ...updates } = updatedTask;
       
+      // Update the updated_at timestamp
+      const updatesWithTimestamp = {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      };
+      
       // Handle subtasks as a separate property (convert to JSON string)
       const updatesWithSubtasksAsString = {
-        ...updates,
+        ...updatesWithTimestamp,
         // Only include subtasks in serialized form if they exist
-        ...(updates.subtasks ? { subtasks: JSON.stringify(updates.subtasks) } : {})
+        ...(updatesWithTimestamp.subtasks ? { subtasks: JSON.stringify(updatesWithTimestamp.subtasks) } : {})
       };
       
       const { data, error } = await mockCrmService.mockTasksAPI.updateTask(id, updatesWithSubtasksAsString);
