@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,9 +12,6 @@ import { toast } from "sonner";
 import { Maximize2, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Opportunity, OpportunityStatus, opportunityStatusLabels } from "@/types/crm";
-import OpportunityBasicInfo from "./tabs/OpportunityBasicInfo";
-import OpportunityContactHistory from "./tabs/OpportunityContactHistory";
-import OpportunityTasksTab from "./tabs/OpportunityTasksTab";
 import { createTaskForOpportunity } from "@/services/crmWorkflowService";
 import { mockOpportunitiesAPI } from "@/services/mockCrmService";
 
@@ -35,10 +32,12 @@ export const OpportunityDetailSheet = ({
   const navigate = useNavigate();
 
   // Set the current status when the opportunity changes
-  if (opportunity && opportunity.status !== currentStatus) {
-    setCurrentStatus(opportunity.status as OpportunityStatus);
-    setEditingValues(opportunity);
-  }
+  useEffect(() => {
+    if (opportunity) {
+      setCurrentStatus(opportunity.status as OpportunityStatus);
+      setEditingValues(opportunity);
+    }
+  }, [opportunity]);
 
   const updateOpportunityMutation = useMutation({
     mutationFn: async ({ 
@@ -56,7 +55,7 @@ export const OpportunityDetailSheet = ({
         updateData.status = status;
       }
       
-      const { error } = await mockOpportunitiesAPI.updateOpportunity(id, updateData);
+      const { data: updatedOpportunity, error } = await mockOpportunitiesAPI.updateOpportunity(id, updateData);
         
       if (error) throw error;
       
@@ -70,7 +69,7 @@ export const OpportunityDetailSheet = ({
         await createTaskForOpportunity(
           opportunity.id,
           opportunity.title,
-          result.status,
+          opportunity.status as OpportunityStatus,
           opportunity.employee_id
         );
       }
@@ -111,7 +110,7 @@ export const OpportunityDetailSheet = ({
 
   const handleViewFullDetails = () => {
     if (opportunity) {
-      navigate(`/opportunities/detail/${opportunity.id}`);
+      navigate(`/opportunities/${opportunity.id}`);
       onClose();
     }
   };
@@ -127,7 +126,7 @@ export const OpportunityDetailSheet = ({
               <SheetTitle className="text-xl text-red-900">{opportunity.title}</SheetTitle>
               <div className="flex items-center mt-1 text-muted-foreground">
                 <span className="mr-2">
-                  {opportunity.customer_name || "Müşteri atanmamış"}
+                  {opportunity.customer?.name || "Müşteri atanmamış"}
                 </span>
                 <span className="text-sm px-2 py-0.5 rounded-full bg-red-100 text-red-800">
                   {opportunityStatusLabels[opportunity.status]}
@@ -177,7 +176,7 @@ export const OpportunityDetailSheet = ({
         </SheetHeader>
         
         <Tabs defaultValue="details" className="mt-6">
-          <TabsList className="grid grid-cols-3 mb-6 bg-red-100/50">
+          <TabsList className="grid grid-cols-2 mb-6 bg-red-100/50">
             <TabsTrigger 
               value="details"
               className="data-[state=active]:bg-red-200 data-[state=active]:text-red-900"
@@ -185,26 +184,71 @@ export const OpportunityDetailSheet = ({
               Detaylar
             </TabsTrigger>
             <TabsTrigger 
-              value="contact"
+              value="notes"
               className="data-[state=active]:bg-red-200 data-[state=active]:text-red-900"
             >
-              İletişim Geçmişi
-            </TabsTrigger>
-            <TabsTrigger 
-              value="tasks"
-              className="data-[state=active]:bg-red-200 data-[state=active]:text-red-900"
-            >
-              Görevler
+              Notlar
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="details">
-            <OpportunityBasicInfo 
-              opportunity={opportunity}
-              editingValues={editingValues}
-              onInputChange={handleInputChange}
-              isReadOnly={false}
-            />
+            <div className="space-y-4">
+              <div>
+                <Label className="text-red-800">Başlık</Label>
+                <Input 
+                  value={editingValues.title || ""}
+                  onChange={(e) => handleInputChange("title", e.target.value)}
+                  className="border-red-200 focus:border-red-300 focus:ring-red-100" 
+                />
+              </div>
+              
+              <div>
+                <Label className="text-red-800">Açıklama</Label>
+                <Textarea 
+                  value={editingValues.description || ""}
+                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  className="border-red-200 focus:border-red-300 focus:ring-red-100" 
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-red-800">Öncelik</Label>
+                  <Select 
+                    value={editingValues.priority || opportunity.priority}
+                    onValueChange={(val) => handleInputChange("priority", val)}
+                  >
+                    <SelectTrigger className="border-red-200 focus:ring-red-100">
+                      <SelectValue placeholder="Öncelik seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Düşük</SelectItem>
+                      <SelectItem value="medium">Orta</SelectItem>
+                      <SelectItem value="high">Yüksek</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-red-800">Tahmini Değer</Label>
+                  <Input 
+                    type="number" 
+                    value={editingValues.value ?? opportunity.value}
+                    onChange={(e) => handleInputChange("value", parseFloat(e.target.value))}
+                    className="border-red-200 focus:border-red-300 focus:ring-red-100" 
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label className="text-red-800">Beklenen Kapanış Tarihi</Label>
+                <Input 
+                  type="date" 
+                  value={editingValues.expected_close_date?.split('T')[0] || ""}
+                  onChange={(e) => handleInputChange("expected_close_date", e.target.value)}
+                  className="border-red-200 focus:border-red-300 focus:ring-red-100" 
+                />
+              </div>
+            </div>
             
             <div className="flex justify-end mt-4">
               <Button 
@@ -218,12 +262,28 @@ export const OpportunityDetailSheet = ({
             </div>
           </TabsContent>
           
-          <TabsContent value="contact">
-            <OpportunityContactHistory opportunity={opportunity} />
-          </TabsContent>
-          
-          <TabsContent value="tasks">
-            <OpportunityTasksTab opportunityId={opportunity.id} />
+          <TabsContent value="notes">
+            <div className="space-y-4">
+              <div>
+                <Label className="text-red-800">Notlar</Label>
+                <Textarea 
+                  value={editingValues.notes || ""}
+                  onChange={(e) => handleInputChange("notes", e.target.value)}
+                  className="min-h-[200px] border-red-200 focus:border-red-300 focus:ring-red-100" 
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end mt-4">
+              <Button 
+                onClick={handleSaveChanges}
+                disabled={updateOpportunityMutation.isPending}
+                className="bg-red-800 text-white hover:bg-red-900"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Notları Kaydet
+              </Button>
+            </div>
           </TabsContent>
         </Tabs>
         

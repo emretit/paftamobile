@@ -1,17 +1,26 @@
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { DropResult } from "@hello-pangea/dnd";
+import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Plus, Search, Filter, Users } from "lucide-react";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue 
+} from "@/components/ui/select";
+import { useOpportunities } from "@/hooks/useOpportunities";
+import OpportunitiesKanban from "@/components/opportunities/OpportunitiesKanban";
+import OpportunityDetailSheet from "@/components/opportunities/OpportunityDetailSheet";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { PlusCircle, Search, Filter } from "lucide-react";
-import { Opportunity, OpportunityStatus } from "@/types/crm";
-import { OpportunitiesState } from "@/types/crm";
-import OpportunitiesKanban from "@/components/crm/OpportunitiesKanban";
-import OpportunityDetailSheet from "@/components/crm/OpportunityDetailSheet";
-import { crmService } from "@/services/crmService";
-import DefaultLayout from "@/components/layouts/DefaultLayout";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { opportunityPriorityLabels, opportunityStatusColors, opportunityStatusLabels } from "@/types/crm";
+import { format } from "date-fns";
 
 interface OpportunitiesPageProps {
   isCollapsed: boolean;
@@ -19,111 +28,34 @@ interface OpportunitiesPageProps {
 }
 
 const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesPageProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"kanban" | "table">("kanban");
 
-  // Fetch opportunities
-  const { data: opportunities, isLoading, error } = useQuery({
-    queryKey: ['opportunities'],
-    queryFn: async () => {
-      const { data, error } = await crmService.getOpportunities();
-      if (error) throw error;
-      return data || [];
-    }
-  });
-
-  // Update opportunity mutation
-  const updateOpportunityMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string, status: OpportunityStatus }) => {
-      const { data, error } = await crmService.updateOpportunity(id, { status });
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
-    }
-  });
-
-  // Create new opportunity
-  const createOpportunityMutation = useMutation({
-    mutationFn: async (opportunityData: Partial<Opportunity>) => {
-      const { data, error } = await crmService.createOpportunity(opportunityData);
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
-    }
-  });
-
-  // Filter opportunities based on search term
-  const filteredOpportunities = opportunities?.filter(opportunity => 
-    opportunity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (opportunity.description || "").toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
-
-  // Organize opportunities by status for Kanban
-  const organizedOpportunities: OpportunitiesState = {
-    new: filteredOpportunities.filter(o => o.status === 'new'),
-    first_contact: filteredOpportunities.filter(o => o.status === 'first_contact'),
-    site_visit: filteredOpportunities.filter(o => o.status === 'site_visit'),
-    preparing_proposal: filteredOpportunities.filter(o => o.status === 'preparing_proposal'),
-    proposal_sent: filteredOpportunities.filter(o => o.status === 'proposal_sent'),
-    accepted: filteredOpportunities.filter(o => o.status === 'accepted'),
-    lost: filteredOpportunities.filter(o => o.status === 'lost')
-  };
-
-  // Handle drag and drop
-  const handleDragEnd = async (result: DropResult) => {
-    const { destination, source, draggableId } = result;
-
-    // Dropped outside a droppable area
-    if (!destination) return;
-
-    // No movement
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) return;
-
-    // Get the opportunity that was moved
-    const opportunity = filteredOpportunities.find(o => o.id === draggableId);
-    if (!opportunity) return;
-
-    // Update opportunity status
-    await updateOpportunityMutation.mutateAsync({
-      id: draggableId,
-      status: destination.droppableId as OpportunityStatus
-    });
-  };
+  const {
+    opportunities,
+    isLoading,
+    error,
+    selectedOpportunity,
+    setSelectedOpportunity,
+    isDetailOpen,
+    setIsDetailOpen,
+    selectedItems,
+    setSelectedItems,
+    handleDragEnd,
+    handleCreateOpportunity
+  } = useOpportunities(searchQuery, selectedEmployee, selectedCustomer);
 
   // Handle clicking on an opportunity
-  const handleOpportunityClick = (opportunity: Opportunity) => {
+  const handleOpportunityClick = (opportunity: any) => {
     setSelectedOpportunity(opportunity);
     setIsDetailOpen(true);
   };
 
-  // Create a new opportunity
-  const handleCreateNewOpportunity = async () => {
-    await createOpportunityMutation.mutateAsync({
-      title: "Yeni Fırsat",
-      status: "new",
-      priority: "medium",
-      value: 0
-    });
-  };
-
-  // Close the detail sheet
-  const handleCloseDetail = () => {
-    setIsDetailOpen(false);
-    setSelectedOpportunity(null);
-  };
-
   return (
     <DefaultLayout isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed}>
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Fırsatlar</h1>
@@ -133,53 +65,158 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesPageProps) 
             <Button
               variant="default"
               className="bg-red-800 hover:bg-red-900 text-white"
-              onClick={handleCreateNewOpportunity}
+              onClick={handleCreateOpportunity}
             >
-              <PlusCircle className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4" />
               Yeni Fırsat
             </Button>
           </div>
         </div>
 
         <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <div className="relative flex-1">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="relative flex-1 w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="Fırsat ara..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-gray-300"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 border-gray-300 w-full"
               />
             </div>
-            <Button variant="outline" size="sm" className="shrink-0">
-              <Filter className="mr-2 h-4 w-4" />
-              Filtrele
-            </Button>
+            <div className="flex gap-2 w-full md:w-auto">
+              <Select value={selectedEmployee || ""} onValueChange={value => setSelectedEmployee(value || null)}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <Users className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Sorumlu Seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tüm Sorumlular</SelectItem>
+                  {/* Would be populated from employees data */}
+                  <SelectItem value="1">Ahmet Yılmaz</SelectItem>
+                  <SelectItem value="2">Ayşe Kaya</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={selectedCustomer || ""} onValueChange={value => setSelectedCustomer(value || null)}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectValue placeholder="Müşteri Seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tüm Müşteriler</SelectItem>
+                  {/* Would be populated from customers data */}
+                  <SelectItem value="1">ABC Şirketi</SelectItem>
+                  <SelectItem value="2">XYZ Ltd.</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button variant="outline" size="sm" className="shrink-0">
+                <Filter className="mr-2 h-4 w-4" />
+                Filtrele
+              </Button>
+            </div>
           </div>
         </div>
 
-        <Separator className="my-6" />
-
-        {isLoading ? (
-          <div className="text-center py-10">Fırsatlar yükleniyor...</div>
-        ) : error ? (
-          <div className="text-center py-10 text-red-600">Bir hata oluştu.</div>
-        ) : (
-          <div className="pb-10">
-            <OpportunitiesKanban
-              opportunities={organizedOpportunities}
-              onDragEnd={handleDragEnd}
-              onOpportunityClick={handleOpportunityClick}
-            />
+        <Tabs defaultValue="kanban" className="space-y-4" value={viewMode} onValueChange={(value) => setViewMode(value as "kanban" | "table")}>
+          <div className="flex justify-between items-center">
+            <TabsList>
+              <TabsTrigger value="kanban">Kanban Görünümü</TabsTrigger>
+              <TabsTrigger value="table">Tablo Görünümü</TabsTrigger>
+            </TabsList>
           </div>
-        )}
+
+          <TabsContent value="kanban" className="space-y-4">
+            {isLoading ? (
+              <div className="text-center py-10">Fırsatlar yükleniyor...</div>
+            ) : error ? (
+              <div className="text-center py-10 text-red-600">Bir hata oluştu.</div>
+            ) : (
+              <div className="pb-10 overflow-x-auto">
+                <DragDropContext onDragEnd={handleDragEnd}>
+                  <OpportunitiesKanban
+                    opportunities={opportunities}
+                    onOpportunityClick={handleOpportunityClick}
+                    onOpportunitySelect={setSelectedItems}
+                    selectedOpportunities={selectedItems}
+                  />
+                </DragDropContext>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="table" className="space-y-4">
+            {isLoading ? (
+              <div className="text-center py-10">Fırsatlar yükleniyor...</div>
+            ) : error ? (
+              <div className="text-center py-10 text-red-600">Bir hata oluştu.</div>
+            ) : (
+              <div className="bg-white rounded-lg shadow overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Başlık</TableHead>
+                      <TableHead>Müşteri</TableHead>
+                      <TableHead>Durum</TableHead>
+                      <TableHead>Öncelik</TableHead>
+                      <TableHead>Değer</TableHead>
+                      <TableHead>Sorumlu</TableHead>
+                      <TableHead>Tahmini Kapanış</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {Object.values(opportunities).flat().map((opportunity) => (
+                      <TableRow 
+                        key={opportunity.id} 
+                        className="cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleOpportunityClick(opportunity)}
+                      >
+                        <TableCell className="font-medium">{opportunity.title}</TableCell>
+                        <TableCell>{opportunity.customer?.name || "-"}</TableCell>
+                        <TableCell>
+                          <Badge className={opportunityStatusColors[opportunity.status]}>
+                            {opportunityStatusLabels[opportunity.status]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{opportunityPriorityLabels[opportunity.priority]}</TableCell>
+                        <TableCell>
+                          {new Intl.NumberFormat('tr-TR', { 
+                            style: 'currency', 
+                            currency: 'TRY' 
+                          }).format(opportunity.value)}
+                        </TableCell>
+                        <TableCell>
+                          {opportunity.employee ? 
+                            `${opportunity.employee.first_name} ${opportunity.employee.last_name}` : 
+                            "-"}
+                        </TableCell>
+                        <TableCell>
+                          {opportunity.expected_close_date ? 
+                            format(new Date(opportunity.expected_close_date), 'dd MMM yyyy') : 
+                            "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    
+                    {Object.values(opportunities).flat().length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                          Fırsat bulunamadı
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
       
       <OpportunityDetailSheet
         opportunity={selectedOpportunity}
         isOpen={isDetailOpen}
-        onClose={handleCloseDetail}
+        onClose={() => setIsDetailOpen(false)}
       />
     </DefaultLayout>
   );

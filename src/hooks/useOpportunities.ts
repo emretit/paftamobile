@@ -1,13 +1,14 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { DropResult } from "@hello-pangea/dnd";
-import { Opportunity, OpportunityStatus, OpportunityExtended } from "@/types/crm";
+import { Opportunity, OpportunityStatus } from "@/types/crm";
 import { createTaskForOpportunity } from "@/services/crmWorkflowService";
 import { mockOpportunitiesAPI } from "@/services/mockCrmService";
 
 export type OpportunitiesState = {
-  [key in OpportunityStatus]?: OpportunityExtended[];
+  [key in OpportunityStatus]: Opportunity[];
 };
 
 export const useOpportunities = (
@@ -25,9 +26,9 @@ export const useOpportunities = (
     lost: []
   });
   
-  const [selectedOpportunity, setSelectedOpportunity] = useState<OpportunityExtended | null>(null);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<OpportunityExtended[]>([]);
+  const [selectedItems, setSelectedItems] = useState<Opportunity[]>([]);
   
   const queryClient = useQueryClient();
   
@@ -48,7 +49,7 @@ export const useOpportunities = (
       }
       
       if (filteredData.error) throw filteredData.error;
-      return filteredData.data as OpportunityExtended[];
+      return filteredData.data as Opportunity[];
     }
   });
   
@@ -91,7 +92,7 @@ export const useOpportunities = (
     onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['opportunities'] });
       
-      const opportunity = result.data as OpportunityExtended;
+      const opportunity = result.data as Opportunity;
       
       // Generate task based on the new status
       if (opportunity) {
@@ -185,6 +186,39 @@ export const useOpportunities = (
     });
   };
   
+  // Create a new opportunity
+  const createOpportunityMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await mockOpportunitiesAPI.createOpportunity({
+        title: "Yeni Fırsat",
+        status: "new",
+        priority: "medium",
+        value: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      toast.success('Yeni fırsat oluşturuldu');
+      
+      // Open the detail panel for the new opportunity
+      setSelectedOpportunity(data as Opportunity);
+      setIsDetailOpen(true);
+    },
+    onError: (error) => {
+      toast.error('Fırsat oluşturulurken bir hata oluştu');
+      console.error('Error creating opportunity:', error);
+    }
+  });
+  
+  const handleCreateOpportunity = () => {
+    createOpportunityMutation.mutate();
+  };
+  
   return {
     opportunities,
     isLoading,
@@ -195,6 +229,7 @@ export const useOpportunities = (
     setIsDetailOpen,
     selectedItems,
     setSelectedItems,
-    handleDragEnd
+    handleDragEnd,
+    handleCreateOpportunity
   };
 };

@@ -39,28 +39,26 @@ const OpportunitiesKanban = ({
   selectedOpportunities = [],
 }: OpportunitiesKanbanProps) => {
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex overflow-x-auto gap-4 pb-4">
-        {columns.map((column) => (
-          <div key={column.id} className="flex-none min-w-[300px]">
-            <div className="flex items-center gap-2 mb-3">
-              <div className={`h-3 w-3 rounded-full ${column.color}`}></div>
-              <h2 className="font-semibold text-gray-900">
-                {column.title} ({opportunities[column.id as keyof OpportunitiesState]?.length || 0})
-              </h2>
-            </div>
-            <OpportunityColumn
-              id={column.id as OpportunityStatus}
-              title={column.title}
-              opportunities={opportunities[column.id as keyof OpportunitiesState] || []}
-              onOpportunityClick={onOpportunityClick}
-              onOpportunitySelect={onOpportunitySelect}
-              selectedOpportunities={selectedOpportunities}
-            />
+    <div className="flex overflow-x-auto gap-4 pb-4">
+      {columns.map((column) => (
+        <div key={column.id} className="flex-none min-w-[300px]">
+          <div className="flex items-center gap-2 mb-3">
+            <div className={`h-3 w-3 rounded-full ${column.color}`}></div>
+            <h2 className="font-semibold text-gray-900">
+              {column.title} ({opportunities[column.id as keyof OpportunitiesState]?.length || 0})
+            </h2>
           </div>
-        ))}
-      </div>
-    </DragDropContext>
+          <OpportunityColumn
+            id={column.id as OpportunityStatus}
+            title={column.title}
+            opportunities={opportunities[column.id as keyof OpportunitiesState] || []}
+            onOpportunityClick={onOpportunityClick}
+            onOpportunitySelect={onOpportunitySelect}
+            selectedOpportunities={selectedOpportunities}
+          />
+        </div>
+      ))}
+    </div>
   );
 };
 

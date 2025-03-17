@@ -26,6 +26,7 @@ import EmployeeDetails from "./pages/EmployeeDetails";
 import EmployeeForm from "./pages/EmployeeForm";
 import Dashboard from "./pages/Dashboard";
 import PurchaseManagement from "@/pages/PurchaseManagement";
+import Opportunities from "@/pages/crm/Opportunities";
 
 const queryClient = new QueryClient();
 
@@ -135,8 +136,10 @@ function App() {
             path="/purchase-management"
             element={<ProtectedRoute><PurchaseManagement isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
-          
-          {/* CRM routes will be added later - for now, we're just setting up the navigation */}
+          <Route
+            path="/opportunities"
+            element={<ProtectedRoute><Opportunities isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
         </Routes>
       </Router>
     </QueryClientProvider>

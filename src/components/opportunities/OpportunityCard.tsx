@@ -1,108 +1,81 @@
 
+import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Opportunity, opportunityPriorityLabels } from "@/types/crm";
-import { CalendarIcon, User, Building } from "lucide-react";
-import { format } from "date-fns";
-import { tr } from "date-fns/locale";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Draggable } from "@hello-pangea/dnd";
+import { Opportunity, opportunityStatusColors } from "@/types/crm";
+import { CalendarIcon, DollarSign, User } from "lucide-react";
+import { format } from 'date-fns';
 
 interface OpportunityCardProps {
   opportunity: Opportunity;
-  onClick: (opportunity: Opportunity) => void;
-  onSelect?: (opportunity: Opportunity) => void;
+  index: number;
+  onClick: () => void;
   isSelected?: boolean;
 }
 
-const priorityColorMap = {
-  high: "bg-red-100 text-red-800 border-red-200",
-  medium: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  low: "bg-blue-100 text-blue-800 border-blue-200"
-};
-
-const formatMoney = (amount: number) => {
-  return new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: 'TRY',
-    minimumFractionDigits: 0
-  }).format(amount);
-};
-
-const OpportunityCard = ({ 
-  opportunity, 
-  onClick, 
-  onSelect, 
-  isSelected = false 
-}: OpportunityCardProps) => {
-  const handleClick = () => {
-    onClick(opportunity);
-  };
-
-  const handleCheckboxClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onSelect) {
-      onSelect(opportunity);
-    }
-  };
-
+const OpportunityCard = ({ opportunity, index, onClick, isSelected = false }: OpportunityCardProps) => {
   return (
-    <div 
-      className={`
-        p-4 mb-2 bg-white border rounded-lg shadow-sm cursor-pointer 
-        hover:shadow-md transition-shadow
-        ${isSelected ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200'}
-      `}
-      onClick={handleClick}
-    >
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex gap-2 items-center">
-          {onSelect && (
-            <div onClick={handleCheckboxClick}>
-              <Checkbox checked={isSelected} />
-            </div>
-          )}
-          <h3 className="font-medium text-gray-900 truncate max-w-[200px]">
-            {opportunity.title}
-          </h3>
-        </div>
-        <Badge 
-          variant="outline"
-          className={`${priorityColorMap[opportunity.priority]} text-xs`}
+    <Draggable draggableId={opportunity.id} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          className={`mb-3 ${snapshot.isDragging ? "opacity-75" : ""}`}
         >
-          {opportunityPriorityLabels[opportunity.priority]}
-        </Badge>
-      </div>
-
-      <div className="text-lg font-semibold text-gray-900 mb-3">
-        {formatMoney(opportunity.value)}
-      </div>
-
-      <div className="flex flex-col space-y-2 text-sm text-gray-600">
-        <div className="flex items-center gap-2">
-          <Building className="h-4 w-4 text-gray-400" />
-          <span className="truncate max-w-[230px]">
-            {opportunity.customer?.name || "Atanmamış"}
-          </span>
+          <Card 
+            className={`${isSelected ? "border-red-500 border-2" : ""} 
+                      hover:border-red-300 hover:shadow-md transition-all duration-200 cursor-pointer`}
+            onClick={onClick}
+          >
+            <CardContent className="p-4">
+              <div className="flex justify-between items-start">
+                <h3 className="font-medium text-gray-900 line-clamp-2">{opportunity.title}</h3>
+                <Badge className="ml-2 flex-shrink-0" variant="outline">
+                  {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(opportunity.value)}
+                </Badge>
+              </div>
+              
+              {opportunity.description && (
+                <p className="text-sm text-gray-500 mt-2 line-clamp-2">{opportunity.description}</p>
+              )}
+              
+              <div className="flex items-center mt-3 text-xs text-gray-500">
+                {opportunity.expected_close_date && (
+                  <div className="flex items-center mr-3">
+                    <CalendarIcon className="h-3 w-3 mr-1" />
+                    <span>{format(new Date(opportunity.expected_close_date), 'dd MMM yyyy')}</span>
+                  </div>
+                )}
+                
+                {opportunity.customer && (
+                  <div className="flex items-center overflow-hidden">
+                    <User className="h-3 w-3 mr-1 flex-shrink-0" />
+                    <span className="truncate">{opportunity.customer.name}</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-between items-center mt-3">
+                <Badge className={opportunityStatusColors[opportunity.priority]} variant="secondary">
+                  {opportunity.priority === 'high' ? 'Yüksek' : 
+                   opportunity.priority === 'medium' ? 'Orta' : 'Düşük'}
+                </Badge>
+                
+                {opportunity.employee && (
+                  <div className="flex items-center text-xs text-gray-500">
+                    <span className="truncate">
+                      {opportunity.employee.first_name} {opportunity.employee.last_name}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
-
-        <div className="flex items-center gap-2">
-          <User className="h-4 w-4 text-gray-400" />
-          <span className="truncate max-w-[230px]">
-            {opportunity.employee ? 
-              `${opportunity.employee.first_name} ${opportunity.employee.last_name}` : 
-              "Atanmamış"}
-          </span>
-        </div>
-
-        {opportunity.expected_close_date && (
-          <div className="flex items-center gap-2">
-            <CalendarIcon className="h-4 w-4 text-gray-400" />
-            <span>
-              {format(new Date(opportunity.expected_close_date), "d MMM yyyy", { locale: tr })}
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
+      )}
+    </Draggable>
   );
 };
 
