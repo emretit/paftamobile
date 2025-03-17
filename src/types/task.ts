@@ -1,8 +1,14 @@
 
-export type TaskStatus = 'todo' | 'in_progress' | 'completed' | 'postponed';
-export type TaskPriority = 'low' | 'medium' | 'high';
-export type TaskType = 'general' | 'meeting' | 'follow_up' | 'call' | 'email' | 'opportunity' | 'proposal';
+// Define the status options for tasks
+export type TaskStatus = "todo" | "in_progress" | "completed" | "postponed";
 
+// Define the priority levels for tasks
+export type TaskPriority = "low" | "medium" | "high";
+
+// Define the types of tasks
+export type TaskType = "opportunity" | "proposal" | "general" | "email" | "meeting" | "call";
+
+// Define the structure for subtasks
 export interface SubTask {
   id: string;
   title: string;
@@ -10,25 +16,31 @@ export interface SubTask {
   created_at: string;
 }
 
+// Define the main Task interface
 export interface Task {
   id: string;
   title: string;
-  description?: string;
+  description: string;
   status: TaskStatus;
   priority: TaskPriority;
   type: TaskType;
   assignee_id?: string;
   due_date?: string;
-  related_item_id?: string;
-  related_item_title?: string;
   created_at: string;
   updated_at: string;
+  related_item_id?: string;
+  related_item_title?: string;
   subtasks?: SubTask[];
+  
+  // Virtual fields from joins
   assignee?: {
     id: string;
     first_name: string;
     last_name: string;
     email?: string;
     avatar_url?: string;
-  } | null;
+  };
+  
+  // Used for drag and drop identification
+  item_type?: string;
 }

@@ -19,4 +19,6 @@ export interface Deal {
   nextSteps?: any[];
   productServices?: any[];
   reminders?: any[];
+  notes?: string;
+  internalComments?: string;
 }

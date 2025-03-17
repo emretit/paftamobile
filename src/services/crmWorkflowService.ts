@@ -1,165 +1,145 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { OpportunityStatus } from "@/types/crm";
-import { Task } from "@/types/task";
+import { TaskPriority } from "@/types/task";
+import { addDays, format } from "date-fns";
 
-export interface WorkflowTask {
-  title: string;
-  description?: string;
-  priority: 'low' | 'medium' | 'high';
-  due_date?: string; // ISO string
-}
-
-const getTaskForOpportunityStatus = (status: OpportunityStatus): WorkflowTask | null => {
-  switch (status) {
-    case 'new':
-      return {
-        title: 'İlk görüşmeyi yap ve ziyaret planla',
-        description: 'Müşteri ile ilk görüşmeyi yaparak bir site ziyareti planlayınız.',
-        priority: 'medium',
-        due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString() // 3 days from now
-      };
-    case 'first_contact':
-      return {
-        title: 'Ziyaret Yap ve raporla',
-        description: 'Planlanan ziyareti gerçekleştirin ve sonuçları raporlayın.',
-        priority: 'high',
-        due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString() // 5 days from now
-      };
-    case 'site_visit':
-      return {
-        title: 'Teklif Hazırla',
-        description: 'Ziyaret sonuçlarına göre uygun bir teklif hazırlayın.',
-        priority: 'high',
-        due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString() // 2 days from now
-      };
-    case 'proposal_sent':
-      return {
-        title: 'Teklif Takibini Yap',
-        description: 'Gönderilen teklifin durumunu takip edin ve müşteri ile iletişime geçin.',
-        priority: 'medium',
-        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
-      };
-    case 'accepted':
-      return {
-        title: 'Satış Sözleşmesi Hazırla',
-        description: 'Kabul edilen teklif için satış sözleşmesi hazırlayın.',
-        priority: 'high',
-        due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString() // 3 days from now
-      };
-    case 'lost':
-      return {
-        title: 'Fırsatı Kapat ve Kaybetme Nedeni Raporla',
-        description: 'Kaybedilen fırsatın nedenlerini analiz edin ve raporlayın.',
-        priority: 'low',
-        due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString() // 2 days from now
-      };
-    default:
-      return null;
-  }
-};
-
+/**
+ * Create a task for an opportunity based on its status
+ */
 export const createTaskForOpportunity = async (
   opportunityId: string,
   opportunityTitle: string,
   status: OpportunityStatus,
   assigneeId?: string
-): Promise<Task | null> => {
+) => {
+  let taskTitle = "";
+  let taskDescription = "";
+  let priority: TaskPriority = "medium";
+  let dueDate = addDays(new Date(), 3);
+
+  // Set task details based on opportunity status
+  switch (status) {
+    case "new":
+      taskTitle = "İlk görüşmeyi yap ve ziyaret planla";
+      taskDescription = `Yeni fırsat için ilk görüşmeyi gerçekleştir: ${opportunityTitle}`;
+      dueDate = addDays(new Date(), 2);
+      priority = "high";
+      break;
+
+    case "first_contact":
+      taskTitle = "Ziyaret Yap ve raporla";
+      taskDescription = `İlk görüşmesi yapılan fırsat için saha ziyareti planla: ${opportunityTitle}`;
+      dueDate = addDays(new Date(), 5);
+      priority = "medium";
+      break;
+
+    case "site_visit":
+      taskTitle = "Teklif Hazırla";
+      taskDescription = `Saha ziyareti yapılan fırsat için teklif hazırla: ${opportunityTitle}`;
+      dueDate = addDays(new Date(), 3);
+      priority = "high";
+      break;
+
+    case "proposal_sent":
+      taskTitle = "Teklif Takibini Yap";
+      taskDescription = `Gönderilen teklif için takip çağrısı yap: ${opportunityTitle}`;
+      dueDate = addDays(new Date(), 7);
+      priority = "medium";
+      break;
+
+    case "accepted":
+      taskTitle = "Satış Sözleşmesi Hazırla";
+      taskDescription = `Kabul edilen fırsat için satış sözleşmesi hazırla: ${opportunityTitle}`;
+      dueDate = addDays(new Date(), 2);
+      priority = "high";
+      break;
+
+    case "lost":
+      taskTitle = "Fırsatı Kapat ve Kaybetme Nedeni Raporla";
+      taskDescription = `Kaybedilen fırsat için kapanış raporu hazırla: ${opportunityTitle}`;
+      dueDate = addDays(new Date(), 1);
+      priority = "low";
+      break;
+
+    default:
+      // Don't create a task for other statuses
+      return;
+  }
+
   try {
-    const taskData = getTaskForOpportunityStatus(status);
-    
-    if (!taskData) return null;
-    
-    const taskToCreate = {
-      title: taskData.title,
-      description: taskData.description || '',
-      status: 'todo',
-      priority: taskData.priority,
-      type: 'opportunity',
-      assignee_id: assigneeId,
-      due_date: taskData.due_date,
-      related_item_id: opportunityId,
-      related_item_title: opportunityTitle
-    };
-    
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert([taskToCreate])
-      .select()
-      .single();
-      
-    if (error) {
-      console.error('Error creating opportunity task:', error);
-      toast.error('Görev oluşturulurken bir hata oluştu');
-      return null;
-    }
-    
-    toast.success('Görev başarıyla oluşturuldu');
-    return data as Task;
+    // Format due date for database
+    const formattedDueDate = format(dueDate, "yyyy-MM-dd");
+
+    // Create task
+    const { error } = await supabase.from("tasks").insert([
+      {
+        title: taskTitle,
+        description: taskDescription,
+        status: "todo",
+        priority,
+        type: "opportunity",
+        assignee_id: assigneeId,
+        due_date: formattedDueDate,
+        related_item_id: opportunityId,
+        related_item_title: opportunityTitle
+      }
+    ]);
+
+    if (error) throw error;
   } catch (error) {
-    console.error('Error in workflow task creation:', error);
-    toast.error('Görev oluşturulurken bir hata oluştu');
-    return null;
+    console.error("Error creating task for opportunity:", error);
   }
 };
 
+/**
+ * Update opportunity status when proposal status changes
+ */
 export const updateOpportunityOnProposalStatusChange = async (
   proposalId: string,
-  opportunityId?: string,
-  newStatus?: string
+  opportunityId: string,
+  proposalStatus: string
 ) => {
-  if (!opportunityId) return;
-  
   try {
-    let opportunityStatus: OpportunityStatus | undefined;
-    
+    let opportunityStatus: OpportunityStatus | null = null;
+
     // Map proposal status to opportunity status
-    if (newStatus === 'sent') {
-      opportunityStatus = 'proposal_sent';
-    } else if (newStatus === 'approved' || newStatus === 'converted_to_order') {
-      opportunityStatus = 'accepted';
-    } else if (newStatus === 'rejected') {
-      opportunityStatus = 'lost';
+    if (proposalStatus === "sent") {
+      opportunityStatus = "proposal_sent";
+    } else if (proposalStatus === "accepted") {
+      opportunityStatus = "accepted";
+    } else if (proposalStatus === "rejected") {
+      opportunityStatus = "lost";
     }
-    
-    if (!opportunityStatus) return;
-    
-    // Update the opportunity status
-    const { error } = await supabase
-      .from('opportunities')
-      .update({ status: opportunityStatus })
-      .eq('id', opportunityId);
-      
-    if (error) {
-      console.error('Error updating opportunity status:', error);
-      toast.error('Fırsat durumu güncellenirken bir hata oluştu');
-      return;
+
+    // Only update opportunity if we have a valid status mapping
+    if (opportunityStatus) {
+      // Fetch the opportunity to get required data
+      const { data: opportunity, error: fetchError } = await supabase
+        .from("opportunities")
+        .select("title, employee_id")
+        .eq("id", opportunityId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Update the opportunity status
+      const { error } = await supabase
+        .from("opportunities")
+        .update({ status: opportunityStatus })
+        .eq("id", opportunityId);
+
+      if (error) throw error;
+
+      // Create a follow-up task based on the new status
+      await createTaskForOpportunity(
+        opportunityId,
+        opportunity.title,
+        opportunityStatus,
+        opportunity.employee_id
+      );
     }
-    
-    // Fetch the opportunity to get the title for task creation
-    const { data: opportunity, error: oppError } = await supabase
-      .from('opportunities')
-      .select('title, employee_id')
-      .eq('id', opportunityId)
-      .single();
-      
-    if (oppError) {
-      console.error('Error fetching opportunity:', oppError);
-      return;
-    }
-    
-    // Create the corresponding task
-    await createTaskForOpportunity(
-      opportunityId,
-      opportunity.title,
-      opportunityStatus,
-      opportunity.employee_id
-    );
-    
-    toast.success('Fırsat durumu güncellendi');
   } catch (error) {
-    console.error('Error in workflow status update:', error);
-    toast.error('İşlem sırasında bir hata oluştu');
+    console.error("Error updating opportunity after proposal status change:", error);
   }
 };
