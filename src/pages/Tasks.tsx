@@ -3,7 +3,6 @@ import { useState } from "react";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import TasksContent from "@/components/tasks/TasksContent";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import TaskForm from "@/components/tasks/TaskForm";
@@ -11,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TasksKanban from "@/components/tasks/TasksKanban";
+import TasksPageHeader from "@/components/tasks/header/TasksPageHeader";
 
 interface TasksPageProps {
   isCollapsed: boolean;
@@ -32,6 +32,8 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
 
   const handleDialogClose = () => {
     setIsDialogOpen(false);
+    // Refresh tasks data
+    queryClient.invalidateQueries({ queryKey: ["tasks"] });
   };
 
   return (
@@ -42,13 +44,7 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
       subtitle="Tüm görevleri yönetin"
     >
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Görevler</h1>
-          <Button onClick={handleAddTask}>
-            <Plus className="mr-2 h-4 w-4" />
-            Yeni Görev
-          </Button>
-        </div>
+        <TasksPageHeader onCreateTask={handleAddTask} />
 
         <div className="flex flex-col sm:flex-row gap-4 justify-between">
           <div className="flex flex-col sm:flex-row gap-2">
