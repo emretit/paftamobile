@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -132,10 +133,6 @@ function App() {
           />
           <Route
             path="/opportunities"
-            element={<ProtectedRoute><Opportunities isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
-          />
-          <Route
-            path="/deals"
             element={<ProtectedRoute><Opportunities isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
           <Route

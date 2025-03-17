@@ -33,22 +33,25 @@ const OpportunityTasksTab = ({ opportunityId }: OpportunityTasksTabProps) => {
       
       // Transform the data to match the Task type structure
       return data.map(task => {
-        let taskAssignee;
+        let taskAssignee = null;
         
-        // Check if assignee exists and is not an error object
-        if (task.assignee && !('error' in task.assignee)) {
-          taskAssignee = {
-            id: task.assignee.id,
-            first_name: task.assignee.first_name,
-            last_name: task.assignee.last_name,
-            email: task.assignee.email,
-            phone: task.assignee.phone,
-            position: task.assignee.position,
-            department: task.assignee.department,
-            status: task.assignee.status,
-            name: `${task.assignee.first_name} ${task.assignee.last_name}`,
-            avatar: task.assignee.avatar_url
-          };
+        // Check if assignee exists and has expected properties
+        if (task.assignee && typeof task.assignee === 'object' && !('error' in task.assignee)) {
+          const assignee = task.assignee as any;
+          if (assignee) {
+            taskAssignee = {
+              id: assignee.id,
+              first_name: assignee.first_name,
+              last_name: assignee.last_name,
+              email: assignee.email,
+              phone: assignee.phone,
+              position: assignee.position,
+              department: assignee.department,
+              status: assignee.status,
+              name: `${assignee.first_name} ${assignee.last_name}`,
+              avatar: assignee.avatar_url
+            };
+          }
         }
 
         return {
