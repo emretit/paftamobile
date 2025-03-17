@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useEmployeeNames = () => {
   const { data: employees = [] } = useQuery({
-    queryKey: ["employees-names"],
+    queryKey: ["employees"],
     queryFn: async () => {
       try {
         const { data, error } = await supabase

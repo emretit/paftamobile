@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -50,7 +49,14 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
           .single();
           
         if (error) throw error;
-        return data as Proposal;
+        
+        // Transform any potential 'files' field to 'attachments' for compatibility
+        const transformedData = {
+          ...data,
+          attachments: data.files || []
+        };
+        
+        return transformedData as unknown as Proposal;
       } catch (error) {
         console.error('Error fetching proposal:', error);
         throw error;
@@ -280,12 +286,12 @@ const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) 
                   {currentStatus !== 'gonderildi' && (
                     <Button 
                       onClick={() => {
-                        setCurrentStatus('gonderildi');
+                        setCurrentStatus('gonderildi' as ProposalStatus);
                         setTimeout(() => {
                           handleSaveStatus();
                         }, 100);
                       }}
-                      disabled={isUpdating || currentStatus === 'gonderildi'}
+                      disabled={isUpdating || currentStatus === 'gonderildi' as ProposalStatus}
                       className="bg-red-800 hover:bg-red-900"
                     >
                       <Send className="mr-2 h-4 w-4" />

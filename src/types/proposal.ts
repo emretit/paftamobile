@@ -63,22 +63,26 @@ export interface Proposal {
   warranty_terms?: string;
   delivery_terms?: string;
   currency?: string;
+  files?: any; // This corresponds to the files JSONB field in Supabase
   customer?: {
     id: string;
     name: string;
     company?: string;
     email?: string;
     phone?: string;
-  };
+  } | null;
   employee?: {
     id: string;
     first_name: string;
     last_name: string;
     email?: string;
     name?: string;
-  };
+  } | null;
   items?: ProposalItem[];
-  attachments?: ProposalAttachment[];
+  // Map attachments to files for backward compatibility
+  get attachments(): ProposalAttachment[] {
+    return this.files || [];
+  }
 }
 
 export interface SalesPerformanceData {

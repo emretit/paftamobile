@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ProposalFilters } from "@/components/proposals/types";
 import { ProposalDetailSheet } from "@/components/proposals/ProposalDetailSheet";
 import { Proposal, ProposalStatus } from "@/types/proposal";
-import { Plus, Filter, Table as TableIcon, LayoutGrid, Search } from "lucide-react";
+import { Plus, Filter, Table as TableIcon, LayoutGrid, Search, FileText } from "lucide-react";
 import { Table, TableBody } from "@/components/ui/table";
 import { ProposalTableHeader } from "@/components/proposals/table/ProposalTableHeader";
 import { ProposalTableRow } from "@/components/proposals/table/ProposalTableRow";
@@ -96,7 +95,14 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsProps) => {
         const { data, error } = await query;
         
         if (error) throw error;
-        return data as Proposal[];
+        
+        // Transform any potential 'files' field to 'attachments' for compatibility
+        const transformedData = data.map(item => ({
+          ...item,
+          attachments: item.files || []
+        }));
+        
+        return transformedData as unknown as Proposal[];
       } catch (error) {
         console.error('Error fetching proposals:', error);
         throw error;
