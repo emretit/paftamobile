@@ -885,6 +885,81 @@ export type Database = {
           },
         ]
       }
+      opportunities: {
+        Row: {
+          contact_history: Json | null
+          created_at: string
+          currency: string | null
+          customer_id: string | null
+          description: string | null
+          employee_id: string | null
+          expected_close_date: string | null
+          id: string
+          notes: string | null
+          priority: string
+          products: Json | null
+          proposal_id: string | null
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          value: number | null
+        }
+        Insert: {
+          contact_history?: Json | null
+          created_at?: string
+          currency?: string | null
+          customer_id?: string | null
+          description?: string | null
+          employee_id?: string | null
+          expected_close_date?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          products?: Json | null
+          proposal_id?: string | null
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          value?: number | null
+        }
+        Update: {
+          contact_history?: Json | null
+          created_at?: string
+          currency?: string | null
+          customer_id?: string | null
+          description?: string | null
+          employee_id?: string | null
+          expected_close_date?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          products?: Json | null
+          proposal_id?: string | null
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunities_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_notifications: {
         Row: {
           created_at: string | null
@@ -1138,6 +1213,88 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      proposals: {
+        Row: {
+          attachments: Json | null
+          created_at: string
+          currency: string | null
+          customer_id: string | null
+          description: string | null
+          employee_id: string | null
+          id: string
+          items: Json | null
+          notes: string | null
+          number: string
+          opportunity_id: string | null
+          status: string
+          terms: string | null
+          title: string
+          total_amount: number
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          attachments?: Json | null
+          created_at?: string
+          currency?: string | null
+          customer_id?: string | null
+          description?: string | null
+          employee_id?: string | null
+          id?: string
+          items?: Json | null
+          notes?: string | null
+          number: string
+          opportunity_id?: string | null
+          status?: string
+          terms?: string | null
+          title: string
+          total_amount?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          attachments?: Json | null
+          created_at?: string
+          currency?: string | null
+          customer_id?: string | null
+          description?: string | null
+          employee_id?: string | null
+          id?: string
+          items?: Json | null
+          notes?: string | null
+          number?: string
+          opportunity_id?: string | null
+          status?: string
+          terms?: string | null
+          title?: string
+          total_amount?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       purchase_invoices: {
         Row: {
@@ -1645,6 +1802,69 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      tasks: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          opportunity_id: string | null
+          priority: string
+          related_item_id: string | null
+          related_item_title: string | null
+          related_item_type: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          opportunity_id?: string | null
+          priority?: string
+          related_item_id?: string | null
+          related_item_title?: string | null
+          related_item_type?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          opportunity_id?: string | null
+          priority?: string
+          related_item_id?: string | null
+          related_item_title?: string | null
+          related_item_type?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
