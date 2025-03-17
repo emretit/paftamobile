@@ -10,6 +10,8 @@ import OpportunitiesHeader from "@/components/opportunities/OpportunitiesHeader"
 import OpportunityFilterBar from "@/components/opportunities/OpportunityFilterBar";
 import OpportunityDetailSheet from "@/components/opportunities/OpportunityDetailSheet";
 import OpportunityBulkActions from "@/components/opportunities/OpportunityBulkActions";
+import OpportunitiesContent from "@/components/opportunities/OpportunitiesContent";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface OpportunitiesProps {
   isCollapsed: boolean;
@@ -34,6 +36,7 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
   const [filterKeyword, setFilterKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState<OpportunityStatus | "all">("all");
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState("kanban");
   
   // Group opportunities by status
   const groupedOpportunities = {
@@ -104,14 +107,26 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
       <div className="space-y-6">
         <OpportunitiesHeader />
         
-        <OpportunityFilterBar 
-          filterKeyword={filterKeyword}
-          setFilterKeyword={setFilterKeyword}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          priorityFilter={priorityFilter}
-          setPriorityFilter={setPriorityFilter}
-        />
+        <div className="flex flex-col sm:flex-row gap-4 justify-between">
+          <OpportunityFilterBar 
+            filterKeyword={filterKeyword}
+            setFilterKeyword={setFilterKeyword}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            priorityFilter={priorityFilter}
+            setPriorityFilter={setPriorityFilter}
+          />
+          <Tabs
+            value={activeView}
+            onValueChange={setActiveView}
+            className="w-fit"
+          >
+            <TabsList>
+              <TabsTrigger value="kanban">Kanban</TabsTrigger>
+              <TabsTrigger value="list">Liste</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
         
         {selectedOpportunities.length > 0 && (
           <OpportunityBulkActions 
@@ -129,13 +144,28 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
             <div className="text-red-500">Fırsatlar yüklenirken bir hata oluştu</div>
           </div>
         ) : (
-          <OpportunitiesKanban
-            opportunities={groupedOpportunities}
-            onDragEnd={handleDragEnd}
-            onOpportunityClick={handleOpportunityClick}
-            onOpportunitySelect={handleOpportunitySelect}
-            selectedOpportunities={selectedOpportunities}
-          />
+          <Tabs value={activeView} className="w-full">
+            <TabsContent value="kanban" className="mt-0">
+              <OpportunitiesKanban
+                opportunities={groupedOpportunities}
+                onDragEnd={handleDragEnd}
+                onOpportunityClick={handleOpportunityClick}
+                onOpportunitySelect={handleOpportunitySelect}
+                selectedOpportunities={selectedOpportunities}
+              />
+            </TabsContent>
+            <TabsContent value="list" className="mt-0">
+              <OpportunitiesContent
+                opportunities={groupedOpportunities}
+                isLoading={isLoading}
+                error={error}
+                onSelectOpportunity={handleOpportunityClick}
+                searchQuery={filterKeyword}
+                statusFilter={statusFilter}
+                priorityFilter={priorityFilter}
+              />
+            </TabsContent>
+          </Tabs>
         )}
       </div>
       
