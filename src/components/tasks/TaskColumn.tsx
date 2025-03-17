@@ -8,9 +8,9 @@ interface TaskColumnProps {
   id: string;
   title: string;
   icon: LucideIcon;
-  tasks: Task[] | TaskWithOverdue[];
-  onEdit?: (task: Task) => void;
-  onSelect?: (task: Task) => void;
+  tasks: TaskWithOverdue[];
+  onEdit?: (task: TaskWithOverdue) => void;
+  onSelect?: (task: TaskWithOverdue) => void;
 }
 
 const TaskColumn = ({ id, title, icon: Icon, tasks, onEdit, onSelect }: TaskColumnProps) => {
@@ -34,7 +34,7 @@ const TaskColumn = ({ id, title, icon: Icon, tasks, onEdit, onSelect }: TaskColu
                   className={snapshot.isDragging ? "shadow-lg" : ""}
                 >
                   <TaskCard 
-                    task={task as TaskWithOverdue}
+                    task={task}
                     index={index}
                     onEdit={onEdit ? () => onEdit(task) : undefined} 
                     onSelect={onSelect ? () => onSelect(task) : undefined} 
