@@ -1,4 +1,5 @@
 
+
 import { ProposalStatus } from "@/types/proposal";
 import { ProposalStatusType } from "@/types/crm";
 
@@ -55,7 +56,7 @@ export const workflowSteps = [
   { status: 'sent', label: 'Gönderildi' },
   { status: 'negotiation', label: 'Müzakerede' },
   { status: 'accepted', label: 'Kabul Edildi' }
-];
+] as const;
 
 // Status values that represent final stages of a proposal
-export const finalStages = ['accepted', 'rejected', 'expired', 'converted_to_order'];
+export const finalStages = ['accepted', 'rejected', 'expired', 'converted_to_order'] as const;

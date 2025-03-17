@@ -31,7 +31,7 @@ const NewTaskForm = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    priority: 'medium',
+    priority: 'medium' as 'low' | 'medium' | 'high',
     due_date: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,7 +42,12 @@ const NewTaskForm = ({
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'priority') {
+      setFormData(prev => ({ 
+        ...prev, 
+        [name]: value as 'low' | 'medium' | 'high' 
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

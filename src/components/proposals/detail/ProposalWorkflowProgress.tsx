@@ -5,6 +5,16 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowRight, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface WorkflowStep {
+  status: ProposalStatus;
+  label: string;
+}
+
+interface FinalStage {
+  status: ProposalStatus;
+  description: string;
+}
+
 interface ProposalWorkflowProgressProps {
   currentStatus: ProposalStatus;
   onStatusChange: (status: ProposalStatus) => void;
@@ -16,20 +26,32 @@ export const ProposalWorkflowProgress = ({
   onStatusChange,
   isUpdating = false
 }: ProposalWorkflowProgressProps) => {
-  const currentStepIndex = workflowSteps.findIndex(step => step.status === currentStatus);
+  // Convert string array to proper typed array
+  const typedWorkflowSteps: WorkflowStep[] = workflowSteps.map(step => ({
+    status: step.status as ProposalStatus,
+    label: step.label
+  }));
+  
+  // Convert string array to proper typed array
+  const typedFinalStages: FinalStage[] = finalStages.map(stage => ({
+    status: stage as ProposalStatus,
+    description: `Teklif süreci tamamlandı (${statusLabels[stage as ProposalStatus]})`
+  }));
+  
+  const currentStepIndex = typedWorkflowSteps.findIndex(step => step.status === currentStatus);
   
   // Calculate progress percentage
   const progressPercentage = currentStepIndex >= 0 
-    ? ((currentStepIndex + 1) / workflowSteps.length) * 100 
+    ? ((currentStepIndex + 1) / typedWorkflowSteps.length) * 100 
     : 0;
   
   // Determine next step
-  const nextStep = currentStepIndex >= 0 && currentStepIndex < workflowSteps.length - 1 
-    ? workflowSteps[currentStepIndex + 1] 
+  const nextStep = currentStepIndex >= 0 && currentStepIndex < typedWorkflowSteps.length - 1 
+    ? typedWorkflowSteps[currentStepIndex + 1] 
     : null;
   
   // Check if current status is a final stage
-  const isFinalStage = finalStages.some(stage => stage.status === currentStatus);
+  const isFinalStage = typedFinalStages.some(stage => stage.status === currentStatus);
   
   return (
     <div className="space-y-8">
@@ -40,7 +62,6 @@ export const ProposalWorkflowProgress = ({
         <Progress 
           value={progressPercentage} 
           className="h-2 w-full bg-gray-100" 
-          indicatorClassName="bg-blue-600"
         />
         
         {/* Steps */}
@@ -48,7 +69,7 @@ export const ProposalWorkflowProgress = ({
           {/* Connect steps with line */}
           <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 -z-10"></div>
           
-          {workflowSteps.map((step, index) => {
+          {typedWorkflowSteps.map((step, index) => {
             const isActive = currentStepIndex >= index;
             const isCurrent = currentStepIndex === index;
             
@@ -115,7 +136,7 @@ export const ProposalWorkflowProgress = ({
             <Button 
               variant="outline"
               className="p-4 border-green-200 bg-green-50 text-green-700 hover:bg-green-100 justify-start"
-              onClick={() => !isUpdating && onStatusChange("approved")}
+              onClick={() => !isUpdating && onStatusChange("approved" as ProposalStatus)}
               disabled={isUpdating}
             >
               <div className="flex items-center gap-2">
@@ -123,7 +144,7 @@ export const ProposalWorkflowProgress = ({
                   <Check className="w-4 h-4 text-green-600" />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium">{statusLabels.approved}</p>
+                  <p className="font-medium">{statusLabels["approved"]}</p>
                 </div>
               </div>
             </Button>
@@ -131,7 +152,7 @@ export const ProposalWorkflowProgress = ({
             <Button 
               variant="outline"
               className="p-4 border-red-200 bg-red-50 text-red-700 hover:bg-red-100 justify-start"
-              onClick={() => !isUpdating && onStatusChange("rejected")}
+              onClick={() => !isUpdating && onStatusChange("rejected" as ProposalStatus)}
               disabled={isUpdating}
             >
               <div className="flex items-center gap-2">
@@ -139,7 +160,7 @@ export const ProposalWorkflowProgress = ({
                   <X className="w-4 h-4 text-red-600" />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium">{statusLabels.rejected}</p>
+                  <p className="font-medium">{statusLabels["rejected"]}</p>
                 </div>
               </div>
             </Button>
@@ -147,7 +168,7 @@ export const ProposalWorkflowProgress = ({
             <Button 
               variant="outline"
               className="p-4 border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 justify-start col-span-2"
-              onClick={() => !isUpdating && onStatusChange("converted_to_order")}
+              onClick={() => !isUpdating && onStatusChange("converted_to_order" as ProposalStatus)}
               disabled={isUpdating}
             >
               <div className="flex items-center gap-2">
@@ -155,7 +176,7 @@ export const ProposalWorkflowProgress = ({
                   <Check className="w-4 h-4 text-indigo-600" />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium">{statusLabels.converted_to_order}</p>
+                  <p className="font-medium">{statusLabels["converted_to_order"]}</p>
                 </div>
               </div>
             </Button>
@@ -167,8 +188,8 @@ export const ProposalWorkflowProgress = ({
       {isFinalStage && (
         <div className="rounded-lg border p-4 bg-gray-50">
           <p className="text-center text-gray-700">
-            {finalStages.find(stage => stage.status === currentStatus)?.description || 
-            "Teklif süreci tamamlandı"}
+            {typedFinalStages.find(stage => stage.status === currentStatus)?.description || 
+             "Teklif süreci tamamlandı"}
           </p>
         </div>
       )}
