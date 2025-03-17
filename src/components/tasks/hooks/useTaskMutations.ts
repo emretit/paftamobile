@@ -45,14 +45,15 @@ export const useTaskMutations = () => {
         updated_at: new Date().toISOString(),
       };
       
-      // Handle subtasks as a separate property (convert to JSON string)
-      const taskWithSubtasksAsString = {
+      // Handle subtasks as a separate property
+      const taskWithSubtasksProcessed = {
         ...fullTaskData,
-        // Only include subtasks in serialized form if they exist
-        ...(fullTaskData.subtasks ? { subtasks: JSON.stringify(fullTaskData.subtasks) } : {})
+        subtasks: fullTaskData.subtasks 
+          ? JSON.stringify(fullTaskData.subtasks) 
+          : undefined
       };
       
-      const { data, error } = await mockCrmService.mockTasksAPI.createTask(taskWithSubtasksAsString);
+      const { data, error } = await mockCrmService.mockTasksAPI.createTask(taskWithSubtasksProcessed);
       if (error) throw error;
       return data;
     },
@@ -76,14 +77,15 @@ export const useTaskMutations = () => {
         updated_at: new Date().toISOString(),
       };
       
-      // Handle subtasks as a separate property (convert to JSON string)
-      const updatesWithSubtasksAsString = {
+      // Handle subtasks as a separate property
+      const updatesWithSubtasksProcessed = {
         ...updatesWithTimestamp,
-        // Only include subtasks in serialized form if they exist
-        ...(updatesWithTimestamp.subtasks ? { subtasks: JSON.stringify(updatesWithTimestamp.subtasks) } : {})
+        subtasks: updatesWithTimestamp.subtasks 
+          ? JSON.stringify(updatesWithTimestamp.subtasks) 
+          : undefined
       };
       
-      const { data, error } = await mockCrmService.mockTasksAPI.updateTask(id, updatesWithSubtasksAsString);
+      const { data, error } = await mockCrmService.mockTasksAPI.updateTask(id, updatesWithSubtasksProcessed);
       if (error) throw error;
       return data;
     },

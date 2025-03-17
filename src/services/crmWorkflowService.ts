@@ -1,6 +1,6 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { Task, TaskStatus, TaskPriority, TaskType } from '@/types/task';
+import { Task, TaskStatus, TaskPriority, TaskType, SubTask } from '@/types/task';
 import { updateOpportunity } from '@/services/mockCrmService';
 import { mockTasksAPI } from '@/services/mockCrmService';
 
@@ -111,12 +111,22 @@ export const createTaskForOpportunity = async (
   status: string,
   employeeId?: string
 ) => {
-  let task: Partial<Task> = {
+  let task: Partial<Task> & { 
+    title: string;
+    status: TaskStatus;
+    priority: TaskPriority;
+    type: TaskType;
+    created_at: string;
+    updated_at: string;
+  } = {
     related_item_id: opportunityId,
     related_item_title: opportunityTitle,
     related_item_type: 'opportunity',
     assigned_to: employeeId,
     status: 'todo' as TaskStatus,
+    type: 'general' as TaskType,
+    priority: 'medium' as TaskPriority,
+    title: "",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   };

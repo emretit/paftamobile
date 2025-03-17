@@ -1,13 +1,13 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Task } from "@/types/task";
+import { Task, TaskType } from "@/types/task";
 import { getTasks } from "@/services/mockCrmService";
 
 interface UseKanbanTasksProps {
   searchQuery?: string;
   selectedEmployee?: string | null;
-  selectedType?: string | null;
+  selectedType?: TaskType | null;
 }
 
 export const useKanbanTasks = ({ 
@@ -32,7 +32,17 @@ export const useKanbanTasks = ({
     queryFn: async () => {
       const { data, error } = await getTasks();
       if (error) throw error;
-      return data as Task[];
+      
+      // Ensure all tasks have the required 'type' property
+      const tasksWithType = (data || []).map(task => {
+        if (!task.type) {
+          // Default to 'general' if type is missing
+          return { ...task, type: 'general' as TaskType };
+        }
+        return task;
+      }) as Task[];
+      
+      return tasksWithType;
     }
   });
   
