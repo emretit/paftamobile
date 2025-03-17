@@ -15,7 +15,6 @@ import {
   ListTodo,
   ShoppingCart,
   UserCircle,
-  GitBranch,
   Lightbulb
 } from "lucide-react";
 
@@ -25,13 +24,6 @@ const crmItems = [
   { path: "/proposals", icon: FileText, label: "Teklifler" },
   { path: "/deals", icon: PieChart, label: "Satışlar" },
   { path: "/tasks", icon: ListTodo, label: "Görevler" }
-];
-
-// Define the Products & Services category items
-const productsItems = [
-  { path: "/products", icon: Package, label: "Ürün Listesi" },
-  { path: "/product-form", icon: FileText, label: "Yeni Ürün Ekle" },
-  { path: "/services", icon: Wrench, label: "Hizmetler" }
 ];
 
 export const navItems = [
@@ -45,12 +37,7 @@ export const navItems = [
   { path: "/contacts", icon: Users, label: "Müşteriler" },
   { path: "/suppliers", icon: Truck, label: "Tedarikçiler" },
   { path: "/employees", icon: UserCircle, label: "Çalışanlar" },
-  {
-    category: "Ürünler & Hizmetler",
-    icon: Package,
-    items: productsItems,
-    path: "/products"
-  },
+  { path: "/products", icon: Package, label: "Ürünler & Hizmetler" },
   { path: "/finance", icon: Wallet, label: "Finans" },
   { path: "/purchase-management", icon: ShoppingCart, label: "Satın Alma" },
   { path: "/service", icon: Wrench, label: "Servis" },

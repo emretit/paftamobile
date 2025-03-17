@@ -9,7 +9,7 @@ interface NavLinkProps {
   label: string;
   isActive: boolean;
   isCollapsed: boolean;
-  isCrmButton?: boolean; // New prop to identify CRM buttons
+  isCrmButton?: boolean;
 }
 
 const NavLink = ({ 
@@ -29,12 +29,12 @@ const NavLink = ({
         isActive 
           ? "bg-primary/10 text-primary font-medium" 
           : "text-gray-300 hover:bg-gray-800 hover:text-white",
-        isCrmButton && "border-l-2 border-blue-400" // Special styling for CRM buttons
+        isCrmButton && "border-l-2 border-primary"
       )}
     >
       <Icon className={cn(
         "h-5 w-5 flex-shrink-0",
-        isCrmButton && "text-blue-400" // Highlight CRM button icons
+        isCrmButton && "text-primary"
       )} />
       {!isCollapsed && <span className="text-sm">{label}</span>}
     </Link>
