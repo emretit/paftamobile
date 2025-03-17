@@ -7,14 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, isPast, isToday } from "date-fns";
 import { tr } from "date-fns/locale";
+import { Task, TaskType } from "@/types/task";
 
-interface Task {
-  id: string;
-  title: string;
-  status: string;
-  due_date: string | null;
-  priority: string;
-  type: string;
+interface TaskWithOverdue extends Task {
   isOverdue: boolean;
 }
 
@@ -25,7 +20,7 @@ const priorityColors = {
 };
 
 const TasksSummary = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<TaskWithOverdue[]>([]);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
@@ -42,12 +37,13 @@ const TasksSummary = () => {
           
         if (error) throw error;
         
-        const formattedData: Task[] = data.map(task => {
+        const formattedData: TaskWithOverdue[] = data.map(task => {
           const dueDate = task.due_date ? new Date(task.due_date) : null;
           const isOverdue = dueDate ? isPast(dueDate) && !isToday(dueDate) : false;
           
           return {
             ...task,
+            type: task.type || 'general' as TaskType, // Ensure type property exists
             isOverdue
           };
         });

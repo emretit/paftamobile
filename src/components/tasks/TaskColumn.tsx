@@ -34,7 +34,8 @@ const TaskColumn = ({ id, title, icon: Icon, tasks, onEdit, onSelect }: TaskColu
                   className={snapshot.isDragging ? "shadow-lg" : ""}
                 >
                   <TaskCard 
-                    task={task} 
+                    task={task}
+                    index={index}
                     onEdit={onEdit ? () => onEdit(task) : undefined} 
                     onSelect={onSelect ? () => onSelect(task) : undefined} 
                   />

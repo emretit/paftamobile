@@ -11,6 +11,7 @@ interface CreateTaskData {
   priority: TaskPriority;
   type: TaskType;
   assigned_to?: string;
+  assignee_id?: string;
   due_date?: string;
   related_item_id?: string;
   related_item_title?: string;
@@ -26,6 +27,7 @@ interface UpdateTaskData {
   priority?: TaskPriority;
   type?: TaskType;
   assigned_to?: string;
+  assignee_id?: string;
   due_date?: string;
   related_item_id?: string;
   related_item_title?: string;
@@ -53,7 +55,7 @@ export const useTaskMutations = () => {
           : undefined
       };
       
-      const { data, error } = await mockCrmService.mockTasksAPI.createTask(taskWithSubtasksProcessed);
+      const { data, error } = await mockCrmService.mockTasksAPI.createTask(taskWithSubtasksProcessed as any);
       if (error) throw error;
       return data;
     },
@@ -85,7 +87,7 @@ export const useTaskMutations = () => {
           : undefined
       };
       
-      const { data, error } = await mockCrmService.mockTasksAPI.updateTask(id, updatesWithSubtasksProcessed);
+      const { data, error } = await mockCrmService.mockTasksAPI.updateTask(id, updatesWithSubtasksProcessed as any);
       if (error) throw error;
       return data;
     },

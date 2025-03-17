@@ -3,13 +3,14 @@ export type TaskStatus = 'todo' | 'in_progress' | 'completed' | 'postponed';
 
 export type TaskPriority = 'low' | 'medium' | 'high';
 
-export type TaskType = 'general' | 'call' | 'meeting' | 'follow_up' | 'proposal' | 'opportunity' | 'reminder';
+export type TaskType = 'general' | 'call' | 'meeting' | 'follow_up' | 'proposal' | 'opportunity' | 'reminder' | 'email';
 
 export interface SubTask {
   id: string;
   title: string;
   completed: boolean;
   task_id: string;
+  // No created_at property here
 }
 
 export interface Task {
@@ -20,7 +21,8 @@ export interface Task {
   priority: TaskPriority;
   type: TaskType;
   due_date?: string;
-  assigned_to?: string;
+  assigned_to?: string;  // Keep this for backward compatibility
+  assignee_id?: string;  // Add this for new components
   related_item_id?: string;
   related_item_title?: string;
   related_item_type?: string;
