@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
@@ -28,7 +27,6 @@ export const ProposalKanban = ({ proposals, onProposalSelect }: ProposalKanbanPr
   const queryClient = useQueryClient();
   const [localProposals, setLocalProposals] = useState<Proposal[]>(proposals);
 
-  // Update local state when props change
   useState(() => {
     setLocalProposals(proposals);
   });

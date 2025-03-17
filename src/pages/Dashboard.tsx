@@ -1,3 +1,4 @@
+
 import React from "react";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import ChartWrapper from "@/components/ui/chart-wrapper";
@@ -32,6 +33,24 @@ const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
       change: "+22%",
       changeType: "increase",
     },
+  ];
+  
+  const salesData = [
+    { name: "Ocak", total: 4000 },
+    { name: "Şubat", total: 3000 },
+    { name: "Mart", total: 2000 },
+    { name: "Nisan", total: 2780 },
+    { name: "Mayıs", total: 1890 },
+    { name: "Haziran", total: 2390 },
+  ];
+
+  const incomeExpenseData = [
+    { name: "Ocak", total: 4000 },
+    { name: "Şubat", total: 3000 },
+    { name: "Mart", total: 2000 },
+    { name: "Nisan", total: 2780 },
+    { name: "Mayıs", total: 1890 },
+    { name: "Haziran", total: 2390 },
   ];
   
   return (
@@ -74,27 +93,13 @@ const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ChartWrapper
             title="Satışlar"
-            data={[
-              { name: "Ocak", total: 4000 },
-              { name: "Şubat", total: 3000 },
-              { name: "Mart", total: 2000 },
-              { name: "Nisan", total: 2780 },
-              { name: "Mayıs", total: 1890 },
-              { name: "Haziran", total: 2390 },
-            ]}
+            data={salesData}
             dataKey="total"
           />
           
           <ChartWrapper
             title="Gelir Gider"
-            data={[
-              { name: "Ocak", total: 4000 },
-              { name: "Şubat", total: 3000 },
-              { name: "Mart", total: 2000 },
-              { name: "Nisan", total: 2780 },
-              { name: "Mayıs", total: 1890 },
-              { name: "Haziran", total: 2390 },
-            ]}
+            data={incomeExpenseData}
             dataKey="total"
           />
         </div>
