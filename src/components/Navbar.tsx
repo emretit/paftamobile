@@ -72,22 +72,15 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
                     className={cn(
                       "flex items-center w-full h-11 px-3 rounded-md",
                       !isCollapsed && "justify-between",
-                      "border-l-2 border-primary mt-2",
                       isActive(item.path) 
                         ? "bg-primary/10 text-primary font-medium" 
                         : "text-gray-300 hover:bg-gray-800 hover:text-white"
                     )}
                   >
                     <div className="flex items-center">
-                      <Icon className={cn(
-                        "h-5 w-5 flex-shrink-0",
-                        "text-primary"
-                      )} />
+                      <Icon className="h-5 w-5 flex-shrink-0" />
                       {!isCollapsed && (
-                        <span className={cn(
-                          "ml-3 text-sm font-medium",
-                          "text-primary"
-                        )}>{item.category}</span>
+                        <span className="ml-3 text-sm font-medium">{item.category}</span>
                       )}
                     </div>
                     {!isCollapsed && (
@@ -104,7 +97,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
                           label={subItem.label}
                           isActive={isActive(subItem.path)}
                           isCollapsed={isCollapsed}
-                          isCrmButton={true}
+                          isCrmButton={false}
                         />
                       ))}
                     </div>

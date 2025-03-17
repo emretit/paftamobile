@@ -28,14 +28,10 @@ const NavLink = ({
         isCollapsed ? "justify-center px-3" : "px-3 space-x-3",
         isActive 
           ? "bg-primary/10 text-primary font-medium" 
-          : "text-gray-300 hover:bg-gray-800 hover:text-white",
-        isCrmButton && "border-l-2 border-primary"
+          : "text-gray-300 hover:bg-gray-800 hover:text-white"
       )}
     >
-      <Icon className={cn(
-        "h-5 w-5 flex-shrink-0",
-        isCrmButton && "text-primary"
-      )} />
+      <Icon className="h-5 w-5 flex-shrink-0" />
       {!isCollapsed && <span className="text-sm">{label}</span>}
     </Link>
   );
