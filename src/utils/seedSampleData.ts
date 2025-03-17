@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -12,6 +11,43 @@ export const seedTasks = async () => {
     const nextWeek = new Date(today);
     nextWeek.setDate(nextWeek.getDate() + 7);
 
+    // Check existing tasks to prevent duplicates
+    const { data: existingTasks } = await supabase
+      .from('tasks')
+      .select('id')
+      .limit(1);
+
+    // Only add sample tasks if none exist
+    if (existingTasks && existingTasks.length > 0) {
+      toast.info("Görevler zaten mevcut, yeni örnek veriler eklenmedi.");
+      return { success: true, message: "Görevler zaten mevcut" };
+    }
+
+    // First, get some employees to assign tasks to
+    let { data: employees } = await supabase
+      .from('employees')
+      .select('id')
+      .limit(3);
+    
+    // If no employees exist, we'll leave assigned_to as null
+    const assigneeId = employees && employees.length > 0 
+      ? employees[Math.floor(Math.random() * employees.length)].id 
+      : undefined;
+
+    // Get some opportunities to reference
+    let { data: opportunities } = await supabase
+      .from('opportunities')
+      .select('id, title')
+      .limit(2);
+
+    const opportunityId = opportunities && opportunities.length > 0 
+      ? opportunities[0].id 
+      : undefined;
+      
+    const opportunityTitle = opportunities && opportunities.length > 0 
+      ? opportunities[0].title 
+      : undefined;
+
     const sampleTasks = [
       {
         id: uuidv4(),
@@ -21,6 +57,7 @@ export const seedTasks = async () => {
         priority: 'high',
         type: 'meeting',
         due_date: tomorrow.toISOString(),
+        assigned_to: assigneeId,
       },
       {
         id: uuidv4(),
@@ -30,6 +67,7 @@ export const seedTasks = async () => {
         priority: 'medium',
         type: 'proposal',
         due_date: nextWeek.toISOString(),
+        assigned_to: assigneeId,
       },
       {
         id: uuidv4(),
@@ -39,6 +77,7 @@ export const seedTasks = async () => {
         priority: 'medium',
         type: 'call',
         due_date: tomorrow.toISOString(),
+        assigned_to: assigneeId,
       },
       {
         id: uuidv4(),
@@ -48,6 +87,7 @@ export const seedTasks = async () => {
         priority: 'low',
         type: 'email',
         due_date: today.toISOString(),
+        assigned_to: assigneeId,
       },
       {
         id: uuidv4(),
@@ -57,6 +97,61 @@ export const seedTasks = async () => {
         priority: 'medium',
         type: 'general',
         due_date: nextWeek.toISOString(),
+        assigned_to: assigneeId,
+      },
+      {
+        id: uuidv4(),
+        title: 'Fırsat takibi',
+        description: 'Potansiyel müşteri ile ilgili fırsatı takip et',
+        status: 'todo',
+        priority: 'high',
+        type: 'opportunity',
+        due_date: tomorrow.toISOString(),
+        assigned_to: assigneeId,
+        opportunity_id: opportunityId,
+        related_item_id: opportunityId,
+        related_item_type: 'opportunity',
+        related_item_title: opportunityTitle,
+      },
+      {
+        id: uuidv4(),
+        title: 'Müşteri dosyalarını düzenle',
+        description: 'Tüm müşteri dosyalarını organize et ve arşivle',
+        status: 'todo',
+        priority: 'low',
+        type: 'general',
+        due_date: nextWeek.toISOString(),
+        assigned_to: assigneeId,
+      },
+      {
+        id: uuidv4(),
+        title: 'Haftalık rapor hazırla',
+        description: 'Satış departmanı için haftalık aktivite raporu hazırla',
+        status: 'postponed',
+        priority: 'medium',
+        type: 'general',
+        due_date: tomorrow.toISOString(),
+        assigned_to: assigneeId,
+      },
+      {
+        id: uuidv4(),
+        title: 'Ekip toplantısı',
+        description: 'Haftalık ekip koordinasyon toplantısı',
+        status: 'todo',
+        priority: 'medium',
+        type: 'meeting',
+        due_date: tomorrow.toISOString(),
+        assigned_to: assigneeId,
+      },
+      {
+        id: uuidv4(),
+        title: 'Bütçe planlaması',
+        description: 'Gelecek çeyrek için bütçe planlaması yap',
+        status: 'in_progress',
+        priority: 'high',
+        type: 'general',
+        due_date: nextWeek.toISOString(),
+        assigned_to: assigneeId,
       }
     ];
 
@@ -65,9 +160,12 @@ export const seedTasks = async () => {
       .insert(sampleTasks);
 
     if (error) throw error;
+    
+    toast.success("Örnek görevler başarıyla eklendi!");
     return { success: true };
   } catch (error) {
     console.error('Error seeding tasks:', error);
+    toast.error("Örnek görevler eklenirken bir hata oluştu!");
     return { success: false, error };
   }
 };
@@ -381,9 +479,11 @@ export const seedAllData = async () => {
     // Seed proposals
     await seedProposals();
     
+    toast.success("Tüm örnek veriler başarıyla eklendi!");
     return { success: true };
   } catch (error) {
     console.error('Error seeding all data:', error);
+    toast.error("Örnek veriler eklenirken bir hata oluştu!");
     return { success: false, error };
   }
 };
