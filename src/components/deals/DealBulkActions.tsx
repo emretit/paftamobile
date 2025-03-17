@@ -7,11 +7,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Check, CheckSquare, Clock, Users, X } from "lucide-react";
-import { Deal } from "@/types/deal";
+import { Deal, DealStatus } from "@/types/deal";
 
 interface DealBulkActionsProps {
   selectedDeals: Deal[];
-  onUpdateStatus: (deals: Deal[], newStatus: Deal["status"]) => void;
+  onUpdateStatus: (deals: Deal[], newStatus: DealStatus) => void;
   onClearSelection: () => void;
 }
 
@@ -34,15 +34,15 @@ const DealBulkActions = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem onClick={() => onUpdateStatus(selectedDeals, "negotiation")}>
+          <DropdownMenuItem onClick={() => onUpdateStatus(selectedDeals, "negotiation" as DealStatus)}>
             <Users className="h-4 w-4 mr-2" />
             Görüşmede
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onUpdateStatus(selectedDeals, "follow_up")}>
+          <DropdownMenuItem onClick={() => onUpdateStatus(selectedDeals, "follow_up" as DealStatus)}>
             <Clock className="h-4 w-4 mr-2" />
             Takipte
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onUpdateStatus(selectedDeals, "won")}>
+          <DropdownMenuItem onClick={() => onUpdateStatus(selectedDeals, "won" as DealStatus)}>
             <Check className="h-4 w-4 mr-2" />
             Kazanıldı
           </DropdownMenuItem>

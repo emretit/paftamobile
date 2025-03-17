@@ -1,8 +1,8 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { OpportunityStatus } from "@/types/crm";
 import { TaskPriority } from "@/types/task";
 import { addDays, format } from "date-fns";
+import { crmSupabase as supabase } from "@/services/mockCrmService";
 
 /**
  * Create a task for an opportunity based on its status
@@ -116,8 +116,8 @@ export const updateOpportunityOnProposalStatusChange = async (
     if (opportunityStatus) {
       // Fetch the opportunity to get required data
       const { data: opportunity, error: fetchError } = await supabase
-        .from("opportunities")
-        .select("title, employee_id")
+        .from('opportunities')
+        .select('*')
         .eq("id", opportunityId)
         .single();
 
@@ -125,7 +125,7 @@ export const updateOpportunityOnProposalStatusChange = async (
 
       // Update the opportunity status
       const { error } = await supabase
-        .from("opportunities")
+        .from('opportunities')
         .update({ status: opportunityStatus })
         .eq("id", opportunityId);
 

@@ -1,6 +1,9 @@
 
 import { OpportunityStatus, OpportunityPriority } from "./crm";
 
+// Map deal status to opportunity status for compatibility
+export type DealStatus = OpportunityStatus | "negotiation" | "follow_up" | "won";
+
 export interface Deal {
   id: string;
   title: string;
@@ -8,7 +11,7 @@ export interface Deal {
   customerName?: string;
   employeeName?: string;
   priority: OpportunityPriority;
-  status: OpportunityStatus;
+  status: DealStatus;
   proposalDate?: Date;
   lastContactDate?: Date;
   expectedCloseDate?: Date;

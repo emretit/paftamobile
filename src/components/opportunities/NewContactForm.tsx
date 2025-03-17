@@ -12,12 +12,12 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import type { ContactHistoryItem } from "@/types/crm";
+import { ContactHistoryEntry } from "@/types/crm";
 
 interface NewContactFormProps {
   opportunityId: string;
   employeeId?: string;
-  onSubmit: (contact: Omit<ContactHistoryItem, "id">) => Promise<void>;
+  onSubmit: (contact: Omit<ContactHistoryEntry, "id">) => Promise<void>;
   onCancel: () => void;
 }
 

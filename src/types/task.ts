@@ -5,8 +5,8 @@ export type TaskStatus = "todo" | "in_progress" | "completed" | "postponed";
 // Define the priority levels for tasks
 export type TaskPriority = "low" | "medium" | "high";
 
-// Define the types of tasks
-export type TaskType = "opportunity" | "proposal" | "general" | "email" | "meeting" | "call";
+// Define the types of tasks - extending with new types
+export type TaskType = "opportunity" | "proposal" | "general" | "email" | "meeting" | "call" | "follow_up";
 
 // Define the structure for subtasks
 export interface SubTask {

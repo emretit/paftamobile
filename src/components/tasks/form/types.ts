@@ -1,5 +1,5 @@
 
-import type { TaskPriority, TaskType, SubTask } from "@/types/task";
+import type { TaskPriority, TaskType } from "@/types/task";
 
 export interface FormData {
   title: string;

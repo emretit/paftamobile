@@ -1,14 +1,14 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DropResult } from "@hello-pangea/dnd";
-import { Opportunity, OpportunityStatus } from "@/types/crm";
+import { Opportunity, OpportunityStatus, OpportunityExtended } from "@/types/crm";
 import { createTaskForOpportunity } from "@/services/crmWorkflowService";
+import { crmSupabase as supabase, mockOpportunitiesAPI } from "@/services/mockCrmService";
 
 interface OpportunitiesState {
-  [key: string]: Opportunity[];
+  [key: string]: OpportunityExtended[];
 }
 
 export const useOpportunities = (
@@ -26,42 +26,30 @@ export const useOpportunities = (
     lost: []
   });
   
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<OpportunityExtended | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<Opportunity[]>([]);
+  const [selectedItems, setSelectedItems] = useState<OpportunityExtended[]>([]);
   
   const queryClient = useQueryClient();
   
-  // Fetch opportunities from Supabase
+  // Fetch opportunities
   const { data, isLoading, error } = useQuery({
     queryKey: ["opportunities", searchQuery, selectedEmployee, selectedCustomer],
     queryFn: async () => {
-      let query = supabase.from('opportunities').select(`
-        *,
-        customer:customer_id(id, name, company),
-        employee:employee_id(id, first_name, last_name, avatar_url)
-      `);
-      
-      if (searchQuery) {
-        query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+      let filteredData;
+
+      if (searchQuery || selectedEmployee || selectedCustomer) {
+        filteredData = await mockOpportunitiesAPI.filterOpportunities(
+          searchQuery || '',
+          selectedEmployee || undefined,
+          selectedCustomer || undefined
+        );
+      } else {
+        filteredData = await mockOpportunitiesAPI.getOpportunities();
       }
       
-      if (selectedEmployee) {
-        query = query.eq('employee_id', selectedEmployee);
-      }
-      
-      if (selectedCustomer) {
-        query = query.eq('customer_id', selectedCustomer);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error("Error fetching opportunities:", error);
-        throw error;
-      }
-      
-      return data as Opportunity[];
+      if (filteredData.error) throw filteredData.error;
+      return filteredData.data as OpportunityExtended[];
     }
   });
   
@@ -95,13 +83,8 @@ export const useOpportunities = (
   // Handle drag and drop
   const updateOpportunityMutation = useMutation({
     mutationFn: async ({ id, status, previousStatus }: { id: string; status: OpportunityStatus; previousStatus: OpportunityStatus }) => {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .update({ status })
-        .eq('id', id)
-        .select()
-        .single();
-        
+      const { data, error } = await mockOpportunitiesAPI.updateOpportunity(id, { status });
+      
       if (error) throw error;
       
       return { data, previousStatus };
@@ -109,7 +92,7 @@ export const useOpportunities = (
     onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['opportunities'] });
       
-      const opportunity = result.data as Opportunity;
+      const opportunity = result.data as OpportunityExtended;
       
       // Generate task based on the new status
       await createTaskForOpportunity(
@@ -190,12 +173,12 @@ export const useOpportunities = (
     });
   };
   
-  const handleSelectOpportunity = (opportunity: Opportunity) => {
+  const handleSelectOpportunity = (opportunity: OpportunityExtended) => {
     setSelectedOpportunity(opportunity);
     setIsDetailOpen(true);
   };
   
-  const handleSelectItem = (opportunity: Opportunity) => {
+  const handleSelectItem = (opportunity: OpportunityExtended) => {
     setSelectedItems(prev => {
       const isSelected = prev.some(o => o.id === opportunity.id);
       if (isSelected) {
@@ -205,7 +188,7 @@ export const useOpportunities = (
     });
   };
   
-  const handleBulkStatusUpdate = (opportunities: Opportunity[], newStatus: OpportunityStatus) => {
+  const handleBulkStatusUpdate = (opportunities: OpportunityExtended[], newStatus: OpportunityStatus) => {
     // First update the UI
     setOpportunities(prev => {
       const newState = { ...prev };
@@ -227,10 +210,7 @@ export const useOpportunities = (
     const updateSequentially = async () => {
       for (const opportunity of opportunities) {
         try {
-          const { error } = await supabase
-            .from('opportunities')
-            .update({ status: newStatus })
-            .eq('id', opportunity.id);
+          const { error } = await mockOpportunitiesAPI.updateOpportunity(opportunity.id, { status: newStatus });
             
           if (error) throw error;
           

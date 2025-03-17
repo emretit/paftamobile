@@ -28,14 +28,28 @@ const TaskForm = ({ isOpen, onClose, taskToEdit }: TaskFormProps) => {
     handleDeleteSubtask
   } = useSubtasks(taskToEdit?.subtasks);
   
+  const defaultValues: FormData = taskToEdit ? {
+    title: taskToEdit.title,
+    description: taskToEdit.description,
+    priority: taskToEdit.priority,
+    type: taskToEdit.type,
+    assignee_id: taskToEdit.assignee_id,
+    due_date: taskToEdit.due_date,
+    related_item_id: taskToEdit.related_item_id,
+    related_item_title: taskToEdit.related_item_title
+  } : {
+    title: "",
+    description: "",
+    priority: "medium",
+    type: "general",
+    assignee_id: undefined,
+    due_date: undefined,
+    related_item_id: undefined,
+    related_item_title: undefined
+  };
+  
   const { register, handleSubmit, setValue, reset, watch } = useForm<FormData>({
-    defaultValues: taskToEdit || {
-      title: "",
-      description: "",
-      priority: "medium",
-      type: "general",
-      subtasks: []
-    }
+    defaultValues
   });
 
   const handleSuccess = () => {

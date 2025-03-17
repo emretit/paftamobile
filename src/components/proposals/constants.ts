@@ -1,64 +1,22 @@
 
-import { ProposalStatus } from "@/types/proposal";
-import { ProposalStatusType } from "@/types/crm";
+import { ProposalStatus } from "@/types/crm";
 
-export const statusLabels: Record<ProposalStatus, string> = {
-  hazirlaniyor: "Hazırlanıyor",
-  onay_bekliyor: "Onay Bekliyor",
-  gonderildi: "Gönderildi",
-  draft: "Taslak",
-  new: "Yeni",
-  review: "İncelemede",
+// Map proposal status to user-friendly labels
+export const proposalStatusLabels: Record<ProposalStatus, string> = {
+  draft: "Hazırlanıyor",
+  pending_approval: "Onay Bekliyor",
   sent: "Gönderildi",
-  negotiation: "Müzakerede",
   accepted: "Kabul Edildi",
   rejected: "Reddedildi",
-  expired: "Süresi Doldu",
-  discovery_scheduled: "Keşif Planlandı",
-  meeting_completed: "Görüşme Tamamlandı",
-  quote_in_progress: "Teklif Hazırlanıyor",
-  quote_sent: "Teklif Gönderildi",
-  approved: "Onaylandı",
-  converted_to_order: "Siparişe Dönüştü",
-  preparing: "Hazırlanıyor",
-  pending: "Onay Bekliyor"
+  expired: "Süresi Doldu"
 };
 
-export const statusStyles: Record<ProposalStatus, { bg: string; text: string }> = {
-  hazirlaniyor: { bg: "bg-amber-500", text: "text-white" },
-  onay_bekliyor: { bg: "bg-blue-500", text: "text-white" },
-  gonderildi: { bg: "bg-green-600", text: "text-white" },
-  draft: { bg: "bg-slate-400", text: "text-white" },
-  new: { bg: "bg-blue-400", text: "text-white" },
-  review: { bg: "bg-yellow-400", text: "text-black" },
-  sent: { bg: "bg-green-400", text: "text-white" },
-  negotiation: { bg: "bg-purple-400", text: "text-white" },
-  accepted: { bg: "bg-emerald-500", text: "text-white" },
-  rejected: { bg: "bg-red-500", text: "text-white" },
-  expired: { bg: "bg-gray-500", text: "text-white" },
-  discovery_scheduled: { bg: "bg-indigo-400", text: "text-white" },
-  meeting_completed: { bg: "bg-cyan-500", text: "text-white" },
-  quote_in_progress: { bg: "bg-amber-500", text: "text-white" },
-  quote_sent: { bg: "bg-teal-500", text: "text-white" },
-  approved: { bg: "bg-green-600", text: "text-white" },
-  converted_to_order: { bg: "bg-blue-600", text: "text-white" },
-  preparing: { bg: "bg-amber-500", text: "text-white" },
-  pending: { bg: "bg-blue-500", text: "text-white" }
+// Map proposal status to colors for UI
+export const proposalStatusColors: Record<ProposalStatus, string> = {
+  draft: "bg-gray-100 text-gray-800",
+  pending_approval: "bg-blue-100 text-blue-800",
+  sent: "bg-indigo-100 text-indigo-800",
+  accepted: "bg-green-100 text-green-800",
+  rejected: "bg-red-100 text-red-800",
+  expired: "bg-amber-100 text-amber-800"
 };
-
-// Primary status options for the new simplified workflow
-export const primaryProposalStatuses: ProposalStatus[] = [
-  "hazirlaniyor",
-  "onay_bekliyor", 
-  "gonderildi"
-];
-
-// Workflow steps for the proposal process
-export const workflowSteps = [
-  { status: 'hazirlaniyor', label: 'Hazırlanıyor' },
-  { status: 'onay_bekliyor', label: 'Onay Bekliyor' },
-  { status: 'gonderildi', label: 'Gönderildi' }
-] as const;
-
-// Status values that represent final stages of a proposal
-export const finalStages = ['gonderildi', 'accepted', 'rejected', 'expired', 'converted_to_order'] as const;

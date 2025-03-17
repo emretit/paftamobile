@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { FormData } from "../form/types";
-import type { SubTask, Task } from "@/types/task";
+import type { SubTask, Task, TaskStatus } from "@/types/task";
 
 export const useTaskMutations = (
   onSuccess: () => void,
@@ -16,7 +16,7 @@ export const useTaskMutations = (
       // Store the task data but handle subtasks as JSON
       const taskData = {
         ...data.formData,
-        status: 'todo' as const,
+        status: 'todo' as TaskStatus,
         // Store subtasks as a JSON field
         subtasks: JSON.stringify(data.subtasks)
       };
