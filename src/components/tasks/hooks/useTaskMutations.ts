@@ -68,7 +68,7 @@ export const useTaskMutations = () => {
         ...(updates.subtasks ? { subtasks: JSON.stringify(updates.subtasks) } : {})
       };
       
-      const { data, error } = await mockCrmService.updateTask(id, updatesWithSubtasksAsString);
+      const { data, error } = await mockCrmService.mockTasksAPI.updateTask(id, updatesWithSubtasksAsString);
       if (error) throw error;
       return data;
     },
@@ -84,7 +84,7 @@ export const useTaskMutations = () => {
 
   const deleteTaskMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { success, error } = await mockCrmService.deleteTask(id);
+      const { success, error } = await mockCrmService.mockTasksAPI.deleteTask(id);
       if (error) throw error;
       return success;
     },
@@ -97,19 +97,6 @@ export const useTaskMutations = () => {
       toast.error("Görev silinirken bir hata oluştu");
     },
   });
-
-  // Wrapper functions to simplify usage
-  const createTask = async (taskData: CreateTaskData) => {
-    return createTaskMutation.mutateAsync(taskData);
-  };
-
-  const updateTask = async (updatedTask: UpdateTaskData) => {
-    return updateTaskMutation.mutateAsync(updatedTask);
-  };
-
-  const deleteTask = async (id: string) => {
-    return deleteTaskMutation.mutateAsync(id);
-  };
 
   return {
     createTask: createTaskMutation.mutateAsync,

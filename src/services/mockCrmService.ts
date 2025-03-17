@@ -1,440 +1,355 @@
-import { supabase } from '@/integrations/supabase/client';
-import { Task, TaskPriority, TaskStatus } from '@/types/task';
-import { Proposal, ProposalStatus } from '@/types/proposal';
-import { 
-  Opportunity, 
-  OpportunityStatus, 
-  ContactHistoryItem,
-  OpportunityPriority
-} from '@/types/crm';
-import { v4 as uuidv4 } from 'uuid';
+import { Opportunity, ContactHistoryItem } from "@/types/crm";
+import { Task } from "@/types/task";
 
-// Get all tasks
-export const getTasks = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select(`
-        *,
-        assignee:assigned_to(id, first_name, last_name, avatar_url)
-      `)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    
-    return { data, error: null };
-  } catch (error) {
-    console.error('Error fetching tasks:', error);
-    return { data: [], error };
+// Mock data - Opportunities
+let mockOpportunities: Opportunity[] = [
+  {
+    id: "opp-1",
+    title: "Potansiyel Büyük Müşteri Anlaşması",
+    status: "new",
+    priority: "high",
+    value: 50000,
+    customer_id: "cust-1",
+    employee_id: "emp-1",
+    created_at: "2024-07-01T10:00:00Z",
+    updated_at: "2024-07-01T10:00:00Z",
+    expected_close_date: "2024-12-31T00:00:00Z",
+    notes: "Görüşmeler olumlu ilerliyor. Teklif hazırlanacak.",
+    contact_history: []
+  },
+  {
+    id: "opp-2",
+    title: "Web Sitesi Yenileme Projesi",
+    status: "first_contact",
+    priority: "medium",
+    value: 20000,
+    customer_id: "cust-2",
+    employee_id: "emp-2",
+    created_at: "2024-06-15T14:30:00Z",
+    updated_at: "2024-06-15T14:30:00Z",
+    expected_close_date: "2024-11-15T00:00:00Z",
+    notes: "Müşteri ile ilk görüşme yapıldı. İhtiyaçlar belirlendi.",
+    contact_history: []
+  },
+  {
+    id: "opp-3",
+    title: "Mobil Uygulama Geliştirme",
+    status: "site_visit",
+    priority: "low",
+    value: 30000,
+    customer_id: "cust-3",
+    employee_id: "emp-1",
+    created_at: "2024-05-20T09:00:00Z",
+    updated_at: "2024-05-20T09:00:00Z",
+    expected_close_date: "2024-10-30T00:00:00Z",
+    notes: "Müşteri lokasyonunda ziyaret gerçekleştirildi. Teknik detaylar konuşuldu.",
+    contact_history: []
+  },
+  {
+    id: "opp-4",
+    title: "ERP Sistemi Entegrasyonu",
+    status: "preparing_proposal",
+    priority: "high",
+    value: 75000,
+    customer_id: "cust-4",
+    employee_id: "emp-2",
+    created_at: "2024-04-10T16:45:00Z",
+    updated_at: "2024-04-10T16:45:00Z",
+    expected_close_date: "2024-09-20T00:00:00Z",
+    notes: "Teklif hazırlanıyor. Müşteriye özel fiyatlandırma yapılacak.",
+    contact_history: []
+  },
+  {
+    id: "opp-5",
+    title: "Bulut Sunucu Migrasyonu",
+    status: "proposal_sent",
+    priority: "medium",
+    value: 15000,
+    customer_id: "cust-5",
+    employee_id: "emp-1",
+    created_at: "2024-03-01T11:15:00Z",
+    updated_at: "2024-03-01T11:15:00Z",
+    expected_close_date: "2024-08-15T00:00:00Z",
+    notes: "Teklif müşteriye gönderildi. Onay bekleniyor.",
+    contact_history: []
+  },
+  {
+    id: "opp-6",
+    title: "Yazılım Lisanslama Anlaşması",
+    status: "accepted",
+    priority: "high",
+    value: 100000,
+    customer_id: "cust-6",
+    employee_id: "emp-2",
+    created_at: "2024-02-01T08:00:00Z",
+    updated_at: "2024-02-01T08:00:00Z",
+    expected_close_date: "2024-07-01T00:00:00Z",
+    notes: "Anlaşma başarıyla tamamlandı.",
+    contact_history: []
+  },
+  {
+    id: "opp-7",
+    title: "Donanım Tedarik Projesi",
+    status: "lost",
+    priority: "medium",
+    value: 5000,
+    customer_id: "cust-7",
+    employee_id: "emp-1",
+    created_at: "2024-01-15T13:00:00Z",
+    updated_at: "2024-01-15T13:00:00Z",
+    expected_close_date: "2024-06-30T00:00:00Z",
+    notes: "Müşteri başka bir tedarikçi ile anlaştı.",
+    contact_history: []
   }
-};
+];
 
-export const mockOpportunitiesAPI = {
-  async getOpportunities() {
-    try {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select(`
-          *,
-          customer:customer_id(*),
-          employee:employee_id(*)
-        `)
-        .order('updated_at', { ascending: false });
-
-      if (error) {
-        console.error("Error fetching opportunities:", error);
-        return { data: [], error };
-      }
-
-      // Convert contact_history from JSON to array if needed
-      const opportunities = data.map(opp => ({
-        ...opp,
-        contact_history: opp.contact_history ? 
-          (typeof opp.contact_history === 'string' ? 
-            JSON.parse(opp.contact_history) : opp.contact_history) : []
-      }));
-
-      return { data: opportunities, error: null };
-    } catch (error) {
-      console.error("Error in getOpportunities:", error);
-      return { data: [], error };
+// Mock data - Tasks
+let mockTasks: Task[] = [
+  {
+    id: "task-1",
+    title: "Müşteri ile Teklif Görüşmesi",
+    status: "todo",
+    priority: "high",
+    type: "meeting",
+    due_date: "2024-07-05T17:00:00Z",
+    assigned_to: "emp-1",
+    related_item_id: "opp-1",
+    related_item_title: "Potansiyel Büyük Müşteri Anlaşması",
+    related_item_type: "opportunity",
+    created_at: "2024-07-02T09:00:00Z",
+    updated_at: "2024-07-02T09:00:00Z",
+    assignee: {
+      id: "emp-1",
+      first_name: "Ayşe",
+      last_name: "Yılmaz",
+      avatar_url: "/avatars/1.png"
     }
   },
-  
-  async filterOpportunities(
-    searchQuery: string,
-    employeeId?: string,
-    customerId?: string
-  ) {
-    try {
-      let query = supabase
-        .from('opportunities')
-        .select(`
-          *,
-          customer:customer_id(*),
-          employee:employee_id(*)
-        `)
-        .order('updated_at', { ascending: false });
-      
-      if (searchQuery) {
-        query = query.ilike('title', `%${searchQuery}%`);
-      }
-      
-      if (employeeId) {
-        query = query.eq('employee_id', employeeId);
-      }
-      
-      if (customerId) {
-        query = query.eq('customer_id', customerId);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error("Error filtering opportunities:", error);
-        return { data: [], error };
-      }
-      
-      const opportunities = data.map(opp => ({
-        ...opp,
-        contact_history: opp.contact_history ? 
-          (typeof opp.contact_history === 'string' ? 
-            JSON.parse(opp.contact_history) : opp.contact_history) : []
-      }));
-      
-      return { data: opportunities, error: null };
-    } catch (error) {
-      console.error("Error in filterOpportunities:", error);
-      return { data: [], error };
+  {
+    id: "task-2",
+    title: "Web Sitesi İçerik Güncellemesi",
+    status: "in_progress",
+    priority: "medium",
+    type: "general",
+    due_date: "2024-07-10T12:00:00Z",
+    assigned_to: "emp-2",
+    related_item_id: "opp-2",
+    related_item_title: "Web Sitesi Yenileme Projesi",
+    related_item_type: "opportunity",
+    created_at: "2024-06-16T11:00:00Z",
+    updated_at: "2024-06-16T11:00:00Z",
+    assignee: {
+      id: "emp-2",
+      first_name: "Mehmet",
+      last_name: "Demir",
+      avatar_url: "/avatars/2.png"
     }
   },
-  
-  async getOpportunity(id: string) {
-    try {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select(`
-          *,
-          customer:customer_id(*),
-          employee:employee_id(*)
-        `)
-        .eq('id', id)
-        .single();
-      
-      if (error) {
-        console.error("Error fetching opportunity:", error);
-        return { data: null, error };
-      }
-      
-      const opportunity = {
-        ...data,
-        contact_history: data.contact_history ? 
-          (typeof data.contact_history === 'string' ? 
-            JSON.parse(data.contact_history) : data.contact_history) : []
-      };
-      
-      return { data: opportunity, error: null };
-    } catch (error) {
-      console.error("Error in getOpportunity:", error);
-      return { data: null, error };
+  {
+    id: "task-3",
+    title: "Mobil Uygulama Testlerinin Yapılması",
+    status: "completed",
+    priority: "low",
+    type: "general",
+    due_date: "2024-07-15T18:00:00Z",
+    assigned_to: "emp-1",
+    related_item_id: "opp-3",
+    related_item_title: "Mobil Uygulama Geliştirme",
+    related_item_type: "opportunity",
+    created_at: "2024-05-21T15:00:00Z",
+    updated_at: "2024-05-21T15:00:00Z",
+    assignee: {
+      id: "emp-1",
+      first_name: "Ayşe",
+      last_name: "Yılmaz",
+      avatar_url: "/avatars/1.png"
     }
   },
-  
-  async createOpportunity(opportunity: Partial<Opportunity>) {
-    try {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .insert([
-          {
-            ...opportunity,
-            id: uuidv4(),
-            contact_history: JSON.stringify([])
-          }
-        ])
-        .select()
-        .single();
-      
-      if (error) {
-        console.error("Error creating opportunity:", error);
-        return { data: null, error };
-      }
-      
-      return { data, error: null };
-    } catch (error) {
-      console.error("Error in createOpportunity:", error);
-      return { data: null, error };
+  {
+    id: "task-4",
+    title: "ERP Sistemi Demo Sunumu",
+    status: "postponed",
+    priority: "high",
+    type: "meeting",
+    due_date: "2024-07-20T10:00:00Z",
+    assigned_to: "emp-2",
+    related_item_id: "opp-4",
+    related_item_title: "ERP Sistemi Entegrasyonu",
+    related_item_type: "opportunity",
+    created_at: "2024-04-11T14:00:00Z",
+    updated_at: "2024-04-11T14:00:00Z",
+    assignee: {
+      id: "emp-2",
+      first_name: "Mehmet",
+      last_name: "Demir",
+      avatar_url: "/avatars/2.png"
     }
   },
-  
-  async updateOpportunity(id: string, updates: Partial<Opportunity>) {
-    try {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) {
-        console.error("Error updating opportunity:", error);
-        return { data: null, error };
-      }
-      
-      return { data, error: null };
-    } catch (error) {
-      console.error("Error in updateOpportunity:", error);
-      return { data: null, error };
+  {
+    id: "task-5",
+    title: "Bulut Sunucu Güvenlik Kontrolleri",
+    status: "todo",
+    priority: "medium",
+    type: "general",
+    due_date: "2024-07-25T16:00:00Z",
+    assigned_to: "emp-1",
+    related_item_id: "opp-5",
+    related_item_title: "Bulut Sunucu Migrasyonu",
+    related_item_type: "opportunity",
+    created_at: "2024-03-02T10:00:00Z",
+    updated_at: "2024-03-02T10:00:00Z",
+    assignee: {
+      id: "emp-1",
+      first_name: "Ayşe",
+      last_name: "Yılmaz",
+      avatar_url: "/avatars/1.png"
     }
   },
-  
-  async deleteOpportunity(id: string) {
-    try {
-      const { error } = await supabase
-        .from('opportunities')
-        .delete()
-        .eq('id', id);
-      
-      if (error) {
-        console.error("Error deleting opportunity:", error);
-        return { success: false, error };
-      }
-      
-      return { success: true, error: null };
-    } catch (error) {
-      console.error("Error in deleteOpportunity:", error);
-      return { success: false, error };
+  {
+    id: "task-6",
+    title: "Yazılım Lisans Sözleşmesi İmzalanması",
+    status: "completed",
+    priority: "high",
+    type: "general",
+    due_date: "2024-07-30T11:00:00Z",
+    assigned_to: "emp-2",
+    related_item_id: "opp-6",
+    related_item_title: "Yazılım Lisanslama Anlaşması",
+    related_item_type: "opportunity",
+    created_at: "2024-02-02T08:00:00Z",
+    updated_at: "2024-02-02T08:00:00Z",
+    assignee: {
+      id: "emp-2",
+      first_name: "Mehmet",
+      last_name: "Demir",
+      avatar_url: "/avatars/2.png"
     }
   },
-  
-  async addContactHistory(opportunityId: string, contactHistoryItem: ContactHistoryItem) {
-    try {
-      // Fetch the existing opportunity to get the current contact history
-      const { data: opportunityData, error: fetchError } = await supabase
-        .from('opportunities')
-        .select('contact_history')
-        .eq('id', opportunityId)
-        .single();
-      
-      if (fetchError) {
-        console.error("Error fetching opportunity for contact history update:", fetchError);
-        return { data: null, error: fetchError };
-      }
-      
-      // Parse the existing contact history or initialize an empty array
-      const existingHistory = opportunityData?.contact_history 
-        ? (typeof opportunityData.contact_history === 'string' 
-            ? JSON.parse(opportunityData.contact_history) 
-            : opportunityData.contact_history) 
-        : [];
-      
-      // Add the new contact history item
-      const updatedHistory = [...existingHistory, { ...contactHistoryItem, id: uuidv4() }];
-      
-      // Update the opportunity with the new contact history
-      const { data: updateData, error: updateError } = await supabase
-        .from('opportunities')
-        .update({ contact_history: JSON.stringify(updatedHistory) })
-        .eq('id', opportunityId)
-        .select()
-        .single();
-      
-      if (updateError) {
-        console.error("Error updating opportunity with contact history:", updateError);
-        return { data: null, error: updateError };
-      }
-      
-      return { data: updateData, error: null };
-    } catch (error) {
-      console.error("Error in addContactHistory:", error);
-      return { data: null, error };
-    }
-  },
-  
-  async updateContactHistoryItem(opportunityId: string, contactHistoryItem: ContactHistoryItem) {
-    try {
-      // Fetch the existing opportunity to get the current contact history
-      const { data: opportunityData, error: fetchError } = await supabase
-        .from('opportunities')
-        .select('contact_history')
-        .eq('id', opportunityId)
-        .single();
-      
-      if (fetchError) {
-        console.error("Error fetching opportunity for contact history update:", fetchError);
-        return { data: null, error: fetchError };
-      }
-      
-      // Parse the existing contact history
-      const existingHistory = opportunityData?.contact_history
-        ? (typeof opportunityData.contact_history === 'string'
-            ? JSON.parse(opportunityData.contact_history)
-            : opportunityData.contact_history)
-        : [];
-      
-      // Update the contact history item
-      const updatedHistory = existingHistory.map(item =>
-        item.id === contactHistoryItem.id ? contactHistoryItem : item
-      );
-      
-      // Update the opportunity with the updated contact history
-      const { data: updateData, error: updateError } = await supabase
-        .from('opportunities')
-        .update({ contact_history: JSON.stringify(updatedHistory) })
-        .eq('id', opportunityId)
-        .select()
-        .single();
-      
-      if (updateError) {
-        console.error("Error updating opportunity with contact history:", updateError);
-        return { data: null, error: updateError };
-      }
-      
-      return { data: updateData, error: null };
-    } catch (error) {
-      console.error("Error in updateContactHistoryItem:", error);
-      return { data: null, error };
-    }
-  },
-  
-  async deleteContactHistoryItem(opportunityId: string, contactHistoryItemId: string) {
-    try {
-      // Fetch the existing opportunity to get the current contact history
-      const { data: opportunityData, error: fetchError } = await supabase
-        .from('opportunities')
-        .select('contact_history')
-        .eq('id', opportunityId)
-        .single();
-      
-      if (fetchError) {
-        console.error("Error fetching opportunity for contact history update:", fetchError);
-        return { data: null, error: fetchError };
-      }
-      
-      // Parse the existing contact history
-      const existingHistory = opportunityData?.contact_history
-        ? (typeof opportunityData.contact_history === 'string'
-            ? JSON.parse(opportunityData.contact_history)
-            : opportunityData.contact_history)
-        : [];
-      
-      // Delete the contact history item
-      const updatedHistory = existingHistory.filter(item => item.id !== contactHistoryItemId);
-      
-      // Update the opportunity with the updated contact history
-      const { data: updateData, error: updateError } = await supabase
-        .from('opportunities')
-        .update({ contact_history: JSON.stringify(updatedHistory) })
-        .eq('id', opportunityId)
-        .select()
-        .single();
-      
-      if (updateError) {
-        console.error("Error updating opportunity with contact history:", updateError);
-        return { data: null, error: updateError };
-      }
-      
-      return { data: updateData, error: null };
-    } catch (error) {
-      console.error("Error in deleteContactHistoryItem:", error);
-      return { data: null, error };
+  {
+    id: "task-7",
+    title: "Donanım İhale Şartnamesinin Hazırlanması",
+    status: "todo",
+    priority: "medium",
+    type: "general",
+    due_date: "2024-08-05T14:00:00Z",
+    assigned_to: "emp-1",
+    related_item_id: "opp-7",
+    related_item_title: "Donanım Tedarik Projesi",
+    related_item_type: "opportunity",
+    created_at: "2024-01-16T13:00:00Z",
+    updated_at: "2024-01-16T13:00:00Z",
+    assignee: {
+      id: "emp-1",
+      first_name: "Ayşe",
+      last_name: "Yılmaz",
+      avatar_url: "/avatars/1.png"
     }
   }
+];
+
+// Mock API functions
+const getOpportunities = async (): Promise<{ data: Opportunity[] | null, error: any }> => {
+  return { data: mockOpportunities, error: null };
 };
 
-export const mockTasksAPI = {
-  async getTasks() {
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select(`
-          *,
-          assignee:assigned_to(id, first_name, last_name, avatar_url)
-        `)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error("Error fetching tasks:", error);
-        return { data: [], error };
-      }
-      
-      // Convert subtasks from JSON to array if needed
-      const tasks = data.map(task => ({
-        ...task,
-        subtasks: task.subtasks ? 
-          (typeof task.subtasks === 'string' ? 
-            JSON.parse(task.subtasks) : task.subtasks) : []
-      }));
-      
-      return { data: tasks, error: null };
-    } catch (error) {
-      console.error("Error in getTasks:", error);
-      return { data: [], error };
-    }
-  },
-  
-  async createTask(task: any) {
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert([
-          {
-            ...task,
-            id: uuidv4()
-          }
-        ])
-        .select()
-        .single();
-      
-      if (error) {
-        console.error("Error creating task:", error);
-        return { data: null, error };
-      }
-      
-      return { data, error: null };
-    } catch (error) {
-      console.error("Error in createTask:", error);
-      return { data: null, error };
-    }
-  },
-  
-  async updateTask(id: string, updates: any) {
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) {
-        console.error("Error updating task:", error);
-        return { data: null, error };
-      }
-      
-      return { data, error: null };
-    } catch (error) {
-      console.error("Error in updateTask:", error);
-      return { data: null, error };
-    }
-  },
-  
-  async deleteTask(id: string) {
-    try {
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', id);
-      
-      if (error) {
-        console.error("Error deleting task:", error);
-        return { success: false, error };
-      }
-      
-      return { success: true, error: null };
-    } catch (error) {
-      console.error("Error in deleteTask:", error);
-      return { success: false, error };
-    }
+const getOpportunityById = async (id: string): Promise<{ data: Opportunity | null, error: any }> => {
+  const opportunity = mockOpportunities.find(opp => opp.id === id);
+  return { data: opportunity || null, error: null };
+};
+
+const createOpportunity = async (opportunity: Opportunity): Promise<{ data: Opportunity | null, error: any }> => {
+  mockOpportunities.push(opportunity);
+  return { data: opportunity, error: null };
+};
+
+const updateOpportunity = async (id: string, updates: Partial<Opportunity>): Promise<{ data: Opportunity | null, error: any }> => {
+  const index = mockOpportunities.findIndex(opp => opp.id === id);
+  if (index !== -1) {
+    mockOpportunities[index] = { ...mockOpportunities[index], ...updates } as Opportunity;
+    return { data: mockOpportunities[index], error: null };
   }
+  return { data: null, error: 'Opportunity not found' };
 };
 
+const deleteOpportunity = async (id: string): Promise<{ success: boolean, error: any }> => {
+  mockOpportunities = mockOpportunities.filter(opp => opp.id !== id);
+  return { success: true, error: null };
+};
+
+const addContactHistory = async (opportunityId: string, contactHistory: ContactHistoryItem): Promise<{ data: ContactHistoryItem | null, error: any }> => {
+  const opportunity = mockOpportunities.find(opp => opp.id === opportunityId);
+  if (opportunity && opportunity.contact_history) {
+    opportunity.contact_history.push(contactHistory);
+    return { data: contactHistory, error: null };
+  }
+  return { data: null, error: 'Opportunity not found' };
+};
+
+const getOpportunityContactHistory = async (opportunityId: string): Promise<{ data: ContactHistoryItem[] | null, error: any }> => {
+  const opportunity = mockOpportunities.find(opp => opp.id === opportunityId);
+  if (opportunity) {
+    return { data: opportunity.contact_history || [], error: null };
+  }
+  return { data: null, error: 'Opportunity not found' };
+};
+
+const getTasks = async (): Promise<{ data: Task[] | null, error: any }> => {
+  return { data: mockTasks, error: null };
+};
+
+const updateTask = async (id: string, updates: Partial<Task>): Promise<{ data: Task | null, error: any }> => {
+  const index = mockTasks.findIndex(task => task.id === id);
+  if (index !== -1) {
+    mockTasks[index] = { ...mockTasks[index], ...updates } as Task;
+    return { data: mockTasks[index], error: null };
+  }
+  return { data: null, error: 'Task not found' };
+};
+
+const deleteTask = async (id: string): Promise<{ success: boolean, error: any }> => {
+  mockTasks = mockTasks.filter(task => task.id !== id);
+  return { success: true, error: null };
+};
+
+// Mock API for tasks (mimicking a separate tasks API)
+const mockTasksAPI = {
+  createTask: async (task: Omit<Task, 'id'>): Promise<{ data: Task | null, error: any }> => {
+    const newTask: Task = {
+      id: `task-${Date.now()}`,
+      ...task,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as Task;
+    mockTasks.push(newTask);
+    return { data: newTask, error: null };
+  },
+  
+  updateTask: async (id: string, updates: Partial<Task>): Promise<{ data: Task | null, error: any }> => {
+    const index = mockTasks.findIndex(task => task.id === id);
+    if (index !== -1) {
+      mockTasks[index] = { ...mockTasks[index], ...updates } as Task;
+      return { data: mockTasks[index], error: null };
+    }
+    return { data: null, error: 'Task not found' };
+  },
+  
+  deleteTask: async (id: string): Promise<{ success: boolean, error: any }> => {
+    mockTasks = mockTasks.filter(task => task.id !== id);
+    return { success: true, error: null };
+  },
+};
+
+// Export as a named export for components expecting 'mockCrmService'
+export const mockCrmService = {
+  getOpportunities,
+  createOpportunity,
+  updateOpportunity,
+  deleteOpportunity,
+  getOpportunityById,
+  addContactHistory,
+  getOpportunityContactHistory,
+  getTasks,
+  mockTasksAPI,
+  updateTask,
+  deleteTask
+};
