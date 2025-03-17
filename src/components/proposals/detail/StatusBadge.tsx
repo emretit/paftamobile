@@ -1,52 +1,26 @@
 
-import { statusStyles, statusLabels } from "../constants";
 import { ProposalStatus } from "@/types/proposal";
+import { statusLabels, statusStyles } from "../constants";
 
 interface StatusBadgeProps {
   status: ProposalStatus;
+  size?: "sm" | "md" | "lg";
 }
 
-export const StatusBadge = ({ status }: StatusBadgeProps) => {
-  const style = statusStyles[status] || { bg: "bg-gray-100", text: "text-gray-800" };
-  const label = statusLabels[status] || status.replace(/_/g, ' ');
-  
-  // Define icons for specific statuses
-  let statusIcon = "";
-  
-  switch (status) {
-    case "discovery_scheduled":
-      statusIcon = "🔎";
-      break;
-    case "meeting_completed":
-      statusIcon = "✅";
-      break;
-    case "quote_in_progress":
-      statusIcon = "📝";
-      break;
-    case "approved":
-    case "accepted":
-      statusIcon = "✅";
-      break;
-    case "rejected":
-      statusIcon = "❌";
-      break;
-    case "converted_to_order":
-      statusIcon = "📦";
-      break;
-    case "sent":
-    case "quote_sent":
-      statusIcon = "📤";
-      break;
-    case "negotiation":
-      statusIcon = "🤝";
-      break;
-    default:
-      break;
-  }
-  
+export const StatusBadge = ({ status, size = "md" }: StatusBadgeProps) => {
+  const sizeClasses = {
+    sm: "px-2 py-0.5 text-xs",
+    md: "px-2.5 py-1 text-sm",
+    lg: "px-3 py-1.5 text-base"
+  };
+
+  const style = statusStyles[status] || { bg: "bg-gray-400", text: "text-white" };
+  const label = statusLabels[status] || status;
+
   return (
-    <span className={`px-3 py-1 rounded-full font-medium ${style.bg} ${style.text} flex items-center gap-1 text-sm`}>
-      {statusIcon && <span>{statusIcon}</span>}
+    <span
+      className={`inline-flex items-center rounded-full font-medium ${style.bg} ${style.text} ${sizeClasses[size]}`}
+    >
       {label}
     </span>
   );

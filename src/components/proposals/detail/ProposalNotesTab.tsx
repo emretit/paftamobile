@@ -3,59 +3,84 @@ import { useState } from "react";
 import { Proposal } from "@/types/proposal";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface ProposalNotesTabProps {
   proposal: Proposal;
-  onNotesChange?: (notes: string) => void;
+  isReadOnly?: boolean;
 }
 
-export const ProposalNotesTab = ({ proposal, onNotesChange }: ProposalNotesTabProps) => {
+export const ProposalNotesTab = ({ 
+  proposal,
+  isReadOnly = false
+}: ProposalNotesTabProps) => {
   const [notes, setNotes] = useState(proposal.internal_notes || "");
-  const [isEditing, setIsEditing] = useState(false);
-
-  const handleSave = () => {
-    if (onNotesChange) {
-      onNotesChange(notes);
-      setIsEditing(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const queryClient = useQueryClient();
+  
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNotes(e.target.value);
+  };
+  
+  const saveNotes = async () => {
+    if (notes === proposal.internal_notes) return;
+    
+    setIsSaving(true);
+    try {
+      const { data, error } = await supabase
+        .from('proposals')
+        .update({ internal_notes: notes })
+        .eq('id', proposal.id)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+      toast.success("Notlar başarıyla kaydedildi");
+    } catch (error) {
+      console.error("Error saving notes:", error);
+      toast.error("Notlar kaydedilirken bir hata oluştu");
+    } finally {
+      setIsSaving(false);
     }
   };
-
-  if (!isEditing) {
+  
+  if (isReadOnly) {
     return (
       <div className="space-y-4">
-        {notes ? (
-          <div className="mt-4 p-4 bg-muted/30 rounded-lg whitespace-pre-wrap">
-            {notes}
+        {proposal.internal_notes ? (
+          <div className="whitespace-pre-wrap bg-gray-50 p-4 rounded-md border">
+            {proposal.internal_notes}
           </div>
         ) : (
-          <div className="py-8 text-center text-muted-foreground">
-            Bu teklif için henüz bir not bulunmamaktadır.
+          <div className="text-center text-muted-foreground py-8">
+            Bu teklif için not bulunmamaktadır.
           </div>
         )}
-        
-        <div className="flex justify-end">
-          <Button variant="outline" onClick={() => setIsEditing(true)}>
-            Düzenle
-          </Button>
-        </div>
       </div>
     );
   }
-
+  
   return (
     <div className="space-y-4">
       <Textarea
         value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        placeholder="Bu teklif hakkında notlarınızı buraya yazın..."
-        className="min-h-[200px]"
+        onChange={handleNotesChange}
+        placeholder="Teklif ile ilgili notlarınızı buraya yazabilirsiniz..."
+        className="min-h-[200px] border-red-100 focus-visible:ring-red-200"
       />
       
-      <div className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={() => setIsEditing(false)}>
-          İptal
-        </Button>
-        <Button onClick={handleSave}>
+      <div className="flex justify-end">
+        <Button 
+          onClick={saveNotes} 
+          disabled={isSaving || notes === proposal.internal_notes}
+          className="bg-red-800 text-white hover:bg-red-900"
+        >
+          <Save className="mr-2 h-4 w-4" />
           Kaydet
         </Button>
       </div>

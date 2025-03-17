@@ -1,9 +1,11 @@
 
-
 import { ProposalStatus } from "@/types/proposal";
 import { ProposalStatusType } from "@/types/crm";
 
 export const statusLabels: Record<ProposalStatus, string> = {
+  hazirlaniyor: "Hazırlanıyor",
+  onay_bekliyor: "Onay Bekliyor",
+  gonderildi: "Gönderildi",
   draft: "Taslak",
   new: "Yeni",
   review: "İncelemede",
@@ -23,6 +25,9 @@ export const statusLabels: Record<ProposalStatus, string> = {
 };
 
 export const statusStyles: Record<ProposalStatus, { bg: string; text: string }> = {
+  hazirlaniyor: { bg: "bg-amber-500", text: "text-white" },
+  onay_bekliyor: { bg: "bg-blue-500", text: "text-white" },
+  gonderildi: { bg: "bg-green-600", text: "text-white" },
   draft: { bg: "bg-slate-400", text: "text-white" },
   new: { bg: "bg-blue-400", text: "text-white" },
   review: { bg: "bg-yellow-400", text: "text-black" },
@@ -41,22 +46,19 @@ export const statusStyles: Record<ProposalStatus, { bg: string; text: string }> 
   pending: { bg: "bg-blue-500", text: "text-white" }
 };
 
-// Simplified status options for the new proposal flow
-export const simplifiedProposalStatuses: ProposalStatusType[] = [
-  "preparing",
-  "pending",
-  "sent"
+// Primary status options for the new simplified workflow
+export const primaryProposalStatuses: ProposalStatus[] = [
+  "hazirlaniyor",
+  "onay_bekliyor", 
+  "gonderildi"
 ];
 
 // Workflow steps for the proposal process
 export const workflowSteps = [
-  { status: 'draft', label: 'Taslak' },
-  { status: 'preparing', label: 'Hazırlanıyor' },
-  { status: 'pending', label: 'Onay Bekliyor' },
-  { status: 'sent', label: 'Gönderildi' },
-  { status: 'negotiation', label: 'Müzakerede' },
-  { status: 'accepted', label: 'Kabul Edildi' }
+  { status: 'hazirlaniyor', label: 'Hazırlanıyor' },
+  { status: 'onay_bekliyor', label: 'Onay Bekliyor' },
+  { status: 'gonderildi', label: 'Gönderildi' }
 ] as const;
 
 // Status values that represent final stages of a proposal
-export const finalStages = ['accepted', 'rejected', 'expired', 'converted_to_order'] as const;
+export const finalStages = ['gonderildi', 'accepted', 'rejected', 'expired', 'converted_to_order'] as const;

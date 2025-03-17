@@ -7,17 +7,21 @@ import { toast } from "sonner";
 interface StatusUpdateParams {
   proposalId: string;
   status: ProposalStatus;
+  opportunityId?: string | null;
 }
 
 export const useProposalStatusUpdate = () => {
   const queryClient = useQueryClient();
   
   const updateProposalStatus = useMutation({
-    mutationFn: async ({ proposalId, status }: StatusUpdateParams) => {
+    mutationFn: async ({ proposalId, status, opportunityId }: StatusUpdateParams) => {
       try {
         const { data, error } = await supabase
           .from('proposals')
-          .update({ status })
+          .update({ 
+            status,
+            ...(status === 'gonderildi' ? { sent_date: new Date().toISOString() } : {})
+          })
           .eq('id', proposalId)
           .select()
           .single();
@@ -29,9 +33,22 @@ export const useProposalStatusUpdate = () => {
         throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
-      toast.success("Teklif durumu başarıyla güncellendi");
+      
+      // If the status is 'gonderildi', also invalidate tasks and opportunities
+      if (variables.status === 'gonderildi') {
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      }
+      
+      const statusLabel = variables.status === 'hazirlaniyor' 
+        ? 'Hazırlanıyor' 
+        : variables.status === 'onay_bekliyor' 
+          ? 'Onay Bekliyor' 
+          : 'Gönderildi';
+      
+      toast.success(`Teklif durumu başarıyla "${statusLabel}" olarak güncellendi`);
     },
     onError: (error) => {
       console.error('Mutation error:', error);

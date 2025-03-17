@@ -1,5 +1,8 @@
 
 export type ProposalStatus = 
+  | 'hazirlaniyor'
+  | 'onay_bekliyor'
+  | 'gonderildi'
   | 'draft'
   | 'new'
   | 'review'
@@ -25,6 +28,16 @@ export interface ProposalItem {
   tax_rate: number;
   total_price: number;
   currency?: string;
+  product_id?: string;
+}
+
+export interface ProposalAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+  uploaded_at: string;
 }
 
 export interface Proposal {
@@ -47,23 +60,25 @@ export interface Proposal {
   internal_notes?: string;
   discounts?: number;
   additional_charges?: number;
-  currency?: string;
-  customer?: {
-    name: string;
-  };
-  employee?: {
-    first_name: string;
-    last_name: string;
-  };
-  items?: ProposalItem[];
   warranty_terms?: string;
   delivery_terms?: string;
-  files?: Array<{
+  currency?: string;
+  customer?: {
+    id: string;
     name: string;
-    url: string;
-    size: number;
-    type: string;
-  }>;
+    company?: string;
+    email?: string;
+    phone?: string;
+  };
+  employee?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email?: string;
+    name?: string;
+  };
+  items?: ProposalItem[];
+  attachments?: ProposalAttachment[];
 }
 
 export interface SalesPerformanceData {

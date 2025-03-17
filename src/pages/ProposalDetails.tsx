@@ -1,17 +1,26 @@
 
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { useProposalForm } from "@/hooks/useProposalForm";
-import { useProposalFormState } from "@/hooks/useProposalFormState";
-import { ArrowLeft, Save, Send, Printer, Download, Trash2 } from "lucide-react";
-import ProposalFormContent from "@/components/proposals/form/ProposalFormContent";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProposalItemsTab } from "@/components/proposals/detail/ProposalItemsTab";
-import { Separator } from "@/components/ui/separator";
+import { TopBar } from "@/components/TopBar";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Proposal, ProposalStatus } from "@/types/proposal";
+import { ArrowLeft, Edit, Send, Printer, Trash, Save } from "lucide-react";
+import { useProposalStatusUpdate } from "@/hooks/useProposalStatusUpdate";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+import { ProposalDetailsTab } from "@/components/proposals/detail/ProposalDetailsTab";
+import { ProposalItemsTab } from "@/components/proposals/detail/ProposalItemsTab";
+import { ProposalNotesTab } from "@/components/proposals/detail/ProposalNotesTab";
+import { ProposalAttachmentsTab } from "@/components/proposals/detail/ProposalAttachmentsTab";
+import { primaryProposalStatuses, statusLabels } from "@/components/proposals/constants";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import { StatusBadge } from "@/components/proposals/detail/StatusBadge";
 
 interface ProposalDetailsProps {
   isCollapsed: boolean;
@@ -21,296 +30,322 @@ interface ProposalDetailsProps {
 const ProposalDetails = ({ isCollapsed, setIsCollapsed }: ProposalDetailsProps) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { proposalQuery } = useProposalForm();
-  const [activeTab, setActiveTab] = useState("details");
-
-  // Initialize proposal form state with the proposal ID
-  const {
-    methods,
-    isLoading,
-    partnerType,
-    setPartnerType,
-    items,
-    setItems,
-    files,
-    setFiles,
-    totalValues,
-    handleBack,
-    handleSaveDraft,
-    handleSubmit
-  } = useProposalFormState();
-
+  const queryClient = useQueryClient();
+  const [currentStatus, setCurrentStatus] = useState<ProposalStatus | null>(null);
+  const { updateProposalStatus, isUpdating } = useProposalStatusUpdate();
+  
   // Fetch the proposal data
-  const { data: proposal, isLoading: isLoadingProposal } = proposalQuery(id || "");
-
-  const handleDelete = async () => {
+  const { data: proposal, isLoading, error } = useQuery({
+    queryKey: ['proposal', id],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('proposals')
+          .select(`
+            *,
+            customer:customer_id(id, name, company, email, phone),
+            employee:employee_id(id, first_name, last_name, email)
+          `)
+          .eq('id', id)
+          .single();
+          
+        if (error) throw error;
+        return data as Proposal;
+      } catch (error) {
+        console.error('Error fetching proposal:', error);
+        throw error;
+      }
+    },
+    enabled: !!id
+  });
+  
+  // Set up realtime subscription for this specific proposal
+  useEffect(() => {
     if (!id) return;
     
-    if (window.confirm("Bu teklifi silmek istediğinizden emin misiniz?")) {
-      try {
-        // Call the delete function from your hook
-        // Implement the delete functionality in your hook if not already present
-        // await deleteProposal(id);
-        toast({
-          title: "Teklif silindi",
-          description: "Teklif başarıyla silindi."
-        });
-        navigate("/proposals");
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Hata",
-          description: "Teklif silinirken bir hata oluştu."
-        });
-      }
+    const channel = supabase
+      .channel(`proposal-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'proposals',
+          filter: `id=eq.${id}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['proposal', id] });
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, queryClient]);
+  
+  // Update local status state when proposal data changes
+  useEffect(() => {
+    if (proposal && proposal.status !== currentStatus) {
+      setCurrentStatus(proposal.status as ProposalStatus);
+    }
+  }, [proposal]);
+  
+  const handleStatusChange = (newStatus: string) => {
+    setCurrentStatus(newStatus as ProposalStatus);
+  };
+  
+  const handleSaveStatus = async () => {
+    if (!proposal || !currentStatus || currentStatus === proposal.status) return;
+    
+    try {
+      await updateProposalStatus.mutateAsync({
+        proposalId: proposal.id,
+        status: currentStatus,
+        opportunityId: proposal.opportunity_id
+      });
+    } catch (error) {
+      toast.error("Durum güncellenirken bir hata oluştu");
+      console.error("Error updating status:", error);
     }
   };
-
-  if (isLoadingProposal) {
+  
+  const formatDate = (date: string | null | undefined) => {
+    if (!date) return "-";
+    try {
+      return format(new Date(date), "dd MMMM yyyy", { locale: tr });
+    } catch (error) {
+      return "-";
+    }
+  };
+  
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
         <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-        <main className={`flex-1 transition-all duration-300 ${isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"}`}>
+        <main
+          className={`flex-1 transition-all duration-300 ${
+            isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
+          }`}
+        >
+          <TopBar />
           <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold">Teklif Yükleniyor...</h1>
-            </div>
-            <div className="animate-pulse space-y-4">
-              <div className="h-12 bg-gray-200 rounded w-1/3"></div>
-              <div className="h-64 bg-gray-200 rounded"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
-            </div>
+            <div className="h-8 bg-gray-200 animate-pulse rounded w-1/3 mb-4"></div>
+            <div className="h-6 bg-gray-200 animate-pulse rounded w-1/4 mb-6"></div>
+            <Card className="border-red-100 shadow-sm">
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  <div className="h-12 bg-gray-200 animate-pulse rounded"></div>
+                  <div className="h-32 bg-gray-200 animate-pulse rounded"></div>
+                  <div className="h-32 bg-gray-200 animate-pulse rounded"></div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </main>
       </div>
     );
   }
-
+  
+  if (error || !proposal) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex">
+        <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+        <main
+          className={`flex-1 transition-all duration-300 ${
+            isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
+          }`}
+        >
+          <TopBar />
+          <div className="p-6">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/proposals')}
+              className="mb-6 border-red-200 text-red-700 hover:bg-red-50"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Geri Dön
+            </Button>
+            
+            <Card className="border-red-100 shadow-sm">
+              <CardContent className="p-6 text-center">
+                <h3 className="text-lg font-medium text-red-800 mb-2">Teklif bulunamadı</h3>
+                <p className="text-gray-500 mb-4">İstediğiniz teklif bulunamadı veya erişim iznine sahip değilsiniz.</p>
+                <Button 
+                  onClick={() => navigate('/proposals')}
+                  className="bg-red-800 hover:bg-red-900"
+                >
+                  Teklifler Sayfasına Dön
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    );
+  }
+  
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <main className={`flex-1 transition-all duration-300 ${isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"}`}>
-        <div className="p-4 md:p-6">
-          {/* Header with back button and actions */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-            <div className="flex items-center">
-              <Button variant="outline" size="icon" onClick={() => navigate("/proposals")} className="mr-4">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold">{proposal?.title || "Teklif Detayı"}</h1>
-                <p className="text-muted-foreground">Teklif No: #{proposal?.proposal_number}</p>
+      <main
+        className={`flex-1 transition-all duration-300 ${
+          isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
+        }`}
+      >
+        <TopBar />
+        <div className="p-6">
+          {/* Header with back button */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div>
+              <div className="flex items-center gap-3">
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => navigate('/proposals')}
+                  className="border-red-200 text-red-700 hover:bg-red-50"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <h1 className="text-2xl font-bold text-red-900">{proposal.title}</h1>
+                <StatusBadge status={proposal.status} />
+              </div>
+              <div className="flex items-center gap-2 mt-2 text-gray-500">
+                <span>Teklif #{proposal.proposal_number}</span>
+                <span>•</span>
+                <span>Oluşturma: {formatDate(proposal.created_at)}</span>
+                {proposal.sent_date && (
+                  <>
+                    <span>•</span>
+                    <span>Gönderim: {formatDate(proposal.sent_date)}</span>
+                  </>
+                )}
               </div>
             </div>
             
-            <div className="flex mt-4 sm:mt-0 space-x-2">
-              <Button variant="outline" size="sm" onClick={() => window.print()}>
-                <Printer className="h-4 w-4 mr-2" />
+            <div className="flex items-center gap-2 self-end md:self-auto">
+              <Button 
+                variant="outline"
+                className="border-red-200 text-red-700 hover:bg-red-50"
+              >
+                <Printer className="mr-2 h-4 w-4" />
                 Yazdır
               </Button>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                PDF
-              </Button>
-              <Button variant="destructive" size="sm" onClick={handleDelete}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Sil
-              </Button>
-              <Button variant="default" size="sm" onClick={methods.handleSubmit(handleSubmit)}>
-                <Send className="h-4 w-4 mr-2" />
-                Güncelle
+              <Button 
+                variant="outline"
+                onClick={() => navigate(`/proposals/edit/${proposal.id}`)}
+                className="border-red-200 text-red-700 hover:bg-red-50"
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Düzenle
               </Button>
             </div>
           </div>
-
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="details">Teklif Detayları</TabsTrigger>
-              <TabsTrigger value="items">Ürünler/Hizmetler</TabsTrigger>
-              <TabsTrigger value="preview">Önizleme</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="details" className="mt-6">
-              <Card>
-                <CardContent className="p-6">
-                  <ProposalFormContent
-                    methods={methods}
-                    partnerType={partnerType}
-                    setPartnerType={setPartnerType}
-                    items={items}
-                    setItems={setItems}
-                    files={files}
-                    setFiles={setFiles}
-                    totalValues={totalValues}
-                    onSaveDraft={handleSaveDraft}
-                    onSubmit={handleSubmit}
-                    isLoading={isLoading}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="items" className="mt-6">
-              <Card>
-                <CardContent className="p-6">
-                  {proposal && <ProposalItemsTab proposal={proposal} />}
+          
+          {/* Status change section */}
+          <Card className="mb-6 border-red-100 shadow-sm bg-gradient-to-r from-red-50 to-white">
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex-1 max-w-md">
+                  <h3 className="text-sm font-medium text-red-800 mb-2">Teklif Durumu</h3>
+                  <Select 
+                    value={currentStatus || proposal.status} 
+                    onValueChange={handleStatusChange}
+                    disabled={isUpdating}
+                  >
+                    <SelectTrigger className="w-full border-red-200 focus:ring-red-200">
+                      <SelectValue placeholder="Durum seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {primaryProposalStatuses.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {statusLabels[status]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex gap-2 self-end md:self-auto">
+                  <Button 
+                    variant="outline"
+                    onClick={handleSaveStatus}
+                    disabled={isUpdating || currentStatus === proposal.status}
+                    className="border-red-200 text-red-700 hover:bg-red-50"
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    Kaydet
+                  </Button>
                   
-                  <Separator className="my-6" />
-                  
-                  <div className="flex justify-end">
-                    <Button variant="outline" className="mr-2" onClick={() => setActiveTab("details")}>
-                      Geri
+                  {currentStatus !== 'gonderildi' && (
+                    <Button 
+                      onClick={() => {
+                        setCurrentStatus('gonderildi');
+                        setTimeout(() => {
+                          handleSaveStatus();
+                        }, 100);
+                      }}
+                      disabled={isUpdating || currentStatus === 'gonderildi'}
+                      className="bg-red-800 hover:bg-red-900"
+                    >
+                      <Send className="mr-2 h-4 w-4" />
+                      Teklifi Gönder
                     </Button>
-                    <Button onClick={() => setActiveTab("preview")}>
-                      Önizleme
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="preview" className="mt-6">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="bg-white p-8 border rounded-lg shadow-sm">
-                    <div className="flex justify-between items-start mb-8">
-                      <div>
-                        <h2 className="text-2xl font-bold">{proposal?.title}</h2>
-                        <p className="text-muted-foreground">Teklif No: #{proposal?.proposal_number}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">Toplam Değer:</p>
-                        <p className="text-xl font-bold">
-                          {new Intl.NumberFormat('tr-TR', {
-                            style: 'currency',
-                            currency: 'TRY'
-                          }).format(proposal?.total_value || 0)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                      <div>
-                        <h3 className="font-medium mb-2">Müşteri Bilgileri</h3>
-                        <p>{proposal?.customer?.name || "Müşteri bilgisi bulunamadı"}</p>
-                      </div>
-                      <div>
-                        <h3 className="font-medium mb-2">Teklif Bilgileri</h3>
-                        <p>Oluşturma Tarihi: {new Date(proposal?.created_at || "").toLocaleDateString('tr-TR')}</p>
-                        <p>Geçerlilik: {proposal?.valid_until ? new Date(proposal.valid_until).toLocaleDateString('tr-TR') : "Belirtilmemiş"}</p>
-                        <p>Durumu: {proposal?.status}</p>
-                      </div>
-                    </div>
-
-                    {proposal && proposal.items && proposal.items.length > 0 && (
-                      <div className="mb-8">
-                        <h3 className="font-medium mb-4">Ürünler / Hizmetler</h3>
-                        <div className="rounded-md border overflow-hidden">
-                          <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ürün/Hizmet</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Miktar</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Birim Fiyat</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">KDV %</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Toplam</th>
-                              </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                              {proposal.items.map((item: any, index: number) => (
-                                <tr key={item.id || index}>
-                                  <td className="px-4 py-3 whitespace-nowrap text-sm">{item.name}</td>
-                                  <td className="px-4 py-3 whitespace-nowrap text-sm text-right">{item.quantity}</td>
-                                  <td className="px-4 py-3 whitespace-nowrap text-sm text-right">
-                                    {new Intl.NumberFormat('tr-TR', {
-                                      style: 'currency',
-                                      currency: 'TRY'
-                                    }).format(item.unit_price || 0)}
-                                  </td>
-                                  <td className="px-4 py-3 whitespace-nowrap text-sm text-right">{item.tax_rate}%</td>
-                                  <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
-                                    {new Intl.NumberFormat('tr-TR', {
-                                      style: 'currency',
-                                      currency: 'TRY'
-                                    }).format(item.total_price || 0)}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex justify-end">
-                      <div className="w-64">
-                        <div className="flex justify-between py-2">
-                          <span>Ara Toplam:</span>
-                          <span>
-                            {new Intl.NumberFormat('tr-TR', {
-                              style: 'currency',
-                              currency: 'TRY'
-                            }).format(totalValues.subtotal)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between py-2">
-                          <span>KDV:</span>
-                          <span>
-                            {new Intl.NumberFormat('tr-TR', {
-                              style: 'currency',
-                              currency: 'TRY'
-                            }).format(totalValues.taxAmount)}
-                          </span>
-                        </div>
-                        {totalValues.discounts > 0 && (
-                          <div className="flex justify-between py-2">
-                            <span>İndirimler:</span>
-                            <span className="text-green-600">
-                              -{new Intl.NumberFormat('tr-TR', {
-                                style: 'currency',
-                                currency: 'TRY'
-                              }).format(totalValues.discounts)}
-                            </span>
-                          </div>
-                        )}
-                        {totalValues.additionalCharges > 0 && (
-                          <div className="flex justify-between py-2">
-                            <span>Ek Ücretler:</span>
-                            <span>
-                              {new Intl.NumberFormat('tr-TR', {
-                                style: 'currency',
-                                currency: 'TRY'
-                              }).format(totalValues.additionalCharges)}
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex justify-between py-2 font-bold border-t mt-2 pt-2">
-                          <span>Genel Toplam:</span>
-                          <span>
-                            {new Intl.NumberFormat('tr-TR', {
-                              style: 'currency',
-                              currency: 'TRY'
-                            }).format(totalValues.totalAmount)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end mt-6">
-                    <Button variant="outline" className="mr-2" onClick={() => setActiveTab("items")}>
-                      Geri
-                    </Button>
-                    <Button variant="default" onClick={methods.handleSubmit(handleSubmit)}>
-                      <Save className="h-4 w-4 mr-2" />
-                      Kaydet
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Tabs */}
+          <Card className="border-red-100 shadow-sm">
+            <CardContent className="p-6">
+              <Tabs defaultValue="details" className="w-full">
+                <TabsList className="grid grid-cols-4 mb-6 bg-red-100/50">
+                  <TabsTrigger 
+                    value="details"
+                    className="data-[state=active]:bg-red-200 data-[state=active]:text-red-900"
+                  >
+                    Detaylar
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="items"
+                    className="data-[state=active]:bg-red-200 data-[state=active]:text-red-900"
+                  >
+                    Ürünler
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="notes"
+                    className="data-[state=active]:bg-red-200 data-[state=active]:text-red-900"
+                  >
+                    Notlar
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="attachments"
+                    className="data-[state=active]:bg-red-200 data-[state=active]:text-red-900"
+                  >
+                    Ekler
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="details">
+                  <ProposalDetailsTab proposal={proposal} />
+                </TabsContent>
+                
+                <TabsContent value="items">
+                  <ProposalItemsTab proposal={proposal} />
+                </TabsContent>
+                
+                <TabsContent value="notes">
+                  <ProposalNotesTab proposal={proposal} />
+                </TabsContent>
+                
+                <TabsContent value="attachments">
+                  <ProposalAttachmentsTab proposal={proposal} />
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
