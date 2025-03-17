@@ -7,15 +7,15 @@ import ColumnHeader from "./ColumnHeader";
 import AddColumnDialog from "./dialogs/AddColumnDialog";
 import DeleteColumnDialog from "./dialogs/DeleteColumnDialog";
 import { useKanbanColumns } from "./hooks/useKanbanColumns";
-import type { Task } from "@/types/task";
+import type { Task, TaskWithOverdue } from "@/types/task";
 
 interface TaskKanbanBoardProps {
-  tasks: Task[];
-  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
-  filterTasks: (status: string) => Task[];
+  tasks: TaskWithOverdue[];
+  setTasks: React.Dispatch<React.SetStateAction<TaskWithOverdue[]>>;
+  filterTasks: (status: string) => TaskWithOverdue[];
   onUpdateTaskStatus: (id: string, status: Task['status']) => Promise<void>;
-  onEditTask?: (task: Task) => void;
-  onSelectTask?: (task: Task) => void;
+  onEditTask?: (task: TaskWithOverdue) => void;
+  onSelectTask?: (task: TaskWithOverdue) => void;
 }
 
 const TaskKanbanBoard: React.FC<TaskKanbanBoardProps> = ({

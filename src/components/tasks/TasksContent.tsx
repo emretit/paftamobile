@@ -64,18 +64,22 @@ const TasksContent = ({
       
       // Map tasks with their assignees and ensure they have the required type property
       return tasksData.map(task => {
-        // Ensure assignee_id exists (use assigned_to as fallback)
-        const assigneeId = task.assignee_id || task.assigned_to;
+        // Normalize task object to ensure it has required properties
+        const normalizedTask = {
+          ...task,
+          // Ensure assignee_id exists (use assigned_to as fallback)
+          assignee_id: task.assignee_id || task.assigned_to,
+          // Ensure type property exists
+          type: (task.type || task.related_item_type || "general") as TaskType
+        };
+        
+        const assigneeId = normalizedTask.assignee_id;
         const assignee = assigneeId ? employees[assigneeId] : null;
-        const dueDate = task.due_date ? new Date(task.due_date) : null;
+        const dueDate = normalizedTask.due_date ? new Date(normalizedTask.due_date) : null;
         const isOverdue = dueDate ? dueDate < now : false;
         
         return {
-          ...task,
-          // Make sure assignee_id is populated
-          assignee_id: assigneeId,
-          // Ensure type property exists
-          type: (task.type || task.related_item_type || "general") as TaskType,
+          ...normalizedTask,
           isOverdue,
           assignee: assignee ? {
             id: assignee.id,

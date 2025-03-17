@@ -21,7 +21,7 @@ export interface Task {
   type: TaskType;
   due_date?: string;
   assigned_to?: string; 
-  assignee_id?: string;  // Added explicitly to match both patterns used in code
+  assignee_id?: string;
   related_item_id?: string;
   related_item_title?: string;
   related_item_type?: string;
