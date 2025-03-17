@@ -38,7 +38,8 @@ const OpportunityTasksTab = ({ opportunityId }: OpportunityTasksTabProps) => {
         // Check if assignee exists and has expected properties
         if (task.assignee && typeof task.assignee === 'object' && !('error' in task.assignee)) {
           const assignee = task.assignee as any;
-          if (assignee) {
+          // Additional null check before accessing properties
+          if (assignee && assignee.first_name && assignee.last_name) {
             taskAssignee = {
               id: assignee.id,
               first_name: assignee.first_name,
