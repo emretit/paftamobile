@@ -5,12 +5,14 @@ import TasksContent from "@/components/tasks/TasksContent";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import TaskForm from "@/components/tasks/TaskForm";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TasksKanban from "@/components/tasks/TasksKanban";
 import TasksPageHeader from "@/components/tasks/header/TasksPageHeader";
+import type { Task } from "@/types/task";
 
 interface TasksPageProps {
   isCollapsed: boolean;
@@ -19,19 +21,34 @@ interface TasksPageProps {
 
 const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
   const [activeView, setActiveView] = useState("list");
+  const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
   
   const queryClient = useQueryClient();
 
   const handleAddTask = () => {
+    setSelectedTask(undefined);
     setIsDialogOpen(true);
+  };
+
+  const handleViewTask = (task: Task) => {
+    setSelectedTask(task);
+    setIsSheetOpen(true);
   };
 
   const handleDialogClose = () => {
     setIsDialogOpen(false);
+    // Refresh tasks data
+    queryClient.invalidateQueries({ queryKey: ["tasks"] });
+  };
+
+  const handleSheetClose = () => {
+    setIsSheetOpen(false);
+    setSelectedTask(undefined);
     // Refresh tasks data
     queryClient.invalidateQueries({ queryKey: ["tasks"] });
   };
@@ -106,6 +123,7 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
               searchQuery={searchQuery}
               selectedEmployee={selectedEmployee}
               selectedType={selectedType}
+              onSelectTask={handleViewTask}
             />
           </TabsContent>
           <TabsContent value="kanban" className="mt-0">
@@ -118,11 +136,30 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
         </Tabs>
       </div>
 
+      {/* Dialog for creating/editing tasks */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
-          <TaskForm onClose={handleDialogClose} />
+          <TaskForm 
+            task={undefined} 
+            onClose={handleDialogClose} 
+          />
         </DialogContent>
       </Dialog>
+
+      {/* Sheet for viewing task details */}
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent className="sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Görev Detayları</SheetTitle>
+          </SheetHeader>
+          {selectedTask && (
+            <TaskForm 
+              task={selectedTask} 
+              onClose={handleSheetClose} 
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </DefaultLayout>
   );
 };
