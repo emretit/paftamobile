@@ -29,7 +29,7 @@ const TasksPageHeader = ({ onCreateTask }: TasksPageHeaderProps) => {
         toast({
           title: "Başarılı",
           description: "Örnek görevler başarıyla eklendi!",
-          variant: "success",
+          variant: "default",
         });
         
         // Refresh the tasks data

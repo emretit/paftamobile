@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -43,7 +44,7 @@ export const seedTasks = async () => {
           position: 'Satış Uzmanı',
           department: 'Satış',
           hire_date: '2022-01-15',
-          status: 'aktif'
+          status: 'aktif' as const
         },
         {
           id: uuidv4(),
@@ -54,7 +55,7 @@ export const seedTasks = async () => {
           position: 'Satış Müdürü',
           department: 'Satış',
           hire_date: '2020-03-10',
-          status: 'aktif'
+          status: 'aktif' as const
         },
         {
           id: uuidv4(),
@@ -65,7 +66,7 @@ export const seedTasks = async () => {
           position: 'Teknik Destek',
           department: 'Teknik',
           hire_date: '2021-06-22',
-          status: 'aktif'
+          status: 'aktif' as const
         }
       ];
       
@@ -93,7 +94,7 @@ export const seedTasks = async () => {
           description: 'Müşteri yönetim sistemi geliştirme projesi',
           status: 'qualified',
           customer_id: null,
-          employee_id: employees[0]?.id,
+          employee_id: employees?.[0]?.id,
           value: 50000,
           currency: 'TRY',
           expected_close_date: nextWeek.toISOString()
@@ -104,7 +105,7 @@ export const seedTasks = async () => {
           description: 'İş süreçleri optimizasyonu danışmanlığı',
           status: 'proposal',
           customer_id: null,
-          employee_id: employees[1]?.id,
+          employee_id: employees?.[1]?.id,
           value: 25000,
           currency: 'TRY',
           expected_close_date: nextWeek.toISOString()
@@ -131,10 +132,10 @@ export const seedTasks = async () => {
         priority: 'high',
         type: 'meeting',
         due_date: tomorrow.toISOString(),
-        assigned_to: employees[0]?.id,
+        assigned_to: employees?.[0]?.id,
         related_item_type: 'opportunity',
-        related_item_id: opportunities[0]?.id,
-        related_item_title: opportunities[0]?.title,
+        related_item_id: opportunities?.[0]?.id,
+        related_item_title: opportunities?.[0]?.title,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -146,7 +147,7 @@ export const seedTasks = async () => {
         priority: 'medium',
         type: 'proposal',
         due_date: nextWeek.toISOString(),
-        assigned_to: employees[1]?.id,
+        assigned_to: employees?.[1]?.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -158,7 +159,7 @@ export const seedTasks = async () => {
         priority: 'medium',
         type: 'call',
         due_date: tomorrow.toISOString(),
-        assigned_to: employees[0]?.id,
+        assigned_to: employees?.[0]?.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -170,7 +171,7 @@ export const seedTasks = async () => {
         priority: 'low',
         type: 'email',
         due_date: today.toISOString(),
-        assigned_to: employees[2]?.id,
+        assigned_to: employees?.[2]?.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -184,7 +185,7 @@ export const seedTasks = async () => {
         priority: 'medium',
         type: 'general',
         due_date: nextWeek.toISOString(),
-        assigned_to: employees[1]?.id,
+        assigned_to: employees?.[1]?.id,
         created_at: lastWeek.toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -196,7 +197,7 @@ export const seedTasks = async () => {
         priority: 'high',
         type: 'general',
         due_date: tomorrow.toISOString(),
-        assigned_to: employees[2]?.id,
+        assigned_to: employees?.[2]?.id,
         created_at: lastWeek.toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -208,10 +209,10 @@ export const seedTasks = async () => {
         priority: 'high',
         type: 'opportunity',
         due_date: tomorrow.toISOString(),
-        assigned_to: employees[0]?.id,
+        assigned_to: employees?.[0]?.id,
         related_item_type: 'opportunity',
-        related_item_id: opportunities[1]?.id,
-        related_item_title: opportunities[1]?.title,
+        related_item_id: opportunities?.[1]?.id,
+        related_item_title: opportunities?.[1]?.title,
         created_at: lastWeek.toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -225,7 +226,7 @@ export const seedTasks = async () => {
         priority: 'medium',
         type: 'general',
         due_date: lastWeek.toISOString(),
-        assigned_to: employees[1]?.id,
+        assigned_to: employees?.[1]?.id,
         created_at: lastWeek.toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -237,7 +238,7 @@ export const seedTasks = async () => {
         priority: 'high',
         type: 'meeting',
         due_date: lastWeek.toISOString(),
-        assigned_to: employees[0]?.id,
+        assigned_to: employees?.[0]?.id,
         created_at: lastWeek.toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -249,7 +250,7 @@ export const seedTasks = async () => {
         priority: 'medium',
         type: 'meeting',
         due_date: lastWeek.toISOString(),
-        assigned_to: employees[2]?.id,
+        assigned_to: employees?.[2]?.id,
         created_at: lastWeek.toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -263,7 +264,7 @@ export const seedTasks = async () => {
         priority: 'high',
         type: 'general',
         due_date: nextWeek.toISOString(),
-        assigned_to: employees[1]?.id,
+        assigned_to: employees?.[1]?.id,
         created_at: lastWeek.toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -275,7 +276,7 @@ export const seedTasks = async () => {
         priority: 'medium',
         type: 'meeting',
         due_date: nextWeek.toISOString(),
-        assigned_to: employees[0]?.id,
+        assigned_to: employees?.[0]?.id,
         created_at: lastWeek.toISOString(),
         updated_at: new Date().toISOString()
       },
@@ -287,7 +288,7 @@ export const seedTasks = async () => {
         priority: 'medium',
         type: 'general',
         due_date: nextWeek.toISOString(),
-        assigned_to: employees[2]?.id,
+        assigned_to: employees?.[2]?.id,
         created_at: lastWeek.toISOString(),
         updated_at: new Date().toISOString()
       }
