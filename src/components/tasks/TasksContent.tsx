@@ -21,9 +21,10 @@ const TasksContent = ({
   // Use the realtime hook to listen for task changes
   useTaskRealtime();
 
-  const { data, isLoading: isTasksLoading } = useQuery({
+  const { data, isLoading: isTasksLoading, error } = useQuery({
     queryKey: ["tasks"],
     queryFn: async () => {
+      console.log("Fetching tasks...");
       // First, fetch tasks without the join
       const { data: tasksData, error } = await supabase
         .from("tasks")
@@ -34,6 +35,8 @@ const TasksContent = ({
         console.error("Error fetching tasks:", error);
         throw error;
       }
+      
+      console.log("Tasks fetched:", tasksData?.length || 0);
       
       // If we have employees referenced, fetch them separately
       const employeeIds = tasksData
@@ -52,6 +55,7 @@ const TasksContent = ({
         if (employeesError) {
           console.error("Error fetching employees:", employeesError);
         } else if (employeesData) {
+          console.log("Employees fetched:", employeesData.length);
           employees = employeesData.reduce((acc: Record<string, any>, emp: any) => {
             acc[emp.id] = emp;
             return acc;
@@ -87,6 +91,10 @@ const TasksContent = ({
       });
     }
   });
+
+  if (error) {
+    console.error("Error in task query:", error);
+  }
 
   return (
     <div className="bg-white rounded-lg border shadow-sm">
