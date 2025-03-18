@@ -43,7 +43,17 @@ const TasksContent = ({
         throw error;
       }
 
-      return data as Task[];
+      // Transform the data to match the Task type
+      return (data || []).map(task => ({
+        ...task,
+        type: task.type || 'general', // Provide default type if missing
+        assignee: task.assignee ? {
+          id: task.assignee.id,
+          first_name: task.assignee.first_name,
+          last_name: task.assignee.last_name,
+          avatar_url: task.assignee.avatar_url
+        } : undefined
+      })) as Task[];
     },
   });
 
