@@ -43,10 +43,7 @@ const TasksContent = ({
         throw error;
       }
 
-      return data.map(task => ({
-        ...task,
-        type: task.type || 'general' // Ensure type exists on all tasks
-      })) as Task[];
+      return data as Task[];
     },
   });
 

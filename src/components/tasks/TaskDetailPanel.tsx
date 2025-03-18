@@ -1,5 +1,6 @@
 
-import { TaskDetails } from "./detail";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import TaskDetails from "./detail/TaskDetails";
 import type { Task } from "@/types/task";
 
 interface TaskDetailPanelProps {
@@ -9,12 +10,14 @@ interface TaskDetailPanelProps {
 }
 
 const TaskDetailPanel = ({ task, isOpen, onClose }: TaskDetailPanelProps) => {
+  if (!task) return null;
+
   return (
-    <TaskDetails
-      task={task}
-      isOpen={isOpen}
-      onClose={onClose}
-    />
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent className="sm:max-w-md overflow-y-auto">
+        <TaskDetails task={task} onClose={onClose} />
+      </SheetContent>
+    </Sheet>
   );
 };
 

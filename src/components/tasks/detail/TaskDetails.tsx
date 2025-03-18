@@ -1,113 +1,132 @@
 
 import { useState, useEffect } from "react";
-import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader } from "@/components/ui/sheet";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import type { Task } from "@/types/task";
-import TaskDetailHeader from "./TaskDetailHeader";
-import TaskMainInfo from "./TaskMainInfo";
-import TaskMetadata from "./TaskMetadata";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { CalendarIcon, Save } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useTaskDetail } from "../hooks/useTaskDetail";
-import { SubtaskManager } from "./SubtaskManager";
+import type { Task } from "@/types/task";
 
 interface TaskDetailsProps {
-  task: Task | null;
-  isOpen: boolean;
+  task: Task;
   onClose: () => void;
 }
 
-const TaskDetails = ({ task, isOpen, onClose }: TaskDetailsProps) => {
-  const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<Task | null>(null);
-  const [date, setDate] = useState<Date | undefined>(undefined);
-  const { isLoading, updateTaskMutation } = useTaskDetail();
+const TaskDetails = ({ task, onClose }: TaskDetailsProps) => {
+  const [formData, setFormData] = useState<Task>(task);
+  const { updateTaskMutation } = useTaskDetail();
 
   useEffect(() => {
-    if (task) {
-      setFormData(task);
-      setDate(task.due_date ? new Date(task.due_date) : undefined);
-    }
+    setFormData(task);
   }, [task]);
 
-  const handleInputChange = (key: keyof Task, value: any) => {
-    if (!formData) return;
-    setFormData({
-      ...formData,
-      [key]: value
-    });
-  };
-
-  const handleDateChange = (newDate: Date | undefined) => {
-    setDate(newDate);
-    if (formData && newDate) {
-      setFormData({
-        ...formData,
-        due_date: newDate.toISOString()
-      });
-    } else if (formData) {
-      // Handle clearing the date
-      setFormData({
-        ...formData,
-        due_date: undefined
-      });
-    }
+  const handleInputChange = (field: keyof Task, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSave = () => {
-    if (!formData) return;
-    updateTaskMutation.mutate(formData, {
-      onSuccess: () => {
-        // No need to close after save
-      }
-    });
+    updateTaskMutation.mutate(formData);
   };
 
-  if (!formData) return null;
-
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="sm:max-w-md overflow-y-auto">
-        <SheetHeader className="relative">
-          <TaskDetailHeader onClose={onClose} />
-        </SheetHeader>
-        <div className="mt-6 space-y-6">
-          <TaskMainInfo 
-            formData={formData} 
-            handleInputChange={handleInputChange} 
-          />
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Görev Detayları</h3>
+        <Input
+          value={formData.title}
+          onChange={(e) => handleInputChange('title', e.target.value)}
+          placeholder="Görev başlığı"
+          className="mb-4"
+        />
+        <Textarea
+          value={formData.description || ''}
+          onChange={(e) => handleInputChange('description', e.target.value)}
+          placeholder="Görev açıklaması"
+          className="min-h-[100px] mb-4"
+        />
+      </div>
 
-          <TaskMetadata 
-            formData={formData}
-            date={date}
-            handleInputChange={handleInputChange}
-            handleDateChange={handleDateChange}
-          />
-
-          <SubtaskManager
-            task={formData}
-            onUpdate={handleInputChange}
-          />
-
-          <Button
-            className="w-full"
-            onClick={handleSave}
-            disabled={isLoading || updateTaskMutation.isPending}
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Durum</label>
+          <Select
+            value={formData.status}
+            onValueChange={(value) => handleInputChange('status', value)}
           >
-            {updateTaskMutation.isPending ? (
-              "Kaydediliyor..."
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Değişiklikleri Kaydet
-              </>
-            )}
-          </Button>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todo">Yapılacak</SelectItem>
+              <SelectItem value="in_progress">Devam Ediyor</SelectItem>
+              <SelectItem value="completed">Tamamlandı</SelectItem>
+              <SelectItem value="postponed">Ertelendi</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      </SheetContent>
-    </Sheet>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Öncelik</label>
+          <Select
+            value={formData.priority}
+            onValueChange={(value) => handleInputChange('priority', value)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">Düşük</SelectItem>
+              <SelectItem value="medium">Orta</SelectItem>
+              <SelectItem value="high">Yüksek</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Bitiş Tarihi</label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !formData.due_date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {formData.due_date ? format(new Date(formData.due_date), 'PPP') : <span>Tarih seç</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={formData.due_date ? new Date(formData.due_date) : undefined}
+                onSelect={(date) => handleInputChange('due_date', date?.toISOString())}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
+      <Button 
+        className="w-full"
+        onClick={handleSave}
+        disabled={updateTaskMutation.isPending}
+      >
+        {updateTaskMutation.isPending ? "Kaydediliyor..." : (
+          <>
+            <Save className="mr-2 h-4 w-4" />
+            Değişiklikleri Kaydet
+          </>
+        )}
+      </Button>
+    </div>
   );
 };
 
