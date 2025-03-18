@@ -1805,7 +1805,7 @@ export type Database = {
       }
       tasks: {
         Row: {
-          assigned_to: string | null
+          assignee_id: string | null
           created_at: string
           description: string | null
           due_date: string | null
@@ -1817,10 +1817,11 @@ export type Database = {
           related_item_type: string | null
           status: string
           title: string
+          type: string
           updated_at: string
         }
         Insert: {
-          assigned_to?: string | null
+          assignee_id?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null
@@ -1832,10 +1833,11 @@ export type Database = {
           related_item_type?: string | null
           status?: string
           title: string
+          type?: string
           updated_at?: string
         }
         Update: {
-          assigned_to?: string | null
+          assignee_id?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null
@@ -1847,12 +1849,13 @@ export type Database = {
           related_item_type?: string | null
           status?: string
           title?: string
+          type?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "tasks_assigned_to_fkey"
-            columns: ["assigned_to"]
+            foreignKeyName: "tasks_assignee_id_fkey"
+            columns: ["assignee_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
