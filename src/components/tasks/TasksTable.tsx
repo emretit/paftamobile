@@ -8,6 +8,8 @@ import { MoreHorizontal } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Task } from "@/types/task";
 import { getPriorityColor } from "@/components/service/utils/priorityUtils";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
 
 export interface TasksTableProps {
   tasks: Task[];
@@ -32,22 +34,57 @@ export const TasksTable = ({
       task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
       
-    const matchesEmployee = !selectedEmployee || selectedEmployee === "all" || task.assignee_id === selectedEmployee;
+    const matchesEmployee = !selectedEmployee || selectedEmployee === "all" || task.assigned_to === selectedEmployee;
     const matchesType = !selectedType || selectedType === "all" || task.type === selectedType;
     
     return matchesSearch && matchesEmployee && matchesType;
   });
+
+  // Function to get the status display name
+  const getStatusDisplay = (status: string) => {
+    switch (status) {
+      case "todo": return "Yapılacak";
+      case "in_progress": return "Devam Ediyor";
+      case "completed": return "Tamamlandı";
+      case "postponed": return "Ertelendi";
+      default: return status;
+    }
+  };
+
+  // Function to get status badge color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "todo": return "bg-gray-100 text-gray-800";
+      case "in_progress": return "bg-blue-100 text-blue-800";
+      case "completed": return "bg-green-100 text-green-800";
+      case "postponed": return "bg-yellow-100 text-yellow-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  // Function to format date with proper locale
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "-";
+    try {
+      return format(new Date(dateString), "dd MMM yyyy", { locale: tr });
+    } catch (error) {
+      console.error("Invalid date:", dateString);
+      return "-";
+    }
+  };
 
   if (isLoading) {
     return (
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Assignee</TableHead>
-            <TableHead>Priority</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Due Date</TableHead>
+            <TableHead>Başlık</TableHead>
+            <TableHead>Atanan</TableHead>
+            <TableHead>Öncelik</TableHead>
+            <TableHead>Durum</TableHead>
+            <TableHead>Tip</TableHead>
+            <TableHead>Son Tarih</TableHead>
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -55,6 +92,7 @@ export const TasksTable = ({
             <TableRow key={index}>
               <TableCell><Skeleton className="h-4 w-48" /></TableCell>
               <TableCell><Skeleton className="h-8 w-8 rounded-full" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-16" /></TableCell>
               <TableCell><Skeleton className="h-4 w-16" /></TableCell>
               <TableCell><Skeleton className="h-4 w-16" /></TableCell>
               <TableCell><Skeleton className="h-4 w-24" /></TableCell>
@@ -70,19 +108,20 @@ export const TasksTable = ({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Title</TableHead>
-          <TableHead>Assignee</TableHead>
-          <TableHead>Priority</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Due Date</TableHead>
+          <TableHead>Başlık</TableHead>
+          <TableHead>Atanan</TableHead>
+          <TableHead>Öncelik</TableHead>
+          <TableHead>Durum</TableHead>
+          <TableHead>Tip</TableHead>
+          <TableHead>Son Tarih</TableHead>
           <TableHead className="w-[50px]"></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {filteredTasks.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-              No tasks found with the current filters
+            <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+              Filtrelerle eşleşen görev bulunamadı
             </TableCell>
           </TableRow>
         ) : (
@@ -106,21 +145,34 @@ export const TasksTable = ({
                     </span>
                   </div>
                 ) : (
-                  <span className="text-gray-500 text-sm">Unassigned</span>
+                  <span className="text-gray-500 text-sm">Atanmamış</span>
                 )}
               </TableCell>
               <TableCell>
                 <Badge className={getPriorityColor(task.priority)}>
-                  {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                  {task.priority === "low" ? "Düşük" : 
+                   task.priority === "medium" ? "Orta" : "Yüksek"}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <Badge className={getStatusColor(task.status)}>
+                  {getStatusDisplay(task.status)}
                 </Badge>
               </TableCell>
               <TableCell>
                 <Badge variant="outline">
-                  {task.type.charAt(0).toUpperCase() + task.type.slice(1)}
+                  {task.type === "general" ? "Genel" :
+                   task.type === "call" ? "Arama" :
+                   task.type === "meeting" ? "Toplantı" :
+                   task.type === "follow_up" ? "Takip" :
+                   task.type === "proposal" ? "Teklif" :
+                   task.type === "opportunity" ? "Fırsat" :
+                   task.type === "reminder" ? "Hatırlatma" :
+                   task.type === "email" ? "E-posta" : task.type}
                 </Badge>
               </TableCell>
               <TableCell>
-                {task.due_date ? new Date(task.due_date).toLocaleDateString() : "No date"}
+                {formatDate(task.due_date)}
               </TableCell>
               <TableCell>
                 <Button variant="ghost" size="icon">
