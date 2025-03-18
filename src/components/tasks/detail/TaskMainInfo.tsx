@@ -12,20 +12,20 @@ const TaskMainInfo = ({ formData, handleInputChange }: TaskMainInfoProps) => {
   return (
     <>
       <div className="space-y-2">
-        <label className="text-sm font-medium">Task Name</label>
+        <label className="text-sm font-medium">Görev Adı</label>
         <Input
           value={formData.title}
           onChange={(e) => handleInputChange('title', e.target.value)}
-          placeholder="Enter task name"
+          placeholder="Görev adını girin"
         />
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Description</label>
+        <label className="text-sm font-medium">Açıklama</label>
         <Textarea
           value={formData.description || ''}
           onChange={(e) => handleInputChange('description', e.target.value)}
-          placeholder="Enter task description"
+          placeholder="Görev açıklamasını girin"
           className="min-h-32"
         />
       </div>

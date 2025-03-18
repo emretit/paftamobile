@@ -141,7 +141,11 @@ export const TasksTable = ({
           </TableRow>
         ) : (
           filteredTasks.map((task) => (
-            <TableRow key={task.id} onClick={() => onSelectTask(task)} className="cursor-pointer hover:bg-gray-50">
+            <TableRow 
+              key={task.id} 
+              onClick={() => onSelectTask(task)} 
+              className="cursor-pointer hover:bg-gray-50"
+            >
               <TableCell className="font-medium">{task.title}</TableCell>
               <TableCell>
                 {task.assignee ? (
@@ -176,14 +180,21 @@ export const TasksTable = ({
               </TableCell>
               <TableCell>
                 <Badge variant="outline">
-                  {getTypeDisplay(task.type)}
+                  {task.type ? getTypeDisplay(task.type) : "Genel"}
                 </Badge>
               </TableCell>
               <TableCell>
                 {formatDate(task.due_date)}
               </TableCell>
               <TableCell>
-                <Button variant="ghost" size="icon">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectTask(task);
+                  }}
+                >
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </TableCell>

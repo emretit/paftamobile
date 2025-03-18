@@ -45,10 +45,10 @@ const TaskDetails = ({ task, isOpen, onClose }: TaskDetailsProps) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Task updated successfully');
+      toast.success('Görev başarıyla güncellendi');
     },
     onError: (error) => {
-      toast.error('Failed to update task: ' + error.message);
+      toast.error('Görev güncellenirken hata oluştu: ' + error.message);
     }
   });
 
@@ -102,11 +102,11 @@ const TaskDetails = ({ task, isOpen, onClose }: TaskDetailsProps) => {
             disabled={updateTaskMutation.isPending}
           >
             {updateTaskMutation.isPending ? (
-              "Saving..."
+              "Kaydediliyor..."
             ) : (
               <>
                 <Save className="mr-2 h-4 w-4" />
-                Save Changes
+                Değişiklikleri Kaydet
               </>
             )}
           </Button>

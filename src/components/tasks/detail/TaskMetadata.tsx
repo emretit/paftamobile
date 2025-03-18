@@ -48,13 +48,13 @@ const TaskMetadata = ({
   return (
     <>
       <div className="space-y-2">
-        <label className="text-sm font-medium">Assigned To</label>
+        <label className="text-sm font-medium">Görevlendirilen</label>
         <Select
           value={formData.assignee_id || ''}
           onValueChange={(value) => handleInputChange('assignee_id', value)}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select assignee" />
+            <SelectValue placeholder="Görevlendirilecek kişiyi seçin" />
           </SelectTrigger>
           <SelectContent>
             {employees?.map((employee) => (
@@ -67,7 +67,7 @@ const TaskMetadata = ({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Due Date</label>
+        <label className="text-sm font-medium">Bitiş Tarihi</label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -77,7 +77,7 @@ const TaskMetadata = ({
                 !date && "text-muted-foreground"
               )}
             >
-              {date ? format(date, "PPP") : <span>Pick a date</span>}
+              {date ? format(date, "PPP") : <span>Tarih seçin</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -93,7 +93,7 @@ const TaskMetadata = ({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Status</label>
+        <label className="text-sm font-medium">Durum</label>
         <Select
           value={formData.status}
           onValueChange={(value) => 
@@ -101,19 +101,19 @@ const TaskMetadata = ({
           }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select status" />
+            <SelectValue placeholder="Durum seçin" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="todo">To Do</SelectItem>
-            <SelectItem value="in_progress">In Progress</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="postponed">Postponed</SelectItem>
+            <SelectItem value="todo">Yapılacak</SelectItem>
+            <SelectItem value="in_progress">Devam Ediyor</SelectItem>
+            <SelectItem value="completed">Tamamlandı</SelectItem>
+            <SelectItem value="postponed">Ertelendi</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Priority</label>
+        <label className="text-sm font-medium">Öncelik</label>
         <Select
           value={formData.priority}
           onValueChange={(value) => 
@@ -121,12 +121,12 @@ const TaskMetadata = ({
           }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select priority" />
+            <SelectValue placeholder="Öncelik seçin" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="low">Low</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="high">High</SelectItem>
+            <SelectItem value="low">Düşük</SelectItem>
+            <SelectItem value="medium">Orta</SelectItem>
+            <SelectItem value="high">Yüksek</SelectItem>
           </SelectContent>
         </Select>
       </div>
