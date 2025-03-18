@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import TasksTable from "./TasksTable";
 import type { Task, TaskType, TaskWithOverdue } from "@/types/task";
 import { useTaskRealtime } from "./hooks/useTaskRealtime";
+import { toast } from "sonner";
 
 interface TasksContentProps {
   searchQuery?: string;
@@ -33,6 +34,7 @@ const TasksContent = ({
 
       if (error) {
         console.error("Error fetching tasks:", error);
+        toast.error(`Görevler yüklenirken hata: ${error.message}`);
         throw error;
       }
       
@@ -54,6 +56,7 @@ const TasksContent = ({
           
         if (employeesError) {
           console.error("Error fetching employees:", employeesError);
+          toast.error(`Çalışanlar yüklenirken hata: ${employeesError.message}`);
         } else if (employeesData) {
           console.log("Employees fetched:", employeesData.length);
           employees = employeesData.reduce((acc: Record<string, any>, emp: any) => {
@@ -94,6 +97,15 @@ const TasksContent = ({
 
   if (error) {
     console.error("Error in task query:", error);
+    return (
+      <div className="bg-white rounded-lg border shadow-sm">
+        <div className="p-6">
+          <div className="text-red-600 py-4">
+            Görevler yüklenirken bir hata oluştu: {(error as Error).message}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
