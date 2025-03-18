@@ -62,6 +62,21 @@ export const TasksTable = ({
     }
   };
 
+  // Function to get type display name
+  const getTypeDisplay = (type: string) => {
+    switch (type) {
+      case "general": return "Genel";
+      case "call": return "Arama";
+      case "meeting": return "Toplantı";
+      case "follow_up": return "Takip";
+      case "proposal": return "Teklif";
+      case "opportunity": return "Fırsat";
+      case "reminder": return "Hatırlatma";
+      case "email": return "E-posta";
+      default: return type;
+    }
+  };
+
   // Function to format date with proper locale
   const formatDate = (dateString?: string) => {
     if (!dateString) return "-";
@@ -161,14 +176,7 @@ export const TasksTable = ({
               </TableCell>
               <TableCell>
                 <Badge variant="outline">
-                  {task.type === "general" ? "Genel" :
-                   task.type === "call" ? "Arama" :
-                   task.type === "meeting" ? "Toplantı" :
-                   task.type === "follow_up" ? "Takip" :
-                   task.type === "proposal" ? "Teklif" :
-                   task.type === "opportunity" ? "Fırsat" :
-                   task.type === "reminder" ? "Hatırlatma" :
-                   task.type === "email" ? "E-posta" : task.type}
+                  {getTypeDisplay(task.type)}
                 </Badge>
               </TableCell>
               <TableCell>

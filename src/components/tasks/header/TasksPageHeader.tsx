@@ -1,9 +1,10 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Database } from "lucide-react";
 import { seedTasks } from "@/utils/seedSampleData";
 import { useToast } from "@/components/ui/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface TasksPageHeaderProps {
   onCreateTask: () => void;
@@ -11,18 +12,35 @@ interface TasksPageHeaderProps {
 
 const TasksPageHeader = ({ onCreateTask }: TasksPageHeaderProps) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isSeeding, setIsSeeding] = useState(false);
 
   const handleSeedData = async () => {
     try {
+      setIsSeeding(true);
       toast({
         title: "Örnek Veriler Yükleniyor",
         description: "Örnek görevler yükleniyor, lütfen bekleyin...",
       });
       
-      await seedTasks();
+      const result = await seedTasks();
       
-      // Reload the page to show the new data
-      window.location.reload();
+      if (result.success) {
+        toast({
+          title: "Başarılı",
+          description: "Örnek görevler başarıyla eklendi!",
+          variant: "success",
+        });
+        
+        // Refresh the tasks data
+        queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      } else {
+        toast({
+          title: "Hata",
+          description: "Örnek veriler yüklenirken bir hata oluştu.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error("Error seeding data:", error);
       toast({
@@ -30,6 +48,8 @@ const TasksPageHeader = ({ onCreateTask }: TasksPageHeaderProps) => {
         description: "Örnek veriler yüklenirken bir hata oluştu.",
         variant: "destructive",
       });
+    } finally {
+      setIsSeeding(false);
     }
   };
 
@@ -42,9 +62,14 @@ const TasksPageHeader = ({ onCreateTask }: TasksPageHeaderProps) => {
         </p>
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" onClick={handleSeedData} className="flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          onClick={handleSeedData} 
+          className="flex items-center gap-2"
+          disabled={isSeeding}
+        >
           <Database className="h-4 w-4" />
-          <span>Örnek Veriler Ekle</span>
+          <span>{isSeeding ? "Yükleniyor..." : "Örnek Veriler Ekle"}</span>
         </Button>
         <Button onClick={onCreateTask} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
