@@ -27,11 +27,11 @@ export const useTaskDetail = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Task updated successfully');
+      toast.success('Görev başarıyla güncellendi');
     },
     onError: (error) => {
       setIsLoading(false);
-      toast.error('Failed to update task');
+      toast.error('Görev güncellenirken hata oluştu: ' + error.message);
       console.error('Error updating task:', error);
     }
   });
@@ -49,11 +49,11 @@ export const useTaskDetail = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Task deleted successfully');
+      toast.success('Görev başarıyla silindi');
     },
     onError: (error) => {
       setIsLoading(false);
-      toast.error('Failed to delete task');
+      toast.error('Görev silinirken hata oluştu: ' + error.message);
       console.error('Error deleting task:', error);
     }
   });

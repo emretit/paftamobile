@@ -10,6 +10,8 @@ import type { Task } from "@/types/task";
 import TaskDetailHeader from "./TaskDetailHeader";
 import TaskMainInfo from "./TaskMainInfo";
 import TaskMetadata from "./TaskMetadata";
+import { useTaskDetail } from "../hooks/useTaskDetail";
+import { SubtaskManager } from "./SubtaskManager";
 
 interface TaskDetailsProps {
   task: Task | null;
@@ -21,6 +23,7 @@ const TaskDetails = ({ task, isOpen, onClose }: TaskDetailsProps) => {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Task | null>(null);
   const [date, setDate] = useState<Date | undefined>(undefined);
+  const { isLoading, updateTaskMutation } = useTaskDetail();
 
   useEffect(() => {
     if (task) {
@@ -28,29 +31,6 @@ const TaskDetails = ({ task, isOpen, onClose }: TaskDetailsProps) => {
       setDate(task.due_date ? new Date(task.due_date) : undefined);
     }
   }, [task]);
-
-  const updateTaskMutation = useMutation({
-    mutationFn: async (updatedTask: Partial<Task>) => {
-      if (!task?.id) throw new Error('Task ID is required');
-
-      const { data, error } = await supabase
-        .from('tasks')
-        .update(updatedTask as any) // Type assertion to avoid TypeScript errors
-        .eq('id', task.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data as Task;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Görev başarıyla güncellendi');
-    },
-    onError: (error) => {
-      toast.error('Görev güncellenirken hata oluştu: ' + error.message);
-    }
-  });
 
   const handleInputChange = (key: keyof Task, value: any) => {
     if (!formData) return;
@@ -67,19 +47,29 @@ const TaskDetails = ({ task, isOpen, onClose }: TaskDetailsProps) => {
         ...formData,
         due_date: newDate.toISOString()
       });
+    } else if (formData) {
+      // Handle clearing the date
+      setFormData({
+        ...formData,
+        due_date: undefined
+      });
     }
   };
 
   const handleSave = () => {
     if (!formData) return;
-    updateTaskMutation.mutate(formData);
+    updateTaskMutation.mutate(formData, {
+      onSuccess: () => {
+        // No need to close after save
+      }
+    });
   };
 
   if (!formData) return null;
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="sm:max-w-md">
+      <SheetContent className="sm:max-w-md overflow-y-auto">
         <SheetHeader className="relative">
           <TaskDetailHeader onClose={onClose} />
         </SheetHeader>
@@ -96,10 +86,15 @@ const TaskDetails = ({ task, isOpen, onClose }: TaskDetailsProps) => {
             handleDateChange={handleDateChange}
           />
 
+          <SubtaskManager
+            task={formData}
+            onUpdate={handleInputChange}
+          />
+
           <Button
             className="w-full"
             onClick={handleSave}
-            disabled={updateTaskMutation.isPending}
+            disabled={isLoading || updateTaskMutation.isPending}
           >
             {updateTaskMutation.isPending ? (
               "Kaydediliyor..."
