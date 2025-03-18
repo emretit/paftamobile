@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,7 +45,6 @@ const TasksContent = ({
       // Transform the data to match the Task type
       return (data || []).map(task => ({
         ...task,
-        type: task.type || 'general', // Provide default type if missing
         assignee: task.assignee ? {
           id: task.assignee.id,
           first_name: task.assignee.first_name,
