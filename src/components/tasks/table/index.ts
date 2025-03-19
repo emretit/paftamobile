@@ -1,7 +1,7 @@
 
-export { default as TaskTableHeader } from './TaskTableHeader';
-export { default as TaskTableRow } from './TaskTableRow';
-export { PriorityBadge } from './PriorityBadge';
-export { useSortedTasks } from './useSortedTasks';
-export { useTaskOperations } from './useTaskOperations';
-export type { SortField, SortDirection } from './types';
+export { default as TasksTable } from './TasksTable';
+export { default as TasksTableHeader } from './TasksTableHeader';
+export { default as TasksTableRow } from './TasksTableRow';
+export { default as TasksTableEmpty } from './TasksTableEmpty';
+export { default as TasksTableLoading } from './TasksTableLoading';
+export type { TasksTableProps } from './TasksTable';
