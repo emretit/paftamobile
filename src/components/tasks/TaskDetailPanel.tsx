@@ -12,10 +12,14 @@ interface TaskDetailPanelProps {
 const TaskDetailPanel = ({ task, isOpen, onClose }: TaskDetailPanelProps) => {
   if (!task) return null;
 
+  const handleClose = () => {
+    onClose();
+  };
+
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
+    <Sheet open={isOpen} onOpenChange={handleClose}>
       <SheetContent className="sm:max-w-md overflow-y-auto">
-        <TaskDetails task={task} onClose={onClose} />
+        <TaskDetails task={task} onClose={handleClose} />
       </SheetContent>
     </Sheet>
   );

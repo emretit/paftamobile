@@ -27,10 +27,16 @@ const TaskDetails = ({ task, onClose }: TaskDetailsProps) => {
 
   const handleInputChange = (field: keyof Task, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    console.log(`Field ${field} changed to:`, value);
   };
 
   const handleSave = () => {
-    updateTaskMutation.mutate(formData);
+    console.log("Saving form data:", formData);
+    updateTaskMutation.mutate(formData, {
+      onSuccess: () => {
+        onClose();
+      }
+    });
   };
 
   return (
@@ -83,6 +89,21 @@ const TaskDetails = ({ task, onClose }: TaskDetailsProps) => {
               <SelectItem value="low">Düşük</SelectItem>
               <SelectItem value="medium">Orta</SelectItem>
               <SelectItem value="high">Yüksek</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Görevlendirilen</label>
+          <Select
+            value={formData.assignee_id || ''}
+            onValueChange={(value) => handleInputChange('assignee_id', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Kişi seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              {/* We can add employees here later */}
             </SelectContent>
           </Select>
         </div>
