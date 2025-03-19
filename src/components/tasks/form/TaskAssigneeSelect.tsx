@@ -49,7 +49,7 @@ const TaskAssigneeSelect = ({ form, defaultValue }: TaskAssigneeSelectProps) => 
       name="assignee_id"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Atanan Kişi</FormLabel>
+          <FormLabel>Atanan</FormLabel>
           <Select
             disabled={isLoading}
             onValueChange={field.onChange}
