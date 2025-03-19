@@ -48,7 +48,7 @@ const TasksFilterBar = ({
           onValueChange={(value) => setSelectedEmployee(value === "all" ? null : value)}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Çalışan seç" />
+            <SelectValue placeholder="Atanan seç" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tümü</SelectItem>

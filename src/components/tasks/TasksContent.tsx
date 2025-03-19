@@ -8,8 +8,8 @@ import type { Task } from "@/types/task";
 
 interface TasksContentProps {
   searchQuery: string;
-  selectedEmployee: string;
-  selectedType: string;
+  selectedEmployee: string | null;
+  selectedType: string | null;
   onSelectTask?: (task: Task) => void;
 }
 

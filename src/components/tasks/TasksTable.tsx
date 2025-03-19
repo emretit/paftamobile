@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +15,8 @@ export interface TasksTableProps {
   isLoading: boolean;
   onSelectTask: (task: Task) => void;
   searchQuery?: string;
-  selectedEmployee?: string;
-  selectedType?: string;
+  selectedEmployee?: string | null;
+  selectedType?: string | null;
 }
 
 export const TasksTable = ({
@@ -25,8 +24,8 @@ export const TasksTable = ({
   isLoading,
   onSelectTask,
   searchQuery = "",
-  selectedEmployee = "",
-  selectedType = ""
+  selectedEmployee = null,
+  selectedType = null
 }: TasksTableProps) => {
   // Filter tasks based on search and filters
   const filteredTasks = tasks.filter(task => {
@@ -34,7 +33,7 @@ export const TasksTable = ({
       task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
       
-    const matchesEmployee = !selectedEmployee || selectedEmployee === "all" || task.assigned_to === selectedEmployee;
+    const matchesEmployee = !selectedEmployee || selectedEmployee === "all" || task.assignee_id === selectedEmployee;
     const matchesType = !selectedType || selectedType === "all" || task.type === selectedType;
     
     return matchesSearch && matchesEmployee && matchesType;
