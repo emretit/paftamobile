@@ -1,13 +1,15 @@
 
-import type { TaskPriority, TaskType } from "@/types/task";
+import { TaskPriority, TaskStatus, TaskType } from "@/types/task";
 
-export interface FormData {
+export interface FormValues {
   title: string;
   description: string;
+  status: TaskStatus;
   priority: TaskPriority;
   type: TaskType;
   assignee_id?: string;
-  due_date?: string;
+  due_date?: Date;
   related_item_id?: string;
+  related_item_type?: string;
   related_item_title?: string;
 }

@@ -3,19 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { TaskPriority, TaskType } from "@/types/task";
-
-interface FormValues {
-  title: string;
-  description: string;
-  status: string;
-  priority: TaskPriority;
-  type: TaskType;
-  assignee_id?: string;
-  due_date?: Date;
-  related_item_id?: string;
-  related_item_type?: string;
-  related_item_title?: string;
-}
+import { FormValues } from "./types";
 
 interface TaskMetadataProps {
   watch: UseFormWatch<FormValues>;

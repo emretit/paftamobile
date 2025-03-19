@@ -10,19 +10,7 @@ import { cn } from "@/lib/utils";
 import { UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-interface FormValues {
-  title: string;
-  description: string;
-  status: string;
-  priority: string;
-  type: string;
-  assignee_id?: string;
-  due_date?: Date;
-  related_item_id?: string;
-  related_item_type?: string;
-  related_item_title?: string;
-}
+import { FormValues } from "./types";
 
 interface TaskAssignmentProps {
   watch: UseFormWatch<FormValues>;

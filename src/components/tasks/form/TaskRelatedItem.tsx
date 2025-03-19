@@ -1,28 +1,11 @@
 
-import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormWatch, UseFormSetValue } from "react-hook-form";
-import { TaskType } from "@/types/task";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-interface RelatedItem {
-  id: string;
-  title: string;
-}
-
-interface FormValues {
-  title: string;
-  description: string;
-  status: string;
-  priority: string;
-  type: string;
-  assignee_id?: string;
-  due_date?: Date;
-  related_item_id?: string;
-  related_item_type?: string;
-  related_item_title?: string;
-}
+import { TaskType } from "@/types/task";
+import { FormValues } from "./types";
 
 interface TaskRelatedItemProps {
   taskType: TaskType;
@@ -31,98 +14,54 @@ interface TaskRelatedItemProps {
 }
 
 const TaskRelatedItem = ({ taskType, watch, setValue }: TaskRelatedItemProps) => {
-  const [relatedItems, setRelatedItems] = useState<RelatedItem[]>([]);
-  const [loading, setLoading] = useState(false);
   const relatedItemType = watch("related_item_type");
+  
+  // Fetch opportunities for the related entity dropdown
+  const { data: opportunities } = useQuery({
+    queryKey: ["opportunities"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("opportunities")
+        .select("id, title");
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: relatedItemType === "opportunity" || taskType === "opportunity"
+  });
 
+  // Fetch proposals for the related entity dropdown
+  const { data: proposals } = useQuery({
+    queryKey: ["proposals"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("proposals")
+        .select("id, title");
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: relatedItemType === "proposal" || taskType === "proposal"
+  });
+  
+  // Automatically set related item type based on task type if relevant
   useEffect(() => {
-    // Only fetch related items if we have a specific type
-    if (!taskType || taskType === 'general') {
-      setRelatedItems([]);
-      return;
+    if (taskType === "opportunity" && !relatedItemType) {
+      setValue("related_item_type", "opportunity");
+    } else if (taskType === "proposal" && !relatedItemType) {
+      setValue("related_item_type", "proposal");
     }
+  }, [taskType, relatedItemType, setValue]);
 
-    const fetchRelatedItems = async () => {
-      setLoading(true);
-      try {
-        let data = null;
-        let error = null;
-
-        // Fetch different related items based on task type
-        switch (taskType) {
-          case 'opportunity':
-            // Fetch opportunities
-            ({ data, error } = await supabase
-              .from('opportunities')
-              .select('id, title')
-              .order('created_at', { ascending: false }));
-            break;
-          case 'proposal':
-            // Fetch proposals
-            ({ data, error } = await supabase
-              .from('proposals')
-              .select('id, title')
-              .order('created_at', { ascending: false }));
-            break;
-          // Add other cases for email, call, meeting, etc.
-          default:
-            // For other types, just clear the list
-            setRelatedItems([]);
-            setLoading(false);
-            return;
-        }
-
-        if (error) throw error;
-        setRelatedItems(data || []);
-      } catch (error) {
-        console.error(`Error fetching ${taskType} items:`, error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRelatedItems();
-  }, [taskType]);
-
-  // Effect to set related_item_title when related_item_id changes
-  useEffect(() => {
-    const relatedItemId = watch("related_item_id");
-    if (relatedItemId && relatedItems.length > 0) {
-      const item = relatedItems.find(item => item.id === relatedItemId);
-      if (item) {
-        setValue("related_item_title", item.title);
-      }
-    }
-  }, [watch("related_item_id"), relatedItems, setValue]);
-
-  // Only show related item field for certain task types
-  if (!taskType || taskType === 'general') {
+  // If the task type isn't related to something else, don't show this section
+  if (!["opportunity", "proposal", "follow_up"].includes(taskType) && !relatedItemType) {
     return null;
   }
-
-  const getRelatedItemLabel = () => {
-    switch (taskType) {
-      case 'opportunity':
-        return 'İlgili Fırsat';
-      case 'proposal':
-        return 'İlgili Teklif';
-      case 'call':
-        return 'İlgili Arama';
-      case 'email':
-        return 'İlgili E-posta';
-      case 'meeting':
-        return 'İlgili Toplantı';
-      case 'follow_up':
-        return 'İlgili Takip';
-      default:
-        return 'İlgili Öğe';
-    }
-  };
 
   return (
     <div className="space-y-4">
       <div className="grid gap-2">
-        <Label>İlgili Kayıt Türü</Label>
+        <Label htmlFor="related_item_type">İlgili Kayıt Türü</Label>
         <Select
           value={watch("related_item_type") || ""}
           onValueChange={(value) => 
@@ -142,29 +81,45 @@ const TaskRelatedItem = ({ taskType, watch, setValue }: TaskRelatedItemProps) =>
 
       {relatedItemType && (
         <div className="grid gap-2">
-          <Label>İlgili {relatedItemType === "opportunity" ? "Fırsat" : "Teklif"}</Label>
+          <Label htmlFor="related_item_id">İlgili {relatedItemType === "opportunity" ? "Fırsat" : "Teklif"}</Label>
           <Select
             value={watch("related_item_id") || ""}
-            onValueChange={(value) => 
-              setValue("related_item_id", value === "" ? undefined : value)
-            }
+            onValueChange={(value) => {
+              setValue("related_item_id", value === "" ? undefined : value);
+              
+              // Also set the title
+              if (value && value !== "") {
+                if (relatedItemType === "opportunity" && opportunities) {
+                  const opportunity = opportunities.find(opp => opp.id === value);
+                  if (opportunity) {
+                    setValue("related_item_title", opportunity.title);
+                  }
+                } else if (relatedItemType === "proposal" && proposals) {
+                  const proposal = proposals.find(prop => prop.id === value);
+                  if (proposal) {
+                    setValue("related_item_title", proposal.title);
+                  }
+                }
+              } else {
+                setValue("related_item_title", undefined);
+              }
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder={`İlgili ${relatedItemType === "opportunity" ? "fırsat" : "teklif"} seçin`} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">Seçilmedi</SelectItem>
-              {loading ? (
-                <SelectItem value="" disabled>Yükleniyor...</SelectItem>
-              ) : relatedItems.length === 0 ? (
-                <SelectItem value="" disabled>İlgili öğe bulunamadı</SelectItem>
-              ) : (
-                relatedItems.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.title}
-                  </SelectItem>
-                ))
-              )}
+              {relatedItemType === "opportunity" && opportunities?.map((opportunity) => (
+                <SelectItem key={opportunity.id} value={opportunity.id}>
+                  {opportunity.title}
+                </SelectItem>
+              ))}
+              {relatedItemType === "proposal" && proposals?.map((proposal) => (
+                <SelectItem key={proposal.id} value={proposal.id}>
+                  {proposal.title}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -172,5 +127,7 @@ const TaskRelatedItem = ({ taskType, watch, setValue }: TaskRelatedItemProps) =>
     </div>
   );
 };
+
+import { useEffect } from "react";
 
 export default TaskRelatedItem;

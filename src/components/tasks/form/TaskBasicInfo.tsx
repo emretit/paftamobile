@@ -3,19 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UseFormRegister, FieldErrors } from "react-hook-form";
-
-interface FormValues {
-  title: string;
-  description: string;
-  status: string;
-  priority: string;
-  type: string;
-  assignee_id?: string;
-  due_date?: Date;
-  related_item_id?: string;
-  related_item_type?: string;
-  related_item_title?: string;
-}
+import { FormValues } from "./types";
 
 interface TaskBasicInfoProps {
   register: UseFormRegister<FormValues>;

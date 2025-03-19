@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Task } from "@/types/task";
+import { FormValues } from "./types";
 import TaskBasicInfo from "./TaskBasicInfo";
 import TaskMetadata from "./TaskMetadata";
 import TaskAssignment from "./TaskAssignment";
@@ -16,19 +16,6 @@ interface TaskFormProps {
   task?: Task;
   onClose: () => void;
 }
-
-type FormValues = {
-  title: string;
-  description: string;
-  status: Task["status"];
-  priority: Task["priority"];
-  type: Task["type"];
-  assignee_id?: string;
-  due_date?: Date;
-  related_item_id?: string;
-  related_item_type?: string;
-  related_item_title?: string;
-};
 
 export default function TaskForm({ task, onClose }: TaskFormProps) {
   const queryClient = useQueryClient();
