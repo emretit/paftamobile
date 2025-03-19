@@ -10,11 +10,23 @@ import { cn } from "@/lib/utils";
 import { UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { FormData } from "./types";
+
+interface FormValues {
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  type: string;
+  assignee_id?: string;
+  due_date?: Date;
+  related_item_id?: string;
+  related_item_type?: string;
+  related_item_title?: string;
+}
 
 interface TaskAssignmentProps {
-  watch: UseFormWatch<FormData>;
-  setValue: UseFormSetValue<FormData>;
+  watch: UseFormWatch<FormValues>;
+  setValue: UseFormSetValue<FormValues>;
 }
 
 const TaskAssignment = ({ watch, setValue }: TaskAssignmentProps) => {
@@ -34,7 +46,7 @@ const TaskAssignment = ({ watch, setValue }: TaskAssignmentProps) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div className="space-y-2">
-        <Label>Atanan Kişi</Label>
+        <Label>Görevlendirilen</Label>
         <Select
           value={watch("assignee_id") || ""}
           onValueChange={(value) => setValue("assignee_id", value)}
@@ -43,6 +55,7 @@ const TaskAssignment = ({ watch, setValue }: TaskAssignmentProps) => {
             <SelectValue placeholder="Kişi seçin" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="">Atanmamış</SelectItem>
             {employees?.map((employee) => (
               <SelectItem key={employee.id} value={employee.id}>
                 {employee.first_name} {employee.last_name}
@@ -70,8 +83,8 @@ const TaskAssignment = ({ watch, setValue }: TaskAssignmentProps) => {
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar
               mode="single"
-              selected={watch("due_date") ? new Date(watch("due_date")) : undefined}
-              onSelect={(date) => setValue("due_date", date?.toISOString())}
+              selected={watch("due_date")}
+              onSelect={(date) => setValue("due_date", date)}
               initialFocus
             />
           </PopoverContent>

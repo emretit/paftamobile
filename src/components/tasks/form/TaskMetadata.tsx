@@ -2,50 +2,43 @@
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormWatch, UseFormSetValue } from "react-hook-form";
-import type { FormData } from "./types";
-import type { Task } from "@/types/task";
+import { TaskPriority, TaskType } from "@/types/task";
+
+interface FormValues {
+  title: string;
+  description: string;
+  status: string;
+  priority: TaskPriority;
+  type: TaskType;
+  assignee_id?: string;
+  due_date?: Date;
+  related_item_id?: string;
+  related_item_type?: string;
+  related_item_title?: string;
+}
 
 interface TaskMetadataProps {
-  watch: UseFormWatch<FormData>;
-  setValue: UseFormSetValue<FormData>;
+  watch: UseFormWatch<FormValues>;
+  setValue: UseFormSetValue<FormValues>;
 }
 
 const TaskMetadata = ({ watch, setValue }: TaskMetadataProps) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div className="space-y-2">
-        <Label>Öncelik</Label>
-        <Select
-          value={watch("priority")}
-          onValueChange={(value) => setValue("priority", value as Task["priority"])}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Öncelik seçin" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="low">Düşük</SelectItem>
-            <SelectItem value="medium">Orta</SelectItem>
-            <SelectItem value="high">Yüksek</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Tip</Label>
-        <Select
-          value={watch("type")}
-          onValueChange={(value) => setValue("type", value as Task["type"])}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Görev tipi seçin" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="general">Genel</SelectItem>
-            <SelectItem value="opportunity">Fırsat</SelectItem>
-            <SelectItem value="proposal">Teklif</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="grid gap-2">
+      <Label>Öncelik</Label>
+      <Select 
+        value={watch("priority")} 
+        onValueChange={(value) => setValue("priority", value as TaskPriority)}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Öncelik seçin" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="low">Düşük</SelectItem>
+          <SelectItem value="medium">Orta</SelectItem>
+          <SelectItem value="high">Yüksek</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   );
 };

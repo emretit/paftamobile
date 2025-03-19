@@ -2,33 +2,52 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { UseFormRegister } from "react-hook-form";
-import type { FormData } from "./types";
+import { UseFormRegister, FieldErrors } from "react-hook-form";
 
-interface TaskBasicInfoProps {
-  register: UseFormRegister<FormData>;
+interface FormValues {
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  type: string;
+  assignee_id?: string;
+  due_date?: Date;
+  related_item_id?: string;
+  related_item_type?: string;
+  related_item_title?: string;
 }
 
-const TaskBasicInfo = ({ register }: TaskBasicInfoProps) => {
+interface TaskBasicInfoProps {
+  register: UseFormRegister<FormValues>;
+  errors: FieldErrors<FormValues>;
+}
+
+const TaskBasicInfo = ({ register, errors }: TaskBasicInfoProps) => {
   return (
     <>
-      <div className="space-y-2">
-        <Label htmlFor="title">Başlık</Label>
+      <div className="grid gap-2">
+        <Label htmlFor="title">Başlık <span className="text-red-500">*</span></Label>
         <Input
           id="title"
-          {...register("title", { required: true })}
-          placeholder="Görev başlığını girin"
+          placeholder="Görev başlığı"
+          {...register("title", { required: "Başlık zorunludur" })}
         />
+        {errors.title && (
+          <p className="text-sm text-red-500">{errors.title.message}</p>
+        )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="description">Açıklama</Label>
+      <div className="grid gap-2">
+        <Label htmlFor="description">Açıklama <span className="text-red-500">*</span></Label>
         <Textarea
           id="description"
-          {...register("description")}
-          placeholder="Görev açıklamasını girin"
-          className="min-h-[100px]"
+          placeholder="Görev açıklaması"
+          rows={3}
+          {...register("description", { required: "Açıklama zorunludur" })}
         />
+        {errors.description && (
+          <p className="text-sm text-red-500">{errors.description.message}</p>
+        )}
       </div>
     </>
   );

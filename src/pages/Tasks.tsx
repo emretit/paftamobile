@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TasksKanban from "@/components/tasks/TasksKanban";
 import TasksPageHeader from "@/components/tasks/header/TasksPageHeader";
-import TaskForm from "@/components/tasks/TaskForm";
+import TaskForm from "@/components/tasks/form/TaskForm";
 import type { Task } from "@/types/task";
 
 interface TasksPageProps {

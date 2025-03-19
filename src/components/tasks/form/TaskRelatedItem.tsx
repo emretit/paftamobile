@@ -1,32 +1,39 @@
 
 import { useState, useEffect } from "react";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UseFormReturn } from "react-hook-form";
+import { UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { TaskType } from "@/types/task";
 import { supabase } from "@/integrations/supabase/client";
-
-interface TaskRelatedItemProps {
-  form: UseFormReturn<any>;
-  taskType: TaskType;
-  defaultRelatedItemId?: string;
-  defaultRelatedItemTitle?: string;
-}
 
 interface RelatedItem {
   id: string;
   title: string;
 }
 
-const TaskRelatedItem = ({ 
-  form, 
-  taskType,
-  defaultRelatedItemId,
-  defaultRelatedItemTitle 
-}: TaskRelatedItemProps) => {
+interface FormValues {
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  type: string;
+  assignee_id?: string;
+  due_date?: Date;
+  related_item_id?: string;
+  related_item_type?: string;
+  related_item_title?: string;
+}
+
+interface TaskRelatedItemProps {
+  taskType: TaskType;
+  watch: UseFormWatch<FormValues>;
+  setValue: UseFormSetValue<FormValues>;
+}
+
+const TaskRelatedItem = ({ taskType, watch, setValue }: TaskRelatedItemProps) => {
   const [relatedItems, setRelatedItems] = useState<RelatedItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const relatedItemType = watch("related_item_type");
 
   useEffect(() => {
     // Only fetch related items if we have a specific type
@@ -77,6 +84,17 @@ const TaskRelatedItem = ({
     fetchRelatedItems();
   }, [taskType]);
 
+  // Effect to set related_item_title when related_item_id changes
+  useEffect(() => {
+    const relatedItemId = watch("related_item_id");
+    if (relatedItemId && relatedItems.length > 0) {
+      const item = relatedItems.find(item => item.id === relatedItemId);
+      if (item) {
+        setValue("related_item_title", item.title);
+      }
+    }
+  }, [watch("related_item_id"), relatedItems, setValue]);
+
   // Only show related item field for certain task types
   if (!taskType || taskType === 'general') {
     return null;
@@ -103,56 +121,54 @@ const TaskRelatedItem = ({
 
   return (
     <div className="space-y-4">
-      <FormField
-        control={form.control}
-        name="related_item_id"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{getRelatedItemLabel()}</FormLabel>
-            <Select
-              onValueChange={(value) => {
-                field.onChange(value);
-                // If selection changes, update the title too
-                if (value) {
-                  const selectedItem = relatedItems.find(item => item.id === value);
-                  if (selectedItem) {
-                    form.setValue('related_item_title', selectedItem.title);
-                  }
-                } else {
-                  form.setValue('related_item_title', undefined);
-                }
-              }}
-              defaultValue={field.value}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder={`${getRelatedItemLabel()} seçin`} />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {loading ? (
-                  <SelectItem value="" disabled>Yükleniyor...</SelectItem>
-                ) : relatedItems.length === 0 ? (
-                  <SelectItem value="" disabled>İlgili öğe bulunamadı</SelectItem>
-                ) : (
-                  relatedItems.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.title}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid gap-2">
+        <Label>İlgili Kayıt Türü</Label>
+        <Select
+          value={watch("related_item_type") || ""}
+          onValueChange={(value) => 
+            setValue("related_item_type", value === "" ? undefined : value)
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="İlgili kayıt türü seçin" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Seçilmedi</SelectItem>
+            <SelectItem value="opportunity">Fırsat</SelectItem>
+            <SelectItem value="proposal">Teklif</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-      {/* Hidden field to store the related item title */}
-      <input 
-        type="hidden" 
-        {...form.register('related_item_title')} 
-      />
+      {relatedItemType && (
+        <div className="grid gap-2">
+          <Label>İlgili {relatedItemType === "opportunity" ? "Fırsat" : "Teklif"}</Label>
+          <Select
+            value={watch("related_item_id") || ""}
+            onValueChange={(value) => 
+              setValue("related_item_id", value === "" ? undefined : value)
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={`İlgili ${relatedItemType === "opportunity" ? "fırsat" : "teklif"} seçin`} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Seçilmedi</SelectItem>
+              {loading ? (
+                <SelectItem value="" disabled>Yükleniyor...</SelectItem>
+              ) : relatedItems.length === 0 ? (
+                <SelectItem value="" disabled>İlgili öğe bulunamadı</SelectItem>
+              ) : (
+                relatedItems.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.title}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
     </div>
   );
 };
