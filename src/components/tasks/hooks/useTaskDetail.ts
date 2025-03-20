@@ -8,7 +8,7 @@ export const useTaskDetail = () => {
   const queryClient = useQueryClient();
 
   const updateTaskMutation = useMutation({
-    mutationFn: async (updatedTask: Task) => {
+    mutationFn: async (updatedTask: Omit<Task, 'subtasks'>) => {
       console.log("Updating task:", updatedTask);
       
       // Only send the fields we want to update to avoid type errors

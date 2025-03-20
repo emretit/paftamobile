@@ -11,6 +11,8 @@ interface TaskSubtaskListProps {
 const TaskSubtaskList = ({ subtasks, onChange }: TaskSubtaskListProps) => {
   const [newSubtask, setNewSubtask] = useState("");
   const [isAddingSubtask, setIsAddingSubtask] = useState(false);
+  const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
 
   const handleAddSubtaskClick = () => {
     setIsAddingSubtask(true);
@@ -48,14 +50,27 @@ const TaskSubtaskList = ({ subtasks, onChange }: TaskSubtaskListProps) => {
     onChange(subtasks.filter(subtask => subtask.id !== id));
   };
 
-  const handleEditSubtask = (id: string, newTitle: string) => {
-    if (!newTitle.trim()) return;
+  const handleStartEditing = (subtask: SubTask) => {
+    setEditingSubtaskId(subtask.id);
+    setEditValue(subtask.title);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingSubtaskId || !editValue.trim()) return;
     
     onChange(
       subtasks.map(subtask => 
-        subtask.id === id ? { ...subtask, title: newTitle.trim() } : subtask
+        subtask.id === editingSubtaskId ? { ...subtask, title: editValue.trim() } : subtask
       )
     );
+    
+    setEditingSubtaskId(null);
+    setEditValue("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSubtaskId(null);
+    setEditValue("");
   };
 
   const handleMoveSubtask = (subtaskId: string, direction: 'up' | 'down') => {
@@ -103,14 +118,14 @@ const TaskSubtaskList = ({ subtasks, onChange }: TaskSubtaskListProps) => {
             <SubtaskItem
               key={subtask.id}
               subtask={subtask}
-              isEditing={false}
-              editValue=""
+              isEditing={editingSubtaskId === subtask.id}
+              editValue={editingSubtaskId === subtask.id ? editValue : ''}
               onToggle={(completed) => handleSubtaskToggle(subtask.id, completed)}
               onDelete={() => handleDeleteSubtask(subtask.id)}
-              onEdit={() => {}}
-              onSaveEdit={() => {}}
-              onCancelEdit={() => {}}
-              onChangeEditValue={() => {}}
+              onEdit={() => handleStartEditing(subtask)}
+              onSaveEdit={handleSaveEdit}
+              onCancelEdit={handleCancelEdit}
+              onChangeEditValue={setEditValue}
               onMoveUp={() => handleMoveSubtask(subtask.id, 'up')}
               onMoveDown={() => handleMoveSubtask(subtask.id, 'down')}
               isFirst={index === 0}
