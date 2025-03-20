@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 import { Proposal, ProposalStatus } from "@/types/proposal";
@@ -11,6 +12,8 @@ const generateProposalNumber = (): string => {
 
 export const createProposal = async (proposalData: Partial<Proposal>): Promise<Proposal> => {
   try {
+    const proposalItems = proposalData.items || [];
+    
     const { data, error } = await supabase
       .from('proposals')
       .insert({
@@ -24,15 +27,41 @@ export const createProposal = async (proposalData: Partial<Proposal>): Promise<P
         number: proposalData.number || generateProposalNumber(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        payment_terms: proposalData.payment_terms || "",
-        delivery_terms: proposalData.delivery_terms || "",
-        items: proposalData.items || [],
+        items: proposalItems,
+        currency: proposalData.currency || "TRY",
+        terms: proposalData.terms || "",
+        notes: proposalData.notes || "",
+        description: proposalData.description || "",
+        valid_until: proposalData.valid_until,
+        attachments: proposalData.attachments || []
       })
       .select()
       .single();
 
     if (error) throw error;
-    return data as Proposal;
+    
+    // Transform the response to match our Proposal type
+    const result: Proposal = {
+      id: data.id,
+      title: data.title,
+      number: data.number,
+      customer_id: data.customer_id,
+      opportunity_id: data.opportunity_id,
+      employee_id: data.employee_id,
+      status: data.status as ProposalStatus,
+      total_amount: data.total_amount,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      valid_until: data.valid_until,
+      items: Array.isArray(data.items) ? data.items : [],
+      attachments: Array.isArray(data.attachments) ? data.attachments : [],
+      currency: data.currency || "TRY",
+      terms: data.terms,
+      notes: data.notes,
+      description: data.description
+    };
+    
+    return result;
   } catch (error) {
     console.error('Error creating proposal:', error);
     throw error;
@@ -43,12 +72,51 @@ export const getProposalById = async (id: string): Promise<Proposal | null> => {
   try {
     const { data, error } = await supabase
       .from('proposals')
-      .select('*')
+      .select(`
+        *,
+        customer:customer_id (*),
+        employee:employee_id (*)
+      `)
       .eq('id', id)
       .single();
 
     if (error) throw error;
-    return data as Proposal;
+    
+    // Transform the response to match our Proposal type
+    const result: Proposal = {
+      id: data.id,
+      title: data.title,
+      number: data.number,
+      customer_id: data.customer_id,
+      opportunity_id: data.opportunity_id,
+      employee_id: data.employee_id,
+      status: data.status as ProposalStatus,
+      total_amount: data.total_amount,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      valid_until: data.valid_until,
+      items: Array.isArray(data.items) ? data.items : [],
+      attachments: Array.isArray(data.attachments) ? data.attachments : [],
+      currency: data.currency || "TRY",
+      terms: data.terms,
+      notes: data.notes,
+      description: data.description,
+      
+      // Include the joined relations
+      customer: data.customer,
+      employee: data.employee,
+      
+      // Backward compatibility fields
+      total_value: data.total_amount || 0,
+      proposal_number: data.number,
+      payment_terms: data.payment_terms || "",
+      delivery_terms: data.delivery_terms || "",
+      internal_notes: data.internal_notes || "",
+      discounts: data.discounts || 0,
+      additional_charges: data.additional_charges || 0,
+    };
+    
+    return result;
   } catch (error) {
     console.error('Error fetching proposal:', error);
     return null;
@@ -68,6 +136,13 @@ export const updateProposal = async (id: string, proposalData: Partial<Proposal>
         total_amount: proposalData.total_amount,
         number: proposalData.number,
         updated_at: new Date().toISOString(),
+        items: proposalData.items,
+        currency: proposalData.currency,
+        terms: proposalData.terms,
+        notes: proposalData.notes,
+        description: proposalData.description,
+        valid_until: proposalData.valid_until,
+        attachments: proposalData.attachments
       })
       .eq('id', id)
       .select()
@@ -100,25 +175,21 @@ export const addProposalComment = async (proposalId: string, comment: string): P
     // Get the current proposal
     const { data: proposal, error } = await supabase
       .from('proposals')
-      .select('comments')
+      .select('notes')
       .eq('id', proposalId)
       .single();
 
     if (error) throw error;
 
-    // Add the new comment
-    const comments = proposal.comments || [];
-    comments.push({
-      id: uuidv4(),
-      content: comment,
-      created_at: new Date().toISOString(),
-      user_id: 'system', // Replace with actual user ID when auth is implemented
-    });
+    // Add the new comment to notes
+    const newNotes = proposal.notes ? 
+      `${proposal.notes}\n\n${new Date().toISOString()} - ${comment}` : 
+      `${new Date().toISOString()} - ${comment}`;
 
     // Update the proposal
     await supabase
       .from('proposals')
-      .update({ comments })
+      .update({ notes: newNotes })
       .eq('id', proposalId);
   } catch (error) {
     console.error('Error adding proposal comment:', error);

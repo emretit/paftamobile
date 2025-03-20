@@ -1,4 +1,5 @@
 
+import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Proposal } from "@/types/proposal";
 import { format } from "date-fns";
@@ -6,6 +7,7 @@ import { tr } from "date-fns/locale";
 import { Eye, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "../detail/StatusBadge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ProposalTableRowProps {
   proposal: Proposal;
@@ -26,37 +28,72 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
   };
   
   return (
-    <TableRow className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-      <TableCell className="font-medium">#{proposal.number || proposal.proposal_number}</TableCell>
+    <TableRow 
+      className="cursor-pointer h-16 transition-colors hover:bg-muted/50"
+      onClick={() => onSelect(proposal)}
+    >
+      <TableCell className="font-medium">#{proposal.number}</TableCell>
       <TableCell>
         {proposal.customer ? (
-          <div>
-            <div className="font-medium">{proposal.customer.name}</div>
-            {proposal.customer.company && (
-              <div className="text-xs text-muted-foreground">{proposal.customer.company}</div>
-            )}
+          <div className="flex items-center space-x-2">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-primary/10 text-primary">
+                {proposal.customer.name?.substring(0, 1) || 'C'}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="font-medium">{proposal.customer.name}</div>
+              {proposal.customer.company && (
+                <div className="text-xs text-muted-foreground">{proposal.customer.company}</div>
+              )}
+            </div>
           </div>
         ) : (
           <span className="text-muted-foreground">{proposal.customer_name || "Müşteri yok"}</span>
         )}
       </TableCell>
       <TableCell>
-        <StatusBadge status={proposal.status as any} />
+        <StatusBadge status={proposal.status} />
       </TableCell>
+      <TableCell>
+        {proposal.employee ? (
+          <div className="flex items-center space-x-2">
+            <Avatar className="h-6 w-6">
+              <AvatarFallback>
+                {proposal.employee.first_name?.[0]}
+                {proposal.employee.last_name?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm">
+              {proposal.employee.first_name} {proposal.employee.last_name}
+            </span>
+          </div>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )}
+      </TableCell>
+      <TableCell className="font-medium">{formatMoney(proposal.total_amount || 0)}</TableCell>
       <TableCell>{formatDate(proposal.created_at)}</TableCell>
       <TableCell>{formatDate(proposal.valid_until)}</TableCell>
-      <TableCell className="font-medium">{formatMoney(proposal.total_amount || proposal.total_value || 0)}</TableCell>
       <TableCell>
         <div className="flex justify-end">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onSelect(proposal)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(proposal);
+            }}
             className="h-8 w-8"
           >
             <Eye className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8"
+            onClick={(e) => e.stopPropagation()}
+          >
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </div>

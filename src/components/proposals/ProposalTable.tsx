@@ -4,7 +4,7 @@ import { Table, TableBody } from "@/components/ui/table";
 import { useProposals } from "@/hooks/useProposals";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { updateProposalStatus } from "@/services/crmService";
 import { Proposal, ProposalStatus } from "@/types/proposal";
 import { ProposalFilters } from "./types";
 import { Column } from "./types";
@@ -12,6 +12,7 @@ import { ProposalTableHeader } from "./table/ProposalTableHeader";
 import { ProposalTableRow } from "./table/ProposalTableRow";
 import { ProposalTableSkeleton } from "./table/ProposalTableSkeleton";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ProposalTableProps {
   filters: ProposalFilters;
@@ -24,27 +25,32 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortField, setSortField] = useState<string>("created_at");
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
   const [columns] = useState<Column[]>([
-    { id: "proposal_number", label: "Teklif No", visible: true },
-    { id: "customer_id", label: "Müşteri", visible: true },
-    { id: "status", label: "Durum", visible: true },
-    { id: "employee_id", label: "Satış Temsilcisi", visible: true },
-    { id: "total_value", label: "Toplam Tutar", visible: true, sortable: true },
+    { id: "number", label: "Teklif No", visible: true, sortable: true },
+    { id: "customer", label: "Müşteri", visible: true, sortable: true },
+    { id: "status", label: "Durum", visible: true, sortable: true },
+    { id: "employee", label: "Satış Temsilcisi", visible: true, sortable: true },
+    { id: "total_amount", label: "Toplam Tutar", visible: true, sortable: true },
     { id: "created_at", label: "Oluşturma Tarihi", visible: true, sortable: true },
-    { id: "valid_until", label: "Geçerlilik", visible: true },
+    { id: "valid_until", label: "Geçerlilik", visible: true, sortable: true },
     { id: "actions", label: "İşlemler", visible: true },
   ]);
 
-  const updateProposalStatus = async (proposalId: string, newStatus: ProposalStatus) => {
+  const handleSort = (field: string) => {
+    if (field === sortField) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const handleStatusUpdate = async (proposalId: string, newStatus: ProposalStatus) => {
     try {
-      const { error } = await supabase
-        .from('proposals')
-        .update({ status: newStatus })
-        .eq('id', proposalId);
-
-      if (error) throw error;
-
+      await updateProposalStatus(proposalId, newStatus);
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
       
       toast({
@@ -86,37 +92,77 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
     return <div className="p-4 text-center text-gray-500">Henüz teklif bulunmamaktadır.</div>;
   }
 
+  // Sort proposals based on the sort field and direction
+  const sortedProposals = [...data].sort((a, b) => {
+    if (!a || !b) return 0;
+    
+    const fieldA = sortField === 'customer' 
+      ? a.customer?.name || ''
+      : sortField === 'employee'
+      ? a.employee?.first_name || ''
+      : (a as any)[sortField];
+      
+    const fieldB = sortField === 'customer' 
+      ? b.customer?.name || ''
+      : sortField === 'employee'
+      ? b.employee?.first_name || ''
+      : (b as any)[sortField];
+    
+    if (!fieldA && !fieldB) return 0;
+    if (!fieldA) return sortDirection === 'asc' ? -1 : 1;
+    if (!fieldB) return sortDirection === 'asc' ? 1 : -1;
+    
+    if (typeof fieldA === 'number' && typeof fieldB === 'number') {
+      return sortDirection === 'asc' ? fieldA - fieldB : fieldB - fieldA;
+    }
+    
+    const valueA = String(fieldA).toLowerCase();
+    const valueB = String(fieldB).toLowerCase();
+    
+    return sortDirection === 'asc'
+      ? valueA.localeCompare(valueB)
+      : valueB.localeCompare(valueA);
+  });
+
   // Filter proposals based on the search query
   const filteredProposals = searchQuery.trim() === "" 
-    ? data 
-    : data.filter((proposal) => 
+    ? sortedProposals 
+    : sortedProposals.filter((proposal) => 
         proposal.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        proposal.proposal_number?.toString().includes(searchQuery)
+        proposal.number?.toString().includes(searchQuery) ||
+        proposal.customer?.name?.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
   return (
-    <div className="w-full">
-      <div className="flex justify-between items-center p-4 border-b">
-        <Input
-          className="max-w-sm"
-          placeholder="Teklif ara..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <div className="flex space-x-2">
-          <select className="px-2 py-1 border rounded text-sm">
-            <option value="all">Tümü</option>
-            <option value="this-month">Bu Ay</option>
-            <option value="last-month">Geçen Ay</option>
-          </select>
-          <select className="px-2 py-1 border rounded text-sm">
-            <option value="all">Tümü</option>
-          </select>
+    <div className="w-full border rounded-md overflow-hidden">
+      <div className="flex justify-between items-center p-4 border-b bg-background">
+        <div className="flex items-center space-x-2 flex-1">
+          <Input
+            placeholder="Teklif ara..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="max-w-sm h-9"
+          />
+          <Select defaultValue="all">
+            <SelectTrigger className="w-[180px] h-9">
+              <SelectValue placeholder="Filtrele" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tümü</SelectItem>
+              <SelectItem value="this-month">Bu Ay</SelectItem>
+              <SelectItem value="last-month">Geçen Ay</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <div className="overflow-x-auto">
         <Table>
-          <ProposalTableHeader columns={columns} />
+          <ProposalTableHeader 
+            columns={columns} 
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+          />
           <TableBody>
             {filteredProposals.map((proposal, index) => (
               <ProposalTableRow
