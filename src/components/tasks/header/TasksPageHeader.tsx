@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { Link } from "react-router-dom";
+import TasksViewToggle from "./TasksViewToggle";
 
 interface TasksPageHeaderProps {
   onCreateTask: () => void;
@@ -9,20 +9,16 @@ interface TasksPageHeaderProps {
 
 const TasksPageHeader = ({ onCreateTask }: TasksPageHeaderProps) => {
   return (
-    <div className="flex flex-col sm:flex-row justify-between gap-4">
+    <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Görevler</h1>
-        <p className="text-muted-foreground">
-          Tüm görevleri görüntüleyin, düzenleyin ve yönetin
-        </p>
+        <h1 className="text-2xl font-semibold">Görevler</h1>
+        <p className="text-muted-foreground">Tüm görevleri görüntüleyin ve yönetin</p>
       </div>
-      <div className="flex items-center gap-2">
-        <Link to="/tasks/new">
-          <Button size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            Görev Ekle
-          </Button>
-        </Link>
+      <div className="flex space-x-2 w-full sm:w-auto justify-end">
+        <TasksViewToggle />
+        <Button onClick={onCreateTask} className="whitespace-nowrap">
+          <Plus className="mr-2 h-4 w-4" /> Görev Ekle
+        </Button>
       </div>
     </div>
   );
