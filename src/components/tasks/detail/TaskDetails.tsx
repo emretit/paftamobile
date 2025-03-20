@@ -13,6 +13,7 @@ import { useTaskDetail } from "../hooks/useTaskDetail";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import TaskMetadata from "./TaskMetadata";
+import { SubtaskManager } from "./SubtaskManager";
 import type { Task } from "@/types/task";
 
 interface TaskDetailsProps {
@@ -75,6 +76,11 @@ const TaskDetails = ({ task, onClose }: TaskDetailsProps) => {
           date={date}
           handleInputChange={handleInputChange}
           handleDateChange={handleDateChange}
+        />
+
+        <SubtaskManager 
+          task={formData} 
+          onUpdate={handleInputChange} 
         />
       </div>
 
