@@ -12,6 +12,7 @@ import TasksFilterBar from "@/components/tasks/filters/TasksFilterBar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Task, TaskStatus } from "@/types/task";
+import { ViewType } from "@/components/tasks/header/TasksViewToggle";
 
 interface TasksPageProps {
   isCollapsed: boolean;
@@ -24,7 +25,7 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
   const [selectedAssignee, setSelectedAssignee] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
-  const [activeView, setActiveView] = useState("list");
+  const [activeView, setActiveView] = useState<ViewType>("table");
   
   const queryClient = useQueryClient();
 
@@ -59,7 +60,11 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
       subtitle="Tüm görevleri yönetin"
     >
       <div className="space-y-6">
-        <TasksPageHeader onCreateTask={handleAddTask} />
+        <TasksPageHeader 
+          onCreateTask={handleAddTask} 
+          activeView={activeView}
+          setActiveView={setActiveView}
+        />
 
         <TasksFilterBar
           searchQuery={searchQuery}
@@ -75,14 +80,14 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
 
         <Tabs
           value={activeView}
-          onValueChange={setActiveView}
+          onValueChange={(value) => setActiveView(value as ViewType)}
           className="w-full"
         >
           <TabsList className="mb-4">
-            <TabsTrigger value="list">Liste</TabsTrigger>
+            <TabsTrigger value="table">Liste</TabsTrigger>
             <TabsTrigger value="kanban">Kanban</TabsTrigger>
           </TabsList>
-          <TabsContent value="list" className="mt-0">
+          <TabsContent value="table" className="mt-0">
             <TasksContent 
               searchQuery={searchQuery}
               selectedEmployee={selectedAssignee}
