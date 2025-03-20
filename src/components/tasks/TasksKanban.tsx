@@ -13,6 +13,7 @@ interface TasksKanbanProps {
   searchQuery?: string;
   selectedEmployee?: string | null;
   selectedType?: string | null;
+  selectedStatus?: TaskStatus | null;
   onSelectTask?: (task: Task) => void;
 }
 
@@ -27,6 +28,7 @@ export const TasksKanban = ({
   searchQuery, 
   selectedEmployee, 
   selectedType,
+  selectedStatus,
   onSelectTask
 }: TasksKanbanProps) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -38,7 +40,8 @@ export const TasksKanban = ({
   const { tasks, setTasksState, isLoading, error } = useKanbanTasks({
     searchQuery,
     selectedEmployee,
-    selectedType: selectedType
+    selectedType: selectedType,
+    selectedStatus
   });
   
   const { updateTask } = useTaskMutations();

@@ -4,12 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TasksTable } from "./table";
 import TaskDetailPanel from "./TaskDetailPanel";
-import type { Task } from "@/types/task";
+import type { Task, TaskStatus } from "@/types/task";
 
 interface TasksContentProps {
   searchQuery: string;
   selectedEmployee: string | null;
   selectedType: string | null;
+  selectedStatus: TaskStatus | null;
   onSelectTask?: (task: Task) => void;
 }
 
@@ -17,6 +18,7 @@ const TasksContent = ({
   searchQuery, 
   selectedEmployee, 
   selectedType,
+  selectedStatus,
   onSelectTask 
 }: TasksContentProps) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -78,6 +80,7 @@ const TasksContent = ({
         searchQuery={searchQuery}
         selectedEmployee={selectedEmployee}
         selectedType={selectedType}
+        selectedStatus={selectedStatus}
       />
 
       <TaskDetailPanel

@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Table, TableBody } from "@/components/ui/table";
-import { Task } from "@/types/task";
+import { Task, TaskStatus } from "@/types/task";
 import TasksTableHeader from "./TasksTableHeader";
 import TasksTableRow from "./TasksTableRow";
 import TasksTableEmpty from "./TasksTableEmpty";
@@ -19,6 +19,7 @@ export interface TasksTableProps {
   searchQuery?: string;
   selectedEmployee?: string | null;
   selectedType?: string | null;
+  selectedStatus?: TaskStatus | null;
 }
 
 export const TasksTable = ({
@@ -27,7 +28,8 @@ export const TasksTable = ({
   onSelectTask,
   searchQuery = "",
   selectedEmployee = null,
-  selectedType = null
+  selectedType = null,
+  selectedStatus = null
 }: TasksTableProps) => {
   const [sortField, setSortField] = useState<SortField>("title");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
@@ -36,7 +38,7 @@ export const TasksTable = ({
   useTaskRealtime();
   
   // Filter tasks based on search and filters
-  const filteredTasks = filterTasks(tasks, searchQuery, selectedEmployee, selectedType);
+  const filteredTasks = filterTasks(tasks, searchQuery, selectedEmployee, selectedType, selectedStatus);
   
   // Sort the filtered tasks
   const sortedTasks = useSortedTasks(filteredTasks, sortField, sortDirection);

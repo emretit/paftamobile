@@ -1,11 +1,12 @@
 
-import { Task } from "@/types/task";
+import { Task, TaskStatus } from "@/types/task";
 
 export const filterTasks = (
   tasks: Task[],
   searchQuery: string,
   selectedEmployee: string | null,
-  selectedType: string | null
+  selectedType: string | null,
+  selectedStatus: TaskStatus | null
 ): Task[] => {
   return tasks.filter(task => {
     const matchesSearch = 
@@ -14,7 +15,8 @@ export const filterTasks = (
       
     const matchesEmployee = !selectedEmployee || selectedEmployee === "all" || task.assignee_id === selectedEmployee;
     const matchesType = !selectedType || selectedType === "all" || task.type === selectedType;
+    const matchesStatus = !selectedStatus || selectedStatus === "all" || task.status === selectedStatus;
     
-    return matchesSearch && matchesEmployee && matchesType;
+    return matchesSearch && matchesEmployee && matchesType && matchesStatus;
   });
 };

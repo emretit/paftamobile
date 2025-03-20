@@ -11,7 +11,7 @@ import TaskForm from "@/components/tasks/form/TaskForm";
 import TasksFilterBar from "@/components/tasks/filters/TasksFilterBar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Task } from "@/types/task";
+import type { Task, TaskStatus } from "@/types/task";
 
 interface TasksPageProps {
   isCollapsed: boolean;
@@ -23,6 +23,7 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAssignee, setSelectedAssignee] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
   const [activeView, setActiveView] = useState("list");
   
   const queryClient = useQueryClient();
@@ -67,6 +68,8 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
           setSelectedEmployee={setSelectedAssignee}
           selectedType={selectedType}
           setSelectedType={setSelectedType}
+          selectedStatus={selectedStatus}
+          setSelectedStatus={setSelectedStatus}
           employees={employees}
         />
 
@@ -84,6 +87,7 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
               searchQuery={searchQuery}
               selectedEmployee={selectedAssignee}
               selectedType={selectedType}
+              selectedStatus={selectedStatus}
             />
           </TabsContent>
           <TabsContent value="kanban" className="mt-0">
@@ -91,6 +95,7 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
               searchQuery={searchQuery}
               selectedEmployee={selectedAssignee}
               selectedType={selectedType}
+              selectedStatus={selectedStatus}
             />
           </TabsContent>
         </Tabs>
