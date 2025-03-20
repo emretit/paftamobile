@@ -5,7 +5,7 @@ import TasksContent from "@/components/tasks/TasksContent";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import TasksPageHeader from "@/components/tasks/header/TasksPageHeader";
-import TaskForm from "@/components/tasks/TaskForm";
+import TaskForm from "@/components/tasks/form/TaskForm";
 import TasksFilterBar from "@/components/tasks/filters/TasksFilterBar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
