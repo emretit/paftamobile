@@ -59,7 +59,7 @@ const TaskDetails = ({ task, onClose }: TaskDetailsProps) => {
     
     try {
       // First update the local state
-      handleInputChange('subtasks', subtasks);
+      setFormData(prev => ({ ...prev, subtasks }));
       
       // Then update the database
       const { data, error } = await supabase
@@ -76,7 +76,7 @@ const TaskDetails = ({ task, onClose }: TaskDetailsProps) => {
       toast.error("Alt görevler güncellenirken bir hata oluştu");
       
       // Revert to original subtasks on error
-      handleInputChange('subtasks', task.subtasks);
+      setFormData(prev => ({ ...prev, subtasks: task.subtasks }));
     } finally {
       setIsUpdatingSubtasks(false);
     }
