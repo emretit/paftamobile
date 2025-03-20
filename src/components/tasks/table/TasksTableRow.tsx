@@ -76,7 +76,7 @@ const TasksTableRow = ({
         <div className="flex flex-col">
           <span>{task.title}</span>
           {task.description && (
-            <span className="text-xs text-gray-500 line-clamp-1 mt-1">
+            <span className="text-xs text-muted-foreground line-clamp-1 mt-1">
               {task.description}
             </span>
           )}
@@ -95,7 +95,7 @@ const TasksTableRow = ({
             {formatDate(task.due_date)}
           </span>
         ) : (
-          <span className="text-gray-400">-</span>
+          <span className="text-muted-foreground">-</span>
         )}
       </TableCell>
       <TableCell>
@@ -119,7 +119,7 @@ const TasksTableRow = ({
             </span>
           </div>
         ) : (
-          <span className="text-gray-400">Atanmamış</span>
+          <span className="text-muted-foreground">Atanmamış</span>
         )}
       </TableCell>
       <TableCell>
@@ -142,7 +142,7 @@ const TasksTableRow = ({
         </Select>
       </TableCell>
       <TableCell>
-        <div onClick={(e) => e.stopPropagation()}>
+        <div onClick={(e) => e.stopPropagation()} className="flex justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

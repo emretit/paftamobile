@@ -36,7 +36,7 @@ export const ProposalTableRow = ({
   
   return (
     <TableRow 
-      className="cursor-pointer transition-colors hover:bg-muted/50"
+      className="cursor-pointer transition-colors hover:bg-gray-50"
       onClick={() => onSelect(proposal)}
     >
       <TableCell className="font-medium">#{proposal.number}</TableCell>

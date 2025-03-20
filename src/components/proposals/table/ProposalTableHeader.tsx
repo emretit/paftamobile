@@ -28,13 +28,13 @@ export const ProposalTableHeader = ({
 
   return (
     <TableHeader>
-      <TableRow>
+      <TableRow className="bg-gray-50">
         {columns.map((column) => (
           column.visible && (
             <TableHead 
               key={column.id}
               className={cn(
-                column.sortable ? 'cursor-pointer hover:bg-gray-50' : '',
+                column.sortable ? 'cursor-pointer hover:bg-gray-100' : '',
                 "h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
               )}
               onClick={column.sortable && onSort ? () => onSort(column.id) : undefined}
