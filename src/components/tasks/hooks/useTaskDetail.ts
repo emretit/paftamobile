@@ -25,9 +25,9 @@ export const useTaskDetail = () => {
       };
       
       const { data, error } = await supabase
-        .from('tasks')
+        .from("tasks")
         .update(taskForUpdate)
-        .eq('id', updatedTask.id)
+        .eq("id", updatedTask.id)
         .select()
         .single();
 

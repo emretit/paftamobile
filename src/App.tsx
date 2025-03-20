@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -30,6 +29,7 @@ import Proposals from "@/pages/Proposals";
 import ProposalCreate from "@/pages/ProposalCreate";
 import Tasks from "@/pages/Tasks";
 import Opportunities from "@/pages/crm/Opportunities";
+import NewTask from "./pages/NewTask";
 
 const queryClient = new QueryClient();
 
@@ -152,6 +152,17 @@ function App() {
           <Route
             path="/tasks"
             element={<ProtectedRoute><Tasks isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/tasks/new"
+            element={
+              <AuthGuard>
+                <NewTask 
+                  isCollapsed={isCollapsed} 
+                  setIsCollapsed={setIsCollapsed} 
+                />
+              </AuthGuard>
+            }
           />
           <Route
             path="/opportunities"
