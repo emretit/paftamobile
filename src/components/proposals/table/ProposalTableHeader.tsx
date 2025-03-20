@@ -35,11 +35,12 @@ export const ProposalTableHeader = ({
               key={column.id}
               className={cn(
                 "h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap",
-                column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
+                column.sortable ? 'cursor-pointer hover:bg-gray-100' : '',
+                column.id === 'actions' ? 'text-right' : ''
               )}
               onClick={column.sortable && onSort ? () => onSort(column.id) : undefined}
             >
-              <div className="flex items-center">
+              <div className={cn("flex items-center", column.id === 'actions' ? 'justify-end' : '')}>
                 <span>{column.label}</span>
                 {column.sortable && getSortIcon(column.id)}
               </div>
