@@ -14,6 +14,7 @@ import { Proposal, ProposalStatus } from "@/types/proposal";
 import { useProposals } from "@/hooks/useProposals";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
+import ProposalsViewToggle from "@/components/proposals/header/ProposalsViewToggle";
 
 interface ProposalsPageProps {
   isCollapsed: boolean;
@@ -24,7 +25,7 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [activeView, setActiveView] = useState<string>("list");
+  const [activeView, setActiveView] = useState<"list" | "kanban">("list");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
 
@@ -56,16 +57,17 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
       subtitle="Müşterilerinize gönderdiğiniz teklifleri yönetin"
     >
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Teklifler</h1>
-          <div className="flex items-center space-x-4">
-            <Tabs value={activeView} onValueChange={setActiveView} className="w-fit">
-              <TabsList>
-                <TabsTrigger value="list">Liste</TabsTrigger>
-                <TabsTrigger value="kanban">Kanban</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <Button onClick={() => navigate("/proposal/create")}>
+        <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
+          <div>
+            <h1 className="text-2xl font-semibold">Teklifler</h1>
+            <p className="text-muted-foreground">Tüm teklifleri görüntüleyin ve yönetin</p>
+          </div>
+          <div className="flex space-x-2 w-full sm:w-auto justify-end">
+            <ProposalsViewToggle 
+              activeView={activeView} 
+              setActiveView={setActiveView} 
+            />
+            <Button onClick={() => navigate("/proposal/create")} className="whitespace-nowrap">
               <Plus className="mr-2 h-4 w-4" />
               Yeni Teklif
             </Button>
