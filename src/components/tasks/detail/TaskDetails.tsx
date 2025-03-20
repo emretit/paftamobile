@@ -3,13 +3,9 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon, Save } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Save } from "lucide-react";
 import { useTaskDetail } from "../hooks/useTaskDetail";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import TaskMetadata from "./TaskMetadata";
 import { SubtaskManager } from "./SubtaskManager";
@@ -46,7 +42,12 @@ const TaskDetails = ({ task, onClose }: TaskDetailsProps) => {
 
   const handleSave = () => {
     console.log("Saving form data:", formData);
-    updateTaskMutation.mutate(formData, {
+    // When saving the main task, we don't include subtasks since we handle them separately
+    const taskDataForUpdate = { ...formData };
+    // We need to remove subtasks here to prevent the type error
+    delete (taskDataForUpdate as any).subtasks;
+    
+    updateTaskMutation.mutate(taskDataForUpdate, {
       onSuccess: () => {
         onClose();
       }

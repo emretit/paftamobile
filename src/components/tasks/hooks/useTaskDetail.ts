@@ -20,7 +20,8 @@ export const useTaskDetail = () => {
         priority: updatedTask.priority,
         type: updatedTask.type || 'general',
         due_date: updatedTask.due_date,
-        assignee_id: updatedTask.assignee_id
+        assignee_id: updatedTask.assignee_id,
+        subtasks: updatedTask.subtasks // Add subtasks to the update object
       };
       
       const { data, error } = await supabase
