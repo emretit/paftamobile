@@ -1,14 +1,12 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { format } from "date-fns";
 import { Save } from "lucide-react";
 import { useTaskDetail } from "../hooks/useTaskDetail";
 import { supabase } from "@/integrations/supabase/client";
 import TaskMetadata from "./TaskMetadata";
-import { SubtaskManager } from "./SubtaskManager";
+import { SubtaskManager } from "./subtasks";
 import type { Task, SubTask } from "@/types/task";
 import { toast } from "sonner";
 
