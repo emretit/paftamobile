@@ -41,7 +41,7 @@ const TaskAssignment = ({ watch, setValue }: TaskAssignmentProps) => {
           <SelectValue placeholder={isLoadingEmployees ? "Yükleniyor..." : "Çalışan seçin"} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="_unassigned">Atanmamış</SelectItem>
+          <SelectItem value="unassigned">Atanmamış</SelectItem>
           {employees?.map((employee) => (
             <SelectItem key={employee.id} value={employee.id}>
               {employee.first_name} {employee.last_name}
