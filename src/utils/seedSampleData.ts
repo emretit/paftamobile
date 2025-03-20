@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -437,107 +436,6 @@ export const seedOpportunities = async () => {
   }
 };
 
-// Seed sample proposals
-export const seedProposals = async () => {
-  try {
-    // First, get a customer to reference
-    let { data: customers } = await supabase
-      .from('customers')
-      .select('id')
-      .limit(3);
-    
-    // If no customers exist, return error
-    if (!customers || customers.length === 0) {
-      return { success: false, error: 'No customers found. Please seed customers first.' };
-    }
-    
-    // Get employees
-    let { data: employees } = await supabase
-      .from('employees')
-      .select('id')
-      .limit(2);
-    
-    // If no employees exist, return error
-    if (!employees || employees.length === 0) {
-      return { success: false, error: 'No employees found. Please seed employees first.' };
-    }
-    
-    // Get opportunities
-    let { data: opportunities } = await supabase
-      .from('opportunities')
-      .select('id')
-      .limit(3);
-    
-    // If no opportunities exist, return error
-    if (!opportunities || opportunities.length === 0) {
-      return { success: false, error: 'No opportunities found. Please seed opportunities first.' };
-    }
-    
-    const today = new Date();
-    const nextMonth = new Date(today);
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
-    
-    const statuses = ['draft', 'sent', 'viewed', 'accepted', 'rejected', 'expired'];
-    
-    const sampleProposals = [];
-    
-    for (let i = 0; i < 5; i++) {
-      const customerId = customers[Math.floor(Math.random() * customers.length)].id;
-      const employeeId = employees[Math.floor(Math.random() * employees.length)].id;
-      const opportunityId = opportunities[Math.floor(Math.random() * opportunities.length)].id;
-      const status = statuses[Math.floor(Math.random() * statuses.length)];
-      const totalAmount = Math.floor(Math.random() * 50000) + 5000;
-      
-      sampleProposals.push({
-        id: uuidv4(),
-        number: `TEK-${2023}${i + 1}`,
-        title: `Teklif #${i + 1} - ${status === 'draft' ? 'Taslak' : status === 'sent' ? 'Gönderildi' : status === 'viewed' ? 'Görüntülendi' : status === 'accepted' ? 'Kabul Edildi' : status === 'rejected' ? 'Reddedildi' : 'Süresi Doldu'}`,
-        description: `Bu bir örnek ${status} durumundaki tekliftir.`,
-        customer_id: customerId,
-        opportunity_id: opportunityId,
-        employee_id: employeeId,
-        status: status,
-        total_amount: totalAmount,
-        created_at: today.toISOString(),
-        updated_at: today.toISOString(),
-        valid_until: nextMonth.toISOString(),
-        items: JSON.stringify([
-          {
-            id: uuidv4(),
-            name: "Yazılım Geliştirme",
-            description: "Web uygulaması geliştirme hizmeti",
-            quantity: 1,
-            unit_price: totalAmount * 0.7,
-            total_price: totalAmount * 0.7
-          },
-          {
-            id: uuidv4(),
-            name: "Danışmanlık",
-            description: "Teknik danışmanlık hizmeti",
-            quantity: 10,
-            unit_price: totalAmount * 0.3 / 10,
-            total_price: totalAmount * 0.3
-          }
-        ]),
-        attachments: JSON.stringify([]),
-        terms: "30 gün ödeme vadesi",
-        notes: "Bu bir örnek tekliftir.",
-        currency: "TRY"
-      });
-    }
-    
-    const { error } = await supabase
-      .from('proposals')
-      .insert(sampleProposals);
-      
-    if (error) throw error;
-    return { success: true };
-  } catch (error) {
-    console.error('Error seeding proposals:', error);
-    return { success: false, error };
-  }
-};
-
 // Seed all sample data
 export const seedAllData = async () => {
   try {
@@ -619,9 +517,6 @@ export const seedAllData = async () => {
     
     // Seed opportunities
     await seedOpportunities();
-    
-    // Seed proposals
-    await seedProposals();
     
     toast.success("Tüm örnek veriler başarıyla eklendi!");
     return { success: true };
