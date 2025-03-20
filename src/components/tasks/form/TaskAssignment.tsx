@@ -34,7 +34,13 @@ const TaskAssignment = ({ watch, setValue }: TaskAssignmentProps) => {
       <Label htmlFor="assignee_id">Atanan Çalışan</Label>
       <Select 
         value={assigneeId || ""} 
-        onValueChange={(value) => setValue("assignee_id", value || undefined)}
+        onValueChange={(value) => {
+          if (value === "unassigned") {
+            setValue("assignee_id", undefined);
+          } else {
+            setValue("assignee_id", value);
+          }
+        }}
         disabled={isLoadingEmployees}
       >
         <SelectTrigger>
