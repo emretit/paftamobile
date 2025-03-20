@@ -2,25 +2,25 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { UseFormRegister, FieldErrors } from "react-hook-form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UseFormRegister, FieldErrors, UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { FormValues } from "./types";
 
 interface TaskBasicInfoProps {
   register: UseFormRegister<FormValues>;
   errors: FieldErrors<FormValues>;
+  watch: UseFormWatch<FormValues>;
+  setValue: UseFormSetValue<FormValues>;
 }
 
-const TaskBasicInfo = ({ register, errors }: TaskBasicInfoProps) => {
+const TaskBasicInfo = ({ register, errors, watch, setValue }: TaskBasicInfoProps) => {
   return (
-    <>
+    <div className="space-y-4">
       <div className="grid gap-2">
-        <Label htmlFor="title" className="flex items-center">
-          Başlık <span className="text-red-500 ml-1">*</span>
-        </Label>
+        <Label htmlFor="title">Başlık <span className="text-red-500">*</span></Label>
         <Input
           id="title"
           placeholder="Görev başlığı"
-          className={errors.title ? "border-red-500 focus:ring-red-500" : ""}
           {...register("title", { required: "Başlık zorunludur" })}
         />
         {errors.title && (
@@ -29,15 +29,12 @@ const TaskBasicInfo = ({ register, errors }: TaskBasicInfoProps) => {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="description" className="flex items-center">
-          Açıklama <span className="text-red-500 ml-1">*</span>
-        </Label>
+        <Label htmlFor="description">Açıklama</Label>
         <Textarea
           id="description"
           placeholder="Görev açıklaması"
           rows={3}
-          className={errors.description ? "border-red-500 focus:ring-red-500" : ""}
-          {...register("description", { required: "Açıklama zorunludur" })}
+          {...register("description")}
         />
         {errors.description && (
           <p className="text-sm text-red-500">{errors.description.message}</p>
@@ -45,28 +42,48 @@ const TaskBasicInfo = ({ register, errors }: TaskBasicInfoProps) => {
       </div>
       
       <div className="grid gap-2">
-        <Label htmlFor="type" className="flex items-center">
-          Görev Türü <span className="text-red-500 ml-1">*</span>
-        </Label>
-        <select 
-          id="type"
-          className="border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary/30"
-          {...register("type")}
+        <Label htmlFor="type">Tür</Label>
+        <Select 
+          value={watch("type")} 
+          onValueChange={(value) => setValue("type", value as any)}
         >
-          <option value="general">Genel</option>
-          <option value="call">Arama</option>
-          <option value="meeting">Toplantı</option>
-          <option value="follow_up">Takip</option>
-          <option value="proposal">Teklif</option>
-          <option value="opportunity">Fırsat</option>
-          <option value="reminder">Hatırlatıcı</option>
-          <option value="email">E-posta</option>
-        </select>
-        {errors.type && (
-          <p className="text-sm text-red-500">{errors.type.message}</p>
+          <SelectTrigger>
+            <SelectValue placeholder="Tür seçin" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="general">Genel</SelectItem>
+            <SelectItem value="call">Arama</SelectItem>
+            <SelectItem value="meeting">Toplantı</SelectItem>
+            <SelectItem value="follow_up">Takip</SelectItem>
+            <SelectItem value="proposal">Teklif</SelectItem>
+            <SelectItem value="opportunity">Fırsat</SelectItem>
+            <SelectItem value="reminder">Hatırlatma</SelectItem>
+            <SelectItem value="email">E-posta</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="grid gap-2">
+        <Label htmlFor="status">Durum <span className="text-red-500">*</span></Label>
+        <Select 
+          value={watch("status")} 
+          onValueChange={(value) => setValue("status", value as any)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Durum seçin" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todo">Yapılacak</SelectItem>
+            <SelectItem value="in_progress">Devam Ediyor</SelectItem>
+            <SelectItem value="completed">Tamamlandı</SelectItem>
+            <SelectItem value="postponed">Ertelendi</SelectItem>
+          </SelectContent>
+        </Select>
+        {errors.status && (
+          <p className="text-sm text-red-500">{errors.status.message}</p>
         )}
       </div>
-    </>
+    </div>
   );
 };
 

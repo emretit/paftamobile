@@ -1,100 +1,85 @@
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { FormValues } from "./types";
-import { UseFormWatch, UseFormSetValue, FieldErrors } from "react-hook-form";
 
 interface TaskRelatedItemProps {
-  taskType: string;
   watch: UseFormWatch<FormValues>;
   setValue: UseFormSetValue<FormValues>;
-  errors?: FieldErrors<FormValues>;
 }
 
-const TaskRelatedItem = ({ 
-  taskType, 
-  watch, 
-  setValue,
-  errors 
-}: TaskRelatedItemProps) => {
-  const [relatedItems, setRelatedItems] = useState<{ id: string; title: string; }[]>([]);
+const TaskRelatedItem = ({ watch, setValue }: TaskRelatedItemProps) => {
   const relatedItemType = watch("related_item_type");
   const relatedItemId = watch("related_item_id");
 
-  // Fetch opportunities
-  const { data: opportunities, isLoading: isLoadingOpportunities } = useQuery({
-    queryKey: ["opportunities-for-tasks"],
+  // Fetch opportunities for the related entity dropdown
+  const { data: opportunities } = useQuery({
+    queryKey: ["opportunities"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("opportunities")
         .select("id, title");
-        
+      
       if (error) throw error;
       return data || [];
     },
-    enabled: taskType === "opportunity" || relatedItemType === "opportunity",
+    enabled: relatedItemType === "opportunity"
   });
 
-  // Fetch proposals
-  const { data: proposals, isLoading: isLoadingProposals } = useQuery({
-    queryKey: ["proposals-for-tasks"],
+  // Fetch proposals for the related entity dropdown
+  const { data: proposals } = useQuery({
+    queryKey: ["proposals"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("proposals")
         .select("id, title");
-        
+      
       if (error) throw error;
       return data || [];
     },
-    enabled: taskType === "proposal" || relatedItemType === "proposal",
+    enabled: relatedItemType === "proposal"
   });
 
-  // Update related items when related item type changes
+  // Effect to reset related_item_id when related_item_type changes
   useEffect(() => {
-    if (relatedItemType === "opportunity" && opportunities) {
-      setRelatedItems(opportunities);
-    } else if (relatedItemType === "proposal" && proposals) {
-      setRelatedItems(proposals);
-    } else {
-      setRelatedItems([]);
+    if (relatedItemType) {
+      setValue("related_item_id", undefined);
+      setValue("related_item_title", undefined);
     }
-  }, [relatedItemType, opportunities, proposals]);
+  }, [relatedItemType, setValue]);
 
-  // Auto-set related item type based on task type if it's opportunity or proposal
+  // Effect to set related_item_title when related_item_id changes
   useEffect(() => {
-    if ((taskType === "opportunity" || taskType === "proposal") && !relatedItemType) {
-      setValue("related_item_type", taskType);
-    }
-  }, [taskType, relatedItemType, setValue]);
-
-  // Update related_item_title when related_item_id changes
-  useEffect(() => {
-    if (relatedItemId && relatedItems.length > 0) {
-      const selectedItem = relatedItems.find(item => item.id === relatedItemId);
-      if (selectedItem) {
-        setValue("related_item_title", selectedItem.title);
+    if (relatedItemId && relatedItemType) {
+      if (relatedItemType === "opportunity" && opportunities) {
+        const opportunity = opportunities.find(opp => opp.id === relatedItemId);
+        if (opportunity) {
+          setValue("related_item_title", opportunity.title);
+        }
+      } else if (relatedItemType === "proposal" && proposals) {
+        const proposal = proposals.find(prop => prop.id === relatedItemId);
+        if (proposal) {
+          setValue("related_item_title", proposal.title);
+        }
       }
     }
-  }, [relatedItemId, relatedItems, setValue]);
+  }, [relatedItemId, relatedItemType, opportunities, proposals, setValue]);
 
   return (
-    <div className="space-y-4 border p-4 rounded-md bg-gray-50">
-      <h3 className="font-medium">İlgili Kayıt Bilgileri (Opsiyonel)</h3>
-      
+    <div className="space-y-4">
       <div className="grid gap-2">
         <Label htmlFor="related_item_type">İlgili Kayıt Türü</Label>
         <Select
           value={relatedItemType || ""}
-          onValueChange={(value) => {
-            setValue("related_item_type", value === "" ? undefined : value);
-            setValue("related_item_id", undefined);  // Reset the related item id
-            setValue("related_item_title", undefined);  // Reset the related item title
-          }}
+          onValueChange={(value) => 
+            setValue("related_item_type", value === "" ? undefined : value)
+          }
         >
-          <SelectTrigger id="related_item_type">
+          <SelectTrigger>
             <SelectValue placeholder="İlgili kayıt türü seçin" />
           </SelectTrigger>
           <SelectContent>
@@ -103,44 +88,34 @@ const TaskRelatedItem = ({
             <SelectItem value="proposal">Teklif</SelectItem>
           </SelectContent>
         </Select>
-        {errors?.related_item_type && (
-          <p className="text-sm text-red-500">{errors.related_item_type.message}</p>
-        )}
       </div>
 
       {relatedItemType && (
         <div className="grid gap-2">
-          <Label htmlFor="related_item_id">
-            İlgili {relatedItemType === "opportunity" ? "Fırsat" : "Teklif"}
-          </Label>
+          <Label htmlFor="related_item_id">İlgili {relatedItemType === "opportunity" ? "Fırsat" : "Teklif"}</Label>
           <Select
             value={relatedItemId || ""}
             onValueChange={(value) => 
               setValue("related_item_id", value === "" ? undefined : value)
             }
           >
-            <SelectTrigger id="related_item_id">
-              <SelectValue 
-                placeholder={
-                  (relatedItemType === "opportunity" && isLoadingOpportunities) || 
-                  (relatedItemType === "proposal" && isLoadingProposals) 
-                    ? "Yükleniyor..." 
-                    : `İlgili ${relatedItemType === "opportunity" ? "fırsat" : "teklif"} seçin`
-                } 
-              />
+            <SelectTrigger>
+              <SelectValue placeholder={`İlgili ${relatedItemType === "opportunity" ? "fırsat" : "teklif"} seçin`} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">Seçilmedi</SelectItem>
-              {relatedItems.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.title}
+              {relatedItemType === "opportunity" && opportunities?.map((opportunity) => (
+                <SelectItem key={opportunity.id} value={opportunity.id}>
+                  {opportunity.title}
+                </SelectItem>
+              ))}
+              {relatedItemType === "proposal" && proposals?.map((proposal) => (
+                <SelectItem key={proposal.id} value={proposal.id}>
+                  {proposal.title}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {errors?.related_item_id && (
-            <p className="text-sm text-red-500">{errors.related_item_id.message}</p>
-          )}
         </div>
       )}
     </div>
