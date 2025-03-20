@@ -1,40 +1,27 @@
-
 export type ProposalStatus = 
   | 'draft' 
   | 'pending_approval' 
-  | 'discovery_scheduled' 
-  | 'meeting_completed' 
-  | 'quote_in_progress' 
-  | 'quote_sent' 
-  | 'negotiation' 
-  | 'approved' 
+  | 'sent' 
+  | 'accepted' 
   | 'rejected' 
-  | 'converted_to_order';
+  | 'expired';
 
 export const proposalStatusLabels: Record<ProposalStatus, string> = {
   draft: "Taslak",
   pending_approval: "Onay Bekliyor",
-  discovery_scheduled: "Keşif Planlandı",
-  meeting_completed: "Görüşme Tamamlandı",
-  quote_in_progress: "Teklif Hazırlanıyor",
-  quote_sent: "Teklif Gönderildi",
-  negotiation: "Müzakere Aşaması",
-  approved: "Onaylandı",
+  sent: "Gönderildi",
+  accepted: "Kabul Edildi",
   rejected: "Reddedildi",
-  converted_to_order: "Siparişe Dönüştü"
+  expired: "Süresi Dolmuş"
 };
 
 export const proposalStatusColors: Record<ProposalStatus, string> = {
   draft: "bg-gray-100 text-gray-800",
   pending_approval: "bg-amber-100 text-amber-800",
-  discovery_scheduled: "bg-blue-100 text-blue-800",
-  meeting_completed: "bg-indigo-100 text-indigo-800",
-  quote_in_progress: "bg-violet-100 text-violet-800",
-  quote_sent: "bg-yellow-100 text-yellow-800",
-  negotiation: "bg-purple-100 text-purple-800",
-  approved: "bg-green-100 text-green-800",
+  sent: "bg-blue-100 text-blue-800",
+  accepted: "bg-green-100 text-green-800",
   rejected: "bg-red-100 text-red-800",
-  converted_to_order: "bg-indigo-100 text-indigo-800"
+  expired: "bg-orange-100 text-orange-800"
 };
 
 export interface ProposalItem {

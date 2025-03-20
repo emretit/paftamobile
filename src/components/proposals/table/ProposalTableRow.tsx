@@ -72,7 +72,7 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
           <span className="text-muted-foreground">-</span>
         )}
       </TableCell>
-      <TableCell className="font-medium">{formatMoney(proposal.total_amount || 0)}</TableCell>
+      <TableCell className="font-medium">{formatMoney(proposal.total_amount || proposal.total_value || 0)}</TableCell>
       <TableCell>{formatDate(proposal.created_at)}</TableCell>
       <TableCell>{formatDate(proposal.valid_until)}</TableCell>
       <TableCell>

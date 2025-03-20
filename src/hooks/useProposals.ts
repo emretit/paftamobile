@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Proposal } from "@/types/proposal";
+import { Proposal, ProposalStatus } from "@/types/proposal";
 import { ProposalFilters } from "@/components/proposals/types";
 
 export const useProposals = (filters?: ProposalFilters) => {
@@ -53,7 +53,7 @@ export const useProposals = (filters?: ProposalFilters) => {
           customer_id: item.customer_id,
           opportunity_id: item.opportunity_id,
           employee_id: item.employee_id,
-          status: item.status,
+          status: item.status as ProposalStatus,
           total_amount: item.total_amount || 0,
           created_at: item.created_at,
           updated_at: item.updated_at,

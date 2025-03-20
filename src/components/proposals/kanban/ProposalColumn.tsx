@@ -26,7 +26,7 @@ const ProposalColumn = ({
         <div
           ref={provided.innerRef}
           className={`min-h-[500px] w-full p-3 rounded-md ${
-            snapshot.isDraggingOver ? 'bg-red-50' : 'bg-gray-50'
+            snapshot.isDraggingOver ? 'bg-slate-100' : 'bg-gray-50'
           } transition-colors duration-200`}
           {...provided.droppableProps}
         >
@@ -34,6 +34,7 @@ const ProposalColumn = ({
             <ProposalCard
               key={proposal.id}
               proposal={proposal}
+              index={index}
               onClick={() => onSelect && onSelect(proposal)}
             />
           ))}

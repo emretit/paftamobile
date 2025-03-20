@@ -1,7 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
-import { Proposal, ProposalStatus } from "@/types/proposal";
+import { Proposal, ProposalStatus, ProposalItem } from "@/types/proposal";
 
 // Function to generate a unique proposal number
 const generateProposalNumber = (): string => {
@@ -27,13 +26,12 @@ export const createProposal = async (proposalData: Partial<Proposal>): Promise<P
         number: proposalData.number || generateProposalNumber(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        items: proposalItems,
+        items: proposalItems as any,
         currency: proposalData.currency || "TRY",
         terms: proposalData.terms || "",
         notes: proposalData.notes || "",
         description: proposalData.description || "",
-        valid_until: proposalData.valid_until,
-        attachments: proposalData.attachments || []
+        valid_until: proposalData.valid_until
       })
       .select()
       .single();
@@ -53,7 +51,7 @@ export const createProposal = async (proposalData: Partial<Proposal>): Promise<P
       created_at: data.created_at,
       updated_at: data.updated_at,
       valid_until: data.valid_until,
-      items: Array.isArray(data.items) ? data.items : [],
+      items: Array.isArray(data.items) ? data.items as ProposalItem[] : [],
       attachments: Array.isArray(data.attachments) ? data.attachments : [],
       currency: data.currency || "TRY",
       terms: data.terms,
@@ -95,7 +93,7 @@ export const getProposalById = async (id: string): Promise<Proposal | null> => {
       created_at: data.created_at,
       updated_at: data.updated_at,
       valid_until: data.valid_until,
-      items: Array.isArray(data.items) ? data.items : [],
+      items: Array.isArray(data.items) ? data.items as ProposalItem[] : [],
       attachments: Array.isArray(data.attachments) ? data.attachments : [],
       currency: data.currency || "TRY",
       terms: data.terms,
@@ -210,7 +208,7 @@ export const updateProposalStatus = async (id: string, status: ProposalStatus): 
     if (error) throw error;
 
     // For statuses that require notifications, we could add logic here
-    if (status === "quote_sent") {
+    if (status === "sent") {
       console.log("Proposal sent notification would be triggered here");
       // Notification logic would go here
     }
@@ -243,7 +241,7 @@ export const getProposalTotals = async (): Promise<{
         totalApproved += proposal.total_amount || 0;
       }
       
-      if (proposal.status === "quote_sent") {
+      if (proposal.status === "sent") {
         totalSent += 1;
       }
     });

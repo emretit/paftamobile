@@ -5,8 +5,9 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ProposalColumn from "./kanban/ProposalColumn";
-import { FileText, Calendar, Building, MessageSquare, CheckSquare, XSquare, DollarSign, Users } from "lucide-react";
+import { FileText, Calendar, Check, X, Clock, AlertTriangle } from "lucide-react";
 import type { Proposal, ProposalStatus } from "@/types/proposal";
+import { updateProposalStatus } from "@/services/crmService";
 
 interface ProposalKanbanProps {
   proposals: Proposal[];
@@ -15,15 +16,11 @@ interface ProposalKanbanProps {
 
 const columns = [
   { id: "draft", title: "Taslak", icon: FileText, color: "bg-gray-600" },
-  { id: "pending_approval", title: "Onay Bekliyor", icon: Building, color: "bg-amber-600" },
-  { id: "discovery_scheduled", title: "Keşif Planlandı", icon: Calendar, color: "bg-blue-600" },
-  { id: "meeting_completed", title: "Görüşme Tamamlandı", icon: Users, color: "bg-indigo-600" },
-  { id: "quote_in_progress", title: "Teklif Hazırlanıyor", icon: FileText, color: "bg-violet-600" },
-  { id: "quote_sent", title: "Teklif Gönderildi", icon: DollarSign, color: "bg-yellow-600" },
-  { id: "negotiation", title: "Müzakere Aşaması", icon: MessageSquare, color: "bg-purple-600" },
-  { id: "approved", title: "Onaylandı", icon: CheckSquare, color: "bg-green-600" },
-  { id: "rejected", title: "Reddedildi", icon: XSquare, color: "bg-red-600" },
-  { id: "converted_to_order", title: "Siparişe Dönüştü", icon: DollarSign, color: "bg-indigo-800" }
+  { id: "pending_approval", title: "Onay Bekliyor", icon: Clock, color: "bg-amber-600" },
+  { id: "sent", title: "Gönderildi", icon: Calendar, color: "bg-blue-600" },
+  { id: "accepted", title: "Kabul Edildi", icon: Check, color: "bg-green-600" },
+  { id: "rejected", title: "Reddedildi", icon: X, color: "bg-red-600" },
+  { id: "expired", title: "Süresi Dolmuş", icon: AlertTriangle, color: "bg-orange-600" }
 ];
 
 export const ProposalKanban = ({ proposals, onProposalSelect }: ProposalKanbanProps) => {
@@ -37,12 +34,7 @@ export const ProposalKanban = ({ proposals, onProposalSelect }: ProposalKanbanPr
 
   const updateProposalMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: ProposalStatus }) => {
-      const { error } = await supabase
-        .from('proposals')
-        .update({ status })
-        .eq('id', id);
-      
-      if (error) throw error;
+      await updateProposalStatus(id, status);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
