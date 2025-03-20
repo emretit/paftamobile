@@ -17,14 +17,10 @@ const TasksPageHeader = ({ onCreateTask }: TasksPageHeaderProps) => {
         </p>
       </div>
       <div className="flex items-center gap-2">
-        <Button onClick={onCreateTask} size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Görev Ekle
-        </Button>
         <Link to="/tasks/new">
-          <Button variant="secondary" size="sm">
+          <Button size="sm">
             <Plus className="mr-2 h-4 w-4" />
-            Yeni Görev Sayfası
+            Görev Ekle
           </Button>
         </Link>
       </div>
