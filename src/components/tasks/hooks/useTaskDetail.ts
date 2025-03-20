@@ -21,7 +21,7 @@ export const useTaskDetail = () => {
         type: updatedTask.type || 'general',
         due_date: updatedTask.due_date,
         assignee_id: updatedTask.assignee_id,
-        subtasks: updatedTask.subtasks // Add subtasks to the update object
+        // subtasks are handled separately in the component
       };
       
       const { data, error } = await supabase

@@ -42,12 +42,11 @@ const TaskDetails = ({ task, onClose }: TaskDetailsProps) => {
 
   const handleSave = () => {
     console.log("Saving form data:", formData);
-    // When saving the main task, we don't include subtasks since we handle them separately
-    const taskDataForUpdate = { ...formData };
-    // We need to remove subtasks here to prevent the type error
-    delete (taskDataForUpdate as any).subtasks;
     
-    updateTaskMutation.mutate(taskDataForUpdate, {
+    // Create a copy of the task data without subtasks
+    const { subtasks, ...taskDataForUpdate } = formData;
+    
+    updateTaskMutation.mutate(taskDataForUpdate as Task, {
       onSuccess: () => {
         onClose();
       }
