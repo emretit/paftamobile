@@ -6,7 +6,7 @@ export const filterTasks = (
   searchQuery: string,
   selectedEmployee: string | null,
   selectedType: string | null,
-  selectedStatus: TaskStatus | null
+  selectedStatus: TaskStatus | "all" | null
 ): Task[] => {
   return tasks.filter(task => {
     const matchesSearch = 

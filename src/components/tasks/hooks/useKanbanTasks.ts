@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +8,7 @@ interface UseKanbanTasksProps {
   searchQuery?: string;
   selectedEmployee?: string | null;
   selectedType?: string | null;
-  selectedStatus?: TaskStatus | null;
+  selectedStatus?: TaskStatus | "all" | null;
 }
 
 interface KanbanTasks {
@@ -75,7 +76,7 @@ export const useKanbanTasks = ({
       
       const matchesEmployee = !selectedEmployee || task.assignee_id === selectedEmployee;
       const matchesType = !selectedType || task.type === selectedType;
-      const matchesStatus = !selectedStatus || task.status === selectedStatus;
+      const matchesStatus = !selectedStatus || selectedStatus === "all" || task.status === selectedStatus;
       
       return matchesSearch && matchesEmployee && matchesType && matchesStatus;
     });
@@ -89,8 +90,8 @@ export const useKanbanTasks = ({
     };
 
     // If status filter is active, only show that status column with filtered tasks
-    if (selectedStatus) {
-      groupedTasks[selectedStatus] = filteredTasks.filter(task => task.status === selectedStatus);
+    if (selectedStatus && selectedStatus !== "all") {
+      groupedTasks[selectedStatus as TaskStatus] = filteredTasks.filter(task => task.status === selectedStatus);
     } else {
       // Otherwise, organize all filtered tasks by their status
       filteredTasks.forEach(task => {

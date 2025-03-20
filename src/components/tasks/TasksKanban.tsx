@@ -118,6 +118,14 @@ export const TasksKanban = ({
     );
   }
 
+  // Helper function to add isOverdue property to tasks
+  const addIsOverdueProp = (tasksArr: Task[]) => {
+    return tasksArr.map(task => ({
+      ...task,
+      isOverdue: task.due_date ? new Date(task.due_date) < new Date() : false
+    }));
+  };
+
   return (
     <div className="h-full">
       <DragDropContext onDragEnd={handleDragEnd}>
@@ -133,7 +141,7 @@ export const TasksKanban = ({
               <KanbanColumn
                 id={column.id}
                 title={column.title}
-                tasks={tasks[column.id as keyof typeof tasks]}
+                tasks={addIsOverdueProp(tasks[column.id as keyof typeof tasks])}
                 onTaskEdit={handleTaskEdit}
                 onTaskSelect={onSelectTask}
               />
