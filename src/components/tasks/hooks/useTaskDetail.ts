@@ -21,6 +21,9 @@ export const useTaskDetail = () => {
         type: updatedTask.type || 'general',
         due_date: updatedTask.due_date,
         assignee_id: updatedTask.assignee_id,
+        related_item_id: updatedTask.related_item_id,
+        related_item_title: updatedTask.related_item_title,
+        related_item_type: updatedTask.related_item_type
         // subtasks are handled separately in the component
       };
       
