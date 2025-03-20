@@ -4,8 +4,6 @@ import DefaultLayout from "@/components/layouts/DefaultLayout";
 import TasksContent from "@/components/tasks/TasksContent";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import TasksKanban from "@/components/tasks/TasksKanban";
 import TasksPageHeader from "@/components/tasks/header/TasksPageHeader";
 import TaskForm from "@/components/tasks/form/TaskForm";
 import TasksFilterBar from "@/components/tasks/filters/TasksFilterBar";
@@ -78,32 +76,14 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
           employees={employees}
         />
 
-        <Tabs
-          value={activeView}
-          onValueChange={(value) => setActiveView(value as ViewType)}
-          className="w-full"
-        >
-          <TabsList className="mb-4">
-            <TabsTrigger value="table">Liste</TabsTrigger>
-            <TabsTrigger value="kanban">Kanban</TabsTrigger>
-          </TabsList>
-          <TabsContent value="table" className="mt-0">
-            <TasksContent 
-              searchQuery={searchQuery}
-              selectedEmployee={selectedAssignee}
-              selectedType={selectedType}
-              selectedStatus={selectedStatus}
-            />
-          </TabsContent>
-          <TabsContent value="kanban" className="mt-0">
-            <TasksKanban 
-              searchQuery={searchQuery}
-              selectedEmployee={selectedAssignee}
-              selectedType={selectedType}
-              selectedStatus={selectedStatus}
-            />
-          </TabsContent>
-        </Tabs>
+        {activeView === "table" && (
+          <TasksContent 
+            searchQuery={searchQuery}
+            selectedEmployee={selectedAssignee}
+            selectedType={selectedType}
+            selectedStatus={selectedStatus}
+          />
+        )}
       </div>
 
       {/* Dialog for creating/editing tasks */}
