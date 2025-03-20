@@ -28,7 +28,7 @@ export const ProposalTableHeader = ({
 
   return (
     <TableHeader>
-      <TableRow className="bg-gray-50">
+      <TableRow className="bg-gray-50 border-b">
         {columns.map((column) => (
           column.visible && (
             <TableHead 

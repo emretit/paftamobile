@@ -21,7 +21,7 @@ const TaskTableHeader = ({ sortField, sortDirection, handleSort }: TaskTableHead
 
   return (
     <TableHeader>
-      <TableRow className="bg-gray-50">
+      <TableRow className="bg-gray-50 border-b">
         <TableHead 
           className="cursor-pointer hover:bg-gray-100 h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
           onClick={() => handleSort("title")}

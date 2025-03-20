@@ -48,7 +48,7 @@ const ServiceTableHeader: React.FC<ServiceTableHeaderProps> = ({
   
   return (
     <TableHeader>
-      <TableRow className="bg-gray-50">
+      <TableRow className="bg-gray-50 border-b">
         {renderSortableHeader("Servis No", "title")}
         {renderSortableHeader("Başlık", "title")}
         {renderSortableHeader("Müşteri", "customer")}
