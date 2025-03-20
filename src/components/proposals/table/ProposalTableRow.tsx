@@ -27,7 +27,7 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
   
   return (
     <TableRow className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-      <TableCell className="font-medium">#{proposal.proposal_number}</TableCell>
+      <TableCell className="font-medium">#{proposal.number || proposal.proposal_number}</TableCell>
       <TableCell>
         {proposal.customer ? (
           <div>
@@ -37,7 +37,7 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
             )}
           </div>
         ) : (
-          <span className="text-muted-foreground">Müşteri yok</span>
+          <span className="text-muted-foreground">{proposal.customer_name || "Müşteri yok"}</span>
         )}
       </TableCell>
       <TableCell>
@@ -45,7 +45,7 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
       </TableCell>
       <TableCell>{formatDate(proposal.created_at)}</TableCell>
       <TableCell>{formatDate(proposal.valid_until)}</TableCell>
-      <TableCell className="font-medium">{formatMoney(proposal.total_value)}</TableCell>
+      <TableCell className="font-medium">{formatMoney(proposal.total_amount || proposal.total_value || 0)}</TableCell>
       <TableCell>
         <div className="flex justify-end">
           <Button

@@ -31,7 +31,7 @@ export const ProposalItemsTab = ({ proposal }: ProposalItemsTabProps) => {
   const calculateTaxAmount = () => {
     return proposal.items?.reduce((sum, item) => {
       const itemTotal = item.quantity * item.unit_price;
-      return sum + (itemTotal * item.tax_rate / 100);
+      return sum + (itemTotal * (item.tax_rate || 0) / 100);
     }, 0) || 0;
   };
 
@@ -64,7 +64,7 @@ export const ProposalItemsTab = ({ proposal }: ProposalItemsTabProps) => {
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell className="text-right">{item.quantity}</TableCell>
                   <TableCell className="text-right">{formatMoney(item.unit_price)}</TableCell>
-                  <TableCell className="text-right">%{item.tax_rate}</TableCell>
+                  <TableCell className="text-right">%{item.tax_rate || 0}</TableCell>
                   <TableCell className="text-right font-medium">{formatMoney(item.total_price)}</TableCell>
                 </TableRow>
               ))}
@@ -82,13 +82,13 @@ export const ProposalItemsTab = ({ proposal }: ProposalItemsTabProps) => {
           <span className="text-sm text-muted-foreground">Toplam Vergi:</span>
           <span className="font-medium">{formatMoney(calculateTaxAmount())}</span>
         </div>
-        {proposal.discounts ? (
+        {(proposal.discounts && proposal.discounts > 0) ? (
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">İndirim:</span>
             <span className="font-medium text-red-600">-{formatMoney(proposal.discounts)}</span>
           </div>
         ) : null}
-        {proposal.additional_charges ? (
+        {(proposal.additional_charges && proposal.additional_charges > 0) ? (
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Ek Masraflar:</span>
             <span className="font-medium">{formatMoney(proposal.additional_charges)}</span>

@@ -1,3 +1,4 @@
+
 import { useMemo } from "react";
 import { 
   AreaChart, 
@@ -79,11 +80,11 @@ const ProposalAnalytics = () => {
     if (!data || data.length === 0) return null;
 
     const totalProposals = data.length;
-    const acceptedProposals = data.filter(p => p.status === 'accepted').length;
+    const acceptedProposals = data.filter(p => p.status === 'approved').length;
     const rejectedProposals = data.filter(p => p.status === 'rejected').length;
     const pendingProposals = totalProposals - acceptedProposals - rejectedProposals;
 
-    const totalValue = data.reduce((sum, p) => sum + p.total_value, 0);
+    const totalValue = data.reduce((sum, p) => sum + (p.total_amount || p.total_value || 0), 0);
     const averageValue = totalValue / totalProposals || 0;
     const acceptanceRate = (acceptedProposals / totalProposals) * 100 || 0;
 
@@ -174,20 +175,20 @@ const ProposalAnalytics = () => {
                 <div>
                   <div className="font-medium">{proposal.title}</div>
                   <div className="text-sm text-gray-500">
-                    {proposal.customer?.name || 'İsimsiz Müşteri'} • {new Date(proposal.created_at).toLocaleDateString('tr-TR')}
+                    {proposal.customer?.name || proposal.customer_name || 'İsimsiz Müşteri'} • {new Date(proposal.created_at).toLocaleDateString('tr-TR')}
                   </div>
                 </div>
                 <div className="flex items-center">
                   <div className="mr-4 text-right">
                     <div className="font-semibold">
-                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(proposal.total_value)}
+                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(proposal.total_amount || proposal.total_value || 0)}
                     </div>
                     <div className={`text-xs px-2 py-0.5 rounded-full inline-block ${
-                      proposal.status === 'accepted' ? 'bg-green-100 text-green-800' : 
+                      proposal.status === 'approved' ? 'bg-green-100 text-green-800' : 
                       proposal.status === 'rejected' ? 'bg-red-100 text-red-800' : 
                       'bg-amber-100 text-amber-800'
                     }`}>
-                      {proposal.status === 'accepted' ? 'Onaylandı' : 
+                      {proposal.status === 'approved' ? 'Onaylandı' : 
                        proposal.status === 'rejected' ? 'Reddedildi' : 
                        'Beklemede'}
                     </div>

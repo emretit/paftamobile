@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, User2Icon, CreditCardIcon } from "lucide-react";
-import { Proposal, proposalStatusColors } from "@/types/proposal";
+import { Proposal, proposalStatusColors, proposalStatusLabels } from "@/types/proposal";
 import { format } from "date-fns";
 
 interface ProposalCardProps {
@@ -31,26 +31,22 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, onClick }) => {
       <CardHeader className="p-4 pb-2">
         <CardTitle className="text-sm font-medium flex justify-between items-start">
           <span className="truncate">
-            {proposal.title || `Teklif #${proposal.proposal_number}`}
+            {proposal.title || `Teklif #${proposal.number || proposal.proposal_number}`}
           </span>
           <Badge className={proposalStatusColors[proposal.status]}>
-            {proposal.status === "draft" && "Taslak"}
-            {proposal.status === "pending_approval" && "Onay Bekliyor"}
-            {proposal.status === "sent" && "Gönderildi"}
-            {proposal.status === "accepted" && "Kabul Edildi"}
-            {proposal.status === "rejected" && "Reddedildi"}
+            {proposalStatusLabels[proposal.status]}
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0 text-xs space-y-2">
         <div className="flex items-center text-gray-600">
           <User2Icon className="h-3.5 w-3.5 mr-2" />
-          {proposal.customer?.name || "İsimsiz Müşteri"}
+          {proposal.customer?.name || proposal.customer_name || "İsimsiz Müşteri"}
         </div>
-        {proposal.total_value && (
+        {(proposal.total_amount || proposal.total_value) && (
           <div className="flex items-center text-gray-600">
             <CreditCardIcon className="h-3.5 w-3.5 mr-2" />
-            {formatMoney(proposal.total_value)}
+            {formatMoney(proposal.total_amount || proposal.total_value || 0)}
           </div>
         )}
         {proposal.valid_until && (

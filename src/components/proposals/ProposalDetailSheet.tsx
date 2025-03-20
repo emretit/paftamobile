@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Sheet,
@@ -62,7 +63,7 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
                 <FileText className="mr-2 h-4 w-4" />
                 Teklif No
               </div>
-              <div className="font-medium">TEK-{proposal.proposal_number}</div>
+              <div className="font-medium">TEK-{proposal.number || proposal.proposal_number}</div>
             </div>
 
             <div className="space-y-1">
@@ -81,7 +82,7 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
                 Müşteri
               </div>
               <div className="font-medium">
-                {proposal.customer?.name || "-"}
+                {proposal.customer?.name || proposal.customer_name || "-"}
               </div>
             </div>
 
@@ -93,7 +94,7 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
               <div className="font-medium">
                 {proposal.employee
                   ? `${proposal.employee.first_name} ${proposal.employee.last_name}`
-                  : "-"}
+                  : proposal.employee_name || "-"}
               </div>
             </div>
 
@@ -103,7 +104,7 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
                 Toplam Tutar
               </div>
               <div className="font-medium">
-                {formatMoney(proposal.total_value)}
+                {formatMoney(proposal.total_amount || proposal.total_value || 0)}
               </div>
             </div>
 
@@ -168,7 +169,7 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
                         Toplam:
                       </td>
                       <td className="text-right py-2 font-medium">
-                        {formatMoney(proposal.total_value)}
+                        {formatMoney(proposal.total_amount || proposal.total_value || 0)}
                       </td>
                     </tr>
                   </tfoot>
