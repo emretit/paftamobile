@@ -1,4 +1,3 @@
-
 import { useMemo } from "react";
 import { 
   AreaChart, 
@@ -80,7 +79,7 @@ const ProposalAnalytics = () => {
     if (!data || data.length === 0) return null;
 
     const totalProposals = data.length;
-    const acceptedProposals = data.filter(p => p.status === 'approved').length;
+    const acceptedProposals = data.filter(p => p.status === 'accepted').length;
     const rejectedProposals = data.filter(p => p.status === 'rejected').length;
     const pendingProposals = totalProposals - acceptedProposals - rejectedProposals;
 
@@ -184,11 +183,11 @@ const ProposalAnalytics = () => {
                       {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(proposal.total_amount || proposal.total_value || 0)}
                     </div>
                     <div className={`text-xs px-2 py-0.5 rounded-full inline-block ${
-                      proposal.status === 'approved' ? 'bg-green-100 text-green-800' : 
+                      proposal.status === 'accepted' ? 'bg-green-100 text-green-800' : 
                       proposal.status === 'rejected' ? 'bg-red-100 text-red-800' : 
                       'bg-amber-100 text-amber-800'
                     }`}>
-                      {proposal.status === 'approved' ? 'Onaylandı' : 
+                      {proposal.status === 'accepted' ? 'Onaylandı' : 
                        proposal.status === 'rejected' ? 'Reddedildi' : 
                        'Beklemede'}
                     </div>
@@ -211,3 +210,4 @@ const ProposalAnalytics = () => {
 };
 
 export default ProposalAnalytics;
+

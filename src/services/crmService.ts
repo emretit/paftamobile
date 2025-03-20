@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 import { Proposal, ProposalStatus, ProposalItem } from "@/types/proposal";
+import { Opportunity, OpportunityStatus } from "@/types/crm";
 
 // Function to generate a unique proposal number
 const generateProposalNumber = (): string => {
@@ -51,7 +52,7 @@ export const createProposal = async (proposalData: Partial<Proposal>): Promise<P
       created_at: data.created_at,
       updated_at: data.updated_at,
       valid_until: data.valid_until,
-      items: Array.isArray(data.items) ? data.items as ProposalItem[] : [],
+      items: Array.isArray(data.items) ? (data.items as any) as ProposalItem[] : [],
       attachments: Array.isArray(data.attachments) ? data.attachments : [],
       currency: data.currency || "TRY",
       terms: data.terms,
@@ -93,7 +94,7 @@ export const getProposalById = async (id: string): Promise<Proposal | null> => {
       created_at: data.created_at,
       updated_at: data.updated_at,
       valid_until: data.valid_until,
-      items: Array.isArray(data.items) ? data.items as ProposalItem[] : [],
+      items: Array.isArray(data.items) ? (data.items as any) as ProposalItem[] : [],
       attachments: Array.isArray(data.attachments) ? data.attachments : [],
       currency: data.currency || "TRY",
       terms: data.terms,
@@ -107,11 +108,11 @@ export const getProposalById = async (id: string): Promise<Proposal | null> => {
       // Backward compatibility fields
       total_value: data.total_amount || 0,
       proposal_number: data.number,
-      payment_terms: data.payment_terms || "",
-      delivery_terms: data.delivery_terms || "",
-      internal_notes: data.internal_notes || "",
-      discounts: data.discounts || 0,
-      additional_charges: data.additional_charges || 0,
+      payment_terms: "",
+      delivery_terms: "",
+      internal_notes: "",
+      discounts: 0,
+      additional_charges: 0,
     };
     
     return result;
@@ -134,7 +135,7 @@ export const updateProposal = async (id: string, proposalData: Partial<Proposal>
         total_amount: proposalData.total_amount,
         number: proposalData.number,
         updated_at: new Date().toISOString(),
-        items: proposalData.items,
+        items: proposalData.items as any,
         currency: proposalData.currency,
         terms: proposalData.terms,
         notes: proposalData.notes,
@@ -256,5 +257,49 @@ export const getProposalTotals = async (): Promise<{
   } catch (error) {
     console.error('Error getting proposal totals:', error);
     throw error;
+  }
+};
+
+export const crmService = {
+  createProposal,
+  getProposalById,
+  updateProposal,
+  deleteProposal: async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('proposals')
+        .delete()
+        .eq('id', id);
+  
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting proposal:', error);
+      throw error;
+    }
+  },
+  addProposalComment,
+  updateProposalStatus,
+  getProposalTotals,
+  
+  updateOpportunity: async (id: string, data: Partial<Opportunity>): Promise<{ data: Opportunity, error: any }> => {
+    try {
+      const { data: updatedData, error } = await supabase
+        .from('opportunities')
+        .update(data)
+        .eq('id', id)
+        .select(`
+          *,
+          customer:customer_id (*),
+          employee:employee_id (*)
+        `)
+        .single();
+        
+      if (error) throw error;
+      
+      return { data: updatedData as Opportunity, error: null };
+    } catch (error) {
+      console.error('Error updating opportunity:', error);
+      return { data: {} as Opportunity, error };
+    }
   }
 };
