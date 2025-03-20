@@ -2,6 +2,7 @@
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import type { SortField, SortDirection } from "./types";
+import { cn } from "@/lib/utils";
 
 interface TaskTableHeaderProps {
   sortField: SortField;
@@ -20,9 +21,9 @@ const TaskTableHeader = ({ sortField, sortDirection, handleSort }: TaskTableHead
 
   return (
     <TableHeader>
-      <TableRow>
+      <TableRow className="bg-gray-50">
         <TableHead 
-          className="cursor-pointer hover:bg-gray-50"
+          className="cursor-pointer hover:bg-gray-100 h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
           onClick={() => handleSort("title")}
         >
           <div className="flex items-center">
@@ -31,7 +32,7 @@ const TaskTableHeader = ({ sortField, sortDirection, handleSort }: TaskTableHead
           </div>
         </TableHead>
         <TableHead 
-          className="cursor-pointer hover:bg-gray-50"
+          className="cursor-pointer hover:bg-gray-100 h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
           onClick={() => handleSort("due_date")}
         >
           <div className="flex items-center">
@@ -40,7 +41,7 @@ const TaskTableHeader = ({ sortField, sortDirection, handleSort }: TaskTableHead
           </div>
         </TableHead>
         <TableHead 
-          className="cursor-pointer hover:bg-gray-50"
+          className="cursor-pointer hover:bg-gray-100 h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
           onClick={() => handleSort("priority")}
         >
           <div className="flex items-center">
@@ -49,7 +50,7 @@ const TaskTableHeader = ({ sortField, sortDirection, handleSort }: TaskTableHead
           </div>
         </TableHead>
         <TableHead 
-          className="cursor-pointer hover:bg-gray-50"
+          className="cursor-pointer hover:bg-gray-100 h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
           onClick={() => handleSort("assignee")}
         >
           <div className="flex items-center">
@@ -57,10 +58,10 @@ const TaskTableHeader = ({ sortField, sortDirection, handleSort }: TaskTableHead
             {getSortIcon("assignee")}
           </div>
         </TableHead>
-        <TableHead className="w-[180px]">
+        <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap w-[180px]">
           Status
         </TableHead>
-        <TableHead className="w-[80px]">Actions</TableHead>
+        <TableHead className="h-12 px-4 text-right align-middle font-medium text-muted-foreground whitespace-nowrap w-[80px]">Actions</TableHead>
       </TableRow>
     </TableHeader>
   );

@@ -34,8 +34,8 @@ export const ProposalTableHeader = ({
             <TableHead 
               key={column.id}
               className={cn(
-                column.sortable ? 'cursor-pointer hover:bg-gray-100' : '',
-                "h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
+                "h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap",
+                column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
               )}
               onClick={column.sortable && onSort ? () => onSort(column.id) : undefined}
             >

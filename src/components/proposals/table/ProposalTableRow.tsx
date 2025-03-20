@@ -36,11 +36,11 @@ export const ProposalTableRow = ({
   
   return (
     <TableRow 
-      className="cursor-pointer transition-colors hover:bg-gray-50"
+      className="cursor-pointer transition-colors hover:bg-gray-50 h-16"
       onClick={() => onSelect(proposal)}
     >
-      <TableCell className="font-medium">#{proposal.number}</TableCell>
-      <TableCell>
+      <TableCell className="font-medium p-4">#{proposal.number}</TableCell>
+      <TableCell className="p-4">
         {proposal.customer ? (
           <div className="flex items-center space-x-2">
             <Avatar className="h-8 w-8">
@@ -64,7 +64,7 @@ export const ProposalTableRow = ({
         proposalId={proposal.id} 
         onStatusChange={onStatusChange} 
       />
-      <TableCell>
+      <TableCell className="p-4">
         {proposal.employee ? (
           <div className="flex items-center space-x-2">
             <Avatar className="h-6 w-6">
@@ -81,10 +81,10 @@ export const ProposalTableRow = ({
           <span className="text-muted-foreground">-</span>
         )}
       </TableCell>
-      <TableCell className="font-medium">{formatMoney(proposal.total_amount || proposal.total_value || 0)}</TableCell>
-      <TableCell>{formatDate(proposal.created_at)}</TableCell>
-      <TableCell>{formatDate(proposal.valid_until)}</TableCell>
-      <TableCell>
+      <TableCell className="font-medium p-4">{formatMoney(proposal.total_amount || proposal.total_value || 0)}</TableCell>
+      <TableCell className="p-4">{formatDate(proposal.created_at)}</TableCell>
+      <TableCell className="p-4">{formatDate(proposal.valid_until)}</TableCell>
+      <TableCell className="p-4">
         <div className="flex justify-end">
           <Button
             variant="ghost"

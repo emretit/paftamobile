@@ -3,6 +3,7 @@ import React from "react";
 import { TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import type { SortField, SortDirection } from "@/components/tasks/table/types";
+import { cn } from "@/lib/utils";
 
 interface ServiceTableHeaderProps {
   sortField?: SortField;
@@ -27,7 +28,10 @@ const ServiceTableHeader: React.FC<ServiceTableHeaderProps> = ({
     const isClickable = !!handleSort;
     return (
       <TableHead 
-        className={isClickable ? "cursor-pointer hover:bg-gray-50" : ""}
+        className={cn(
+          "h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap",
+          isClickable ? "cursor-pointer hover:bg-gray-100" : ""
+        )}
         onClick={() => isClickable && handleSort(field)}
       >
         {isClickable ? (
@@ -52,7 +56,7 @@ const ServiceTableHeader: React.FC<ServiceTableHeaderProps> = ({
         {renderSortableHeader("Teknisyen", "assignee")}
         {renderSortableHeader("Durum", "status")}
         {renderSortableHeader("Öncelik", "priority")}
-        <TableHead className="text-right">İşlemler</TableHead>
+        <TableHead className="text-right h-12 px-4 font-medium text-muted-foreground whitespace-nowrap">İşlemler</TableHead>
       </TableRow>
     </TableHeader>
   );

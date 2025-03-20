@@ -28,7 +28,7 @@ const TasksTableHeader: React.FC<TasksTableHeaderProps> = ({
     <TableHeader>
       <TableRow className="bg-gray-50">
         <TableHead 
-          className="cursor-pointer hover:bg-gray-100"
+          className="cursor-pointer hover:bg-gray-100 h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
           onClick={() => handleSort("title")}
         >
           <div className="flex items-center">
@@ -38,7 +38,7 @@ const TasksTableHeader: React.FC<TasksTableHeaderProps> = ({
         </TableHead>
         
         <TableHead 
-          className="cursor-pointer hover:bg-gray-100"
+          className="cursor-pointer hover:bg-gray-100 h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
           onClick={() => handleSort("due_date")}
         >
           <div className="flex items-center">
@@ -48,7 +48,7 @@ const TasksTableHeader: React.FC<TasksTableHeaderProps> = ({
         </TableHead>
         
         <TableHead 
-          className="cursor-pointer hover:bg-gray-100"
+          className="cursor-pointer hover:bg-gray-100 h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
           onClick={() => handleSort("priority")}
         >
           <div className="flex items-center">
@@ -58,7 +58,7 @@ const TasksTableHeader: React.FC<TasksTableHeaderProps> = ({
         </TableHead>
         
         <TableHead 
-          className="cursor-pointer hover:bg-gray-100"
+          className="cursor-pointer hover:bg-gray-100 h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
           onClick={() => handleSort("assignee")}
         >
           <div className="flex items-center">
@@ -68,7 +68,7 @@ const TasksTableHeader: React.FC<TasksTableHeaderProps> = ({
         </TableHead>
         
         <TableHead 
-          className="cursor-pointer hover:bg-gray-100"
+          className="cursor-pointer hover:bg-gray-100 h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
           onClick={() => handleSort("related_item")}
         >
           <div className="flex items-center">
@@ -78,7 +78,7 @@ const TasksTableHeader: React.FC<TasksTableHeaderProps> = ({
         </TableHead>
         
         <TableHead 
-          className="cursor-pointer hover:bg-gray-100"
+          className="cursor-pointer hover:bg-gray-100 h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
           onClick={() => handleSort("status")}
         >
           <div className="flex items-center">
@@ -87,7 +87,7 @@ const TasksTableHeader: React.FC<TasksTableHeaderProps> = ({
           </div>
         </TableHead>
         
-        <TableHead className="text-right">
+        <TableHead className="text-right h-12 px-4 font-medium text-muted-foreground whitespace-nowrap">
           İşlemler
         </TableHead>
       </TableRow>

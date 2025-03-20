@@ -69,10 +69,10 @@ const TasksTableRow = ({
   return (
     <TableRow 
       key={task.id}
-      className="cursor-pointer hover:bg-gray-50"
+      className="cursor-pointer hover:bg-gray-50 h-16"
       onClick={() => onSelectTask(task)}
     >
-      <TableCell className="font-medium">
+      <TableCell className="font-medium p-4">
         <div className="flex flex-col">
           <span>{task.title}</span>
           {task.description && (
@@ -82,7 +82,7 @@ const TasksTableRow = ({
           )}
         </div>
       </TableCell>
-      <TableCell>
+      <TableCell className="p-4">
         {task.due_date ? (
           <span 
             className={cn(
@@ -98,13 +98,13 @@ const TasksTableRow = ({
           <span className="text-muted-foreground">-</span>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell className="p-4">
         <Badge className={getPriorityColor(task.priority)}>
           {task.priority === "low" ? "Düşük" : 
            task.priority === "medium" ? "Orta" : "Yüksek"}
         </Badge>
       </TableCell>
-      <TableCell>
+      <TableCell className="p-4">
         {task.assignee ? (
           <div className="flex items-center space-x-2">
             <Avatar className="h-6 w-6">
@@ -122,10 +122,10 @@ const TasksTableRow = ({
           <span className="text-muted-foreground">Atanmamış</span>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell className="p-4">
         {getRelatedItemDisplay()}
       </TableCell>
-      <TableCell onClick={(e) => e.stopPropagation()}>
+      <TableCell onClick={(e) => e.stopPropagation()} className="p-4">
         <Select
           value={task.status}
           onValueChange={(value) => onStatusChange(task.id, value as Task['status'])}
@@ -141,7 +141,7 @@ const TasksTableRow = ({
           </SelectContent>
         </Select>
       </TableCell>
-      <TableCell>
+      <TableCell className="p-4">
         <div onClick={(e) => e.stopPropagation()} className="flex justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
