@@ -30,11 +30,6 @@ const DefaultLayout = ({
       >
         <TopBar />
         
-        <div className="px-6 py-4 bg-white border-b">
-          <h1 className="text-2xl font-bold text-primary-dark">{title}</h1>
-          {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
-        </div>
-        
         <Separator />
         
         <main className="p-6">
