@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Task, TaskStatus } from "@/types/task";
 import { ViewType } from "@/components/tasks/header/TasksViewToggle";
+import TasksKanban from "@/components/tasks/TasksKanban";
 
 interface TasksPageProps {
   isCollapsed: boolean;
@@ -78,6 +79,15 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
 
         {activeView === "table" && (
           <TasksContent 
+            searchQuery={searchQuery}
+            selectedEmployee={selectedAssignee}
+            selectedType={selectedType}
+            selectedStatus={selectedStatus}
+          />
+        )}
+        
+        {activeView === "kanban" && (
+          <TasksKanban 
             searchQuery={searchQuery}
             selectedEmployee={selectedAssignee}
             selectedType={selectedType}
