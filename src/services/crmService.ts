@@ -1,7 +1,8 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 import { Proposal, ProposalStatus, ProposalItem } from "@/types/proposal";
-import { Opportunity, OpportunityStatus } from "@/types/crm";
+import { Opportunity, OpportunityStatus, ContactHistoryItem } from "@/types/crm";
 
 // Function to generate a unique proposal number
 const generateProposalNumber = (): string => {
@@ -148,7 +149,7 @@ export const updateProposal = async (id: string, proposalData: Partial<Proposal>
       .single();
 
     if (error) throw error;
-    return data as Proposal;
+    return data as unknown as Proposal;
   } catch (error) {
     console.error('Error updating proposal:', error);
     throw error;
@@ -264,28 +265,22 @@ export const crmService = {
   createProposal,
   getProposalById,
   updateProposal,
-  deleteProposal: async (id: string): Promise<void> => {
-    try {
-      const { error } = await supabase
-        .from('proposals')
-        .delete()
-        .eq('id', id);
-  
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error deleting proposal:', error);
-      throw error;
-    }
-  },
+  deleteProposal,
   addProposalComment,
   updateProposalStatus,
   getProposalTotals,
   
   updateOpportunity: async (id: string, data: Partial<Opportunity>): Promise<{ data: Opportunity, error: any }> => {
     try {
+      // Convert the contact_history to a format Supabase accepts
+      const dataToUpdate = {
+        ...data,
+        contact_history: data.contact_history ? data.contact_history as any : undefined
+      };
+
       const { data: updatedData, error } = await supabase
         .from('opportunities')
-        .update(data)
+        .update(dataToUpdate)
         .eq('id', id)
         .select(`
           *,
@@ -296,7 +291,15 @@ export const crmService = {
         
       if (error) throw error;
       
-      return { data: updatedData as Opportunity, error: null };
+      // Transform the response to match our Opportunity type
+      const transformedData: Opportunity = {
+        ...updatedData,
+        contact_history: Array.isArray(updatedData.contact_history) 
+          ? (updatedData.contact_history as any) as ContactHistoryItem[] 
+          : []
+      } as Opportunity;
+      
+      return { data: transformedData, error: null };
     } catch (error) {
       console.error('Error updating opportunity:', error);
       return { data: {} as Opportunity, error };
