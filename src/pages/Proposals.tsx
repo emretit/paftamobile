@@ -10,9 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProposalKanban } from "@/components/proposals/ProposalKanban";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProposalDetailSheet from "@/components/proposals/ProposalDetailSheet";
-import { Proposal } from "@/types/proposal";
+import { Proposal, ProposalStatus } from "@/types/proposal";
 import { useProposals } from "@/hooks/useProposals";
 import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
 
 interface ProposalsPageProps {
   isCollapsed: boolean;
@@ -62,23 +63,22 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
               <Plus className="mr-2 h-4 w-4" />
               Yeni Teklif
             </Button>
-            <Button variant="outline" onClick={() => setIsFilterOpen(!isFilterOpen)}>
-              <Filter className="mr-2 h-4 w-4" />
-              Filtreler
-            </Button>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-between">
-          <div className="flex flex-col sm:flex-row gap-2">
+        <Card className="p-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
             <Input
               placeholder="Teklif ara..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-xs"
+              className="flex-1"
             />
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className="w-[180px]">
+            <Select
+              value={selectedStatus}
+              onValueChange={setSelectedStatus}
+            >
+              <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Tüm Durumlar" />
               </SelectTrigger>
               <SelectContent>
@@ -91,14 +91,24 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
                 <SelectItem value="expired">Süresi Dolmuş</SelectItem>
               </SelectContent>
             </Select>
+            <Select defaultValue="all">
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filtrele" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tümü</SelectItem>
+                <SelectItem value="this-month">Bu Ay</SelectItem>
+                <SelectItem value="last-month">Geçen Ay</SelectItem>
+              </SelectContent>
+            </Select>
+            <Tabs value={activeView} onValueChange={setActiveView} className="w-fit">
+              <TabsList>
+                <TabsTrigger value="list">Liste</TabsTrigger>
+                <TabsTrigger value="kanban">Kanban</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
-          <Tabs value={activeView} onValueChange={setActiveView} className="w-fit">
-            <TabsList>
-              <TabsTrigger value="list">Liste</TabsTrigger>
-              <TabsTrigger value="kanban">Kanban</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+        </Card>
 
         <Tabs value={activeView} className="w-full">
           <TabsContent value="list" className="mt-0">

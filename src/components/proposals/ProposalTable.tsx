@@ -11,8 +11,6 @@ import { Column } from "./types";
 import { ProposalTableHeader } from "./table/ProposalTableHeader";
 import { ProposalTableRow } from "./table/ProposalTableRow";
 import { ProposalTableSkeleton } from "./table/ProposalTableSkeleton";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ProposalTableProps {
   filters: ProposalFilters;
@@ -24,7 +22,6 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
   const { data, isLoading, error } = useProposals(filters);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState<string>("created_at");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
@@ -124,37 +121,17 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
       : valueB.localeCompare(valueA);
   });
 
-  // Filter proposals based on the search query
-  const filteredProposals = searchQuery.trim() === "" 
+  // Filter proposals based on search query from parent filters
+  const filteredProposals = filters.search.trim() === "" 
     ? sortedProposals 
     : sortedProposals.filter((proposal) => 
-        proposal.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        proposal.number?.toString().includes(searchQuery) ||
-        proposal.customer?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+        proposal.title?.toLowerCase().includes(filters.search.toLowerCase()) ||
+        proposal.number?.toString().includes(filters.search) ||
+        proposal.customer?.name?.toLowerCase().includes(filters.search.toLowerCase())
       );
 
   return (
     <div className="w-full border rounded-md overflow-hidden">
-      <div className="flex justify-between items-center p-4 border-b bg-background">
-        <div className="flex items-center space-x-2 flex-1">
-          <Input
-            placeholder="Teklif ara..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-sm h-9"
-          />
-          <Select defaultValue="all">
-            <SelectTrigger className="w-[180px] h-9">
-              <SelectValue placeholder="Filtrele" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tümü</SelectItem>
-              <SelectItem value="this-month">Bu Ay</SelectItem>
-              <SelectItem value="last-month">Geçen Ay</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
       <div className="overflow-x-auto">
         <Table className="border-collapse">
           <ProposalTableHeader 
