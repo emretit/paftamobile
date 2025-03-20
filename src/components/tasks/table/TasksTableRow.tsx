@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import PriorityBadge from "./PriorityBadge";
+import { PriorityBadge } from "./PriorityBadge";
 
 interface TasksTableRowProps {
   task: Task;
@@ -45,22 +45,20 @@ const TasksTableRow: React.FC<TasksTableRowProps> = ({
 
   const getStatusColor = (status: TaskStatus) => {
     switch (status) {
-      case "not_started": return "bg-gray-100 hover:bg-gray-200 text-gray-800";
+      case "todo": return "bg-gray-100 hover:bg-gray-200 text-gray-800";
       case "in_progress": return "bg-blue-100 hover:bg-blue-200 text-blue-800";
       case "completed": return "bg-green-100 hover:bg-green-200 text-green-800";
-      case "on_hold": return "bg-yellow-100 hover:bg-yellow-200 text-yellow-800";
-      case "cancelled": return "bg-red-100 hover:bg-red-200 text-red-800";
+      case "postponed": return "bg-yellow-100 hover:bg-yellow-200 text-yellow-800";
       default: return "bg-gray-100 hover:bg-gray-200 text-gray-800";
     }
   };
 
   const getStatusLabel = (status: TaskStatus) => {
     switch (status) {
-      case "not_started": return "Başlanmadı";
+      case "todo": return "Yapılacak";
       case "in_progress": return "Devam Ediyor";
       case "completed": return "Tamamlandı";
-      case "on_hold": return "Beklemede";
-      case "cancelled": return "İptal Edildi";
+      case "postponed": return "Ertelendi";
       default: return status;
     }
   };
@@ -80,12 +78,12 @@ const TasksTableRow: React.FC<TasksTableRowProps> = ({
         <PriorityBadge priority={task.priority} />
       </TableCell>
       <TableCell className="p-4">
-        {task.assignee_name || "-"}
+        {task.assignee ? task.assignee.first_name + " " + task.assignee.last_name : "-"}
       </TableCell>
       <TableCell className="p-4 text-muted-foreground">
-        {task.related_to ? (
+        {task.related_item_title ? (
           <span className="inline-flex items-center">
-            {task.related_to}
+            {task.related_item_title}
           </span>
         ) : (
           "-"

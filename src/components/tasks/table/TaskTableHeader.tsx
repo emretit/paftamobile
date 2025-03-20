@@ -39,10 +39,10 @@ const TaskTableHeader = ({ sortField, sortDirection, handleSort }: TaskTableHead
         {renderSortableHeader("Due Date", "due_date")}
         {renderSortableHeader("Priority", "priority")}
         {renderSortableHeader("Assigned To", "assignee")}
-        <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap w-[180px]">
+        <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap">
           Status
         </TableHead>
-        <TableHead className="h-12 px-4 text-right align-middle font-medium text-muted-foreground whitespace-nowrap w-[80px]">
+        <TableHead className="h-12 px-4 text-right align-middle font-medium text-muted-foreground whitespace-nowrap">
           Actions
         </TableHead>
       </TableRow>

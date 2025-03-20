@@ -37,20 +37,20 @@ const TaskTableRow = ({
   return (
     <TableRow 
       key={task.id}
-      className="cursor-pointer hover:bg-gray-50"
+      className="cursor-pointer hover:bg-gray-50 h-16"
       onClick={() => onSelectTask(task)}
     >
-      <TableCell className="font-medium">
+      <TableCell className="font-medium p-4">
         <div className="flex flex-col">
           <span>{task.title}</span>
           {task.description && (
-            <span className="text-xs text-gray-500 line-clamp-1 mt-1">
+            <span className="text-xs text-muted-foreground line-clamp-1 mt-1">
               {task.description}
             </span>
           )}
         </div>
       </TableCell>
-      <TableCell>
+      <TableCell className="p-4">
         {task.due_date ? (
           <span 
             className={cn(
@@ -63,11 +63,11 @@ const TaskTableRow = ({
             {format(new Date(task.due_date), "dd MMM yyyy")}
           </span>
         ) : (
-          <span className="text-gray-400">-</span>
+          <span className="text-muted-foreground">-</span>
         )}
       </TableCell>
-      <TableCell><PriorityBadge priority={task.priority} /></TableCell>
-      <TableCell>
+      <TableCell className="p-4"><PriorityBadge priority={task.priority} /></TableCell>
+      <TableCell className="p-4">
         {task.assignee ? (
           <div className="flex items-center space-x-2">
             <Avatar className="h-6 w-6">
@@ -82,10 +82,10 @@ const TaskTableRow = ({
             </span>
           </div>
         ) : (
-          <span className="text-gray-400">-</span>
+          <span className="text-muted-foreground">-</span>
         )}
       </TableCell>
-      <TableCell onClick={(e) => e.stopPropagation()}>
+      <TableCell className="p-4" onClick={(e) => e.stopPropagation()}>
         <Select
           value={task.status}
           onValueChange={(value) => onStatusChange(task.id, value as Task['status'])}
@@ -101,7 +101,7 @@ const TaskTableRow = ({
           </SelectContent>
         </Select>
       </TableCell>
-      <TableCell>
+      <TableCell className="p-4 text-right">
         <div onClick={(e) => e.stopPropagation()}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
