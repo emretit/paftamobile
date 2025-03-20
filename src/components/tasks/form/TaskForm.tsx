@@ -164,6 +164,7 @@ export default function TaskForm({ task, onClose }: TaskFormProps) {
           <TaskMetadata 
             watch={watch} 
             setValue={setValue} 
+            errors={errors}
           />
         </div>
         
@@ -176,6 +177,7 @@ export default function TaskForm({ task, onClose }: TaskFormProps) {
           taskType={taskType} 
           watch={watch}
           setValue={setValue}
+          errors={errors}
         />
       </div>
       
