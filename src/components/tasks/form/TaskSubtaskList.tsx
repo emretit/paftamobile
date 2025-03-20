@@ -1,10 +1,7 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Trash2 } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { SubTask } from "@/types/task";
+import { SubtaskHeader, SubtaskInput, SubtaskItem, EmptySubtasks } from "@/components/tasks/detail/subtasks";
+import type { SubTask } from "@/types/task";
 
 interface TaskSubtaskListProps {
   subtasks: SubTask[];
@@ -12,20 +9,31 @@ interface TaskSubtaskListProps {
 }
 
 const TaskSubtaskList = ({ subtasks, onChange }: TaskSubtaskListProps) => {
-  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [newSubtask, setNewSubtask] = useState("");
+  const [isAddingSubtask, setIsAddingSubtask] = useState(false);
+
+  const handleAddSubtaskClick = () => {
+    setIsAddingSubtask(true);
+  };
+
+  const handleCancelAdd = () => {
+    setIsAddingSubtask(false);
+    setNewSubtask("");
+  };
 
   const handleAddSubtask = () => {
-    if (!newSubtaskTitle.trim()) return;
+    if (!newSubtask.trim()) return;
     
-    const newSubtask: SubTask = {
+    const newSubtaskItem: SubTask = {
       id: crypto.randomUUID(),
-      title: newSubtaskTitle.trim(),
+      title: newSubtask.trim(),
       completed: false,
       task_id: ""
     };
     
-    onChange([...subtasks, newSubtask]);
-    setNewSubtaskTitle("");
+    onChange([...subtasks, newSubtaskItem]);
+    setNewSubtask("");
+    setIsAddingSubtask(false);
   };
 
   const handleSubtaskToggle = (id: string, completed: boolean) => {
@@ -40,61 +48,80 @@ const TaskSubtaskList = ({ subtasks, onChange }: TaskSubtaskListProps) => {
     onChange(subtasks.filter(subtask => subtask.id !== id));
   };
 
+  const handleEditSubtask = (id: string, newTitle: string) => {
+    if (!newTitle.trim()) return;
+    
+    onChange(
+      subtasks.map(subtask => 
+        subtask.id === id ? { ...subtask, title: newTitle.trim() } : subtask
+      )
+    );
+  };
+
+  const handleMoveSubtask = (subtaskId: string, direction: 'up' | 'down') => {
+    if (subtasks.length < 2) return;
+    
+    const currentIndex = subtasks.findIndex(st => st.id === subtaskId);
+    if (currentIndex === -1) return;
+    
+    const newIndex = direction === 'up' 
+      ? Math.max(0, currentIndex - 1) 
+      : Math.min(subtasks.length - 1, currentIndex + 1);
+    
+    if (newIndex === currentIndex) return;
+    
+    const updatedSubtasks = [...subtasks];
+    const [movedItem] = updatedSubtasks.splice(currentIndex, 1);
+    updatedSubtasks.splice(newIndex, 0, movedItem);
+    
+    onChange(updatedSubtasks);
+  };
+
   return (
     <div className="space-y-4">
-      <h3 className="font-medium">Alt Görevler</h3>
+      <SubtaskHeader 
+        isAddingSubtask={isAddingSubtask} 
+        onAddClick={handleAddSubtaskClick} 
+        isUpdating={false}
+      />
       
-      <div className="flex gap-2">
-        <Input
-          placeholder="Alt görev ekle"
-          value={newSubtaskTitle}
-          onChange={(e) => setNewSubtaskTitle(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              handleAddSubtask();
-            }
-          }}
+      {isAddingSubtask && (
+        <SubtaskInput
+          value={newSubtask}
+          onChange={setNewSubtask}
+          onSave={handleAddSubtask}
+          onCancel={handleCancelAdd}
+          isUpdating={false}
+          placeholder="Alt görev başlığı"
+          autoFocus
         />
-        <Button type="button" onClick={handleAddSubtask} size="sm">
-          <Plus className="h-4 w-4" />
-        </Button>
-      </div>
+      )}
       
-      <div className="space-y-2">
-        {subtasks.length === 0 ? (
-          <div className="text-sm text-gray-500 py-2">
-            Henüz alt görev eklenmedi.
-          </div>
-        ) : (
-          subtasks.map((subtask) => (
-            <div key={subtask.id} className="flex items-center justify-between py-2 border-b">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={subtask.completed}
-                  onCheckedChange={(checked) => 
-                    handleSubtaskToggle(subtask.id, checked as boolean)
-                  }
-                  id={`subtask-${subtask.id}`}
-                />
-                <label
-                  htmlFor={`subtask-${subtask.id}`}
-                  className={`text-sm ${subtask.completed ? "line-through text-gray-400" : ""}`}
-                >
-                  {subtask.title}
-                </label>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleDeleteSubtask(subtask.id)}
-              >
-                <Trash2 className="h-4 w-4 text-red-500" />
-              </Button>
-            </div>
-          ))
-        )}
-      </div>
+      {subtasks.length > 0 ? (
+        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+          {subtasks.map((subtask, index) => (
+            <SubtaskItem
+              key={subtask.id}
+              subtask={subtask}
+              isEditing={false}
+              editValue=""
+              onToggle={(completed) => handleSubtaskToggle(subtask.id, completed)}
+              onDelete={() => handleDeleteSubtask(subtask.id)}
+              onEdit={() => {}}
+              onSaveEdit={() => {}}
+              onCancelEdit={() => {}}
+              onChangeEditValue={() => {}}
+              onMoveUp={() => handleMoveSubtask(subtask.id, 'up')}
+              onMoveDown={() => handleMoveSubtask(subtask.id, 'down')}
+              isFirst={index === 0}
+              isLast={index === subtasks.length - 1}
+              isUpdating={false}
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptySubtasks />
+      )}
     </div>
   );
 };

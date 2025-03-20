@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +45,7 @@ const TaskDetails = ({ task, onClose }: TaskDetailsProps) => {
     // Create a copy of the task data without subtasks
     const { subtasks, ...taskDataForUpdate } = formData;
     
-    updateTaskMutation.mutate(taskDataForUpdate as Task, {
+    updateTaskMutation.mutate(taskDataForUpdate, {
       onSuccess: () => {
         onClose();
       }
