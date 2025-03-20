@@ -12,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { useEmployeeNames } from "@/hooks/useEmployeeNames";
 
 interface TaskFormProps {
   task?: Task;
@@ -25,7 +24,7 @@ type FormValues = {
   status: TaskStatus;
   priority: TaskPriority;
   type: TaskType;
-  assigned_to?: string;
+  assignee_id?: string;
   due_date?: Date;
   related_item_id?: string;
   related_item_type?: string;
@@ -35,8 +34,21 @@ type FormValues = {
 export default function TaskForm({ task, onClose }: TaskFormProps) {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { employees, isLoading: isLoadingEmployees } = useEmployeeNames();
   
+  // Fetch employees for assignee dropdown
+  const { data: employees = [], isLoading: isLoadingEmployees } = useQuery({
+    queryKey: ["employees-for-assignee"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("employees")
+        .select("id, first_name, last_name, position, department, status")
+        .eq("status", "aktif");
+
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
   // Fetch opportunities for the related entity dropdown
   const { data: opportunities } = useQuery({
     queryKey: ["opportunities"],
@@ -70,7 +82,7 @@ export default function TaskForm({ task, onClose }: TaskFormProps) {
       status: task?.status || "todo",
       priority: task?.priority || "medium",
       type: task?.type || "general",
-      assigned_to: task?.assigned_to || undefined,
+      assignee_id: task?.assignee_id || undefined,
       due_date: task?.due_date ? new Date(task.due_date) : undefined,
       related_item_id: task?.related_item_id || undefined,
       related_item_type: task?.related_item_type || undefined,
@@ -117,7 +129,7 @@ export default function TaskForm({ task, onClose }: TaskFormProps) {
         status: data.status,
         priority: data.priority,
         type: data.type,
-        assigned_to: data.assigned_to || null,
+        assignee_id: data.assignee_id || null,
         due_date: data.due_date ? data.due_date.toISOString() : null,
         related_item_id: data.related_item_id || null,
         related_item_type: data.related_item_type || null,
@@ -156,7 +168,7 @@ export default function TaskForm({ task, onClose }: TaskFormProps) {
         status: data.status,
         priority: data.priority,
         type: data.type,
-        assigned_to: data.assigned_to || null,
+        assignee_id: data.assignee_id || null,
         due_date: data.due_date ? data.due_date.toISOString() : null,
         related_item_id: data.related_item_id || null,
         related_item_type: data.related_item_type || null,
@@ -219,12 +231,12 @@ export default function TaskForm({ task, onClose }: TaskFormProps) {
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="description">Açıklama <span className="text-red-500">*</span></Label>
+          <Label htmlFor="description">Açıklama</Label>
           <Textarea
             id="description"
             placeholder="Görev açıklaması"
             rows={3}
-            {...register("description", { required: "Açıklama zorunludur" })}
+            {...register("description")}
           />
           {errors.description && (
             <p className="text-sm text-red-500">{errors.description.message}</p>
@@ -305,10 +317,10 @@ export default function TaskForm({ task, onClose }: TaskFormProps) {
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="assigned_to">Atanan Çalışan <span className="text-red-500">*</span></Label>
+          <Label htmlFor="assignee_id">Atanan Çalışan</Label>
           <Select 
-            value={watch("assigned_to") || ""} 
-            onValueChange={(value) => setValue("assigned_to", value || undefined)}
+            value={watch("assignee_id") || ""} 
+            onValueChange={(value) => setValue("assignee_id", value || undefined)}
             disabled={isLoadingEmployees}
           >
             <SelectTrigger>
@@ -323,8 +335,8 @@ export default function TaskForm({ task, onClose }: TaskFormProps) {
               ))}
             </SelectContent>
           </Select>
-          {errors.assigned_to && (
-            <p className="text-sm text-red-500">{errors.assigned_to.message}</p>
+          {errors.assignee_id && (
+            <p className="text-sm text-red-500">{errors.assignee_id.message}</p>
           )}
         </div>
 
