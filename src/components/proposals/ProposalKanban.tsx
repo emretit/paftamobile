@@ -14,6 +14,8 @@ interface ProposalKanbanProps {
 }
 
 const columns = [
+  { id: "draft", title: "Taslak", icon: FileText, color: "bg-gray-600" },
+  { id: "pending_approval", title: "Onay Bekliyor", icon: Building, color: "bg-amber-600" },
   { id: "discovery_scheduled", title: "Keşif Planlandı", icon: Calendar, color: "bg-blue-600" },
   { id: "meeting_completed", title: "Görüşme Tamamlandı", icon: Users, color: "bg-indigo-600" },
   { id: "quote_in_progress", title: "Teklif Hazırlanıyor", icon: FileText, color: "bg-violet-600" },
