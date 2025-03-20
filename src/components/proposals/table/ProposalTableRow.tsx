@@ -1,22 +1,29 @@
 
 import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { Proposal } from "@/types/proposal";
+import { Proposal, ProposalStatus } from "@/types/proposal";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Eye, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import StatusBadge from "../detail/StatusBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProposalStatusCell } from "./ProposalStatusCell";
 
 interface ProposalTableRowProps {
   proposal: Proposal;
   index: number;
   formatMoney: (amount: number) => string;
   onSelect: (proposal: Proposal) => void;
+  onStatusChange: (proposalId: string, newStatus: ProposalStatus) => void;
 }
 
-export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: ProposalTableRowProps) => {
+export const ProposalTableRow = ({ 
+  proposal, 
+  index, 
+  formatMoney, 
+  onSelect,
+  onStatusChange 
+}: ProposalTableRowProps) => {
   const formatDate = (date: string | null | undefined) => {
     if (!date) return "-";
     
@@ -29,7 +36,7 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
   
   return (
     <TableRow 
-      className="cursor-pointer h-16 transition-colors hover:bg-muted/50"
+      className="cursor-pointer transition-colors hover:bg-muted/50"
       onClick={() => onSelect(proposal)}
     >
       <TableCell className="font-medium">#{proposal.number}</TableCell>
@@ -52,9 +59,11 @@ export const ProposalTableRow = ({ proposal, index, formatMoney, onSelect }: Pro
           <span className="text-muted-foreground">{proposal.customer_name || "Müşteri yok"}</span>
         )}
       </TableCell>
-      <TableCell>
-        <StatusBadge status={proposal.status} />
-      </TableCell>
+      <ProposalStatusCell 
+        status={proposal.status} 
+        proposalId={proposal.id} 
+        onStatusChange={onStatusChange} 
+      />
       <TableCell>
         {proposal.employee ? (
           <div className="flex items-center space-x-2">

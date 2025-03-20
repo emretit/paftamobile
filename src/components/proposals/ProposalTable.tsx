@@ -156,7 +156,7 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
         </div>
       </div>
       <div className="overflow-x-auto">
-        <Table>
+        <Table className="border-collapse">
           <ProposalTableHeader 
             columns={columns} 
             sortField={sortField}
@@ -171,6 +171,7 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
                 index={index}
                 formatMoney={formatMoney}
                 onSelect={onProposalSelect}
+                onStatusChange={handleStatusUpdate}
               />
             ))}
           </TableBody>

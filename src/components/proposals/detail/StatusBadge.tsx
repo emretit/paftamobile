@@ -2,13 +2,15 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { ProposalStatus, proposalStatusLabels, proposalStatusColors } from '@/types/proposal';
+import { Badge } from '@/components/ui/badge';
 
 interface StatusBadgeProps {
   status: ProposalStatus;
   size?: 'sm' | 'md' | 'lg';
+  className?: string;
 }
 
-const StatusBadge = ({ status, size = 'md' }: StatusBadgeProps) => {
+const StatusBadge = ({ status, size = 'md', className }: StatusBadgeProps) => {
   const sizeClasses = {
     sm: "py-0.5 px-2 text-xs",
     md: "py-1 px-2 text-sm",
@@ -16,15 +18,17 @@ const StatusBadge = ({ status, size = 'md' }: StatusBadgeProps) => {
   };
   
   return (
-    <span 
+    <Badge 
       className={cn(
-        "inline-flex items-center rounded border font-medium",
+        "font-medium border",
         proposalStatusColors[status],
-        sizeClasses[size]
+        sizeClasses[size],
+        className
       )}
+      variant="secondary"
     >
       {proposalStatusLabels[status]}
-    </span>
+    </Badge>
   );
 };
 
