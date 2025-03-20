@@ -3,7 +3,7 @@ import { useState } from "react";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Filter } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProposalTable from "@/components/proposals/ProposalTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -58,7 +58,13 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Teklifler</h1>
-          <div className="flex space-x-2">
+          <div className="flex items-center space-x-4">
+            <Tabs value={activeView} onValueChange={setActiveView} className="w-fit">
+              <TabsList>
+                <TabsTrigger value="list">Liste</TabsTrigger>
+                <TabsTrigger value="kanban">Kanban</TabsTrigger>
+              </TabsList>
+            </Tabs>
             <Button onClick={() => navigate("/proposal/create")}>
               <Plus className="mr-2 h-4 w-4" />
               Yeni Teklif
@@ -101,12 +107,6 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
                 <SelectItem value="last-month">Geçen Ay</SelectItem>
               </SelectContent>
             </Select>
-            <Tabs value={activeView} onValueChange={setActiveView} className="w-fit">
-              <TabsList>
-                <TabsTrigger value="list">Liste</TabsTrigger>
-                <TabsTrigger value="kanban">Kanban</TabsTrigger>
-              </TabsList>
-            </Tabs>
           </div>
         </Card>
 
