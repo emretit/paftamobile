@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,9 +28,10 @@ export const ProposalKanban = ({ proposals, onProposalSelect }: ProposalKanbanPr
   const queryClient = useQueryClient();
   const [localProposals, setLocalProposals] = useState<Proposal[]>(proposals);
 
-  useState(() => {
+  // Update local proposals when props change
+  useEffect(() => {
     setLocalProposals(proposals);
-  });
+  }, [proposals]);
 
   const updateProposalMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: ProposalStatus }) => {

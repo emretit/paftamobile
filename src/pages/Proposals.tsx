@@ -11,6 +11,8 @@ import { ProposalKanban } from "@/components/proposals/ProposalKanban";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProposalDetailSheet from "@/components/proposals/ProposalDetailSheet";
 import { Proposal } from "@/types/proposal";
+import { useProposals } from "@/hooks/useProposals";
+import { toast } from "sonner";
 
 interface ProposalsPageProps {
   isCollapsed: boolean;
@@ -24,6 +26,18 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
   const [activeView, setActiveView] = useState<string>("list");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
+
+  // Fetch proposals data
+  const { data: proposals = [], isLoading, error } = useProposals({
+    status: selectedStatus,
+    search: searchQuery,
+    dateRange: { from: null, to: null }
+  });
+
+  if (error) {
+    toast.error("Teklifler yüklenirken bir hata oluştu");
+    console.error("Error loading proposals:", error);
+  }
 
   const handleRowClick = (proposal: Proposal) => {
     setSelectedProposal(proposal);
@@ -71,10 +85,14 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
                 <SelectItem value="all">Tüm Durumlar</SelectItem>
                 <SelectItem value="draft">Taslak</SelectItem>
                 <SelectItem value="pending_approval">Onay Bekliyor</SelectItem>
-                <SelectItem value="sent">Gönderildi</SelectItem>
-                <SelectItem value="accepted">Kabul Edildi</SelectItem>
+                <SelectItem value="discovery_scheduled">Keşif Planlandı</SelectItem>
+                <SelectItem value="meeting_completed">Görüşme Tamamlandı</SelectItem>
+                <SelectItem value="quote_in_progress">Teklif Hazırlanıyor</SelectItem>
+                <SelectItem value="quote_sent">Teklif Gönderildi</SelectItem>
+                <SelectItem value="negotiation">Müzakere Aşaması</SelectItem>
+                <SelectItem value="approved">Onaylandı</SelectItem>
                 <SelectItem value="rejected">Reddedildi</SelectItem>
-                <SelectItem value="expired">Süresi Dolmuş</SelectItem>
+                <SelectItem value="converted_to_order">Siparişe Dönüştü</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -98,10 +116,19 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
             />
           </TabsContent>
           <TabsContent value="kanban" className="mt-0">
-            <ProposalKanban
-              proposals={[]} 
-              onProposalSelect={handleRowClick}
-            />
+            {isLoading ? (
+              <div className="flex items-center justify-center h-[600px]">
+                <div className="text-center">
+                  <div className="w-8 h-8 border-4 border-t-blue-600 border-b-blue-600 border-l-transparent border-r-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-500">Teklifler yükleniyor...</p>
+                </div>
+              </div>
+            ) : (
+              <ProposalKanban
+                proposals={proposals} 
+                onProposalSelect={handleRowClick}
+              />
+            )}
           </TabsContent>
         </Tabs>
       </div>
