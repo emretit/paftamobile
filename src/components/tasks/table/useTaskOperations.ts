@@ -2,59 +2,56 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { Task } from "@/types/task";
+import { Task } from "@/types/task";
 
 export const useTaskOperations = () => {
   const queryClient = useQueryClient();
 
-  const updateTaskStatusMutation = useMutation({
-    mutationFn: async ({ taskId, status }: { taskId: string; status: Task['status'] }) => {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ status })
-        .eq('id', taskId);
-      
+  const updateTaskStatus = useMutation({
+    mutationFn: async (data: { taskId: string; status: Task['status'] }) => {
+      const { data: updatedTask, error } = await supabase
+        .from("tasks")
+        .update({ status: data.status })
+        .eq("id", data.taskId)
+        .select()
+        .single();
+
       if (error) throw error;
+      return updatedTask;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Task status updated');
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      toast.success("Görev durumu güncellendi");
     },
     onError: (error) => {
-      toast.error('Error updating task status');
-      console.error('Error updating task status:', error);
-    }
+      console.error("Error updating task status:", error);
+      toast.error("Görev durumu güncellenemedi");
+    },
   });
 
-  const deleteTaskMutation = useMutation({
+  const deleteTask = useMutation({
     mutationFn: async (taskId: string) => {
       const { error } = await supabase
-        .from('tasks')
+        .from("tasks")
         .delete()
-        .eq('id', taskId);
-      
+        .eq("id", taskId);
+
       if (error) throw error;
+      return taskId;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Task deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      toast.success("Görev silindi");
     },
     onError: (error) => {
-      toast.error('Error deleting task');
-      console.error('Error deleting task:', error);
-    }
+      console.error("Error deleting task:", error);
+      toast.error("Görev silinemedi");
+    },
   });
 
-  const handleStatusChange = (taskId: string, status: Task['status']) => {
-    updateTaskStatusMutation.mutate({ taskId, status });
-  };
-
-  const handleDeleteTask = (taskId: string) => {
-    deleteTaskMutation.mutate(taskId);
-  };
-
   return {
-    handleStatusChange,
-    handleDeleteTask
+    updateTaskStatus: (taskId: string, status: Task['status']) => 
+      updateTaskStatus.mutate({ taskId, status }),
+    deleteTask: (taskId: string) => deleteTask.mutate(taskId),
   };
 };
