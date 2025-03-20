@@ -1,16 +1,11 @@
 
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { UseFormWatch, UseFormSetValue } from "react-hook-form";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormValues } from "./types";
+import { UseFormWatch, UseFormSetValue } from "react-hook-form";
 
 interface TaskAssignmentProps {
   watch: UseFormWatch<FormValues>;
@@ -18,66 +13,57 @@ interface TaskAssignmentProps {
 }
 
 const TaskAssignment = ({ watch, setValue }: TaskAssignmentProps) => {
-  const { data: employees = [] } = useQuery({
+  const [employees, setEmployees] = useState<{ id: string; first_name: string; last_name: string; }[]>([]);
+  const assigneeId = watch("assignee_id");
+
+  // Fetch employees
+  const { isLoading: isLoadingEmployees } = useQuery({
     queryKey: ["employees-for-assignment"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("employees")
-        .select("id, first_name, last_name, avatar_url")
-        .eq("status", "aktif");
-
-      if (error) throw error;
-      return data || [];
-    }
+      try {
+        const { data, error } = await supabase
+          .from("employees")
+          .select("id, first_name, last_name")
+          .eq("status", "aktif");
+        
+        if (error) throw error;
+        setEmployees(data || []);
+        return data;
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+        return [];
+      }
+    },
   });
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div className="space-y-2">
-        <Label>Atanan</Label>
-        <Select
-          value={watch("assignee_id") || ""}
-          onValueChange={(value) => setValue("assignee_id", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Kişi seçin" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">Atanmamış</SelectItem>
-            {employees?.map((employee) => (
-              <SelectItem key={employee.id} value={employee.id}>
-                {employee.first_name} {employee.last_name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Bitiş Tarihi</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full justify-start text-left font-normal",
-                !watch("due_date") && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {watch("due_date") ? format(new Date(watch("due_date")), "PPP") : "Tarih seçin"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={watch("due_date")}
-              onSelect={(date) => setValue("due_date", date)}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
+    <div className="grid gap-2">
+      <Label>Atanan Çalışan <span className="text-red-500">*</span></Label>
+      <Select 
+        value={assigneeId || ""} 
+        onValueChange={(value) => setValue("assignee_id", value || undefined)}
+        disabled={isLoadingEmployees}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder={isLoadingEmployees ? "Yükleniyor..." : "Çalışan seçin"} />
+        </SelectTrigger>
+        <SelectContent>
+          {employees && employees.length > 0 ? (
+            <>
+              <SelectItem value="">Atanmamış</SelectItem>
+              {employees.map((employee) => (
+                <SelectItem key={employee.id} value={employee.id}>
+                  {employee.first_name} {employee.last_name}
+                </SelectItem>
+              ))}
+            </>
+          ) : (
+            <SelectItem value="" disabled>
+              {isLoadingEmployees ? "Yükleniyor..." : "Çalışan bulunamadı"}
+            </SelectItem>
+          )}
+        </SelectContent>
+      </Select>
     </div>
   );
 };
