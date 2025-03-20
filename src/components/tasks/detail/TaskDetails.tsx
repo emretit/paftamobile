@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -14,7 +13,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import TaskMetadata from "./TaskMetadata";
 import { SubtaskManager } from "./SubtaskManager";
-import type { Task } from "@/types/task";
+import type { Task, SubTask } from "@/types/task";
+import { toast } from "sonner";
 
 interface TaskDetailsProps {
   task: Task;
@@ -27,6 +27,7 @@ const TaskDetails = ({ task, onClose }: TaskDetailsProps) => {
     task.due_date ? new Date(task.due_date) : undefined
   );
   const { updateTaskMutation } = useTaskDetail();
+  const [isUpdatingSubtasks, setIsUpdatingSubtasks] = useState(false);
 
   useEffect(() => {
     setFormData(task);
@@ -50,6 +51,36 @@ const TaskDetails = ({ task, onClose }: TaskDetailsProps) => {
         onClose();
       }
     });
+  };
+
+  // Handle subtask updates directly to the database for real-time changes
+  const handleSubtaskUpdate = async (subtasks: SubTask[]) => {
+    if (!formData.id) return;
+    setIsUpdatingSubtasks(true);
+    
+    try {
+      // First update the local state
+      handleInputChange('subtasks', subtasks);
+      
+      // Then update the database
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({ subtasks })
+        .eq('id', formData.id)
+        .select();
+      
+      if (error) throw error;
+      
+      console.log("Subtasks updated successfully:", data);
+    } catch (error) {
+      console.error("Error updating subtasks:", error);
+      toast.error("Alt görevler güncellenirken bir hata oluştu");
+      
+      // Revert to original subtasks on error
+      handleInputChange('subtasks', task.subtasks);
+    } finally {
+      setIsUpdatingSubtasks(false);
+    }
   };
 
   return (
@@ -80,14 +111,15 @@ const TaskDetails = ({ task, onClose }: TaskDetailsProps) => {
 
         <SubtaskManager 
           task={formData} 
-          onUpdate={handleInputChange} 
+          onUpdate={handleSubtaskUpdate}
+          isUpdating={isUpdatingSubtasks}
         />
       </div>
 
       <Button 
         className="w-full"
         onClick={handleSave}
-        disabled={updateTaskMutation.isPending}
+        disabled={updateTaskMutation.isPending || isUpdatingSubtasks}
       >
         {updateTaskMutation.isPending ? "Kaydediliyor..." : (
           <>
