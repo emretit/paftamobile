@@ -1,8 +1,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { Task, TaskStatus, TaskPriority, TaskType, SubTask } from '@/types/task';
-import { updateOpportunity } from '@/services/mockCrmService';
-import { mockTasksAPI } from '@/services/mockCrmService';
+import { mockCrmService, mockTasksAPI } from '@/services/mockCrmService';
 
 // Helper function to format date as ISO string
 const formatDateOffset = (daysOffset: number) => {
@@ -23,8 +22,8 @@ export const handleProposalStatusChange = async (
 ) => {
   // Update linked opportunity status if available
   if (opportunityId && newStatus === 'sent') {
-    await updateOpportunity(opportunityId, {
-      status: 'proposal_sent'
+    await mockCrmService.updateOpportunity(opportunityId, {
+      status: 'proposal_sent' as any
     });
     
     // Create a follow-up task
