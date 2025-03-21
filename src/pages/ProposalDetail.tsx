@@ -83,9 +83,9 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
 
   const handleEdit = () => {
     if (proposal) {
-      setIsEditMode(true);
-      // In a real implementation, this would navigate to an edit form or enable in-place editing
-      toast.info("Düzenleme modu aktif");
+      // İlgili düzenleme sayfasına yönlendirme yapacak şekilde değiştirildi
+      navigate(`/proposal/edit/${proposal.id}`);
+      toast.info("Teklif düzenleme sayfasına yönlendiriliyorsunuz");
     }
   };
 
@@ -275,9 +275,9 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
             <Mail className="h-4 w-4 mr-2" />
             E-posta Gönder
           </Button>
-          <Button variant="outline" size="sm" onClick={handleEdit}>
+          <Button variant="outline" size="sm" onClick={handleEdit} className="bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border-blue-200">
             <Edit className="h-4 w-4 mr-2" />
-            Düzenle
+            Teklifi Düzenle
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>

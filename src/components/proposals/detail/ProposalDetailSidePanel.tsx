@@ -17,11 +17,13 @@ import {
   MapPin,
   Award,
   Tag,
-  ShieldCheck
+  ShieldCheck,
+  PenLine
 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { calculateProposalTotals, formatProposalAmount } from "@/services/workflow/proposalWorkflow";
+import { useNavigate } from "react-router-dom";
 
 interface ProposalDetailSidePanelProps {
   proposal: Proposal;
@@ -29,6 +31,8 @@ interface ProposalDetailSidePanelProps {
 }
 
 const ProposalDetailSidePanel = ({ proposal, onShowFullView }: ProposalDetailSidePanelProps) => {
+  const navigate = useNavigate();
+  
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "-";
     try {
@@ -46,6 +50,10 @@ const ProposalDetailSidePanel = ({ proposal, onShowFullView }: ProposalDetailSid
   const totals = proposal.items && proposal.items.length > 0 
     ? calculateProposalTotals(proposal.items)
     : { subtotal: 0, taxAmount: 0, total: proposal.total_amount || 0 };
+    
+  const handleEditProposal = () => {
+    navigate(`/proposal/edit/${proposal.id}`);
+  };
 
   return (
     <Card className="h-full">
@@ -243,8 +251,9 @@ const ProposalDetailSidePanel = ({ proposal, onShowFullView }: ProposalDetailSid
         <Separator />
         
         <div className="pt-2 flex space-x-2">
-          <Button className="w-full" asChild>
-            <a href={`/proposal/${proposal.id}/edit`}>Düzenle</a>
+          <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={handleEditProposal}>
+            <PenLine className="h-4 w-4 mr-2" />
+            Teklifi Düzenle
           </Button>
         </div>
       </CardContent>

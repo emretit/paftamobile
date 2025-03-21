@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -29,6 +28,7 @@ import PurchaseManagement from "@/pages/PurchaseManagement";
 import Proposals from "@/pages/Proposals";
 import ProposalCreate from "@/pages/ProposalCreate";
 import ProposalDetail from "@/pages/ProposalDetail";
+import ProposalEdit from "@/pages/ProposalEdit";
 import Tasks from "@/pages/Tasks";
 import Opportunities from "@/pages/crm/Opportunities";
 import CrmDashboard from "@/pages/crm/CrmDashboard";
@@ -154,6 +154,10 @@ function App() {
           <Route
             path="/proposal/:id"
             element={<ProtectedRoute><ProposalDetail isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/proposal/edit/:id"
+            element={<ProtectedRoute><ProposalEdit isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
           <Route
             path="/tasks"
