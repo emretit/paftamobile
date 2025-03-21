@@ -42,11 +42,17 @@ const ProductPricingSection = ({ form }: ProductPricingSectionProps) => {
     defaultValue: 18,
   });
 
+  const currency = useWatch({
+    control: form.control,
+    name: "currency",
+    defaultValue: "TRY",
+  });
+
   const formatPrice = (value: number | null) => {
-    if (value === null) return "0,00 ₺";
+    if (value === null) return "0,00";
     return new Intl.NumberFormat('tr-TR', { 
       style: 'currency', 
-      currency: 'TRY'
+      currency: currency
     }).format(value);
   };
 
@@ -127,6 +133,33 @@ const ProductPricingSection = ({ form }: ProductPricingSectionProps) => {
                     <SelectItem value="1">%1</SelectItem>
                     <SelectItem value="8">%8</SelectItem>
                     <SelectItem value="18">%18</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="currency"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Para Birimi</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Para birimi seçiniz" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="TRY">Türk Lirası (TRY)</SelectItem>
+                    <SelectItem value="USD">Amerikan Doları (USD)</SelectItem>
+                    <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                    <SelectItem value="GBP">İngiliz Sterlini (GBP)</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

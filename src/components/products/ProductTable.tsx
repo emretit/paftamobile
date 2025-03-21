@@ -54,6 +54,7 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
       if (error) throw error;
 
       toast.success("Ürün başarıyla silindi");
+      // You might want to refresh the products list here
     } catch (error) {
       console.error('Error deleting product:', error);
       toast.error("Ürün silinirken bir hata oluştu");

@@ -5,6 +5,13 @@ import { DollarSign, Edit2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 interface ProductPricingProps {
   price: number;
@@ -15,6 +22,7 @@ interface ProductPricingProps {
     price?: number;
     discount_price?: number | null;
     tax_rate?: number;
+    currency?: string;
   }) => void;
 }
 
@@ -29,7 +37,8 @@ const ProductPricing = ({
   const [editValues, setEditValues] = useState({
     price,
     discountPrice,
-    taxRate
+    taxRate,
+    currency
   });
 
   const formatPrice = (amount: number) => {
@@ -48,7 +57,8 @@ const ProductPricing = ({
     onUpdate({
       price: Number(editValues.price),
       discount_price: editValues.discountPrice ? Number(editValues.discountPrice) : null,
-      tax_rate: Number(editValues.taxRate)
+      tax_rate: Number(editValues.taxRate),
+      currency: editValues.currency
     });
     setIsEditing(false);
   };
@@ -133,7 +143,27 @@ const ProductPricing = ({
 
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-500">Para Birimi</span>
-            <span>{currency}</span>
+            {isEditing ? (
+              <Select
+                value={editValues.currency}
+                onValueChange={(value) => setEditValues(prev => ({
+                  ...prev,
+                  currency: value
+                }))}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Para birimi seç" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="TRY">Türk Lirası (TRY)</SelectItem>
+                  <SelectItem value="USD">Amerikan Doları (USD)</SelectItem>
+                  <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                  <SelectItem value="GBP">İngiliz Sterlini (GBP)</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <span>{currency}</span>
+            )}
           </div>
 
           {isEditing && (
@@ -141,7 +171,7 @@ const ProductPricing = ({
               <Button
                 variant="outline"
                 onClick={() => {
-                  setEditValues({ price, discountPrice, taxRate });
+                  setEditValues({ price, discountPrice, taxRate, currency });
                   setIsEditing(false);
                 }}
               >

@@ -143,6 +143,13 @@ const ProductDetailsForm: React.FC<ProductDetailsFormProps> = ({
             />
           </div>
 
+          <div className="space-y-2">
+            <Label>Para Birimi</Label>
+            <div className="text-sm font-medium">
+              {selectedProduct.currency}
+            </div>
+          </div>
+
           <div className="mt-6 pt-4 border-t space-y-2">
             <div className="flex justify-between">
               <span>Birim Fiyat:</span>
