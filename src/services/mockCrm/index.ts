@@ -3,7 +3,7 @@ import { mockCrmOpportunityService } from './opportunityService';
 import { mockCrmOpportunitiesService } from './opportunitiesService';
 import { mockCrmProposalsService } from './proposalsService';
 import { mockCrmStatsService } from './statsService';
-import { mockCrmTasksService } from './tasksService';
+import { mockCrmTasksService, mockTasksAPI } from './tasksService';
 
 // Exporting as the original mockCrmService object
 export const mockCrmService = {
@@ -19,14 +19,13 @@ export const mockCrmService = {
   // Tasks
   getTasks: mockCrmTasksService.getTasks,
   getTaskById: mockCrmTasksService.getTaskById,
-  getSubtasks: mockCrmTasksService.getSubtasks,
   
   // Stats
-  getStats: mockCrmStatsService.getStats,
-  getOpportunityCountByStatus: mockCrmStatsService.getOpportunityCountByStatus,
-  getProposalCountByStatus: mockCrmStatsService.getProposalCountByStatus,
-  getRecentActivity: mockCrmStatsService.getRecentActivity
+  getTaskStats: mockCrmStatsService.getTaskStats,
+  getProposalStats: mockCrmStatsService.getProposalStats,
+  getOpportunityStats: mockCrmStatsService.getOpportunityStats
 };
 
 // Also export individual services for more granular imports
-export const mockTasksAPI = mockCrmTasksService;
+export { mockTasksAPI };
+
