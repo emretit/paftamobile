@@ -127,15 +127,25 @@ const ProductPricing = ({
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-500">KDV Oranı</span>
             {isEditing ? (
-              <Input
-                type="number"
-                value={editValues.taxRate}
-                onChange={(e) => setEditValues(prev => ({
+              <Select 
+                value={String(editValues.taxRate)}
+                onValueChange={(value) => setEditValues(prev => ({
                   ...prev,
-                  taxRate: e.target.valueAsNumber
+                  taxRate: parseInt(value)
                 }))}
-                className="w-32 text-right"
-              />
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="KDV Oranı" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">%0</SelectItem>
+                  <SelectItem value="1">%1</SelectItem>
+                  <SelectItem value="8">%8</SelectItem>
+                  <SelectItem value="10">%10</SelectItem>
+                  <SelectItem value="18">%18</SelectItem>
+                  <SelectItem value="20">%20</SelectItem>
+                </SelectContent>
+              </Select>
             ) : (
               <span>%{taxRate}</span>
             )}

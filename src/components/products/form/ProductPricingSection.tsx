@@ -1,4 +1,3 @@
-
 import { 
   FormControl, 
   FormField, 
@@ -132,7 +131,9 @@ const ProductPricingSection = ({ form }: ProductPricingSectionProps) => {
                     <SelectItem value="0">%0</SelectItem>
                     <SelectItem value="1">%1</SelectItem>
                     <SelectItem value="8">%8</SelectItem>
+                    <SelectItem value="10">%10</SelectItem>
                     <SelectItem value="18">%18</SelectItem>
+                    <SelectItem value="20">%20</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
