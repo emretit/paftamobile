@@ -27,5 +27,7 @@ export const PriorityBadge = ({ priority }: PriorityBadgeProps) => {
       label = priority;
   }
   
-  return <span className={`px-2 py-1 rounded-full text-xs ${color}`}>{label}</span>;
+  return <span className={`px-2 py-1 rounded-full text-xs font-medium ${color}`}>{label}</span>;
 };
+
+export default PriorityBadge;

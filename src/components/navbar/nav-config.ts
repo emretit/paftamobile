@@ -1,46 +1,81 @@
 
-import { 
-  LayoutDashboard, 
-  Users, 
-  Truck,
-  Wallet,
-  Wrench,
-  FileDown,
-  FileUp,
-  Package,
+import {
+  Building2,
+  Briefcase,
+  CreditCard,
+  FileText,
+  Home,
   Settings,
   ShoppingCart,
-  UserCircle,
-  Briefcase,
-  FileText,
-  CheckSquare
+  User,
+  Users,
+  Wrench,
+  BarChart2,
+  ListTodo
 } from "lucide-react";
 
 export const navItems = [
-  { path: "/dashboard", icon: LayoutDashboard, label: "Gösterge Paneli" },
+  {
+    path: "/dashboard",
+    icon: Home,
+    label: "Gösterge Paneli",
+  },
   {
     category: "CRM",
     icon: Briefcase,
-    path: "/opportunities",
+    path: "/crm",
     items: [
-      { path: "/opportunities", icon: Briefcase, label: "Fırsatlar" },
-      { path: "/proposals", icon: FileText, label: "Teklifler" },
-      { path: "/tasks", icon: CheckSquare, label: "Görevler" }
-    ]
+      {
+        path: "/tasks",
+        icon: ListTodo,
+        label: "Görevler",
+      },
+      {
+        path: "/proposals",
+        icon: FileText,
+        label: "Teklifler",
+      },
+      {
+        path: "/opportunities",
+        icon: BarChart2,
+        label: "Fırsatlar",
+      },
+    ],
   },
-  { path: "/contacts", icon: Users, label: "Müşteriler" },
-  { path: "/suppliers", icon: Truck, label: "Tedarikçiler" },
-  { path: "/employees", icon: UserCircle, label: "Çalışanlar" },
-  { path: "/products", icon: Package, label: "Ürünler & Hizmetler" },
-  { path: "/finance", icon: Wallet, label: "Finans" },
-  { path: "/purchase-management", icon: ShoppingCart, label: "Satın Alma" },
-  { path: "/service", icon: Wrench, label: "Servis" },
-  { path: "/purchase-invoices", icon: FileDown, label: "Alış Faturaları" },
-  { path: "/sales-invoices", icon: FileUp, label: "Satış Faturaları" }
+  {
+    path: "/contacts",
+    icon: User,
+    label: "Müşteriler",
+  },
+  {
+    path: "/suppliers",
+    icon: Building2,
+    label: "Tedarikçiler",
+  },
+  {
+    path: "/products",
+    icon: ShoppingCart,
+    label: "Ürünler",
+  },
+  {
+    path: "/employees",
+    icon: Users,
+    label: "Çalışanlar",
+  },
+  {
+    path: "/finance",
+    icon: CreditCard,
+    label: "Finans",
+  },
+  {
+    path: "/service",
+    icon: Wrench,
+    label: "Servis",
+  },
 ];
 
 export const settingsItem = {
   path: "/settings",
   icon: Settings,
-  label: "Ayarlar & Yönetim"
+  label: "Ayarlar",
 };
