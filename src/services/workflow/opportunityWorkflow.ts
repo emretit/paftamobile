@@ -2,6 +2,7 @@
 import { taskWorkflow } from './taskWorkflow';
 import { mockCrmService, mockTasksAPI } from '@/services/mockCrm';
 import { formatDateOffset } from './utils';
+import { TaskStatus, TaskPriority } from '@/types/task';
 
 /**
  * Handle opportunity creation workflow
@@ -73,15 +74,13 @@ const createProposalTask = async (opportunityId: string, opportunityTitle: strin
   return await mockTasksAPI.createTask({
     title: `Teklif Hazırla: ${opportunityTitle}`,
     description: 'Müşteri fırsatı için teklif hazırlamanız gerekiyor.',
-    status: 'todo',
-    priority: 'high',
+    status: 'todo' as TaskStatus,
+    priority: 'high' as TaskPriority,
     assigned_to: assigneeId,
     due_date: formatDateOffset(2),
-    related_item: {
-      id: opportunityId,
-      type: 'opportunity',
-      title: opportunityTitle
-    }
+    related_item_id: opportunityId,
+    related_item_type: 'opportunity',
+    related_item_title: opportunityTitle
   });
 };
 
@@ -89,15 +88,13 @@ const createNegotiationTask = async (opportunityId: string, opportunityTitle: st
   return await mockTasksAPI.createTask({
     title: `Müzakere Hazırlığı: ${opportunityTitle}`,
     description: 'Müzakere toplantısı için hazırlık yapınız.',
-    status: 'todo',
-    priority: 'medium',
+    status: 'todo' as TaskStatus,
+    priority: 'medium' as TaskPriority,
     assigned_to: assigneeId,
     due_date: formatDateOffset(1),
-    related_item: {
-      id: opportunityId,
-      type: 'opportunity',
-      title: opportunityTitle
-    }
+    related_item_id: opportunityId,
+    related_item_type: 'opportunity',
+    related_item_title: opportunityTitle
   });
 };
 
@@ -105,15 +102,13 @@ const createOnboardingTask = async (opportunityId: string, opportunityTitle: str
   return await mockTasksAPI.createTask({
     title: `Müşteri Başlangıcı: ${opportunityTitle}`,
     description: 'Yeni müşteri için başlangıç süreçlerini başlatınız.',
-    status: 'todo',
-    priority: 'high',
+    status: 'todo' as TaskStatus,
+    priority: 'high' as TaskPriority,
     assigned_to: assigneeId,
     due_date: formatDateOffset(3),
-    related_item: {
-      id: opportunityId,
-      type: 'opportunity',
-      title: opportunityTitle
-    }
+    related_item_id: opportunityId,
+    related_item_type: 'opportunity',
+    related_item_title: opportunityTitle
   });
 };
 
@@ -121,14 +116,12 @@ const createLossAnalysisTask = async (opportunityId: string, opportunityTitle: s
   return await mockTasksAPI.createTask({
     title: `Kayıp Analizi: ${opportunityTitle}`,
     description: 'Kaybedilen fırsatın neden kaybedildiğini analiz ediniz.',
-    status: 'todo',
-    priority: 'low',
+    status: 'todo' as TaskStatus,
+    priority: 'low' as TaskPriority,
     assigned_to: assigneeId,
     due_date: formatDateOffset(5),
-    related_item: {
-      id: opportunityId,
-      type: 'opportunity',
-      title: opportunityTitle
-    }
+    related_item_id: opportunityId,
+    related_item_type: 'opportunity',
+    related_item_title: opportunityTitle
   });
 };
