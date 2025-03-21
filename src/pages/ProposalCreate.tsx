@@ -1,18 +1,32 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, FileText, Plus } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ProposalTemplateGrid from "@/components/proposals/templates/ProposalTemplateGrid";
+import { ArrowLeft, Save } from "lucide-react";
 import ProposalForm from "@/components/proposals/templates/ProposalForm";
-import { ProposalTemplate } from "@/types/proposal-template";
-import { toast } from "sonner";
-import { ProposalFormData } from "@/types/proposal-form";
-import { useForm } from "react-hook-form";
 import { useProposalForm } from "@/hooks/useProposalForm";
+import { toast } from "sonner";
+
+// Default template for proposal creation
+const defaultTemplate = {
+  id: "default-template",
+  name: "Standart Teklif",
+  description: "Hızlı teklif oluşturma şablonu",
+  templateType: "standard",
+  templateFeatures: [
+    "Ürün ve hizmet teklifleri için uygun",
+    "KDV dahil/hariç seçeneği",
+    "İskonto alanları"
+  ],
+  items: [],
+  prefilledFields: {
+    title: "Yeni Teklif",
+    validityDays: 30,
+    paymentTerm: "prepaid"
+  }
+};
 
 interface ProposalCreateProps {
   isCollapsed: boolean;
@@ -21,27 +35,15 @@ interface ProposalCreateProps {
 
 const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) => {
   const navigate = useNavigate();
-  const [selectedTemplate, setSelectedTemplate] = useState<ProposalTemplate | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("templates");
-  const { createProposal, saveDraft } = useProposalForm();
+  const { saveDraft } = useProposalForm();
 
-  const handleTemplateSelect = (template: ProposalTemplate) => {
-    setSelectedTemplate(template);
-    setActiveTab("form");
+  const handleBack = () => {
+    navigate("/proposals");
   };
 
   const handleSaveDraft = () => {
     toast.success("Teklif taslak olarak kaydedildi");
     navigate("/proposals");
-  };
-
-  const handleBack = () => {
-    if (activeTab === "form" && selectedTemplate) {
-      setActiveTab("templates");
-      setSelectedTemplate(null);
-    } else {
-      navigate("/proposals");
-    }
   };
 
   return (
@@ -65,45 +67,18 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Geri
               </Button>
-              {activeTab === "form" && (
-                <Button onClick={handleSaveDraft}>
-                  <Save className="h-4 w-4 mr-2" />
-                  Taslak Olarak Kaydet
-                </Button>
-              )}
+              <Button onClick={handleSaveDraft}>
+                <Save className="h-4 w-4 mr-2" />
+                Taslak Olarak Kaydet
+              </Button>
             </div>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="templates">
-                <FileText className="h-4 w-4 mr-2" />
-                Teklif Şablonları
-              </TabsTrigger>
-              <TabsTrigger value="form" disabled={!selectedTemplate}>
-                <Plus className="h-4 w-4 mr-2" />
-                Teklif Formu
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="templates">
-              <Card>
-                <CardContent className="p-6">
-                  <ProposalTemplateGrid onSelectTemplate={handleTemplateSelect} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="form">
-              {selectedTemplate && (
-                <Card>
-                  <CardContent className="p-6">
-                    <ProposalForm template={selectedTemplate} onSaveDraft={handleSaveDraft} />
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-          </Tabs>
+          <Card>
+            <CardContent className="p-6">
+              <ProposalForm template={defaultTemplate} onSaveDraft={handleSaveDraft} />
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
