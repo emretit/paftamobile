@@ -86,7 +86,7 @@ const ProductGeneralSection = ({ form }: ProductGeneralSectionProps) => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Kategorisiz</SelectItem>
+                    <SelectItem value="none">Kategorisiz</SelectItem>
                     {categories?.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}
