@@ -4,10 +4,11 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Proposal, ProposalStatus } from "@/types/proposal";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Eye, MoreHorizontal } from "lucide-react";
+import { Eye, PenLine, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProposalStatusCell } from "./ProposalStatusCell";
+import { useNavigate } from "react-router-dom";
 
 interface ProposalTableRowProps {
   proposal: Proposal;
@@ -24,6 +25,8 @@ export const ProposalTableRow = ({
   onSelect,
   onStatusChange 
 }: ProposalTableRowProps) => {
+  const navigate = useNavigate();
+  
   const formatDate = (date: string | null | undefined) => {
     if (!date) return "-";
     
@@ -32,6 +35,11 @@ export const ProposalTableRow = ({
     } catch {
       return "-";
     }
+  };
+  
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/proposal/${proposal.id}`);
   };
   
   return (
@@ -94,6 +102,7 @@ export const ProposalTableRow = ({
               onSelect(proposal);
             }}
             className="h-8 w-8"
+            title="Detayları Görüntüle"
           >
             <Eye className="h-4 w-4" />
           </Button>
@@ -101,7 +110,17 @@ export const ProposalTableRow = ({
             variant="ghost" 
             size="icon" 
             className="h-8 w-8"
+            onClick={handleEdit}
+            title="Düzenle"
+          >
+            <PenLine className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8"
             onClick={(e) => e.stopPropagation()}
+            title="Diğer İşlemler"
           >
             <MoreHorizontal className="h-4 w-4" />
           </Button>

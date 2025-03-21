@@ -28,6 +28,7 @@ import Dashboard from "./pages/Dashboard";
 import PurchaseManagement from "@/pages/PurchaseManagement";
 import Proposals from "@/pages/Proposals";
 import ProposalCreate from "@/pages/ProposalCreate";
+import ProposalDetail from "@/pages/ProposalDetail";
 import Tasks from "@/pages/Tasks";
 import Opportunities from "@/pages/crm/Opportunities";
 import CrmDashboard from "@/pages/crm/CrmDashboard";
@@ -147,8 +148,12 @@ function App() {
             element={<ProtectedRoute><Proposals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
           <Route
-            path="/proposals/new"
+            path="/proposal/create"
             element={<ProtectedRoute><ProposalCreate isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          <Route
+            path="/proposal/:id"
+            element={<ProtectedRoute><ProposalDetail isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
           <Route
             path="/tasks"

@@ -1,36 +1,32 @@
 
-// This file acts as the entry point for the mock CRM service
-// Re-exporting all services for backward compatibility
-
-import { mockTasksAPI } from './tasksService';
-import { mockCrmTasksService } from './tasksService';
-import { mockCrmProposalsService } from './proposalsService';
-import { mockCrmOpportunitiesService } from './opportunitiesService';
-import { mockCrmStatsService } from './statsService';
 import { mockCrmOpportunityService } from './opportunityService';
+import { mockCrmOpportunitiesService } from './opportunitiesService';
+import { mockCrmProposalsService } from './proposalsService';
+import { mockCrmStatsService } from './statsService';
+import { mockCrmTasksService } from './tasksService';
 
-// Create a combined service for backward compatibility
+// Exporting as the original mockCrmService object
 export const mockCrmService = {
-  // Tasks
-  getTasks: mockCrmTasksService.getTasks,
-  getTaskById: mockCrmTasksService.getTaskById,
+  // Opportunities
+  getOpportunities: mockCrmOpportunitiesService.getOpportunities,
+  getOpportunityById: mockCrmOpportunitiesService.getOpportunityById,
+  updateOpportunity: mockCrmOpportunityService.updateOpportunity,
   
   // Proposals
   getProposals: mockCrmProposalsService.getProposals,
   getProposalById: mockCrmProposalsService.getProposalById,
   
-  // Opportunities
-  getOpportunities: mockCrmOpportunitiesService.getOpportunities,
-  getOpportunityById: mockCrmOpportunitiesService.getOpportunityById,
+  // Tasks
+  getTasks: mockCrmTasksService.getTasks,
+  getTaskById: mockCrmTasksService.getTaskById,
+  getSubtasks: mockCrmTasksService.getSubtasks,
   
   // Stats
-  getTaskStats: mockCrmStatsService.getTaskStats,
-  getProposalStats: mockCrmStatsService.getProposalStats,
-  getOpportunityStats: mockCrmStatsService.getOpportunityStats,
-  
-  // Update operations
-  updateOpportunity: mockCrmOpportunityService.updateOpportunity
+  getStats: mockCrmStatsService.getStats,
+  getOpportunityCountByStatus: mockCrmStatsService.getOpportunityCountByStatus,
+  getProposalCountByStatus: mockCrmStatsService.getProposalCountByStatus,
+  getRecentActivity: mockCrmStatsService.getRecentActivity
 };
 
-// Export the task API directly for services that use it
-export { mockTasksAPI };
+// Also export individual services for more granular imports
+export const mockTasksAPI = mockCrmTasksService;
