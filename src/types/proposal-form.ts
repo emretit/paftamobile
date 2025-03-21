@@ -1,5 +1,5 @@
 
-import { ProposalItem } from "./proposal";
+import { ProposalItem, ProposalStatus } from "./proposal";
 
 export interface ProposalFormData {
   title: string;
@@ -15,6 +15,9 @@ export interface ProposalFormData {
   paymentTerm?: string;
   discounts?: number;
   additionalCharges?: number;
+  total_amount?: number;
+  description?: string;
+  status?: ProposalStatus;
 }
 
 // Export the ProposalItem type (using export type for isolatedModules)
