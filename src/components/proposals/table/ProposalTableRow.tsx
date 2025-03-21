@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProposalStatusCell } from "./ProposalStatusCell";
 import { useNavigate } from "react-router-dom";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface ProposalTableRowProps {
   proposal: Proposal;
@@ -115,15 +116,38 @@ export const ProposalTableRow = ({
           >
             <PenLine className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            onClick={(e) => e.stopPropagation()}
-            title="Diğer İşlemler"
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={(e) => e.stopPropagation()}
+                title="Diğer İşlemler"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onClick={() => navigate(`/proposal/${proposal.id}`)}>
+                Detayları Görüntüle
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate(`/proposal/${proposal.id}/edit`)}>
+                Düzenle
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => window.open(`/proposal/${proposal.id}/print`, '_blank')}>
+                Yazdır
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => {
+                  const newStatus: ProposalStatus = proposal.status === 'draft' ? 'sent' : 'draft';
+                  onStatusChange(proposal.id, newStatus);
+                }}
+              >
+                {proposal.status === 'draft' ? 'Gönderildi Olarak İşaretle' : 'Taslak Olarak İşaretle'}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </TableCell>
     </TableRow>

@@ -1,114 +1,134 @@
 
+import { taskWorkflow } from './taskWorkflow';
+import { mockCrmService, mockTasksAPI } from '@/services/mockCrm';
 import { formatDateOffset } from './utils';
-import { TaskStatus, TaskPriority, TaskType, Task } from '@/types/task';
-import { mockTasksAPI } from '@/services/mockCrm';
 
 /**
- * Create task based on opportunity status change
+ * Handle opportunity creation workflow
+ * - Create follow-up tasks
+ * - Update related entities if needed
  */
-export const createTaskForOpportunity = async (
+export const handleOpportunityCreation = async (opportunity: any) => {
+  try {
+    // Create a task for the opportunity owner to follow up
+    await taskWorkflow.assignOpportunityCreatedTask(
+      opportunity.id,
+      opportunity.title || opportunity.name,
+      opportunity.assigned_to || opportunity.owner_id
+    );
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error in opportunity creation workflow:", error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Handle opportunity status change workflow
+ * - Create appropriate tasks based on new status
+ * - Update related customer or deal records if needed
+ */
+export const handleOpportunityStatusChange = async (
   opportunityId: string,
   opportunityTitle: string,
-  status: string,
-  employeeId?: string
+  oldStatus: string,
+  newStatus: string,
+  assigneeId?: string
 ) => {
-  let task: Partial<Task> & { 
-    title: string;
-    status: TaskStatus;
-    priority: TaskPriority;
-    type: TaskType;
-    created_at: string;
-    updated_at: string;
-  } = {
-    related_item_id: opportunityId,
-    related_item_title: opportunityTitle,
-    related_item_type: 'opportunity',
-    assigned_to: employeeId,
-    status: 'todo' as TaskStatus,
-    type: 'general' as TaskType,
-    priority: 'medium' as TaskPriority,
-    title: "",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
-
-  // Create different tasks based on opportunity status
-  switch (status) {
-    case 'new':
-      task = {
-        ...task,
-        title: "İlk görüşmeyi yap ve ziyaret planla",
-        description: `${opportunityTitle} için ilk görüşme ve müşteri ziyareti planla`,
-        priority: 'medium' as TaskPriority,
-        type: 'meeting' as TaskType,
-        due_date: formatDateOffset(3)
-      };
-      break;
-      
-    case 'first_contact':
-      task = {
-        ...task,
-        title: "Ziyaret yap ve raporla",
-        description: `${opportunityTitle} için müşteri ziyareti yap ve raporla`,
-        priority: 'medium' as TaskPriority,
-        type: 'meeting' as TaskType,
-        due_date: formatDateOffset(5)
-      };
-      break;
-      
-    case 'site_visit':
-      task = {
-        ...task,
-        title: "Teklif hazırla",
-        description: `${opportunityTitle} için teklif hazırla`,
-        priority: 'high' as TaskPriority,
-        type: 'proposal' as TaskType,
-        due_date: formatDateOffset(2)
-      };
-      break;
-      
-    case 'proposal_sent':
-      task = {
-        ...task,
-        title: "Teklif takibini yap",
-        description: `${opportunityTitle} için gönderilen teklifin takibini yap`,
-        priority: 'high' as TaskPriority,
-        type: 'follow_up' as TaskType,
-        due_date: formatDateOffset(3)
-      };
-      break;
-      
-    case 'accepted':
-      task = {
-        ...task,
-        title: "Satış sözleşmesi hazırla",
-        description: `${opportunityTitle} için satış sözleşmesi hazırla`,
-        priority: 'high' as TaskPriority,
-        type: 'opportunity' as TaskType,
-        due_date: formatDateOffset(2)
-      };
-      break;
-      
-    case 'lost':
-      task = {
-        ...task,
-        title: "Fırsatı kapat ve kaybetme nedeni raporla",
-        description: `${opportunityTitle} fırsatının kaybedilme nedenlerini analiz et`,
-        priority: 'medium' as TaskPriority,
-        type: 'opportunity' as TaskType,
-        due_date: formatDateOffset(1)
-      };
-      break;
-      
-    default:
-      return null;
-  }
-  
   try {
-    const result = await mockTasksAPI.createTask(task);
-    return result.data;
+    // Different workflows based on the new status
+    switch (newStatus) {
+      case 'qualified':
+        // Create task to prepare a proposal
+        await createProposalTask(opportunityId, opportunityTitle, assigneeId);
+        break;
+        
+      case 'negotiation':
+        // Create task to prepare for negotiation
+        await createNegotiationTask(opportunityId, opportunityTitle, assigneeId);
+        break;
+        
+      case 'closed_won':
+        // Create onboarding tasks
+        await createOnboardingTask(opportunityId, opportunityTitle, assigneeId);
+        break;
+        
+      case 'closed_lost':
+        // Create task for loss analysis
+        await createLossAnalysisTask(opportunityId, opportunityTitle, assigneeId);
+        break;
+    }
+    
+    return { success: true };
   } catch (error) {
-    console.error(`Error creating task for opportunity status ${status}:`, error);
-    return null;
+    console.error("Error in opportunity status change workflow:", error);
+    return { success: false, error };
   }
+};
+
+// Helper functions to create specific tasks
+
+const createProposalTask = async (opportunityId: string, opportunityTitle: string, assigneeId?: string) => {
+  return await mockTasksAPI.createTask({
+    title: `Teklif Hazırla: ${opportunityTitle}`,
+    description: 'Müşteri fırsatı için teklif hazırlamanız gerekiyor.',
+    status: 'todo',
+    priority: 'high',
+    assigned_to: assigneeId,
+    due_date: formatDateOffset(2),
+    related_item: {
+      id: opportunityId,
+      type: 'opportunity',
+      title: opportunityTitle
+    }
+  });
+};
+
+const createNegotiationTask = async (opportunityId: string, opportunityTitle: string, assigneeId?: string) => {
+  return await mockTasksAPI.createTask({
+    title: `Müzakere Hazırlığı: ${opportunityTitle}`,
+    description: 'Müzakere toplantısı için hazırlık yapınız.',
+    status: 'todo',
+    priority: 'medium',
+    assigned_to: assigneeId,
+    due_date: formatDateOffset(1),
+    related_item: {
+      id: opportunityId,
+      type: 'opportunity',
+      title: opportunityTitle
+    }
+  });
+};
+
+const createOnboardingTask = async (opportunityId: string, opportunityTitle: string, assigneeId?: string) => {
+  return await mockTasksAPI.createTask({
+    title: `Müşteri Başlangıcı: ${opportunityTitle}`,
+    description: 'Yeni müşteri için başlangıç süreçlerini başlatınız.',
+    status: 'todo',
+    priority: 'high',
+    assigned_to: assigneeId,
+    due_date: formatDateOffset(3),
+    related_item: {
+      id: opportunityId,
+      type: 'opportunity',
+      title: opportunityTitle
+    }
+  });
+};
+
+const createLossAnalysisTask = async (opportunityId: string, opportunityTitle: string, assigneeId?: string) => {
+  return await mockTasksAPI.createTask({
+    title: `Kayıp Analizi: ${opportunityTitle}`,
+    description: 'Kaybedilen fırsatın neden kaybedildiğini analiz ediniz.',
+    status: 'todo',
+    priority: 'low',
+    assigned_to: assigneeId,
+    due_date: formatDateOffset(5),
+    related_item: {
+      id: opportunityId,
+      type: 'opportunity',
+      title: opportunityTitle
+    }
+  });
 };

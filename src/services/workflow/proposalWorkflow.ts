@@ -36,3 +36,57 @@ export const handleProposalStatusChange = async (
     }
   }
 };
+
+// Add functions for handling proposal creation, updates, and file management
+
+/**
+ * Get file icon based on file type/extension
+ */
+export const getProposalFileIcon = (file: File | { name: string, type: string }) => {
+  const type = file.type.split('/')[0];
+  const extension = file.name.split('.').pop()?.toLowerCase();
+
+  if (type === 'image') return 'image';
+  if (extension === 'pdf') return 'pdf';
+  if (extension === 'doc' || extension === 'docx') return 'word';
+  if (extension === 'xls' || extension === 'xlsx') return 'excel';
+  return 'file';
+};
+
+/**
+ * Format proposal amounts with proper currency
+ */
+export const formatProposalAmount = (amount: number, currency: string = 'TRY') => {
+  return new Intl.NumberFormat('tr-TR', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
+
+/**
+ * Calculate subtotals, taxes, and final amounts
+ */
+export const calculateProposalTotals = (items: any[]) => {
+  let subtotal = 0;
+  let taxAmount = 0;
+  
+  items.forEach(item => {
+    const unitPrice = item.unit_price || 0;
+    const quantity = item.quantity || 0;
+    const taxRate = item.tax_rate || 0;
+    
+    const itemSubtotal = unitPrice * quantity;
+    const itemTax = itemSubtotal * (taxRate / 100);
+    
+    subtotal += itemSubtotal;
+    taxAmount += itemTax;
+  });
+  
+  return {
+    subtotal,
+    taxAmount,
+    total: subtotal + taxAmount
+  };
+};

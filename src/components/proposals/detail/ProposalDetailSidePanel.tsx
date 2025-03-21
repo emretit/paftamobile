@@ -11,10 +11,17 @@ import {
   User, 
   CreditCard, 
   FileText, 
-  Maximize2 
+  Maximize2,
+  Phone,
+  Mail,
+  MapPin,
+  Award,
+  Tag,
+  ShieldCheck
 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { calculateProposalTotals, formatProposalAmount } from "@/services/workflow/proposalWorkflow";
 
 interface ProposalDetailSidePanelProps {
   proposal: Proposal;
@@ -32,13 +39,13 @@ const ProposalDetailSidePanel = ({ proposal, onShowFullView }: ProposalDetailSid
   };
 
   const formatMoney = (amount: number) => {
-    return new Intl.NumberFormat("tr-TR", {
-      style: "currency",
-      currency: proposal.currency || "TRY",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(amount);
+    return formatProposalAmount(amount, proposal.currency);
   };
+
+  // Calculate totals for display
+  const totals = proposal.items && proposal.items.length > 0 
+    ? calculateProposalTotals(proposal.items)
+    : { subtotal: 0, taxAmount: 0, total: proposal.total_amount || 0 };
 
   return (
     <Card className="h-full">
@@ -76,6 +83,29 @@ const ProposalDetailSidePanel = ({ proposal, onShowFullView }: ProposalDetailSid
             </span>
           </div>
           
+          {(proposal.customer?.company || proposal.customer?.email || proposal.customer?.phone) && (
+            <div className="px-2 py-3 bg-gray-50 rounded-md space-y-2">
+              {proposal.customer?.company && (
+                <div className="flex items-center text-sm">
+                  <Building className="h-3 w-3 mr-2 text-gray-500" />
+                  <span>{proposal.customer.company}</span>
+                </div>
+              )}
+              {proposal.customer?.email && (
+                <div className="flex items-center text-sm">
+                  <Mail className="h-3 w-3 mr-2 text-gray-500" />
+                  <span>{proposal.customer.email}</span>
+                </div>
+              )}
+              {proposal.customer?.phone && (
+                <div className="flex items-center text-sm">
+                  <Phone className="h-3 w-3 mr-2 text-gray-500" />
+                  <span>{proposal.customer.phone}</span>
+                </div>
+              )}
+            </div>
+          )}
+          
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground flex items-center">
               <User className="h-4 w-4 mr-2" />
@@ -110,7 +140,7 @@ const ProposalDetailSidePanel = ({ proposal, onShowFullView }: ProposalDetailSid
               Toplam Tutar
             </span>
             <span className="font-medium">
-              {formatMoney(proposal.total_amount || proposal.total_value || 0)}
+              {formatMoney(totals.total)}
             </span>
           </div>
         </div>
@@ -127,22 +157,41 @@ const ProposalDetailSidePanel = ({ proposal, onShowFullView }: ProposalDetailSid
         <Separator />
         
         <div className="space-y-2">
-          <h3 className="text-sm font-medium">Ödeme Şartları</h3>
+          <h3 className="text-sm font-medium flex items-center">
+            <Tag className="h-4 w-4 mr-2" />
+            Ödeme Şartları
+          </h3>
           <p className="text-sm text-muted-foreground">
             {proposal.payment_terms || "Belirtilmemiş"}
           </p>
         </div>
         
         <div className="space-y-2">
-          <h3 className="text-sm font-medium">Teslimat Şartları</h3>
+          <h3 className="text-sm font-medium flex items-center">
+            <MapPin className="h-4 w-4 mr-2" />
+            Teslimat Şartları
+          </h3>
           <p className="text-sm text-muted-foreground">
             {proposal.delivery_terms || "Belirtilmemiş"}
           </p>
         </div>
         
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium flex items-center">
+            <ShieldCheck className="h-4 w-4 mr-2" />
+            Garanti Koşulları
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {proposal.terms || "Standart garanti koşulları geçerlidir."}
+          </p>
+        </div>
+        
         {proposal.description && (
           <div className="space-y-2">
-            <h3 className="text-sm font-medium">Açıklama</h3>
+            <h3 className="text-sm font-medium flex items-center">
+              <FileText className="h-4 w-4 mr-2" />
+              Açıklama
+            </h3>
             <p className="text-sm text-muted-foreground">
               {proposal.description}
             </p>
@@ -160,8 +209,43 @@ const ProposalDetailSidePanel = ({ proposal, onShowFullView }: ProposalDetailSid
         
         <Separator />
         
+        <div className="pt-2 space-y-3">
+          <div className="text-sm font-medium">Finansal Özet</div>
+          <div className="space-y-1 bg-gray-50 p-3 rounded-md">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Ara Toplam:</span>
+              <span>{formatMoney(totals.subtotal)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">KDV:</span>
+              <span>{formatMoney(totals.taxAmount)}</span>
+            </div>
+            {proposal.discounts && proposal.discounts > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">İndirim:</span>
+                <span className="text-red-600">-{formatMoney(proposal.discounts)}</span>
+              </div>
+            )}
+            {proposal.additional_charges && proposal.additional_charges > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Ek Ücretler:</span>
+                <span>{formatMoney(proposal.additional_charges)}</span>
+              </div>
+            )}
+            <Separator className="my-2" />
+            <div className="flex justify-between font-bold text-red-900">
+              <span>Genel Toplam:</span>
+              <span>{formatMoney(totals.total)}</span>
+            </div>
+          </div>
+        </div>
+        
+        <Separator />
+        
         <div className="pt-2 flex space-x-2">
-          <Button className="w-full">Düzenle</Button>
+          <Button className="w-full" asChild>
+            <a href={`/proposal/${proposal.id}/edit`}>Düzenle</a>
+          </Button>
         </div>
       </CardContent>
     </Card>

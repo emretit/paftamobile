@@ -1,82 +1,83 @@
 
 import { formatDateOffset } from './utils';
-import { TaskStatus, TaskPriority, TaskType } from '@/types/task';
-import { mockTasksAPI } from '@/services/mockCrm';
+import { mockCrmService, mockTasksAPI } from '@/services/mockCrm';
 
-/**
- * Task workflow service functions
- */
+interface AssignTaskParams {
+  title: string;
+  description?: string;
+  assigned_to?: string;
+  due_date?: string;
+  priority?: string;
+  related_item_id?: string;
+  related_item_type?: string;
+  related_item_title?: string;
+}
+
 export const taskWorkflow = {
   /**
-   * Create a follow-up task
+   * Create a new follow-up task
    */
-  createFollowUpTask: async ({
-    title,
-    related_item_id,
-    related_item_title,
-    related_item_type,
-    assigned_to,
-    due_date
-  }: {
-    title: string;
-    related_item_id: string;
-    related_item_title: string;
-    related_item_type: string;
-    assigned_to?: string;
-    due_date?: string;
-  }) => {
+  createFollowUpTask: async (params: AssignTaskParams) => {
     try {
       const task = {
-        title,
-        description: `${related_item_title} için takip.`,
-        status: 'todo' as TaskStatus,
-        priority: 'high' as TaskPriority,
-        type: 'follow_up' as TaskType,
-        assigned_to,
-        due_date,
-        related_item_id,
-        related_item_title,
-        related_item_type,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        title: params.title,
+        description: params.description || 'Takip gerekli',
+        status: 'todo',
+        priority: params.priority || 'medium',
+        assigned_to: params.assigned_to,
+        due_date: params.due_date || formatDateOffset(3),
+        related_item: {
+          id: params.related_item_id,
+          type: params.related_item_type,
+          title: params.related_item_title
+        }
       };
       
-      return await mockTasksAPI.createTask(task);
+      // Create the task
+      const { error } = await mockTasksAPI.createTask(task);
+      
+      if (error) {
+        console.error("Error creating follow-up task:", error);
+        return { success: false, error };
+      }
+      
+      return { success: true };
     } catch (error) {
-      // Return a default error response
-      return { data: null, error };
+      console.error("Error in createFollowUpTask:", error);
+      return { success: false, error };
     }
   },
-
+  
   /**
-   * Create a reminder task for an opportunity
+   * Assign a task to a user when a new opportunity is created
    */
-  createOpportunityReminderTask: async (
-    opportunityId: string,
-    opportunityTitle: string,
-    employeeId?: string,
-    daysOffset = 7
-  ) => {
+  assignOpportunityCreatedTask: async (opportunityId: string, opportunityTitle: string, assigneeId?: string) => {
     try {
       const task = {
-        title: `Hatırlatma: ${opportunityTitle}`,
-        description: `${opportunityTitle} fırsatı için takip zamanı.`,
-        status: 'todo' as TaskStatus,
-        priority: 'medium' as TaskPriority,
-        type: 'reminder' as TaskType,
-        assigned_to: employeeId,
-        due_date: formatDateOffset(daysOffset),
-        related_item_id: opportunityId,
-        related_item_title: opportunityTitle,
-        related_item_type: 'opportunity',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        title: `İnceleme: ${opportunityTitle}`,
+        description: 'Yeni oluşturulan fırsatı inceleyiniz.',
+        status: 'todo',
+        priority: 'high',
+        assigned_to: assigneeId,
+        due_date: formatDateOffset(1),
+        related_item: {
+          id: opportunityId,
+          type: 'opportunity',
+          title: opportunityTitle
+        }
       };
       
-      return await mockTasksAPI.createTask(task);
+      const { error } = await mockTasksAPI.createTask(task);
+      
+      if (error) {
+        console.error("Error creating opportunity task:", error);
+        return { success: false, error };
+      }
+      
+      return { success: true };
     } catch (error) {
-      // Return a default error response
-      return { data: null, error };
+      console.error("Error in assignOpportunityCreatedTask:", error);
+      return { success: false, error };
     }
   }
 };

@@ -1,19 +1,28 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Proposal, proposalStatusColors, proposalStatusLabels } from "@/types/proposal";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { ProposalItemsTab } from "./ProposalItemsTab";
+import ProposalAttachments from "@/components/proposals/form/ProposalAttachments";
 
 interface ProposalDetailFullViewProps {
   proposal: Proposal;
+  isEditMode?: boolean;
 }
 
-const ProposalDetailFullView = ({ proposal }: ProposalDetailFullViewProps) => {
+const ProposalDetailFullView = ({ proposal, isEditMode = false }: ProposalDetailFullViewProps) => {
+  const [files, setFiles] = useState<File[]>([]);
+  const [activeTab, setActiveTab] = useState('items');
+  
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "-";
     try {
@@ -24,9 +33,9 @@ const ProposalDetailFullView = ({ proposal }: ProposalDetailFullViewProps) => {
   };
 
   const formatMoney = (amount: number) => {
-    return new Intl.NumberFormat("tr-TR", {
-      style: "currency",
-      currency: proposal.currency || "TRY",
+    return new Intl.NumberFormat('tr-TR', {
+      style: 'currency',
+      currency: proposal.currency || 'TRY',
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(amount);
@@ -38,69 +47,16 @@ const ProposalDetailFullView = ({ proposal }: ProposalDetailFullViewProps) => {
         <CardTitle>Teklif Detayları</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="items">
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="items">Teklif Kalemleri</TabsTrigger>
             <TabsTrigger value="details">Genel Bilgiler</TabsTrigger>
+            <TabsTrigger value="attachments">Ekler</TabsTrigger>
             <TabsTrigger value="history">Tarihçe</TabsTrigger>
           </TabsList>
 
           <TabsContent value="items" className="space-y-4">
-            <div className="bg-muted/40 p-3 rounded-md">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-2">Ürün/Hizmet</th>
-                    <th className="text-right py-2">Miktar</th>
-                    <th className="text-right py-2">Birim Fiyat</th>
-                    <th className="text-right py-2">KDV</th>
-                    <th className="text-right py-2">Toplam</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {proposal.items && proposal.items.length > 0 ? (
-                    proposal.items.map((item, index) => (
-                      <tr key={item.id || index} className="border-b border-border/50">
-                        <td className="py-2">
-                          <div>
-                            <div className="font-medium">{item.name}</div>
-                            {item.description && (
-                              <div className="text-xs text-muted-foreground">{item.description}</div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="text-right py-2">{item.quantity}</td>
-                        <td className="text-right py-2">
-                          {formatMoney(item.unit_price)}
-                        </td>
-                        <td className="text-right py-2">%{item.tax_rate || 0}</td>
-                        <td className="text-right py-2">
-                          {formatMoney(item.total_price)}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="text-center py-4 text-gray-500">
-                        Bu teklifte henüz kalem bulunmuyor
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-                {proposal.items && proposal.items.length > 0 && (
-                  <tfoot>
-                    <tr className="border-t border-border">
-                      <td colSpan={4} className="text-right py-2 font-medium">
-                        Toplam:
-                      </td>
-                      <td className="text-right py-2 font-medium">
-                        {formatMoney(proposal.total_amount || proposal.total_value || 0)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                )}
-              </table>
-            </div>
+            <ProposalItemsTab proposal={proposal} />
           </TabsContent>
 
           <TabsContent value="details" className="space-y-6">
@@ -117,19 +73,53 @@ const ProposalDetailFullView = ({ proposal }: ProposalDetailFullViewProps) => {
                           {proposal.customer.name?.substring(0, 1) || 'C'}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <div className="font-medium">{proposal.customer.name}</div>
-                        {proposal.customer.company && (
-                          <div className="text-sm text-muted-foreground">{proposal.customer.company}</div>
+                      <div className="space-y-1 w-full">
+                        {isEditMode ? (
+                          <Input 
+                            defaultValue={proposal.customer.name || ''} 
+                            className="font-medium"
+                            placeholder="Müşteri Adı"
+                          />
+                        ) : (
+                          <div className="font-medium">{proposal.customer.name}</div>
                         )}
-                        {proposal.customer.email && (
-                          <div className="text-sm text-muted-foreground">{proposal.customer.email}</div>
+                        {isEditMode ? (
+                          <Input 
+                            defaultValue={proposal.customer.company || ''} 
+                            className="text-sm"
+                            placeholder="Şirket Adı"
+                          />
+                        ) : (
+                          proposal.customer.company && (
+                            <div className="text-sm text-muted-foreground">{proposal.customer.company}</div>
+                          )
+                        )}
+                        {isEditMode ? (
+                          <Input 
+                            defaultValue={proposal.customer.email || ''} 
+                            className="text-sm"
+                            placeholder="E-posta"
+                            type="email"
+                          />
+                        ) : (
+                          proposal.customer.email && (
+                            <div className="text-sm text-muted-foreground">{proposal.customer.email}</div>
+                          )
                         )}
                       </div>
                     </div>
                   ) : (
                     <div className="text-muted-foreground">
-                      {proposal.customer_name || "Müşteri bilgisi bulunmuyor"}
+                      {isEditMode ? (
+                        <div className="space-y-2 w-full">
+                          <Input placeholder="Müşteri Adı" />
+                          <Input placeholder="Şirket Adı" />
+                          <Input placeholder="E-posta" type="email" />
+                          <Input placeholder="Telefon" />
+                        </div>
+                      ) : (
+                        proposal.customer_name || "Müşteri bilgisi bulunmuyor"
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -150,7 +140,15 @@ const ProposalDetailFullView = ({ proposal }: ProposalDetailFullViewProps) => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Geçerlilik Tarihi:</span>
-                    <span className="font-medium">{formatDate(proposal.valid_until)}</span>
+                    {isEditMode ? (
+                      <Input 
+                        type="date" 
+                        defaultValue={proposal.valid_until ? new Date(proposal.valid_until).toISOString().split('T')[0] : ''} 
+                        className="w-40 text-right"
+                      />
+                    ) : (
+                      <span className="font-medium">{formatDate(proposal.valid_until)}</span>
+                    )}
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Durum:</span>
@@ -176,16 +174,32 @@ const ProposalDetailFullView = ({ proposal }: ProposalDetailFullViewProps) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <h3 className="font-medium text-sm">Ödeme Şartları</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {proposal.payment_terms || "Belirtilmemiş"}
-                    </p>
+                    {isEditMode ? (
+                      <Textarea 
+                        defaultValue={proposal.payment_terms || ""} 
+                        placeholder="Ödeme şartlarını belirtin"
+                        className="min-h-[100px]"
+                      />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        {proposal.payment_terms || "Belirtilmemiş"}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
                     <h3 className="font-medium text-sm">Teslimat Şartları</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {proposal.delivery_terms || "Belirtilmemiş"}
-                    </p>
+                    {isEditMode ? (
+                      <Textarea 
+                        defaultValue={proposal.delivery_terms || ""} 
+                        placeholder="Teslimat şartlarını belirtin"
+                        className="min-h-[100px]"
+                      />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        {proposal.delivery_terms || "Belirtilmemiş"}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -193,16 +207,32 @@ const ProposalDetailFullView = ({ proposal }: ProposalDetailFullViewProps) => {
 
                 <div className="space-y-2">
                   <h3 className="font-medium text-sm">Açıklama</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {proposal.description || "Açıklama bulunmuyor"}
-                  </p>
+                  {isEditMode ? (
+                    <Textarea 
+                      defaultValue={proposal.description || ""} 
+                      placeholder="Teklif açıklaması"
+                      className="min-h-[100px]"
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {proposal.description || "Açıklama bulunmuyor"}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <h3 className="font-medium text-sm">Notlar</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {proposal.notes || "Not bulunmuyor"}
-                  </p>
+                  {isEditMode ? (
+                    <Textarea 
+                      defaultValue={proposal.notes || ""} 
+                      placeholder="Ekstra notlar"
+                      className="min-h-[100px]"
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {proposal.notes || "Not bulunmuyor"}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -241,16 +271,60 @@ const ProposalDetailFullView = ({ proposal }: ProposalDetailFullViewProps) => {
             </Card>
           </TabsContent>
 
+          <TabsContent value="attachments" className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <ProposalAttachments files={files} setFiles={setFiles} />
+                
+                {isEditMode && (
+                  <div className="mt-4 flex justify-end">
+                    <Button type="button">
+                      Dosyaları Kaydet
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="history" className="space-y-4">
             <Card>
               <CardContent className="pt-6">
-                <div className="text-center py-12 text-muted-foreground">
-                  Bu teklif için tarihçe bilgisi henüz bulunmamaktadır.
+                <div className="space-y-4">
+                  {proposal.status !== 'draft' ? (
+                    <div className="relative pl-6 pb-6 border-l-2 border-gray-200">
+                      <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-green-500 border-2 border-white"></div>
+                      <div className="mb-1 text-sm">
+                        <span className="font-semibold">Durum Değişikliği</span> • 
+                        <span className="text-muted-foreground"> {formatDate(proposal.updated_at || proposal.created_at)}</span>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Teklif durumu <Badge className={proposalStatusColors[proposal.status]}>{proposalStatusLabels[proposal.status]}</Badge> olarak güncellendi.
+                      </div>
+                    </div>
+                  ) : null}
+                  
+                  <div className="relative pl-6 border-l-2 border-gray-200">
+                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-500 border-2 border-white"></div>
+                    <div className="mb-1 text-sm">
+                      <span className="font-semibold">Teklif Oluşturuldu</span> • 
+                      <span className="text-muted-foreground"> {formatDate(proposal.created_at)}</span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Teklif {proposal.employee ? `${proposal.employee.first_name} ${proposal.employee.last_name}` : 'bir kullanıcı'} tarafından oluşturuldu.
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+        
+        {isEditMode && activeTab !== 'attachments' && (
+          <div className="mt-6 flex justify-end">
+            <Button>Değişiklikleri Kaydet</Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
