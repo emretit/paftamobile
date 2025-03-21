@@ -18,7 +18,6 @@ export const mockCrmTasksService = {
       if (error) throw error;
       return { data: data as unknown as Task[], error: null };
     } catch (error) {
-      console.error('Error fetching tasks:', error);
       return { data: [], error };
     }
   },
@@ -45,7 +44,6 @@ export const mockCrmTasksService = {
       
       return { data: taskWithSubtasks, error: null };
     } catch (error) {
-      console.error('Error fetching task:', error);
       return { data: null, error };
     }
   }
@@ -78,7 +76,6 @@ export const mockTasksAPI = {
       if (error) throw error;
       return { data: data as unknown as Task, error: null };
     } catch (error) {
-      console.error('Error creating task:', error);
       return { data: null, error };
     }
   },
@@ -95,7 +92,6 @@ export const mockTasksAPI = {
       if (error) throw error;
       return { data: data as unknown as Task, error: null };
     } catch (error) {
-      console.error('Error updating task:', error);
       return { data: null, error };
     }
   }

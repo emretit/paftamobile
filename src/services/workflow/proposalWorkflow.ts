@@ -16,18 +16,23 @@ export const handleProposalStatusChange = async (
 ) => {
   // Update linked opportunity status if available
   if (opportunityId && newStatus === 'sent') {
-    await mockCrmService.updateOpportunity(opportunityId, {
-      status: 'proposal_sent' as any
-    });
-    
-    // Create a follow-up task
-    await taskWorkflow.createFollowUpTask({
-      title: `Teklif Takibi: ${proposalTitle}`,
-      related_item_id: proposalId,
-      related_item_title: proposalTitle,
-      related_item_type: 'proposal',
-      assigned_to: assigneeId,
-      due_date: formatDateOffset(3) // 3 days from now
-    });
+    try {
+      await mockCrmService.updateOpportunity(opportunityId, {
+        status: 'proposal_sent' as any
+      });
+      
+      // Create a follow-up task
+      await taskWorkflow.createFollowUpTask({
+        title: `Teklif Takibi: ${proposalTitle}`,
+        related_item_id: proposalId,
+        related_item_title: proposalTitle,
+        related_item_type: 'proposal',
+        assigned_to: assigneeId,
+        due_date: formatDateOffset(3) // 3 days from now
+      });
+    } catch (error) {
+      // Silently fail but don't break the application flow
+      // In a production environment, this would be logged to a monitoring service
+    }
   }
 };

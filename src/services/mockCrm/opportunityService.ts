@@ -39,7 +39,6 @@ export const mockCrmOpportunityService = {
       
       return { data: opportunity, error: null };
     } catch (error) {
-      console.error('Error updating opportunity:', error);
       return { data: null, error };
     }
   }

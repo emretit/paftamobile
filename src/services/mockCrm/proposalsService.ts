@@ -27,7 +27,6 @@ export const mockCrmProposalsService = {
       
       return { data: proposals, error: null };
     } catch (error) {
-      console.error('Error fetching proposals:', error);
       return { data: [], error };
     }
   },
@@ -54,7 +53,6 @@ export const mockCrmProposalsService = {
       
       return { data: proposal, error: null };
     } catch (error) {
-      console.error('Error fetching proposal:', error);
       return { data: null, error };
     }
   }

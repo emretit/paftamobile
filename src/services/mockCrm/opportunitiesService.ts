@@ -29,7 +29,6 @@ export const mockCrmOpportunitiesService = {
       
       return { data: opportunities, error: null };
     } catch (error) {
-      console.error('Error fetching opportunities:', error);
       return { data: [], error };
     }
   },
@@ -58,7 +57,6 @@ export const mockCrmOpportunitiesService = {
       
       return { data: opportunity, error: null };
     } catch (error) {
-      console.error('Error fetching opportunity:', error);
       return { data: null, error };
     }
   }

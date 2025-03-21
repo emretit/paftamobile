@@ -25,22 +25,27 @@ export const taskWorkflow = {
     assigned_to?: string;
     due_date?: string;
   }) => {
-    const task = {
-      title,
-      description: `${related_item_title} için takip.`,
-      status: 'todo' as TaskStatus,
-      priority: 'high' as TaskPriority,
-      type: 'follow_up' as TaskType,
-      assigned_to,
-      due_date,
-      related_item_id,
-      related_item_title,
-      related_item_type,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    
-    return await mockTasksAPI.createTask(task);
+    try {
+      const task = {
+        title,
+        description: `${related_item_title} için takip.`,
+        status: 'todo' as TaskStatus,
+        priority: 'high' as TaskPriority,
+        type: 'follow_up' as TaskType,
+        assigned_to,
+        due_date,
+        related_item_id,
+        related_item_title,
+        related_item_type,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      return await mockTasksAPI.createTask(task);
+    } catch (error) {
+      // Return a default error response
+      return { data: null, error };
+    }
   },
 
   /**
@@ -52,21 +57,26 @@ export const taskWorkflow = {
     employeeId?: string,
     daysOffset = 7
   ) => {
-    const task = {
-      title: `Hatırlatma: ${opportunityTitle}`,
-      description: `${opportunityTitle} fırsatı için takip zamanı.`,
-      status: 'todo' as TaskStatus,
-      priority: 'medium' as TaskPriority,
-      type: 'reminder' as TaskType,
-      assigned_to: employeeId,
-      due_date: formatDateOffset(daysOffset),
-      related_item_id: opportunityId,
-      related_item_title: opportunityTitle,
-      related_item_type: 'opportunity',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    
-    return await mockTasksAPI.createTask(task);
+    try {
+      const task = {
+        title: `Hatırlatma: ${opportunityTitle}`,
+        description: `${opportunityTitle} fırsatı için takip zamanı.`,
+        status: 'todo' as TaskStatus,
+        priority: 'medium' as TaskPriority,
+        type: 'reminder' as TaskType,
+        assigned_to: employeeId,
+        due_date: formatDateOffset(daysOffset),
+        related_item_id: opportunityId,
+        related_item_title: opportunityTitle,
+        related_item_type: 'opportunity',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      return await mockTasksAPI.createTask(task);
+    } catch (error) {
+      // Return a default error response
+      return { data: null, error };
+    }
   }
 };
