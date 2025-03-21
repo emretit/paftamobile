@@ -1,32 +1,11 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "@/components/Navbar";
+import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save } from "lucide-react";
-import ProposalForm from "@/components/proposals/templates/ProposalForm";
-import { useProposalForm } from "@/hooks/useProposalForm";
 import { toast } from "sonner";
-
-// Default template for proposal creation
-const defaultTemplate = {
-  id: "default-template",
-  name: "Standart Teklif",
-  description: "Hızlı teklif oluşturma şablonu",
-  templateType: "standard",
-  templateFeatures: [
-    "Ürün ve hizmet teklifleri için uygun",
-    "KDV dahil/hariç seçeneği",
-    "İskonto alanları"
-  ],
-  items: [],
-  prefilledFields: {
-    title: "Yeni Teklif",
-    validityDays: 30,
-    paymentTerm: "prepaid"
-  }
-};
+import { useProposalForm } from "@/hooks/useProposalForm";
+import ProposalFormShared from "@/components/proposals/form/ProposalFormShared";
 
 interface ProposalCreateProps {
   isCollapsed: boolean;
@@ -35,53 +14,50 @@ interface ProposalCreateProps {
 
 const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) => {
   const navigate = useNavigate();
-  const { saveDraft } = useProposalForm();
+  const { saveDraft, isLoading } = useProposalForm();
+  const [saving, setSaving] = useState(false);
 
   const handleBack = () => {
     navigate("/proposals");
   };
 
-  const handleSaveDraft = () => {
-    toast.success("Teklif taslak olarak kaydedildi");
-    navigate("/proposals");
+  const handleSave = async (formData: any) => {
+    try {
+      setSaving(true);
+      
+      // Yeni teklif oluşturma
+      await saveDraft(formData);
+      
+      toast.success("Teklif başarıyla oluşturuldu");
+      navigate("/proposals");
+    } catch (error) {
+      console.error("Error creating proposal:", error);
+      toast.error("Teklif oluşturulurken bir hata oluştu");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <main
-        className={`flex-1 transition-all duration-300 ${
-          isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
-        }`}
-      >
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Yeni Teklif Oluştur</h1>
-              <p className="text-gray-600 mt-1">
-                Müşterileriniz için yeni bir teklif hazırlayın
-              </p>
-            </div>
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={handleBack}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Geri
-              </Button>
-              <Button onClick={handleSaveDraft}>
-                <Save className="h-4 w-4 mr-2" />
-                Taslak Olarak Kaydet
-              </Button>
-            </div>
-          </div>
-
-          <Card>
-            <CardContent className="p-6">
-              <ProposalForm template={defaultTemplate} onSaveDraft={handleSaveDraft} />
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    </div>
+    <DefaultLayout
+      isCollapsed={isCollapsed}
+      setIsCollapsed={setIsCollapsed}
+      title="Yeni Teklif Oluştur"
+      subtitle="Müşterileriniz için yeni bir teklif hazırlayın"
+    >
+      <Card className="p-6">
+        <CardContent className="p-0">
+          <ProposalFormShared 
+            proposal={null}
+            loading={false}
+            saving={saving || isLoading}
+            isNew={true}
+            onSave={handleSave}
+            onBack={handleBack}
+          />
+        </CardContent>
+      </Card>
+    </DefaultLayout>
   );
 };
 
