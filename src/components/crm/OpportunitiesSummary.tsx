@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { mockCrmService } from "@/services/mockCrmService";
+import { mockCrmService } from "@/services/mockCrm";
 
 interface OpportunityCount {
   status: string;
