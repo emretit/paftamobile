@@ -5,6 +5,9 @@ import { Proposal, ProposalStatus, ProposalItem } from '@/types/proposal';
 import { Task, TaskStatus, SubTask } from '@/types/task';
 import { v4 as uuidv4 } from 'uuid';
 
+// Type alias for JSON compatibility with Supabase
+type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+
 export const mockCrmService = {
   // Task related methods
   getTasks: async () => {
@@ -253,9 +256,17 @@ export const mockCrmService = {
   // Adding the missing exports needed by crmWorkflowService.ts
   updateOpportunity: async (id: string, updateData: Partial<Opportunity>) => {
     try {
+      // Need to handle contact_history specifically to convert to JSON
+      const dataToUpdate: any = { ...updateData };
+      
+      // Handle contact_history conversion if present
+      if (updateData.contact_history) {
+        dataToUpdate.contact_history = JSON.stringify(updateData.contact_history);
+      }
+      
       const { data, error } = await supabase
         .from('opportunities')
-        .update(updateData)
+        .update(dataToUpdate)
         .eq('id', id)
         .select(`
           *,
