@@ -1,6 +1,6 @@
 
 import { formatDateOffset } from './utils';
-import { mockCrmService } from '@/services/mockCrmService';
+import { mockCrmService, mockTasksAPI } from '@/services/mockCrm';
 import { taskWorkflow } from './taskWorkflow';
 
 /**

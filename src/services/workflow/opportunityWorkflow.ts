@@ -1,7 +1,7 @@
 
 import { formatDateOffset } from './utils';
 import { TaskStatus, TaskPriority, TaskType, Task } from '@/types/task';
-import { mockTasksAPI } from '@/services/mockCrmService';
+import { mockTasksAPI } from '@/services/mockCrm';
 
 /**
  * Create task based on opportunity status change
