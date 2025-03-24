@@ -46,6 +46,8 @@ export const useProductFormActions = (
             errorMessage = "Bu SKU veya barkod değeri zaten kullanılmaktadır";
           } else if (error.code === "23503") {
             errorMessage = "Belirtilen kategori veya tedarikçi bulunamadı";
+          } else if (error.code === "42703") {
+            errorMessage = "Veritabanı yapısı ile uyumsuzluk. Sistem yöneticinize danışın.";
           }
           
           toast({
@@ -62,12 +64,14 @@ export const useProductFormActions = (
         });
         navigate(`/product-details/${productId}`);
       } else {
-        // Ensure name is not undefined as it's required by the schema
+        // For new products, ensure we properly format all data for the database schema
         const insertData = {
           ...preparedData,
-          name: preparedData.name, // Explicitly include name to satisfy TypeScript
+          name: preparedData.name,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
+          // Note: min_stock_level is already correctly named in the form data
+          // No need to map to stock_threshold
         };
 
         console.log("Creating new product:", insertData);
@@ -87,7 +91,7 @@ export const useProductFormActions = (
           } else if (error.code === "23503") {
             errorMessage = "Belirtilen kategori veya tedarikçi bulunamadı";
           } else if (error.code === "42703") {
-            errorMessage = "Veritabanı yapısı ile uyumsuzluk. Sistem yöneticinize danışın.";
+            errorMessage = "Veritabanı ile uyumsuzluk. Alan adı hatası. Sistem yöneticinize danışın.";
           }
           
           toast({
