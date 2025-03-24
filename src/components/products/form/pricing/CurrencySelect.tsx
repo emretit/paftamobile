@@ -30,7 +30,7 @@ const CurrencySelect = ({ form }: CurrencySelectProps) => {
           <FormLabel>Para Birimi</FormLabel>
           <Select
             onValueChange={field.onChange}
-            value={field.value}
+            value={field.value || "TRY"}
           >
             <FormControl>
               <SelectTrigger>

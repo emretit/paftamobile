@@ -120,7 +120,7 @@ const ProductInventorySection = ({ form }: ProductInventorySectionProps) => {
                 <FormLabel>Birim</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  value={field.value}
+                  value={field.value || "piece"}
                 >
                   <FormControl>
                     <SelectTrigger>
