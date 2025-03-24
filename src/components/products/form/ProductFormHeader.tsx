@@ -24,18 +24,34 @@ const ProductFormHeader = ({
 }: ProductFormHeaderProps) => {
   const navigate = useNavigate();
 
-  const handleSave = () => {
+  const handleSave = async () => {
     console.log("Save button clicked");
     console.log("Form is valid?", form.formState.isValid);
     console.log("Form errors:", form.formState.errors);
+    
+    // Trigger validation manually
+    const isValid = await form.trigger();
+    if (!isValid) {
+      console.log("Form validation failed:", form.formState.errors);
+      return;
+    }
+    
     return form.handleSubmit((values) => {
       console.log("Form submitted with values:", values);
       return onSubmit(values, false);
     })();
   };
 
-  const handleSaveAndNew = () => {
+  const handleSaveAndNew = async () => {
     console.log("Save and Add New button clicked");
+    
+    // Trigger validation manually
+    const isValid = await form.trigger();
+    if (!isValid) {
+      console.log("Form validation failed:", form.formState.errors);
+      return;
+    }
+    
     return form.handleSubmit((values) => onSubmit(values, true))();
   };
 
@@ -57,7 +73,7 @@ const ProductFormHeader = ({
       
       <div className="flex space-x-3">
         {isEditing && (
-          <Button variant="outline" onClick={onDuplicate} className="font-medium">
+          <Button variant="outline" onClick={onDuplicate} className="font-medium" disabled={isSubmitting}>
             <Copy className="h-4 w-4 mr-2" />
             Ürünü Kopyala
           </Button>
@@ -77,7 +93,7 @@ const ProductFormHeader = ({
           className="font-medium"
         >
           <Save className="h-4 w-4 mr-2" />
-          {isEditing ? "Güncelle" : "Kaydet"}
+          {isSubmitting ? "Kaydediliyor..." : isEditing ? "Güncelle" : "Kaydet"}
         </Button>
       </div>
     </div>

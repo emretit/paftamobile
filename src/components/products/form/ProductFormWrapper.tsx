@@ -4,6 +4,8 @@ import { useProductForm } from "./hooks/useProductForm";
 import { useProductFormActions } from "./hooks/useProductFormActions";
 import ProductFormHeader from "./ProductFormHeader";
 import ProductFormTabs from "./ProductFormTabs";
+import { useEffect } from "react";
+import { toast } from "@/hooks/use-toast";
 
 const ProductFormWrapper = () => {
   const { form, isEditing, isSubmitting, setIsSubmitting, productId } = useProductForm();
@@ -13,9 +15,35 @@ const ProductFormWrapper = () => {
     setIsSubmitting
   );
 
+  // Watch for form errors and display them via toast
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      if (Object.keys(form.formState.errors).length > 0) {
+        console.log("Form has errors:", form.formState.errors);
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   const handleSubmit = async (values: any, addAnother = false) => {
     console.log("Form submission handler called with values:", values);
     try {
+      // Validate form before submission
+      const isValid = await form.trigger();
+      if (!isValid) {
+        const errorKeys = Object.keys(form.formState.errors);
+        if (errorKeys.length > 0) {
+          toast({
+            title: "Form Hatası",
+            description: "Lütfen formdaki hataları düzeltin",
+            variant: "destructive"
+          });
+          console.error("Form validation errors:", form.formState.errors);
+          return { resetForm: false };
+        }
+      }
+      
       const result = await onSubmit(values, addAnother);
       if (result.resetForm) {
         console.log("Resetting form after successful submission");

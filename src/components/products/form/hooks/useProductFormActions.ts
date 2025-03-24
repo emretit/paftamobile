@@ -39,9 +39,18 @@ export const useProductFormActions = (
 
         if (error) {
           console.error("Error updating product:", error);
+          let errorMessage = "Ürün güncellenirken bir hata oluştu";
+          
+          // Provide more specific error message based on the error code
+          if (error.code === "23505") {
+            errorMessage = "Bu SKU veya barkod değeri zaten kullanılmaktadır";
+          } else if (error.code === "23503") {
+            errorMessage = "Belirtilen kategori veya tedarikçi bulunamadı";
+          }
+          
           toast({
             title: "Hata",
-            description: "Ürün güncellenirken bir hata oluştu",
+            description: errorMessage,
             variant: "destructive"
           });
           throw error;
@@ -70,9 +79,18 @@ export const useProductFormActions = (
 
         if (error) {
           console.error("Error saving product:", error);
+          let errorMessage = "Ürün kaydedilirken bir hata oluştu";
+          
+          // Provide more specific error message based on the error code
+          if (error.code === "23505") {
+            errorMessage = "Bu SKU veya barkod değeri zaten kullanılmaktadır";
+          } else if (error.code === "23503") {
+            errorMessage = "Belirtilen kategori veya tedarikçi bulunamadı";
+          }
+          
           toast({
             title: "Hata",
-            description: "Ürün kaydedilirken bir hata oluştu",
+            description: errorMessage,
             variant: "destructive"
           });
           throw error;
@@ -96,7 +114,7 @@ export const useProductFormActions = (
       console.error("Error saving product:", error);
       toast({
         title: "Hata",
-        description: "Ürün kaydedilirken bir hata oluştu",
+        description: "Ürün kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.",
         variant: "destructive"
       });
       return { resetForm: false };
@@ -149,7 +167,7 @@ export const useProductFormActions = (
       console.error("Error duplicating product:", error);
       toast({
         title: "Hata",
-        description: "Ürün kopyalanırken bir hata oluştu",
+        description: "Ürün kopyalanırken bir hata oluştu. Lütfen tekrar deneyin.",
         variant: "destructive"
       });
     }
