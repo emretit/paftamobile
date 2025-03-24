@@ -1,57 +1,63 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Heading } from "@/components/ui/heading";
+import { Separator } from "@/components/ui/separator";
+import { ArrowLeft } from "lucide-react";
 import { Proposal } from "@/types/proposal";
 
-interface ProposalFormHeaderProps {
-  proposal: Proposal | null;
+export interface ProposalFormHeaderProps {
+  title: string;
+  subtitle?: string;
+  proposal?: Proposal | null;
   loading: boolean;
   saving: boolean;
   isNew: boolean;
-  onSave: () => void;
-  onBack: () => void;
-  title: string;
+  onSave?: () => void;
+  onBack?: () => void;
 }
 
-const ProposalFormHeader = ({
-  proposal,
-  loading,
-  saving,
+const ProposalFormHeader = ({ 
+  title, 
+  subtitle,
+  proposal, 
+  loading, 
+  saving, 
   isNew,
   onSave,
-  onBack,
-  title,
+  onBack 
 }: ProposalFormHeaderProps) => {
-  const getTitle = () => {
-    if (loading) return <Skeleton className="h-8 w-40" />;
-    return title || (isNew ? "Yeni Teklif Oluştur" : `${proposal?.title || ""} Düzenle`);
-  };
-
-  const getButtonText = () => {
-    return isNew ? "Teklif Oluştur" : "Değişiklikleri Kaydet";
-  };
-
   return (
-    <div className="mb-6 flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={onBack} className="dark:bg-gray-800 dark:border-gray-700">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Geri
-        </Button>
-        <h1 className="text-2xl font-bold dark:text-white">
-          {getTitle()}
-        </h1>
+    <div className="flex flex-col gap-4 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          {onBack && (
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={onBack}
+              disabled={saving}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          )}
+          <Heading
+            title={title}
+            description={subtitle || (isNew ? "Yeni teklif oluşturun" : "Teklif bilgilerini güncelleyin")}
+          />
+        </div>
+
+        {!loading && onSave && (
+          <Button 
+            onClick={onSave}
+            disabled={saving}
+            className="w-full md:w-auto"
+          >
+            {saving ? "Kaydediliyor..." : (isNew ? "Teklifi Oluştur" : "Değişiklikleri Kaydet")}
+          </Button>
+        )}
       </div>
-      <Button 
-        onClick={onSave} 
-        disabled={loading || saving}
-        className="bg-red-600 hover:bg-red-700 text-white"
-      >
-        <Save className="h-4 w-4 mr-2" />
-        {getButtonText()}
-      </Button>
+      <Separator />
     </div>
   );
 };

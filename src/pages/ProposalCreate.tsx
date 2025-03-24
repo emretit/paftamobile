@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { useProposalForm } from "@/hooks/useProposalForm";
@@ -14,6 +14,7 @@ interface ProposalCreateProps {
 const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) => {
   const navigate = useNavigate();
   const { saveDraft, isLoading } = useProposalForm();
+  const [saving, setSaving] = useState(false);
 
   const handleBack = () => {
     navigate("/proposals");
@@ -27,6 +28,7 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
         return;
       }
 
+      setSaving(true);
       // Create new proposal
       await saveDraft(formData);
       toast.success("Teklif taslak olarak kaydedildi.");
@@ -34,6 +36,8 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
     } catch (error) {
       console.error("Error creating proposal:", error);
       toast.error("Teklif oluşturulurken bir hata oluştu.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -47,6 +51,7 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
       <ProposalForm
         proposal={null}
         loading={false}
+        saving={saving || isLoading}
         isNew={true}
         onSave={handleSave}
         onBack={handleBack}

@@ -1,239 +1,136 @@
 
-import { Product } from "@/types/product";
+import { useState, useCallback } from "react";
 import { ProposalItem } from "@/types/proposal";
 import { v4 as uuidv4 } from "uuid";
-import { convertCurrency, calculateTotalWithTax } from "../utils/currencyUtils";
+import { Product } from "@/types/product";
+import { convertCurrency } from "../utils/currencyUtils";
 
-export const useProposalItemsManagement = (selectedCurrency: string, exchangeRates: {[key: string]: number}) => {
-  const handleAddItem = (
-    items: ProposalItem[], 
-    setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>
-  ) => {
-    // Create a new proposal item with default values
+export const useProposalItemsManagement = (
+  selectedCurrency: string,
+  exchangeRates: Record<string, number>
+) => {
+  const [items, setItems] = useState<ProposalItem[]>([]);
+
+  const handleAddItem = useCallback(() => {
     const newItem: ProposalItem = {
       id: uuidv4(),
       name: "",
       quantity: 1,
       unit_price: 0,
-      tax_rate: 18, // Default tax rate
       total_price: 0,
-      discount_rate: 0, // Default discount rate
       currency: selectedCurrency,
-      stock_status: 'in_stock',
-      group: 'diger' // Default grup değeri
     };
-    
-    setItems([...items, newItem]);
-  };
+    setItems((prev) => [...prev, newItem]);
+  }, [selectedCurrency]);
 
-  const handleSelectProduct = (
-    product: Product, 
-    items: ProposalItem[], 
-    setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>,
-    quantity: number = 1,
-    customPrice?: number,
-    discountRate: number = 0
-  ) => {
-    // Use the custom price if provided, otherwise use the product's price
-    const price = customPrice !== undefined ? customPrice : (product.price || 0);
-    
-    // Convert price to the selected currency if needed
-    let convertedPrice = price;
-    if (product.currency !== selectedCurrency) {
-      console.log(`Converting price from ${product.currency} (${price}) to ${selectedCurrency} using rates:`, exchangeRates);
-      convertedPrice = convertCurrency(price, product.currency, selectedCurrency, exchangeRates);
-      console.log(`Converted price: ${convertedPrice} ${selectedCurrency}`);
-    }
-    
-    // Calculate total price with tax
-    const totalPrice = calculateTotalWithTax(
-      convertedPrice, 
-      quantity, 
-      product.tax_rate || 18,
-      discountRate
-    );
-    
-    // Determine stock status
-    let stockStatus = 'in_stock';
-    if (product.stock_quantity <= 0) {
-      stockStatus = 'out_of_stock';
-    } else if (product.stock_quantity <= product.stock_threshold || 
-               product.stock_quantity <= product.min_stock_level) {
-      stockStatus = 'low_stock';
-    }
-    
-    // Determine product group based on product_type or category_type
-    let group = 'diger'; // Default
-    if (product.product_type === 'physical') {
-      group = 'urun';
-    } else if (product.product_type === 'service') {
-      group = 'hizmet';
-    } else if (product.category_type === 'software') {
-      group = 'yazilim';
-    } else if (product.category_type === 'hardware') {
-      group = 'donanim';
-    }
-    
-    // Create the new proposal item with product data
-    const newItem: ProposalItem = {
-      id: uuidv4(),
-      product_id: product.id,
-      name: product.name,
-      description: product.description || undefined,
-      quantity: quantity,
-      unit_price: convertedPrice,
-      tax_rate: product.tax_rate || 18,
-      discount_rate: discountRate,
-      total_price: totalPrice,
-      currency: selectedCurrency,
-      stock_status: stockStatus,
-      group: group,
-      // Orijinal fiyat ve para birimi bilgilerini sakla
-      original_currency: product.currency,
-      original_price: price
-    };
-    
-    setItems([...items, newItem]);
-  };
-
-  const handleRemoveItem = (
-    index: number,
-    items: ProposalItem[],
-    setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>
-  ) => {
-    setItems(items.filter((_, i) => i !== index));
-  };
-
-  const handleItemChange = (
-    index: number, 
-    field: keyof ProposalItem | 'unitPrice' | 'taxRate' | 'totalPrice', 
-    value: string | number,
-    items: ProposalItem[],
-    setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>
-  ) => {
-    const updatedItems = [...items];
-    const item = updatedItems[index];
-    
-    if (field === 'quantity' || field === 'unit_price' || field === 'unitPrice' || 
-        field === 'tax_rate' || field === 'taxRate' || field === 'discount_rate') {
-      // Handle snake_case to camelCase mapping
-      if (field === 'unitPrice') {
-        item.unit_price = Number(value);
-      } else if (field === 'taxRate') {
-        item.tax_rate = Number(value);
-      } else {
-        // @ts-ignore - field exists on ProposalItem
-        item[field] = Number(value);
+  const handleSelectProduct = useCallback(
+    (product: Product) => {
+      // Skip if product is already in the list
+      if (items.some((item) => item.product_id === product.id)) {
+        return;
       }
-      
-      // Update total price
-      const quantity = item.quantity;
-      const unitPrice = item.unit_price;
-      const taxRate = item.tax_rate || 0;
-      const discountRate = item.discount_rate || 0;
-      
-      // Calculate with tax and discount
-      item.total_price = calculateTotalWithTax(unitPrice, quantity, taxRate, discountRate);
-    } else if (field === 'currency') {
-      const oldCurrency = item.currency || selectedCurrency;
-      const newCurrency = value as string;
-      
-      // Convert the unit price to the new currency
-      if (oldCurrency !== newCurrency) {
-        // Eğer orijinal para birimi ve fiyat bilgisi varsa, direkt ondan dönüştür
-        if (item.original_currency && item.original_price !== undefined) {
-          item.unit_price = convertCurrency(
-            item.original_price,
-            item.original_currency,
-            newCurrency,
-            exchangeRates
-          );
-        } else {
-          // Yoksa mevcut fiyattan dönüştür
-          item.unit_price = convertCurrency(
-            item.unit_price,
-            oldCurrency,
-            newCurrency,
-            exchangeRates
-          );
-        }
-        
-        // Update total price
-        const quantity = item.quantity;
-        const unitPrice = item.unit_price;
-        const taxRate = item.tax_rate || 0;
-        const discountRate = item.discount_rate || 0;
-        
-        // Calculate with tax and discount
-        item.total_price = calculateTotalWithTax(unitPrice, quantity, taxRate, discountRate);
-      }
-      
-      item.currency = newCurrency;
-    } else {
-      // @ts-ignore - We know the field exists
-      item[field] = value;
-    }
-    
-    setItems(updatedItems);
-  };
 
-  // Tüm kalemlerin para birimini değiştirme fonksiyonu
-  const updateAllItemsCurrency = (
-    items: ProposalItem[],
-    setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>,
-    newCurrency: string
-  ) => {
-    if (!items || items.length === 0) return;
+      const productCurrency = product.currency || "TRY";
+      let unitPrice = product.price || 0;
 
-    const updatedItems = items.map(item => {
-      const oldCurrency = item.currency || selectedCurrency;
-      
-      // Para birimi değişmediyse atla
-      if (oldCurrency === newCurrency) return item;
-      
-      // Kopya oluştur
-      const updatedItem = { ...item };
-      
-      // Eğer orijinal para birimi ve fiyat bilgisi varsa, direkt ondan dönüştür
-      if (item.original_currency && item.original_price !== undefined) {
-        updatedItem.unit_price = convertCurrency(
-          item.original_price,
-          item.original_currency,
-          newCurrency,
-          exchangeRates
-        );
-      } else {
-        // Yoksa mevcut fiyattan dönüştür
-        updatedItem.unit_price = convertCurrency(
-          item.unit_price,
-          oldCurrency,
-          newCurrency,
+      // Convert product price to selected currency if different
+      if (productCurrency !== selectedCurrency) {
+        unitPrice = convertCurrency(
+          unitPrice,
+          productCurrency,
+          selectedCurrency,
           exchangeRates
         );
       }
+
+      const newItem: ProposalItem = {
+        id: uuidv4(),
+        product_id: product.id,
+        name: product.name,
+        description: product.description,
+        quantity: 1,
+        unit_price: unitPrice,
+        tax_rate: product.tax_rate || 18,
+        discount_rate: product.discount_rate || 0,
+        total_price: unitPrice, // Quantity is 1, so total = unit price
+        currency: selectedCurrency,
+        original_currency: productCurrency,
+        original_price: product.price || 0,
+        stock_status: product.stock_quantity && product.stock_quantity > 0 
+          ? (product.stock_quantity > product.stock_threshold ? 'in_stock' : 'low_stock')
+          : 'out_of_stock',
+      };
       
-      // Para birimini güncelle
-      updatedItem.currency = newCurrency;
-      
-      // Toplam fiyatı yeniden hesapla
-      updatedItem.total_price = calculateTotalWithTax(
-        updatedItem.unit_price,
-        updatedItem.quantity,
-        updatedItem.tax_rate || 0,
-        updatedItem.discount_rate || 0
+      setItems((prev) => [...prev, newItem]);
+    },
+    [items, selectedCurrency, exchangeRates]
+  );
+
+  const handleRemoveItem = useCallback((id: string) => {
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  }, []);
+
+  const handleItemChange = useCallback(
+    (id: string, field: keyof ProposalItem, value: any) => {
+      setItems((prev) =>
+        prev.map((item) => {
+          if (item.id !== id) return item;
+
+          const updatedItem = { ...item, [field]: value };
+
+          // Recalculate total price when quantity or unit_price changes
+          if (field === "quantity" || field === "unit_price") {
+            updatedItem.total_price = 
+              updatedItem.quantity * updatedItem.unit_price;
+          }
+
+          return updatedItem;
+        })
       );
-      
-      return updatedItem;
-    });
-    
-    setItems(updatedItems);
-  };
+    },
+    []
+  );
+
+  const updateAllItemsCurrency = useCallback(
+    (newCurrency: string) => {
+      if (newCurrency === selectedCurrency) return items;
+
+      const updatedItems = items.map((item) => {
+        // If original currency is available, convert from it to maintain accuracy
+        const sourceCurrency = item.original_currency || item.currency || selectedCurrency;
+        const sourcePrice = 
+          sourceCurrency === item.original_currency && item.original_price !== undefined
+            ? item.original_price
+            : item.unit_price;
+
+        const convertedPrice = convertCurrency(
+          sourcePrice,
+          sourceCurrency,
+          newCurrency,
+          exchangeRates
+        );
+
+        return {
+          ...item,
+          unit_price: convertedPrice,
+          total_price: convertedPrice * item.quantity,
+          currency: newCurrency,
+        };
+      });
+
+      setItems(updatedItems);
+      return updatedItems;
+    },
+    [items, selectedCurrency, exchangeRates]
+  );
 
   return {
+    items,
+    setItems,
     handleAddItem,
     handleSelectProduct,
     handleRemoveItem,
     handleItemChange,
-    updateAllItemsCurrency // Tüm kalemleri güncelleme fonksiyonunu dışarı aktar
+    updateAllItemsCurrency,
   };
 };

@@ -1,5 +1,29 @@
 
-export type ProposalStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'cancelled' | 'revised';
+export type ProposalStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'cancelled' | 'revised' | 'pending_approval';
+
+// Status label mapping for UI display
+export const proposalStatusLabels: Record<ProposalStatus, string> = {
+  draft: 'Taslak',
+  sent: 'Gönderildi',
+  accepted: 'Kabul Edildi',
+  rejected: 'Reddedildi',
+  expired: 'Süresi Dolmuş',
+  cancelled: 'İptal Edildi',
+  revised: 'Revize Edildi',
+  pending_approval: 'Onay Bekliyor'
+};
+
+// Status color mapping for UI display
+export const proposalStatusColors: Record<ProposalStatus, string> = {
+  draft: 'bg-gray-500 hover:bg-gray-600',
+  sent: 'bg-blue-500 hover:bg-blue-600',
+  accepted: 'bg-green-500 hover:bg-green-600',
+  rejected: 'bg-red-500 hover:bg-red-600',
+  expired: 'bg-orange-500 hover:bg-orange-600',
+  cancelled: 'bg-rose-500 hover:bg-rose-600',
+  revised: 'bg-amber-500 hover:bg-amber-600',
+  pending_approval: 'bg-purple-500 hover:bg-purple-600'
+};
 
 export interface ProposalItem {
   id: string;
@@ -27,6 +51,31 @@ export interface ProposalAttachment {
   created_at: string;
 }
 
+// Customer and Employee interfaces to support relations
+export interface Customer {
+  id: string;
+  name: string;
+  email?: string;
+  company?: string;
+  phone?: string;
+  mobile_phone?: string;
+  office_phone?: string;
+  address?: string;
+  tax_number?: string;
+  tax_office?: string;
+}
+
+export interface Employee {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email?: string;
+  phone?: string;
+  position?: string;
+  department?: string;
+  avatar_url?: string;
+}
+
 export interface Proposal {
   id: string;
   number: string;
@@ -51,6 +100,17 @@ export interface Proposal {
   currency?: string; // Para birimi
   items?: ProposalItem[];
   attachments?: ProposalAttachment[];
+  
+  // Additional fields used in various components
+  proposal_number?: string; // Backward compatibility field
+  total_value?: number; // Backward compatibility field for total_amount
+  internal_notes?: string;
+  discounts?: number;
+  additional_charges?: number;
+  
+  // Relations
+  customer?: Customer;
+  employee?: Employee;
 }
 
 export interface ProposalFormValues {
