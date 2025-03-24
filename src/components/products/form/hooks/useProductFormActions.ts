@@ -15,9 +15,16 @@ export const useProductFormActions = (
   const onSubmit = async (values: ProductFormSchema, addAnother = false) => {
     setIsSubmitting(true);
     try {
+      // Prepare data by ensuring null values for empty strings in UUID fields
+      const preparedData = {
+        ...values,
+        category_id: values.category_id && values.category_id.trim() !== "" ? values.category_id : null,
+        supplier_id: values.supplier_id && values.supplier_id.trim() !== "" ? values.supplier_id : null
+      };
+      
       if (isEditing && productId) {
         const updateData = {
-          ...values,
+          ...preparedData,
           updated_at: new Date().toISOString()
         };
 
@@ -33,8 +40,8 @@ export const useProductFormActions = (
       } else {
         // Ensure name is not undefined as it's required by the schema
         const insertData = {
-          ...values,
-          name: values.name, // Explicitly include name to satisfy TypeScript
+          ...preparedData,
+          name: preparedData.name, // Explicitly include name to satisfy TypeScript
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
