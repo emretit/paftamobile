@@ -13,7 +13,7 @@ import { ProductFormSchema } from "../ProductFormSchema";
 
 interface PriceInputProps {
   form: UseFormReturn<ProductFormSchema>;
-  name: "price" | "discount_price";
+  name: "price" | "discount_price" | "purchase_price";
   label: string;
   description?: string;
   isRequired?: boolean;
