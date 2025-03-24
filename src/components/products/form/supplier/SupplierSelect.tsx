@@ -34,7 +34,7 @@ const SupplierSelect = ({ form }: SupplierSelectProps) => {
           <FormLabel>Tedarikçi</FormLabel>
           <Select
             onValueChange={field.onChange}
-            value={field.value || ""}
+            value={field.value || "none"}
           >
             <FormControl>
               <SelectTrigger>

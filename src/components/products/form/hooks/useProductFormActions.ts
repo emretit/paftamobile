@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { ProductFormSchema } from "../ProductFormSchema";
 
 export const useProductFormActions = (
@@ -39,10 +39,18 @@ export const useProductFormActions = (
 
         if (error) {
           console.error("Error updating product:", error);
+          toast({
+            title: "Hata",
+            description: "Ürün güncellenirken bir hata oluştu",
+            variant: "destructive"
+          });
           throw error;
         }
 
-        toast.success("Ürün başarıyla güncellendi");
+        toast({
+          title: "Başarılı",
+          description: "Ürün başarıyla güncellendi",
+        });
         navigate(`/product-details/${productId}`);
       } else {
         // Ensure name is not undefined as it's required by the schema
@@ -62,11 +70,19 @@ export const useProductFormActions = (
 
         if (error) {
           console.error("Error saving product:", error);
+          toast({
+            title: "Hata",
+            description: "Ürün kaydedilirken bir hata oluştu",
+            variant: "destructive"
+          });
           throw error;
         }
 
         console.log("Product created successfully:", data);
-        toast.success("Ürün başarıyla oluşturuldu");
+        toast({
+          title: "Başarılı",
+          description: "Ürün başarıyla oluşturuldu",
+        });
         
         if (addAnother) {
           // We'll handle form reset in the component
@@ -78,7 +94,11 @@ export const useProductFormActions = (
       return { resetForm: false };
     } catch (error) {
       console.error("Error saving product:", error);
-      toast.error("Ürün kaydedilirken bir hata oluştu");
+      toast({
+        title: "Hata",
+        description: "Ürün kaydedilirken bir hata oluştu",
+        variant: "destructive"
+      });
       return { resetForm: false };
     } finally {
       setIsSubmitting(false);
@@ -117,14 +137,21 @@ export const useProductFormActions = (
 
         if (error) throw error;
 
-        toast.success("Ürün başarıyla kopyalandı");
+        toast({
+          title: "Başarılı",
+          description: "Ürün başarıyla kopyalandı",
+        });
         if (data) {
           navigate(`/product-form/${data.id}`);
         }
       }
     } catch (error) {
       console.error("Error duplicating product:", error);
-      toast.error("Ürün kopyalanırken bir hata oluştu");
+      toast({
+        title: "Hata",
+        description: "Ürün kopyalanırken bir hata oluştu",
+        variant: "destructive"
+      });
     }
   };
 

@@ -2,6 +2,7 @@
 import { useParams } from "react-router-dom";
 import ProductFormWrapper from "@/components/products/form/ProductFormWrapper";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
+import { Toaster } from "@/components/ui/toaster";
 
 interface ProductFormProps {
   isCollapsed: boolean;
@@ -20,6 +21,7 @@ const ProductForm = ({ isCollapsed, setIsCollapsed }: ProductFormProps) => {
       subtitle="Ürün bilgilerini doldurun ve kaydedin"
     >
       <ProductFormWrapper />
+      <Toaster />
     </DefaultLayout>
   );
 };
