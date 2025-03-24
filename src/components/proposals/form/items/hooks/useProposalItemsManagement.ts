@@ -51,7 +51,8 @@ export const useProposalItemsManagement = (
         quantity: 1,
         unit_price: unitPrice,
         tax_rate: product.tax_rate || 18,
-        discount_rate: product.discount_rate || 0,
+        // Use 0 as default discount rate since the product doesn't have this field
+        discount_rate: 0,
         total_price: unitPrice, // Quantity is 1, so total = unit price
         currency: selectedCurrency,
         original_currency: productCurrency,

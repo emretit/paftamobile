@@ -58,11 +58,14 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
       setSelectedCurrency(globalCurrency);
       // Tüm kalemlerin para birimini güncelle
       if (items.length > 0) {
-        updateAllItemsCurrency(items, onItemsChange, globalCurrency);
-        toast.success(`Tüm kalemler ${globalCurrency} para birimine dönüştürüldü`);
+        const updatedItems = updateAllItemsCurrency(globalCurrency);
+        if (updatedItems) {
+          onItemsChange(updatedItems);
+          toast.success(`Tüm kalemler ${globalCurrency} para birimine dönüştürüldü`);
+        }
       }
     }
-  }, [globalCurrency]);
+  }, [globalCurrency, selectedCurrency, setSelectedCurrency, updateAllItemsCurrency, items, onItemsChange]);
 
   // Calculate totals
   const calculateSubtotal = () => {
@@ -119,9 +122,38 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     return totals;
   }, [items]);
 
-  const handleProductSelect = (product: Product, quantity?: number, customPrice?: number, discountRate?: number) => {
-    handleSelectProduct(product, items, onItemsChange, quantity, customPrice, discountRate);
-    toast.success(`${product.name} teklif kalemine eklendi`);
+  const handleProductSelect = (product: Product) => {
+    const updatedItems = handleSelectProduct(product);
+    if (updatedItems) {
+      onItemsChange(updatedItems);
+      toast.success(`${product.name} teklif kalemine eklendi`);
+    }
+  };
+
+  // Handle adding a new item
+  const onAddItem = () => {
+    const updatedItems = handleAddItem();
+    if (updatedItems) {
+      onItemsChange(updatedItems);
+    }
+  };
+
+  // Handle removing an item
+  const onRemoveItem = (index: number) => {
+    const itemId = items[index].id;
+    const updatedItems = handleRemoveItem(itemId);
+    if (updatedItems) {
+      onItemsChange(updatedItems);
+    }
+  };
+
+  // Handle item changes
+  const onItemChange = (index: number, field: keyof ProposalItem, value: any) => {
+    const itemId = items[index].id;
+    const updatedItems = handleItemChange(itemId, field, value);
+    if (updatedItems) {
+      onItemsChange(updatedItems);
+    }
   };
 
   // Check for stock warnings
@@ -147,7 +179,10 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     
     // Tüm kalemlerin para birimini güncelle
     if (items.length > 0) {
-      updateAllItemsCurrency(items, onItemsChange, currency);
+      const updatedItems = updateAllItemsCurrency(currency);
+      if (updatedItems) {
+        onItemsChange(updatedItems);
+      }
     }
   };
 
@@ -166,9 +201,9 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
       <ProposalItemsHeader
         selectedCurrency={selectedCurrency}
         onCurrencyChange={handleGlobalCurrencyChange}
-        onAddItem={() => handleAddItem(items, onItemsChange)}
+        onAddItem={onAddItem}
         onOpenProductDialog={() => setProductDialogOpen(true)}
-        onSelectProduct={(product) => handleProductSelect(product)}
+        onSelectProduct={handleProductSelect}
         currencyOptions={currencyOptions}
         isGlobalCurrencyEnabled={false} // Artık global para birimi kullanıyoruz
       />
@@ -191,10 +226,8 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
       <div className="border dark:border-gray-700 rounded-md overflow-hidden">
         <ProposalItemsTable
           items={items}
-          handleItemChange={(index, field, value) => 
-            handleItemChange(index, field, value, items, onItemsChange)
-          }
-          handleRemoveItem={(index) => handleRemoveItem(index, items, onItemsChange)}
+          handleItemChange={onItemChange}
+          handleRemoveItem={onRemoveItem}
           selectedCurrency={selectedCurrency}
           formatCurrency={formatCurrency}
           currencyOptions={currencyOptions}
@@ -251,9 +284,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
       <ProductSearchDialog
         open={productDialogOpen}
         onOpenChange={setProductDialogOpen}
-        onSelectProduct={(product, quantity, customPrice, discountRate) => 
-          handleProductSelect(product, quantity, customPrice, discountRate)
-        }
+        onSelectProduct={handleProductSelect}
         selectedCurrency={selectedCurrency}
       />
     </div>

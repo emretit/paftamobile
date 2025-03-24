@@ -50,6 +50,8 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
         subtitle={subtitle}
         loading={loading}
         saving={saving || formSaving}
+        isNew={isNew}
+        proposal={proposal}
       />
 
       {/* Global Para Birimi Seçici */}

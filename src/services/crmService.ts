@@ -1,8 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
-import { Proposal, ProposalStatus, ProposalItem } from "@/types/proposal";
+import { Proposal, ProposalStatus, ProposalItem, ProposalAttachment } from "@/types/proposal";
 import { Opportunity, OpportunityStatus, ContactHistoryItem } from "@/types/crm";
+import { Json } from "@/types/json";
 
 // Function to generate a unique proposal number
 const generateProposalNumber = (): string => {
@@ -11,9 +12,53 @@ const generateProposalNumber = (): string => {
   return `TEKLIF-${timestamp}-${randomNumber}`;
 };
 
+// Helper function to convert Json[] to ProposalAttachment[]
+const convertJsonToAttachments = (jsonAttachments: Json[] | null): ProposalAttachment[] => {
+  if (!jsonAttachments) return [];
+  
+  return jsonAttachments.map(item => {
+    if (typeof item === 'object' && item !== null) {
+      return {
+        id: (item as any).id || uuidv4(),
+        name: (item as any).name || 'Unknown',
+        url: (item as any).url || '',
+        type: (item as any).type || 'unknown',
+        size: (item as any).size || 0,
+        created_at: (item as any).created_at || new Date().toISOString()
+      };
+    }
+    // Fallback for invalid items
+    return {
+      id: uuidv4(),
+      name: 'Unknown',
+      url: '',
+      type: 'unknown',
+      size: 0,
+      created_at: new Date().toISOString()
+    };
+  });
+};
+
+// Helper function to convert ProposalAttachment[] to Json
+const convertAttachmentsToJson = (attachments: ProposalAttachment[]): Json[] => {
+  return attachments.map(attachment => {
+    return {
+      id: attachment.id,
+      name: attachment.name,
+      url: attachment.url,
+      type: attachment.type,
+      size: attachment.size,
+      created_at: attachment.created_at
+    };
+  });
+};
+
 export const createProposal = async (proposalData: Partial<Proposal>): Promise<Proposal> => {
   try {
     const proposalItems = proposalData.items || [];
+    const attachments = proposalData.attachments ? 
+      convertAttachmentsToJson(proposalData.attachments) : 
+      [];
     
     const { data, error } = await supabase
       .from('proposals')
@@ -29,6 +74,7 @@ export const createProposal = async (proposalData: Partial<Proposal>): Promise<P
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         items: proposalItems as any,
+        attachments: attachments,
         currency: proposalData.currency || "TRY",
         terms: proposalData.terms || "",
         notes: proposalData.notes || "",
@@ -54,11 +100,20 @@ export const createProposal = async (proposalData: Partial<Proposal>): Promise<P
       updated_at: data.updated_at,
       valid_until: data.valid_until,
       items: Array.isArray(data.items) ? (data.items as any) as ProposalItem[] : [],
-      attachments: Array.isArray(data.attachments) ? data.attachments : [],
+      attachments: convertJsonToAttachments(data.attachments as Json[]),
       currency: data.currency || "TRY",
       terms: data.terms,
       notes: data.notes,
-      description: data.description
+      description: data.description,
+      
+      // Backward compatibility fields
+      total_value: data.total_amount || 0,
+      proposal_number: data.number,
+      payment_terms: "",
+      delivery_terms: "",
+      internal_notes: "",
+      discounts: 0,
+      additional_charges: 0,
     };
     
     return result;
@@ -96,7 +151,7 @@ export const getProposalById = async (id: string): Promise<Proposal | null> => {
       updated_at: data.updated_at,
       valid_until: data.valid_until,
       items: Array.isArray(data.items) ? (data.items as any) as ProposalItem[] : [],
-      attachments: Array.isArray(data.attachments) ? data.attachments : [],
+      attachments: convertJsonToAttachments(data.attachments as Json[]),
       currency: data.currency || "TRY",
       terms: data.terms,
       notes: data.notes,
@@ -142,7 +197,7 @@ export const updateProposal = async (id: string, proposalData: Partial<Proposal>
         notes: proposalData.notes,
         description: proposalData.description,
         valid_until: proposalData.valid_until,
-        attachments: proposalData.attachments
+        attachments: proposalData.attachments ? convertAttachmentsToJson(proposalData.attachments) : undefined
       })
       .eq('id', id)
       .select()
