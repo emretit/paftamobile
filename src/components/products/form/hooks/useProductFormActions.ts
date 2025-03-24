@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { showSuccess, showError } from "@/utils/toastUtils";
+import { showSuccess, showError, showWarning } from "@/utils/toastUtils";
 import { ProductFormSchema } from "../ProductFormSchema";
 
 export const useProductFormActions = (

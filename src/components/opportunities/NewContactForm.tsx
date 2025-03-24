@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { showError } from "@/utils/toastUtils";
+import { showError, showSuccess } from "@/utils/toastUtils";
 import { ContactHistoryItem } from "@/types/crm";
 
 const formSchema = z.object({
@@ -45,6 +45,7 @@ const NewContactForm: React.FC<NewContactFormProps> = ({ opportunityId, onSubmit
       };
 
       await onSubmit(newContact);
+      showSuccess("İletişim kaydı başarıyla eklendi");
       form.reset();
       
     } catch (error) {

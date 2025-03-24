@@ -5,7 +5,7 @@ import { useProductFormActions } from "./hooks/useProductFormActions";
 import ProductFormHeader from "./ProductFormHeader";
 import ProductFormTabs from "./ProductFormTabs";
 import { useEffect } from "react";
-import { showError } from "@/utils/toastUtils";
+import { showError, showWarning } from "@/utils/toastUtils";
 
 const ProductFormWrapper = () => {
   const { form, isEditing, isSubmitting, setIsSubmitting, productId } = useProductForm();
@@ -19,6 +19,7 @@ const ProductFormWrapper = () => {
   useEffect(() => {
     const subscription = form.watch(() => {
       if (Object.keys(form.formState.errors).length > 0) {
+        // Only log errors to console, not display toast on every keystroke
         console.log("Form has errors:", form.formState.errors);
       }
     });
@@ -35,7 +36,9 @@ const ProductFormWrapper = () => {
         const errorKeys = Object.keys(form.formState.errors);
         if (errorKeys.length > 0) {
           showError("Lütfen formdaki hataları düzeltin");
-          console.error("Form validation errors:", form.formState.errors);
+          // More detailed error display in console
+          const errorMessages = errorKeys.map(key => `${key}: ${form.formState.errors[key]?.message}`);
+          console.error("Form validation errors:", errorMessages);
           return { resetForm: false };
         }
       }
@@ -48,6 +51,7 @@ const ProductFormWrapper = () => {
       return result;
     } catch (error) {
       console.error("Error in form submission handler:", error);
+      showError("Form işlenirken beklenmeyen bir hata oluştu");
       return { resetForm: false };
     }
   };

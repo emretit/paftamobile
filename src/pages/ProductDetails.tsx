@@ -2,13 +2,13 @@
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { Product } from "@/types/product";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
 import ProductDetailsHeader from "@/components/products/details/ProductDetailsHeader";
 import ProductDetailsTabs from "@/components/products/details/ProductDetailsTabs";
 import ProductDetailsLoading from "@/components/products/details/ProductDetailsLoading";
+import { showSuccess, showError } from "@/utils/toastUtils";
 
 interface ProductDetailsProps {
   isCollapsed: boolean;
@@ -49,6 +49,10 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
 
       return transformedData;
     },
+    onError: (error) => {
+      console.error("Error fetching product:", error);
+      showError("Ürün bilgilerini alırken bir hata oluştu");
+    }
   });
 
   const updateProductMutation = useMutation({
@@ -62,10 +66,11 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product", id] });
-      toast.success("Ürün başarıyla güncellendi");
+      showSuccess("Ürün başarıyla güncellendi");
     },
-    onError: () => {
-      toast.error("Ürün güncellenirken bir hata oluştu");
+    onError: (error) => {
+      console.error("Error updating product:", error);
+      showError("Ürün güncellenirken bir hata oluştu");
     },
   });
 
