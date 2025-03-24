@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { showSuccess, showError } from "@/utils/toastUtils";
 import { BankAccountFormFields } from "./BankAccountFormFields";
 
 type BankAccount = {
@@ -77,18 +77,11 @@ export function NewBankAccountForm({ onSuccess }: NewBankAccountFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bankAccounts'] });
-      toast({
-        title: "Başarılı",
-        description: "Banka hesabı başarıyla oluşturuldu.",
-      });
+      showSuccess("Banka hesabı başarıyla oluşturuldu.");
       onSuccess();
     },
     onError: (error) => {
-      toast({
-        title: "Hata",
-        description: "Banka hesabı oluşturulurken bir hata oluştu.",
-        variant: "destructive",
-      });
+      showError("Banka hesabı oluşturulurken bir hata oluştu.");
       console.error('Error creating bank account:', error);
     },
   });

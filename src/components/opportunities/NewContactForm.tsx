@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { showError } from "@/utils/toastUtils";
 import { ContactHistoryItem } from "@/types/crm";
 
 const formSchema = z.object({
@@ -49,7 +49,7 @@ const NewContactForm: React.FC<NewContactFormProps> = ({ opportunityId, onSubmit
       
     } catch (error) {
       console.error("Error adding contact:", error);
-      toast.error("İletişim kaydedilemedi");
+      showError("İletişim kaydedilemedi");
     }
   };
 

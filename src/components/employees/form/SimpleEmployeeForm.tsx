@@ -5,7 +5,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { showSuccess, showError } from "@/utils/toastUtils";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,7 +48,6 @@ type FormValues = z.infer<typeof formSchema>;
 
 const SimpleEmployeeForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const form = useForm<FormValues>({
@@ -112,10 +111,7 @@ const SimpleEmployeeForm = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Başarılı!",
-        description: "Çalışan başarıyla oluşturuldu",
-      });
+      showSuccess("Çalışan başarıyla oluşturuldu");
       
       // Navigate to the employee details page
       if (newEmployee?.id) {
@@ -125,11 +121,7 @@ const SimpleEmployeeForm = () => {
       }
     } catch (error) {
       console.error("Error creating employee:", error);
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Çalışan oluşturulurken hata oluştu. Lütfen tekrar deneyin.",
-      });
+      showError("Çalışan oluşturulurken hata oluştu. Lütfen tekrar deneyin.");
     } finally {
       setIsSubmitting(false);
     }
