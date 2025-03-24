@@ -11,7 +11,7 @@ import {
 import { Edit, Trash } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { showSuccess, showError } from "@/utils/toastUtils";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -53,11 +53,11 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
 
       if (error) throw error;
 
-      toast.success("Ürün başarıyla silindi");
+      showSuccess("Ürün başarıyla silindi");
       // You might want to refresh the products list here
     } catch (error) {
       console.error('Error deleting product:', error);
-      toast.error("Ürün silinirken bir hata oluştu");
+      showError("Ürün silinirken bir hata oluştu");
     }
   };
 
