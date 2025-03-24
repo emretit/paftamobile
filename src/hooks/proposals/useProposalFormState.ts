@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ProposalFormData } from "@/types/proposal-form";
@@ -54,16 +53,19 @@ export const useProposalFormState = (
         items: initialProposal.items || []
       });
     } else if (isNew) {
-      // Set default employee to current user if they are an employee
-      const currentUserAsEmployee = employees.find(
-        emp => user && emp.email === user.email // Check for user existence first
-      );
-      
-      if (currentUserAsEmployee) {
-        setFormData(prev => ({
-          ...prev,
-          employee_id: currentUserAsEmployee.id
-        }));
+      if (user) {
+        const currentUserAsEmployee = employees.find(
+          emp => user && emp.first_name && emp.last_name && 
+          (user.user_metadata?.full_name?.includes(emp.first_name) || 
+          user.user_metadata?.full_name?.includes(emp.last_name))
+        );
+        
+        if (currentUserAsEmployee) {
+          setFormData(prev => ({
+            ...prev,
+            employee_id: currentUserAsEmployee.id
+          }));
+        }
       }
     }
   }, [initialProposal, isNew, employees, user]);
