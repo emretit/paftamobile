@@ -35,10 +35,20 @@ const ProductPricingSection = ({ form }: ProductPricingSectionProps) => {
     defaultValue: "TRY",
   });
   
+  // Add purchase price if defined in form
+  const purchasePrice = useWatch({
+    control: form.control,
+    name: "purchase_price",
+    defaultValue: undefined,
+  });
+  
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-6">
+          {/* Currency selection first - more prominent */}
+          <CurrencySelect form={form} />
+          
           <PriceInput 
             form={form} 
             name="price" 
@@ -52,9 +62,16 @@ const ProductPricingSection = ({ form }: ProductPricingSectionProps) => {
             label="İndirimli Fiyat" 
             description="İndirim yoksa boş bırakabilirsiniz" 
           />
+          
+          {/* Optional purchase price field */}
+          <PriceInput 
+            form={form} 
+            name="purchase_price" 
+            label="Alış Fiyatı" 
+            description="Ürünün alış fiyatı (isteğe bağlı)" 
+          />
 
           <TaxRateSelect form={form} />
-          <CurrencySelect form={form} />
         </div>
 
         <PricePreviewCard 
@@ -62,6 +79,7 @@ const ProductPricingSection = ({ form }: ProductPricingSectionProps) => {
           discountPrice={discountPrice} 
           taxRate={taxRate} 
           currency={currency} 
+          purchasePrice={purchasePrice}
         />
       </div>
     </div>

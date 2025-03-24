@@ -43,6 +43,11 @@ const ProductFormWrapper = () => {
         }
       }
       
+      // Ensure currency is properly set before submission
+      if (!values.currency || values.currency.trim() === "") {
+        values.currency = "TRY"; // Default to TRY if no currency is specified
+      }
+      
       const result = await onSubmit(values, addAnother);
       if (result.resetForm) {
         console.log("Resetting form after successful submission");

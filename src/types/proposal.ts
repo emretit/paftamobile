@@ -1,4 +1,3 @@
-
 export type ProposalStatus = 
   | 'draft' 
   | 'pending_approval' 
@@ -38,6 +37,8 @@ export interface ProposalItem {
   product_id?: string;
   stock_status?: string;
   group?: string; // Yeni eklenen grup/kategori alanı
+  original_currency?: string; // Ürünün orijinal para birimi
+  original_price?: number;    // Ürünün orijinal fiyatı
 }
 
 export interface Customer {

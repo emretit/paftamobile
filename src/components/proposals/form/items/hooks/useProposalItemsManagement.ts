@@ -1,3 +1,4 @@
+
 import { Product } from "@/types/product";
 import { ProposalItem } from "@/types/proposal";
 import { v4 as uuidv4 } from "uuid";
@@ -39,7 +40,9 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
     // Convert price to the selected currency if needed
     let convertedPrice = price;
     if (product.currency !== selectedCurrency) {
+      console.log(`Converting price from ${product.currency} (${price}) to ${selectedCurrency} using rates:`, exchangeRates);
       convertedPrice = convertCurrency(price, product.currency, selectedCurrency, exchangeRates);
+      console.log(`Converted price: ${convertedPrice} ${selectedCurrency}`);
     }
     
     // Calculate total price with tax
@@ -54,7 +57,8 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
     let stockStatus = 'in_stock';
     if (product.stock_quantity <= 0) {
       stockStatus = 'out_of_stock';
-    } else if (product.stock_quantity <= product.min_stock_level) {
+    } else if (product.stock_quantity <= product.stock_threshold || 
+               product.stock_quantity <= product.min_stock_level) {
       stockStatus = 'low_stock';
     }
     
@@ -83,7 +87,10 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       total_price: totalPrice,
       currency: selectedCurrency,
       stock_status: stockStatus,
-      group: group
+      group: group,
+      // Store the original price and currency for reference
+      original_currency: product.currency,
+      original_price: price
     };
     
     setItems([...items, newItem]);

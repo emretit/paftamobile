@@ -72,3 +72,25 @@ export const calculateTotalWithTax = (
   // Apply tax to subtotal
   return subtotal * (1 + taxRate / 100);
 };
+
+// Get exchange rate for a specific currency
+export const getExchangeRate = (
+  currency: string,
+  exchangeRates: {[key: string]: number}
+): number => {
+  return exchangeRates[currency] || 1;
+};
+
+// Format a currency conversion display (e.g., "100₺ ≈ $3.08")
+export const formatCurrencyConversion = (
+  amount: number,
+  fromCurrency: string,
+  toCurrency: string,
+  exchangeRates: {[key: string]: number}
+): string => {
+  if (fromCurrency === toCurrency) return formatCurrencyValue(amount, fromCurrency);
+  
+  const convertedAmount = convertCurrency(amount, fromCurrency, toCurrency, exchangeRates);
+  
+  return `${formatCurrencyValue(amount, fromCurrency)} ≈ ${formatCurrencyValue(convertedAmount, toCurrency)}`;
+};
