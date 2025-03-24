@@ -26,6 +26,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     setProductDialogOpen,
     exchangeRates,
     formatCurrency,
+    currencyOptions,
     handleCurrencyChange,
     handleAddItem,
     handleSelectProduct,
@@ -33,14 +34,6 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     handleItemChange,
     convertCurrency
   } = useProposalItems();
-
-  // Currency options
-  const currencyOptions = [
-    { value: "TRY", label: "TRY (₺)" },
-    { value: "USD", label: "USD ($)" },
-    { value: "EUR", label: "EUR (€)" },
-    { value: "GBP", label: "GBP (£)" }
-  ];
 
   // Tax rate options
   const taxRateOptions = [
@@ -56,8 +49,8 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     return items.reduce((sum, item) => sum + Number(item.total_price || 0), 0);
   };
 
-  const handleProductSelect = (product: Product, quantity?: number, customPrice?: number) => {
-    handleSelectProduct(product, items, onItemsChange, quantity, customPrice);
+  const handleProductSelect = (product: Product, quantity?: number, customPrice?: number, discountRate?: number) => {
+    handleSelectProduct(product, items, onItemsChange, quantity, customPrice, discountRate);
     toast.success(`${product.name} teklif kalemine eklendi`);
   };
 
@@ -104,8 +97,8 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
       <ProductSearchDialog
         open={productDialogOpen}
         onOpenChange={setProductDialogOpen}
-        onSelectProduct={(product, quantity, customPrice) => 
-          handleProductSelect(product, quantity, customPrice)
+        onSelectProduct={(product, quantity, customPrice, discountRate) => 
+          handleProductSelect(product, quantity, customPrice, discountRate)
         }
         selectedCurrency={selectedCurrency}
       />

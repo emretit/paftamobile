@@ -16,7 +16,12 @@ import { useProductSearchDialog } from "./useProductSearchDialog";
 interface ProductSearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectProduct: (product: Product, quantity?: number, customPrice?: number) => void;
+  onSelectProduct: (
+    product: Product, 
+    quantity?: number, 
+    customPrice?: number,
+    discountRate?: number
+  ) => void;
   selectedCurrency: string;
   triggerRef?: React.RefObject<HTMLButtonElement>;
   initialSelectedProduct?: Product | null;
@@ -53,7 +58,7 @@ const ProductSearchDialog: React.FC<ProductSearchDialogProps> = ({
 
   const handleSelectProduct = () => {
     if (selectedProduct) {
-      onSelectProduct(selectedProduct, quantity, customPrice);
+      onSelectProduct(selectedProduct, quantity, customPrice, discountRate);
       onOpenChange(false);
       setDetailsDialogOpen(false);
       resetForm();
@@ -83,6 +88,7 @@ const ProductSearchDialog: React.FC<ProductSearchDialogProps> = ({
             searchQuery={searchQuery}
             formatCurrency={formatCurrency}
             onSelectProduct={openProductDetails}
+            selectedCurrency={selectedCurrency}
           />
         </DialogContent>
       </Dialog>
@@ -101,6 +107,7 @@ const ProductSearchDialog: React.FC<ProductSearchDialogProps> = ({
         setDiscountRate={setDiscountRate}
         formatCurrency={formatCurrency}
         onSelectProduct={handleSelectProduct}
+        selectedCurrency={selectedCurrency}
       />
     </>
   );

@@ -2,7 +2,7 @@
 import { Product } from "@/types/product";
 import { ProposalItem } from "@/types/proposal";
 import { v4 as uuidv4 } from "uuid";
-import { convertCurrency } from "../utils/currencyUtils";
+import { convertCurrency, calculateTotalWithTax } from "../utils/currencyUtils";
 
 export const useProposalItemsManagement = (selectedCurrency: string, exchangeRates: {[key: string]: number}) => {
   const handleAddItem = (
@@ -16,7 +16,8 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       unit_price: 0,
       tax_rate: 18, // Default tax rate
       total_price: 0,
-      currency: selectedCurrency
+      currency: selectedCurrency,
+      discount_rate: 0
     };
     
     setItems([...items, newItem]);
@@ -27,7 +28,8 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
     items: ProposalItem[], 
     setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>,
     quantity: number = 1,
-    customPrice?: number
+    customPrice?: number,
+    discountRate: number = 0
   ) => {
     // Use the custom price if provided, otherwise use the product's price
     const price = customPrice !== undefined ? customPrice : (product.price || 0);
@@ -38,9 +40,20 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       convertedPrice = convertCurrency(price, product.currency, selectedCurrency, exchangeRates);
     }
     
-    const totalPrice = quantity * convertedPrice * (1 + (product.tax_rate || 0) / 100);
+    // Calculate total price with tax
+    const totalPrice = calculateTotalWithTax(
+      convertedPrice, 
+      quantity, 
+      product.tax_rate || 18,
+      discountRate
+    );
     
-    const newItem: ProposalItem & { currency?: string, product_id?: string } = {
+    const newItem: ProposalItem & { 
+      currency?: string, 
+      product_id?: string,
+      discount_rate?: number,
+      stock_status?: string
+    } = {
       id: uuidv4(),
       product_id: product.id,
       name: product.name,
@@ -49,7 +62,9 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       unit_price: convertedPrice,
       tax_rate: product.tax_rate || 18,
       total_price: totalPrice,
-      currency: selectedCurrency
+      currency: selectedCurrency,
+      discount_rate: discountRate,
+      stock_status: product.stock_quantity > 0 ? (product.stock_quantity <= product.min_stock_level ? 'low_stock' : 'in_stock') : 'out_of_stock'
     };
     
     setItems([...items, newItem]);
@@ -65,7 +80,7 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
 
   const handleItemChange = (
     index: number, 
-    field: keyof ProposalItem | 'currency' | 'unitPrice' | 'taxRate' | 'totalPrice', 
+    field: keyof ProposalItem | 'currency' | 'unitPrice' | 'taxRate' | 'totalPrice' | 'discount_rate', 
     value: string | number,
     items: ProposalItem[],
     setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>
@@ -75,10 +90,12 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       currency?: string, 
       unitPrice?: number, 
       taxRate?: number, 
-      totalPrice?: number 
+      totalPrice?: number,
+      discount_rate?: number
     };
     
-    if (field === 'quantity' || field === 'unit_price' || field === 'unitPrice' || field === 'tax_rate' || field === 'taxRate') {
+    if (field === 'quantity' || field === 'unit_price' || field === 'unitPrice' || 
+        field === 'tax_rate' || field === 'taxRate' || field === 'discount_rate') {
       // Handle snake_case to camelCase mapping
       if (field === 'unitPrice') {
         itemWithExtras.unit_price = Number(value);
@@ -93,11 +110,34 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       const quantity = itemWithExtras.quantity;
       const unitPrice = itemWithExtras.unit_price;
       const taxRate = itemWithExtras.tax_rate || 0;
+      const discountRate = itemWithExtras.discount_rate || 0;
       
-      // Calculate with tax
-      itemWithExtras.total_price = quantity * unitPrice * (1 + taxRate / 100);
+      // Calculate with tax and discount
+      itemWithExtras.total_price = calculateTotalWithTax(unitPrice, quantity, taxRate, discountRate);
     } else if (field === 'currency') {
-      itemWithExtras.currency = value as string;
+      const oldCurrency = itemWithExtras.currency || selectedCurrency;
+      const newCurrency = value as string;
+      
+      // Convert the unit price to the new currency
+      if (oldCurrency !== newCurrency) {
+        itemWithExtras.unit_price = convertCurrency(
+          itemWithExtras.unit_price,
+          oldCurrency,
+          newCurrency,
+          exchangeRates
+        );
+        
+        // Update total price
+        const quantity = itemWithExtras.quantity;
+        const unitPrice = itemWithExtras.unit_price;
+        const taxRate = itemWithExtras.tax_rate || 0;
+        const discountRate = itemWithExtras.discount_rate || 0;
+        
+        // Calculate with tax and discount
+        itemWithExtras.total_price = calculateTotalWithTax(unitPrice, quantity, taxRate, discountRate);
+      }
+      
+      itemWithExtras.currency = newCurrency;
     } else {
       // @ts-ignore - We know the field exists
       itemWithExtras[field] = value;

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/product";
-import { formatCurrencyValue } from "../utils/currencyUtils";
+import { formatCurrencyValue, convertCurrency } from "../utils/currencyUtils";
 
 export const useProductSearchDialog = (
   open: boolean,
@@ -91,6 +91,7 @@ export const useProductSearchDialog = (
     products,
     isLoading,
     formatCurrency,
-    resetForm
+    resetForm,
+    convertCurrency
   };
 };

@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { formatCurrencyValue } from "../utils/currencyUtils";
+import { formatCurrencyValue, getCurrencyOptions, getCurrencySymbol } from "../utils/currencyUtils";
+import { toast } from "sonner";
 
 export const useCurrencyManagement = () => {
   const [selectedCurrency, setSelectedCurrency] = useState("TRY");
@@ -13,14 +14,23 @@ export const useCurrencyManagement = () => {
     GBP: 41.3
   });
 
+  // Get currency options for select inputs
+  const currencyOptions = getCurrencyOptions();
+  
   // Format currency
   const formatCurrency = (amount: number, currency: string = selectedCurrency) => {
     return formatCurrencyValue(amount, currency);
   };
 
+  // Get currency symbol
+  const getCurrencySymbolValue = (currency: string = selectedCurrency) => {
+    return getCurrencySymbol(currency);
+  };
+
   // Handle currency change
   const handleCurrencyChange = (value: string) => {
     setSelectedCurrency(value);
+    toast.success(`Para birimi ${value} olarak değiştirildi`);
   };
 
   // Fetch exchange rates from an API
@@ -43,7 +53,9 @@ export const useCurrencyManagement = () => {
     selectedCurrency,
     setSelectedCurrency,
     exchangeRates,
+    currencyOptions,
     formatCurrency,
+    getCurrencySymbol: getCurrencySymbolValue,
     handleCurrencyChange
   };
 };

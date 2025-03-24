@@ -1,8 +1,16 @@
 
 import React from "react";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { Product } from "@/types/product";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
+import { convertCurrency } from "../utils/currencyUtils";
 
 interface ProductListProps {
   products: Product[];
@@ -10,6 +18,7 @@ interface ProductListProps {
   searchQuery: string;
   formatCurrency: (amount: number, currency?: string) => string;
   onSelectProduct: (product: Product) => void;
+  selectedCurrency: string;
 }
 
 const ProductList: React.FC<ProductListProps> = ({
@@ -17,95 +26,128 @@ const ProductList: React.FC<ProductListProps> = ({
   isLoading,
   searchQuery,
   formatCurrency,
-  onSelectProduct
+  onSelectProduct,
+  selectedCurrency
 }) => {
-  if (isLoading) {
+  // Filter products by search query
+  const filteredProducts = products.filter((product) => {
+    const searchLower = searchQuery.toLowerCase();
     return (
-      <div className="divide-y">
-        {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="p-3 flex items-center gap-3">
-            <Skeleton className="h-12 w-12 rounded" />
-            <div className="space-y-2 flex-1">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-3 w-1/2" />
-            </div>
-            <Skeleton className="h-8 w-20" />
-          </div>
-        ))}
-      </div>
+      product.name.toLowerCase().includes(searchLower) ||
+      (product.sku && product.sku.toLowerCase().includes(searchLower)) ||
+      (product.barcode && product.barcode.toLowerCase().includes(searchLower))
     );
-  }
+  });
 
-  // Filter products based on search query
-  const filteredProducts = searchQuery 
-    ? products.filter(product => 
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (product.sku && product.sku.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (product.barcode && product.barcode.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-    : products;
-
-  if (filteredProducts.length === 0) {
-    return (
-      <div className="p-6 text-center">
-        <p className="text-muted-foreground">
-          {searchQuery 
-            ? `"${searchQuery}" ile eşleşen ürün bulunamadı.` 
-            : "Görüntülenecek ürün yok."}
-        </p>
-      </div>
-    );
-  }
-
-  const getStockStatusBadge = (product: Product) => {
-    const stock = product.stock_quantity || 0;
-    
-    if (stock <= 0) {
-      return <Badge variant="destructive">Stokta Yok</Badge>;
-    } else if (stock <= 5) {
-      return <Badge variant="warning" className="bg-amber-500">Sınırlı</Badge>;
+  const getStockStatus = (product: Product) => {
+    if (product.stock_quantity <= 0) {
+      return { status: "Stokta Yok", className: "text-red-500" };
+    } else if (product.stock_quantity <= product.min_stock_level) {
+      return { status: "Düşük Stok", className: "text-yellow-500" };
     } else {
-      return <Badge variant="outline" className="border-green-500 text-green-500">Stokta</Badge>;
+      return { status: "Stokta Var", className: "text-green-500" };
     }
   };
 
+  // Convert price to selected currency for display
+  const getDisplayPrice = (product: Product) => {
+    if (product.currency === selectedCurrency) {
+      return formatCurrency(product.price, product.currency);
+    }
+    
+    // Use fixed exchange rates (this would be dynamic in a real app)
+    const exchangeRates = {
+      TRY: 1,
+      USD: 32.5,
+      EUR: 35.2,
+      GBP: 41.3
+    };
+    
+    const convertedPrice = convertCurrency(
+      product.price,
+      product.currency,
+      selectedCurrency,
+      exchangeRates
+    );
+    
+    return (
+      <>
+        {formatCurrency(convertedPrice, selectedCurrency)}
+        <span className="text-xs text-muted-foreground block">
+          {formatCurrency(product.price, product.currency)}
+        </span>
+      </>
+    );
+  };
+
   return (
-    <div className="divide-y max-h-[400px] overflow-y-auto">
-      {filteredProducts.map(product => (
-        <div 
-          key={product.id} 
-          className="p-3 hover:bg-muted/50 cursor-pointer flex items-center gap-3"
-          onClick={() => onSelectProduct(product)}
-        >
-          <div className="h-12 w-12 bg-muted rounded flex items-center justify-center overflow-hidden">
-            {product.image_url ? (
-              <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
-            ) : (
-              <span className="text-2xl text-muted-foreground">📦</span>
-            )}
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <h4 className="font-medium text-sm truncate">{product.name}</h4>
-            <div className="flex text-xs mt-1 text-muted-foreground">
-              <span className="truncate">
-                {product.sku ? `SKU: ${product.sku}` : ""}
-                {product.sku && product.category_id ? " • " : ""}
-                {product.product_categories?.name || ""}
-              </span>
-            </div>
-          </div>
-          
-          <div className="text-right">
-            <div className="font-medium">
-              {formatCurrency(product.price, product.currency)}
-            </div>
-            <div className="mt-1">
-              {getStockStatusBadge(product)}
-            </div>
-          </div>
-        </div>
-      ))}
+    <div className="border rounded-md">
+      <Table className="min-w-full">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[250px]">Ürün Adı</TableHead>
+            <TableHead>SKU</TableHead>
+            <TableHead>Kategori</TableHead>
+            <TableHead className="text-right">Stok</TableHead>
+            <TableHead className="text-right">Fiyat</TableHead>
+            <TableHead className="w-[80px]"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-6">
+                Ürünler yükleniyor...
+              </TableCell>
+            </TableRow>
+          ) : filteredProducts.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                {searchQuery 
+                  ? `"${searchQuery}" ile eşleşen ürün bulunamadı.` 
+                  : "Henüz ürün eklenmemiş."}
+              </TableCell>
+            </TableRow>
+          ) : (
+            filteredProducts.map((product) => {
+              const { status, className } = getStockStatus(product);
+              return (
+                <TableRow 
+                  key={product.id}
+                  className="hover:bg-muted/30 cursor-pointer"
+                  onClick={() => onSelectProduct(product)}
+                >
+                  <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>{product.sku || "-"}</TableCell>
+                  <TableCell>
+                    {product.product_categories?.name || "Kategori Yok"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span className={className}>
+                      {status} ({product.stock_quantity})
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {getDisplayPrice(product)}
+                  </TableCell>
+                  <TableCell>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectProduct(product);
+                      }}
+                    >
+                      Seç
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 };

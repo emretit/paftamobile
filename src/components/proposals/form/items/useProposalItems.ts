@@ -11,7 +11,9 @@ export const useProposalItems = () => {
     selectedCurrency,
     setSelectedCurrency,
     exchangeRates,
+    currencyOptions,
     formatCurrency,
+    getCurrencySymbol,
     handleCurrencyChange
   } = useCurrencyManagement();
 
@@ -28,7 +30,9 @@ export const useProposalItems = () => {
     productDialogOpen,
     setProductDialogOpen,
     exchangeRates,
+    currencyOptions,
     formatCurrency,
+    getCurrencySymbol,
     handleCurrencyChange,
     handleAddItem,
     handleSelectProduct,
