@@ -33,7 +33,10 @@ export interface ProposalItem {
   unit_price: number;
   tax_rate?: number;
   total_price: number;
-  discount_rate?: number; // Added the discount_rate property
+  discount_rate?: number;
+  currency?: string; // Added the currency property
+  product_id?: string; // Added product_id for product reference
+  stock_status?: string; // Added stock status indicator
 }
 
 export interface Customer {

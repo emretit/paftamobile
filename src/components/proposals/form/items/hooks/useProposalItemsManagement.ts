@@ -1,4 +1,3 @@
-
 import { Product } from "@/types/product";
 import { ProposalItem } from "@/types/proposal";
 import { v4 as uuidv4 } from "uuid";
@@ -9,7 +8,7 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
     items: ProposalItem[], 
     setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>
   ) => {
-    // Type definition to match ProposalItem with additional optional props
+    // Create a new proposal item with default values
     const newItem: ProposalItem = {
       id: uuidv4(),
       name: "",
@@ -18,10 +17,10 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       tax_rate: 18, // Default tax rate
       total_price: 0,
       discount_rate: 0, // Default discount rate
-      currency: selectedCurrency // This is handled via type augmentation below
+      currency: selectedCurrency // Now this property is defined in the interface
     };
     
-    setItems([...items, newItem as ProposalItem & { currency?: string }]);
+    setItems([...items, newItem]);
   };
 
   const handleSelectProduct = (
@@ -50,11 +49,7 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
     );
     
     // Create the new proposal item with product data
-    const newItem: ProposalItem & { 
-      currency?: string;
-      product_id?: string;
-      stock_status?: string;
-    } = {
+    const newItem: ProposalItem = {
       id: uuidv4(),
       product_id: product.id,
       name: product.name,
@@ -81,66 +76,61 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
 
   const handleItemChange = (
     index: number, 
-    field: keyof ProposalItem | 'currency' | 'unitPrice' | 'taxRate' | 'totalPrice', 
+    field: keyof ProposalItem | 'unitPrice' | 'taxRate' | 'totalPrice', 
     value: string | number,
     items: ProposalItem[],
     setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>
   ) => {
     const updatedItems = [...items];
-    const itemWithExtras = updatedItems[index] as ProposalItem & { 
-      currency?: string;
-      unitPrice?: number;
-      taxRate?: number;
-      totalPrice?: number;
-    };
+    const item = updatedItems[index];
     
     if (field === 'quantity' || field === 'unit_price' || field === 'unitPrice' || 
         field === 'tax_rate' || field === 'taxRate' || field === 'discount_rate') {
       // Handle snake_case to camelCase mapping
       if (field === 'unitPrice') {
-        itemWithExtras.unit_price = Number(value);
+        item.unit_price = Number(value);
       } else if (field === 'taxRate') {
-        itemWithExtras.tax_rate = Number(value);
+        item.tax_rate = Number(value);
       } else {
         // @ts-ignore - field exists on ProposalItem
-        itemWithExtras[field] = Number(value);
+        item[field] = Number(value);
       }
       
       // Update total price
-      const quantity = itemWithExtras.quantity;
-      const unitPrice = itemWithExtras.unit_price;
-      const taxRate = itemWithExtras.tax_rate || 0;
-      const discountRate = itemWithExtras.discount_rate || 0;
+      const quantity = item.quantity;
+      const unitPrice = item.unit_price;
+      const taxRate = item.tax_rate || 0;
+      const discountRate = item.discount_rate || 0;
       
       // Calculate with tax and discount
-      itemWithExtras.total_price = calculateTotalWithTax(unitPrice, quantity, taxRate, discountRate);
+      item.total_price = calculateTotalWithTax(unitPrice, quantity, taxRate, discountRate);
     } else if (field === 'currency') {
-      const oldCurrency = itemWithExtras.currency || selectedCurrency;
+      const oldCurrency = item.currency || selectedCurrency;
       const newCurrency = value as string;
       
       // Convert the unit price to the new currency
       if (oldCurrency !== newCurrency) {
-        itemWithExtras.unit_price = convertCurrency(
-          itemWithExtras.unit_price,
+        item.unit_price = convertCurrency(
+          item.unit_price,
           oldCurrency,
           newCurrency,
           exchangeRates
         );
         
         // Update total price
-        const quantity = itemWithExtras.quantity;
-        const unitPrice = itemWithExtras.unit_price;
-        const taxRate = itemWithExtras.tax_rate || 0;
-        const discountRate = itemWithExtras.discount_rate || 0;
+        const quantity = item.quantity;
+        const unitPrice = item.unit_price;
+        const taxRate = item.tax_rate || 0;
+        const discountRate = item.discount_rate || 0;
         
         // Calculate with tax and discount
-        itemWithExtras.total_price = calculateTotalWithTax(unitPrice, quantity, taxRate, discountRate);
+        item.total_price = calculateTotalWithTax(unitPrice, quantity, taxRate, discountRate);
       }
       
-      itemWithExtras.currency = newCurrency;
+      item.currency = newCurrency;
     } else {
       // @ts-ignore - We know the field exists
-      itemWithExtras[field] = value;
+      item[field] = value;
     }
     
     setItems(updatedItems);
