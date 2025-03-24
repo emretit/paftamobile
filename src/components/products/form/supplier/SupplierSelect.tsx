@@ -42,7 +42,7 @@ const SupplierSelect = ({ form }: SupplierSelectProps) => {
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="">Seçilmedi</SelectItem>
+              <SelectItem value="none">Seçilmedi</SelectItem>
               {suppliers?.map((supplier) => (
                 <SelectItem key={supplier.id} value={supplier.id}>
                   {supplier.name}

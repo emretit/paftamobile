@@ -19,8 +19,8 @@ export const useProductFormActions = (
       // Prepare data by ensuring null values for empty strings in UUID fields
       const preparedData = {
         ...values,
-        category_id: values.category_id && values.category_id.trim() !== "" ? values.category_id : null,
-        supplier_id: values.supplier_id && values.supplier_id.trim() !== "" ? values.supplier_id : null
+        category_id: values.category_id && values.category_id.trim() !== "" && values.category_id !== "none" ? values.category_id : null,
+        supplier_id: values.supplier_id && values.supplier_id.trim() !== "" && values.supplier_id !== "none" ? values.supplier_id : null
       };
       
       console.log("Prepared data for submission:", preparedData);
