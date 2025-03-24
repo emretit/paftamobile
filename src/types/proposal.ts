@@ -1,3 +1,4 @@
+
 export type ProposalStatus = 
   | 'draft' 
   | 'pending_approval' 
@@ -32,6 +33,7 @@ export interface ProposalItem {
   unit_price: number;
   tax_rate?: number;
   total_price: number;
+  discount_rate?: number; // Added the discount_rate property
 }
 
 export interface Customer {

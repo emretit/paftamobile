@@ -9,18 +9,19 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
     items: ProposalItem[], 
     setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>
   ) => {
-    const newItem: ProposalItem & { currency?: string } = {
+    // Type definition to match ProposalItem with additional optional props
+    const newItem: ProposalItem = {
       id: uuidv4(),
       name: "",
       quantity: 1,
       unit_price: 0,
       tax_rate: 18, // Default tax rate
       total_price: 0,
-      currency: selectedCurrency,
-      discount_rate: 0
+      discount_rate: 0, // Default discount rate
+      currency: selectedCurrency // This is handled via type augmentation below
     };
     
-    setItems([...items, newItem]);
+    setItems([...items, newItem as ProposalItem & { currency?: string }]);
   };
 
   const handleSelectProduct = (
@@ -48,11 +49,11 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       discountRate
     );
     
+    // Create the new proposal item with product data
     const newItem: ProposalItem & { 
-      currency?: string, 
-      product_id?: string,
-      discount_rate?: number,
-      stock_status?: string
+      currency?: string;
+      product_id?: string;
+      stock_status?: string;
     } = {
       id: uuidv4(),
       product_id: product.id,
@@ -61,9 +62,9 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       quantity: quantity,
       unit_price: convertedPrice,
       tax_rate: product.tax_rate || 18,
+      discount_rate: discountRate,
       total_price: totalPrice,
       currency: selectedCurrency,
-      discount_rate: discountRate,
       stock_status: product.stock_quantity > 0 ? (product.stock_quantity <= product.min_stock_level ? 'low_stock' : 'in_stock') : 'out_of_stock'
     };
     
@@ -80,18 +81,17 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
 
   const handleItemChange = (
     index: number, 
-    field: keyof ProposalItem | 'currency' | 'unitPrice' | 'taxRate' | 'totalPrice' | 'discount_rate', 
+    field: keyof ProposalItem | 'currency' | 'unitPrice' | 'taxRate' | 'totalPrice', 
     value: string | number,
     items: ProposalItem[],
     setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>
   ) => {
     const updatedItems = [...items];
     const itemWithExtras = updatedItems[index] as ProposalItem & { 
-      currency?: string, 
-      unitPrice?: number, 
-      taxRate?: number, 
-      totalPrice?: number,
-      discount_rate?: number
+      currency?: string;
+      unitPrice?: number;
+      taxRate?: number;
+      totalPrice?: number;
     };
     
     if (field === 'quantity' || field === 'unit_price' || field === 'unitPrice' || 
