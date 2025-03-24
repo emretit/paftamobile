@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Proposal, ProposalStatus, ProposalAttachment } from "@/types/proposal";
 import { Json } from "@/types/json";
@@ -181,3 +180,8 @@ class CrmService {
 }
 
 export const crmService = new CrmService();
+
+// Export the updateProposalStatus function separately for direct import
+export const updateProposalStatus = (id: string, status: ProposalStatus) => {
+  return crmService.updateProposalStatus(id, status);
+};

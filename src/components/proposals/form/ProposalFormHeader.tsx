@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Heading } from "@/components/ui/heading";
 import { Proposal } from "@/types/proposal";
 
 export interface ProposalFormHeaderProps {
@@ -29,10 +28,10 @@ const ProposalFormHeader: React.FC<ProposalFormHeaderProps> = ({
           <Skeleton className="h-4 w-[300px]" />
         </div>
       ) : (
-        <Heading 
-          title={title}
-          description={subtitle}
-        />
+        <div>
+          <h1 className="text-2xl font-bold">{title}</h1>
+          <p className="text-muted-foreground">{subtitle}</p>
+        </div>
       )}
 
       <div className="flex items-center gap-2">

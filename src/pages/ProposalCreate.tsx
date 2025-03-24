@@ -2,9 +2,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
-import { useProposalForm } from "@/hooks/useProposalForm";
 import ProposalForm from "@/components/proposals/form/ProposalForm";
 import { toast } from "sonner";
+import { useProposalForm } from "@/hooks/useProposalForm";
+import { crmService } from "@/services/crmService";
 
 interface ProposalCreateProps {
   isCollapsed: boolean;
@@ -13,8 +14,8 @@ interface ProposalCreateProps {
 
 const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) => {
   const navigate = useNavigate();
-  const { saveDraft, isLoading } = useProposalForm();
   const [saving, setSaving] = useState(false);
+  const { createProposal } = useProposalForm();
 
   const handleBack = () => {
     navigate("/proposals");
@@ -22,20 +23,26 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
 
   const handleSave = async (formData: any) => {
     try {
-      // Check for empty items
-      if (!formData.items || formData.items.length === 0) {
-        toast.warning("Lütfen en az bir teklif kalemi ekleyin.");
-        return;
+      setSaving(true);
+      const result = await crmService.createProposal({
+        title: formData.title,
+        description: formData.description,
+        valid_until: formData.valid_until,
+        payment_terms: formData.payment_terms,
+        delivery_terms: formData.delivery_terms,
+        notes: formData.notes,
+        status: formData.status,
+      });
+
+      if (result.error) {
+        throw result.error;
       }
 
-      setSaving(true);
-      // Create new proposal
-      await saveDraft(formData);
-      toast.success("Teklif taslak olarak kaydedildi.");
+      toast.success("Teklif başarıyla oluşturuldu");
       navigate("/proposals");
     } catch (error) {
       console.error("Error creating proposal:", error);
-      toast.error("Teklif oluşturulurken bir hata oluştu.");
+      toast.error("Teklif oluşturulurken bir hata oluştu");
     } finally {
       setSaving(false);
     }
@@ -45,18 +52,18 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
     <DefaultLayout
       isCollapsed={isCollapsed}
       setIsCollapsed={setIsCollapsed}
-      title="Yeni Teklif Oluştur"
-      subtitle="Müşterileriniz için yeni bir teklif hazırlayın"
+      title="Yeni Teklif"
+      subtitle="Yeni bir teklif oluşturun"
     >
       <ProposalForm
         proposal={null}
         loading={false}
-        saving={saving || isLoading}
+        saving={saving}
         isNew={true}
         onSave={handleSave}
         onBack={handleBack}
-        title="Yeni Teklif Oluştur"
-        subtitle="Müşterileriniz için yeni bir teklif hazırlayın"
+        title="Yeni Teklif"
+        subtitle="Yeni bir teklif oluşturun"
       />
     </DefaultLayout>
   );

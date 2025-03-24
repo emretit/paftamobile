@@ -147,13 +147,12 @@ const ProposalFormShared = ({
   return (
     <>
       <ProposalFormHeader 
-        proposal={proposal}
+        title={title}
         loading={loading}
         saving={saving}
         isNew={isNew}
-        onSave={handleSave}
-        onBack={onBack}
-        title={title} // Pass the title prop here
+        proposal={proposal}
+        subtitle="Teklif bilgilerini düzenleyin"
       />
 
       {loading ? (
@@ -190,6 +189,7 @@ const ProposalFormShared = ({
             saving={saving}
             onSave={handleSave}
             onBack={onBack}
+            isFormDirty={isFormDirty}
           />
         </div>
       )}
