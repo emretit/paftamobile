@@ -21,7 +21,7 @@ export const productSchema = z.object({
   image_url: z.string().nullable().optional(),
   category_id: z.string().nullable().optional(),
   supplier_id: z.string().nullable().optional(),
-  purchase_price: z.coerce.number().min(0, "Alış fiyatı 0'dan küçük olamaz").optional(),
+  purchase_price: z.coerce.number().nullable().optional(),
 });
 
 export type ProductFormSchema = z.infer<typeof productSchema>;

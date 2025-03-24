@@ -35,7 +35,6 @@ const ProductPricingSection = ({ form }: ProductPricingSectionProps) => {
     defaultValue: "TRY",
   });
   
-  // Add purchase price if defined in form
   const purchasePrice = useWatch({
     control: form.control,
     name: "purchase_price",
@@ -46,7 +45,6 @@ const ProductPricingSection = ({ form }: ProductPricingSectionProps) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-6">
-          {/* Currency selection first - more prominent */}
           <CurrencySelect form={form} />
           
           <PriceInput 
@@ -63,7 +61,6 @@ const ProductPricingSection = ({ form }: ProductPricingSectionProps) => {
             description="İndirim yoksa boş bırakabilirsiniz" 
           />
           
-          {/* Optional purchase price field */}
           <PriceInput 
             form={form} 
             name="purchase_price" 
@@ -78,7 +75,7 @@ const ProductPricingSection = ({ form }: ProductPricingSectionProps) => {
           price={price} 
           discountPrice={discountPrice} 
           taxRate={taxRate} 
-          currency={currency} 
+          currency={currency}
           purchasePrice={purchasePrice}
         />
       </div>

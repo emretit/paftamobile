@@ -7,13 +7,15 @@ interface PricePreviewCardProps {
   discountPrice: number | null;
   taxRate: number;
   currency: string;
+  purchasePrice?: number | undefined;  // Add optional purchase price
 }
 
 const PricePreviewCard = ({ 
   price, 
   discountPrice, 
   taxRate, 
-  currency 
+  currency,
+  purchasePrice 
 }: PricePreviewCardProps) => {
   return (
     <Card className="p-6 bg-muted/50 flex flex-col justify-center space-y-6">
@@ -22,6 +24,13 @@ const PricePreviewCard = ({
       </h3>
       
       <div className="space-y-4">
+        {purchasePrice !== undefined && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Alış Fiyatı:</span>
+            <span className="font-medium">{formatPrice(purchasePrice, currency)}</span>
+          </div>
+        )}
+        
         <div className="flex justify-between">
           <span className="text-muted-foreground">Satış Fiyatı:</span>
           <span className="font-medium">{formatPrice(price, currency)}</span>
@@ -31,24 +40,33 @@ const PricePreviewCard = ({
           <>
             <div className="flex justify-between">
               <span className="text-muted-foreground">İndirimli Fiyat:</span>
-              <span className="font-medium text-green-600">{formatPrice(discountPrice, currency)}</span>
+              <span className="font-medium text-green-600">
+                {formatPrice(discountPrice, currency)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">İndirim Oranı:</span>
-              <span className="font-medium">%{Math.round(calculateDiscount(price, discountPrice))}</span>
+              <span className="font-medium">
+                %{Math.round(calculateDiscount(price, discountPrice))}
+              </span>
             </div>
           </>
         )}
         
         <div className="flex justify-between">
           <span className="text-muted-foreground">KDV Tutarı:</span>
-          <span className="font-medium">{formatPrice(calculateTax(discountPrice || price, taxRate), currency)}</span>
+          <span className="font-medium">
+            {formatPrice(calculateTax(discountPrice || price, taxRate), currency)}
+          </span>
         </div>
         
         <div className="flex justify-between pt-2 border-t border-border">
           <span className="font-medium">KDV Dahil Fiyat:</span>
           <span className="font-bold">
-            {formatPrice((discountPrice || price) + calculateTax(discountPrice || price, taxRate), currency)}
+            {formatPrice(
+              (discountPrice || price) + calculateTax(discountPrice || price, taxRate),
+              currency
+            )}
           </span>
         </div>
       </div>
