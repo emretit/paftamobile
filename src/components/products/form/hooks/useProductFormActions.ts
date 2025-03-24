@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { showSuccess, showError } from "@/utils/toastUtils";
 import { ProductFormSchema } from "../ProductFormSchema";
 
 export const useProductFormActions = (
@@ -51,18 +52,11 @@ export const useProductFormActions = (
             errorMessage = "Veritabanı sütun ismi uyumsuzluğu. Lütfen sistem yöneticinize başvurun.";
           }
           
-          toast({
-            title: "Hata",
-            description: errorMessage,
-            variant: "destructive"
-          });
+          showError(errorMessage);
           throw error;
         }
 
-        toast({
-          title: "Başarılı",
-          description: "Ürün başarıyla güncellendi",
-        });
+        showSuccess("Ürün başarıyla güncellendi");
         navigate(`/product-details/${productId}`);
       } else {
         // Create a new product with explicit fields that match the database schema
@@ -106,19 +100,12 @@ export const useProductFormActions = (
             errorMessage = "Veritabanı sütun ismi uyumsuzluğu. Lütfen sistem yöneticinize başvurun.";
           }
           
-          toast({
-            title: "Hata",
-            description: errorMessage,
-            variant: "destructive"
-          });
+          showError(errorMessage);
           throw error;
         }
 
         console.log("Product created successfully:", data);
-        toast({
-          title: "Başarılı",
-          description: "Ürün başarıyla oluşturuldu",
-        });
+        showSuccess("Ürün başarıyla oluşturuldu");
         
         if (addAnother) {
           // We'll handle form reset in the component
@@ -130,11 +117,7 @@ export const useProductFormActions = (
       return { resetForm: false };
     } catch (error) {
       console.error("Error saving product:", error);
-      toast({
-        title: "Hata",
-        description: "Ürün kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.",
-        variant: "destructive"
-      });
+      showError("Ürün kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.");
       return { resetForm: false };
     } finally {
       setIsSubmitting(false);
@@ -173,21 +156,14 @@ export const useProductFormActions = (
 
         if (error) throw error;
 
-        toast({
-          title: "Başarılı",
-          description: "Ürün başarıyla kopyalandı",
-        });
+        showSuccess("Ürün başarıyla kopyalandı");
         if (data) {
           navigate(`/product-form/${data.id}`);
         }
       }
     } catch (error) {
       console.error("Error duplicating product:", error);
-      toast({
-        title: "Hata",
-        description: "Ürün kopyalanırken bir hata oluştu. Lütfen tekrar deneyin.",
-        variant: "destructive"
-      });
+      showError("Ürün kopyalanırken bir hata oluştu. Lütfen tekrar deneyin.");
     }
   };
 

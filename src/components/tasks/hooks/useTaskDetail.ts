@@ -1,7 +1,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { showSuccess, showError } from "@/utils/toastUtils";
 import type { Task } from "@/types/task";
 
 export const useTaskDetail = () => {
@@ -44,11 +44,11 @@ export const useTaskDetail = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Görev başarıyla güncellendi');
+      showSuccess('Görev başarıyla güncellendi');
     },
     onError: (error) => {
       console.error("Mutation error:", error);
-      toast.error('Görev güncellenirken hata oluştu: ' + error.message);
+      showError('Görev güncellenirken hata oluştu: ' + error.message);
     }
   });
 

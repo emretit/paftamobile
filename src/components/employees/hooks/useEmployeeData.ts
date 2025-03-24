@@ -2,11 +2,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Employee } from "@/types/employee";
-import { useToast } from "@/components/ui/use-toast";
+import { showSuccess, showError } from "@/utils/toastUtils";
 
 export const useEmployeeData = () => {
-  const { toast } = useToast();
-
   const { data: employees = [], isLoading, refetch } = useQuery({
     queryKey: ['employees'],
     queryFn: async () => {
@@ -20,11 +18,7 @@ export const useEmployeeData = () => {
         return data as Employee[];
       } catch (error) {
         console.error('Error fetching employees:', error);
-        toast({
-          variant: "destructive",
-          title: "Hata",
-          description: "Çalışan bilgileri yüklenirken bir hata oluştu.",
-        });
+        showError("Çalışan bilgileri yüklenirken bir hata oluştu.");
         return [];
       }
     },
@@ -39,19 +33,12 @@ export const useEmployeeData = () => {
         
       if (error) throw error;
       
-      toast({
-        title: "Başarılı",
-        description: "Tüm çalışan bilgileri silindi.",
-      });
+      showSuccess("Tüm çalışan bilgileri silindi.");
       
       refetch();
     } catch (error) {
       console.error('Error clearing employees:', error);
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Çalışan bilgileri silinirken bir hata oluştu.",
-      });
+      showError("Çalışan bilgileri silinirken bir hata oluştu.");
     }
   };
 

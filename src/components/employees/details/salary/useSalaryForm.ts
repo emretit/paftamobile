@@ -1,11 +1,10 @@
 
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { showSuccess, showError } from "@/utils/toastUtils";
 
 export const useSalaryForm = (employeeId: string) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
   const saveSalary = async (values: any) => {
     setIsSubmitting(true);
@@ -30,19 +29,12 @@ export const useSalaryForm = (employeeId: string) => {
 
       if (error) throw error;
 
-      toast({
-        title: "Başarılı",
-        description: "Maaş bilgisi başarıyla kaydedildi"
-      });
+      showSuccess("Maaş bilgisi başarıyla kaydedildi");
       
       return true;
     } catch (error) {
       console.error('Maaş bilgisi kaydedilirken hata:', error);
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Maaş bilgisi kaydedilirken bir hata oluştu"
-      });
+      showError("Maaş bilgisi kaydedilirken bir hata oluştu");
       return false;
     } finally {
       setIsSubmitting(false);

@@ -5,6 +5,7 @@ import { useProposalItemsManagement } from "./hooks/useProposalItemsManagement";
 import { convertCurrency } from "./utils/currencyUtils";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { showError } from "@/utils/toastUtils";
 
 export const useProposalItems = () => {
   const [productDialogOpen, setProductDialogOpen] = useState(false);
@@ -30,14 +31,20 @@ export const useProposalItems = () => {
   const { data: products, isLoading } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*, product_categories(*)")
-        .eq("is_active", true)  // Only select active products
-        .order("name");
-      
-      if (error) throw error;
-      return data || [];
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*, product_categories(*)")
+          .eq("is_active", true)  // Only select active products
+          .order("name");
+        
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        showError("Ürünler yüklenirken bir hata oluştu");
+        return [];
+      }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes cache
     refetchOnWindowFocus: false, // Don't refetch when window regains focus

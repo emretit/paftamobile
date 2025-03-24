@@ -1,7 +1,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { showSuccess, showError } from "@/utils/toastUtils";
 import type { Task } from "@/types/task";
 import type { Deal } from "@/types/deal";
 
@@ -20,10 +20,10 @@ export const usePipelineMutations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Task status updated successfully');
+      showSuccess('Task status updated successfully');
     },
     onError: (error) => {
-      toast.error('Error updating task status');
+      showError('Error updating task status');
       console.error('Error updating task:', error);
     }
   });
@@ -44,10 +44,10 @@ export const usePipelineMutations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
-      toast.success('Deal status updated successfully');
+      showSuccess('Deal status updated successfully');
     },
     onError: (error) => {
-      toast.error('Error updating deal status');
+      showError('Error updating deal status');
       console.error('Error updating deal:', error);
     }
   });

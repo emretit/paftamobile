@@ -5,7 +5,7 @@ import { useProductFormActions } from "./hooks/useProductFormActions";
 import ProductFormHeader from "./ProductFormHeader";
 import ProductFormTabs from "./ProductFormTabs";
 import { useEffect } from "react";
-import { toast } from "@/hooks/use-toast";
+import { showError } from "@/utils/toastUtils";
 
 const ProductFormWrapper = () => {
   const { form, isEditing, isSubmitting, setIsSubmitting, productId } = useProductForm();
@@ -34,11 +34,7 @@ const ProductFormWrapper = () => {
       if (!isValid) {
         const errorKeys = Object.keys(form.formState.errors);
         if (errorKeys.length > 0) {
-          toast({
-            title: "Form Hatası",
-            description: "Lütfen formdaki hataları düzeltin",
-            variant: "destructive"
-          });
+          showError("Lütfen formdaki hataları düzeltin");
           console.error("Form validation errors:", form.formState.errors);
           return { resetForm: false };
         }

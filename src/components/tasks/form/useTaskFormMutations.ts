@@ -1,7 +1,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { showSuccess, showError } from "@/utils/toastUtils";
 import { FormValues } from "./types";
 
 export const useTaskFormMutations = (onClose: () => void, taskId?: string) => {
@@ -34,12 +34,12 @@ export const useTaskFormMutations = (onClose: () => void, taskId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Görev başarıyla oluşturuldu");
+      showSuccess("Görev başarıyla oluşturuldu");
       onClose();
     },
     onError: (error) => {
       console.error("Error creating task:", error);
-      toast.error("Görev oluşturulurken bir hata oluştu");
+      showError("Görev oluşturulurken bir hata oluştu");
     },
   });
 
@@ -73,12 +73,12 @@ export const useTaskFormMutations = (onClose: () => void, taskId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Görev başarıyla güncellendi");
+      showSuccess("Görev başarıyla güncellendi");
       onClose();
     },
     onError: (error) => {
       console.error("Error updating task:", error);
-      toast.error("Görev güncellenirken bir hata oluştu");
+      showError("Görev güncellenirken bir hata oluştu");
     },
   });
 

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { showSuccess, showError } from "@/utils/toastUtils";
 
 interface PasswordResetFormProps {
   onSuccess: () => void;
@@ -16,7 +16,6 @@ export const PasswordResetForm = ({
   onBackToSignIn,
   onError 
 }: PasswordResetFormProps) => {
-  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -31,17 +30,10 @@ export const PasswordResetForm = ({
 
     if (error) {
       onError(error.message);
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: error.message,
-      });
+      showError(error.message);
     } else {
       onSuccess();
-      toast({
-        title: "E-posta Gönderildi",
-        description: "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.",
-      });
+      showSuccess("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.");
     }
     setLoading(false);
   };

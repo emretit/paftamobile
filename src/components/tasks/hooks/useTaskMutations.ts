@@ -1,7 +1,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { showSuccess, showError } from "@/utils/toastUtils";
 import { Task } from "@/types/task";
 
 export const useTaskMutations = () => {
@@ -23,11 +23,11 @@ export const useTaskMutations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Task updated successfully");
+      showSuccess("Task updated successfully");
     },
     onError: (error) => {
       console.error("Error updating task:", error);
-      toast.error("Failed to update task");
+      showError("Failed to update task");
     },
   });
 
@@ -43,11 +43,11 @@ export const useTaskMutations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Task deleted successfully");
+      showSuccess("Task deleted successfully");
     },
     onError: (error) => {
       console.error("Error deleting task:", error);
-      toast.error("Failed to delete task");
+      showError("Failed to delete task");
     },
   });
 
