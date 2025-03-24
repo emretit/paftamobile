@@ -21,3 +21,12 @@ export const DEFAULT_EXCHANGE_RATES = {
   EUR: 35.2,
   GBP: 41.3,
 };
+
+// Yeni eklenen teklif grubu/kategorileri
+export const PROPOSAL_ITEM_GROUPS = [
+  { value: "urun", label: "Ürünler" },
+  { value: "hizmet", label: "Hizmetler" },
+  { value: "yazilim", label: "Yazılım" },
+  { value: "donanim", label: "Donanım" },
+  { value: "diger", label: "Diğer" },
+];

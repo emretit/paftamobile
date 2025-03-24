@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, AlertCircle, Info } from "lucide-react";
 import { ProposalItem } from "@/types/proposal";
@@ -11,6 +11,7 @@ import { useProposalItems } from "./useProposalItems";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { PROPOSAL_ITEM_GROUPS } from "./proposalItemsConstants";
 
 interface ProposalItemsProps {
   items: ProposalItem[];
@@ -86,6 +87,22 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     }, 0);
   };
 
+  // Gruplar bazında toplam hesaplama
+  const groupTotals = useMemo(() => {
+    const totals: Record<string, number> = {};
+    
+    PROPOSAL_ITEM_GROUPS.forEach(group => {
+      totals[group.value] = 0;
+    });
+
+    items.forEach(item => {
+      const group = item.group || 'diger';
+      totals[group] = (totals[group] || 0) + item.total_price;
+    });
+    
+    return totals;
+  }, [items]);
+
   const handleProductSelect = (product: Product, quantity?: number, customPrice?: number, discountRate?: number) => {
     handleSelectProduct(product, items, onItemsChange, quantity, customPrice, discountRate);
     toast.success(`${product.name} teklif kalemine eklendi`);
@@ -94,6 +111,18 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
   // Check for stock warnings
   const hasLowStockItems = items.some(item => item.stock_status === 'low_stock');
   const hasOutOfStockItems = items.some(item => item.stock_status === 'out_of_stock');
+
+  // Gruplara göre ürün sayısı
+  const itemCountByGroup = useMemo(() => {
+    const counts: Record<string, number> = {};
+    
+    items.forEach(item => {
+      const group = item.group || 'diger';
+      counts[group] = (counts[group] || 0) + 1;
+    });
+    
+    return counts;
+  }, [items]);
 
   return (
     <div className="space-y-4">
@@ -146,7 +175,28 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
       </div>
 
       {items.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex flex-col md:flex-row justify-between gap-4">
+          {/* Grup bazlı dağılım */}
+          <div className="space-y-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-md flex-grow">
+            <h3 className="text-sm font-medium mb-2">Teklif Kalemleri Dağılımı</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {PROPOSAL_ITEM_GROUPS.map(group => (
+                itemCountByGroup[group.value] ? (
+                  <div key={group.value} className="flex justify-between text-xs">
+                    <span className="flex items-center">
+                      <Badge variant="outline" className="mr-2 py-0 h-5">
+                        {itemCountByGroup[group.value]}
+                      </Badge>
+                      {group.label}:
+                    </span>
+                    <span>{formatCurrency(groupTotals[group.value], selectedCurrency)}</span>
+                  </div>
+                ) : null
+              ))}
+            </div>
+          </div>
+          
+          {/* Toplam özeti */}
           <div className="space-y-2 min-w-[300px] p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
             <div className="flex justify-between text-sm">
               <span>Ara Toplam:</span>

@@ -1,4 +1,3 @@
-
 import { Product } from "@/types/product";
 import { ProposalItem } from "@/types/proposal";
 import { v4 as uuidv4 } from "uuid";
@@ -19,7 +18,8 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       total_price: 0,
       discount_rate: 0, // Default discount rate
       currency: selectedCurrency,
-      stock_status: 'in_stock'
+      stock_status: 'in_stock',
+      group: 'diger' // Default grup değeri
     };
     
     setItems([...items, newItem]);
@@ -58,6 +58,18 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       stockStatus = 'low_stock';
     }
     
+    // Determine product group based on product_type or category_type
+    let group = 'diger'; // Default
+    if (product.product_type === 'physical') {
+      group = 'urun';
+    } else if (product.product_type === 'service') {
+      group = 'hizmet';
+    } else if (product.category_type === 'software') {
+      group = 'yazilim';
+    } else if (product.category_type === 'hardware') {
+      group = 'donanim';
+    }
+    
     // Create the new proposal item with product data
     const newItem: ProposalItem = {
       id: uuidv4(),
@@ -70,7 +82,8 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       discount_rate: discountRate,
       total_price: totalPrice,
       currency: selectedCurrency,
-      stock_status: stockStatus
+      stock_status: stockStatus,
+      group: group
     };
     
     setItems([...items, newItem]);

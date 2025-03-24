@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { PROPOSAL_ITEM_GROUPS } from "./proposalItemsConstants";
 
 interface ProposalItemsTableProps {
   items: ProposalItem[];
@@ -38,6 +39,7 @@ const ProposalItemsTable = ({
         <thead>
           <tr className="border-b bg-muted/40">
             <th className="py-3 px-4 text-left font-medium">Ürün/Hizmet</th>
+            <th className="py-3 px-4 text-left font-medium w-28">Grup</th>
             <th className="py-3 px-4 text-right font-medium w-20">Miktar</th>
             <th className="py-3 px-4 text-right font-medium w-32">Birim Fiyat</th>
             <th className="py-3 px-4 text-center font-medium w-20">Para Birimi</th>
@@ -50,7 +52,7 @@ const ProposalItemsTable = ({
         <tbody>
           {items.length === 0 ? (
             <tr>
-              <td colSpan={8} className="py-3 px-4 text-center text-muted-foreground">
+              <td colSpan={9} className="py-3 px-4 text-center text-muted-foreground">
                 Henüz ürün eklenmedi. Ürün eklemek için yukarıdaki butonları kullanın.
               </td>
             </tr>
@@ -71,6 +73,23 @@ const ProposalItemsTable = ({
                       </div>
                     )}
                   </div>
+                </td>
+                <td className="py-3 px-4">
+                  <Select 
+                    value={item.group || ""}
+                    onValueChange={(value) => handleItemChange(index, "group", value)}
+                  >
+                    <SelectTrigger className="border-0 bg-transparent focus-visible:ring-0 h-8 w-full">
+                      <SelectValue placeholder="Grup Seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PROPOSAL_ITEM_GROUPS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </td>
                 <td className="py-3 px-4">
                   <Input
