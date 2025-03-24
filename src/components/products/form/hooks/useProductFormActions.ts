@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,7 +47,7 @@ export const useProductFormActions = (
           } else if (error.code === "23503") {
             errorMessage = "Belirtilen kategori veya tedarikçi bulunamadı";
           } else if (error.code === "42703") {
-            errorMessage = "Veritabanı yapısı ile uyumsuzluk. Sistem yöneticinize danışın.";
+            errorMessage = "Veritabanı sütun ismi uyumsuzluğu. Lütfen sistem yöneticinize başvurun.";
           }
           
           toast({
@@ -63,10 +64,26 @@ export const useProductFormActions = (
         });
         navigate(`/product-details/${productId}`);
       } else {
-        // IMPORTANT: Do not try to transform min_stock_level to stock_threshold
-        // We need to use the exact field names that exist in the database
+        // IMPORTANT: Ensure all required fields are included and not optional
         const insertData = {
-          ...preparedData,
+          name: preparedData.name, // Ensure name is explicitly included and not optional
+          description: preparedData.description,
+          sku: preparedData.sku,
+          barcode: preparedData.barcode,
+          price: preparedData.price,
+          discount_price: preparedData.discount_price,
+          stock_quantity: preparedData.stock_quantity,
+          min_stock_level: preparedData.min_stock_level,
+          tax_rate: preparedData.tax_rate,
+          unit: preparedData.unit,
+          is_active: preparedData.is_active,
+          currency: preparedData.currency,
+          category_type: preparedData.category_type,
+          product_type: preparedData.product_type,
+          status: preparedData.status,
+          image_url: preparedData.image_url,
+          category_id: preparedData.category_id,
+          supplier_id: preparedData.supplier_id,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
