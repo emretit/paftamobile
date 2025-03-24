@@ -75,7 +75,7 @@ export const useProductFormActions = (
             price: preparedData.price,
             discount_price: preparedData.discount_price,
             stock_quantity: preparedData.stock_quantity,
-            min_stock_level: preparedData.min_stock_level, // This is the correct field in the database
+            min_stock_level: preparedData.min_stock_level,
             tax_rate: preparedData.tax_rate,
             unit: preparedData.unit,
             is_active: preparedData.is_active,
