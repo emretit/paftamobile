@@ -86,6 +86,8 @@ export const useProductFormActions = (
             errorMessage = "Bu SKU veya barkod değeri zaten kullanılmaktadır";
           } else if (error.code === "23503") {
             errorMessage = "Belirtilen kategori veya tedarikçi bulunamadı";
+          } else if (error.code === "42703") {
+            errorMessage = "Veritabanı yapısı ile uyumsuzluk. Sistem yöneticinize danışın.";
           }
           
           toast({
