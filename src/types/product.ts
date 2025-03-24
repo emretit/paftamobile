@@ -24,7 +24,7 @@ export interface Product {
   tax_rate: number;
   stock_quantity: number;
   min_stock_level: number;
-  stock_threshold?: number;
+  stock_threshold: number;
   unit: string;
   category_id: string;
   category_type: string;

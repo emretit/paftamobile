@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,8 +20,8 @@ export const useProductFormActions = (
         ...values,
         category_id: values.category_id && values.category_id.trim() !== "" && values.category_id !== "none" ? values.category_id : null,
         supplier_id: values.supplier_id && values.supplier_id.trim() !== "" && values.supplier_id !== "none" ? values.supplier_id : null,
-        // Set stock_threshold to min_stock_level if not provided
-        stock_threshold: values.stock_threshold || values.min_stock_level
+        // Make sure stock_threshold is explicitly included
+        stock_threshold: values.stock_threshold !== undefined ? values.stock_threshold : values.min_stock_level
       };
       
       console.log("Prepared data for submission:", preparedData);
