@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, AlertCircle } from "lucide-react";
+import { Plus, Search, AlertCircle, Info } from "lucide-react";
 import { ProposalItem } from "@/types/proposal";
 import { Product } from "@/types/product";
 import ProposalItemsHeader from "./ProposalItemsHeader";
@@ -97,6 +97,16 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
 
   return (
     <div className="space-y-4">
+      {items.length === 0 && (
+        <Alert variant="default" className="border-blue-500 text-blue-800 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Teklif Kalemleri Ekleme</AlertTitle>
+          <AlertDescription>
+            "Ürün Ekle" butonu ile mevcut ürünlerden seçim yapabilir veya "Manuel Ekle" ile yeni kalemler oluşturabilirsiniz. Eklenen ürünler aşağıda listelenecektir.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <ProposalItemsHeader
         selectedCurrency={selectedCurrency}
         onCurrencyChange={handleCurrencyChange}

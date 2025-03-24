@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useCurrencyManagement } from "./hooks/useCurrencyManagement";
 import { useProposalItemsManagement } from "./hooks/useProposalItemsManagement";
 import { convertCurrency } from "./utils/currencyUtils";
@@ -26,18 +26,21 @@ export const useProposalItems = () => {
     handleItemChange
   } = useProposalItemsManagement(selectedCurrency, exchangeRates);
 
-  // Fetch products for realtime data
+  // Fetch products for realtime data with optimized query
   const { data: products, isLoading } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
         .select("*, product_categories(*)")
+        .eq("is_active", true)  // Only select active products
         .order("name");
       
       if (error) throw error;
       return data || [];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
   });
 
   return {

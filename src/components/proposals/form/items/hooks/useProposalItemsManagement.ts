@@ -18,7 +18,8 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       tax_rate: 18, // Default tax rate
       total_price: 0,
       discount_rate: 0, // Default discount rate
-      currency: selectedCurrency
+      currency: selectedCurrency,
+      stock_status: 'in_stock'
     };
     
     setItems([...items, newItem]);
@@ -49,6 +50,14 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       discountRate
     );
     
+    // Determine stock status
+    let stockStatus = 'in_stock';
+    if (product.stock_quantity <= 0) {
+      stockStatus = 'out_of_stock';
+    } else if (product.stock_quantity <= product.min_stock_level) {
+      stockStatus = 'low_stock';
+    }
+    
     // Create the new proposal item with product data
     const newItem: ProposalItem = {
       id: uuidv4(),
@@ -61,7 +70,7 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       discount_rate: discountRate,
       total_price: totalPrice,
       currency: selectedCurrency,
-      stock_status: product.stock_quantity > 0 ? (product.stock_quantity <= product.min_stock_level ? 'low_stock' : 'in_stock') : 'out_of_stock'
+      stock_status: stockStatus
     };
     
     setItems([...items, newItem]);
