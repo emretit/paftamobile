@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,7 +64,7 @@ export const useProductFormActions = (
         });
         navigate(`/product-details/${productId}`);
       } else {
-        // Create a typed insert object with all required fields explicitly defined
+        // Create a new product with explicit fields that match the database schema
         const { data, error } = await supabase
           .from("products")
           .insert({
@@ -74,7 +75,7 @@ export const useProductFormActions = (
             price: preparedData.price,
             discount_price: preparedData.discount_price,
             stock_quantity: preparedData.stock_quantity,
-            min_stock_level: preparedData.min_stock_level,
+            min_stock_level: preparedData.min_stock_level, // This is the correct field in the database
             tax_rate: preparedData.tax_rate,
             unit: preparedData.unit,
             is_active: preparedData.is_active,
@@ -88,8 +89,7 @@ export const useProductFormActions = (
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
-          .select()
-          .single();
+          .select();
 
         if (error) {
           console.error("Error saving product:", error);
@@ -121,8 +121,8 @@ export const useProductFormActions = (
         if (addAnother) {
           // We'll handle form reset in the component
           return { resetForm: true };
-        } else if (data) {
-          navigate(`/product-details/${data.id}`);
+        } else if (data && data[0]) {
+          navigate(`/product-details/${data[0].id}`);
         }
       }
       return { resetForm: false };
