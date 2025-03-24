@@ -13,6 +13,7 @@ export const useProductFormActions = (
   const navigate = useNavigate();
 
   const onSubmit = async (values: ProductFormSchema, addAnother = false) => {
+    console.log("Product submission started:", { values, isEditing, productId });
     setIsSubmitting(true);
     try {
       // Prepare data by ensuring null values for empty strings in UUID fields
@@ -22,18 +23,24 @@ export const useProductFormActions = (
         supplier_id: values.supplier_id && values.supplier_id.trim() !== "" ? values.supplier_id : null
       };
       
+      console.log("Prepared data for submission:", preparedData);
+      
       if (isEditing && productId) {
         const updateData = {
           ...preparedData,
           updated_at: new Date().toISOString()
         };
 
+        console.log("Updating existing product:", updateData);
         const { error } = await supabase
           .from("products")
           .update(updateData)
           .eq("id", productId);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating product:", error);
+          throw error;
+        }
 
         toast.success("Ürün başarıyla güncellendi");
         navigate(`/product-details/${productId}`);
@@ -46,14 +53,19 @@ export const useProductFormActions = (
           updated_at: new Date().toISOString()
         };
 
+        console.log("Creating new product:", insertData);
         const { error, data } = await supabase
           .from("products")
           .insert(insertData)
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error saving product:", error);
+          throw error;
+        }
 
+        console.log("Product created successfully:", data);
         toast.success("Ürün başarıyla oluşturuldu");
         
         if (addAnother) {

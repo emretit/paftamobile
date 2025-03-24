@@ -24,6 +24,21 @@ const ProductFormHeader = ({
 }: ProductFormHeaderProps) => {
   const navigate = useNavigate();
 
+  const handleSave = () => {
+    console.log("Save button clicked");
+    console.log("Form is valid?", form.formState.isValid);
+    console.log("Form errors:", form.formState.errors);
+    return form.handleSubmit((values) => {
+      console.log("Form submitted with values:", values);
+      return onSubmit(values, false);
+    })();
+  };
+
+  const handleSaveAndNew = () => {
+    console.log("Save and Add New button clicked");
+    return form.handleSubmit((values) => onSubmit(values, true))();
+  };
+
   return (
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-4">
@@ -48,7 +63,7 @@ const ProductFormHeader = ({
           </Button>
         )}
         <Button 
-          onClick={form.handleSubmit((values) => onSubmit(values, true))}
+          onClick={handleSaveAndNew}
           variant="secondary"
           disabled={isSubmitting}
           className="font-medium"
@@ -57,7 +72,7 @@ const ProductFormHeader = ({
           Kaydet ve Yeni Ekle
         </Button>
         <Button 
-          onClick={form.handleSubmit((values) => onSubmit(values, false))}
+          onClick={handleSave}
           disabled={isSubmitting}
           className="font-medium"
         >
