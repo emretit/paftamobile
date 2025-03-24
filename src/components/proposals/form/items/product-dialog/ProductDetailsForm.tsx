@@ -1,16 +1,17 @@
 
-import React, { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Product } from "@/types/product";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import {
   Select,
-  SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
+import { Product } from "@/types/product";
 
 interface ProductDetailsFormProps {
   selectedProduct: Product;
@@ -37,139 +38,148 @@ const ProductDetailsForm: React.FC<ProductDetailsFormProps> = ({
   setDiscountRate,
   formatCurrency,
 }) => {
-  const [calculatedPrice, setCalculatedPrice] = useState<number>(0);
-  const [total, setTotal] = useState<number>(0);
+  // Simple depo options - in a real app would be fetched from backend
+  const depoOptions = [
+    { value: "Ana Depo", label: "Ana Depo" },
+    { value: "Yedek Depo", label: "Yedek Depo" },
+    { value: "Satış Depo", label: "Satış Depo" },
+  ];
 
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuantity(Number(e.target.value));
+  // Calculate final price with discount
+  const calculateFinalPrice = () => {
+    if (customPrice === undefined) return 0;
+    const discountAmount = customPrice * (discountRate / 100);
+    return customPrice - discountAmount;
   };
 
-  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCustomPrice(Number(e.target.value));
+  // Calculate total price
+  const calculateTotalPrice = () => {
+    return calculateFinalPrice() * quantity;
   };
-
-  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDiscountRate(Number(e.target.value));
-  };
-
-  // Calculate pricing when dependencies change
-  useEffect(() => {
-    const basePrice = customPrice !== undefined ? customPrice : selectedProduct.price;
-    const discountAmount = basePrice * (discountRate / 100);
-    const discountedPrice = basePrice - discountAmount;
-    setCalculatedPrice(discountedPrice);
-    setTotal(discountedPrice * quantity);
-  }, [quantity, customPrice, discountRate, selectedProduct.price]);
 
   return (
-    <div className="py-4">
-      <Tabs defaultValue="details">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="details">Detaylar</TabsTrigger>
-          <TabsTrigger value="pricing">Fiyatlandırma</TabsTrigger>
-        </TabsList>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="product-depo">Depo Seçimi</Label>
+          <Select value={selectedDepo} onValueChange={setSelectedDepo}>
+            <SelectTrigger id="product-depo">
+              <SelectValue placeholder="Depo seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              {depoOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <TabsContent value="details" className="space-y-4 mt-4">
-          <div className="space-y-2">
-            <Label htmlFor="depo">Depo</Label>
-            <Select value={selectedDepo} onValueChange={setSelectedDepo}>
-              <SelectTrigger id="depo">
-                <SelectValue placeholder="Depo seçin" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Ana Depo">Ana Depo</SelectItem>
-                <SelectItem value="Yedek Depo">Yedek Depo</SelectItem>
-                <SelectItem value="Servis Deposu">Servis Deposu</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="quantity">Miktar</Label>
+        <div>
+          <Label htmlFor="product-quantity">Adet</Label>
+          <div className="flex items-center space-x-2">
             <Input
-              id="quantity"
+              id="product-quantity"
               type="number"
               min="1"
               value={quantity}
-              onChange={handleQuantityChange}
-              className="col-span-1"
+              onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+              className="w-full"
             />
           </div>
-
-          <div className="space-y-2">
-            <Label>Stok Miktarı</Label>
-            <div className="text-sm font-medium">
-              {selectedProduct.stock_quantity} {selectedProduct.unit}
-            </div>
-          </div>
-
-          {selectedProduct.purchase_price && (
-            <div className="space-y-2">
-              <Label>Alış Fiyatı</Label>
-              <div className="text-sm font-medium">
-                {formatCurrency(selectedProduct.purchase_price, selectedProduct.currency)}
-              </div>
-            </div>
+          {selectedProduct.stock_quantity !== undefined && selectedProduct.stock_quantity < quantity && (
+            <p className="text-sm text-destructive mt-1">
+              Uyarı: Stokta sadece {selectedProduct.stock_quantity} adet bulunmaktadır.
+            </p>
           )}
-        </TabsContent>
+        </div>
 
-        <TabsContent value="pricing" className="space-y-4 mt-4">
-          <div className="space-y-2">
-            <Label htmlFor="price">Satış Fiyatı</Label>
-            <Input
-              id="price"
-              type="number"
-              min="0"
-              step="0.01"
-              value={customPrice !== undefined ? customPrice : selectedProduct.price}
-              onChange={handlePriceChange}
-              className="col-span-1"
-            />
-            <div className="text-xs text-muted-foreground">
-              Katalog fiyatı: {formatCurrency(selectedProduct.price, selectedProduct.currency)}
-            </div>
+        <div>
+          <Label htmlFor="product-price">Birim Fiyat ({selectedProduct.currency})</Label>
+          <Input
+            id="product-price"
+            type="number"
+            min="0"
+            step="0.01"
+            value={customPrice}
+            onChange={(e) => setCustomPrice(parseFloat(e.target.value) || 0)}
+            className="w-full"
+          />
+          {customPrice !== selectedProduct.price && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Standart fiyat: {formatCurrency(selectedProduct.price, selectedProduct.currency)}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <div className="flex justify-between items-center">
+            <Label htmlFor="discount-rate">İndirim Oranı (%{discountRate})</Label>
+            <span className="text-sm text-muted-foreground">
+              {formatCurrency(calculateFinalPrice(), selectedProduct.currency)}
+            </span>
           </div>
+          <Slider
+            id="discount-rate"
+            value={[discountRate]}
+            min={0}
+            max={100}
+            step={1}
+            onValueChange={(values) => setDiscountRate(values[0])}
+            className="my-2"
+          />
+        </div>
+      </div>
 
+      <div className="space-y-4">
+        <Card className="p-4 bg-muted/40">
           <div className="space-y-2">
-            <Label htmlFor="discount">İndirim (%)</Label>
-            <Input
-              id="discount"
-              type="number"
-              min="0"
-              max="100"
-              value={discountRate}
-              onChange={handleDiscountChange}
-              className="col-span-1"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Para Birimi</Label>
-            <div className="text-sm font-medium">
-              {selectedProduct.currency}
-            </div>
-          </div>
-
-          <div className="mt-6 pt-4 border-t space-y-2">
             <div className="flex justify-between">
-              <span>Birim Fiyat:</span>
-              <span className="font-medium">
-                {formatCurrency(calculatedPrice, selectedProduct.currency)}
+              <span className="text-sm text-muted-foreground">Ürün:</span>
+              <span className="font-medium">{selectedProduct.name}</span>
+            </div>
+            
+            {selectedProduct.sku && (
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">SKU:</span>
+                <span>{selectedProduct.sku}</span>
+              </div>
+            )}
+            
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Stok:</span>
+              <span>{selectedProduct.stock_quantity || 0} {selectedProduct.unit}</span>
+            </div>
+            
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Birim Fiyat:</span>
+              <span>{formatCurrency(calculateFinalPrice(), selectedProduct.currency)}</span>
+            </div>
+            
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Miktar:</span>
+              <span>{quantity} {selectedProduct.unit}</span>
+            </div>
+            
+            <div className="flex justify-between pt-2 border-t">
+              <span className="font-medium">Toplam:</span>
+              <span className="font-bold">
+                {formatCurrency(calculateTotalPrice(), selectedProduct.currency)}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span>KDV Oranı:</span>
-              <span className="font-medium">%{selectedProduct.tax_rate}</span>
-            </div>
-            <div className="flex justify-between font-bold">
-              <span>Toplam:</span>
-              <span>
-                {formatCurrency(total, selectedProduct.currency)}
-              </span>
+          </div>
+        </Card>
+
+        {selectedProduct.description && (
+          <div>
+            <Label className="block mb-2">Ürün Açıklaması</Label>
+            <div className="p-3 bg-muted/30 rounded text-sm">
+              {selectedProduct.description}
             </div>
           </div>
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
     </div>
   );
 };

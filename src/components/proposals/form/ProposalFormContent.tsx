@@ -5,7 +5,7 @@ import { ProposalFormData } from "@/types/proposal-form";
 import ProposalFormBasicInfo from "./ProposalFormBasicInfo";
 import ProposalFormCustomerInfo from "./ProposalFormCustomerInfo";
 import ProposalFormDetails from "./ProposalFormDetails";
-import ProposalFormItems from "./ProposalFormItems";
+import ProposalItems from "./items/ProposalItems";
 
 interface ProposalFormContentProps {
   formData: ProposalFormData;
@@ -52,7 +52,7 @@ const ProposalFormContent: React.FC<ProposalFormContentProps> = ({
         />
       </div>
       
-      <ProposalFormItems
+      <ProposalItems
         items={formData.items || []}
         onItemsChange={handleItemsChange}
       />

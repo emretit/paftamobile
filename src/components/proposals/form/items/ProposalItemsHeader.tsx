@@ -173,4 +173,3 @@ const ProposalItemsHeader = ({
 };
 
 export default ProposalItemsHeader;
-
