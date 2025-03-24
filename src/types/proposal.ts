@@ -1,60 +1,30 @@
-export type ProposalStatus = 
-  | 'draft' 
-  | 'pending_approval' 
-  | 'sent' 
-  | 'accepted' 
-  | 'rejected' 
-  | 'expired';
 
-export const proposalStatusLabels: Record<ProposalStatus, string> = {
-  draft: "Taslak",
-  pending_approval: "Onay Bekliyor",
-  sent: "Gönderildi",
-  accepted: "Kabul Edildi",
-  rejected: "Reddedildi",
-  expired: "Süresi Dolmuş"
-};
-
-export const proposalStatusColors: Record<ProposalStatus, string> = {
-  draft: "bg-gray-100 text-gray-800",
-  pending_approval: "bg-amber-100 text-amber-800",
-  sent: "bg-blue-100 text-blue-800",
-  accepted: "bg-green-100 text-green-800",
-  rejected: "bg-red-100 text-red-800",
-  expired: "bg-orange-100 text-orange-800"
-};
+export type ProposalStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'cancelled' | 'revised';
 
 export interface ProposalItem {
   id: string;
+  product_id?: string;
   name: string;
   description?: string;
   quantity: number;
   unit_price: number;
   tax_rate?: number;
-  total_price: number;
   discount_rate?: number;
+  total_price: number;
   currency?: string;
-  product_id?: string;
-  stock_status?: string;
-  group?: string; // Yeni eklenen grup/kategori alanı
+  group?: string; // Grup bilgisi (örn. ürün, hizmet)
+  stock_status?: 'in_stock' | 'low_stock' | 'out_of_stock';
   original_currency?: string; // Ürünün orijinal para birimi
-  original_price?: number;    // Ürünün orijinal fiyatı
+  original_price?: number; // Ürünün orijinal fiyatı
 }
 
-export interface Customer {
+export interface ProposalAttachment {
   id: string;
   name: string;
-  company?: string;
-  email?: string;
-  phone?: string;
-}
-
-export interface Employee {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email?: string;
-  avatar_url?: string;
+  url: string;
+  type: string;
+  size: number;
+  created_at: string;
 }
 
 export interface Proposal {
@@ -63,38 +33,37 @@ export interface Proposal {
   title: string;
   description?: string;
   customer_id?: string;
-  opportunity_id?: string;
+  customer_name?: string;
+  customer_email?: string;
   employee_id?: string;
-  status: ProposalStatus;
-  total_amount: number;
-  created_at: string;
-  updated_at: string;
+  employee_name?: string;
+  opportunity_id?: string;
+  opportunity_title?: string;
   valid_until?: string;
-  items?: ProposalItem[];
-  attachments?: any[];
-  currency?: string;
-  terms?: string;
-  notes?: string;
-  
-  total_value?: number;
-  proposal_number?: number | string;
   payment_terms?: string;
   delivery_terms?: string;
-  internal_notes?: string;
-  discounts?: number;
-  additional_charges?: number;
-  
-  customer?: Customer;
-  employee?: Employee;
-  customer_name?: string;
-  employee_name?: string;
+  notes?: string;
+  terms?: string;
+  status: ProposalStatus;
+  created_at: string;
+  updated_at: string;
+  total_amount: number;
+  currency?: string; // Para birimi
+  items?: ProposalItem[];
+  attachments?: ProposalAttachment[];
 }
 
-export interface ProposalFilters {
-  status: string;
-  search: string;
-  dateRange: {
-    from: Date | null;
-    to: Date | null;
-  };
+export interface ProposalFormValues {
+  title: string;
+  description?: string;
+  customerId?: string;
+  employeeId?: string;
+  opportunityId?: string;
+  validUntil?: Date;
+  paymentTerms?: string;
+  deliveryTerms?: string;
+  notes?: string;
+  status: ProposalStatus;
+  items?: ProposalItem[];
+  currency?: string; // Para birimi
 }

@@ -25,7 +25,8 @@ export const useProposalFormState = (
     status: "draft" as ProposalStatus,
     customer_id: "",
     employee_id: "",
-    items: []
+    items: [],
+    currency: "TRY" // Varsayılan para birimi
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -51,7 +52,8 @@ export const useProposalFormState = (
         status: initialProposal.status,
         customer_id: initialProposal.customer_id || "",
         employee_id: initialProposal.employee_id || "",
-        items: initialProposal.items || []
+        items: initialProposal.items || [],
+        currency: initialProposal.currency || "TRY" // Mevcut teklifteki para birimi
       });
     } else if (isNew) {
       if (user) {
@@ -80,6 +82,10 @@ export const useProposalFormState = (
     
     if (!formData.valid_until) {
       errors.valid_until = "Geçerlilik tarihi gereklidir";
+    }
+    
+    if (!formData.currency) {
+      errors.currency = "Para birimi seçilmelidir";
     }
     
     setFormErrors(errors);
@@ -154,6 +160,33 @@ export const useProposalFormState = (
     }));
   };
 
+  // Para birimi değişikliğini yönetme
+  const handleCurrencyChange = (currency: string) => {
+    // Teklif para birimini güncelle
+    setFormData(prev => ({
+      ...prev,
+      currency
+    }));
+    setIsFormDirty(true);
+    
+    // Teklif kalemlerini yeni para birimine göre dönüştürme işlemi
+    if (formData.items && formData.items.length > 0) {
+      toast.info(`Tüm kalemler ${currency} para birimine dönüştürülecek`);
+      
+      // Teklif kalemleri için para birimi güncelleme işlemi burada yapılabilir
+      // Bu işlem useProposalItems veya useProposalItemsManagement hook'unda 
+      // yapılacağı için şimdilik boş bırakıyoruz
+    }
+    
+    // Para birimi hata mesajını temizle
+    if (formErrors.currency) {
+      setFormErrors(prev => ({
+        ...prev,
+        currency: ""
+      }));
+    }
+  };
+
   const handleSave = async () => {
     if (!validateForm()) {
       toast.error("Lütfen gerekli alanları doldurun");
@@ -187,6 +220,7 @@ export const useProposalFormState = (
     handleSelectChange,
     handleDateChange,
     handleItemsChange,
+    handleCurrencyChange, // Para birimi değişikliği için fonksiyonu dışa aktar
     handleSave,
     validateForm
   };

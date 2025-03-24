@@ -24,7 +24,8 @@ export const useProposalItems = () => {
     handleAddItem,
     handleSelectProduct,
     handleRemoveItem,
-    handleItemChange
+    handleItemChange,
+    updateAllItemsCurrency
   } = useProposalItemsManagement(selectedCurrency, exchangeRates);
 
   // Fetch products for realtime data with optimized query
@@ -64,6 +65,7 @@ export const useProposalItems = () => {
     handleSelectProduct,
     handleRemoveItem,
     handleItemChange,
+    updateAllItemsCurrency, // Tüm kalemleri güncelleme fonksiyonu
     convertCurrency,
     products,
     isLoading

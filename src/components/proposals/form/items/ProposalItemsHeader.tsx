@@ -19,6 +19,7 @@ interface ProposalItemsHeaderProps {
   onOpenProductDialog: () => void;
   onSelectProduct: (product: Product) => void;
   currencyOptions: { value: string; label: string }[];
+  isGlobalCurrencyEnabled?: boolean; // Para birimi seçimini göster/gizle
 }
 
 const ProposalItemsHeader = ({
@@ -28,23 +29,26 @@ const ProposalItemsHeader = ({
   onOpenProductDialog,
   onSelectProduct,
   currencyOptions,
+  isGlobalCurrencyEnabled = true
 }: ProposalItemsHeaderProps) => {
   return (
     <div className="flex justify-between items-center mb-4">
       <Label className="text-base font-medium">Ürünler ve Hizmetler</Label>
       <div className="flex space-x-2 items-center">
-        <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
-          <SelectTrigger className="w-[130px]">
-            <SelectValue placeholder="Para Birimi" />
-          </SelectTrigger>
-          <SelectContent>
-            {currencyOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {isGlobalCurrencyEnabled && (
+          <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Para Birimi" />
+            </SelectTrigger>
+            <SelectContent>
+              {currencyOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         
         <Button 
           variant="outline" 

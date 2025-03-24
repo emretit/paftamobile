@@ -1,18 +1,17 @@
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Proposal } from "@/types/proposal";
 import { useProposalFormState } from "@/hooks/proposals/useProposalFormState";
-
-// Import sub-components
 import ProposalFormHeader from "./ProposalFormHeader";
 import ProposalFormContent from "./ProposalFormContent";
 import ProposalFormActions from "./ProposalFormActions";
+import ProposalCurrencySelector from "./ProposalCurrencySelector";
 
 interface ProposalFormProps {
   proposal: Proposal | null;
   loading: boolean;
-  saving?: boolean; // Make this optional so it's compatible with old and new usages
+  saving: boolean;
   isNew: boolean;
   onSave: (formData: any) => Promise<void>;
   onBack: () => void;
@@ -23,7 +22,7 @@ interface ProposalFormProps {
 const ProposalForm: React.FC<ProposalFormProps> = ({
   proposal,
   loading,
-  saving = false, // Provide default value
+  saving,
   isNew,
   onSave,
   onBack,
@@ -33,71 +32,63 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
   const {
     formData,
     formErrors,
+    isFormDirty,
     saving: formSaving,
     handleInputChange,
     handleSelectChange,
     handleDateChange,
     handleItemsChange,
-    handleSave
+    handleSave,
+    validateForm,
+    handleCurrencyChange, // Para birimi değişim fonksiyonu
   } = useProposalFormState(proposal, isNew, onSave);
 
-  // Use either the passed saving prop or the one from the form state
-  const isSaving = saving || formSaving;
-
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return "";
-    try {
-      return new Date(dateString).toLocaleDateString("tr-TR", {
-        day: "numeric",
-        month: "long",
-        year: "numeric"
-      });
-    } catch (error) {
-      return "";
-    }
-  };
-
   return (
-    <Card className="p-6 dark:bg-gray-900 border-gray-200 dark:border-gray-700">
-      <CardContent className="p-0">
-        <ProposalFormHeader
+    <>
+      <ProposalFormHeader 
+        title={title}
+        subtitle={subtitle}
+        loading={loading}
+        saving={saving || formSaving}
+      />
+
+      {/* Global Para Birimi Seçici */}
+      <ProposalCurrencySelector 
+        selectedCurrency={formData.currency || "TRY"}
+        onCurrencyChange={handleCurrencyChange}
+      />
+
+      {loading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+      ) : (
+        <ProposalFormContent
+          formData={formData}
+          formErrors={formErrors}
+          isNew={isNew}
           proposal={proposal}
-          loading={loading}
-          saving={isSaving}
-          isNew={isNew}
-          onSave={handleSave}
-          onBack={onBack}
-          title={title}
+          handleInputChange={handleInputChange}
+          handleSelectChange={handleSelectChange}
+          handleDateChange={handleDateChange}
+          handleItemsChange={handleItemsChange}
+          formatDate={(dateString) => {
+            if (!dateString) return "";
+            return new Date(dateString).toLocaleDateString("tr-TR");
+          }}
         />
-        
-        {loading ? (
-          <div className="space-y-4 animate-pulse">
-            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-            <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-          </div>
-        ) : (
-          <ProposalFormContent
-            formData={formData}
-            formErrors={formErrors}
-            isNew={isNew}
-            proposal={proposal}
-            handleInputChange={handleInputChange}
-            handleSelectChange={handleSelectChange}
-            handleDateChange={handleDateChange}
-            handleItemsChange={handleItemsChange}
-            formatDate={formatDate}
-          />
-        )}
-        
-        <ProposalFormActions
-          isNew={isNew}
-          saving={isSaving}
-          onSave={handleSave}
-          onBack={onBack}
-        />
-      </CardContent>
-    </Card>
+      )}
+
+      <ProposalFormActions 
+        isNew={isNew}
+        saving={saving || formSaving}
+        onSave={handleSave}
+        onBack={onBack}
+        isFormDirty={isFormDirty}
+      />
+    </>
   );
 };
 

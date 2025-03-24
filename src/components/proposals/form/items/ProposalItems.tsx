@@ -1,5 +1,5 @@
 
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, AlertCircle, Info } from "lucide-react";
 import { ProposalItem } from "@/types/proposal";
@@ -16,11 +16,13 @@ import { PROPOSAL_ITEM_GROUPS } from "./proposalItemsConstants";
 interface ProposalItemsProps {
   items: ProposalItem[];
   onItemsChange: (items: ProposalItem[]) => void;
+  globalCurrency?: string; // Global para birimi
 }
 
 const ProposalItems: React.FC<ProposalItemsProps> = ({ 
   items, 
-  onItemsChange 
+  onItemsChange,
+  globalCurrency = "TRY"
 }) => {
   const {
     selectedCurrency,
@@ -36,7 +38,9 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     handleRemoveItem,
     handleItemChange,
     convertCurrency,
-    isLoading
+    products,
+    isLoading,
+    updateAllItemsCurrency // Tüm kalemleri güncelleme fonksiyonu
   } = useProposalItems();
 
   // Tax rate options
@@ -47,6 +51,18 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     { value: 18, label: "%18" },
     { value: 20, label: "%20" }
   ];
+
+  // Global para birimi değiştiğinde tüm kalemleri güncelle
+  useEffect(() => {
+    if (globalCurrency && globalCurrency !== selectedCurrency) {
+      setSelectedCurrency(globalCurrency);
+      // Tüm kalemlerin para birimini güncelle
+      if (items.length > 0) {
+        updateAllItemsCurrency(items, onItemsChange, globalCurrency);
+        toast.success(`Tüm kalemler ${globalCurrency} para birimine dönüştürüldü`);
+      }
+    }
+  }, [globalCurrency]);
 
   // Calculate totals
   const calculateSubtotal = () => {
@@ -124,6 +140,17 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     return counts;
   }, [items]);
 
+  // Para birimi değişikliğini ele alma
+  const handleGlobalCurrencyChange = (currency: string) => {
+    // Para birimi değişikliği için handleCurrencyChange fonksiyonunu çağır
+    handleCurrencyChange(currency);
+    
+    // Tüm kalemlerin para birimini güncelle
+    if (items.length > 0) {
+      updateAllItemsCurrency(items, onItemsChange, currency);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {items.length === 0 && (
@@ -138,11 +165,12 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
 
       <ProposalItemsHeader
         selectedCurrency={selectedCurrency}
-        onCurrencyChange={handleCurrencyChange}
+        onCurrencyChange={handleGlobalCurrencyChange}
         onAddItem={() => handleAddItem(items, onItemsChange)}
         onOpenProductDialog={() => setProductDialogOpen(true)}
         onSelectProduct={(product) => handleProductSelect(product)}
         currencyOptions={currencyOptions}
+        isGlobalCurrencyEnabled={false} // Artık global para birimi kullanıyoruz
       />
       
       {/* Stock warnings */}

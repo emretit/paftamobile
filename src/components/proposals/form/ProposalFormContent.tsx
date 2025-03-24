@@ -55,6 +55,7 @@ const ProposalFormContent: React.FC<ProposalFormContentProps> = ({
       <ProposalItems
         items={formData.items || []}
         onItemsChange={handleItemsChange}
+        globalCurrency={formData.currency || "TRY"} // Global para birimini ilet
       />
       
       <ProposalFormDetails

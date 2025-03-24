@@ -88,7 +88,7 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       currency: selectedCurrency,
       stock_status: stockStatus,
       group: group,
-      // Store the original price and currency for reference
+      // Orijinal fiyat ve para birimi bilgilerini sakla
       original_currency: product.currency,
       original_price: price
     };
@@ -140,12 +140,23 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       
       // Convert the unit price to the new currency
       if (oldCurrency !== newCurrency) {
-        item.unit_price = convertCurrency(
-          item.unit_price,
-          oldCurrency,
-          newCurrency,
-          exchangeRates
-        );
+        // Eğer orijinal para birimi ve fiyat bilgisi varsa, direkt ondan dönüştür
+        if (item.original_currency && item.original_price !== undefined) {
+          item.unit_price = convertCurrency(
+            item.original_price,
+            item.original_currency,
+            newCurrency,
+            exchangeRates
+          );
+        } else {
+          // Yoksa mevcut fiyattan dönüştür
+          item.unit_price = convertCurrency(
+            item.unit_price,
+            oldCurrency,
+            newCurrency,
+            exchangeRates
+          );
+        }
         
         // Update total price
         const quantity = item.quantity;
@@ -166,10 +177,63 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
     setItems(updatedItems);
   };
 
+  // Tüm kalemlerin para birimini değiştirme fonksiyonu
+  const updateAllItemsCurrency = (
+    items: ProposalItem[],
+    setItems: React.Dispatch<React.SetStateAction<ProposalItem[]>>,
+    newCurrency: string
+  ) => {
+    if (!items || items.length === 0) return;
+
+    const updatedItems = items.map(item => {
+      const oldCurrency = item.currency || selectedCurrency;
+      
+      // Para birimi değişmediyse atla
+      if (oldCurrency === newCurrency) return item;
+      
+      // Kopya oluştur
+      const updatedItem = { ...item };
+      
+      // Eğer orijinal para birimi ve fiyat bilgisi varsa, direkt ondan dönüştür
+      if (item.original_currency && item.original_price !== undefined) {
+        updatedItem.unit_price = convertCurrency(
+          item.original_price,
+          item.original_currency,
+          newCurrency,
+          exchangeRates
+        );
+      } else {
+        // Yoksa mevcut fiyattan dönüştür
+        updatedItem.unit_price = convertCurrency(
+          item.unit_price,
+          oldCurrency,
+          newCurrency,
+          exchangeRates
+        );
+      }
+      
+      // Para birimini güncelle
+      updatedItem.currency = newCurrency;
+      
+      // Toplam fiyatı yeniden hesapla
+      updatedItem.total_price = calculateTotalWithTax(
+        updatedItem.unit_price,
+        updatedItem.quantity,
+        updatedItem.tax_rate || 0,
+        updatedItem.discount_rate || 0
+      );
+      
+      return updatedItem;
+    });
+    
+    setItems(updatedItems);
+  };
+
   return {
     handleAddItem,
     handleSelectProduct,
     handleRemoveItem,
-    handleItemChange
+    handleItemChange,
+    updateAllItemsCurrency // Tüm kalemleri güncelleme fonksiyonunu dışarı aktar
   };
 };
