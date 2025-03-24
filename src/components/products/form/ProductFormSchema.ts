@@ -10,6 +10,7 @@ export const productSchema = z.object({
   discount_price: z.coerce.number().nullable().optional(),
   stock_quantity: z.coerce.number().min(0, "Stok miktarı 0'dan küçük olamaz"),
   min_stock_level: z.coerce.number().min(0, "Minimum stok seviyesi 0'dan küçük olamaz"),
+  stock_threshold: z.coerce.number().min(0, "Stok eşiği 0'dan küçük olamaz").optional().default(0),
   tax_rate: z.coerce.number().min(0, "Vergi oranı 0'dan küçük olamaz").max(100, "Vergi oranı 100'den büyük olamaz"),
   unit: z.string(),
   is_active: z.boolean().default(true),

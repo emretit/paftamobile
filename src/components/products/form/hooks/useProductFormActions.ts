@@ -20,7 +20,9 @@ export const useProductFormActions = (
       const preparedData = {
         ...values,
         category_id: values.category_id && values.category_id.trim() !== "" && values.category_id !== "none" ? values.category_id : null,
-        supplier_id: values.supplier_id && values.supplier_id.trim() !== "" && values.supplier_id !== "none" ? values.supplier_id : null
+        supplier_id: values.supplier_id && values.supplier_id.trim() !== "" && values.supplier_id !== "none" ? values.supplier_id : null,
+        // Set stock_threshold to min_stock_level if not provided
+        stock_threshold: values.stock_threshold || values.min_stock_level
       };
       
       console.log("Prepared data for submission:", preparedData);
@@ -76,6 +78,7 @@ export const useProductFormActions = (
             discount_price: preparedData.discount_price,
             stock_quantity: preparedData.stock_quantity,
             min_stock_level: preparedData.min_stock_level,
+            stock_threshold: preparedData.stock_threshold,
             tax_rate: preparedData.tax_rate,
             unit: preparedData.unit,
             is_active: preparedData.is_active,

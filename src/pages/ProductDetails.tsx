@@ -42,7 +42,9 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
         last_purchase_date: null,
         related_products: [],
         product_categories: productData.product_categories || null,
-        suppliers: null
+        suppliers: null,
+        // Make sure stock_threshold is available, default to min_stock_level if not set
+        stock_threshold: productData.stock_threshold || productData.min_stock_level
       };
 
       return transformedData;

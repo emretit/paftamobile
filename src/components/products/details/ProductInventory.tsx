@@ -9,6 +9,7 @@ import { format } from "date-fns";
 interface ProductInventoryProps {
   stockQuantity: number;
   minStockLevel: number;
+  stockThreshold?: number;
   unit: string;
   supplier: {
     id: string;
@@ -20,12 +21,14 @@ interface ProductInventoryProps {
   onUpdate: (updates: {
     stock_quantity?: number;
     min_stock_level?: number;
+    stock_threshold?: number;
   }) => void;
 }
 
 const ProductInventory = ({ 
   stockQuantity, 
   minStockLevel,
+  stockThreshold,
   unit,
   supplier,
   lastPurchaseDate,
@@ -34,16 +37,21 @@ const ProductInventory = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState({
     stockQuantity,
-    minStockLevel
+    minStockLevel,
+    stockThreshold: stockThreshold || minStockLevel
   });
 
   const handleSave = () => {
     onUpdate({
       stock_quantity: Number(editValues.stockQuantity),
-      min_stock_level: Number(editValues.minStockLevel)
+      min_stock_level: Number(editValues.minStockLevel),
+      stock_threshold: Number(editValues.stockThreshold)
     });
     setIsEditing(false);
   };
+
+  // Display threshold only if it's different from minStockLevel
+  const showThreshold = stockThreshold && stockThreshold !== minStockLevel;
 
   return (
     <Card>
@@ -101,6 +109,25 @@ const ProductInventory = ({
             )}
           </div>
 
+          {(isEditing || showThreshold) && (
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">Stok Alarm Eşiği</span>
+              {isEditing ? (
+                <Input
+                  type="number"
+                  value={editValues.stockThreshold}
+                  onChange={(e) => setEditValues(prev => ({
+                    ...prev,
+                    stockThreshold: e.target.valueAsNumber
+                  }))}
+                  className="w-32 text-right"
+                />
+              ) : (
+                <span>{stockThreshold} {unit}</span>
+              )}
+            </div>
+          )}
+
           {supplier && (
             <>
               <div className="flex justify-between items-center">
@@ -130,7 +157,11 @@ const ProductInventory = ({
               <Button
                 variant="outline"
                 onClick={() => {
-                  setEditValues({ stockQuantity, minStockLevel });
+                  setEditValues({
+                    stockQuantity,
+                    minStockLevel,
+                    stockThreshold: stockThreshold || minStockLevel
+                  });
                   setIsEditing(false);
                 }}
               >

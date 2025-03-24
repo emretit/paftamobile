@@ -31,6 +31,12 @@ const ProductInventorySection = ({ form }: ProductInventorySectionProps) => {
     defaultValue: 0,
   });
 
+  const stockThreshold = useWatch({
+    control: form.control,
+    name: "stock_threshold",
+    defaultValue: 0,
+  });
+
   const minStockLevel = useWatch({
     control: form.control,
     name: "min_stock_level",
@@ -38,6 +44,9 @@ const ProductInventorySection = ({ form }: ProductInventorySectionProps) => {
   });
 
   const getStockStatus = () => {
+    // Use stockThreshold as the primary threshold, fall back to minStockLevel if not set
+    const thresholdToUse = stockThreshold || minStockLevel;
+    
     if (stockQuantity <= 0) {
       return {
         label: "Stokta Yok",
@@ -45,11 +54,11 @@ const ProductInventorySection = ({ form }: ProductInventorySectionProps) => {
         message: "Ürün stokta mevcut değil.",
         color: "text-destructive",
       };
-    } else if (stockQuantity <= minStockLevel) {
+    } else if (stockQuantity <= thresholdToUse) {
       return {
         label: "Düşük Stok",
         icon: <AlertTriangle className="h-5 w-5 text-amber-500" />,
-        message: `Stok kritik seviyenin altında (${minStockLevel} adet).`,
+        message: `Stok kritik seviyenin altında (${thresholdToUse} adet).`,
         color: "text-amber-500",
       };
     } else {
@@ -114,6 +123,28 @@ const ProductInventorySection = ({ form }: ProductInventorySectionProps) => {
 
           <FormField
             control={form.control}
+            name="stock_threshold"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Stok Alarm Eşiği</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Özel bir alarm eşiği belirleyin (boş bırakılırsa minimum stok seviyesi kullanılır)
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="unit"
             render={({ field }) => (
               <FormItem>
@@ -166,6 +197,12 @@ const ProductInventorySection = ({ form }: ProductInventorySectionProps) => {
                 <span className="text-muted-foreground">Minimum Seviye:</span>
                 <span className="font-medium">{minStockLevel} birim</span>
               </div>
+              {stockThreshold > 0 && stockThreshold !== minStockLevel && (
+                <div className="flex justify-between mt-2">
+                  <span className="text-muted-foreground">Alarm Eşiği:</span>
+                  <span className="font-medium">{stockThreshold} birim</span>
+                </div>
+              )}
             </div>
           </div>
         </Card>

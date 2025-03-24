@@ -24,6 +24,7 @@ export const useProductForm = () => {
       discount_price: null,
       stock_quantity: 0,
       min_stock_level: 0,
+      stock_threshold: 0,
       tax_rate: 18,
       unit: "piece",
       is_active: true,
@@ -60,6 +61,7 @@ export const useProductForm = () => {
             category_id: data.category_id || "",
             supplier_id: data.supplier_id || "",
             discount_price: data.discount_price || null,
+            stock_threshold: data.stock_threshold || data.min_stock_level, // Default to min_stock_level if not set
           });
         }
       } catch (error) {

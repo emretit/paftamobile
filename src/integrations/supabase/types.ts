@@ -1121,6 +1121,7 @@ export type Database = {
           sku: string | null
           status: string
           stock_quantity: number | null
+          stock_threshold: number | null
           supplier_id: string | null
           tax_rate: number
           unit: string
@@ -1145,6 +1146,7 @@ export type Database = {
           sku?: string | null
           status?: string
           stock_quantity?: number | null
+          stock_threshold?: number | null
           supplier_id?: string | null
           tax_rate?: number
           unit?: string
@@ -1169,6 +1171,7 @@ export type Database = {
           sku?: string | null
           status?: string
           stock_quantity?: number | null
+          stock_threshold?: number | null
           supplier_id?: string | null
           tax_rate?: number
           unit?: string
