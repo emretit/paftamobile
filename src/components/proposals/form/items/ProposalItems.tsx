@@ -37,10 +37,9 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     handleSelectProduct,
     handleRemoveItem,
     handleItemChange,
-    convertCurrency,
     products,
     isLoading,
-    updateAllItemsCurrency // Tüm kalemleri güncelleme fonksiyonu
+    updateAllItemsCurrency
   } = useProposalItems();
 
   // Tax rate options
@@ -116,7 +115,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
 
     items.forEach(item => {
       const group = item.group || 'diger';
-      totals[group] = (totals[group] || 0) + item.total_price;
+      totals[group] = (totals[group] || 0) + (item.total_price || 0);
     });
     
     return totals;
@@ -203,7 +202,6 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
         onCurrencyChange={handleGlobalCurrencyChange}
         onAddItem={onAddItem}
         onOpenProductDialog={() => setProductDialogOpen(true)}
-        onSelectProduct={handleProductSelect}
         currencyOptions={currencyOptions}
         isGlobalCurrencyEnabled={false} // Artık global para birimi kullanıyoruz
       />
@@ -250,7 +248,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
                       </Badge>
                       {group.label}:
                     </span>
-                    <span>{formatCurrency(groupTotals[group.value], selectedCurrency)}</span>
+                    <span>{formatCurrency(groupTotals[group.value])}</span>
                   </div>
                 ) : null
               ))}
@@ -261,21 +259,21 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
           <div className="space-y-2 min-w-[300px] p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
             <div className="flex justify-between text-sm">
               <span>Ara Toplam:</span>
-              <span>{formatCurrency(calculateSubtotal() - calculateTaxTotal(), selectedCurrency)}</span>
+              <span>{formatCurrency(calculateSubtotal() - calculateTaxTotal())}</span>
             </div>
             {calculateDiscountTotal() > 0 && (
               <div className="flex justify-between text-sm text-red-500">
                 <span>İndirim Tutarı:</span>
-                <span>-{formatCurrency(calculateDiscountTotal(), selectedCurrency)}</span>
+                <span>-{formatCurrency(calculateDiscountTotal())}</span>
               </div>
             )}
             <div className="flex justify-between text-sm">
               <span>KDV Toplamı:</span>
-              <span>{formatCurrency(calculateTaxTotal(), selectedCurrency)}</span>
+              <span>{formatCurrency(calculateTaxTotal())}</span>
             </div>
             <div className="flex justify-between font-medium pt-2 border-t dark:border-gray-700">
               <span>Genel Toplam:</span>
-              <span>{formatCurrency(calculateSubtotal(), selectedCurrency)}</span>
+              <span>{formatCurrency(calculateSubtotal())}</span>
             </div>
           </div>
         </div>

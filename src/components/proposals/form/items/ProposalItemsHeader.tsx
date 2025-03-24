@@ -1,73 +1,75 @@
 
 import React from "react";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Search, Plus } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+import { Plus, Search } from "lucide-react";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
 } from "@/components/ui/select";
-import { Product } from "@/types/product";
 
 interface ProposalItemsHeaderProps {
   selectedCurrency: string;
-  onCurrencyChange: (value: string) => void;
+  onCurrencyChange: (currency: string) => void;
   onAddItem: () => void;
   onOpenProductDialog: () => void;
-  onSelectProduct: (product: Product) => void;
   currencyOptions: { value: string; label: string }[];
-  isGlobalCurrencyEnabled?: boolean; // Para birimi seçimini göster/gizle
+  isGlobalCurrencyEnabled?: boolean;
 }
 
-const ProposalItemsHeader = ({
-  selectedCurrency,
-  onCurrencyChange,
-  onAddItem,
+const ProposalItemsHeader: React.FC<ProposalItemsHeaderProps> = ({ 
+  selectedCurrency, 
+  onCurrencyChange, 
+  onAddItem, 
   onOpenProductDialog,
-  onSelectProduct,
   currencyOptions,
   isGlobalCurrencyEnabled = true
-}: ProposalItemsHeaderProps) => {
+}) => {
   return (
-    <div className="flex justify-between items-center mb-4">
-      <Label className="text-base font-medium">Ürünler ve Hizmetler</Label>
-      <div className="flex space-x-2 items-center">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+      <h3 className="text-lg font-medium">Teklif Kalemleri</h3>
+      
+      <div className="flex items-center gap-2 w-full sm:w-auto">
         {isGlobalCurrencyEnabled && (
-          <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
-            <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="Para Birimi" />
-            </SelectTrigger>
-            <SelectContent>
-              {currencyOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2 mr-2">
+            <span className="text-sm text-muted-foreground">Para Birimi:</span>
+            <Select 
+              value={selectedCurrency} 
+              onValueChange={onCurrencyChange}
+            >
+              <SelectTrigger className="w-[100px]">
+                <SelectValue placeholder="Para Birimi" />
+              </SelectTrigger>
+              <SelectContent>
+                {currencyOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
         
         <Button 
           variant="outline" 
-          type="button" 
-          size="sm"
-          onClick={onOpenProductDialog}
-        >
-          <Search className="h-4 w-4 mr-2" />
-          Ürün Ekle
-        </Button>
-        
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
+          size="sm" 
           onClick={onAddItem}
+          className="w-full sm:w-auto"
         >
           <Plus className="h-4 w-4 mr-2" />
           Manuel Ekle
+        </Button>
+        
+        <Button 
+          size="sm" 
+          onClick={onOpenProductDialog}
+          className="w-full sm:w-auto"
+        >
+          <Search className="h-4 w-4 mr-2" />
+          Ürün Ekle
         </Button>
       </div>
     </div>

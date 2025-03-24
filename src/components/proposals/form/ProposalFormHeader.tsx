@@ -1,63 +1,47 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Heading } from "@/components/ui/heading";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft } from "lucide-react";
 import { Proposal } from "@/types/proposal";
 
 export interface ProposalFormHeaderProps {
   title: string;
-  subtitle?: string;
-  proposal?: Proposal | null;
+  subtitle: string;
   loading: boolean;
   saving: boolean;
   isNew: boolean;
-  onSave?: () => void;
-  onBack?: () => void;
+  proposal: Proposal | null;
 }
 
-const ProposalFormHeader = ({ 
-  title, 
+const ProposalFormHeader: React.FC<ProposalFormHeaderProps> = ({
+  title,
   subtitle,
-  proposal, 
-  loading, 
-  saving, 
+  loading,
+  saving,
   isNew,
-  onSave,
-  onBack 
-}: ProposalFormHeaderProps) => {
+  proposal
+}) => {
   return (
-    <div className="flex flex-col gap-4 mb-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          {onBack && (
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={onBack}
-              disabled={saving}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          )}
-          <Heading
-            title={title}
-            description={subtitle || (isNew ? "Yeni teklif oluşturun" : "Teklif bilgilerini güncelleyin")}
-          />
+    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6 gap-4">
+      {loading ? (
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-[250px]" />
+          <Skeleton className="h-4 w-[300px]" />
         </div>
+      ) : (
+        <Heading 
+          title={title}
+          description={subtitle}
+        />
+      )}
 
-        {!loading && onSave && (
-          <Button 
-            onClick={onSave}
-            disabled={saving}
-            className="w-full md:w-auto"
-          >
-            {saving ? "Kaydediliyor..." : (isNew ? "Teklifi Oluştur" : "Değişiklikleri Kaydet")}
-          </Button>
+      <div className="flex items-center gap-2">
+        {saving && (
+          <div className="text-sm text-muted-foreground animate-pulse">
+            Kaydediliyor...
+          </div>
         )}
       </div>
-      <Separator />
     </div>
   );
 };

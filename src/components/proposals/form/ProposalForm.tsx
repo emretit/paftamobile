@@ -40,7 +40,7 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
     handleItemsChange,
     handleSave,
     validateForm,
-    handleCurrencyChange, // Para birimi değişim fonksiyonu
+    handleCurrencyChange,
   } = useProposalFormState(proposal, isNew, onSave);
 
   return (

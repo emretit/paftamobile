@@ -24,7 +24,7 @@ export const useProposalItems = () => {
   } = useCurrencyManagement();
 
   // Fetch products for realtime data with optimized query
-  const { data: products, isLoading } = useQuery({
+  const { data: products = [], isLoading } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
       try {
