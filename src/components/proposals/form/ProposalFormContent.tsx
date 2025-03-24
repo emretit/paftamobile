@@ -34,7 +34,11 @@ const ProposalFormContent: React.FC<ProposalFormContentProps> = ({
     <div className="space-y-8 my-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ProposalFormBasicInfo
-          formData={formData}
+          formData={{
+            title: formData.title,
+            status: formData.status,
+            valid_until: formData.valid_until || ""
+          }}
           formErrors={formErrors}
           handleInputChange={handleInputChange}
           handleSelectChange={handleSelectChange}
@@ -54,7 +58,12 @@ const ProposalFormContent: React.FC<ProposalFormContentProps> = ({
       />
       
       <ProposalFormDetails
-        formData={formData}
+        formData={{
+          description: formData.description || "",
+          payment_terms: formData.payment_terms || "",
+          delivery_terms: formData.delivery_terms || "",
+          notes: formData.notes || ""
+        }}
         handleInputChange={handleInputChange}
       />
     </div>

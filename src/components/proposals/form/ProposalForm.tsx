@@ -12,6 +12,7 @@ import ProposalFormActions from "./ProposalFormActions";
 interface ProposalFormProps {
   proposal: Proposal | null;
   loading: boolean;
+  saving?: boolean; // Make this optional so it's compatible with old and new usages
   isNew: boolean;
   onSave: (formData: any) => Promise<void>;
   onBack: () => void;
@@ -22,6 +23,7 @@ interface ProposalFormProps {
 const ProposalForm: React.FC<ProposalFormProps> = ({
   proposal,
   loading,
+  saving = false, // Provide default value
   isNew,
   onSave,
   onBack,
@@ -31,13 +33,16 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
   const {
     formData,
     formErrors,
-    saving,
+    saving: formSaving,
     handleInputChange,
     handleSelectChange,
     handleDateChange,
     handleItemsChange,
     handleSave
   } = useProposalFormState(proposal, isNew, onSave);
+
+  // Use either the passed saving prop or the one from the form state
+  const isSaving = saving || formSaving;
 
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "";
@@ -58,7 +63,7 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
         <ProposalFormHeader
           proposal={proposal}
           loading={loading}
-          saving={saving}
+          saving={isSaving}
           isNew={isNew}
           onSave={handleSave}
           onBack={onBack}
@@ -87,7 +92,7 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
         
         <ProposalFormActions
           isNew={isNew}
-          saving={saving}
+          saving={isSaving}
           onSave={handleSave}
           onBack={onBack}
         />

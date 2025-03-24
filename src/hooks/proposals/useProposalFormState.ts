@@ -56,7 +56,7 @@ export const useProposalFormState = (
     } else if (isNew) {
       // Set default employee to current user if they are an employee
       const currentUserAsEmployee = employees.find(
-        emp => emp.email === user?.email
+        emp => user && emp.email === user.email // Check for user existence first
       );
       
       if (currentUserAsEmployee) {

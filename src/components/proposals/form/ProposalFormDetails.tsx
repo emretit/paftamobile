@@ -2,14 +2,10 @@
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ProposalFormData } from "@/types/proposal-form";
 
 interface ProposalFormDetailsProps {
-  formData: {
-    description: string;
-    payment_terms: string;
-    delivery_terms: string;
-    notes: string;
-  };
+  formData: Pick<ProposalFormData, 'description' | 'payment_terms' | 'delivery_terms' | 'notes'>;
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
 }
 

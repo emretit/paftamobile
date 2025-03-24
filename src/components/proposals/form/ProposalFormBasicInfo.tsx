@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -7,16 +6,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { tr } from "date-fns/locale";
 import { ProposalStatus, proposalStatusLabels } from "@/types/proposal";
+import { ProposalFormData } from "@/types/proposal-form";
 
 interface ProposalFormBasicInfoProps {
-  formData: {
-    title: string;
-    status: ProposalStatus;
-    valid_until: string;
-  };
+  formData: Pick<ProposalFormData, 'title' | 'status' | 'valid_until'>;
   formErrors: Record<string, string>;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSelectChange: (name: string, value: string) => void;

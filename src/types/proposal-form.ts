@@ -17,7 +17,7 @@ export interface ProposalFormData {
   additionalCharges?: number;
   total_amount?: number;
   description?: string;
-  status?: ProposalStatus;
+  status: ProposalStatus; // Changed from optional to required
 }
 
 // Export the ProposalItem type (using export type for isolatedModules)

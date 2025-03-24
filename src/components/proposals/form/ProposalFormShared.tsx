@@ -18,6 +18,7 @@ interface ProposalFormSharedProps {
   isNew: boolean;
   onSave: (formData: any) => Promise<void>;
   onBack: () => void;
+  title: string; // Adding the missing title prop
 }
 
 const ProposalFormShared = ({
@@ -27,6 +28,7 @@ const ProposalFormShared = ({
   isNew,
   onSave,
   onBack,
+  title,
 }: ProposalFormSharedProps) => {
   // Form state
   const [formData, setFormData] = useState({
@@ -151,6 +153,7 @@ const ProposalFormShared = ({
         isNew={isNew}
         onSave={handleSave}
         onBack={onBack}
+        title={title} // Pass the title prop here
       />
 
       {loading ? (
