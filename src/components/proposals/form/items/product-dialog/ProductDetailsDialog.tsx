@@ -17,8 +17,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { AlertCircle, Package, CheckCircle, AlertTriangle } from "lucide-react";
 import { Product } from "@/types/product";
 import { convertCurrency } from "../utils/currencyUtils";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ProductDetailsDialogProps {
   open: boolean;
@@ -57,6 +60,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
   const [availableStock, setAvailableStock] = useState(0);
   const [stockStatus, setStockStatus] = useState("");
   const [convertedPrice, setConvertedPrice] = useState(0);
+  const [notes, setNotes] = useState("");
 
   // Update calculations when inputs change
   useEffect(() => {
@@ -118,17 +122,49 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
     }
   };
 
+  const getStockStatusIcon = (status: string) => {
+    switch (status) {
+      case "out_of_stock":
+        return <AlertCircle className="h-4 w-4 text-red-500" />;
+      case "low_stock":
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      case "in_stock":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      default:
+        return <Package className="h-4 w-4" />;
+    }
+  };
+
   const getStockStatusClass = (status: string) => {
     switch (status) {
       case "out_of_stock":
-        return "text-red-500";
+        return "bg-red-100 text-red-800 border-red-200";
       case "low_stock":
-        return "text-yellow-500";
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
       case "in_stock":
-        return "text-green-500";
+        return "bg-green-100 text-green-800 border-green-200";
       default:
         return "";
     }
+  };
+
+  const getStockWarning = (status: string) => {
+    if (status === "out_of_stock") {
+      return (
+        <div className="mt-2 text-sm text-red-600 flex items-center space-x-1">
+          <AlertCircle className="h-3 w-3" />
+          <span>Bu ürün stokta mevcut değil. Yine de teklife ekleyebilirsiniz.</span>
+        </div>
+      );
+    } else if (status === "low_stock") {
+      return (
+        <div className="mt-2 text-sm text-yellow-600 flex items-center space-x-1">
+          <AlertTriangle className="h-3 w-3" />
+          <span>Bu ürün düşük stok seviyesinde ({availableStock} adet).</span>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -141,7 +177,15 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
         <div className="grid gap-4 py-4">
           {/* Product Info */}
           <div>
-            <h3 className="text-lg font-medium">{selectedProduct.name}</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium">{selectedProduct.name}</h3>
+              <Badge variant="outline" className={getStockStatusClass(stockStatus)}>
+                <span className="flex items-center space-x-1">
+                  {getStockStatusIcon(stockStatus)}
+                  <span>{getStockStatusText(stockStatus)}</span>
+                </span>
+              </Badge>
+            </div>
             {selectedProduct.description && (
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {selectedProduct.description}
@@ -149,10 +193,9 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
             )}
             <div className="flex items-center mt-2 text-sm">
               <span className="mr-4">SKU: {selectedProduct.sku || "-"}</span>
-              <span className={`${getStockStatusClass(stockStatus)}`}>
-                {getStockStatusText(stockStatus)} ({availableStock} adet)
-              </span>
+              <span>Stok: {availableStock} {selectedProduct.unit}</span>
             </div>
+            {getStockWarning(stockStatus)}
           </div>
           
           {/* Quantity */}
@@ -212,6 +255,18 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
                 onChange={(e) => setDiscountRate(Math.min(100, parseInt(e.target.value) || 0))}
               />
             </div>
+          </div>
+          
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label htmlFor="notes">Ek Notlar</Label>
+            <Textarea
+              id="notes"
+              placeholder="Ürün için ek açıklamalar..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+            />
           </div>
           
           {/* Total Price */}

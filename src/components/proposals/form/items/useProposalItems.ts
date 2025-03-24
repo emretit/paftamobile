@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useCurrencyManagement } from "./hooks/useCurrencyManagement";
 import { useProposalItemsManagement } from "./hooks/useProposalItemsManagement";
 import { convertCurrency } from "./utils/currencyUtils";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useProposalItems = () => {
   const [productDialogOpen, setProductDialogOpen] = useState(false);
@@ -24,6 +26,20 @@ export const useProposalItems = () => {
     handleItemChange
   } = useProposalItemsManagement(selectedCurrency, exchangeRates);
 
+  // Fetch products for realtime data
+  const { data: products, isLoading } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*, product_categories(*)")
+        .order("name");
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   return {
     selectedCurrency,
     setSelectedCurrency,
@@ -38,6 +54,8 @@ export const useProposalItems = () => {
     handleSelectProduct,
     handleRemoveItem,
     handleItemChange,
-    convertCurrency
+    convertCurrency,
+    products,
+    isLoading
   };
 };

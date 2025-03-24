@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { useProposalForm } from "@/hooks/useProposalForm";
 import ProposalForm from "@/components/proposals/form/ProposalForm";
+import { toast } from "sonner";
 
 interface ProposalCreateProps {
   isCollapsed: boolean;
@@ -20,11 +21,19 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
 
   const handleSave = async (formData: any) => {
     try {
+      // Check for empty items
+      if (!formData.items || formData.items.length === 0) {
+        toast.warning("Lütfen en az bir teklif kalemi ekleyin.");
+        return;
+      }
+
       // Create new proposal
       await saveDraft(formData);
+      toast.success("Teklif taslak olarak kaydedildi.");
       navigate("/proposals");
     } catch (error) {
       console.error("Error creating proposal:", error);
+      toast.error("Teklif oluşturulurken bir hata oluştu.");
     }
   };
 

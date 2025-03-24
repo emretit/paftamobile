@@ -1,4 +1,3 @@
-
 export type ProposalStatus = 
   | 'draft' 
   | 'pending_approval' 
@@ -34,9 +33,9 @@ export interface ProposalItem {
   tax_rate?: number;
   total_price: number;
   discount_rate?: number;
-  currency?: string; // Added the currency property
-  product_id?: string; // Added product_id for product reference
-  stock_status?: string; // Added stock status indicator
+  currency?: string;
+  product_id?: string;
+  stock_status?: string;
 }
 
 export interface Customer {
@@ -74,7 +73,6 @@ export interface Proposal {
   terms?: string;
   notes?: string;
   
-  // Additional properties needed by components
   total_value?: number;
   proposal_number?: number | string;
   payment_terms?: string;
@@ -83,7 +81,6 @@ export interface Proposal {
   discounts?: number;
   additional_charges?: number;
   
-  // Joined relations
   customer?: Customer;
   employee?: Employee;
   customer_name?: string;

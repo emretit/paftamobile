@@ -1,3 +1,4 @@
+
 import { Product } from "@/types/product";
 import { ProposalItem } from "@/types/proposal";
 import { v4 as uuidv4 } from "uuid";
@@ -17,7 +18,7 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       tax_rate: 18, // Default tax rate
       total_price: 0,
       discount_rate: 0, // Default discount rate
-      currency: selectedCurrency // Now this property is defined in the interface
+      currency: selectedCurrency
     };
     
     setItems([...items, newItem]);
