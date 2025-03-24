@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,14 +63,12 @@ export const useProductFormActions = (
         });
         navigate(`/product-details/${productId}`);
       } else {
-        // For new products, ensure we properly format all data for the database schema
+        // IMPORTANT: Do not try to transform min_stock_level to stock_threshold
+        // We need to use the exact field names that exist in the database
         const insertData = {
           ...preparedData,
-          name: preparedData.name,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-          // Note: min_stock_level is already correctly named in the form data
-          // No need to map to stock_threshold
         };
 
         console.log("Creating new product:", insertData);
@@ -91,7 +88,7 @@ export const useProductFormActions = (
           } else if (error.code === "23503") {
             errorMessage = "Belirtilen kategori veya tedarikçi bulunamadı";
           } else if (error.code === "42703") {
-            errorMessage = "Veritabanı ile uyumsuzluk. Alan adı hatası. Sistem yöneticinize danışın.";
+            errorMessage = "Veritabanı sütun ismi uyumsuzluğu. Lütfen sistem yöneticinize başvurun.";
           }
           
           toast({
