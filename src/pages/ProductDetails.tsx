@@ -49,9 +49,11 @@ const ProductDetails = ({ isCollapsed, setIsCollapsed }: ProductDetailsProps) =>
 
       return transformedData;
     },
-    onError: (error) => {
-      console.error("Error fetching product:", error);
-      showError("Ürün bilgilerini alırken bir hata oluştu");
+    meta: {
+      onError: (error: Error) => {
+        console.error("Error fetching product:", error);
+        showError("Ürün bilgilerini alırken bir hata oluştu");
+      }
     }
   });
 
