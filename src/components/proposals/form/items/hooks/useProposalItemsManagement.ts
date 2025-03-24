@@ -38,14 +38,17 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       convertedPrice = convertCurrency(price, product.currency, selectedCurrency, exchangeRates);
     }
     
+    const totalPrice = quantity * convertedPrice * (1 + (product.tax_rate || 0) / 100);
+    
     const newItem: ProposalItem & { currency?: string, product_id?: string } = {
       id: uuidv4(),
       product_id: product.id,
       name: product.name,
+      description: product.description || undefined,
       quantity: quantity,
       unit_price: convertedPrice,
       tax_rate: product.tax_rate || 18,
-      total_price: quantity * convertedPrice,
+      total_price: totalPrice,
       currency: selectedCurrency
     };
     
@@ -89,7 +92,10 @@ export const useProposalItemsManagement = (selectedCurrency: string, exchangeRat
       // Update total price
       const quantity = itemWithExtras.quantity;
       const unitPrice = itemWithExtras.unit_price;
-      itemWithExtras.total_price = quantity * unitPrice;
+      const taxRate = itemWithExtras.tax_rate || 0;
+      
+      // Calculate with tax
+      itemWithExtras.total_price = quantity * unitPrice * (1 + taxRate / 100);
     } else if (field === 'currency') {
       itemWithExtras.currency = value as string;
     } else {

@@ -8,6 +8,7 @@ import ProposalItemsHeader from "./ProposalItemsHeader";
 import ProposalItemsTable from "./ProposalItemsTable";
 import ProductSearchDialog from "./product-dialog/ProductSearchDialog";
 import { useProposalItems } from "./useProposalItems";
+import { toast } from "sonner";
 
 interface ProposalItemsProps {
   items: ProposalItem[];
@@ -55,6 +56,11 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     return items.reduce((sum, item) => sum + Number(item.total_price || 0), 0);
   };
 
+  const handleProductSelect = (product: Product, quantity?: number, customPrice?: number) => {
+    handleSelectProduct(product, items, onItemsChange, quantity, customPrice);
+    toast.success(`${product.name} teklif kalemine eklendi`);
+  };
+
   return (
     <div className="space-y-4">
       <ProposalItemsHeader
@@ -62,7 +68,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
         onCurrencyChange={handleCurrencyChange}
         onAddItem={() => handleAddItem(items, onItemsChange)}
         onOpenProductDialog={() => setProductDialogOpen(true)}
-        onSelectProduct={(product) => handleSelectProduct(product, items, onItemsChange)}
+        onSelectProduct={(product) => handleProductSelect(product)}
         currencyOptions={currencyOptions}
       />
       
@@ -99,7 +105,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
         open={productDialogOpen}
         onOpenChange={setProductDialogOpen}
         onSelectProduct={(product, quantity, customPrice) => 
-          handleSelectProduct(product, items, onItemsChange, quantity, customPrice)
+          handleProductSelect(product, quantity, customPrice)
         }
         selectedCurrency={selectedCurrency}
       />

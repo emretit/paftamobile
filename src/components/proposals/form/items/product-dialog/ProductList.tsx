@@ -1,9 +1,8 @@
 
 import React from "react";
-import { Package, Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Product } from "@/types/product";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 interface ProductListProps {
   products: Product[];
@@ -18,82 +17,96 @@ const ProductList: React.FC<ProductListProps> = ({
   isLoading,
   searchQuery,
   formatCurrency,
-  onSelectProduct,
+  onSelectProduct
 }) => {
-  // Filter products based on search query
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (product.sku && product.sku.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (product.barcode && product.barcode.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
   if (isLoading) {
     return (
-      <div className="col-span-2 py-4 text-center text-muted-foreground">
-        Ürünler yükleniyor...
-      </div>
-    );
-  }
-  
-  if (filteredProducts.length === 0) {
-    return (
-      <div className="col-span-2 py-4 text-center text-muted-foreground">
-        Ürün bulunamadı
-      </div>
-    );
-  }
-
-  return (
-    <ScrollArea className="h-[400px]">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {filteredProducts.map((product) => (
-          <div
-            key={product.id}
-            className="p-3 border rounded hover:bg-muted/40 flex justify-between items-center"
-          >
-            <div className="flex items-center space-x-3 flex-1">
-              {product.image_url ? (
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="w-12 h-12 object-cover rounded"
-                />
-              ) : (
-                <div className="w-12 h-12 bg-muted rounded flex items-center justify-center text-muted-foreground">
-                  <Package className="h-6 w-6" />
-                </div>
-              )}
-              <div className="flex-1">
-                <p className="font-medium">{product.name}</p>
-                <div className="flex flex-col text-sm text-muted-foreground">
-                  <span>SKU: {product.sku || "-"}</span>
-                  <span>Fiyat: {formatCurrency(product.price || 0, product.currency)}</span>
-                  <span>Stok: {product.stock_quantity || 0}</span>
-                </div>
-              </div>
+      <div className="divide-y">
+        {[1, 2, 3, 4, 5].map(i => (
+          <div key={i} className="p-3 flex items-center gap-3">
+            <Skeleton className="h-12 w-12 rounded" />
+            <div className="space-y-2 flex-1">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-3 w-1/2" />
             </div>
-            <div className="flex space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onSelectProduct(product)}
-                className="ml-2 whitespace-nowrap"
-              >
-                <Info className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onSelectProduct(product)}
-                className="ml-2 whitespace-nowrap"
-              >
-                Seç
-              </Button>
-            </div>
+            <Skeleton className="h-8 w-20" />
           </div>
         ))}
       </div>
-    </ScrollArea>
+    );
+  }
+
+  // Filter products based on search query
+  const filteredProducts = searchQuery 
+    ? products.filter(product => 
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (product.sku && product.sku.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (product.barcode && product.barcode.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : products;
+
+  if (filteredProducts.length === 0) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-muted-foreground">
+          {searchQuery 
+            ? `"${searchQuery}" ile eşleşen ürün bulunamadı.` 
+            : "Görüntülenecek ürün yok."}
+        </p>
+      </div>
+    );
+  }
+
+  const getStockStatusBadge = (product: Product) => {
+    const stock = product.stock_quantity || 0;
+    
+    if (stock <= 0) {
+      return <Badge variant="destructive">Stokta Yok</Badge>;
+    } else if (stock <= 5) {
+      return <Badge variant="warning" className="bg-amber-500">Sınırlı</Badge>;
+    } else {
+      return <Badge variant="outline" className="border-green-500 text-green-500">Stokta</Badge>;
+    }
+  };
+
+  return (
+    <div className="divide-y max-h-[400px] overflow-y-auto">
+      {filteredProducts.map(product => (
+        <div 
+          key={product.id} 
+          className="p-3 hover:bg-muted/50 cursor-pointer flex items-center gap-3"
+          onClick={() => onSelectProduct(product)}
+        >
+          <div className="h-12 w-12 bg-muted rounded flex items-center justify-center overflow-hidden">
+            {product.image_url ? (
+              <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-2xl text-muted-foreground">📦</span>
+            )}
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <h4 className="font-medium text-sm truncate">{product.name}</h4>
+            <div className="flex text-xs mt-1 text-muted-foreground">
+              <span className="truncate">
+                {product.sku ? `SKU: ${product.sku}` : ""}
+                {product.sku && product.category_id ? " • " : ""}
+                {product.product_categories?.name || ""}
+              </span>
+            </div>
+          </div>
+          
+          <div className="text-right">
+            <div className="font-medium">
+              {formatCurrency(product.price, product.currency)}
+            </div>
+            <div className="mt-1">
+              {getStockStatusBadge(product)}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 };
 

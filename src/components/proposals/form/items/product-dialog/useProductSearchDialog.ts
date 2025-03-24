@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/product";
+import { formatCurrencyValue } from "../utils/currencyUtils";
 
 export const useProductSearchDialog = (
   open: boolean,
@@ -48,13 +49,11 @@ export const useProductSearchDialog = (
         return [];
       }
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const formatCurrency = (amount: number, currency: string = "TRY") => {
-    return new Intl.NumberFormat('tr-TR', { 
-      style: 'currency', 
-      currency: currency 
-    }).format(amount);
+    return formatCurrencyValue(amount, currency);
   };
 
   const openProductDetails = (product: Product) => {
