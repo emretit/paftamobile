@@ -108,7 +108,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
       
       {/* Stock warnings */}
       {(hasLowStockItems || hasOutOfStockItems) && (
-        <Alert variant={hasOutOfStockItems ? "destructive" : "warning"}>
+        <Alert variant={hasOutOfStockItems ? "destructive" : "default"} className={!hasOutOfStockItems ? "border-yellow-500 text-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800" : ""}>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>
             {hasOutOfStockItems ? "Stokta olmayan ürünler" : "Düşük stoklu ürünler"}
