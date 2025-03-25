@@ -1,6 +1,5 @@
 
 import { ExchangeRates, CurrencyOption } from "../types/currencyTypes";
-import { CURRENCY_OPTIONS } from "../proposalItemsConstants";
 
 // Format a currency value for display
 export const formatCurrencyValue = (amount: number, currency: string = "TRY"): string => {

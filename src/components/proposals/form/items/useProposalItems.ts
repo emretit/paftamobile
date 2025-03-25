@@ -81,13 +81,19 @@ export const useProposalItems = () => {
       return items;
     }
 
+    // Ürünün orijinal para birimi ve fiyatını kullan
     const productCurrency = product.currency || "TRY";
-    let unitPrice = product.price || 0;
+    const originalPrice = product.price || 0;
+    
+    // Orijinal para birimi ve fiyat bilgisini sakla
+    const originalCurrency = product.original_currency || productCurrency;
+    const originalPriceValue = product.original_price !== undefined ? product.original_price : originalPrice;
 
-    // Convert product price to selected currency if different
+    // Bu ürünün fiyatını seçilen para birimine çevir (UI gösterimi için)
+    let unitPrice = originalPrice;
     if (productCurrency !== selectedCurrency) {
       unitPrice = convertCurrency(
-        unitPrice,
+        originalPrice,
         productCurrency,
         selectedCurrency,
         exchangeRates
@@ -105,12 +111,15 @@ export const useProposalItems = () => {
       discount_rate: 0, // Default discount rate
       total_price: unitPrice, // Quantity is 1, so total = unit price
       currency: selectedCurrency,
-      original_currency: productCurrency, // Save the original currency
-      original_price: product.price || 0, // Save the original price
+      original_currency: originalCurrency, // Ürünün orijinal para birimini sakla
+      original_price: originalPriceValue, // Ürünün orijinal fiyatını sakla
       stock_status: product.stock_quantity && product.stock_quantity > 0 
         ? (product.stock_quantity > product.stock_threshold ? 'in_stock' : 'low_stock')
         : 'out_of_stock',
     };
+    
+    console.log("Eklenen ürün orijinal para birimi:", originalCurrency);
+    console.log("Eklenen ürün orijinal fiyatı:", originalPriceValue);
     
     const updatedItems = [...items, newItem];
     setItems(updatedItems);

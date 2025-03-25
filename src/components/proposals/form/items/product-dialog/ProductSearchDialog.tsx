@@ -58,7 +58,19 @@ const ProductSearchDialog: React.FC<ProductSearchDialogProps> = ({
 
   const handleSelectProduct = () => {
     if (selectedProduct) {
-      onSelectProduct(selectedProduct, quantity, customPrice, discountRate);
+      // Ürünü seçerken, ürünün orijinal para birimi ve fiyat bilgisini de gönderelim
+      onSelectProduct(
+        { 
+          ...selectedProduct, 
+          // Orijinal para birimi ve fiyat bilgisini korumak için
+          original_currency: selectedProduct.currency,
+          original_price: selectedProduct.price
+        }, 
+        quantity, 
+        customPrice, 
+        discountRate
+      );
+      
       onOpenChange(false);
       setDetailsDialogOpen(false);
       resetForm();
