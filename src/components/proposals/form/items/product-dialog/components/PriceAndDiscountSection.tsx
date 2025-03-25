@@ -67,7 +67,7 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
             <SelectTrigger id="currency-select" className="w-full">
               <SelectValue placeholder="Para Birimi" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper" className="bg-white z-50">
               {currencyOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.symbol} {option.value}
@@ -106,7 +106,7 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
             <SelectTrigger id="vat-rate" className="w-full">
               <SelectValue placeholder="KDV Oranı" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white z-50">
               {[0, 10, 18, 20].map((rate) => (
                 <SelectItem key={rate} value={`${rate}`}>
                   {rate}%
