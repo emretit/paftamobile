@@ -1,28 +1,19 @@
 
-import { useParams } from "react-router-dom";
-import ProductFormWrapper from "@/components/products/form/ProductFormWrapper";
-import DefaultLayout from "@/components/layouts/DefaultLayout";
-import { Toaster } from "@/components/ui/toaster";
+import React from 'react';
+import PlaceholderPage from '../components/PlaceholderPage';
 
 interface ProductFormProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
 }
 
-const ProductForm = ({ isCollapsed, setIsCollapsed }: ProductFormProps) => {
-  const { id } = useParams();
-  const title = id ? "Ürün Düzenle" : "Yeni Ürün Ekle";
-  
+const ProductForm: React.FC<ProductFormProps> = ({ isCollapsed, setIsCollapsed }) => {
   return (
-    <DefaultLayout 
+    <PlaceholderPage 
+      title="Ürün Formu" 
       isCollapsed={isCollapsed} 
-      setIsCollapsed={setIsCollapsed}
-      title={title}
-      subtitle="Ürün bilgilerini doldurun ve kaydedin"
-    >
-      <ProductFormWrapper />
-      <Toaster />
-    </DefaultLayout>
+      setIsCollapsed={setIsCollapsed} 
+    />
   );
 };
 

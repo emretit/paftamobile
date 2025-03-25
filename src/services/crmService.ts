@@ -1,50 +1,47 @@
 
-import { ServiceOptions } from "./base/BaseService";
-import { proposalService, changeProposalStatus } from "./proposal/proposalService";
-import { opportunityService } from "./opportunity/opportunityService";
-import { Proposal, ProposalStatus, ProposalAttachment } from "@/types/proposal";
-import { Opportunity } from "@/types/crm";
+import { supabase } from "@/integrations/supabase/client";
+import { Proposal } from "@/types/proposal";
 
-// Re-export the services
-export { proposalService, opportunityService, changeProposalStatus };
+export const crmService = {
+  async createProposal(data: Partial<Proposal>) {
+    try {
+      const { data: result, error } = await supabase
+        .from('proposals')
+        .insert({
+          title: data.title,
+          description: data.description,
+          valid_until: data.valid_until,
+          payment_terms: data.payment_terms,
+          delivery_terms: data.delivery_terms,
+          notes: data.notes,
+          status: data.status || 'draft',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select();
 
-// Re-export the interface
-export type CrmServiceOptions = ServiceOptions;
-
-class CrmService {
-  // Proposal Methods
-  async getProposals(options: CrmServiceOptions = {}) {
-    return proposalService.getProposals(options);
-  }
+      if (error) throw error;
+      
+      return { data: result, error: null };
+    } catch (error) {
+      console.error('Error creating proposal:', error);
+      return { data: null, error };
+    }
+  },
   
-  async getProposalById(id: string) {
-    return proposalService.getProposalById(id);
-  }
-  
-  async createProposal(proposal: Partial<Proposal>) {
-    return proposalService.createProposal(proposal);
-  }
-  
-  async updateProposal(id: string, proposal: Partial<Proposal>) {
-    return proposalService.updateProposal(id, proposal);
-  }
-  
-  async deleteProposal(id: string) {
-    return proposalService.deleteProposal(id);
-  }
-  
-  async updateProposalStatus(id: string, status: ProposalStatus) {
-    return proposalService.updateProposalStatus(id, status);
-  }
-  
-  async addProposalAttachment(id: string, attachment: ProposalAttachment) {
-    return proposalService.addProposalAttachment(id, attachment);
-  }
-  
-  // Opportunity Methods
-  async updateOpportunity(id: string, updateData: Partial<Opportunity>) {
-    return opportunityService.updateOpportunity(id, updateData);
-  }
-}
-
-export const crmService = new CrmService();
+  async getProposals() {
+    try {
+      const { data, error } = await supabase
+        .from('proposals')
+        .select()
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error getting proposals:', error);
+      return { data: null, error };
+    }
+  },
+};

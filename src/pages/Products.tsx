@@ -1,140 +1,19 @@
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Plus, LayoutGrid, Table as TableIcon } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import ProductFilters from "@/components/products/ProductFilters";
-import ProductGrid from "@/components/products/ProductGrid";
-import ProductTable from "@/components/products/ProductTable";
-import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
-import { TopBar } from "@/components/TopBar";
+import React from 'react';
+import PlaceholderPage from '../components/PlaceholderPage';
 
 interface ProductsProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
 }
 
-const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
-  const navigate = useNavigate();
-  const [view, setView] = useState<"grid" | "table">("table");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [stockFilter, setStockFilter] = useState("all");
-
-  const { data: categories = [] } = useQuery({
-    queryKey: ["categories"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("product_categories")
-        .select("id, name");
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ["products", searchQuery, categoryFilter, stockFilter],
-    queryFn: async () => {
-      let query = supabase
-        .from("products")
-        .select(`
-          *,
-          product_categories (
-            id,
-            name
-          )
-        `);
-
-      if (searchQuery) {
-        query = query.ilike("name", `%${searchQuery}%`);
-      }
-
-      if (categoryFilter && categoryFilter !== "all") {
-        query = query.eq("category_id", categoryFilter);
-      }
-
-      if (stockFilter !== "all") {
-        switch (stockFilter) {
-          case "out_of_stock":
-            query = query.eq("stock_quantity", 0);
-            break;
-          case "low_stock":
-            query = query.gt("stock_quantity", 0).lte("stock_quantity", 5);
-            break;
-          case "in_stock":
-            query = query.gt("stock_quantity", 5);
-            break;
-        }
-      }
-
-      const { data, error } = await query.order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const handleBulkAction = async (action: string) => {
-    console.log('Bulk action:', action);
-  };
-
+const Products: React.FC<ProductsProps> = ({ isCollapsed, setIsCollapsed }) => {
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <main className={`flex-1 transition-all duration-300 ${
-        isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
-      }`}>
-        <TopBar />
-        <div className="container mx-auto p-8 max-w-7xl">
-          <ProductFilters
-            setSearchQuery={setSearchQuery}
-            categoryFilter={categoryFilter}
-            setCategoryFilter={setCategoryFilter}
-            stockFilter={stockFilter}
-            setStockFilter={setStockFilter}
-            categories={categories}
-            totalProducts={products.length}
-            onBulkAction={handleBulkAction}
-          />
-
-          <div className="flex items-center justify-between mt-6">
-            <div className="flex items-center space-x-2">
-              <div className="border rounded-lg p-1">
-                <Button
-                  variant={view === "grid" ? "default" : "ghost"}
-                  size="icon"
-                  onClick={() => setView("grid")}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={view === "table" ? "default" : "ghost"}
-                  size="icon"
-                  onClick={() => setView("table")}
-                >
-                  <TableIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            <Button onClick={() => navigate("/product-form")} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Yeni Ürün
-            </Button>
-          </div>
-
-          <div className="mt-6 rounded-lg border bg-card">
-            {view === "grid" ? (
-              <ProductGrid products={products || []} isLoading={isLoading} />
-            ) : (
-              <ProductTable products={products || []} isLoading={isLoading} />
-            )}
-          </div>
-        </div>
-      </main>
-    </div>
+    <PlaceholderPage 
+      title="Ürünler" 
+      isCollapsed={isCollapsed} 
+      setIsCollapsed={setIsCollapsed} 
+    />
   );
 };
 

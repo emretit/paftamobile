@@ -1,54 +1,19 @@
 
-import Navbar from "@/components/Navbar";
-import CustomerFormHeader from "@/components/customers/CustomerFormHeader";
-import CustomerFormContent from "@/components/customers/CustomerFormContent";
-import { useCustomerForm } from "@/hooks/useCustomerForm";
+import React from 'react';
+import PlaceholderPage from '../components/PlaceholderPage';
 
 interface CustomerFormProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
 }
 
-const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
-  const {
-    id,
-    formData,
-    setFormData,
-    isLoadingCustomer,
-    customerError,
-    mutation,
-    handleSubmit,
-    navigate
-  } = useCustomerForm();
-
-  if (customerError) {
-    return null;
-  }
-
+const CustomerForm: React.FC<CustomerFormProps> = ({ isCollapsed, setIsCollapsed }) => {
   return (
-    <div className="min-h-screen bg-white flex relative">
-      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <main
-        className={`flex-1 p-4 sm:p-8 transition-all duration-300 ${
-          isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
-        }`}
-      >
-        <CustomerFormHeader id={id} />
-
-        {isLoadingCustomer && id ? (
-          <div className="text-center py-8">Yükleniyor...</div>
-        ) : (
-          <CustomerFormContent 
-            formData={formData}
-            setFormData={setFormData}
-            handleSubmit={handleSubmit}
-            isPending={mutation.isPending}
-            isEdit={!!id}
-            onCancel={() => navigate('/contacts')}
-          />
-        )}
-      </main>
-    </div>
+    <PlaceholderPage 
+      title="Müşteri Formu" 
+      isCollapsed={isCollapsed} 
+      setIsCollapsed={setIsCollapsed} 
+    />
   );
 };
 

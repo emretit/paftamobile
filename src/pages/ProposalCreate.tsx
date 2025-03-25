@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from 'react';
 import { useNavigate } from "react-router-dom";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import ProposalForm from "@/components/proposals/form/ProposalForm";
@@ -14,7 +14,7 @@ interface ProposalCreateProps {
 
 const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) => {
   const navigate = useNavigate();
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = React.useState(false);
   const { createProposal } = useProposalForm();
 
   const handleBack = () => {

@@ -1,10 +1,45 @@
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { ThemeProvider } from './components/ui/theme-provider';
 import { Toaster } from './components/ui/toaster';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
+import AuthGuard from './components/AuthGuard';
 import { handleApiRequest } from './api/routes';
+
+// Import all page components
+import Index from './pages/Index';
+import Auth from './pages/Auth';
+import Dashboard from './pages/Dashboard';
+import Products from './pages/Products';
+import ProductForm from './pages/ProductForm';
+import ProductDetails from './pages/ProductDetails';
+import Contacts from './pages/Contacts';
+import CustomerForm from './pages/CustomerForm';
+import ContactDetails from './pages/ContactDetails';
+import CustomerEdit from './pages/CustomerEdit';
+import Suppliers from './pages/Suppliers';
+import SupplierDetails from './pages/SupplierDetails';
+import SupplierForm from './pages/SupplierForm';
+import Employees from './pages/Employees';
+import AddEmployee from './pages/AddEmployee';
+import EmployeeDetails from './pages/EmployeeDetails';
+import EmployeeForm from './pages/EmployeeForm';
+import Finance from './pages/Finance';
+import Service from './pages/Service';
+import Settings from './pages/Settings';
+import PurchaseInvoices from './pages/PurchaseInvoices';
+import SalesInvoices from './pages/SalesInvoices';
+import PurchaseManagement from './pages/PurchaseManagement';
+import Proposals from './pages/Proposals';
+import ProposalCreate from './pages/ProposalCreate';
+import ProposalDetail from './pages/ProposalDetail';
+import ProposalEdit from './pages/ProposalEdit';
+import Tasks from './pages/Tasks';
+import Opportunities from './pages/Opportunities';
+import CrmDashboard from './pages/CrmDashboard';
 
 const originalFetch = window.fetch;
 window.fetch = async function(input: RequestInfo | URL, init?: RequestInit) {
