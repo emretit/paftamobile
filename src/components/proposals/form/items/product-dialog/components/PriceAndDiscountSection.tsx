@@ -1,18 +1,13 @@
 
 import React, { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { getCurrencyOptions, fetchTCMBExchangeRates } from "../../utils/currencyUtils";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { RefreshCcw } from "lucide-react";
+
+// Import refactored components
+import CurrencySelector from "./price-section/CurrencySelector";
+import PriceInput from "./price-section/PriceInput";
+import TaxRateSelector from "./price-section/TaxRateSelector";
+import PriceSummary from "./price-section/PriceSummary";
 
 interface PriceAndDiscountSectionProps {
   customPrice: number | undefined;
@@ -116,104 +111,62 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
     handleCurrencyChange(value);
   };
 
+  const handlePriceChange = (value: number | string) => {
+    setLocalPrice(value);
+    setCustomPrice(Number(value));
+  };
+
+  const handleDiscountChange = (value: number | string) => {
+    const numValue = Number(value);
+    setLocalDiscountRate(numValue);
+    setDiscountRate(numValue);
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-4">
-        <div className="col-span-1 space-y-2">
-          <Label htmlFor="currency-select" className="font-medium">Para Birimi</Label>
-          <Select 
-            value={selectedCurrency} 
-            onValueChange={onCurrencyChange}
-            disabled={isLoading}
-          >
-            <SelectTrigger id="currency-select" className="w-full">
-              <SelectValue placeholder="Para Birimi" />
-            </SelectTrigger>
-            <SelectContent position="popper" className="bg-white z-[100] min-w-[8rem]">
-              {currencyOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.symbol} {option.value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {isLoading && (
-            <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-              <RefreshCcw className="h-3 w-3 animate-spin" />
-              <span>Kurlar yükleniyor...</span>
-            </div>
-          )}
+        <div className="col-span-1">
+          <CurrencySelector
+            selectedCurrency={selectedCurrency}
+            onCurrencyChange={onCurrencyChange}
+            currencyOptions={currencyOptions}
+            isLoading={isLoading}
+          />
         </div>
 
-        <div className="col-span-1 space-y-2">
-          <Label htmlFor="unit-price" className="font-medium">Birim Fiyat</Label>
-          <Input
+        <div className="col-span-1">
+          <PriceInput
             id="unit-price"
-            type="number"
+            label="Birim Fiyat"
             value={localPrice}
-            onChange={(e) => {
-              const value = e.target.value;
-              setLocalPrice(value);
-              setCustomPrice(Number(value));
-            }}
-            placeholder="Birim Fiyat"
-            className="w-full"
+            onChange={handlePriceChange}
           />
         </div>
 
-        <div className="col-span-1 space-y-2">
-          <Label htmlFor="vat-rate" className="font-medium">KDV Oranı (%)</Label>
-          <Select 
-            value={`${localDiscountRate}`}
-            onValueChange={(value) => {
-              const numValue = Number(value);
-              setLocalDiscountRate(numValue);
-              setDiscountRate(numValue);
-            }}
-          >
-            <SelectTrigger id="vat-rate" className="w-full">
-              <SelectValue placeholder="KDV Oranı" />
-            </SelectTrigger>
-            <SelectContent position="popper" className="bg-white z-[100]">
-              {[0, 10, 18, 20].map((rate) => (
-                <SelectItem key={rate} value={`${rate}`}>
-                  {rate}%
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="col-span-1 space-y-2">
-          <Label htmlFor="discount-rate" className="font-medium">İndirim Oranı (%)</Label>
-          <Input
-            id="discount-rate"
-            type="number"
+        <div className="col-span-1">
+          <TaxRateSelector
             value={localDiscountRate}
-            onChange={(e) => {
-              const value = Number(e.target.value);
-              setLocalDiscountRate(value);
-              setDiscountRate(value);
-            }}
+            onChange={handleDiscountChange}
+          />
+        </div>
+
+        <div className="col-span-1">
+          <PriceInput
+            id="discount-rate"
+            label="İndirim Oranı (%)"
+            value={localDiscountRate}
+            onChange={handleDiscountChange}
             placeholder="İndirim Oranı"
-            className="w-full"
           />
         </div>
       </div>
 
-      <div className="mt-4 p-3 bg-muted/40 rounded-md border">
-        <h4 className="text-sm font-medium mb-2">Fiyat Özeti</h4>
-        <div className="space-y-1 text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Önceki Tekliflerdeki Fiyat:</span>
-            <span>{formatCurrency(convertedPrice, selectedCurrency)}</span>
-          </div>
-          <div className="flex justify-between font-medium pt-1 border-t mt-1">
-            <span>Toplam Fiyat (KDV Dahil):</span>
-            <span>{formatCurrency(calculateTotalPrice(), selectedCurrency)}</span>
-          </div>
-        </div>
-      </div>
+      <PriceSummary
+        convertedPrice={convertedPrice}
+        calculatedTotal={calculateTotalPrice()}
+        selectedCurrency={selectedCurrency}
+        formatCurrency={formatCurrency}
+      />
     </div>
   );
 };
