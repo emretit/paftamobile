@@ -75,7 +75,7 @@ class CrmService {
       const proposalNumber = await this.generateProposalNumber();
       
       // Create a clean insert data object
-      const insertData: Record<string, any> = {
+      const insertData: any = {
         title: proposal.title,
         description: proposal.description,
         customer_id: proposal.customer_id,
@@ -163,7 +163,7 @@ class CrmService {
       
       const { data, error } = await supabase
         .from('proposals')
-        .update(updateData)
+        .update(updateData as any)
         .eq('id', id)
         .select()
         .single();
