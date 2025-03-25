@@ -1,18 +1,17 @@
 
 import { useState, useEffect } from "react";
-import { formatCurrencyValue, getCurrencyOptions, getCurrencySymbol } from "../utils/currencyUtils";
+import { formatCurrencyValue, getCurrencyOptions, getCurrencySymbol, fetchTCMBExchangeRates } from "../utils/currencyUtils";
 import { toast } from "sonner";
 
 export const useCurrencyManagement = () => {
   const [selectedCurrency, setSelectedCurrency] = useState("TRY");
-  // Hard-coded exchange rates for demonstration purposes
-  // In a real application, this would come from an API
   const [exchangeRates, setExchangeRates] = useState({
     TRY: 1,
     USD: 32.5,
     EUR: 35.2,
     GBP: 41.3
   });
+  const [isLoadingRates, setIsLoadingRates] = useState(false);
 
   // Get currency options for select inputs
   const currencyOptions = getCurrencyOptions();
@@ -33,20 +32,24 @@ export const useCurrencyManagement = () => {
     toast.success(`Para birimi ${value} olarak değiştirildi`);
   };
 
-  // Fetch exchange rates from an API
+  // Fetch exchange rates from TCMB when component mounts
   useEffect(() => {
-    // This would be replaced with an actual API call in a production environment
-    const fetchExchangeRates = async () => {
+    const getExchangeRates = async () => {
+      setIsLoadingRates(true);
       try {
-        // In a real application, this would fetch the latest exchange rates
-        // For now, we'll use the static rates defined above
-        console.log("Exchange rates would be fetched here in production");
+        const rates = await fetchTCMBExchangeRates();
+        setExchangeRates(rates);
+        console.log("TCMB Exchange rates loaded:", rates);
+        toast.success("Güncel döviz kurları yüklendi");
       } catch (error) {
         console.error("Error fetching exchange rates:", error);
+        toast.error("Döviz kurları yüklenemedi, varsayılan değerler kullanılıyor");
+      } finally {
+        setIsLoadingRates(false);
       }
     };
 
-    fetchExchangeRates();
+    getExchangeRates();
   }, []);
 
   return {
@@ -56,6 +59,7 @@ export const useCurrencyManagement = () => {
     currencyOptions,
     formatCurrency,
     getCurrencySymbol: getCurrencySymbolValue,
-    handleCurrencyChange
+    handleCurrencyChange,
+    isLoadingRates
   };
 };

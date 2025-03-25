@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/types/product";
-import { convertCurrency, getCurrentExchangeRates } from "../utils/currencyUtils";
+import { convertCurrency, getCurrentExchangeRates, fetchTCMBExchangeRates } from "../utils/currencyUtils";
 
 // Import refactored components
 import ProductInfoSection from "./components/ProductInfoSection";
@@ -61,6 +61,33 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
   const [originalPrice, setOriginalPrice] = useState(0);
   const [originalCurrency, setOriginalCurrency] = useState("");
   const [currentCurrency, setCurrentCurrency] = useState(selectedCurrency);
+  const [exchangeRates, setExchangeRates] = useState({
+    TRY: 1,
+    USD: 32.5,
+    EUR: 35.2,
+    GBP: 41.3
+  });
+  const [isLoadingRates, setIsLoadingRates] = useState(false);
+
+  // Fetch exchange rates when dialog opens
+  useEffect(() => {
+    if (open) {
+      const getExchangeRates = async () => {
+        setIsLoadingRates(true);
+        try {
+          const rates = await fetchTCMBExchangeRates();
+          setExchangeRates(rates);
+          console.log("Dialog Exchange rates loaded:", rates);
+        } catch (error) {
+          console.error("Error fetching exchange rates in dialog:", error);
+        } finally {
+          setIsLoadingRates(false);
+        }
+      };
+      
+      getExchangeRates();
+    }
+  }, [open]);
 
   // Update calculations when inputs change
   useEffect(() => {
@@ -95,9 +122,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
       const productPrice = selectedProduct.price;
       
       if (productCurrency !== currentCurrency) {
-        // Get current exchange rates
-        const exchangeRates = getCurrentExchangeRates();
-        
+        // Convert using fetched exchange rates
         const newConvertedPrice = convertCurrency(
           productPrice,
           productCurrency,
@@ -120,7 +145,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
         }
       }
     }
-  }, [currentCurrency, selectedProduct, customPrice, originalPrice]);
+  }, [currentCurrency, selectedProduct, customPrice, originalPrice, exchangeRates]);
 
   // Set initial values when dialog opens
   useEffect(() => {
@@ -205,6 +230,12 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
         </div>
         
         <DialogFooter>
+          {isLoadingRates && (
+            <div className="mr-auto text-sm text-muted-foreground flex items-center">
+              <span className="animate-pulse mr-2">●</span>
+              Güncel kurlar yükleniyor...
+            </div>
+          )}
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             İptal
           </Button>

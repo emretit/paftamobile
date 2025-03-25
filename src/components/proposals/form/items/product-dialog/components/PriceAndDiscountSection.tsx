@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getCurrencyOptions } from "../../utils/currencyUtils";
+import { getCurrencyOptions, fetchTCMBExchangeRates } from "../../utils/currencyUtils";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
@@ -40,6 +40,32 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
   const currencyOptions = getCurrencyOptions();
   const [localPrice, setLocalPrice] = useState<number | string>(customPrice || convertedPrice);
   const [localDiscountRate, setLocalDiscountRate] = useState(discountRate);
+  const [exchangeRates, setExchangeRates] = useState({
+    TRY: 1,
+    USD: 32.5,
+    EUR: 35.2,
+    GBP: 41.3
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch exchange rates when component mounts
+  useEffect(() => {
+    const getExchangeRates = async () => {
+      setIsLoading(true);
+      try {
+        const rates = await fetchTCMBExchangeRates();
+        setExchangeRates(rates);
+        console.log("Exchange rates updated:", rates);
+      } catch (error) {
+        console.error("Failed to fetch exchange rates:", error);
+        toast.error("Güncel döviz kurları alınamadı, varsayılan değerler kullanılıyor");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getExchangeRates();
+  }, []);
 
   useEffect(() => {
     setLocalPrice(customPrice || convertedPrice);
@@ -55,6 +81,31 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
 
   const onCurrencyChange = (value: string) => {
     console.log("Currency selection changed to:", value);
+    
+    // Convert price to new currency
+    if (originalCurrency && localPrice) {
+      // Only convert if we're changing from the current currency
+      if (value !== selectedCurrency) {
+        // First convert to TRY (if not already)
+        let priceInTRY = Number(localPrice);
+        if (selectedCurrency !== "TRY") {
+          priceInTRY = priceInTRY * exchangeRates[selectedCurrency];
+        }
+        
+        // Then convert from TRY to target currency
+        let newPrice = priceInTRY;
+        if (value !== "TRY") {
+          newPrice = priceInTRY / exchangeRates[value];
+        }
+        
+        // Update price with converted value
+        setLocalPrice(newPrice.toFixed(2));
+        setCustomPrice(Number(newPrice.toFixed(2)));
+        
+        toast.info(`Fiyat ${selectedCurrency}'den ${value}'ye dönüştürüldü (${formatCurrency(Number(localPrice), selectedCurrency)} → ${formatCurrency(newPrice, value)})`);
+      }
+    }
+    
     toast.info(`Para birimi ${value} olarak değiştirildi`);
     handleCurrencyChange(value);
   };
@@ -67,6 +118,7 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
           <Select 
             value={selectedCurrency} 
             onValueChange={onCurrencyChange}
+            disabled={isLoading}
           >
             <SelectTrigger id="currency-select" className="w-full">
               <SelectValue placeholder="Para Birimi" />
@@ -79,6 +131,7 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
               ))}
             </SelectContent>
           </Select>
+          {isLoading && <p className="text-xs text-muted-foreground">Kurlar yükleniyor...</p>}
         </div>
 
         <div className="col-span-1 space-y-2">
