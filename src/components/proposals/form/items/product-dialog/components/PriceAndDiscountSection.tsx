@@ -6,7 +6,6 @@ import { toast } from "sonner";
 // Import refactored components
 import PriceInput from "./price-section/PriceInput";
 import TaxRateSelector from "./price-section/TaxRateSelector";
-import PriceSummary from "./price-section/PriceSummary";
 
 interface PriceAndDiscountSectionProps {
   customPrice: number | undefined;
@@ -115,13 +114,8 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
           />
         </div>
       </div>
-
-      <PriceSummary
-        convertedPrice={convertedPrice}
-        calculatedTotal={calculateTotalPrice()}
-        selectedCurrency={originalCurrency}
-        formatCurrency={formatCurrency}
-      />
+      
+      {/* PriceSummary component removed from here to avoid duplication */}
     </div>
   );
 };
