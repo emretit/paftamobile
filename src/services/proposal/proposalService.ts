@@ -92,15 +92,13 @@ export class ProposalService extends BaseService {
         updated_at: new Date().toISOString()
       };
       
-      // Add attachments and items if they exist
+      // Store attachments and items directly as JSON strings if they exist
       if (proposal.attachments && proposal.attachments.length > 0) {
-        // Use type assertion to explicitly tell TypeScript this is OK
-        insertData.attachments = proposal.attachments as unknown as Json;
+        insertData.attachments = JSON.stringify(proposal.attachments);
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        // Use type assertion to explicitly tell TypeScript this is OK
-        insertData.items = proposal.items as unknown as Json;
+        insertData.items = JSON.stringify(proposal.items);
       }
       
       const { data, error } = await supabase
@@ -111,14 +109,19 @@ export class ProposalService extends BaseService {
       
       if (error) throw error;
       
-      // Convert the attachments from JSON to the correct Type for the response
-      if (data.attachments) {
-        data.attachments = data.attachments as unknown as ProposalAttachment[];
-      }
-      
-      // Convert items from JSON to the correct Type for the response
-      if (data.items) {
-        data.items = data.items as unknown as ProposalItem[];
+      // Parse the JSON strings back to objects for the response
+      if (data) {
+        if (data.attachments && typeof data.attachments === 'string') {
+          data.attachments = JSON.parse(data.attachments) as ProposalAttachment[];
+        } else if (data.attachments) {
+          data.attachments = data.attachments as unknown as ProposalAttachment[];
+        }
+        
+        if (data.items && typeof data.items === 'string') {
+          data.items = JSON.parse(data.items) as ProposalItem[];
+        } else if (data.items) {
+          data.items = data.items as unknown as ProposalItem[];
+        }
       }
       
       return { data, error: null };
@@ -150,15 +153,13 @@ export class ProposalService extends BaseService {
       if (proposal.currency !== undefined) updateData.currency = proposal.currency;
       if (proposal.total_amount !== undefined) updateData.total_amount = proposal.total_amount;
       
-      // Handle complex types
+      // Convert complex types to JSON strings
       if (proposal.attachments !== undefined) {
-        // Use type assertion to explicitly tell TypeScript this is OK
-        updateData.attachments = proposal.attachments as unknown as Json;
+        updateData.attachments = JSON.stringify(proposal.attachments);
       }
       
       if (proposal.items !== undefined) {
-        // Use type assertion to explicitly tell TypeScript this is OK
-        updateData.items = proposal.items as unknown as Json;
+        updateData.items = JSON.stringify(proposal.items);
       }
       
       const { data, error } = await supabase
@@ -169,6 +170,21 @@ export class ProposalService extends BaseService {
         .single();
       
       if (error) throw error;
+      
+      // Parse JSON strings back to objects for the response
+      if (data) {
+        if (data.attachments && typeof data.attachments === 'string') {
+          data.attachments = JSON.parse(data.attachments) as ProposalAttachment[];
+        } else if (data.attachments) {
+          data.attachments = data.attachments as unknown as ProposalAttachment[];
+        }
+        
+        if (data.items && typeof data.items === 'string') {
+          data.items = JSON.parse(data.items) as ProposalItem[];
+        } else if (data.items) {
+          data.items = data.items as unknown as ProposalItem[];
+        }
+      }
       
       return { data, error: null };
     } catch (error) {
