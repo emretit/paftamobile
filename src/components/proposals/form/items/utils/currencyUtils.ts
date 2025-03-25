@@ -1,4 +1,3 @@
-
 import { ExchangeRates, CurrencyOption } from "../types/currencyTypes";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,7 +16,7 @@ export const formatCurrencyValue = (amount: number, currency: string = "TRY"): s
   return formatter.format(amount);
 };
 
-// Fetch exchange rates from the database
+// Fetch exchange rates from the database with better error handling
 export const fetchTCMBExchangeRates = async (): Promise<ExchangeRates> => {
   try {
     // First try to get from the database
@@ -27,28 +26,33 @@ export const fetchTCMBExchangeRates = async (): Promise<ExchangeRates> => {
       .order('update_date', { ascending: false });
     
     if (error) {
+      console.error("Database error:", error);
       throw new Error(`Database error: ${error.message}`);
     }
     
     if (data && data.length > 0) {
       // Transform the data into the expected format
       const rates: ExchangeRates = { TRY: 1 };
+      const updateDate = data[0].update_date;
+      
       data.forEach(rate => {
         if (rate.currency_code && rate.forex_buying) {
           rates[rate.currency_code] = rate.forex_buying;
         }
       });
       
-      console.log("Database Exchange rates fetched:", rates);
+      console.log(`Exchange rates fetched (${updateDate}):`, rates);
       return rates;
     }
     
     // If no data in database, try the edge function
+    console.log("No rates in database, trying edge function");
     const { data: functionData, error: functionError } = await supabase.functions.invoke('fetch-exchange-rates', {
       method: 'GET'
     });
     
     if (functionError) {
+      console.error("Function error:", functionError);
       throw new Error(`Function error: ${functionError.message}`);
     }
     
@@ -65,6 +69,7 @@ export const fetchTCMBExchangeRates = async (): Promise<ExchangeRates> => {
       return rates;
     }
     
+    console.warn("No exchange rate data available, using fallback rates");
     throw new Error('No exchange rate data available');
   } catch (error) {
     console.error("Error fetching exchange rates:", error);

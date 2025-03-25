@@ -1,11 +1,10 @@
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import ChartWrapper from "@/components/ui/chart-wrapper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { supabase } from "@/integrations/supabase/client";
-import { ExchangeRates } from "@/components/proposals/form/items/types/currencyTypes";
+import ExchangeRateCard from "@/components/dashboard/ExchangeRateCard";
 
 interface DashboardProps {
   isCollapsed: boolean;
@@ -13,39 +12,6 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
-  const [exchangeRates, setExchangeRates] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchExchangeRates() {
-      try {
-        // Fetch the latest exchange rates
-        const { data: rates, error } = await supabase
-          .from('exchange_rates')
-          .select('*')
-          .order('update_date', { ascending: false })
-          .limit(14); // Get the top currencies
-
-        if (error) {
-          console.error('Error fetching exchange rates:', error);
-          throw error;
-        }
-
-        if (rates && rates.length > 0) {
-          setExchangeRates(rates);
-          setLastUpdate(rates[0].update_date);
-        }
-      } catch (error) {
-        console.error('Error in fetchExchangeRates:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchExchangeRates();
-  }, []);
-
   const cardData = [
     {
       title: "Toplam Müşteri",
@@ -87,12 +53,6 @@ const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
     { name: "Mayıs", total: 1890 },
     { name: "Haziran", total: 2390 },
   ];
-
-  // Format number with 4 decimal places
-  const formatRate = (rate: number | null) => {
-    if (rate === null) return '-';
-    return rate.toFixed(4);
-  };
   
   return (
     <DefaultLayout
@@ -133,48 +93,7 @@ const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
 
         {/* Exchange Rates */}
         <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                TCMB Döviz Kurları
-                <span className="text-sm font-normal text-muted-foreground">
-                  {lastUpdate ? `Son güncelleme: ${lastUpdate}` : 'Yükleniyor...'}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex justify-center p-4">Döviz kurları yükleniyor...</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-2">Para Birimi</th>
-                        <th className="text-right p-2">Forex Alış</th>
-                        <th className="text-right p-2">Forex Satış</th>
-                        <th className="text-right p-2">Efektif Alış</th>
-                        <th className="text-right p-2">Efektif Satış</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {exchangeRates
-                        .filter(rate => rate.currency_code !== 'TRY')
-                        .map((rate) => (
-                        <tr key={rate.id} className="border-b hover:bg-muted/50">
-                          <td className="p-2 font-medium">{rate.currency_code}</td>
-                          <td className="text-right p-2">{formatRate(rate.forex_buying)}</td>
-                          <td className="text-right p-2">{formatRate(rate.forex_selling)}</td>
-                          <td className="text-right p-2">{formatRate(rate.banknote_buying)}</td>
-                          <td className="text-right p-2">{formatRate(rate.banknote_selling)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <ExchangeRateCard />
         </div>
         
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
