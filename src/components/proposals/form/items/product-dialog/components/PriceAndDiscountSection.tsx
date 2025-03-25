@@ -65,7 +65,6 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
           <Select 
             value={selectedCurrency} 
             onValueChange={handleCurrencyChange}
-            name="currency"
           >
             <SelectTrigger id="currency-select" className="w-full">
               <SelectValue placeholder="Para Birimi" />
@@ -73,7 +72,7 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
             <SelectContent>
               {currencyOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+                  {option.symbol} {option.value}
                 </SelectItem>
               ))}
             </SelectContent>
