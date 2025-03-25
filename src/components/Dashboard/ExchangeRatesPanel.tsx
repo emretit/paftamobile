@@ -6,7 +6,6 @@ import ExchangeRateHeader from './ExchangeRates/ExchangeRateHeader';
 import ExchangeRateError from './ExchangeRates/ExchangeRateError';
 import ExchangeRateLoading from './ExchangeRates/ExchangeRateLoading';
 import MainCurrencyCard from './ExchangeRates/MainCurrencyCard';
-import OtherCurrenciesTable from './ExchangeRates/OtherCurrenciesTable';
 
 export const ExchangeRatesPanel: React.FC = () => {
   const {
@@ -28,17 +27,9 @@ export const ExchangeRatesPanel: React.FC = () => {
     .sort((a, b) => mainCurrencies.indexOf(a.currency_code) - mainCurrencies.indexOf(b.currency_code));
   
   console.log('Main currency rates:', mainRates);
-  
-  const otherRates = rates.filter(rate => 
-    !mainCurrencies.includes(rate.currency_code) && 
-    rate.currency_code !== 'TRY' &&
-    rate.forex_buying !== null
-  ).sort((a, b) => a.currency_code.localeCompare(b.currency_code));
-
-  console.log('Other currency rates:', otherRates);
 
   return (
-    <Card className="shadow-md border-gray-200 bg-white dark:bg-gray-900">
+    <Card className="shadow-md border-gray-200 bg-white dark:bg-gray-900 max-w-3xl mx-auto">
       <CardHeader className="pb-2">
         <ExchangeRateHeader 
           lastUpdateStatus={lastUpdateStatus}
@@ -53,9 +44,9 @@ export const ExchangeRatesPanel: React.FC = () => {
         ) : isLoading ? (
           <ExchangeRateLoading />
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Main currencies display */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {mainRates.length > 0 ? (
                 mainRates.map((rate) => (
                   <MainCurrencyCard key={rate.currency_code} rate={rate} />
@@ -65,12 +56,6 @@ export const ExchangeRatesPanel: React.FC = () => {
                   Ana döviz kurları bulunamadı
                 </div>
               )}
-            </div>
-            
-            {/* Other currencies table */}
-            <div>
-              <h3 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">Diğer Döviz Kurları</h3>
-              <OtherCurrenciesTable rates={otherRates} />
             </div>
           </div>
         )}

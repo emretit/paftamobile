@@ -91,8 +91,9 @@ const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
           ))}
         </div>
         
-        {/* Exchange Rates Panel */}
-        <div className="mt-8 mb-8">
+        {/* Exchange Rates Panel - Made smaller */}
+        <div className="mt-8 mb-8 max-w-3xl mx-auto">
+          <h2 className="text-xl font-semibold mb-4">Döviz Kurları</h2>
           <ExchangeRatesPanel />
         </div>
         
