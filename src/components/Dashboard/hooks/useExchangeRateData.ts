@@ -98,7 +98,11 @@ export const useExchangeRateData = () => {
           setLastUpdated(functionData.update_date || new Date().toISOString());
         } else {
           console.error('No exchange rate data found in function response');
-          throw new Error('Döviz kuru verisi bulunamadı');
+          // Veri yoksa varsayılan değerleri kullan
+          const fallbackRates = getFallbackRates();
+          console.log('Using fallback rates due to empty function response:', fallbackRates);
+          setRates(fallbackRates);
+          setLastUpdated(new Date().toISOString());
         }
       } else {
         console.log('Using data from database, count:', data.length);
@@ -122,8 +126,9 @@ export const useExchangeRateData = () => {
         toast.error('Döviz kurları güncellenirken bir hata oluştu');
       }
       
+      // Hata durumunda her zaman varsayılan değerleri kullan
       const fallbackRates = getFallbackRates();
-      console.log('Using fallback rates:', fallbackRates);
+      console.log('Using fallback rates due to error:', fallbackRates);
       setRates(fallbackRates);
       setLastUpdated(new Date().toISOString());
     } finally {

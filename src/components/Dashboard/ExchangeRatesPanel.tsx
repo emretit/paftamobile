@@ -23,7 +23,10 @@ export const ExchangeRatesPanel: React.FC = () => {
   
   const mainCurrencies = ['USD', 'EUR', 'GBP'];
   
-  const mainRates = rates.filter(rate => mainCurrencies.includes(rate.currency_code))
+  // Eğer rates array'i boşsa ya da beklenen döviz kurları yoksa,
+  // getFallbackRates fonksiyonundan gelen varsayılan değerleri kullanabilir
+  const mainRates = rates
+    .filter(rate => mainCurrencies.includes(rate.currency_code))
     .sort((a, b) => mainCurrencies.indexOf(a.currency_code) - mainCurrencies.indexOf(b.currency_code));
   
   console.log('Main currency rates:', mainRates);
