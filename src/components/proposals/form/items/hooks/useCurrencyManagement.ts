@@ -38,8 +38,15 @@ export const useCurrencyManagement = () => {
       setIsLoadingRates(true);
       try {
         const rates = await fetchTCMBExchangeRates();
-        setExchangeRates(rates);
-        console.log("TCMB Exchange rates loaded:", rates);
+        // Ensure all required currencies exist in the rates object
+        const completeRates = {
+          TRY: rates.TRY || 1,
+          USD: rates.USD || 32.5,
+          EUR: rates.EUR || 35.2,
+          GBP: rates.GBP || 41.3
+        };
+        setExchangeRates(completeRates);
+        console.log("TCMB Exchange rates loaded:", completeRates);
         toast.success("Güncel döviz kurları yüklendi");
       } catch (error) {
         console.error("Error fetching exchange rates:", error);

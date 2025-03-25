@@ -76,8 +76,15 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
         setIsLoadingRates(true);
         try {
           const rates = await fetchTCMBExchangeRates();
-          setExchangeRates(rates);
-          console.log("Dialog Exchange rates loaded:", rates);
+          // Ensure the returned rates object has all required properties
+          const completeRates = {
+            TRY: rates.TRY || 1,
+            USD: rates.USD || 32.5,
+            EUR: rates.EUR || 35.2,
+            GBP: rates.GBP || 41.3
+          };
+          setExchangeRates(completeRates);
+          console.log("Dialog Exchange rates loaded:", completeRates);
         } catch (error) {
           console.error("Error fetching exchange rates in dialog:", error);
         } finally {
