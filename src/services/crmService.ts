@@ -74,7 +74,7 @@ class CrmService {
       // Generate proposal number
       const proposalNumber = await this.generateProposalNumber();
       
-      // Create a clean insert data object without the properties that cause type issues
+      // Create a clean insert data object
       const insertData: Record<string, any> = {
         title: proposal.title,
         description: proposal.description,
@@ -94,13 +94,13 @@ class CrmService {
         updated_at: new Date().toISOString()
       };
       
-      // Add attachments and items if they exist, properly cast to JSON type
+      // Add attachments and items if they exist
       if (proposal.attachments && proposal.attachments.length > 0) {
-        insertData.attachments = proposal.attachments as any;
+        insertData.attachments = proposal.attachments as unknown as Json;
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        insertData.items = proposal.items as any;
+        insertData.items = proposal.items as unknown as Json;
       }
       
       const { data, error } = await supabase
@@ -112,13 +112,15 @@ class CrmService {
       if (error) throw error;
       
       // Convert the attachments from JSON to the correct type for the response
-      if (data && data.attachments) {
-        data.attachments = data.attachments as unknown as ProposalAttachment[];
-      }
-      
-      // Convert items from JSON to the correct type for the response
-      if (data && data.items) {
-        data.items = data.items as unknown as ProposalItem[];
+      if (data) {
+        if (data.attachments) {
+          data.attachments = data.attachments as unknown as ProposalAttachment[];
+        }
+        
+        // Convert items from JSON to the correct type for the response
+        if (data.items) {
+          data.items = data.items as unknown as ProposalItem[];
+        }
       }
       
       return { data, error: null };
@@ -135,7 +137,7 @@ class CrmService {
         updated_at: new Date().toISOString() 
       };
       
-      // Copy properties that don't have type issues
+      // Copy simple properties
       if (proposal.title !== undefined) updateData.title = proposal.title;
       if (proposal.description !== undefined) updateData.description = proposal.description;
       if (proposal.customer_id !== undefined) updateData.customer_id = proposal.customer_id;
@@ -152,11 +154,11 @@ class CrmService {
       
       // Handle complex types that need conversion
       if (proposal.attachments !== undefined) {
-        updateData.attachments = proposal.attachments as any;
+        updateData.attachments = proposal.attachments as unknown as Json;
       }
       
       if (proposal.items !== undefined) {
-        updateData.items = proposal.items as any;
+        updateData.items = proposal.items as unknown as Json;
       }
       
       const { data, error } = await supabase
@@ -217,7 +219,8 @@ class CrmService {
   // Add method for updating opportunities
   async updateOpportunity(id: string, updateData: Partial<Opportunity>) {
     try {
-      // Create a clean update data object
+      // Create a clean update data object with only the properties
+      // that exist in the database table
       const dataToUpdate: Record<string, any> = {};
       
       // Copy simple properties
@@ -226,23 +229,23 @@ class CrmService {
       if (updateData.status !== undefined) dataToUpdate.status = updateData.status;
       if (updateData.priority !== undefined) dataToUpdate.priority = updateData.priority;
       if (updateData.value !== undefined) dataToUpdate.value = updateData.value;
-      if (updateData.currency !== undefined) dataToUpdate.currency = updateData.currency;
+      if ('currency' in updateData) dataToUpdate.currency = updateData.currency;
       if (updateData.customer_id !== undefined) dataToUpdate.customer_id = updateData.customer_id;
       if (updateData.employee_id !== undefined) dataToUpdate.employee_id = updateData.employee_id;
       if (updateData.expected_close_date !== undefined) dataToUpdate.expected_close_date = updateData.expected_close_date;
-      if (updateData.proposal_id !== undefined) dataToUpdate.proposal_id = updateData.proposal_id;
+      if ('proposal_id' in updateData) dataToUpdate.proposal_id = updateData.proposal_id;
       if (updateData.notes !== undefined) dataToUpdate.notes = updateData.notes;
       
       // Handle complex types that need conversion
-      if (updateData.contact_history !== undefined) {
-        dataToUpdate.contact_history = updateData.contact_history as any;
+      if ('contact_history' in updateData && updateData.contact_history !== undefined) {
+        dataToUpdate.contact_history = updateData.contact_history as unknown as Json;
       }
       
-      if (updateData.products !== undefined) {
-        dataToUpdate.products = updateData.products as any;
+      if ('products' in updateData && updateData.products !== undefined) {
+        dataToUpdate.products = updateData.products as unknown as Json;
       }
       
-      if (updateData.tags !== undefined) {
+      if ('tags' in updateData && updateData.tags !== undefined) {
         dataToUpdate.tags = updateData.tags;
       }
       
