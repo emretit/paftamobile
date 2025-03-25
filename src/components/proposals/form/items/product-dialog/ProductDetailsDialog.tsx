@@ -18,6 +18,7 @@ import QuantityDepoSection from "./components/QuantityDepoSection";
 import PriceAndDiscountSection from "./components/PriceAndDiscountSection";
 import NotesSection from "./components/NotesSection";
 import TotalPriceSection from "./components/TotalPriceSection";
+import { toast } from "sonner";
 
 interface ProductDetailsDialogProps {
   open: boolean;
@@ -59,6 +60,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
   const [notes, setNotes] = useState("");
   const [originalPrice, setOriginalPrice] = useState(0);
   const [originalCurrency, setOriginalCurrency] = useState("");
+  const [currentCurrency, setCurrentCurrency] = useState(selectedCurrency);
 
   // Update calculations when inputs change
   useEffect(() => {
@@ -92,14 +94,14 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
       const productCurrency = selectedProduct.currency || "TRY";
       const productPrice = selectedProduct.price;
       
-      if (productCurrency !== selectedCurrency) {
+      if (productCurrency !== currentCurrency) {
         // Get current exchange rates
         const exchangeRates = getCurrentExchangeRates();
         
         const newConvertedPrice = convertCurrency(
           productPrice,
           productCurrency,
-          selectedCurrency,
+          currentCurrency,
           exchangeRates
         );
         
@@ -118,27 +120,30 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
         }
       }
     }
-  }, [selectedCurrency, selectedProduct, customPrice, originalPrice]);
+  }, [currentCurrency, selectedProduct, customPrice, originalPrice]);
 
   // Set initial values when dialog opens
   useEffect(() => {
     if (open && selectedProduct) {
       setOriginalPrice(selectedProduct.price);
       setOriginalCurrency(selectedProduct.currency || "TRY");
+      setCurrentCurrency(selectedCurrency);
       // Set initial price based on product currency (will be converted if needed in the other useEffect)
       setCustomPrice(selectedProduct.price);
     }
-  }, [open, selectedProduct]);
+  }, [open, selectedProduct, selectedCurrency]);
+
+  // Function to handle currency selection change
+  const handleCurrencyChange = (value: string) => {
+    console.log("Currency changed in dialog to:", value);
+    setCurrentCurrency(value);
+    // We'll also send this currency change event to the parent component
+    window.dispatchEvent(new CustomEvent('currency-change', { detail: value }));
+  };
 
   if (!selectedProduct) {
     return null;
   }
-
-  // Function to handle currency selection change
-  const handleCurrencyChange = (value: string) => {
-    // This will trigger the window event for currency change
-    window.dispatchEvent(new CustomEvent('currency-change', { detail: value }));
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -176,7 +181,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
             setCustomPrice={setCustomPrice}
             discountRate={discountRate}
             setDiscountRate={setDiscountRate}
-            selectedCurrency={selectedCurrency}
+            selectedCurrency={currentCurrency}
             handleCurrencyChange={handleCurrencyChange}
             convertedPrice={convertedPrice}
             originalCurrency={originalCurrency}
@@ -195,7 +200,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
             discountRate={discountRate}
             taxRate={selectedProduct.tax_rate}
             formatCurrency={formatCurrency}
-            selectedCurrency={selectedCurrency}
+            selectedCurrency={currentCurrency}
           />
         </div>
         

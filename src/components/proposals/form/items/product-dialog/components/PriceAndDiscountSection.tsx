@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getCurrencyOptions } from "../../utils/currencyUtils";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 interface PriceAndDiscountSectionProps {
   customPrice: number | undefined;
@@ -52,6 +53,12 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
     return calculatedTotal;
   };
 
+  const onCurrencyChange = (value: string) => {
+    console.log("Currency selection changed to:", value);
+    toast.info(`Para birimi ${value} olarak değiştirildi`);
+    handleCurrencyChange(value);
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-4">
@@ -59,15 +66,12 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
           <Label htmlFor="currency-select" className="font-medium">Para Birimi</Label>
           <Select 
             value={selectedCurrency} 
-            onValueChange={(value) => {
-              console.log("Currency changed to:", value);
-              handleCurrencyChange(value);
-            }}
+            onValueChange={onCurrencyChange}
           >
             <SelectTrigger id="currency-select" className="w-full">
               <SelectValue placeholder="Para Birimi" />
             </SelectTrigger>
-            <SelectContent position="popper" className="bg-white z-50">
+            <SelectContent position="popper" className="bg-white z-[100] min-w-[8rem]">
               {currencyOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.symbol} {option.value}
@@ -106,7 +110,7 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
             <SelectTrigger id="vat-rate" className="w-full">
               <SelectValue placeholder="KDV Oranı" />
             </SelectTrigger>
-            <SelectContent className="bg-white z-50">
+            <SelectContent position="popper" className="bg-white z-[100]">
               {[0, 10, 18, 20].map((rate) => (
                 <SelectItem key={rate} value={`${rate}`}>
                   {rate}%
