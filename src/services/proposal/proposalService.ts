@@ -94,11 +94,13 @@ export class ProposalService extends BaseService {
       
       // Add attachments and items if they exist - properly convert to JSON compatible format
       if (proposal.attachments && proposal.attachments.length > 0) {
-        insertData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as unknown as Json;
+        // Use a proper type assertion for the Json type
+        insertData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as Json;
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        insertData.items = JSON.parse(JSON.stringify(proposal.items)) as unknown as Json;
+        // Use a proper type assertion for the Json type
+        insertData.items = JSON.parse(JSON.stringify(proposal.items)) as Json;
       }
       
       const { data, error } = await supabase
@@ -150,11 +152,13 @@ export class ProposalService extends BaseService {
       
       // Handle complex types that need conversion to JSON
       if (proposal.attachments !== undefined) {
-        updateData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as unknown as Json;
+        // Use a proper type assertion for the Json type
+        updateData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as Json;
       }
       
       if (proposal.items !== undefined) {
-        updateData.items = JSON.parse(JSON.stringify(proposal.items)) as unknown as Json;
+        // Use a proper type assertion for the Json type
+        updateData.items = JSON.parse(JSON.stringify(proposal.items)) as Json;
       }
       
       const { data, error } = await supabase

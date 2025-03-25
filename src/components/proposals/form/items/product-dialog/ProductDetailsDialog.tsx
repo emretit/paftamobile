@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -215,6 +216,12 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
     return symbols[code] || code;
   };
 
+  // Function to handle currency selection change
+  const handleCurrencyChange = (value: string) => {
+    // This will trigger the window event for currency change
+    window.dispatchEvent(new CustomEvent('currency-change', { detail: value }));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -293,9 +300,9 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
                 <span>Birim Fiyat ({getCurrencySymbol(selectedCurrency)})</span>
                 <Select 
                   value={selectedCurrency} 
-                  onValueChange={(val) => window.dispatchEvent(new CustomEvent('currency-change', { detail: val }))}
+                  onValueChange={handleCurrencyChange}
                 >
-                  <SelectTrigger className="h-7 w-24">
+                  <SelectTrigger className="h-7 w-24" id="currency-selector">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
