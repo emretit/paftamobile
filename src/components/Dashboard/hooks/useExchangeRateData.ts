@@ -126,7 +126,7 @@ export const useExchangeRateData = () => {
         toast.error('Döviz kurları güncellenirken bir hata oluştu');
       }
       
-      // Hata durumunda her zaman varsayılan değerleri kullan
+      // Hata durumunda varsayılan değerleri kullan
       const fallbackRates = getFallbackRates();
       console.log('Using fallback rates due to error:', fallbackRates);
       setRates(fallbackRates);
