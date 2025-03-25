@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Proposal, ProposalStatus, ProposalAttachment } from "@/types/proposal";
+import { Proposal, ProposalStatus, ProposalAttachment, ProposalItem } from "@/types/proposal";
 import { Json } from "@/types/json";
 import { Opportunity } from "@/types/crm";
 
@@ -74,23 +74,33 @@ class CrmService {
       // Generate proposal number
       const proposalNumber = await this.generateProposalNumber();
       
-      // Prepare the data with type conversions for JSON compatibility
-      const insertData = {
-        ...proposal,
+      // Create a clean insert data object without the properties that cause type issues
+      const insertData: Record<string, any> = {
+        title: proposal.title,
+        description: proposal.description,
+        customer_id: proposal.customer_id,
+        employee_id: proposal.employee_id,
+        opportunity_id: proposal.opportunity_id,
         number: proposalNumber,
         status: proposal.status || 'draft',
+        valid_until: proposal.valid_until,
+        payment_terms: proposal.payment_terms,
+        delivery_terms: proposal.delivery_terms,
+        notes: proposal.notes,
+        terms: proposal.terms,
+        currency: proposal.currency || 'TRY',
+        total_amount: proposal.total_amount || 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
       
-      // Ensure attachments are properly converted to JSON
-      if (insertData.attachments) {
-        insertData.attachments = insertData.attachments as unknown as Json;
+      // Add attachments and items if they exist, properly cast to JSON type
+      if (proposal.attachments && proposal.attachments.length > 0) {
+        insertData.attachments = proposal.attachments as any;
       }
       
-      // Ensure items are properly converted to JSON
-      if (insertData.items) {
-        insertData.items = insertData.items as unknown as Json;
+      if (proposal.items && proposal.items.length > 0) {
+        insertData.items = proposal.items as any;
       }
       
       const { data, error } = await supabase
@@ -101,9 +111,14 @@ class CrmService {
       
       if (error) throw error;
       
-      // Convert the attachments from JSON to the correct type
+      // Convert the attachments from JSON to the correct type for the response
       if (data && data.attachments) {
         data.attachments = data.attachments as unknown as ProposalAttachment[];
+      }
+      
+      // Convert items from JSON to the correct type for the response
+      if (data && data.items) {
+        data.items = data.items as unknown as ProposalItem[];
       }
       
       return { data, error: null };
@@ -115,17 +130,33 @@ class CrmService {
   
   async updateProposal(id: string, proposal: Partial<Proposal>) {
     try {
-      // Convert attachments to JSON type if needed
-      let updateData: any = { ...proposal, updated_at: new Date().toISOString() };
+      // Create a clean update data object
+      const updateData: Record<string, any> = { 
+        updated_at: new Date().toISOString() 
+      };
       
-      // Ensure attachments are properly converted to JSON
-      if (updateData.attachments) {
-        updateData.attachments = updateData.attachments as unknown as Json;
+      // Copy properties that don't have type issues
+      if (proposal.title !== undefined) updateData.title = proposal.title;
+      if (proposal.description !== undefined) updateData.description = proposal.description;
+      if (proposal.customer_id !== undefined) updateData.customer_id = proposal.customer_id;
+      if (proposal.employee_id !== undefined) updateData.employee_id = proposal.employee_id;
+      if (proposal.opportunity_id !== undefined) updateData.opportunity_id = proposal.opportunity_id;
+      if (proposal.status !== undefined) updateData.status = proposal.status;
+      if (proposal.valid_until !== undefined) updateData.valid_until = proposal.valid_until;
+      if (proposal.payment_terms !== undefined) updateData.payment_terms = proposal.payment_terms;
+      if (proposal.delivery_terms !== undefined) updateData.delivery_terms = proposal.delivery_terms;
+      if (proposal.notes !== undefined) updateData.notes = proposal.notes;
+      if (proposal.terms !== undefined) updateData.terms = proposal.terms;
+      if (proposal.currency !== undefined) updateData.currency = proposal.currency;
+      if (proposal.total_amount !== undefined) updateData.total_amount = proposal.total_amount;
+      
+      // Handle complex types that need conversion
+      if (proposal.attachments !== undefined) {
+        updateData.attachments = proposal.attachments as any;
       }
       
-      // Ensure items are properly converted to JSON
-      if (updateData.items) {
-        updateData.items = updateData.items as unknown as Json;
+      if (proposal.items !== undefined) {
+        updateData.items = proposal.items as any;
       }
       
       const { data, error } = await supabase
@@ -186,11 +217,33 @@ class CrmService {
   // Add method for updating opportunities
   async updateOpportunity(id: string, updateData: Partial<Opportunity>) {
     try {
-      // Need to handle contact_history specifically to convert to JSON if present
-      const dataToUpdate: any = { ...updateData };
+      // Create a clean update data object
+      const dataToUpdate: Record<string, any> = {};
       
-      if (updateData.contact_history) {
-        dataToUpdate.contact_history = dataToUpdate.contact_history as unknown as Json;
+      // Copy simple properties
+      if (updateData.title !== undefined) dataToUpdate.title = updateData.title;
+      if (updateData.description !== undefined) dataToUpdate.description = updateData.description;
+      if (updateData.status !== undefined) dataToUpdate.status = updateData.status;
+      if (updateData.priority !== undefined) dataToUpdate.priority = updateData.priority;
+      if (updateData.value !== undefined) dataToUpdate.value = updateData.value;
+      if (updateData.currency !== undefined) dataToUpdate.currency = updateData.currency;
+      if (updateData.customer_id !== undefined) dataToUpdate.customer_id = updateData.customer_id;
+      if (updateData.employee_id !== undefined) dataToUpdate.employee_id = updateData.employee_id;
+      if (updateData.expected_close_date !== undefined) dataToUpdate.expected_close_date = updateData.expected_close_date;
+      if (updateData.proposal_id !== undefined) dataToUpdate.proposal_id = updateData.proposal_id;
+      if (updateData.notes !== undefined) dataToUpdate.notes = updateData.notes;
+      
+      // Handle complex types that need conversion
+      if (updateData.contact_history !== undefined) {
+        dataToUpdate.contact_history = updateData.contact_history as any;
+      }
+      
+      if (updateData.products !== undefined) {
+        dataToUpdate.products = updateData.products as any;
+      }
+      
+      if (updateData.tags !== undefined) {
+        dataToUpdate.tags = updateData.tags;
       }
       
       const { data, error } = await supabase
