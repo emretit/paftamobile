@@ -3,7 +3,7 @@ import React from 'react';
 import { cn } from "@/lib/utils";
 
 interface StatusBadgeProps {
-  label: string;
+  label: string | React.ReactNode;
   variant?: "default" | "success" | "warning" | "error" | "info" | "neutral" | "custom";
   customColors?: {
     bg: string;

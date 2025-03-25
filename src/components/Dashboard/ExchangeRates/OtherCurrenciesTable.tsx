@@ -1,46 +1,59 @@
 
 import React from 'react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ExchangeRate } from "../types/exchangeRateTypes";
-import { getCurrencyName, getCurrencyIcon } from "../utils/exchangeRateUtils";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { getCurrencyIcon, getCurrencyName } from "../utils/exchangeRateUtils";
+import { TrendingDown, TrendingUp } from "lucide-react";
 
 interface OtherCurrenciesTableProps {
   rates: ExchangeRate[];
 }
 
-export const OtherCurrenciesTable: React.FC<OtherCurrenciesTableProps> = ({ rates }) => {
-  if (rates.length === 0) {
+const OtherCurrenciesTable: React.FC<OtherCurrenciesTableProps> = ({ rates }) => {
+  if (!rates.length) {
     return (
-      <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-md">
-        <p className="text-gray-500 dark:text-gray-400">Diğer döviz kurları bulunmuyor.</p>
+      <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+        Diğer döviz kurları bulunamadı.
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto border rounded-md border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50">
+    <div className="overflow-x-auto border border-gray-100 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
       <Table>
-        <TableHeader>
-          <TableRow className="bg-gray-50 dark:bg-gray-800">
-            <TableHead className="text-left font-medium">Para Birimi</TableHead>
-            <TableHead className="text-right font-medium">Alış</TableHead>
-            <TableHead className="text-right font-medium">Satış</TableHead>
+        <TableHeader className="bg-gray-50 dark:bg-gray-700/30">
+          <TableRow>
+            <TableHead className="w-[120px] font-medium text-gray-600 dark:text-gray-300">Para Birimi</TableHead>
+            <TableHead className="font-medium text-gray-600 dark:text-gray-300">İsim</TableHead>
+            <TableHead className="text-right font-medium text-gray-600 dark:text-gray-300">Alış</TableHead>
+            <TableHead className="text-right font-medium text-gray-600 dark:text-gray-300">Satış</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rates.map((rate) => (
-            <TableRow key={rate.currency_code} className="hover:bg-gray-50 dark:hover:bg-gray-800/70 transition-colors">
-              <TableCell>
+            <TableRow 
+              key={rate.currency_code}
+              className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+            >
+              <TableCell className="font-medium">
                 <div className="flex items-center">
-                  <span className="mr-2 font-medium text-primary dark:text-primary-dark">{getCurrencyIcon(rate.currency_code)}</span>
-                  <div>
-                    <span className="font-medium">{rate.currency_code}</span>
-                    <span className="block text-xs text-gray-500 dark:text-gray-400">{getCurrencyName(rate.currency_code)}</span>
-                  </div>
+                  <span className="mr-2 font-bold text-lg text-primary dark:text-primary-dark">{getCurrencyIcon(rate.currency_code)}</span>
+                  {rate.currency_code}
                 </div>
               </TableCell>
-              <TableCell className="text-right font-medium">{rate.forex_buying?.toLocaleString('tr-TR')}</TableCell>
-              <TableCell className="text-right font-medium">{rate.forex_selling?.toLocaleString('tr-TR')}</TableCell>
+              <TableCell>{getCurrencyName(rate.currency_code)}</TableCell>
+              <TableCell className="text-right">
+                <div className="flex items-center justify-end">
+                  <TrendingDown className="mr-1.5 text-green-500" size={16} />
+                  <span>{rate.forex_buying?.toLocaleString('tr-TR', {maximumFractionDigits: 4})}</span>
+                </div>
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="flex items-center justify-end">
+                  <TrendingUp className="mr-1.5 text-red-500" size={16} />
+                  <span>{rate.forex_selling?.toLocaleString('tr-TR', {maximumFractionDigits: 4})}</span>
+                </div>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
