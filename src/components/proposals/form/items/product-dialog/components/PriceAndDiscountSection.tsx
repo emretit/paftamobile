@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { getCurrencyOptions, fetchTCMBExchangeRates } from "../../utils/currencyUtils";
 import { toast } from "sonner";
 
 // Import refactored components
-import CurrencySelector from "./price-section/CurrencySelector";
 import PriceInput from "./price-section/PriceInput";
 import TaxRateSelector from "./price-section/TaxRateSelector";
 import PriceSummary from "./price-section/PriceSummary";
@@ -81,36 +79,6 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
     return calculatedTotal;
   };
 
-  const onCurrencyChange = (value: string) => {
-    console.log("Currency selection changed to:", value);
-    
-    // Convert price to new currency
-    if (originalCurrency && localPrice) {
-      // Only convert if we're changing from the current currency
-      if (value !== selectedCurrency) {
-        // First convert to TRY (if not already)
-        let priceInTRY = Number(localPrice);
-        if (selectedCurrency !== "TRY") {
-          priceInTRY = priceInTRY * exchangeRates[selectedCurrency];
-        }
-        
-        // Then convert from TRY to target currency
-        let newPrice = priceInTRY;
-        if (value !== "TRY") {
-          newPrice = priceInTRY / exchangeRates[value];
-        }
-        
-        // Update price with converted value
-        setLocalPrice(newPrice.toFixed(2));
-        setCustomPrice(Number(newPrice.toFixed(2)));
-        
-        toast.info(`Fiyat ${selectedCurrency}'den ${value}'ye dönüştürüldü (${formatCurrency(Number(localPrice), selectedCurrency)} → ${formatCurrency(newPrice, value)})`);
-      }
-    }
-    
-    handleCurrencyChange(value);
-  };
-
   const handlePriceChange = (value: number | string) => {
     setLocalPrice(value);
     setCustomPrice(Number(value));
@@ -124,16 +92,7 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-4 gap-4">
-        <div className="col-span-1">
-          <CurrencySelector
-            selectedCurrency={selectedCurrency}
-            onCurrencyChange={onCurrencyChange}
-            currencyOptions={currencyOptions}
-            isLoading={isLoading}
-          />
-        </div>
-
+      <div className="grid grid-cols-3 gap-4">
         <div className="col-span-1">
           <PriceInput
             id="unit-price"
