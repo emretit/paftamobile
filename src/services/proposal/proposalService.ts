@@ -8,7 +8,7 @@ import {
   createProposal, 
   updateProposal, 
   deleteProposal, 
-  updateProposalStatus 
+  updateProposalStatus as updateProposalStatusApi
 } from "./api/crudOperations";
 import { addProposalAttachment } from "./api/attachmentOperations";
 import { parseProposalData } from "./helpers/dataParser";
@@ -35,7 +35,7 @@ export class ProposalService extends BaseService {
   }
   
   async updateProposalStatus(id: string, status: ProposalStatus) {
-    return updateProposalStatus(id, status);
+    return updateProposalStatusApi(id, status);
   }
   
   async addProposalAttachment(id: string, attachment: ProposalAttachment) {
@@ -50,7 +50,8 @@ export class ProposalService extends BaseService {
 
 export const proposalService = new ProposalService();
 
-// Export the updateProposalStatus function separately for direct import
-export const updateProposalStatus = (id: string, status: ProposalStatus) => {
+// Export the function with a different name to avoid conflicts
+export const changeProposalStatus = (id: string, status: ProposalStatus) => {
   return proposalService.updateProposalStatus(id, status);
 };
+
