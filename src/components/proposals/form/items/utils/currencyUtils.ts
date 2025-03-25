@@ -74,3 +74,36 @@ export const getCurrencyOptions = (): CurrencyOption[] => {
     { value: "GBP", label: "£ GBP", symbol: "£" }
   ];
 };
+
+// Get current exchange rates (hard-coded for now, would typically come from an API)
+export const getCurrentExchangeRates = (): ExchangeRates => {
+  return {
+    TRY: 1,
+    USD: 32.5,
+    EUR: 35.2,
+    GBP: 41.3
+  };
+};
+
+// Format exchange rate display
+export const formatExchangeRate = (fromCurrency: string, toCurrency: string, rate: number): string => {
+  return `1 ${fromCurrency} = ${rate.toFixed(2)} ${toCurrency}`;
+};
+
+// Calculate exchange rate between two currencies
+export const calculateExchangeRate = (fromCurrency: string, toCurrency: string, rates: ExchangeRates): number => {
+  if (fromCurrency === toCurrency) return 1;
+  
+  if (fromCurrency === 'TRY') {
+    return 1 / (rates[toCurrency] || 1);
+  }
+  
+  if (toCurrency === 'TRY') {
+    return rates[fromCurrency] || 1;
+  }
+  
+  // Cross-currency rate
+  const fromRate = rates[fromCurrency] || 1;
+  const toRate = rates[toCurrency] || 1;
+  return fromRate / toRate;
+};

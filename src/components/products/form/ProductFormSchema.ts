@@ -15,6 +15,7 @@ export const productSchema = z.object({
   unit: z.string(),
   is_active: z.boolean().default(true),
   currency: z.string().default("TRY"),
+  exchange_rate: z.coerce.number().optional(),
   category_type: z.string().default("product"),
   product_type: z.string().default("physical"),
   status: z.string().default("active"),

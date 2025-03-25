@@ -12,6 +12,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import ExchangeRateInfo from "./ExchangeRateInfo";
 
 interface ProductPricingProps {
   price: number;
@@ -23,6 +24,7 @@ interface ProductPricingProps {
     discount_price?: number | null;
     tax_rate?: number;
     currency?: string;
+    exchange_rate?: number;
   }) => void;
 }
 
@@ -53,13 +55,23 @@ const ProductPricing = ({
     return ((price - discountPrice) / price) * 100;
   };
 
+  const handleCurrencyChange = (newCurrency: string) => {
+    setEditValues(prev => ({
+      ...prev,
+      currency: newCurrency
+    }));
+  };
+
   const handleSave = () => {
-    onUpdate({
+    // If currency changed, calculate and include the exchange rate
+    const updateData: any = {
       price: Number(editValues.price),
       discount_price: editValues.discountPrice ? Number(editValues.discountPrice) : null,
       tax_rate: Number(editValues.taxRate),
       currency: editValues.currency
-    });
+    };
+
+    onUpdate(updateData);
     setIsEditing(false);
   };
 
@@ -89,7 +101,7 @@ const ProductPricing = ({
                 value={editValues.price}
                 onChange={(e) => setEditValues(prev => ({
                   ...prev,
-                  price: e.target.valueAsNumber
+                  price: e.target.valueAsNumber || 0
                 }))}
                 className="w-32 text-right"
               />
@@ -106,7 +118,7 @@ const ProductPricing = ({
                 value={editValues.discountPrice || ''}
                 onChange={(e) => setEditValues(prev => ({
                   ...prev,
-                  discountPrice: e.target.valueAsNumber
+                  discountPrice: e.target.value ? e.target.valueAsNumber : null
                 }))}
                 className="w-32 text-right"
               />
@@ -152,25 +164,32 @@ const ProductPricing = ({
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-500">Para Birimi</span>
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Para Birimi</span>
+              {!isEditing && currency !== "TRY" && (
+                <ExchangeRateInfo currency={currency} />
+              )}
+            </div>
             {isEditing ? (
-              <Select
-                value={editValues.currency}
-                onValueChange={(value) => setEditValues(prev => ({
-                  ...prev,
-                  currency: value
-                }))}
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Para birimi seç" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="TRY">Türk Lirası (TRY)</SelectItem>
-                  <SelectItem value="USD">Amerikan Doları (USD)</SelectItem>
-                  <SelectItem value="EUR">Euro (EUR)</SelectItem>
-                  <SelectItem value="GBP">İngiliz Sterlini (GBP)</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex flex-col items-end">
+                <Select
+                  value={editValues.currency}
+                  onValueChange={handleCurrencyChange}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Para birimi seç" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TRY">Türk Lirası (TRY)</SelectItem>
+                    <SelectItem value="USD">Amerikan Doları (USD)</SelectItem>
+                    <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                    <SelectItem value="GBP">İngiliz Sterlini (GBP)</SelectItem>
+                  </SelectContent>
+                </Select>
+                {editValues.currency !== "TRY" && (
+                  <ExchangeRateInfo currency={editValues.currency} />
+                )}
+              </div>
             ) : (
               <span>{currency}</span>
             )}

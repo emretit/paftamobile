@@ -15,12 +15,13 @@ export interface Product {
   id: string;
   name: string;
   description: string | null;
-  formatted_description?: any; // Making it optional with ?
+  formatted_description?: any;
   sku: string | null;
   barcode: string | null;
   price: number;
   discount_price: number | null;
   currency: string;
+  exchange_rate?: number;
   tax_rate: number;
   stock_quantity: number;
   min_stock_level: number;
@@ -34,12 +35,12 @@ export interface Product {
   image_url: string | null;
   created_at: string;
   updated_at: string;
-  last_purchase_date?: string | null; // Making it optional with ?
-  related_products?: string[]; // Making it optional with ?
+  last_purchase_date?: string | null;
+  related_products?: string[];
   product_categories: ProductCategory | null;
   suppliers: Supplier | null;
   purchase_price?: number;
-  // Add original currency and price properties
+  // For proposal integration - storing original values
   original_currency?: string;
   original_price?: number;
 }
