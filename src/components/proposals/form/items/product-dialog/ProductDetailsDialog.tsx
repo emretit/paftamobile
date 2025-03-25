@@ -139,20 +139,20 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
         
         setConvertedPrice(newConvertedPrice);
         
-        // Update custom price only if it hasn't been manually changed or when dialog first opens
-        if (customPrice === undefined || customPrice === originalPrice) {
-          setCustomPrice(newConvertedPrice);
+        // Set the custom price to the original product price initially
+        if (customPrice === undefined || open) {
+          setCustomPrice(productPrice);
         }
       } else {
         setConvertedPrice(productPrice);
         
-        // Update custom price only if it hasn't been manually changed or when dialog first opens
-        if (customPrice === undefined || customPrice === originalPrice) {
+        // Set the custom price to the original product price initially
+        if (customPrice === undefined || open) {
           setCustomPrice(productPrice);
         }
       }
     }
-  }, [currentCurrency, selectedProduct, customPrice, originalPrice, exchangeRates]);
+  }, [currentCurrency, selectedProduct, customPrice, open, exchangeRates]);
 
   // Set initial values when dialog opens
   useEffect(() => {
@@ -160,7 +160,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
       setOriginalPrice(selectedProduct.price);
       setOriginalCurrency(selectedProduct.currency || "TRY");
       setCurrentCurrency(selectedCurrency);
-      // Set initial price based on product currency (will be converted if needed in the other useEffect)
+      // Set initial price to the product's original price
       setCustomPrice(selectedProduct.price);
     }
   }, [open, selectedProduct, selectedCurrency]);
@@ -215,7 +215,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
             setDiscountRate={setDiscountRate}
             selectedCurrency={currentCurrency}
             handleCurrencyChange={handleCurrencyChange}
-            convertedPrice={convertedPrice}
+            convertedPrice={originalPrice} // Pass the original price instead
             originalCurrency={originalCurrency}
             formatCurrency={formatCurrency}
           />

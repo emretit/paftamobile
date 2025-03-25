@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { getCurrencyOptions, fetchTCMBExchangeRates } from "../../utils/currencyUtils";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
   formatCurrency
 }) => {
   const currencyOptions = getCurrencyOptions();
+  // Use the original product price from parent component
   const [localPrice, setLocalPrice] = useState<number | string>(customPrice || convertedPrice);
   const [localDiscountRate, setLocalDiscountRate] = useState(discountRate);
   const [exchangeRates, setExchangeRates] = useState({
@@ -68,6 +70,7 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
   }, []);
 
   useEffect(() => {
+    // Always use the original product price whenever customPrice or convertedPrice changes
     setLocalPrice(customPrice || convertedPrice);
     setLocalDiscountRate(discountRate);
   }, [customPrice, convertedPrice, discountRate]);
