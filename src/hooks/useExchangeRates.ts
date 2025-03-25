@@ -26,7 +26,7 @@ export const useExchangeRates = () => {
       try {
         setLoading(true);
         
-        // Fetch the latest exchange rates
+        // Fetch the latest exchange rates from the database
         const { data: rates, error } = await supabase
           .from('exchange_rates')
           .select('*')
@@ -42,7 +42,7 @@ export const useExchangeRates = () => {
         } else {
           // If no data in database, try the edge function
           try {
-            const { data: functionData, error: functionError } = await supabase.functions.invoke('fetch-exchange-rates', {
+            const { data: functionData, error: functionError } = await supabase.functions.invoke('exchange-rates', {
               method: 'GET'
             });
             
@@ -107,7 +107,7 @@ export const useExchangeRates = () => {
       setLoading(true);
       
       // Trigger the edge function to fetch new data
-      const { data, error } = await supabase.functions.invoke('fetch-exchange-rates', {
+      const { data, error } = await supabase.functions.invoke('exchange-rates', {
         method: 'POST'
       });
       
