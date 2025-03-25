@@ -1,4 +1,6 @@
 
+import { ExchangeRate } from "../types/exchangeRateTypes";
+
 export const formatDate = (dateString: string) => {
   // Handle both date-only and full ISO timestamp formats
   const date = new Date(dateString);
