@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -99,32 +100,37 @@ export const ExchangeRatesPanel: React.FC = () => {
   const fetchLastUpdateStatus = async () => {
     try {
       // First check if the table exists in the database
-      const { data: tableExists, error: tableError } = await supabase
-        .from('exchange_rate_updates')
-        .select('count(*)', { count: 'exact', head: true });
+      try {
+        // Type assertion to handle the table not being in the TypeScript types
+        const { data: tableExists, error: tableError } = await (supabase
+          .from('exchange_rate_updates' as any)
+          .select('count(*)', { count: 'exact', head: true }) as any);
+          
+        // If there's an error with the table, likely it doesn't exist yet
+        if (tableError) {
+          console.log('Exchange rate updates table may not exist yet:', tableError.message);
+          return;
+        }
         
-      // If there's an error with the table, likely it doesn't exist yet
-      if (tableError) {
-        console.log('Exchange rate updates table may not exist yet:', tableError.message);
-        return;
-      }
-      
-      const { data, error } = await supabase
-        .from('exchange_rate_updates')
-        .select('*')
-        .order('updated_at', { ascending: false })
-        .limit(1);
-      
-      if (error) {
-        console.error('Error fetching update status:', error);
-        return;
-      }
-      
-      if (data && data.length > 0) {
-        setLastUpdateStatus({
-          status: data[0].status,
-          message: data[0].message
-        });
+        const { data, error } = await (supabase
+          .from('exchange_rate_updates' as any)
+          .select('*')
+          .order('updated_at', { ascending: false })
+          .limit(1) as any);
+        
+        if (error) {
+          console.error('Error fetching update status:', error);
+          return;
+        }
+        
+        if (data && data.length > 0) {
+          setLastUpdateStatus({
+            status: data[0].status,
+            message: data[0].message
+          });
+        }
+      } catch (err) {
+        console.error('Error accessing exchange_rate_updates table:', err);
       }
     } catch (err) {
       console.error('Error in fetchLastUpdateStatus:', err);

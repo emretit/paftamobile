@@ -817,6 +817,33 @@ export type Database = {
         }
         Relationships: []
       }
+      exchange_rate_updates: {
+        Row: {
+          count: number | null
+          created_at: string | null
+          id: string
+          message: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          count?: number | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          status: string
+          updated_at: string
+        }
+        Update: {
+          count?: number | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       exchange_rates: {
         Row: {
           banknote_buying: number | null
