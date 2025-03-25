@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpRight, ArrowDownRight, RefreshCw, AlertCircle } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, RefreshCw, AlertCircle, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,6 +18,14 @@ interface ExchangeRate {
 }
 
 const formatDate = (dateString: string) => {
+  // Handle both date-only and full ISO timestamp formats
+  const date = new Date(dateString);
+  
+  // Check if the date is valid
+  if (isNaN(date.getTime())) {
+    return 'Tarih bilgisi mevcut değil';
+  }
+  
   const options: Intl.DateTimeFormatOptions = { 
     year: 'numeric', 
     month: 'long', 
@@ -25,7 +33,13 @@ const formatDate = (dateString: string) => {
     hour: '2-digit',
     minute: '2-digit'
   };
-  return new Date(dateString).toLocaleDateString('tr-TR', options);
+  
+  try {
+    return date.toLocaleDateString('tr-TR', options);
+  } catch (e) {
+    // Fallback formatting if Turkish locale is not available
+    return date.toLocaleString();
+  }
 };
 
 const getCurrencyName = (code: string): string => {
@@ -74,9 +88,35 @@ export const ExchangeRatesPanel: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [lastUpdateStatus, setLastUpdateStatus] = useState<{status: string, message: string} | null>(null);
   
   // Main currencies to display prominently
   const mainCurrencies = ['USD', 'EUR', 'GBP'];
+  
+  // Function to fetch the last update status
+  const fetchLastUpdateStatus = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('exchange_rate_updates')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(1);
+      
+      if (error) {
+        console.error('Error fetching update status:', error);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        setLastUpdateStatus({
+          status: data[0].status,
+          message: data[0].message
+        });
+      }
+    } catch (err) {
+      console.error('Error in fetchLastUpdateStatus:', err);
+    }
+  };
   
   const fetchExchangeRates = async () => {
     try {
@@ -89,7 +129,7 @@ export const ExchangeRatesPanel: React.FC = () => {
         .order('update_date', { ascending: false });
       
       if (queryError) {
-        throw new Error(`Error fetching exchange rates: ${queryError.message}`);
+        throw new Error(`Veritabanından döviz kurları alınamadı: ${queryError.message}`);
       }
       
       if (!data || data.length === 0) {
@@ -99,11 +139,15 @@ export const ExchangeRatesPanel: React.FC = () => {
         });
         
         if (functionError) {
-          throw new Error(`Error fetching exchange rates: ${functionError.message}`);
+          throw new Error(`Döviz kurları çekilemedi: ${functionError.message}`);
         }
         
-        setRates(functionData.data || []);
-        setLastUpdated(functionData.update_date || new Date().toISOString());
+        if (functionData.data && functionData.data.length > 0) {
+          setRates(functionData.data);
+          setLastUpdated(functionData.update_date || new Date().toISOString());
+        } else {
+          throw new Error('Döviz kuru verisi bulunamadı');
+        }
       } else {
         setRates(data);
         // Get the most recent update date
@@ -117,6 +161,9 @@ export const ExchangeRatesPanel: React.FC = () => {
       if (isRefreshing) {
         toast.success('Döviz kurları başarıyla güncellendi');
       }
+      
+      // Fetch the last update status
+      fetchLastUpdateStatus();
     } catch (err) {
       console.error('Failed to fetch exchange rates:', err);
       setError(err.message);
@@ -157,7 +204,7 @@ export const ExchangeRatesPanel: React.FC = () => {
       });
       
       if (error) {
-        throw new Error(`Error updating exchange rates: ${error.message}`);
+        throw new Error(`Döviz kurları güncellenirken hata oluştu: ${error.message}`);
       }
       
       if (data.success) {
@@ -165,7 +212,7 @@ export const ExchangeRatesPanel: React.FC = () => {
         // Fetch the updated rates
         fetchExchangeRates();
       } else {
-        throw new Error(data.message || 'Error updating exchange rates');
+        throw new Error(data.message || 'Döviz kurları güncellenirken hata oluştu');
       }
     } catch (err) {
       console.error('Failed to refresh exchange rates:', err);
@@ -188,17 +235,29 @@ export const ExchangeRatesPanel: React.FC = () => {
     <Card className="shadow-md border-gray-200 bg-white dark:bg-gray-900">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-lg font-semibold">TCMB Döviz Kurları</CardTitle>
+          <CardTitle className="text-lg font-semibold flex items-center">
+            <span>TCMB Döviz Kurları</span>
+            {lastUpdateStatus && (
+              <Badge 
+                variant={lastUpdateStatus.status === 'success' ? 'outline' : 'destructive'}
+                className="ml-3 text-xs"
+              >
+                {lastUpdateStatus.status === 'success' ? 'Güncel' : 'Hata'}
+              </Badge>
+            )}
+          </CardTitle>
           <div className="flex items-center space-x-2">
             {lastUpdated && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                Son Güncelleme: {formatDate(lastUpdated)}
-              </span>
+              <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                <Clock size={14} className="mr-1" />
+                <span>Son Güncelleme: {formatDate(lastUpdated)}</span>
+              </div>
             )}
             <button 
               onClick={handleRefresh} 
               className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               disabled={isRefreshing}
+              title="Kurları Güncelle"
             >
               <RefreshCw 
                 size={18} 

@@ -20,16 +20,20 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
     
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase credentials in environment variables');
+    }
+    
     // Create a Supabase client
     const supabase = createClient(supabaseUrl, supabaseKey, {
       auth: { persistSession: false }
     });
     
-    // Fetch from the fetch-exchange-rates function to update the rates
-    const exchangeRatesUrl = `${supabaseUrl}/functions/v1/fetch-exchange-rates`;
+    // Fetch exchange rates from TCMB
+    console.log('Calling fetch-exchange-rates to update rates from TCMB...');
     
     // We want to create new rates, so use POST
-    const response = await fetch(exchangeRatesUrl, {
+    const response = await fetch(`${supabaseUrl}/functions/v1/fetch-exchange-rates`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -39,13 +43,15 @@ Deno.serve(async (req) => {
     });
     
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`HTTP error! Status: ${response.status}, Body: ${errorText}`);
     }
     
     const result = await response.json();
+    console.log('Exchange rates fetched successfully:', result);
     
-    // Also update a status record in our database to track the last update
-    await supabase
+    // Create an update record to track the last update
+    const { data: updateRecord, error: updateError } = await supabase
       .from('exchange_rate_updates')
       .insert({
         status: 'success',
@@ -54,11 +60,19 @@ Deno.serve(async (req) => {
         count: result.count || 0
       })
       .select();
+      
+    if (updateError) {
+      console.warn('Could not record update status:', updateError);
+    } else {
+      console.log('Update status recorded:', updateRecord);
+    }
     
+    // Return success response
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: 'Daily exchange rate update completed successfully',
+        updated_at: new Date().toISOString(),
         result
       }),
       { 
@@ -73,27 +87,31 @@ Deno.serve(async (req) => {
       const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
       const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
       
-      const supabase = createClient(supabaseUrl, supabaseKey, {
-        auth: { persistSession: false }
-      });
-      
-      await supabase
-        .from('exchange_rate_updates')
-        .insert({
-          status: 'error',
-          updated_at: new Date().toISOString(),
-          message: `Error: ${error.message}`
-        })
-        .select();
+      if (supabaseUrl && supabaseKey) {
+        const supabase = createClient(supabaseUrl, supabaseKey, {
+          auth: { persistSession: false }
+        });
+        
+        await supabase
+          .from('exchange_rate_updates')
+          .insert({
+            status: 'error',
+            updated_at: new Date().toISOString(),
+            message: `Error: ${error.message}`
+          })
+          .select();
+      }
     } catch (logError) {
-      console.error('Failed to log error:', logError);
+      console.error('Failed to log error to database:', logError);
     }
     
+    // Return error response
     return new Response(
       JSON.stringify({ 
         success: false, 
         message: 'Error during daily exchange rate update',
-        error: error.message
+        error: error.message,
+        timestamp: new Date().toISOString()
       }),
       { 
         status: 500,
