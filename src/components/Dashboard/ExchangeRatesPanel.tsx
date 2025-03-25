@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -99,7 +98,17 @@ export const ExchangeRatesPanel: React.FC = () => {
   
   const fetchLastUpdateStatus = async () => {
     try {
-      // Handle the type correctly by explicitly defining the table structure
+      // First check if the table exists in the database
+      const { data: tableExists, error: tableError } = await supabase
+        .from('exchange_rate_updates')
+        .select('count(*)', { count: 'exact', head: true });
+        
+      // If there's an error with the table, likely it doesn't exist yet
+      if (tableError) {
+        console.log('Exchange rate updates table may not exist yet:', tableError.message);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('exchange_rate_updates')
         .select('*')
@@ -112,15 +121,9 @@ export const ExchangeRatesPanel: React.FC = () => {
       }
       
       if (data && data.length > 0) {
-        // Type cast to ensure TypeScript knows the structure
-        const updateData = data[0] as unknown as { 
-          status: string; 
-          message: string;
-        };
-        
         setLastUpdateStatus({
-          status: updateData.status,
-          message: updateData.message
+          status: data[0].status,
+          message: data[0].message
         });
       }
     } catch (err) {
@@ -157,9 +160,9 @@ export const ExchangeRatesPanel: React.FC = () => {
             currency_code: rate.currency_code,
             forex_buying: rate.forex_buying,
             forex_selling: rate.forex_selling,
-            banknote_buying: null,
-            banknote_selling: null,
-            cross_rate: null,
+            banknote_buying: rate.banknote_buying,
+            banknote_selling: rate.banknote_selling,
+            cross_rate: rate.cross_rate,
             update_date: functionData.update_date || new Date().toISOString()
           }));
           
@@ -169,18 +172,8 @@ export const ExchangeRatesPanel: React.FC = () => {
           throw new Error('Döviz kuru verisi bulunamadı');
         }
       } else {
-        const formattedRates: ExchangeRate[] = data.map((rate: any) => ({
-          currency_code: rate.currency_code,
-          forex_buying: rate.forex_buying,
-          forex_selling: rate.forex_selling,
-          banknote_buying: null,
-          banknote_selling: null,
-          cross_rate: null,
-          update_date: rate.update_date
-        }));
-        
-        setRates(formattedRates);
-        const updateDate = formattedRates.length > 0 ? formattedRates[0].update_date : null;
+        setRates(data as ExchangeRate[]);
+        const updateDate = data.length > 0 ? data[0].update_date : null;
         setLastUpdated(updateDate);
       }
       

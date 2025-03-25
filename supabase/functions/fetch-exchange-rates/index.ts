@@ -1,5 +1,4 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.48.1'
-import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts';
 
 // CORS headers
 const corsHeaders = {
@@ -28,63 +27,41 @@ const createSupabaseClient = (req: Request) => {
   })
 }
 
-// Fetch XML data from TCMB
+// Fetch exchange rates from TCMB
 async function fetchTCMBExchangeRates() {
   try {
-    const response = await fetch('https://www.tcmb.gov.tr/kurlar/today.xml', {
-      method: 'GET',
-      headers: { 'Accept': 'application/xml' }
-    });
+    console.log('Fetching TCMB exchange rates...');
+    const response = await fetch('https://www.tcmb.gov.tr/kurlar/today.xml');
     
     if (!response.ok) {
+      console.error(`HTTP error fetching TCMB rates! Status: ${response.status}`);
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     
-    return await response.text();
+    // Get the XML as text
+    const xmlText = await response.text();
+    console.log('Successfully fetched XML text from TCMB');
+    return xmlText;
   } catch (error) {
     console.error('Error fetching TCMB exchange rates:', error);
     throw error;
   }
 }
 
-// Parse XML and extract exchange rates
+// Parse XML and extract exchange rates using a simple string-based approach
+// since we don't have access to a full XML parser in Deno environment
 function parseExchangeRates(xmlText: string) {
-  const parser = new DOMParser();
-  const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+  console.log('Parsing exchange rates using string-based approach...');
   
-  if (!xmlDoc) {
-    throw new Error('Failed to parse XML document');
-  }
+  // Extract the date from the XML
+  const dateMatch = xmlText.match(/<Tarih_Date[^>]*>([^<]*)<\/Tarih_Date>/);
+  const updateDate = dateMatch ? dateMatch[1] : new Date().toISOString().split('T')[0];
   
+  // Define the currencies we want to extract
+  const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD', 'RUB', 'CNY', 'SAR', 'NOK', 'DKK', 'SEK'];
   const exchangeRates = [];
-  const currencies = xmlDoc.getElementsByTagName("Currency");
-  const updateDate = xmlDoc.getElementsByTagName("Tarih_Date")[0]?.getAttribute("Tarih") || 
-                    new Date().toISOString().split('T')[0];
   
-  for (let i = 0; i < currencies.length; i++) {
-    const currency = currencies[i];
-    const currencyCode = currency.getAttribute("CurrencyCode");
-    
-    if (!currencyCode) continue;
-    
-    const forexBuying = currency.getElementsByTagName("ForexBuying")[0]?.textContent;
-    const forexSelling = currency.getElementsByTagName("ForexSelling")[0]?.textContent;
-    const banknoteBuying = currency.getElementsByTagName("BanknoteBuying")[0]?.textContent;
-    const banknoteSelling = currency.getElementsByTagName("BanknoteSelling")[0]?.textContent;
-    const crossRate = currency.getElementsByTagName("CrossRateUSD")[0]?.textContent;
-    
-    exchangeRates.push({
-      currency_code: currencyCode,
-      forex_buying: forexBuying ? parseFloat(forexBuying) : null,
-      forex_selling: forexSelling ? parseFloat(forexSelling) : null,
-      banknote_buying: banknoteBuying ? parseFloat(banknoteBuying) : null,
-      banknote_selling: banknoteSelling ? parseFloat(banknoteSelling) : null,
-      cross_rate: crossRate ? parseFloat(crossRate) : null,
-      update_date: updateDate
-    });
-  }
-  
-  // Add TRY rate (base currency)
+  // Add TRY base currency
   exchangeRates.push({
     currency_code: 'TRY',
     forex_buying: 1,
@@ -95,6 +72,35 @@ function parseExchangeRates(xmlText: string) {
     update_date: updateDate
   });
   
+  // Extract data for each currency using string operations
+  for (const currencyCode of currencies) {
+    // Find the currency section in the XML
+    const currencyRegex = new RegExp(`<Currency CurrencyCode="${currencyCode}"[^>]*>([\\s\\S]*?)<\/Currency>`);
+    const currencyMatch = xmlText.match(currencyRegex);
+    
+    if (currencyMatch) {
+      const currencySection = currencyMatch[1];
+      
+      // Extract values using regex
+      const forexBuyingMatch = currencySection.match(/<ForexBuying>([^<]*)<\/ForexBuying>/);
+      const forexSellingMatch = currencySection.match(/<ForexSelling>([^<]*)<\/ForexSelling>/);
+      const banknoteBuyingMatch = currencySection.match(/<BanknoteBuying>([^<]*)<\/BanknoteBuying>/);
+      const banknoteSellingMatch = currencySection.match(/<BanknoteSelling>([^<]*)<\/BanknoteSelling>/);
+      const crossRateMatch = currencySection.match(/<CrossRateUSD>([^<]*)<\/CrossRateUSD>/);
+      
+      exchangeRates.push({
+        currency_code: currencyCode,
+        forex_buying: forexBuyingMatch ? parseFloat(forexBuyingMatch[1]) : null,
+        forex_selling: forexSellingMatch ? parseFloat(forexSellingMatch[1]) : null,
+        banknote_buying: banknoteBuyingMatch ? parseFloat(banknoteBuyingMatch[1]) : null,
+        banknote_selling: banknoteSellingMatch ? parseFloat(banknoteSellingMatch[1]) : null,
+        cross_rate: crossRateMatch ? parseFloat(crossRateMatch[1]) : null,
+        update_date: updateDate
+      });
+    }
+  }
+  
+  console.log(`Successfully parsed ${exchangeRates.length} currency rates`);
   return exchangeRates;
 }
 
