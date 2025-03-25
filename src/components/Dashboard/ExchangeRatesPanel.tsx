@@ -45,17 +45,20 @@ export const ExchangeRatesPanel: React.FC = () => {
         ) : isLoading ? (
           <ExchangeRateLoading />
         ) : (
-          <>
+          <div className="space-y-6">
             {/* Main currencies display */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {mainRates.map((rate) => (
                 <MainCurrencyCard key={rate.currency_code} rate={rate} />
               ))}
             </div>
             
             {/* Other currencies table */}
-            <OtherCurrenciesTable rates={otherRates} />
-          </>
+            <div>
+              <h3 className="text-sm font-medium mb-2 text-gray-600 dark:text-gray-300">Diğer Döviz Kurları</h3>
+              <OtherCurrenciesTable rates={otherRates} />
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>

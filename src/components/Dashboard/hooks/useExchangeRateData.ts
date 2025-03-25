@@ -1,9 +1,12 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ExchangeRate, UpdateStatus } from "../types/exchangeRateTypes";
 import { getFallbackRates } from "../utils/exchangeRateUtils";
+
+// Set polling interval to 5 minutes (300,000 ms)
+const POLLING_INTERVAL = 5 * 60 * 1000;
 
 export const useExchangeRateData = () => {
   const [rates, setRates] = useState<ExchangeRate[]>([]);
@@ -53,9 +56,11 @@ export const useExchangeRateData = () => {
     }
   };
   
-  const fetchExchangeRates = async () => {
+  const fetchExchangeRates = useCallback(async (showToast = false) => {
     try {
-      setIsRefreshing(true);
+      if (showToast) {
+        setIsRefreshing(true);
+      }
       
       // Use the Supabase client to fetch exchange rates
       const { data, error: queryError } = await supabase
@@ -101,7 +106,7 @@ export const useExchangeRateData = () => {
       
       setError(null);
       
-      if (isRefreshing) {
+      if (showToast) {
         toast.success('Döviz kurları başarıyla güncellendi');
       }
       
@@ -109,7 +114,10 @@ export const useExchangeRateData = () => {
     } catch (err: any) {
       console.error('Failed to fetch exchange rates:', err);
       setError(err.message);
-      toast.error('Döviz kurları güncellenirken bir hata oluştu');
+      
+      if (showToast) {
+        toast.error('Döviz kurları güncellenirken bir hata oluştu');
+      }
       
       const fallbackRates = getFallbackRates();
       setRates(fallbackRates);
@@ -118,7 +126,7 @@ export const useExchangeRateData = () => {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -132,8 +140,11 @@ export const useExchangeRateData = () => {
       }
       
       if (data && data.success) {
-        toast.success('Döviz kurları başarıyla güncellendi');
-        fetchExchangeRates();
+        toast.success('Döviz kurları güncellemesi başlatıldı');
+        // Give it a moment to update in the database
+        setTimeout(() => {
+          fetchExchangeRates(true);
+        }, 1500);
       } else {
         throw new Error(data?.message || 'Döviz kurları güncellenirken hata oluştu');
       }
@@ -147,10 +158,13 @@ export const useExchangeRateData = () => {
   useEffect(() => {
     fetchExchangeRates();
     
-    const intervalId = setInterval(fetchExchangeRates, 5 * 60 * 1000);
+    // Set up polling interval
+    const intervalId = setInterval(() => {
+      fetchExchangeRates();
+    }, POLLING_INTERVAL);
     
     return () => clearInterval(intervalId);
-  }, []);
+  }, [fetchExchangeRates]);
 
   return {
     rates,

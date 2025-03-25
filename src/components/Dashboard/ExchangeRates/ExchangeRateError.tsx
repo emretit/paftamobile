@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ExchangeRateErrorProps {
   error: string;
@@ -8,10 +9,12 @@ interface ExchangeRateErrorProps {
 
 export const ExchangeRateError: React.FC<ExchangeRateErrorProps> = ({ error }) => {
   return (
-    <div className="flex items-center justify-center p-4 text-red-500 bg-red-50 dark:bg-red-900/20 rounded-md">
-      <AlertCircle className="mr-2" size={20} />
-      <span>{error}</span>
-    </div>
+    <Alert variant="destructive" className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50 text-red-800 dark:text-red-200">
+      <AlertCircle className="h-4 w-4" />
+      <AlertDescription>
+        {error}
+      </AlertDescription>
+    </Alert>
   );
 };
 
