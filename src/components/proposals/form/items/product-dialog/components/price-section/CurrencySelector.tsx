@@ -25,8 +25,8 @@ const CurrencySelector: React.FC<CurrencySelectorProps> = ({
   isLoading
 }) => {
   return (
-    <div className="space-y-2">
-      <Label htmlFor="currency-select" className="font-medium">Para Birimi</Label>
+    <>
+      <Label htmlFor="currency-select" className="font-medium block mb-2">Para Birimi</Label>
       <Select 
         value={selectedCurrency} 
         onValueChange={onCurrencyChange}
@@ -44,12 +44,12 @@ const CurrencySelector: React.FC<CurrencySelectorProps> = ({
         </SelectContent>
       </Select>
       {isLoading && (
-        <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+        <div className="flex items-center space-x-1 text-xs text-muted-foreground mt-1">
           <RefreshCcw className="h-3 w-3 animate-spin" />
           <span>Kurlar yükleniyor...</span>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
