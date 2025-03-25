@@ -1,64 +1,51 @@
 
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from './components/ui/toaster';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-import { handleApiRequest } from './api/routes';
-
-// Import all page components
-import Index from './pages/Index';
-import Auth from './pages/Auth';
-import Dashboard from './pages/Dashboard';
-import Products from './pages/Products';
-import ProductForm from './pages/ProductForm';
-import ProductDetails from './pages/ProductDetails';
-import Contacts from './pages/Contacts';
-import CustomerForm from './pages/CustomerForm';
-import ContactDetails from './pages/ContactDetails';
-import CustomerEdit from './pages/CustomerEdit';
-import Suppliers from './pages/Suppliers';
-import SupplierDetails from './pages/SupplierDetails';
-import SupplierForm from './pages/SupplierForm';
-import Employees from './pages/Employees';
-import AddEmployee from './pages/AddEmployee';
-import EmployeeDetails from './pages/EmployeeDetails';
-import EmployeeForm from './pages/EmployeeForm';
-import Finance from './pages/Finance';
-import Service from './pages/Service';
-import Settings from './pages/Settings';
-import PurchaseInvoices from './pages/PurchaseInvoices';
-import SalesInvoices from './pages/SalesInvoices';
-import PurchaseManagement from './pages/PurchaseManagement';
-import Proposals from './pages/Proposals';
-import ProposalCreate from './pages/ProposalCreate';
-import ProposalDetail from './pages/ProposalDetail';
-import ProposalEdit from './pages/ProposalEdit';
-import Tasks from './pages/Tasks';
-import Opportunities from './pages/crm/Opportunities';
-import CrmDashboard from './pages/CrmDashboard';
-
-const originalFetch = window.fetch;
-window.fetch = async function(input: RequestInfo | URL, init?: RequestInit) {
-  const url = input.toString();
-  
-  if (url.startsWith('/api/')) {
-    return handleApiRequest(url);
-  }
-  
-  return originalFetch(input, init);
-};
+import React, { useState } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Toaster } from "@/components/ui/toaster";
+import Index from "@/pages/Index";
+import Products from "@/pages/Products";
+import ProductForm from "@/pages/ProductForm";
+import ProductDetails from "@/pages/ProductDetails";
+import Contacts from "@/pages/Contacts";
+import ContactDetails from "@/pages/ContactDetails";
+import CustomerForm from "@/pages/CustomerForm";
+import CustomerEdit from "@/pages/CustomerEdit";
+import Suppliers from "@/pages/Suppliers";
+import SupplierDetails from "@/pages/SupplierDetails";
+import SupplierForm from "@/pages/SupplierForm";
+import Finance from "@/pages/Finance";
+import Service from "@/pages/Service";
+import Settings from "@/pages/Settings";
+import PurchaseInvoices from "@/pages/PurchaseInvoices";
+import SalesInvoices from "@/pages/SalesInvoices";
+import Auth from "@/pages/Auth";
+import AuthGuard from "@/components/AuthGuard";
+import Employees from "@/pages/Employees";
+import AddEmployee from "./pages/AddEmployee";
+import EmployeeDetails from "./pages/EmployeeDetails";
+import EmployeeForm from "./pages/EmployeeForm";
+import Dashboard from "./pages/Dashboard";
+import PurchaseManagement from "@/pages/PurchaseManagement";
+import Proposals from "@/pages/Proposals";
+import ProposalCreate from "@/pages/ProposalCreate";
+import ProposalDetail from "@/pages/ProposalDetail";
+import ProposalEdit from "@/pages/ProposalEdit";
+import Tasks from "@/pages/Tasks";
+import Opportunities from "@/pages/crm/Opportunities";
+import CrmDashboard from "@/pages/crm/CrmDashboard";
 
 const queryClient = new QueryClient();
 
 function App() {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
-  // Let's temporarily skip AuthGuard for now
   const PublicRoute = ({ children }: { children: React.ReactNode }) => children;
-  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => children;
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => (
+    <AuthGuard>{children}</AuthGuard>
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -191,6 +178,7 @@ function App() {
         </Routes>
       </Router>
       
+      {/* Toast notification systems */}
       <ToastContainer 
         position="bottom-right"
         autoClose={5000}

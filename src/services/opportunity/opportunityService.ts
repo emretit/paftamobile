@@ -20,7 +20,7 @@ export class OpportunityService extends BaseService {
       if (updateData.value !== undefined) dataToUpdate.value = updateData.value;
       if ('currency' in updateData) dataToUpdate.currency = updateData.currency;
       if (updateData.customer_id !== undefined) dataToUpdate.customer_id = updateData.customer_id;
-      if (updateData.assigned_to !== undefined) dataToUpdate.assigned_to = updateData.assigned_to;
+      if (updateData.employee_id !== undefined) dataToUpdate.employee_id = updateData.employee_id;
       if (updateData.expected_close_date !== undefined) dataToUpdate.expected_close_date = updateData.expected_close_date;
       if ('proposal_id' in updateData) dataToUpdate.proposal_id = updateData.proposal_id;
       if (updateData.notes !== undefined) dataToUpdate.notes = updateData.notes;
@@ -45,7 +45,7 @@ export class OpportunityService extends BaseService {
         .select(`
           *,
           customer:customer_id (*),
-          employee:assigned_to (*)
+          employee:employee_id (*)
         `)
         .single();
 

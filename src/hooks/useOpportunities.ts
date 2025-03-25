@@ -1,112 +1,181 @@
 
-import { useState, useEffect } from 'react';
-import { Opportunity } from '@/types/crm';
-import { mockCrmService } from '@/services/mockCrm';
-import { useToast } from '@/components/ui/use-toast';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Opportunity, OpportunityStatus, OpportunitiesState } from "@/types/crm";
+import { DropResult } from "@hello-pangea/dnd";
+import { useToast } from "@/components/ui/use-toast";
 
 export const useOpportunities = () => {
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  const fetchOpportunities = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await mockCrmService.getOpportunities();
-      if (error) throw error;
-      setOpportunities(data || []);
-      setError(null);
-    } catch (err) {
-      setError(err as Error);
-      console.error('Error fetching opportunities:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Fetch all opportunities
+  const { data: opportunitiesData, isLoading, error } = useQuery({
+    queryKey: ["opportunities"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("opportunities")
+        .select(`
+          *,
+          customer:customer_id (*),
+          employee:employee_id (*)
+        `)
+        .order("updated_at", { ascending: false });
 
-  useEffect(() => {
-    fetchOpportunities();
-  }, []);
+      if (error) {
+        console.error("Error fetching opportunities:", error);
+        throw error;
+      }
 
-  const refreshOpportunities = async () => {
-    await fetchOpportunities();
-  };
+      // Transform the data to match our Opportunity type
+      return data.map((item: any) => {
+        // Parse contact_history from JSON if needed
+        let contactHistory = [];
+        try {
+          if (item.contact_history) {
+            contactHistory = typeof item.contact_history === 'string' 
+              ? JSON.parse(item.contact_history) 
+              : item.contact_history;
+          }
+        } catch (e) {
+          console.error("Error parsing contact history:", e);
+          contactHistory = [];
+        }
 
-  const addOpportunity = async (opportunity: Partial<Opportunity>): Promise<boolean> => {
-    try {
-      // In a real app, we would call an API to create the opportunity
-      // For now, we'll mock it
-      const newId = Math.random().toString(36).substring(2, 11);
-      const newOpportunity: Opportunity = {
-        id: newId,
-        title: opportunity.title || '',
-        description: opportunity.description || '',
-        status: opportunity.status || 'new',
-        priority: opportunity.priority || 'medium',
-        value: opportunity.value || 0,
-        currency: opportunity.currency || 'TRY',
-        customer_id: opportunity.customer_id,
-        customer: opportunity.customer,
-        assigned_to: opportunity.assigned_to,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        tags: opportunity.tags || [],
-        contact_history: []
-      };
-
-      // In a real app, we would wait for the API call to complete
-      // For now, we'll just add it to the local state
-      setOpportunities([...opportunities, newOpportunity]);
-
-      toast({
-        title: "Fırsat eklendi",
-        description: "Yeni fırsat başarıyla eklendi."
+        return {
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          status: item.status,
+          priority: item.priority,
+          value: item.value,
+          customer_id: item.customer_id,
+          employee_id: item.employee_id,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+          expected_close_date: item.expected_close_date,
+          notes: item.notes,
+          contact_history: contactHistory,
+          customer: item.customer,
+          employee: item.employee
+        } as Opportunity;
       });
+    }
+  });
 
-      return true;
-    } catch (err) {
-      console.error('Error adding opportunity:', err);
+  // Group opportunities by status
+  const opportunities: OpportunitiesState = {
+    new: [],
+    first_contact: [],
+    site_visit: [],
+    preparing_proposal: [],
+    proposal_sent: [],
+    accepted: [],
+    lost: [],
+  };
+
+  if (opportunitiesData) {
+    opportunitiesData.forEach((opportunity) => {
+      if (opportunity.status in opportunities) {
+        opportunities[opportunity.status as OpportunityStatus].push(opportunity);
+      }
+    });
+  }
+
+  // Handle drag and drop updates
+  const updateOpportunityMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: OpportunityStatus }) => {
+      const { error } = await supabase
+        .from("opportunities")
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (error) throw error;
+      return { id, status };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["opportunities"] });
       toast({
-        variant: "destructive",
+        title: "Fırsat güncellendi",
+        description: "Fırsat durumu başarıyla güncellendi",
+      });
+    },
+    onError: (error) => {
+      console.error("Error updating opportunity:", error);
+      toast({
         title: "Hata",
-        description: "Fırsat eklenirken bir hata oluştu."
+        description: "Fırsat güncellenirken bir hata oluştu",
+        variant: "destructive",
       });
-      return false;
+    },
+  });
+
+  const handleDragEnd = (result: DropResult) => {
+    const { destination, source, draggableId } = result;
+
+    // Drop outside valid area or same status
+    if (!destination || destination.droppableId === source.droppableId) {
+      return;
     }
+
+    // Update opportunity status
+    updateOpportunityMutation.mutate({
+      id: draggableId,
+      status: destination.droppableId as OpportunityStatus,
+    });
   };
 
-  const updateOpportunity = async (opportunity: Partial<Opportunity> & { id: string }): Promise<boolean> => {
+  // Handle other opportunity updates
+  const handleUpdateOpportunity = async (
+    opportunity: Partial<Opportunity> & { id: string }
+  ) => {
     try {
-      const { error } = await mockCrmService.updateOpportunity(
-        opportunity.id, 
-        opportunity
-      );
+      const updateData: any = { ...opportunity };
+      delete updateData.customer;
+      delete updateData.employee;
       
+      // Handle contact_history as JSON
+      if (updateData.contact_history) {
+        updateData.contact_history = JSON.stringify(updateData.contact_history);
+      }
+
+      const { error } = await supabase
+        .from("opportunities")
+        .update(updateData)
+        .eq("id", opportunity.id);
+
       if (error) throw error;
-      
-      // Update local state
-      setOpportunities(
-        opportunities.map(item => 
-          item.id === opportunity.id 
-            ? { ...item, ...opportunity, updated_at: new Date().toISOString() } 
-            : item
-        )
-      );
-      
+
+      queryClient.invalidateQueries({ queryKey: ["opportunities"] });
+      toast({
+        title: "Fırsat güncellendi",
+        description: "Fırsat başarıyla güncellendi",
+      });
+
       return true;
-    } catch (err) {
-      console.error('Error updating opportunity:', err);
+    } catch (error) {
+      console.error("Error updating opportunity:", error);
+      toast({
+        title: "Hata",
+        description: "Fırsat güncellenirken bir hata oluştu",
+        variant: "destructive",
+      });
       return false;
     }
   };
 
   return {
     opportunities,
-    loading,
+    isLoading,
     error,
-    addOpportunity,
-    updateOpportunity,
-    refreshOpportunities
+    handleDragEnd,
+    handleUpdateOpportunity,
+    selectedOpportunity,
+    setSelectedOpportunity,
+    isDetailOpen,
+    setIsDetailOpen,
   };
 };

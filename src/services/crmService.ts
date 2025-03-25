@@ -1,36 +1,50 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { Proposal } from '@/types/proposal';
-import { Opportunity } from '@/types/crm';
+import { ServiceOptions } from "./base/BaseService";
+import { proposalService, changeProposalStatus } from "./proposal/proposalService";
+import { opportunityService } from "./opportunity/opportunityService";
+import { Proposal, ProposalStatus, ProposalAttachment } from "@/types/proposal";
+import { Opportunity } from "@/types/crm";
 
-export const crmService = {
-  async createProposal(data: Partial<Proposal>) {
-    // Placeholder implementation
-    console.log('Creating proposal with data:', data);
-    return { data: null, error: null };
-  },
+// Re-export the services
+export { proposalService, opportunityService, changeProposalStatus };
 
-  async getProposals() {
-    // Placeholder implementation
-    console.log('Fetching proposals');
-    return { data: [], error: null };
-  },
+// Re-export the interface
+export type CrmServiceOptions = ServiceOptions;
 
-  async updateProposal(id: string, data: Partial<Proposal>) {
-    // Placeholder implementation
-    console.log('Updating proposal', id, 'with data:', data);
-    return { data: null, error: null };
-  },
-
-  async changeProposalStatus(id: string, status: string) {
-    // Placeholder implementation
-    console.log('Changing proposal status', id, 'to:', status);
-    return { data: null, error: null };
-  },
-
-  async updateOpportunity(id: string, data: Partial<Opportunity>) {
-    // Placeholder implementation
-    console.log('Updating opportunity', id, 'with data:', data);
-    return { data: null, error: null };
+class CrmService {
+  // Proposal Methods
+  async getProposals(options: CrmServiceOptions = {}) {
+    return proposalService.getProposals(options);
   }
-};
+  
+  async getProposalById(id: string) {
+    return proposalService.getProposalById(id);
+  }
+  
+  async createProposal(proposal: Partial<Proposal>) {
+    return proposalService.createProposal(proposal);
+  }
+  
+  async updateProposal(id: string, proposal: Partial<Proposal>) {
+    return proposalService.updateProposal(id, proposal);
+  }
+  
+  async deleteProposal(id: string) {
+    return proposalService.deleteProposal(id);
+  }
+  
+  async updateProposalStatus(id: string, status: ProposalStatus) {
+    return proposalService.updateProposalStatus(id, status);
+  }
+  
+  async addProposalAttachment(id: string, attachment: ProposalAttachment) {
+    return proposalService.addProposalAttachment(id, attachment);
+  }
+  
+  // Opportunity Methods
+  async updateOpportunity(id: string, updateData: Partial<Opportunity>) {
+    return opportunityService.updateOpportunity(id, updateData);
+  }
+}
+
+export const crmService = new CrmService();

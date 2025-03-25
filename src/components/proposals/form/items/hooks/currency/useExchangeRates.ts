@@ -13,7 +13,7 @@ export const useExchangeRates = () => {
   });
   const [isLoadingRates, setIsLoadingRates] = useState(false);
 
-  // Fetch exchange rates when hook is initialized
+  // Fetch exchange rates from TCMB when component mounts
   useEffect(() => {
     const getExchangeRates = async () => {
       setIsLoadingRates(true);

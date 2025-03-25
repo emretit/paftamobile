@@ -1,5 +1,5 @@
+
 import { ExchangeRates, CurrencyOption } from "../types/currencyTypes";
-import { getExchangeRates } from "./exchangeRateUtils";
 
 // Format a currency value for display
 export const formatCurrencyValue = (amount: number, currency: string = "TRY"): string => {
@@ -18,7 +18,58 @@ export const formatCurrencyValue = (amount: number, currency: string = "TRY"): s
 
 // Fetch exchange rates from the Central Bank of Turkey
 export const fetchTCMBExchangeRates = async (): Promise<ExchangeRates> => {
-  return getExchangeRates();
+  try {
+    // TCMB API endpoint for XML exchange rate data
+    const response = await fetch('https://www.tcmb.gov.tr/kurlar/today.xml', {
+      mode: 'cors',
+      cache: 'no-cache',
+      credentials: 'same-origin',
+      headers: {
+        'Accept': 'application/xml',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+    const xmlText = await response.text();
+    
+    // Parse XML response to get exchange rates
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+    
+    // Initialize rates object with TRY as base (1)
+    const rates: ExchangeRates = { TRY: 1 };
+    
+    // Extract rates for common currencies
+    const currencies = xmlDoc.getElementsByTagName("Currency");
+    for (let i = 0; i < currencies.length; i++) {
+      const currency = currencies[i];
+      const code = currency.getAttribute("CurrencyCode");
+      
+      // Only process USD, EUR, and GBP
+      if (code && ["USD", "EUR", "GBP"].includes(code)) {
+        const forexBuying = currency.getElementsByTagName("ForexBuying")[0]?.textContent;
+        
+        if (forexBuying) {
+          rates[code] = parseFloat(forexBuying);
+        }
+      }
+    }
+    
+    console.log("TCMB Exchange rates fetched:", rates);
+    return rates;
+  } catch (error) {
+    console.error("Error fetching TCMB exchange rates:", error);
+    // Return fallback exchange rates if API call fails
+    return {
+      TRY: 1,
+      USD: 32.5,
+      EUR: 35.2,
+      GBP: 41.3
+    };
+  }
 };
 
 // Convert an amount from one currency to another

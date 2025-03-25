@@ -1,6 +1,7 @@
 
 import { formatDateOffset } from './utils';
-import { mockTasksAPI } from '@/services/mockCrm';
+import { mockCrmService, mockTasksAPI } from '@/services/mockCrm';
+import { TaskStatus, TaskPriority } from '@/types/task';
 
 interface AssignTaskParams {
   title: string;
@@ -22,8 +23,8 @@ export const taskWorkflow = {
       const task = {
         title: params.title,
         description: params.description || 'Takip gerekli',
-        status: 'todo',
-        priority: params.priority || 'medium',
+        status: 'todo' as TaskStatus,
+        priority: (params.priority || 'medium') as TaskPriority,
         assigned_to: params.assigned_to,
         due_date: params.due_date || formatDateOffset(3),
         related_item_id: params.related_item_id,
@@ -31,11 +32,13 @@ export const taskWorkflow = {
         related_item_title: params.related_item_title
       };
       
-      // Create the task using the mock API
+      // Create the task
       const { error } = await mockTasksAPI.createTask(task);
       
-      if (error) throw error;
-      console.log("Task created successfully:", task);
+      if (error) {
+        console.error("Error creating follow-up task:", error);
+        return { success: false, error };
+      }
       
       return { success: true };
     } catch (error) {
@@ -52,8 +55,8 @@ export const taskWorkflow = {
       const task = {
         title: `İnceleme: ${opportunityTitle}`,
         description: 'Yeni oluşturulan fırsatı inceleyiniz.',
-        status: 'todo',
-        priority: 'high',
+        status: 'todo' as TaskStatus,
+        priority: 'high' as TaskPriority,
         assigned_to: assigneeId,
         due_date: formatDateOffset(1),
         related_item_id: opportunityId,
@@ -61,11 +64,12 @@ export const taskWorkflow = {
         related_item_title: opportunityTitle
       };
       
-      // Create the task using the mock API
       const { error } = await mockTasksAPI.createTask(task);
       
-      if (error) throw error;
-      console.log("Opportunity task created:", task);
+      if (error) {
+        console.error("Error creating opportunity task:", error);
+        return { success: false, error };
+      }
       
       return { success: true };
     } catch (error) {

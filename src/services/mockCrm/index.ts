@@ -1,51 +1,30 @@
 
-import { v4 as uuid } from 'uuid';
-import { Proposal } from '@/types/proposal';
-import { crmService } from '../crmService';
 import { mockCrmOpportunitiesService } from './opportunitiesService';
+import { mockCrmProposalsService } from './proposalsService';
+import { mockCrmStatsService } from './statsService';
+import { mockCrmTasksService, mockTasksAPI } from './tasksService';
+import { crmService } from '@/services/crmService';
 
-export const mockTasksAPI = {
-  createTask: async (task: any) => {
-    // Mock implementation for task creation
-    console.log('Creating mock task:', task);
-    return { data: { ...task, id: uuid() }, error: null };
-  }
-};
-
+// Exporting as the original mockCrmService object
 export const mockCrmService = {
-  async getProposalById(id: string) {
-    // Placeholder implementation
-    // In real scenario, this would fetch from an API or database
-    const dummyProposal: Proposal = {
-      id,
-      number: Math.floor(Math.random() * 10000).toString().padStart(5, '0'),
-      title: "Sample Proposal",
-      description: "This is a sample proposal for testing purposes",
-      status: "draft",
-      total_amount: 1500,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      payment_terms: "30 days",
-      delivery_terms: "Within 14 days after payment",
-      notes: "Sample notes",
-      items: []
-    };
-
-    return { data: dummyProposal, error: null };
-  },
-
-  // Add the getOpportunities method
-  async getOpportunities() {
-    return mockCrmOpportunitiesService.getOpportunities();
-  },
-
-  // Add changeProposalStatus method
-  async changeProposalStatus(id: string, status: string) {
-    console.log('Changing proposal status', id, 'to:', status);
-    return { data: { id, status }, error: null };
-  },
-
-  // For other operations, we'll use the real crmService
-  ...crmService
+  // Opportunities
+  getOpportunities: mockCrmOpportunitiesService.getOpportunities,
+  getOpportunityById: mockCrmOpportunitiesService.getOpportunityById,
+  updateOpportunity: crmService.updateOpportunity.bind(crmService),
+  
+  // Proposals
+  getProposals: mockCrmProposalsService.getProposals,
+  getProposalById: mockCrmProposalsService.getProposalById,
+  
+  // Tasks
+  getTasks: mockCrmTasksService.getTasks,
+  getTaskById: mockCrmTasksService.getTaskById,
+  
+  // Stats
+  getTaskStats: mockCrmStatsService.getTaskStats,
+  getProposalStats: mockCrmStatsService.getProposalStats,
+  getOpportunityStats: mockCrmStatsService.getOpportunityStats
 };
+
+// Also export individual services for more granular imports
+export { mockTasksAPI };
