@@ -1,5 +1,5 @@
-
 import { ExchangeRates, CurrencyOption } from "../types/currencyTypes";
+import { supabase } from "@/integrations/supabase/client";
 
 // Format a currency value for display
 export const formatCurrencyValue = (amount: number, currency: string = "TRY"): string => {
@@ -16,52 +16,57 @@ export const formatCurrencyValue = (amount: number, currency: string = "TRY"): s
   return formatter.format(amount);
 };
 
-// Fetch exchange rates from the Central Bank of Turkey
+// Fetch exchange rates from the database
 export const fetchTCMBExchangeRates = async (): Promise<ExchangeRates> => {
   try {
-    // TCMB API endpoint for XML exchange rate data
-    const response = await fetch('https://www.tcmb.gov.tr/kurlar/today.xml', {
-      mode: 'cors',
-      cache: 'no-cache',
-      credentials: 'same-origin',
-      headers: {
-        'Accept': 'application/xml',
-      },
+    // First try to get from the database
+    const { data, error } = await supabase
+      .from('exchange_rates')
+      .select('*')
+      .order('update_date', { ascending: false });
+    
+    if (error) {
+      throw new Error(`Database error: ${error.message}`);
+    }
+    
+    if (data && data.length > 0) {
+      // Transform the data into the expected format
+      const rates: ExchangeRates = { TRY: 1 };
+      data.forEach(rate => {
+        if (rate.currency_code && rate.forex_buying) {
+          rates[rate.currency_code] = rate.forex_buying;
+        }
+      });
+      
+      console.log("Database Exchange rates fetched:", rates);
+      return rates;
+    }
+    
+    // If no data in database, try the edge function
+    const { data: functionData, error: functionError } = await supabase.functions.invoke('fetch-exchange-rates', {
+      method: 'GET'
     });
     
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    if (functionError) {
+      throw new Error(`Function error: ${functionError.message}`);
     }
     
-    const xmlText = await response.text();
-    
-    // Parse XML response to get exchange rates
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-    
-    // Initialize rates object with TRY as base (1)
-    const rates: ExchangeRates = { TRY: 1 };
-    
-    // Extract rates for common currencies
-    const currencies = xmlDoc.getElementsByTagName("Currency");
-    for (let i = 0; i < currencies.length; i++) {
-      const currency = currencies[i];
-      const code = currency.getAttribute("CurrencyCode");
-      
-      // Only process USD, EUR, and GBP
-      if (code && ["USD", "EUR", "GBP"].includes(code)) {
-        const forexBuying = currency.getElementsByTagName("ForexBuying")[0]?.textContent;
-        
-        if (forexBuying) {
-          rates[code] = parseFloat(forexBuying);
+    if (functionData && functionData.data) {
+      // Transform the function data into the expected format
+      const rates: ExchangeRates = { TRY: 1 };
+      functionData.data.forEach((rate: any) => {
+        if (rate.currency_code && rate.forex_buying) {
+          rates[rate.currency_code] = rate.forex_buying;
         }
-      }
+      });
+      
+      console.log("Function Exchange rates fetched:", rates);
+      return rates;
     }
     
-    console.log("TCMB Exchange rates fetched:", rates);
-    return rates;
+    throw new Error('No exchange rate data available');
   } catch (error) {
-    console.error("Error fetching TCMB exchange rates:", error);
+    console.error("Error fetching exchange rates:", error);
     // Return fallback exchange rates if API call fails
     return {
       TRY: 1,

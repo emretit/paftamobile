@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -80,36 +81,56 @@ export const ExchangeRatesPanel: React.FC = () => {
   const fetchExchangeRates = async () => {
     try {
       setIsRefreshing(true);
-      const response = await fetch('https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/fetch-exchange-rates', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.auth.getSession() ? 'authenticated' : 'anonymous'}`
-        }
-      });
       
-      if (!response.ok) {
-        throw new Error(`Error fetching exchange rates: ${response.statusText}`);
+      // Use the Supabase client to fetch exchange rates
+      const { data, error: queryError } = await supabase
+        .from('exchange_rates')
+        .select('*')
+        .order('update_date', { ascending: false });
+      
+      if (queryError) {
+        throw new Error(`Error fetching exchange rates: ${queryError.message}`);
       }
       
-      const result = await response.json();
-      
-      if (result.success) {
-        setRates(result.data);
-        setLastUpdated(result.update_date || new Date().toISOString());
-        setError(null);
+      if (!data || data.length === 0) {
+        // If no data in the database, try calling the function to get fresh data
+        const { data: functionData, error: functionError } = await supabase.functions.invoke('fetch-exchange-rates', {
+          method: 'GET'
+        });
         
-        // Show success message only when manually refreshing
-        if (isRefreshing) {
-          toast.success('Döviz kurları başarıyla güncellendi');
+        if (functionError) {
+          throw new Error(`Error fetching exchange rates: ${functionError.message}`);
         }
+        
+        setRates(functionData.data || []);
+        setLastUpdated(functionData.update_date || new Date().toISOString());
       } else {
-        throw new Error(result.message || 'Error fetching exchange rates');
+        setRates(data);
+        // Get the most recent update date
+        const updateDate = data.length > 0 ? data[0].update_date : null;
+        setLastUpdated(updateDate);
+      }
+      
+      setError(null);
+      
+      // Show success message only when manually refreshing
+      if (isRefreshing) {
+        toast.success('Döviz kurları başarıyla güncellendi');
       }
     } catch (err) {
       console.error('Failed to fetch exchange rates:', err);
       setError(err.message);
       toast.error('Döviz kurları güncellenirken bir hata oluştu');
+      
+      // Use fallback data if fetch fails
+      const fallbackRates = [
+        { currency_code: 'USD', forex_buying: 32.5, forex_selling: 32.8, update_date: new Date().toISOString() },
+        { currency_code: 'EUR', forex_buying: 35.2, forex_selling: 35.5, update_date: new Date().toISOString() },
+        { currency_code: 'GBP', forex_buying: 41.3, forex_selling: 41.6, update_date: new Date().toISOString() },
+        { currency_code: 'TRY', forex_buying: 1, forex_selling: 1, update_date: new Date().toISOString() }
+      ];
+      setRates(fallbackRates);
+      setLastUpdated(new Date().toISOString());
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -127,8 +148,30 @@ export const ExchangeRatesPanel: React.FC = () => {
   }, []);
 
   // Manual refresh handler
-  const handleRefresh = () => {
-    fetchExchangeRates();
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      // Call the edge function to update rates
+      const { data, error } = await supabase.functions.invoke('daily-exchange-rate-update', {
+        method: 'POST'
+      });
+      
+      if (error) {
+        throw new Error(`Error updating exchange rates: ${error.message}`);
+      }
+      
+      if (data.success) {
+        toast.success('Döviz kurları başarıyla güncellendi');
+        // Fetch the updated rates
+        fetchExchangeRates();
+      } else {
+        throw new Error(data.message || 'Error updating exchange rates');
+      }
+    } catch (err) {
+      console.error('Failed to refresh exchange rates:', err);
+      toast.error('Döviz kurları güncellenirken bir hata oluştu');
+      setIsRefreshing(false);
+    }
   };
 
   // Filter and sort rates for display
