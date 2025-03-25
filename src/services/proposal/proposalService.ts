@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Proposal, ProposalStatus, ProposalAttachment, ProposalItem } from "@/types/proposal";
 import { Json } from "@/types/json";
@@ -93,13 +94,13 @@ export class ProposalService extends BaseService {
       
       // Add attachments and items if they exist
       if (proposal.attachments && proposal.attachments.length > 0) {
-        // Convert to JSON-compatible format using JSON stringify and parse
-        insertData.attachments = JSON.parse(JSON.stringify(proposal.attachments));
+        // Use type assertion to explicitly tell TypeScript this is OK
+        insertData.attachments = proposal.attachments as unknown as Json;
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        // Convert to JSON-compatible format using JSON stringify and parse
-        insertData.items = JSON.parse(JSON.stringify(proposal.items));
+        // Use type assertion to explicitly tell TypeScript this is OK
+        insertData.items = proposal.items as unknown as Json;
       }
       
       const { data, error } = await supabase
@@ -151,13 +152,13 @@ export class ProposalService extends BaseService {
       
       // Handle complex types
       if (proposal.attachments !== undefined) {
-        // Convert to JSON-compatible format using JSON stringify and parse
-        updateData.attachments = JSON.parse(JSON.stringify(proposal.attachments));
+        // Use type assertion to explicitly tell TypeScript this is OK
+        updateData.attachments = proposal.attachments as unknown as Json;
       }
       
       if (proposal.items !== undefined) {
-        // Convert to JSON-compatible format using JSON stringify and parse
-        updateData.items = JSON.parse(JSON.stringify(proposal.items));
+        // Use type assertion to explicitly tell TypeScript this is OK
+        updateData.items = proposal.items as unknown as Json;
       }
       
       const { data, error } = await supabase
