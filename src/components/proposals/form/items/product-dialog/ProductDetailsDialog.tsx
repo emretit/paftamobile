@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -18,6 +19,7 @@ import PriceAndDiscountSection from "./components/PriceAndDiscountSection";
 import NotesSection from "./components/NotesSection";
 import TotalPriceSection from "./components/TotalPriceSection";
 import { toast } from "sonner";
+import PriceSummary from "./components/price-section/PriceSummary";
 
 interface ProductDetailsDialogProps {
   open: boolean;
@@ -67,6 +69,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
     GBP: 41.3
   });
   const [isLoadingRates, setIsLoadingRates] = useState(false);
+  const [calculatedTotal, setCalculatedTotal] = useState(0);
 
   useEffect(() => {
     if (open) {
@@ -102,6 +105,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
       const discountedPrice = currentPrice * (1 - discountRate / 100);
       const total = quantity * discountedPrice * (1 + (selectedProduct.tax_rate || 0) / 100);
       setTotalPrice(total);
+      setCalculatedTotal(total);
       
       setAvailableStock(selectedProduct.stock_quantity || 0);
       
@@ -191,6 +195,13 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
             setNotes={setNotes}
           />
           
+          <PriceSummary
+            convertedPrice={convertedPrice}
+            calculatedTotal={calculatedTotal}
+            selectedCurrency={originalCurrency}
+            formatCurrency={formatCurrency}
+          />
+          
           <TotalPriceSection 
             totalPrice={totalPrice}
             discountRate={discountRate}
@@ -220,4 +231,3 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
 };
 
 export default ProductDetailsDialog;
-
