@@ -94,12 +94,12 @@ export class ProposalService extends BaseService {
       
       // Add attachments and items if they exist
       if (proposal.attachments && proposal.attachments.length > 0) {
-        // Convert to JSON explicitly using a deep copy to avoid type issues
+        // The key is to parse and stringify to ensure it's a proper JSON structure
         insertData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as Json;
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        // Convert to JSON explicitly using a deep copy to avoid type issues
+        // The key is to parse and stringify to ensure it's a proper JSON structure
         insertData.items = JSON.parse(JSON.stringify(proposal.items)) as Json;
       }
       
