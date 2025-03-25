@@ -55,6 +55,11 @@ export class ProposalService extends BaseService {
         data.attachments = data.attachments as unknown as ProposalAttachment[];
       }
       
+      // Convert items from JSON to the correct type
+      if (data && data.items) {
+        data.items = data.items as unknown as ProposalItem[];
+      }
+      
       return { data, error: null };
     } catch (error) {
       console.error('Error fetching proposal:', error);
@@ -89,12 +94,12 @@ export class ProposalService extends BaseService {
       
       // Add attachments and items if they exist
       if (proposal.attachments && proposal.attachments.length > 0) {
-        // Convert to JSON explicitly
+        // Convert to JSON explicitly using a deep copy to avoid type issues
         insertData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as Json;
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        // Convert to JSON explicitly
+        // Convert to JSON explicitly using a deep copy to avoid type issues
         insertData.items = JSON.parse(JSON.stringify(proposal.items)) as Json;
       }
       
@@ -149,12 +154,12 @@ export class ProposalService extends BaseService {
       
       // Handle complex types that need conversion
       if (proposal.attachments !== undefined) {
-        // Convert to JSON explicitly
+        // Convert to JSON explicitly using a deep copy to avoid type issues
         updateData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as Json;
       }
       
       if (proposal.items !== undefined) {
-        // Convert to JSON explicitly
+        // Convert to JSON explicitly using a deep copy to avoid type issues
         updateData.items = JSON.parse(JSON.stringify(proposal.items)) as Json;
       }
       

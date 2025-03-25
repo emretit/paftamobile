@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useCurrencyManagement } from "./hooks/useCurrencyManagement";
 import { ProposalItem } from "@/types/proposal";
 import { Product } from "@/types/product";
@@ -22,6 +22,19 @@ export const useProposalItems = () => {
     getCurrencySymbol,
     handleCurrencyChange
   } = useCurrencyManagement();
+
+  // Listen for currency change events from ProductDetailsDialog
+  useEffect(() => {
+    const handleCurrencyChangeEvent = (event: CustomEvent) => {
+      setSelectedCurrency(event.detail);
+    };
+
+    window.addEventListener('currency-change', handleCurrencyChangeEvent as EventListener);
+    
+    return () => {
+      window.removeEventListener('currency-change', handleCurrencyChangeEvent as EventListener);
+    };
+  }, [setSelectedCurrency]);
 
   // Fetch products for realtime data with optimized query
   const { data: products = [], isLoading } = useQuery({
@@ -92,8 +105,8 @@ export const useProposalItems = () => {
       discount_rate: 0, // Default discount rate
       total_price: unitPrice, // Quantity is 1, so total = unit price
       currency: selectedCurrency,
-      original_currency: productCurrency,
-      original_price: product.price || 0,
+      original_currency: productCurrency, // Save the original currency
+      original_price: product.price || 0, // Save the original price
       stock_status: product.stock_quantity && product.stock_quantity > 0 
         ? (product.stock_quantity > product.stock_threshold ? 'in_stock' : 'low_stock')
         : 'out_of_stock',
@@ -119,8 +132,16 @@ export const useProposalItems = () => {
       const updatedItem = { ...item, [field]: value };
 
       // Recalculate total price when quantity or unit_price changes
-      if (field === "quantity" || field === "unit_price") {
-        updatedItem.total_price = updatedItem.quantity * updatedItem.unit_price;
+      if (field === "quantity" || field === "unit_price" || field === "discount_rate" || field === "tax_rate") {
+        const quantity = Number(updatedItem.quantity);
+        const unitPrice = Number(updatedItem.unit_price);
+        const discountRate = Number(updatedItem.discount_rate || 0);
+        const taxRate = Number(updatedItem.tax_rate || 0);
+        
+        // Apply discount
+        const discountedPrice = unitPrice * (1 - discountRate / 100);
+        // Calculate total with tax
+        updatedItem.total_price = quantity * discountedPrice * (1 + taxRate / 100);
       }
 
       return updatedItem;
@@ -149,10 +170,20 @@ export const useProposalItems = () => {
         exchangeRates
       );
 
+      // Recalculate total price with tax and discount
+      const quantity = Number(item.quantity);
+      const discountRate = Number(item.discount_rate || 0);
+      const taxRate = Number(item.tax_rate || 0);
+      
+      // Apply discount
+      const discountedPrice = convertedPrice * (1 - discountRate / 100);
+      // Calculate total with tax
+      const totalPrice = quantity * discountedPrice * (1 + taxRate / 100);
+
       return {
         ...item,
         unit_price: convertedPrice,
-        total_price: convertedPrice * item.quantity,
+        total_price: totalPrice,
         currency: newCurrency,
       };
     });
@@ -178,6 +209,8 @@ export const useProposalItems = () => {
     updateAllItemsCurrency,
     convertCurrency,
     products,
-    isLoading
+    isLoading,
+    items,
+    setItems
   };
 };

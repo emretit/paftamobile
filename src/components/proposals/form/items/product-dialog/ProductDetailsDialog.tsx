@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Package, CheckCircle, AlertTriangle } from "lucide-react";
+import { AlertCircle, Package, CheckCircle, AlertTriangle, CurrencyIcon } from "lucide-react";
 import { Product } from "@/types/product";
 import { convertCurrency } from "../utils/currencyUtils";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,10 +61,16 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
   const [stockStatus, setStockStatus] = useState("");
   const [convertedPrice, setConvertedPrice] = useState(0);
   const [notes, setNotes] = useState("");
+  const [originalPrice, setOriginalPrice] = useState(0);
+  const [originalCurrency, setOriginalCurrency] = useState("");
 
   // Update calculations when inputs change
   useEffect(() => {
     if (selectedProduct) {
+      // Store original product price and currency for reference
+      setOriginalPrice(selectedProduct.price);
+      setOriginalCurrency(selectedProduct.currency || "TRY");
+      
       let basePrice = customPrice !== undefined ? customPrice : selectedProduct.price;
       
       // Convert price to selected currency if needed
@@ -167,6 +173,26 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
     return null;
   };
 
+  const getCurrencyName = (code: string) => {
+    const currencies: Record<string, string> = {
+      TRY: "Türk Lirası",
+      USD: "Amerikan Doları",
+      EUR: "Euro",
+      GBP: "İngiliz Sterlini"
+    };
+    return currencies[code] || code;
+  };
+
+  const getCurrencySymbol = (code: string) => {
+    const symbols: Record<string, string> = {
+      TRY: "₺",
+      USD: "$",
+      EUR: "€",
+      GBP: "£"
+    };
+    return symbols[code] || code;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -196,6 +222,19 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
               <span>Stok: {availableStock} {selectedProduct.unit}</span>
             </div>
             {getStockWarning(stockStatus)}
+          </div>
+          
+          {/* Original Currency Info */}
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center text-sm text-blue-700 dark:text-blue-300">
+              <span className="font-medium mr-2">Orijinal Para Birimi:</span>
+              <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-800 dark:text-blue-200 dark:border-blue-700">
+                {getCurrencySymbol(originalCurrency)} {getCurrencyName(originalCurrency)}
+              </Badge>
+              <span className="ml-2">
+                Fiyat: {formatCurrency(originalPrice, originalCurrency)}
+              </span>
+            </div>
           </div>
           
           {/* Quantity */}
@@ -228,7 +267,23 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
           {/* Price and Discount */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="price">Birim Fiyat ({selectedCurrency})</Label>
+              <Label htmlFor="price" className="flex items-center justify-between">
+                <span>Birim Fiyat</span>
+                <Select 
+                  value={selectedCurrency} 
+                  onValueChange={(val) => window.dispatchEvent(new CustomEvent('currency-change', { detail: val }))}
+                >
+                  <SelectTrigger className="h-7 w-24">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TRY">₺ TRY</SelectItem>
+                    <SelectItem value="USD">$ USD</SelectItem>
+                    <SelectItem value="EUR">€ EUR</SelectItem>
+                    <SelectItem value="GBP">£ GBP</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Label>
               <Input
                 id="price"
                 type="number"
@@ -239,7 +294,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
               />
               {selectedProduct.currency !== selectedCurrency && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Orijinal: {formatCurrency(selectedProduct.price, selectedProduct.currency)}
+                  Dönüştürülmüş: {formatCurrency(convertedPrice, selectedCurrency)}
                 </p>
               )}
             </div>
