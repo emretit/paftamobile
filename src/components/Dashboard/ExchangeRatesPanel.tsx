@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import useExchangeRateData from './hooks/useExchangeRateData';
@@ -6,6 +5,7 @@ import ExchangeRateHeader from './ExchangeRates/ExchangeRateHeader';
 import ExchangeRateError from './ExchangeRates/ExchangeRateError';
 import ExchangeRateLoading from './ExchangeRates/ExchangeRateLoading';
 import MainCurrencyCard from './ExchangeRates/MainCurrencyCard';
+import OtherCurrenciesTable from './ExchangeRates/OtherCurrenciesTable';
 
 export const ExchangeRatesPanel: React.FC = () => {
   const {
@@ -22,16 +22,23 @@ export const ExchangeRatesPanel: React.FC = () => {
   console.log('Exchange Rates Panel - Loading:', isLoading, 'Error:', error);
   
   const mainCurrencies = ['USD', 'EUR', 'GBP'];
+  const otherCurrencies = ['JPY', 'CHF', 'CAD', 'AUD', 'CNY', 'RUB', 'SAR', 'NOK', 'DKK', 'SEK'];
   
   // Sort main currencies in the specified order
   const mainRates = rates
     .filter(rate => mainCurrencies.includes(rate.currency_code))
     .sort((a, b) => mainCurrencies.indexOf(a.currency_code) - mainCurrencies.indexOf(b.currency_code));
   
+  // Filter other currencies
+  const otherRates = rates
+    .filter(rate => otherCurrencies.includes(rate.currency_code) && rate.currency_code !== 'TRY')
+    .sort((a, b) => otherCurrencies.indexOf(a.currency_code) - otherCurrencies.indexOf(b.currency_code));
+  
   console.log('Main currency rates:', mainRates);
+  console.log('Other currency rates:', otherRates);
 
   return (
-    <Card className="shadow-md border-gray-200 bg-white dark:bg-gray-900 max-w-3xl mx-auto">
+    <Card className="shadow-md border-gray-200 bg-white dark:bg-gray-900 max-w-5xl mx-auto">
       <CardHeader className="pb-2">
         <ExchangeRateHeader 
           lastUpdateStatus={lastUpdateStatus}
@@ -46,9 +53,9 @@ export const ExchangeRatesPanel: React.FC = () => {
         ) : isLoading ? (
           <ExchangeRateLoading />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Main currencies display */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {mainRates.length > 0 ? (
                 mainRates.map((rate) => (
                   <MainCurrencyCard key={rate.currency_code} rate={rate} />
@@ -58,6 +65,12 @@ export const ExchangeRatesPanel: React.FC = () => {
                   Ana döviz kurları bulunamadı
                 </div>
               )}
+            </div>
+            
+            {/* Other currencies table */}
+            <div className="mt-6">
+              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3">Diğer Döviz Kurları</h3>
+              <OtherCurrenciesTable rates={otherRates} />
             </div>
           </div>
         )}

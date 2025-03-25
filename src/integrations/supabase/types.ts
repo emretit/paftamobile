@@ -2049,6 +2049,10 @@ export type Database = {
         }
         Returns: number
       }
+      setup_exchange_rate_cron: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       show_limit: {
         Args: Record<PropertyKey, never>
         Returns: number
