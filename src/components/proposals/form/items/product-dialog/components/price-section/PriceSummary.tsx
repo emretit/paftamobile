@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getCurrencyOptions } from "../../../../utils/currencyUtils";
+import { getCurrencyOptions } from "../../../utils/currencyUtils";
 import { ArrowRightLeft } from "lucide-react";
 
 interface PriceSummaryProps {
