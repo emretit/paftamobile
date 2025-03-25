@@ -114,11 +114,11 @@ export class ProposalService extends BaseService {
       
       // Handle complex types by proper serialization
       if (proposal.attachments && proposal.attachments.length > 0) {
-        insertData.attachments = JSON.stringify(proposal.attachments);
+        insertData.attachments = JSON.stringify(proposal.attachments) as unknown as Json;
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        insertData.items = JSON.stringify(proposal.items);
+        insertData.items = JSON.stringify(proposal.items) as unknown as Json;
       }
       
       const { data, error } = await supabase
@@ -191,11 +191,11 @@ export class ProposalService extends BaseService {
       
       // Handle complex types with proper serialization
       if (proposal.attachments !== undefined) {
-        updateData.attachments = JSON.stringify(proposal.attachments);
+        updateData.attachments = JSON.stringify(proposal.attachments) as unknown as Json;
       }
       
       if (proposal.items !== undefined) {
-        updateData.items = JSON.stringify(proposal.items);
+        updateData.items = JSON.stringify(proposal.items) as unknown as Json;
       }
       
       const { data, error } = await supabase
