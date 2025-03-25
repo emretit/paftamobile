@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Proposal, ProposalStatus, ProposalAttachment, ProposalItem } from "@/types/proposal";
 import { BaseService, ServiceOptions } from "../base/BaseService";
+import { Json } from "@/types/json";
 
 export class ProposalService extends BaseService {
   async getProposals(options: ServiceOptions = {}) {
@@ -64,9 +65,9 @@ export class ProposalService extends BaseService {
       // Generate proposal number
       const proposalNumber = await this.generateProposalNumber();
       
-      // Create a clean insert data object
-      const insertData: Record<string, any> = {
-        title: proposal.title,
+      // Create proposal data object with required fields
+      const insertData = {
+        title: proposal.title || "Untitled Proposal",
         description: proposal.description,
         customer_id: proposal.customer_id,
         employee_id: proposal.employee_id,
@@ -86,11 +87,11 @@ export class ProposalService extends BaseService {
       
       // Handle complex types by proper serialization
       if (proposal.attachments && proposal.attachments.length > 0) {
-        insertData.attachments = JSON.stringify(proposal.attachments);
+        insertData.attachments = JSON.stringify(proposal.attachments) as unknown as Json;
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        insertData.items = JSON.stringify(proposal.items);
+        insertData.items = JSON.stringify(proposal.items) as unknown as Json;
       }
       
       const { data, error } = await supabase
@@ -113,8 +114,25 @@ export class ProposalService extends BaseService {
   
   async updateProposal(id: string, proposal: Partial<Proposal>) {
     try {
-      // Create a clean update data object
-      const updateData: Record<string, any> = { 
+      // Create a properly typed update data object
+      const updateData: {
+        updated_at: string;
+        title?: string;
+        description?: string;
+        customer_id?: string;
+        employee_id?: string;
+        opportunity_id?: string;
+        status?: string;
+        valid_until?: string;
+        payment_terms?: string;
+        delivery_terms?: string;
+        notes?: string;
+        terms?: string;
+        currency?: string;
+        total_amount?: number;
+        attachments?: Json;
+        items?: Json;
+      } = { 
         updated_at: new Date().toISOString() 
       };
       
@@ -135,11 +153,11 @@ export class ProposalService extends BaseService {
       
       // Handle complex types with proper serialization
       if (proposal.attachments !== undefined) {
-        updateData.attachments = JSON.stringify(proposal.attachments);
+        updateData.attachments = JSON.stringify(proposal.attachments) as unknown as Json;
       }
       
       if (proposal.items !== undefined) {
-        updateData.items = JSON.stringify(proposal.items);
+        updateData.items = JSON.stringify(proposal.items) as unknown as Json;
       }
       
       const { data, error } = await supabase
