@@ -817,6 +817,45 @@ export type Database = {
         }
         Relationships: []
       }
+      exchange_rates: {
+        Row: {
+          banknote_buying: number | null
+          banknote_selling: number | null
+          created_at: string | null
+          cross_rate: number | null
+          currency_code: string
+          forex_buying: number | null
+          forex_selling: number | null
+          id: string
+          update_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          banknote_buying?: number | null
+          banknote_selling?: number | null
+          created_at?: string | null
+          cross_rate?: number | null
+          currency_code: string
+          forex_buying?: number | null
+          forex_selling?: number | null
+          id?: string
+          update_date?: string
+          updated_at?: string | null
+        }
+        Update: {
+          banknote_buying?: number | null
+          banknote_selling?: number | null
+          created_at?: string | null
+          cross_rate?: number | null
+          currency_code?: string
+          forex_buying?: number | null
+          forex_selling?: number | null
+          id?: string
+          update_date?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       financial_instruments: {
         Row: {
           amount: number
