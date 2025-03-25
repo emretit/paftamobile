@@ -94,13 +94,13 @@ export class ProposalService extends BaseService {
       
       // Add attachments and items if they exist
       if (proposal.attachments && proposal.attachments.length > 0) {
-        // Use a safe conversion to JSON that maintains type compatibility
-        insertData.attachments = JSON.parse(JSON.stringify(proposal.attachments));
+        // Use a safe type conversion to match the expected Json type
+        insertData.attachments = proposal.attachments as unknown as Json;
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        // Use a safe conversion to JSON that maintains type compatibility
-        insertData.items = JSON.parse(JSON.stringify(proposal.items));
+        // Use a safe type conversion to match the expected Json type
+        insertData.items = proposal.items as unknown as Json;
       }
       
       const { data, error } = await supabase
@@ -152,13 +152,13 @@ export class ProposalService extends BaseService {
       
       // Handle complex types that need conversion
       if (proposal.attachments !== undefined) {
-        // Use a safe conversion to JSON that maintains type compatibility
-        updateData.attachments = JSON.parse(JSON.stringify(proposal.attachments));
+        // Use a safe type conversion to match the expected Json type
+        updateData.attachments = proposal.attachments as unknown as Json;
       }
       
       if (proposal.items !== undefined) {
-        // Use a safe conversion to JSON that maintains type compatibility
-        updateData.items = JSON.parse(JSON.stringify(proposal.items));
+        // Use a safe type conversion to match the expected Json type
+        updateData.items = proposal.items as unknown as Json;
       }
       
       const { data, error } = await supabase
