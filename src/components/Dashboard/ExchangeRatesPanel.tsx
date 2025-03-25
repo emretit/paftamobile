@@ -99,6 +99,7 @@ export const ExchangeRatesPanel: React.FC = () => {
   
   const fetchLastUpdateStatus = async () => {
     try {
+      // Handle the type correctly by explicitly defining the table structure
       const { data, error } = await supabase
         .from('exchange_rate_updates')
         .select('*')
@@ -111,9 +112,15 @@ export const ExchangeRatesPanel: React.FC = () => {
       }
       
       if (data && data.length > 0) {
+        // Type cast to ensure TypeScript knows the structure
+        const updateData = data[0] as unknown as { 
+          status: string; 
+          message: string;
+        };
+        
         setLastUpdateStatus({
-          status: data[0].status as string,
-          message: data[0].message as string
+          status: updateData.status,
+          message: updateData.message
         });
       }
     } catch (err) {
