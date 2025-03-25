@@ -1,5 +1,6 @@
 
-import { ExchangeRates } from "../types/currencyTypes";
+import { ExchangeRates, CurrencyOption } from "../types/currencyTypes";
+import { CURRENCY_OPTIONS } from "../proposalItemsConstants";
 
 // Format a currency value for display
 export const formatCurrencyValue = (amount: number, currency: string = "TRY"): string => {
@@ -51,4 +52,26 @@ export const addCurrencySymbol = (price: string, currency: string): string => {
   };
   
   return `${symbols[currency] || currency} ${price}`;
+};
+
+// Get currency symbol for a given currency code
+export const getCurrencySymbol = (currency: string): string => {
+  const symbols: Record<string, string> = {
+    TRY: '₺',
+    USD: '$',
+    EUR: '€',
+    GBP: '£'
+  };
+  
+  return symbols[currency] || currency;
+};
+
+// Get currency options for dropdowns
+export const getCurrencyOptions = (): CurrencyOption[] => {
+  return [
+    { value: "TRY", label: "₺ TRY", symbol: "₺" },
+    { value: "USD", label: "$ USD", symbol: "$" },
+    { value: "EUR", label: "€ EUR", symbol: "€" },
+    { value: "GBP", label: "£ GBP", symbol: "£" }
+  ];
 };

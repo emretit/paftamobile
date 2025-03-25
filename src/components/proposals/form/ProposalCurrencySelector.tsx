@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { DollarSign, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { getCurrencyOptions } from "../form/items/utils/currencyUtils";
+import { getCurrencyOptions } from "./items/utils/currencyUtils";
 
 interface ProposalCurrencySelectorProps {
   selectedCurrency: string;
