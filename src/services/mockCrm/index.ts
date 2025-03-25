@@ -2,6 +2,15 @@
 import { v4 as uuid } from 'uuid';
 import { Proposal } from '@/types/proposal';
 import { crmService } from '../crmService';
+import { mockCrmOpportunitiesService } from './opportunitiesService';
+
+export const mockTasksAPI = {
+  createTask: async (task: any) => {
+    // Mock implementation for task creation
+    console.log('Creating mock task:', task);
+    return { data: { ...task, id: uuid() }, error: null };
+  }
+};
 
 export const mockCrmService = {
   async getProposalById(id: string) {
@@ -24,6 +33,11 @@ export const mockCrmService = {
     };
 
     return { data: dummyProposal, error: null };
+  },
+
+  // Add the getOpportunities method
+  async getOpportunities() {
+    return mockCrmOpportunitiesService.getOpportunities();
   },
 
   // For other operations, we'll use the real crmService

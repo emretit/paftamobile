@@ -13,7 +13,7 @@ export const mockCrmOpportunitiesService = {
         .select(`
           *,
           customer:customer_id (*),
-          employee:employee_id (*)
+          employee:assigned_to (*)
         `)
         .order('created_at', { ascending: false });
 
@@ -40,7 +40,7 @@ export const mockCrmOpportunitiesService = {
         .select(`
           *,
           customer:customer_id (*),
-          employee:employee_id (*)
+          employee:assigned_to (*)
         `)
         .eq('id', id)
         .single();

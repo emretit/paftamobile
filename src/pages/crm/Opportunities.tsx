@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DropResult } from "@hello-pangea/dnd";
 import { Opportunity, OpportunityStatus } from "@/types/crm";
@@ -38,6 +37,42 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
   const [activeView, setActiveView] = useState("kanban");
   
+  const handleUpdateOpportunity = async (opportunity: Partial<Opportunity> & { id: string }): Promise<boolean> => {
+    try {
+      const result = await crmService.updateOpportunity(opportunity.id, opportunity);
+      
+      if (result.error) {
+        throw result.error;
+      }
+      
+      setOpportunities(prev => {
+        const status = opportunity.status as OpportunityStatus;
+        if (!status) return prev;
+        
+        const updatedColumn = prev[status].map(o => 
+          o.id === opportunity.id ? { ...o, ...opportunity } : o
+        );
+        
+        return {
+          ...prev,
+          [status]: updatedColumn
+        };
+      });
+      
+      if (opportunity.id === selectedOpportunity?.id) {
+        setSelectedOpportunity(prev => prev ? { ...prev, ...opportunity } : null);
+      }
+      
+      toast.success("Fırsat başarıyla güncellendi");
+      return true;
+      
+    } catch (error) {
+      console.error("Error updating opportunity:", error);
+      toast.error("Fırsat güncellenirken bir hata oluştu");
+      return false;
+    }
+  };
+
   // Group opportunities by status
   const groupedOpportunities = {
     new: (opportunities.new || [])

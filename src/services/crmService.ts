@@ -109,5 +109,25 @@ export const crmService = {
       console.error('Error updating opportunity:', error);
       return { data: null, error };
     }
+  },
+
+  async getOpportunities() {
+    try {
+      const { data, error } = await supabase
+        .from('opportunities')
+        .select(`
+          *,
+          customer:customer_id (*),
+          employee:assigned_to (*)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error getting opportunities:', error);
+      return { data: [], error };
+    }
   }
 };
