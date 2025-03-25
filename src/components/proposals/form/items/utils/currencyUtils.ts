@@ -1,3 +1,4 @@
+
 import { ExchangeRates, CurrencyOption } from "../types/currencyTypes";
 
 // Format a currency value for display
@@ -19,7 +20,19 @@ export const formatCurrencyValue = (amount: number, currency: string = "TRY"): s
 export const fetchTCMBExchangeRates = async (): Promise<ExchangeRates> => {
   try {
     // TCMB API endpoint for XML exchange rate data
-    const response = await fetch('https://www.tcmb.gov.tr/kurlar/today.xml');
+    const response = await fetch('https://www.tcmb.gov.tr/kurlar/today.xml', {
+      mode: 'cors',
+      cache: 'no-cache',
+      credentials: 'same-origin',
+      headers: {
+        'Accept': 'application/xml',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
     const xmlText = await response.text();
     
     // Parse XML response to get exchange rates
@@ -118,20 +131,15 @@ export const getCurrencyOptions = (): CurrencyOption[] => {
   ];
 };
 
-// Get current exchange rates (now fetches from API)
-export const getCurrentExchangeRates = async (): Promise<ExchangeRates> => {
-  try {
-    return await fetchTCMBExchangeRates();
-  } catch (error) {
-    console.error("Error getting current exchange rates:", error);
-    // Fallback to hardcoded values
-    return {
-      TRY: 1,
-      USD: 32.5,
-      EUR: 35.2,
-      GBP: 41.3
-    };
-  }
+// Get current exchange rates (for synchronous contexts)
+export const getCurrentExchangeRates = (): ExchangeRates => {
+  // Default rates (these will be replaced by API values when available)
+  return {
+    TRY: 1,
+    USD: 32.5,
+    EUR: 35.2,
+    GBP: 41.3
+  };
 };
 
 // Format exchange rate display

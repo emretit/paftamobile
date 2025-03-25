@@ -26,8 +26,25 @@ export const useCurrencyManagement = () => {
     return getCurrencySymbol(currency);
   };
 
+  // Convert amount between currencies
+  const convertAmount = (amount: number, fromCurrency: string, toCurrency: string) => {
+    if (fromCurrency === toCurrency) return amount;
+    
+    // Convert to TRY first (base currency)
+    const amountInTRY = fromCurrency === "TRY" 
+      ? amount 
+      : amount * exchangeRates[fromCurrency];
+    
+    // Then convert from TRY to target currency
+    return toCurrency === "TRY" 
+      ? amountInTRY 
+      : amountInTRY / exchangeRates[toCurrency];
+  };
+
   // Handle currency change
   const handleCurrencyChange = (value: string) => {
+    if (value === selectedCurrency) return;
+    
     setSelectedCurrency(value);
     toast.success(`Para birimi ${value} olarak değiştirildi`);
   };
@@ -67,6 +84,7 @@ export const useCurrencyManagement = () => {
     formatCurrency,
     getCurrencySymbol: getCurrencySymbolValue,
     handleCurrencyChange,
+    convertAmount,
     isLoadingRates
   };
 };

@@ -8,11 +8,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getCurrencyOptions, fetchTCMBExchangeRates } from "../../utils/currencyUtils";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { RefreshCcw } from "lucide-react";
 
 interface PriceAndDiscountSectionProps {
   customPrice: number | undefined;
@@ -113,7 +113,6 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
       }
     }
     
-    toast.info(`Para birimi ${value} olarak değiştirildi`);
     handleCurrencyChange(value);
   };
 
@@ -138,7 +137,12 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
               ))}
             </SelectContent>
           </Select>
-          {isLoading && <p className="text-xs text-muted-foreground">Kurlar yükleniyor...</p>}
+          {isLoading && (
+            <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+              <RefreshCcw className="h-3 w-3 animate-spin" />
+              <span>Kurlar yükleniyor...</span>
+            </div>
+          )}
         </div>
 
         <div className="col-span-1 space-y-2">
