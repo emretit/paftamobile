@@ -297,7 +297,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price" className="flex items-center justify-between">
-                <span>Birim Fiyat ({getCurrencySymbol(selectedCurrency)})</span>
+                <span>Birim Fiyat</span>
                 <Select 
                   value={selectedCurrency} 
                   onValueChange={handleCurrencyChange}
