@@ -1,5 +1,8 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getCurrencyOptions } from "../../../../utils/currencyUtils";
+import { ArrowRightLeft } from "lucide-react";
 
 interface PriceSummaryProps {
   convertedPrice: number;
@@ -14,17 +17,79 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({
   selectedCurrency,
   formatCurrency
 }) => {
+  const [displayCurrency, setDisplayCurrency] = useState<string>(selectedCurrency);
+  const [convertedDisplayPrice, setConvertedDisplayPrice] = useState<number>(convertedPrice);
+  const [convertedDisplayTotal, setConvertedDisplayTotal] = useState<number>(calculatedTotal);
+  const currencyOptions = getCurrencyOptions();
+  
+  useEffect(() => {
+    // When display currency changes, we would convert the prices
+    // For now we'll use dummy conversion rates
+    if (displayCurrency === selectedCurrency) {
+      setConvertedDisplayPrice(convertedPrice);
+      setConvertedDisplayTotal(calculatedTotal);
+    } else {
+      // This would be replaced with actual conversion logic
+      // based on exchange rates
+      const conversionRates: Record<string, number> = {
+        TRY: 1,
+        USD: 0.03,
+        EUR: 0.028,
+        GBP: 0.024
+      };
+      
+      const fromRate = conversionRates[selectedCurrency] || 1;
+      const toRate = conversionRates[displayCurrency] || 1;
+      const rate = toRate / fromRate;
+      
+      setConvertedDisplayPrice(convertedPrice * rate);
+      setConvertedDisplayTotal(calculatedTotal * rate);
+    }
+  }, [displayCurrency, selectedCurrency, convertedPrice, calculatedTotal]);
+
   return (
     <div className="mt-4 p-3 bg-muted/40 rounded-md border">
-      <h4 className="text-sm font-medium mb-2">Fiyat Özeti</h4>
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-sm font-medium">Fiyat Özeti</h4>
+        <div className="flex items-center gap-2">
+          <ArrowRightLeft className="h-3.5 w-3.5 text-muted-foreground" />
+          <Select value={displayCurrency} onValueChange={setDisplayCurrency}>
+            <SelectTrigger className="h-7 w-24 text-xs">
+              <SelectValue placeholder="Para birimi" />
+            </SelectTrigger>
+            <SelectContent>
+              {currencyOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.symbol} {option.value}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
       <div className="space-y-1 text-sm">
         <div className="flex justify-between">
           <span className="text-muted-foreground">Orijinal Fiyat:</span>
-          <span>{formatCurrency(convertedPrice, selectedCurrency)}</span>
+          <div className="flex flex-col items-end">
+            <span>{formatCurrency(convertedDisplayPrice, displayCurrency)}</span>
+            {displayCurrency !== selectedCurrency && (
+              <span className="text-xs text-muted-foreground">
+                ({formatCurrency(convertedPrice, selectedCurrency)})
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex justify-between font-medium pt-1 border-t mt-1">
           <span>Toplam Fiyat (KDV Dahil):</span>
-          <span>{formatCurrency(calculatedTotal, selectedCurrency)}</span>
+          <div className="flex flex-col items-end">
+            <span>{formatCurrency(convertedDisplayTotal, displayCurrency)}</span>
+            {displayCurrency !== selectedCurrency && (
+              <span className="text-xs text-muted-foreground">
+                ({formatCurrency(calculatedTotal, selectedCurrency)})
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>
