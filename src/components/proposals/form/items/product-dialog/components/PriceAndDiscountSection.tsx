@@ -32,7 +32,7 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
   formatCurrency
 }) => {
   const currencyOptions = getCurrencyOptions();
-  // Use the original product price from parent component
+  // Always use the product's original price and currency
   const [localPrice, setLocalPrice] = useState<number | string>(customPrice || convertedPrice);
   const [localDiscountRate, setLocalDiscountRate] = useState(discountRate);
   const [exchangeRates, setExchangeRates] = useState({
@@ -95,20 +95,13 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="col-span-1">
           <PriceInput
             id="unit-price"
-            label="Birim Fiyat"
+            label={`Birim Fiyat (${originalCurrency})`}
             value={localPrice}
             onChange={handlePriceChange}
-          />
-        </div>
-
-        <div className="col-span-1">
-          <TaxRateSelector
-            value={localDiscountRate}
-            onChange={handleDiscountChange}
           />
         </div>
 
@@ -126,7 +119,7 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
       <PriceSummary
         convertedPrice={convertedPrice}
         calculatedTotal={calculateTotalPrice()}
-        selectedCurrency={selectedCurrency}
+        selectedCurrency={originalCurrency}
         formatCurrency={formatCurrency}
       />
     </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -69,14 +68,12 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
   });
   const [isLoadingRates, setIsLoadingRates] = useState(false);
 
-  // Fetch exchange rates when dialog opens
   useEffect(() => {
     if (open) {
       const getExchangeRates = async () => {
         setIsLoadingRates(true);
         try {
           const rates = await fetchTCMBExchangeRates();
-          // Ensure the returned rates object has all required properties
           const completeRates = {
             TRY: rates.TRY || 1,
             USD: rates.USD || 32.5,
@@ -96,20 +93,16 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
     }
   }, [open]);
 
-  // Update calculations when inputs change
   useEffect(() => {
     if (selectedProduct) {
-      // Store original product price and currency for reference
       setOriginalPrice(selectedProduct.price);
       setOriginalCurrency(selectedProduct.currency || "TRY");
       
-      // Apply discount and calculate total
-      const currentPrice = customPrice !== undefined ? customPrice : convertedPrice;
+      const currentPrice = customPrice !== undefined ? customPrice : selectedProduct.price;
       const discountedPrice = currentPrice * (1 - discountRate / 100);
       const total = quantity * discountedPrice * (1 + (selectedProduct.tax_rate || 0) / 100);
       setTotalPrice(total);
       
-      // Set stock info
       setAvailableStock(selectedProduct.stock_quantity || 0);
       
       if (selectedProduct.stock_quantity <= 0) {
@@ -120,56 +113,33 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
         setStockStatus("in_stock");
       }
     }
-  }, [selectedProduct, quantity, customPrice, discountRate, convertedPrice]);
+  }, [selectedProduct, quantity, customPrice, discountRate]);
 
-  // Update converted price when currency changes or when dialog opens
   useEffect(() => {
     if (selectedProduct) {
       const productCurrency = selectedProduct.currency || "TRY";
       const productPrice = selectedProduct.price;
       
-      if (productCurrency !== currentCurrency) {
-        // Convert using fetched exchange rates
-        const newConvertedPrice = convertCurrency(
-          productPrice,
-          productCurrency,
-          currentCurrency,
-          exchangeRates
-        );
-        
-        setConvertedPrice(newConvertedPrice);
-        
-        // Set the custom price to the original product price initially
-        if (customPrice === undefined || open) {
-          setCustomPrice(productPrice);
-        }
-      } else {
-        setConvertedPrice(productPrice);
-        
-        // Set the custom price to the original product price initially
-        if (customPrice === undefined || open) {
-          setCustomPrice(productPrice);
-        }
+      setConvertedPrice(productPrice);
+      
+      if (customPrice === undefined || open) {
+        setCustomPrice(productPrice);
       }
     }
-  }, [currentCurrency, selectedProduct, customPrice, open, exchangeRates]);
+  }, [selectedProduct, customPrice, open]);
 
-  // Set initial values when dialog opens
   useEffect(() => {
     if (open && selectedProduct) {
       setOriginalPrice(selectedProduct.price);
       setOriginalCurrency(selectedProduct.currency || "TRY");
-      setCurrentCurrency(selectedCurrency);
-      // Set initial price to the product's original price
+      setCurrentCurrency(selectedProduct.currency || "TRY");
       setCustomPrice(selectedProduct.price);
     }
-  }, [open, selectedProduct, selectedCurrency]);
+  }, [open, selectedProduct]);
 
-  // Function to handle currency selection change
   const handleCurrencyChange = (value: string) => {
     console.log("Currency changed in dialog to:", value);
     setCurrentCurrency(value);
-    // We'll also send this currency change event to the parent component
     window.dispatchEvent(new CustomEvent('currency-change', { detail: value }));
   };
 
@@ -185,21 +155,18 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
-          {/* Product Info */}
           <ProductInfoSection 
             product={selectedProduct}
             stockStatus={stockStatus}
             availableStock={availableStock}
           />
           
-          {/* Original Currency Info */}
           <OriginalCurrencyInfo 
             originalCurrency={originalCurrency}
             originalPrice={originalPrice}
             formatCurrency={formatCurrency}
           />
           
-          {/* Quantity and Depo */}
           <QuantityDepoSection 
             quantity={quantity}
             setQuantity={setQuantity}
@@ -207,7 +174,6 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
             setSelectedDepo={setSelectedDepo}
           />
           
-          {/* Price and Discount */}
           <PriceAndDiscountSection 
             customPrice={customPrice}
             setCustomPrice={setCustomPrice}
@@ -215,24 +181,22 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
             setDiscountRate={setDiscountRate}
             selectedCurrency={currentCurrency}
             handleCurrencyChange={handleCurrencyChange}
-            convertedPrice={originalPrice} // Pass the original price instead
+            convertedPrice={originalPrice}
             originalCurrency={originalCurrency}
             formatCurrency={formatCurrency}
           />
           
-          {/* Notes */}
           <NotesSection 
             notes={notes}
             setNotes={setNotes}
           />
           
-          {/* Total Price */}
           <TotalPriceSection 
             totalPrice={totalPrice}
             discountRate={discountRate}
             taxRate={selectedProduct.tax_rate}
             formatCurrency={formatCurrency}
-            selectedCurrency={currentCurrency}
+            selectedCurrency={originalCurrency}
           />
         </div>
         
@@ -256,3 +220,4 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
 };
 
 export default ProductDetailsDialog;
+
