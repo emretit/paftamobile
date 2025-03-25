@@ -73,7 +73,7 @@ export class ProposalService extends BaseService {
       const proposalNumber = await this.generateProposalNumber();
       
       // Create a clean insert data object without the complex types
-      const insertData: any = {
+      const insertData: Record<string, any> = {
         title: proposal.title,
         description: proposal.description,
         customer_id: proposal.customer_id,
@@ -92,13 +92,13 @@ export class ProposalService extends BaseService {
         updated_at: new Date().toISOString()
       };
       
-      // Handle attachments and items as raw data, bypassing TypeScript checks
+      // Handle attachments and items by proper casting to Json type
       if (proposal.attachments && proposal.attachments.length > 0) {
-        insertData.attachments = proposal.attachments;
+        insertData.attachments = proposal.attachments as unknown as Json;
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        insertData.items = proposal.items;
+        insertData.items = proposal.items as unknown as Json;
       }
       
       const { data, error } = await supabase
@@ -149,13 +149,13 @@ export class ProposalService extends BaseService {
       if (proposal.currency !== undefined) updateData.currency = proposal.currency;
       if (proposal.total_amount !== undefined) updateData.total_amount = proposal.total_amount;
       
-      // Handle complex types by bypassing TypeScript checks
+      // Handle complex types with proper type casting to Json
       if (proposal.attachments !== undefined) {
-        updateData.attachments = proposal.attachments;
+        updateData.attachments = proposal.attachments as unknown as Json;
       }
       
       if (proposal.items !== undefined) {
-        updateData.items = proposal.items;
+        updateData.items = proposal.items as unknown as Json;
       }
       
       const { data, error } = await supabase
@@ -167,7 +167,7 @@ export class ProposalService extends BaseService {
       
       if (error) throw error;
       
-      // For the response, treat data.attachments and data.items as the correct types
+      // For the response, cast data.attachments and data.items back to their proper types
       if (data) {
         if (data.attachments) {
           data.attachments = data.attachments as unknown as ProposalAttachment[];
