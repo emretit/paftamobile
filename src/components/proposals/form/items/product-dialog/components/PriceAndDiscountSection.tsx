@@ -8,11 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getCurrencyOptions } from "../../utils/currencyUtils";
@@ -64,7 +59,10 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
           <Label htmlFor="currency-select" className="font-medium">Para Birimi</Label>
           <Select 
             value={selectedCurrency} 
-            onValueChange={handleCurrencyChange}
+            onValueChange={(value) => {
+              console.log("Currency changed to:", value);
+              handleCurrencyChange(value);
+            }}
           >
             <SelectTrigger id="currency-select" className="w-full">
               <SelectValue placeholder="Para Birimi" />
