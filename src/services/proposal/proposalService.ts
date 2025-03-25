@@ -66,7 +66,26 @@ export class ProposalService extends BaseService {
       const proposalNumber = await this.generateProposalNumber();
       
       // Create proposal data object with required fields
-      const insertData = {
+      const insertData: {
+        title: string;
+        description?: string;
+        customer_id?: string;
+        employee_id?: string;
+        opportunity_id?: string;
+        number: string;
+        status: string;
+        valid_until?: string;
+        payment_terms?: string;
+        delivery_terms?: string;
+        notes?: string;
+        terms?: string;
+        currency: string;
+        total_amount: number;
+        attachments?: Json;
+        items?: Json;
+        created_at: string;
+        updated_at: string;
+      } = {
         title: proposal.title || "Untitled Proposal",
         description: proposal.description,
         customer_id: proposal.customer_id,
