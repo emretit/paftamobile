@@ -89,10 +89,12 @@ export class ProposalService extends BaseService {
       
       // Add attachments and items if they exist
       if (proposal.attachments && proposal.attachments.length > 0) {
+        // Convert to JSON explicitly
         insertData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as Json;
       }
       
       if (proposal.items && proposal.items.length > 0) {
+        // Convert to JSON explicitly
         insertData.items = JSON.parse(JSON.stringify(proposal.items)) as Json;
       }
       
@@ -147,10 +149,12 @@ export class ProposalService extends BaseService {
       
       // Handle complex types that need conversion
       if (proposal.attachments !== undefined) {
+        // Convert to JSON explicitly
         updateData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as Json;
       }
       
       if (proposal.items !== undefined) {
+        // Convert to JSON explicitly
         updateData.items = JSON.parse(JSON.stringify(proposal.items)) as Json;
       }
       
