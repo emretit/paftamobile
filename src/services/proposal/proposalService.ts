@@ -92,15 +92,13 @@ export class ProposalService extends BaseService {
         updated_at: new Date().toISOString()
       };
       
-      // Add attachments and items if they exist
+      // Add attachments and items if they exist - properly convert to JSON compatible format
       if (proposal.attachments && proposal.attachments.length > 0) {
-        // Use a type assertion to avoid TypeScript errors
-        insertData.attachments = JSON.parse(JSON.stringify(proposal.attachments));
+        insertData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as unknown as Json;
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        // Use a type assertion to avoid TypeScript errors
-        insertData.items = JSON.parse(JSON.stringify(proposal.items));
+        insertData.items = JSON.parse(JSON.stringify(proposal.items)) as unknown as Json;
       }
       
       const { data, error } = await supabase
@@ -150,15 +148,13 @@ export class ProposalService extends BaseService {
       if (proposal.currency !== undefined) updateData.currency = proposal.currency;
       if (proposal.total_amount !== undefined) updateData.total_amount = proposal.total_amount;
       
-      // Handle complex types that need conversion
+      // Handle complex types that need conversion to JSON
       if (proposal.attachments !== undefined) {
-        // Use a type assertion to avoid TypeScript errors
-        updateData.attachments = JSON.parse(JSON.stringify(proposal.attachments));
+        updateData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as unknown as Json;
       }
       
       if (proposal.items !== undefined) {
-        // Use a type assertion to avoid TypeScript errors
-        updateData.items = JSON.parse(JSON.stringify(proposal.items));
+        updateData.items = JSON.parse(JSON.stringify(proposal.items)) as unknown as Json;
       }
       
       const { data, error } = await supabase

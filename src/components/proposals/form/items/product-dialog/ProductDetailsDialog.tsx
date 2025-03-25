@@ -70,10 +70,6 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
       setOriginalPrice(selectedProduct.price);
       setOriginalCurrency(selectedProduct.currency || "TRY");
       
-      // Set customPrice with the product's price if it hasn't been set manually
-      setCustomPrice(selectedProduct.price);
-      setConvertedPrice(selectedProduct.price);
-      
       // Apply discount and calculate total
       const currentPrice = customPrice !== undefined ? customPrice : convertedPrice;
       const discountedPrice = currentPrice * (1 - discountRate / 100);
@@ -93,7 +89,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
     }
   }, [selectedProduct, quantity, customPrice, discountRate, convertedPrice]);
 
-  // Update converted price when currency changes
+  // Update converted price when currency changes or when dialog opens
   useEffect(() => {
     if (selectedProduct) {
       const productCurrency = selectedProduct.currency || "TRY";
@@ -112,14 +108,30 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
         
         setConvertedPrice(newConvertedPrice);
         
-        // Automatically update custom price when currency changes
-        setCustomPrice(newConvertedPrice);
+        // Update custom price only if it hasn't been manually changed or when dialog first opens
+        if (customPrice === undefined || customPrice === originalPrice) {
+          setCustomPrice(newConvertedPrice);
+        }
       } else {
         setConvertedPrice(productPrice);
-        setCustomPrice(productPrice);
+        
+        // Update custom price only if it hasn't been manually changed or when dialog first opens
+        if (customPrice === undefined || customPrice === originalPrice) {
+          setCustomPrice(productPrice);
+        }
       }
     }
-  }, [selectedCurrency, selectedProduct]);
+  }, [selectedCurrency, selectedProduct, customPrice, originalPrice]);
+
+  // Set initial values when dialog opens
+  useEffect(() => {
+    if (open && selectedProduct) {
+      setOriginalPrice(selectedProduct.price);
+      setOriginalCurrency(selectedProduct.currency || "TRY");
+      // Set initial price based on product currency (will be converted if needed in the other useEffect)
+      setCustomPrice(selectedProduct.price);
+    }
+  }, [open, selectedProduct]);
 
   if (!selectedProduct) {
     return null;
@@ -278,7 +290,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price" className="flex items-center justify-between">
-                <span>Birim Fiyat</span>
+                <span>Birim Fiyat ({getCurrencySymbol(selectedCurrency)})</span>
                 <Select 
                   value={selectedCurrency} 
                   onValueChange={(val) => window.dispatchEvent(new CustomEvent('currency-change', { detail: val }))}
@@ -302,7 +314,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
                 value={customPrice !== undefined ? customPrice : convertedPrice}
                 onChange={(e) => setCustomPrice(parseFloat(e.target.value) || 0)}
               />
-              {selectedProduct.currency !== selectedCurrency && (
+              {originalCurrency !== selectedCurrency && (
                 <p className="text-xs text-muted-foreground mt-1">
                   Dönüştürülmüş: {formatCurrency(convertedPrice, selectedCurrency)}
                 </p>
@@ -366,7 +378,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
 
 export default ProductDetailsDialog;
 
-function getStockStatusText(status: string) {
+export function getStockStatusText(status: string) {
   switch (status) {
     case "out_of_stock":
       return "Stokta Yok";
@@ -379,7 +391,7 @@ function getStockStatusText(status: string) {
   }
 }
 
-function getStockStatusIcon(status: string) {
+export function getStockStatusIcon(status: string) {
   switch (status) {
     case "out_of_stock":
       return <AlertCircle className="h-4 w-4 text-red-500" />;
@@ -392,7 +404,7 @@ function getStockStatusIcon(status: string) {
   }
 }
 
-function getStockStatusClass(status: string) {
+export function getStockStatusClass(status: string) {
   switch (status) {
     case "out_of_stock":
       return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800";
@@ -405,7 +417,7 @@ function getStockStatusClass(status: string) {
   }
 }
 
-function getStockWarning(status: string) {
+export function getStockWarning(status: string) {
   if (status === "out_of_stock") {
     return (
       <div className="mt-2 text-sm text-red-600 flex items-center space-x-1">
@@ -424,7 +436,7 @@ function getStockWarning(status: string) {
   return null;
 }
 
-function getCurrencyName(code: string) {
+export function getCurrencyName(code: string) {
   const currencies: Record<string, string> = {
     TRY: "Türk Lirası",
     USD: "Amerikan Doları",
@@ -434,7 +446,7 @@ function getCurrencyName(code: string) {
   return currencies[code] || code;
 }
 
-function getCurrencySymbol(code: string) {
+export function getCurrencySymbol(code: string) {
   const symbols: Record<string, string> = {
     TRY: "₺",
     USD: "$",
