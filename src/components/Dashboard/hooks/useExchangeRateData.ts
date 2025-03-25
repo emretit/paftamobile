@@ -20,22 +20,12 @@ export const useExchangeRateData = () => {
     try {
       // First check if the table exists in the database
       try {
-        // Type assertion to handle the table not being in the TypeScript types
-        const { data: tableExists, error: tableError } = await (supabase
-          .from('exchange_rate_updates' as any)
-          .select('count(*)', { count: 'exact', head: true }) as any);
-          
-        // If there's an error with the table, likely it doesn't exist yet
-        if (tableError) {
-          console.log('Exchange rate updates table may not exist yet:', tableError.message);
-          return;
-        }
-        
-        const { data, error } = await (supabase
-          .from('exchange_rate_updates' as any)
+        // Açıkça güncel updateları almak için tablo sorgusunu değiştiriyoruz
+        const { data, error } = await supabase
+          .from('exchange_rate_updates')
           .select('*')
           .order('updated_at', { ascending: false })
-          .limit(1) as any);
+          .limit(1);
         
         if (error) {
           console.error('Error fetching update status:', error);
@@ -62,6 +52,8 @@ export const useExchangeRateData = () => {
         setIsRefreshing(true);
       }
       
+      console.log('Attempting to fetch exchange rates from database...');
+      
       // Use the Supabase client to fetch exchange rates
       const { data, error: queryError } = await supabase
         .from('exchange_rates')
@@ -69,18 +61,25 @@ export const useExchangeRateData = () => {
         .order('update_date', { ascending: false });
       
       if (queryError) {
+        console.error('Database query error:', queryError);
         throw new Error(`Veritabanından döviz kurları alınamadı: ${queryError.message}`);
       }
       
+      console.log('Exchange rates data from DB:', data);
+      
       if (!data || data.length === 0) {
+        console.log('No data in database, attempting to fetch from edge function...');
         // If no data in the database, try calling the function to get fresh data
         const { data: functionData, error: functionError } = await supabase.functions.invoke('fetch-exchange-rates', {
           method: 'GET'
         });
         
         if (functionError) {
+          console.error('Edge function error:', functionError);
           throw new Error(`Döviz kurları çekilemedi: ${functionError.message}`);
         }
+        
+        console.log('Exchange rates data from function:', functionData);
         
         if (functionData && functionData.data && functionData.data.length > 0) {
           const formattedRates: ExchangeRate[] = functionData.data.map((rate: any) => ({
@@ -93,12 +92,16 @@ export const useExchangeRateData = () => {
             update_date: functionData.update_date || new Date().toISOString()
           }));
           
+          console.log('Formatted rates:', formattedRates);
+          
           setRates(formattedRates);
           setLastUpdated(functionData.update_date || new Date().toISOString());
         } else {
+          console.error('No exchange rate data found in function response');
           throw new Error('Döviz kuru verisi bulunamadı');
         }
       } else {
+        console.log('Using data from database, count:', data.length);
         setRates(data as ExchangeRate[]);
         const updateDate = data.length > 0 ? data[0].update_date : null;
         setLastUpdated(updateDate);
@@ -120,6 +123,7 @@ export const useExchangeRateData = () => {
       }
       
       const fallbackRates = getFallbackRates();
+      console.log('Using fallback rates:', fallbackRates);
       setRates(fallbackRates);
       setLastUpdated(new Date().toISOString());
     } finally {
@@ -131,13 +135,17 @@ export const useExchangeRateData = () => {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
+      console.log('Manually triggering exchange rate update...');
       const { data, error } = await supabase.functions.invoke('daily-exchange-rate-update', {
         method: 'POST'
       });
       
       if (error) {
+        console.error('Function invocation error:', error);
         throw new Error(`Döviz kurları güncellenirken hata oluştu: ${error.message}`);
       }
+      
+      console.log('Function response:', data);
       
       if (data && data.success) {
         toast.success('Döviz kurları güncellemesi başlatıldı');
@@ -156,10 +164,12 @@ export const useExchangeRateData = () => {
   };
 
   useEffect(() => {
+    console.log('Initial exchange rates fetch...');
     fetchExchangeRates();
     
     // Set up polling interval
     const intervalId = setInterval(() => {
+      console.log('Polling for exchange rates update...');
       fetchExchangeRates();
     }, POLLING_INTERVAL);
     

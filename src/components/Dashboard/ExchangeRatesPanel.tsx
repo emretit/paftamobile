@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import useExchangeRateData from './hooks/useExchangeRateData';
@@ -18,16 +19,23 @@ export const ExchangeRatesPanel: React.FC = () => {
     handleRefresh
   } = useExchangeRateData();
   
+  console.log('Exchange Rates Panel - Current rates:', rates);
+  console.log('Exchange Rates Panel - Loading:', isLoading, 'Error:', error);
+  
   const mainCurrencies = ['USD', 'EUR', 'GBP'];
   
   const mainRates = rates.filter(rate => mainCurrencies.includes(rate.currency_code))
     .sort((a, b) => mainCurrencies.indexOf(a.currency_code) - mainCurrencies.indexOf(b.currency_code));
+  
+  console.log('Main currency rates:', mainRates);
   
   const otherRates = rates.filter(rate => 
     !mainCurrencies.includes(rate.currency_code) && 
     rate.currency_code !== 'TRY' &&
     rate.forex_buying !== null
   ).sort((a, b) => a.currency_code.localeCompare(b.currency_code));
+
+  console.log('Other currency rates:', otherRates);
 
   return (
     <Card className="shadow-md border-gray-200 bg-white dark:bg-gray-900">
@@ -48,9 +56,15 @@ export const ExchangeRatesPanel: React.FC = () => {
           <div className="space-y-6">
             {/* Main currencies display */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {mainRates.map((rate) => (
-                <MainCurrencyCard key={rate.currency_code} rate={rate} />
-              ))}
+              {mainRates.length > 0 ? (
+                mainRates.map((rate) => (
+                  <MainCurrencyCard key={rate.currency_code} rate={rate} />
+                ))
+              ) : (
+                <div className="col-span-3 text-center py-4 text-gray-500 dark:text-gray-400">
+                  Ana döviz kurları bulunamadı
+                </div>
+              )}
             </div>
             
             {/* Other currencies table */}
