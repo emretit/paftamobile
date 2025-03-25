@@ -64,9 +64,8 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
           <Label htmlFor="currency-select" className="font-medium">Para Birimi</Label>
           <Select 
             value={selectedCurrency} 
-            onValueChange={(value) => {
-              handleCurrencyChange(value);
-            }}
+            onValueChange={handleCurrencyChange}
+            name="currency"
           >
             <SelectTrigger id="currency-select" className="w-full">
               <SelectValue placeholder="Para Birimi" />
