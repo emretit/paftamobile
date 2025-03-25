@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -199,6 +198,9 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
             calculatedTotal={calculatedTotal}
             selectedCurrency={originalCurrency}
             formatCurrency={formatCurrency}
+            quantity={quantity}
+            discountRate={discountRate}
+            taxRate={selectedProduct.tax_rate || 0}
           />
         </div>
         
