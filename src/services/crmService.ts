@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Proposal } from "@/types/proposal";
+import { Opportunity } from "@/types/crm";
 
 export const crmService = {
   async createProposal(data: Partial<Proposal>) {
@@ -44,4 +45,69 @@ export const crmService = {
       return { data: null, error };
     }
   },
+
+  async updateProposal(id: string, data: Partial<Proposal>) {
+    try {
+      const { data: result, error } = await supabase
+        .from('proposals')
+        .update({
+          title: data.title,
+          description: data.description,
+          valid_until: data.valid_until,
+          payment_terms: data.payment_terms,
+          delivery_terms: data.delivery_terms,
+          notes: data.notes,
+          status: data.status,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select();
+
+      if (error) throw error;
+      
+      return { data: result, error: null };
+    } catch (error) {
+      console.error('Error updating proposal:', error);
+      return { data: null, error };
+    }
+  },
+
+  async changeProposalStatus(id: string, status: string) {
+    try {
+      const { data, error } = await supabase
+        .from('proposals')
+        .update({
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select();
+
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error changing proposal status:', error);
+      return { data: null, error };
+    }
+  },
+
+  async updateOpportunity(id: string, data: Partial<Opportunity>) {
+    try {
+      const { data: result, error } = await supabase
+        .from('opportunities')
+        .update({
+          ...data,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select();
+
+      if (error) throw error;
+      
+      return { data: result, error: null };
+    } catch (error) {
+      console.error('Error updating opportunity:', error);
+      return { data: null, error };
+    }
+  }
 };

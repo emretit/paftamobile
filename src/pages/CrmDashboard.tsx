@@ -2,19 +2,19 @@
 import React from 'react';
 import PlaceholderPage from '../components/PlaceholderPage';
 
-interface ProposalDetailProps {
+interface CrmDashboardProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
 }
 
-const ProposalDetail: React.FC<ProposalDetailProps> = ({ isCollapsed, setIsCollapsed }) => {
+const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed }) => {
   return (
     <PlaceholderPage 
-      title="Teklif Detayı" 
+      title="CRM Dashboard" 
       isCollapsed={isCollapsed} 
       setIsCollapsed={setIsCollapsed} 
     />
   );
 };
 
-export default ProposalDetail;
+export default CrmDashboard;

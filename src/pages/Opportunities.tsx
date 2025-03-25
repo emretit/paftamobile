@@ -2,19 +2,19 @@
 import React from 'react';
 import PlaceholderPage from '../components/PlaceholderPage';
 
-interface ProposalDetailProps {
+interface OpportunitiesProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
 }
 
-const ProposalDetail: React.FC<ProposalDetailProps> = ({ isCollapsed, setIsCollapsed }) => {
+const Opportunities: React.FC<OpportunitiesProps> = ({ isCollapsed, setIsCollapsed }) => {
   return (
     <PlaceholderPage 
-      title="Teklif Detayı" 
+      title="Fırsatlar" 
       isCollapsed={isCollapsed} 
       setIsCollapsed={setIsCollapsed} 
     />
   );
 };
 
-export default ProposalDetail;
+export default Opportunities;
