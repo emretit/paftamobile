@@ -224,7 +224,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Ürün Detayları</DialogTitle>
         </DialogHeader>
