@@ -147,7 +147,7 @@ const ProductPricing = ({
   return (
     <Card className="overflow-hidden">
       {showAlert && (
-        <Alert variant="warning" className="border-orange-300 bg-orange-50 p-3 mt-0 rounded-none">
+        <Alert variant="default" className="border-orange-300 bg-orange-50 p-3 mt-0 rounded-none">
           <AlertCircle className="h-4 w-4 text-orange-500" />
           <AlertDescription className="text-sm text-orange-700">
             Para birimi değiştirildiğinde, döviz kuru otomatik olarak güncellenecektir.

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -71,30 +70,53 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
       setOriginalPrice(selectedProduct.price);
       setOriginalCurrency(selectedProduct.currency || "TRY");
       
-      let basePrice = customPrice !== undefined ? customPrice : selectedProduct.price;
-      
-      // Convert price to selected currency if needed
-      if (selectedProduct.currency !== selectedCurrency) {
-        const exchangeRates = {
-          TRY: 1,
-          USD: 32.5,
-          EUR: 35.2,
-          GBP: 41.3
-        };
-        basePrice = convertCurrency(
-          basePrice, 
-          selectedProduct.currency || "TRY", 
-          selectedCurrency, 
-          exchangeRates
-        );
+      // Set customPrice with the product's price if it hasn't been set manually
+      if (customPrice === undefined) {
+        let productPrice = selectedProduct.price;
+        
+        // Convert price to selected currency if needed
+        if (selectedProduct.currency !== selectedCurrency) {
+          const exchangeRates = {
+            TRY: 1,
+            USD: 32.5,
+            EUR: 35.2,
+            GBP: 41.3
+          };
+          productPrice = convertCurrency(
+            productPrice, 
+            selectedProduct.currency || "TRY", 
+            selectedCurrency, 
+            exchangeRates
+          );
+        }
+        
+        setCustomPrice(productPrice);
+        setConvertedPrice(productPrice);
+      } else {
+        let basePrice = customPrice;
+        
+        // Convert price to selected currency if needed
+        if (selectedProduct.currency !== selectedCurrency) {
+          const exchangeRates = {
+            TRY: 1,
+            USD: 32.5,
+            EUR: 35.2,
+            GBP: 41.3
+          };
+          basePrice = convertCurrency(
+            basePrice, 
+            selectedProduct.currency || "TRY", 
+            selectedCurrency, 
+            exchangeRates
+          );
+        }
+        
+        setConvertedPrice(basePrice);
       }
       
-      setConvertedPrice(basePrice);
-      
-      // Apply discount
-      const discountedPrice = basePrice * (1 - discountRate / 100);
-      
-      // Calculate total with tax
+      // Apply discount and calculate total
+      const currentPrice = customPrice !== undefined ? customPrice : convertedPrice;
+      const discountedPrice = currentPrice * (1 - discountRate / 100);
       const total = quantity * discountedPrice * (1 + (selectedProduct.tax_rate || 0) / 100);
       setTotalPrice(total);
       
@@ -109,7 +131,39 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
         setStockStatus("in_stock");
       }
     }
-  }, [selectedProduct, quantity, customPrice, discountRate, selectedCurrency]);
+  }, [selectedProduct, quantity, customPrice, discountRate, selectedCurrency, convertedPrice]);
+
+  // Update converted price when currency changes
+  useEffect(() => {
+    if (selectedProduct) {
+      const productCurrency = selectedProduct.currency || "TRY";
+      const productPrice = selectedProduct.price;
+      
+      if (productCurrency !== selectedCurrency) {
+        const exchangeRates = {
+          TRY: 1,
+          USD: 32.5,
+          EUR: 35.2,
+          GBP: 41.3
+        };
+        
+        const newConvertedPrice = convertCurrency(
+          productPrice,
+          productCurrency,
+          selectedCurrency,
+          exchangeRates
+        );
+        
+        setConvertedPrice(newConvertedPrice);
+        
+        // Automatically update custom price when currency changes
+        setCustomPrice(newConvertedPrice);
+      } else {
+        setConvertedPrice(productPrice);
+        setCustomPrice(productPrice);
+      }
+    }
+  }, [selectedCurrency, selectedProduct]);
 
   if (!selectedProduct) {
     return null;
@@ -355,3 +409,82 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
 };
 
 export default ProductDetailsDialog;
+
+// Aşağıdaki yardımcı fonksiyonlar dosyanın başına eklenmeli
+function getStockStatusText(status: string) {
+  switch (status) {
+    case "out_of_stock":
+      return "Stokta Yok";
+    case "low_stock":
+      return "Düşük Stok";
+    case "in_stock":
+      return "Stokta";
+    default:
+      return "Bilinmiyor";
+  }
+}
+
+function getStockStatusIcon(status: string) {
+  switch (status) {
+    case "out_of_stock":
+      return <AlertCircle className="h-4 w-4 text-red-500" />;
+    case "low_stock":
+      return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+    case "in_stock":
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    default:
+      return <Package className="h-4 w-4" />;
+  }
+}
+
+function getStockStatusClass(status: string) {
+  switch (status) {
+    case "out_of_stock":
+      return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800";
+    case "low_stock":
+      return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800";
+    case "in_stock":
+      return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800";
+    default:
+      return "";
+  }
+}
+
+function getStockWarning(status: string) {
+  if (status === "out_of_stock") {
+    return (
+      <div className="mt-2 text-sm text-red-600 flex items-center space-x-1">
+        <AlertCircle className="h-3 w-3" />
+        <span>Bu ürün stokta mevcut değil. Yine de teklife ekleyebilirsiniz.</span>
+      </div>
+    );
+  } else if (status === "low_stock") {
+    return (
+      <div className="mt-2 text-sm text-yellow-600 flex items-center space-x-1">
+        <AlertTriangle className="h-3 w-3" />
+        <span>Bu ürün düşük stok seviyesinde.</span>
+      </div>
+    );
+  }
+  return null;
+}
+
+function getCurrencyName(code: string) {
+  const currencies: Record<string, string> = {
+    TRY: "Türk Lirası",
+    USD: "Amerikan Doları",
+    EUR: "Euro",
+    GBP: "İngiliz Sterlini"
+  };
+  return currencies[code] || code;
+}
+
+function getCurrencySymbol(code: string) {
+  const symbols: Record<string, string> = {
+    TRY: "₺",
+    USD: "$",
+    EUR: "€",
+    GBP: "£"
+  };
+  return symbols[code] || code;
+}
