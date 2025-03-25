@@ -96,11 +96,11 @@ class CrmService {
       
       // Add attachments and items if they exist
       if (proposal.attachments && proposal.attachments.length > 0) {
-        insertData.attachments = proposal.attachments as unknown as Json;
+        insertData.attachments = JSON.parse(JSON.stringify(proposal.attachments));
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        insertData.items = proposal.items as unknown as Json;
+        insertData.items = JSON.parse(JSON.stringify(proposal.items));
       }
       
       const { data, error } = await supabase
@@ -154,11 +154,11 @@ class CrmService {
       
       // Handle complex types that need conversion
       if (proposal.attachments !== undefined) {
-        updateData.attachments = proposal.attachments as unknown as Json;
+        updateData.attachments = JSON.parse(JSON.stringify(proposal.attachments));
       }
       
       if (proposal.items !== undefined) {
-        updateData.items = proposal.items as unknown as Json;
+        updateData.items = JSON.parse(JSON.stringify(proposal.items));
       }
       
       const { data, error } = await supabase
@@ -238,11 +238,11 @@ class CrmService {
       
       // Handle complex types that need conversion
       if ('contact_history' in updateData && updateData.contact_history !== undefined) {
-        dataToUpdate.contact_history = updateData.contact_history as unknown as Json;
+        dataToUpdate.contact_history = JSON.parse(JSON.stringify(updateData.contact_history));
       }
       
       if ('products' in updateData && updateData.products !== undefined) {
-        dataToUpdate.products = updateData.products as unknown as Json;
+        dataToUpdate.products = JSON.parse(JSON.stringify(updateData.products));
       }
       
       if ('tags' in updateData && updateData.tags !== undefined) {
