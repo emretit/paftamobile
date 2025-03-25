@@ -17,6 +17,11 @@ interface ExchangeRate {
   update_date: string;
 }
 
+interface UpdateStatus {
+  status: string;
+  message: string;
+}
+
 const formatDate = (dateString: string) => {
   // Handle both date-only and full ISO timestamp formats
   const date = new Date(dateString);
@@ -88,12 +93,10 @@ export const ExchangeRatesPanel: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [lastUpdateStatus, setLastUpdateStatus] = useState<{status: string, message: string} | null>(null);
+  const [lastUpdateStatus, setLastUpdateStatus] = useState<UpdateStatus | null>(null);
   
-  // Main currencies to display prominently
   const mainCurrencies = ['USD', 'EUR', 'GBP'];
   
-  // Function to fetch the last update status
   const fetchLastUpdateStatus = async () => {
     try {
       const { data, error } = await supabase
@@ -109,8 +112,8 @@ export const ExchangeRatesPanel: React.FC = () => {
       
       if (data && data.length > 0) {
         setLastUpdateStatus({
-          status: data[0].status,
-          message: data[0].message
+          status: data[0].status as string,
+          message: data[0].message as string
         });
       }
     } catch (err) {
@@ -143,38 +146,86 @@ export const ExchangeRatesPanel: React.FC = () => {
         }
         
         if (functionData && functionData.data && functionData.data.length > 0) {
-          setRates(functionData.data);
+          const formattedRates: ExchangeRate[] = functionData.data.map((rate: any) => ({
+            currency_code: rate.currency_code,
+            forex_buying: rate.forex_buying,
+            forex_selling: rate.forex_selling,
+            banknote_buying: null,
+            banknote_selling: null,
+            cross_rate: null,
+            update_date: functionData.update_date || new Date().toISOString()
+          }));
+          
+          setRates(formattedRates);
           setLastUpdated(functionData.update_date || new Date().toISOString());
         } else {
           throw new Error('Döviz kuru verisi bulunamadı');
         }
       } else {
-        setRates(data);
-        // Get the most recent update date
-        const updateDate = data.length > 0 ? data[0].update_date : null;
+        const formattedRates: ExchangeRate[] = data.map((rate: any) => ({
+          currency_code: rate.currency_code,
+          forex_buying: rate.forex_buying,
+          forex_selling: rate.forex_selling,
+          banknote_buying: null,
+          banknote_selling: null,
+          cross_rate: null,
+          update_date: rate.update_date
+        }));
+        
+        setRates(formattedRates);
+        const updateDate = formattedRates.length > 0 ? formattedRates[0].update_date : null;
         setLastUpdated(updateDate);
       }
       
       setError(null);
       
-      // Show success message only when manually refreshing
       if (isRefreshing) {
         toast.success('Döviz kurları başarıyla güncellendi');
       }
       
-      // Fetch the last update status
       fetchLastUpdateStatus();
     } catch (err: any) {
       console.error('Failed to fetch exchange rates:', err);
       setError(err.message);
       toast.error('Döviz kurları güncellenirken bir hata oluştu');
       
-      // Use fallback data if fetch fails
-      const fallbackRates = [
-        { currency_code: 'USD', forex_buying: 32.5, forex_selling: 32.8, update_date: new Date().toISOString() },
-        { currency_code: 'EUR', forex_buying: 35.2, forex_selling: 35.5, update_date: new Date().toISOString() },
-        { currency_code: 'GBP', forex_buying: 41.3, forex_selling: 41.6, update_date: new Date().toISOString() },
-        { currency_code: 'TRY', forex_buying: 1, forex_selling: 1, update_date: new Date().toISOString() }
+      const fallbackRates: ExchangeRate[] = [
+        { 
+          currency_code: 'USD', 
+          forex_buying: 32.5, 
+          forex_selling: 32.8, 
+          banknote_buying: null,
+          banknote_selling: null,
+          cross_rate: null,
+          update_date: new Date().toISOString() 
+        },
+        { 
+          currency_code: 'EUR', 
+          forex_buying: 35.2, 
+          forex_selling: 35.5, 
+          banknote_buying: null,
+          banknote_selling: null,
+          cross_rate: null,
+          update_date: new Date().toISOString() 
+        },
+        { 
+          currency_code: 'GBP', 
+          forex_buying: 41.3, 
+          forex_selling: 41.6, 
+          banknote_buying: null,
+          banknote_selling: null,
+          cross_rate: null,
+          update_date: new Date().toISOString() 
+        },
+        { 
+          currency_code: 'TRY', 
+          forex_buying: 1, 
+          forex_selling: 1, 
+          banknote_buying: null,
+          banknote_selling: null,
+          cross_rate: null,
+          update_date: new Date().toISOString() 
+        }
       ];
       setRates(fallbackRates);
       setLastUpdated(new Date().toISOString());
@@ -184,21 +235,17 @@ export const ExchangeRatesPanel: React.FC = () => {
     }
   };
 
-  // Initial fetch
   useEffect(() => {
     fetchExchangeRates();
     
-    // Set up polling every 5 minutes
     const intervalId = setInterval(fetchExchangeRates, 5 * 60 * 1000);
     
     return () => clearInterval(intervalId);
   }, []);
 
-  // Manual refresh handler
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Call the edge function to update rates
       const { data, error } = await supabase.functions.invoke('daily-exchange-rate-update', {
         method: 'POST'
       });
@@ -209,7 +256,6 @@ export const ExchangeRatesPanel: React.FC = () => {
       
       if (data && data.success) {
         toast.success('Döviz kurları başarıyla güncellendi');
-        // Fetch the updated rates
         fetchExchangeRates();
       } else {
         throw new Error(data?.message || 'Döviz kurları güncellenirken hata oluştu');
@@ -221,7 +267,6 @@ export const ExchangeRatesPanel: React.FC = () => {
     }
   };
 
-  // Filter and sort rates for display
   const mainRates = rates.filter(rate => mainCurrencies.includes(rate.currency_code))
     .sort((a, b) => mainCurrencies.indexOf(a.currency_code) - mainCurrencies.indexOf(b.currency_code));
   
