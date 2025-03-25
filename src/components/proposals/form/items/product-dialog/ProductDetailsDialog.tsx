@@ -17,7 +17,6 @@ import OriginalCurrencyInfo from "./components/OriginalCurrencyInfo";
 import QuantityDepoSection from "./components/QuantityDepoSection";
 import PriceAndDiscountSection from "./components/PriceAndDiscountSection";
 import NotesSection from "./components/NotesSection";
-import TotalPriceSection from "./components/TotalPriceSection";
 import { toast } from "sonner";
 import PriceSummary from "./components/price-section/PriceSummary";
 
@@ -200,14 +199,6 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
             calculatedTotal={calculatedTotal}
             selectedCurrency={originalCurrency}
             formatCurrency={formatCurrency}
-          />
-          
-          <TotalPriceSection 
-            totalPrice={totalPrice}
-            discountRate={discountRate}
-            taxRate={selectedProduct.tax_rate}
-            formatCurrency={formatCurrency}
-            selectedCurrency={originalCurrency}
           />
         </div>
         
