@@ -1,4 +1,6 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.48.1'
+import { XMLParser } from 'https://esm.sh/fast-xml-parser@4.3.3'
 
 // CORS headers
 const corsHeaders = {
@@ -48,13 +50,23 @@ async function fetchTCMBExchangeRates() {
   }
 }
 
-// Parse XML and extract exchange rates using a simple string-based approach
+// Parse XML and extract exchange rates using fast-xml-parser
 function parseExchangeRates(xmlText: string) {
-  console.log('Parsing exchange rates...');
+  console.log('Parsing exchange rates using fast-xml-parser...');
   
-  // Extract the date from the XML
-  const dateMatch = xmlText.match(/<Tarih_Date[^>]*>([^<]*)<\/Tarih_Date>/);
-  const updateDate = dateMatch ? dateMatch[1] : new Date().toISOString().split('T')[0];
+  // Create a parser instance with options
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: '@_'
+  });
+  
+  // Parse the XML
+  const parsedData = parser.parse(xmlText);
+  console.log('XML successfully parsed to JSON');
+  
+  // Extract the Tarih_Date from the parsed data
+  const tarihDate = parsedData.Tarih_Date;
+  const updateDate = tarihDate['@_Date'] || new Date().toISOString().split('T')[0];
   
   // Define the currencies we want to extract
   const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD', 'RUB', 'CNY', 'SAR', 'NOK', 'DKK', 'SEK'];
@@ -71,29 +83,24 @@ function parseExchangeRates(xmlText: string) {
     update_date: updateDate
   });
   
-  // Extract data for each currency using string operations
-  for (const currencyCode of currencies) {
-    // Find the currency section in the XML
-    const currencyRegex = new RegExp(`<Currency CurrencyCode="${currencyCode}"[^>]*>([\\s\\S]*?)<\/Currency>`);
-    const currencyMatch = xmlText.match(currencyRegex);
+  // Check if Tarih_Date.Currency is an array
+  const currencyList = Array.isArray(tarihDate.Currency) 
+    ? tarihDate.Currency 
+    : [tarihDate.Currency];
+  
+  // Extract data for each currency
+  for (const currencyData of currencyList) {
+    const currencyCode = currencyData['@_CurrencyCode'];
     
-    if (currencyMatch) {
-      const currencySection = currencyMatch[1];
-      
-      // Extract values using regex
-      const forexBuyingMatch = currencySection.match(/<ForexBuying>([^<]*)<\/ForexBuying>/);
-      const forexSellingMatch = currencySection.match(/<ForexSelling>([^<]*)<\/ForexSelling>/);
-      const banknoteBuyingMatch = currencySection.match(/<BanknoteBuying>([^<]*)<\/BanknoteBuying>/);
-      const banknoteSellingMatch = currencySection.match(/<BanknoteSelling>([^<]*)<\/BanknoteSelling>/);
-      const crossRateMatch = currencySection.match(/<CrossRateUSD>([^<]*)<\/CrossRateUSD>/);
-      
+    // Only process currencies we're interested in
+    if (currencies.includes(currencyCode)) {
       exchangeRates.push({
         currency_code: currencyCode,
-        forex_buying: forexBuyingMatch ? parseFloat(forexBuyingMatch[1].replace(',', '.')) : null,
-        forex_selling: forexSellingMatch ? parseFloat(forexSellingMatch[1].replace(',', '.')) : null,
-        banknote_buying: banknoteBuyingMatch ? parseFloat(banknoteBuyingMatch[1].replace(',', '.')) : null,
-        banknote_selling: banknoteSellingMatch ? parseFloat(banknoteSellingMatch[1].replace(',', '.')) : null,
-        cross_rate: crossRateMatch ? parseFloat(crossRateMatch[1].replace(',', '.')) : null,
+        forex_buying: parseFloat(currencyData.ForexBuying?.replace(',', '.') || '0'),
+        forex_selling: parseFloat(currencyData.ForexSelling?.replace(',', '.') || '0'),
+        banknote_buying: parseFloat(currencyData.BanknoteBuying?.replace(',', '.') || '0'),
+        banknote_selling: parseFloat(currencyData.BanknoteSelling?.replace(',', '.') || '0'),
+        cross_rate: parseFloat(currencyData.CrossRateUSD?.replace(',', '.') || '0') || null,
         update_date: updateDate
       });
     }
