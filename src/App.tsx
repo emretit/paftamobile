@@ -1,41 +1,21 @@
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { ThemeProvider } from './components/ui/theme-provider';
+import { Toaster } from './components/ui/toaster';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import React, { useState } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { Toaster } from "@/components/ui/toaster";
-import Index from "@/pages/Index";
-import Products from "@/pages/Products";
-import ProductForm from "@/pages/ProductForm";
-import ProductDetails from "@/pages/ProductDetails";
-import Contacts from "@/pages/Contacts";
-import ContactDetails from "@/pages/ContactDetails";
-import CustomerForm from "@/pages/CustomerForm";
-import CustomerEdit from "@/pages/CustomerEdit";
-import Suppliers from "@/pages/Suppliers";
-import SupplierDetails from "@/pages/SupplierDetails";
-import SupplierForm from "@/pages/SupplierForm";
-import Finance from "@/pages/Finance";
-import Service from "@/pages/Service";
-import Settings from "@/pages/Settings";
-import PurchaseInvoices from "@/pages/PurchaseInvoices";
-import SalesInvoices from "@/pages/SalesInvoices";
-import Auth from "@/pages/Auth";
-import AuthGuard from "@/components/AuthGuard";
-import Employees from "@/pages/Employees";
-import AddEmployee from "./pages/AddEmployee";
-import EmployeeDetails from "./pages/EmployeeDetails";
-import EmployeeForm from "./pages/EmployeeForm";
-import Dashboard from "./pages/Dashboard";
-import PurchaseManagement from "@/pages/PurchaseManagement";
-import Proposals from "@/pages/Proposals";
-import ProposalCreate from "@/pages/ProposalCreate";
-import ProposalDetail from "@/pages/ProposalDetail";
-import ProposalEdit from "@/pages/ProposalEdit";
-import Tasks from "@/pages/Tasks";
-import Opportunities from "@/pages/crm/Opportunities";
-import CrmDashboard from "@/pages/crm/CrmDashboard";
+import { handleApiRequest } from './api/routes';
+
+const originalFetch = window.fetch;
+window.fetch = async function(input: RequestInfo | URL, init?: RequestInit) {
+  const url = input.toString();
+  
+  if (url.startsWith('/api/')) {
+    return handleApiRequest(url);
+  }
+  
+  return originalFetch(input, init);
+};
 
 const queryClient = new QueryClient();
 
@@ -178,7 +158,6 @@ function App() {
         </Routes>
       </Router>
       
-      {/* Toast notification systems */}
       <ToastContainer 
         position="bottom-right"
         autoClose={5000}
