@@ -1,132 +1,112 @@
 
-import { useState } from "react";
-import { DropResult } from "@hello-pangea/dnd";
-import { Opportunity, OpportunityStatus } from "@/types/crm";
-import { crmService } from "@/services/crmService";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import { Opportunity } from '@/types/crm';
+import { mockCrmService } from '@/services/mockCrm';
+import { useToast } from '@/components/ui/use-toast';
 
 export const useOpportunities = () => {
-  // This is a simplified implementation
-  const [opportunities, setOpportunities] = useState<{
-    new: Opportunity[];
-    first_contact: Opportunity[];
-    site_visit: Opportunity[];
-    preparing_proposal: Opportunity[];
-    proposal_sent: Opportunity[];
-    accepted: Opportunity[];
-    lost: Opportunity[];
-  }>({
-    new: [],
-    first_contact: [],
-    site_visit: [],
-    preparing_proposal: [],
-    proposal_sent: [],
-    accepted: [],
-    lost: []
-  });
-  
-  const [isLoading, setIsLoading] = useState(false);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const { toast } = useToast();
 
-  const handleDragEnd = async (result: DropResult) => {
-    const { destination, source, draggableId } = result;
-    
-    if (!destination) return;
-    
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
-    
-    // Find the opportunity that was dragged
-    const sourceColumn = opportunities[source.droppableId as OpportunityStatus];
-    const draggedOpportunity = sourceColumn.find(o => o.id === draggableId);
-    
-    if (!draggedOpportunity) return;
-    
-    // Create new opportunity with updated status
-    const updatedOpportunity = {
-      ...draggedOpportunity,
-      status: destination.droppableId as OpportunityStatus
-    };
-    
+  const fetchOpportunities = async () => {
+    setLoading(true);
     try {
-      // Update locally first for better UX
-      setOpportunities(prev => {
-        // Remove from source
-        const newSourceColumn = prev[source.droppableId as OpportunityStatus].filter(
-          o => o.id !== draggableId
-        );
-        
-        // Add to destination
-        const newDestColumn = [
-          ...prev[destination.droppableId as OpportunityStatus],
-          updatedOpportunity
-        ];
-        
-        return {
-          ...prev,
-          [source.droppableId]: newSourceColumn,
-          [destination.droppableId]: newDestColumn
-        };
-      });
-      
-      // Then update in the backend
-      await crmService.updateOpportunity(draggableId, {
-        status: destination.droppableId as OpportunityStatus
-      });
-      
-    } catch (error) {
-      console.error("Error updating opportunity status:", error);
-      toast.error("Status güncellenirken bir hata oluştu");
-      // Revert the change on error
-      // Code to revert would go here
+      const { data, error } = await mockCrmService.getOpportunities();
+      if (error) throw error;
+      setOpportunities(data || []);
+      setError(null);
+    } catch (err) {
+      setError(err as Error);
+      console.error('Error fetching opportunities:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUpdateOpportunity = async (opportunity: Opportunity) => {
+  useEffect(() => {
+    fetchOpportunities();
+  }, []);
+
+  const refreshOpportunities = async () => {
+    await fetchOpportunities();
+  };
+
+  const addOpportunity = async (opportunity: Partial<Opportunity>): Promise<boolean> => {
     try {
-      const result = await crmService.updateOpportunity(opportunity.id, opportunity);
-      
-      if (result.error) {
-        throw result.error;
-      }
-      
-      // Update the opportunity in the local state
-      setOpportunities(prev => {
-        const status = opportunity.status;
-        const updatedColumn = prev[status].map(o => 
-          o.id === opportunity.id ? opportunity : o
-        );
-        
-        return {
-          ...prev,
-          [status]: updatedColumn
-        };
+      // In a real app, we would call an API to create the opportunity
+      // For now, we'll mock it
+      const newId = Math.random().toString(36).substring(2, 11);
+      const newOpportunity: Opportunity = {
+        id: newId,
+        title: opportunity.title || '',
+        description: opportunity.description || '',
+        status: opportunity.status || 'new',
+        priority: opportunity.priority || 'medium',
+        value: opportunity.value || 0,
+        currency: opportunity.currency || 'TRY',
+        customer_id: opportunity.customer_id,
+        customer: opportunity.customer,
+        assigned_to: opportunity.assigned_to,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        tags: opportunity.tags || [],
+        contact_history: []
+      };
+
+      // In a real app, we would wait for the API call to complete
+      // For now, we'll just add it to the local state
+      setOpportunities([...opportunities, newOpportunity]);
+
+      toast({
+        title: "Fırsat eklendi",
+        description: "Yeni fırsat başarıyla eklendi."
       });
+
+      return true;
+    } catch (err) {
+      console.error('Error adding opportunity:', err);
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Fırsat eklenirken bir hata oluştu."
+      });
+      return false;
+    }
+  };
+
+  const updateOpportunity = async (opportunity: Partial<Opportunity> & { id: string }): Promise<boolean> => {
+    try {
+      const { error } = await mockCrmService.updateOpportunity(
+        opportunity.id, 
+        opportunity
+      );
       
-      setSelectedOpportunity(opportunity);
-      toast.success("Fırsat başarıyla güncellendi");
+      if (error) throw error;
       
-    } catch (error) {
-      console.error("Error updating opportunity:", error);
-      toast.error("Fırsat güncellenirken bir hata oluştu");
+      // Update local state
+      setOpportunities(
+        opportunities.map(item => 
+          item.id === opportunity.id 
+            ? { ...item, ...opportunity, updated_at: new Date().toISOString() } 
+            : item
+        )
+      );
+      
+      return true;
+    } catch (err) {
+      console.error('Error updating opportunity:', err);
+      return false;
     }
   };
 
   return {
     opportunities,
-    isLoading,
+    loading,
     error,
-    handleDragEnd,
-    handleUpdateOpportunity,
-    selectedOpportunity,
-    setSelectedOpportunity,
-    isDetailOpen,
-    setIsDetailOpen
+    addOpportunity,
+    updateOpportunity,
+    refreshOpportunities
   };
 };

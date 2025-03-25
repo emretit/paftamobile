@@ -1,6 +1,6 @@
 
 import { formatDateOffset } from './utils';
-import { mockCrmService } from '@/services/mockCrm';
+import { mockTasksAPI } from '@/services/mockCrm';
 
 interface AssignTaskParams {
   title: string;
@@ -31,8 +31,11 @@ export const taskWorkflow = {
         related_item_title: params.related_item_title
       };
       
-      // Here we would create the task, but we're using a mock for now
-      console.log("Creating follow-up task:", task);
+      // Create the task using the mock API
+      const { error } = await mockTasksAPI.createTask(task);
+      
+      if (error) throw error;
+      console.log("Task created successfully:", task);
       
       return { success: true };
     } catch (error) {
@@ -58,8 +61,11 @@ export const taskWorkflow = {
         related_item_title: opportunityTitle
       };
       
-      // Here we would create the task, but we're using a mock for now
-      console.log("Creating opportunity task:", task);
+      // Create the task using the mock API
+      const { error } = await mockTasksAPI.createTask(task);
+      
+      if (error) throw error;
+      console.log("Opportunity task created:", task);
       
       return { success: true };
     } catch (error) {

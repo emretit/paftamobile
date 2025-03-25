@@ -1,223 +1,148 @@
-import { useState, useEffect } from "react";
-import { DropResult } from "@hello-pangea/dnd";
-import { Opportunity, OpportunityStatus } from "@/types/crm";
-import { useOpportunities } from "@/hooks/useOpportunities";
-import { useToast } from "@/components/ui/use-toast";
-import DefaultLayout from "@/components/layouts/DefaultLayout";
-import OpportunitiesKanban from "@/components/opportunities/OpportunitiesKanban";
-import OpportunitiesHeader from "@/components/opportunities/OpportunitiesHeader";
-import OpportunityFilterBar from "@/components/opportunities/OpportunityFilterBar";
-import OpportunityDetailSheet from "@/components/opportunities/OpportunityDetailSheet";
-import OpportunityBulkActions from "@/components/opportunities/OpportunityBulkActions";
-import OpportunitiesContent from "@/components/opportunities/OpportunitiesContent";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import React, { useState } from 'react';
+import DefaultLayout from '@/components/layouts/DefaultLayout';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { Sheet } from '@/components/ui/sheet';
+import { Opportunity } from '@/types/crm';
+import { useToast } from '@/components/ui/use-toast';
+import OpportunitiesKanban from '@/components/opportunities/OpportunitiesKanban';
+import OpportunitiesTable from '@/components/opportunities/OpportunitiesTable';
+import OpportunityDetailSheet from '@/components/opportunities/OpportunityDetailSheet';
+import OpportunityForm from '@/components/opportunities/OpportunityForm';
+import { useOpportunities } from '@/hooks/useOpportunities';
+import { mockCrmService } from '@/services/mockCrm';
 
 interface OpportunitiesProps {
   isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
+  setIsCollapsed: (collapsed: boolean) => void;
 }
 
-const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
+const Opportunities: React.FC<OpportunitiesProps> = ({ isCollapsed, setIsCollapsed }) => {
+  const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
+  const [showDetailSheet, setShowDetailSheet] = useState(false);
+  const [showCreateSheet, setShowCreateSheet] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const { toast } = useToast();
+  
   const { 
     opportunities,
-    isLoading, 
+    loading,
     error,
-    handleDragEnd,
-    handleUpdateOpportunity,
-    selectedOpportunity,
-    setSelectedOpportunity,
-    isDetailOpen,
-    setIsDetailOpen
+    addOpportunity,
+    updateOpportunity,
+    refreshOpportunities
   } = useOpportunities();
-  
-  const [selectedOpportunities, setSelectedOpportunities] = useState<Opportunity[]>([]);
-  const [filterKeyword, setFilterKeyword] = useState("");
-  const [statusFilter, setStatusFilter] = useState<OpportunityStatus | "all">("all");
-  const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState("kanban");
-  
-  const handleUpdateOpportunity = async (opportunity: Partial<Opportunity> & { id: string }): Promise<boolean> => {
-    try {
-      const result = await crmService.updateOpportunity(opportunity.id, opportunity);
-      
-      if (result.error) {
-        throw result.error;
-      }
-      
-      setOpportunities(prev => {
-        const status = opportunity.status as OpportunityStatus;
-        if (!status) return prev;
-        
-        const updatedColumn = prev[status].map(o => 
-          o.id === opportunity.id ? { ...o, ...opportunity } : o
-        );
-        
-        return {
-          ...prev,
-          [status]: updatedColumn
-        };
-      });
-      
-      if (opportunity.id === selectedOpportunity?.id) {
-        setSelectedOpportunity(prev => prev ? { ...prev, ...opportunity } : null);
-      }
-      
-      toast.success("Fırsat başarıyla güncellendi");
-      return true;
-      
-    } catch (error) {
-      console.error("Error updating opportunity:", error);
-      toast.error("Fırsat güncellenirken bir hata oluştu");
-      return false;
-    }
-  };
-
-  // Group opportunities by status
-  const groupedOpportunities = {
-    new: (opportunities.new || [])
-      .filter(opp => filterOpportunity(opp))
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    first_contact: (opportunities.first_contact || [])
-      .filter(opp => filterOpportunity(opp))
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    site_visit: (opportunities.site_visit || [])
-      .filter(opp => filterOpportunity(opp))
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    preparing_proposal: (opportunities.preparing_proposal || [])
-      .filter(opp => filterOpportunity(opp))
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    proposal_sent: (opportunities.proposal_sent || [])
-      .filter(opp => filterOpportunity(opp))
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    accepted: (opportunities.accepted || [])
-      .filter(opp => filterOpportunity(opp))
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    lost: (opportunities.lost || [])
-      .filter(opp => filterOpportunity(opp))
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-  };
-  
-  function filterOpportunity(opportunity: Opportunity): boolean {
-    // Filter by keyword
-    const keywordMatch = !filterKeyword || 
-      opportunity.title.toLowerCase().includes(filterKeyword.toLowerCase()) ||
-      (opportunity.description?.toLowerCase() || "").includes(filterKeyword.toLowerCase()) ||
-      (opportunity.customer?.name?.toLowerCase() || "").includes(filterKeyword.toLowerCase());
-    
-    // Filter by status
-    const statusMatch = statusFilter === "all" || opportunity.status === statusFilter;
-    
-    // Filter by priority
-    const priorityMatch = !priorityFilter || opportunity.priority === priorityFilter;
-    
-    return keywordMatch && statusMatch && priorityMatch;
-  }
 
   const handleOpportunityClick = (opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity);
-    setIsDetailOpen(true);
-  };
-  
-  const handleOpportunitySelect = (opportunity: Opportunity) => {
-    setSelectedOpportunities(prev => {
-      const isSelected = prev.some(o => o.id === opportunity.id);
-      return isSelected 
-        ? prev.filter(o => o.id !== opportunity.id) 
-        : [...prev, opportunity];
-    });
-  };
-  
-  const handleClearSelection = () => {
-    setSelectedOpportunities([]);
+    setShowDetailSheet(true);
   };
 
-  // Convert grouped opportunities to flat array for list view
-  const flattenedOpportunities = Object.values(groupedOpportunities).flat();
+  const handleUpdateOpportunity = async (opportunity: Opportunity) => {
+    try {
+      const { error } = await mockCrmService.updateOpportunity(
+        opportunity.id, 
+        opportunity
+      );
+      
+      if (error) {
+        throw error;
+      }
+      
+      await refreshOpportunities();
+      
+      toast({
+        title: "Fırsat güncellendi",
+        description: "Fırsat başarıyla güncellendi.",
+      });
+      
+      return true;
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Fırsat güncellenirken bir hata oluştu.",
+      });
+      return false;
+    }
+  };
+  
+  const toggleViewMode = () => {
+    setViewMode(viewMode === 'kanban' ? 'table' : 'kanban');
+  };
 
   return (
     <DefaultLayout 
       isCollapsed={isCollapsed} 
       setIsCollapsed={setIsCollapsed}
       title="Fırsatlar"
-      subtitle="Tüm satış fırsatlarını yönetin"
+      subtitle="Potansiyel satış fırsatlarınızı yönetin"
     >
-      <div className="space-y-6">
-        <OpportunitiesHeader />
-        
-        <div className="flex flex-col sm:flex-row gap-4 justify-between">
-          <OpportunityFilterBar 
-            filterKeyword={filterKeyword}
-            setFilterKeyword={setFilterKeyword}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            priorityFilter={priorityFilter}
-            setPriorityFilter={setPriorityFilter}
-          />
-          <Tabs
-            value={activeView}
-            onValueChange={setActiveView}
-            className="w-fit"
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex gap-2">
+          <Button
+            variant={viewMode === 'kanban' ? 'default' : 'outline'}
+            onClick={() => setViewMode('kanban')}
+            size="sm"
           >
-            <TabsList>
-              <TabsTrigger value="kanban">Kanban</TabsTrigger>
-              <TabsTrigger value="list">Liste</TabsTrigger>
-            </TabsList>
-          </Tabs>
+            Kanban
+          </Button>
+          <Button
+            variant={viewMode === 'table' ? 'default' : 'outline'}
+            onClick={() => setViewMode('table')}
+            size="sm"
+          >
+            Liste
+          </Button>
         </div>
-        
-        {selectedOpportunities.length > 0 && (
-          <OpportunityBulkActions 
-            selectedOpportunities={selectedOpportunities}
-            onClearSelection={handleClearSelection}
-          />
-        )}
-        
-        {isLoading ? (
-          <div className="h-96 flex items-center justify-center">
-            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-          </div>
-        ) : error ? (
-          <div className="h-96 flex items-center justify-center">
-            <div className="text-red-500">Fırsatlar yüklenirken bir hata oluştu</div>
-          </div>
-        ) : (
-          <Tabs value={activeView} className="w-full">
-            <TabsContent value="kanban" className="mt-0">
-              <OpportunitiesKanban
-                opportunities={groupedOpportunities}
-                onDragEnd={handleDragEnd}
-                onOpportunityClick={handleOpportunityClick}
-                onOpportunitySelect={handleOpportunitySelect}
-                selectedOpportunities={selectedOpportunities}
-              />
-            </TabsContent>
-            <TabsContent value="list" className="mt-0">
-              <OpportunitiesContent
-                opportunities={flattenedOpportunities}
-                isLoading={isLoading}
-                error={error}
-                onSelectOpportunity={handleOpportunityClick}
-                searchQuery={filterKeyword}
-                statusFilter={statusFilter}
-                priorityFilter={priorityFilter}
-              />
-            </TabsContent>
-          </Tabs>
-        )}
+        <Button onClick={() => setShowCreateSheet(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Yeni Fırsat
+        </Button>
       </div>
-      
+
+      {viewMode === 'kanban' ? (
+        <OpportunitiesKanban 
+          opportunities={opportunities || []} 
+          onOpportunityClick={handleOpportunityClick}
+          onOpportunityUpdate={handleUpdateOpportunity} 
+          loading={loading}
+          error={error}
+        />
+      ) : (
+        <OpportunitiesTable 
+          opportunities={opportunities || []} 
+          onOpportunityClick={handleOpportunityClick}
+          loading={loading}
+          error={error}
+        />
+      )}
+
       {selectedOpportunity && (
         <OpportunityDetailSheet
           opportunity={selectedOpportunity}
-          isOpen={isDetailOpen}
-          onClose={() => {
-            setIsDetailOpen(false);
-            setTimeout(() => setSelectedOpportunity(null), 300);
-          }}
-          onUpdate={handleUpdateOpportunity}
+          open={showDetailSheet}
+          onOpenChange={setShowDetailSheet}
+          onUpdateOpportunity={handleUpdateOpportunity}
         />
       )}
+
+      <Sheet
+        open={showCreateSheet}
+        onOpenChange={setShowCreateSheet}
+      >
+        <OpportunityForm
+          onSubmit={async (data) => {
+            const success = await addOpportunity(data);
+            if (success) {
+              setShowCreateSheet(false);
+            }
+            return success;
+          }}
+          onCancel={() => setShowCreateSheet(false)}
+        />
+      </Sheet>
     </DefaultLayout>
   );
 };

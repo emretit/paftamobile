@@ -40,6 +40,12 @@ export const mockCrmService = {
     return mockCrmOpportunitiesService.getOpportunities();
   },
 
+  // Add changeProposalStatus method
+  async changeProposalStatus(id: string, status: string) {
+    console.log('Changing proposal status', id, 'to:', status);
+    return { data: { id, status }, error: null };
+  },
+
   // For other operations, we'll use the real crmService
   ...crmService
 };

@@ -1,89 +1,86 @@
 
-import { taskWorkflow } from './taskWorkflow';
 import { formatDateOffset } from './utils';
+import { mockTasksAPI } from '@/services/mockCrm';
+import { Opportunity } from '@/types/crm';
 
-/**
- * Handle opportunity creation workflow
- * - Create follow-up tasks
- * - Update related entities if needed
- */
-export const handleOpportunityCreation = async (opportunity: any) => {
-  try {
-    // Create a task for the opportunity owner to follow up
-    await taskWorkflow.assignOpportunityCreatedTask(
-      opportunity.id,
-      opportunity.title || opportunity.name,
-      opportunity.assigned_to || opportunity.owner_id
-    );
-    
-    return { success: true };
-  } catch (error) {
-    console.error("Error in opportunity creation workflow:", error);
-    return { success: false, error };
-  }
-};
-
-/**
- * Handle opportunity status change workflow
- * - Create appropriate tasks based on new status
- * - Update related customer or deal records if needed
- */
-export const handleOpportunityStatusChange = async (
-  opportunityId: string,
-  opportunityTitle: string,
-  oldStatus: string,
-  newStatus: string,
-  assigneeId?: string
-) => {
-  try {
-    // Different workflows based on the new status
-    switch (newStatus) {
-      case 'qualified':
-        // Create task to prepare a proposal
-        await createProposalTask(opportunityId, opportunityTitle, assigneeId);
-        break;
-        
-      case 'negotiation':
-        // Create task to prepare for negotiation
-        await createNegotiationTask(opportunityId, opportunityTitle, assigneeId);
-        break;
-        
-      case 'closed_won':
-        // Create onboarding tasks
-        await createOnboardingTask(opportunityId, opportunityTitle, assigneeId);
-        break;
-        
-      case 'closed_lost':
-        // Create task for loss analysis
-        await createLossAnalysisTask(opportunityId, opportunityTitle, assigneeId);
-        break;
+export const opportunityWorkflow = {
+  /**
+   * Handle new opportunity creation
+   */
+  handleNewOpportunity: async (opportunity: Opportunity) => {
+    try {
+      // Create a task for the assigned employee to follow up
+      await createFollowUpTask(opportunity);
+      
+      return { success: true };
+    } catch (error) {
+      console.error("Error in handleNewOpportunity:", error);
+      return { success: false, error };
     }
-    
-    return { success: true };
-  } catch (error) {
-    console.error("Error in opportunity status change workflow:", error);
-    return { success: false, error };
+  },
+  
+  /**
+   * Handle opportunity status change
+   */
+  handleStatusChange: async (opportunity: Opportunity, previousStatus: string) => {
+    try {
+      // If moved to "proposal_sent", create a task to follow up in 3 days
+      if (opportunity.status === 'proposal_sent' && previousStatus !== 'proposal_sent') {
+        await createProposalFollowUpTask(opportunity);
+      }
+      
+      // If moved to "site_visit", create a task to prepare for the visit
+      if (opportunity.status === 'site_visit' && previousStatus !== 'site_visit') {
+        await createSiteVisitTask(opportunity);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error("Error in handleStatusChange:", error);
+      return { success: false, error };
+    }
   }
 };
 
-// Helper functions to create specific tasks
+// Helper functions
+async function createFollowUpTask(opportunity: Opportunity) {
+  return mockTasksAPI.createTask({
+    title: `İlk görüşme: ${opportunity.title}`,
+    description: 'Müşteriyle ilk görüşmeyi planla',
+    status: 'todo',
+    priority: 'high',
+    assigned_to: opportunity.assigned_to,
+    due_date: formatDateOffset(1),
+    related_item_id: opportunity.id,
+    related_item_type: 'opportunity',
+    related_item_title: opportunity.title
+  });
+}
 
-const createProposalTask = async (opportunityId: string, opportunityTitle: string, assigneeId?: string) => {
-  console.log("Creating proposal task for:", opportunityTitle);
-  return { data: null, error: null };
-};
+async function createProposalFollowUpTask(opportunity: Opportunity) {
+  return mockTasksAPI.createTask({
+    title: `Takip: ${opportunity.title} teklifi`,
+    description: 'Gönderilen teklif hakkında müşteriyle iletişime geç',
+    status: 'todo',
+    priority: 'high',
+    assigned_to: opportunity.assigned_to,
+    due_date: formatDateOffset(3),
+    related_item_id: opportunity.id,
+    related_item_type: 'opportunity',
+    related_item_title: opportunity.title
+  });
+}
 
-const createNegotiationTask = async (opportunityId: string, opportunityTitle: string, assigneeId?: string) => {
-  console.log("Creating negotiation task for:", opportunityTitle);
-  return { data: null, error: null };
-};
-
-const createOnboardingTask = async (opportunityId: string, opportunityTitle: string, assigneeId?: string) => {
-  console.log("Creating onboarding task for:", opportunityTitle);
-  return { data: null, error: null };
-};
-
-const createLossAnalysisTask = async (opportunityId: string, opportunityTitle: string, assigneeId?: string) => {
-  console.log("Creating loss analysis task for:", opportunityTitle);
-  return { data: null, error: null };
-};
+async function createSiteVisitTask(opportunity: Opportunity) {
+  return mockTasksAPI.createTask({
+    title: `Ziyaret hazırlığı: ${opportunity.title}`,
+    description: 'Saha ziyareti öncesi gerekli hazırlıkları tamamla',
+    status: 'todo',
+    priority: 'high',
+    assigned_to: opportunity.assigned_to,
+    due_date: formatDateOffset(1),
+    related_item_id: opportunity.id,
+    related_item_type: 'opportunity',
+    related_item_title: opportunity.title
+  });
+}
