@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Proposal, ProposalStatus, ProposalAttachment, ProposalItem } from "@/types/proposal";
 import { Json } from "@/types/json";
@@ -94,13 +93,13 @@ export class ProposalService extends BaseService {
       
       // Add attachments and items if they exist
       if (proposal.attachments && proposal.attachments.length > 0) {
-        // Convert attachments to a plain object that can be stored as JSON
-        insertData.attachments = proposal.attachments;
+        // Convert to JSON-compatible format using JSON stringify and parse
+        insertData.attachments = JSON.parse(JSON.stringify(proposal.attachments));
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        // Convert items to a plain object that can be stored as JSON
-        insertData.items = proposal.items;
+        // Convert to JSON-compatible format using JSON stringify and parse
+        insertData.items = JSON.parse(JSON.stringify(proposal.items));
       }
       
       const { data, error } = await supabase
@@ -152,18 +151,18 @@ export class ProposalService extends BaseService {
       
       // Handle complex types
       if (proposal.attachments !== undefined) {
-        // Use direct assignment instead of type casting
-        updateData.attachments = proposal.attachments;
+        // Convert to JSON-compatible format using JSON stringify and parse
+        updateData.attachments = JSON.parse(JSON.stringify(proposal.attachments));
       }
       
       if (proposal.items !== undefined) {
-        // Use direct assignment instead of type casting
-        updateData.items = proposal.items;
+        // Convert to JSON-compatible format using JSON stringify and parse
+        updateData.items = JSON.parse(JSON.stringify(proposal.items));
       }
       
       const { data, error } = await supabase
         .from('proposals')
-        .update(updateData as any)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
