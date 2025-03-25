@@ -92,15 +92,15 @@ export class ProposalService extends BaseService {
         updated_at: new Date().toISOString()
       };
       
-      // Add attachments and items if they exist - properly convert to JSON compatible format
+      // Add attachments and items if they exist
       if (proposal.attachments && proposal.attachments.length > 0) {
-        // Use a proper type assertion for the Json type
-        insertData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as Json;
+        // Convert attachments to a plain object that can be stored as JSON
+        insertData.attachments = proposal.attachments;
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        // Use a proper type assertion for the Json type
-        insertData.items = JSON.parse(JSON.stringify(proposal.items)) as Json;
+        // Convert items to a plain object that can be stored as JSON
+        insertData.items = proposal.items;
       }
       
       const { data, error } = await supabase
@@ -150,15 +150,15 @@ export class ProposalService extends BaseService {
       if (proposal.currency !== undefined) updateData.currency = proposal.currency;
       if (proposal.total_amount !== undefined) updateData.total_amount = proposal.total_amount;
       
-      // Handle complex types that need conversion to JSON
+      // Handle complex types
       if (proposal.attachments !== undefined) {
-        // Use a proper type assertion for the Json type
-        updateData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as Json;
+        // Use direct assignment instead of type casting
+        updateData.attachments = proposal.attachments;
       }
       
       if (proposal.items !== undefined) {
-        // Use a proper type assertion for the Json type
-        updateData.items = JSON.parse(JSON.stringify(proposal.items)) as Json;
+        // Use direct assignment instead of type casting
+        updateData.items = proposal.items;
       }
       
       const { data, error } = await supabase
