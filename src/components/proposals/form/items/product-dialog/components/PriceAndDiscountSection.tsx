@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { 
@@ -15,7 +14,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getCurrencyOptions } from "../utils/currencyUtils";
+import { getCurrencyOptions } from "../../utils/currencyUtils";
 
 interface PriceAndDiscountSectionProps {
   customPrice: number | undefined;
@@ -44,13 +43,11 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
   const [localPrice, setLocalPrice] = useState<number | string>(customPrice || convertedPrice);
   const [localDiscountRate, setLocalDiscountRate] = useState(discountRate);
 
-  // Update local state when props change
   useEffect(() => {
     setLocalPrice(customPrice || convertedPrice);
     setLocalDiscountRate(discountRate);
   }, [customPrice, convertedPrice, discountRate]);
 
-  // Calculate total price with discount
   const calculateTotalPrice = () => {
     const price = Number(localPrice);
     const discount = Number(localDiscountRate);
@@ -60,7 +57,6 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
 
   return (
     <div className="grid grid-cols-4 gap-2 items-center">
-      {/* Price Column */}
       <div className="col-span-1">
         <Select 
           value={selectedCurrency} 
@@ -81,7 +77,6 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
         </Select>
       </div>
 
-      {/* Unit Price Column */}
       <div className="col-span-1">
         <Input
           type="number"
@@ -96,7 +91,6 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
         />
       </div>
 
-      {/* VAT Column */}
       <div className="col-span-1">
         <Select 
           value={`${localDiscountRate}`}
@@ -119,7 +113,6 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
         </Select>
       </div>
 
-      {/* Discount Column */}
       <div className="col-span-1">
         <Input
           type="number"
@@ -134,7 +127,6 @@ const PriceAndDiscountSection: React.FC<PriceAndDiscountSectionProps> = ({
         />
       </div>
 
-      {/* Total Price Section */}
       <div className="col-span-4 mt-2 text-sm text-muted-foreground">
         <div className="flex justify-between">
           <span>Önceki Fiyat:</span>
