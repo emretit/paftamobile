@@ -39,4 +39,7 @@ export interface Product {
   product_categories: ProductCategory | null;
   suppliers: Supplier | null;
   purchase_price?: number;
+  // Add original currency and price properties
+  original_currency?: string;
+  original_price?: number;
 }

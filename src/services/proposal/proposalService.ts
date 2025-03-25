@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Proposal, ProposalStatus, ProposalAttachment, ProposalItem } from "@/types/proposal";
 import { Json } from "@/types/json";
@@ -93,11 +94,13 @@ export class ProposalService extends BaseService {
       
       // Add attachments and items if they exist
       if (proposal.attachments && proposal.attachments.length > 0) {
-        insertData.attachments = proposal.attachments as any;
+        // Convert to JSON explicitly using JSON.parse(JSON.stringify())
+        insertData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as Json;
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        insertData.items = proposal.items as any;
+        // Convert to JSON explicitly using JSON.parse(JSON.stringify())
+        insertData.items = JSON.parse(JSON.stringify(proposal.items)) as Json;
       }
       
       const { data, error } = await supabase
@@ -149,11 +152,13 @@ export class ProposalService extends BaseService {
       
       // Handle complex types that need conversion
       if (proposal.attachments !== undefined) {
-        updateData.attachments = proposal.attachments as any;
+        // Convert to JSON explicitly using JSON.parse(JSON.stringify())
+        updateData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as Json;
       }
       
       if (proposal.items !== undefined) {
-        updateData.items = proposal.items as any;
+        // Convert to JSON explicitly using JSON.parse(JSON.stringify())
+        updateData.items = JSON.parse(JSON.stringify(proposal.items)) as Json;
       }
       
       const { data, error } = await supabase
