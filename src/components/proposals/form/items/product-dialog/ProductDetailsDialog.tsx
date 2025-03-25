@@ -11,7 +11,7 @@ import {
 import { Product } from "@/types/product";
 import { useProductDetailsState } from "./hooks/useProductDetailsState";
 import { useProductCalculations } from "./hooks/useProductCalculations";
-import DialogContent as ProductDialogContent from "./components/DialogContent";
+import ProductDialogContent from "./components/DialogContent";
 import ExchangeRatesNotice from "./components/ExchangeRatesNotice";
 import DialogFooterButtons from "./components/DialogFooterButtons";
 
