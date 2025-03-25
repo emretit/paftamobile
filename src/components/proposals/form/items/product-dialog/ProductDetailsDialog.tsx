@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Package, CheckCircle, AlertTriangle } from "lucide-react";
 import { Product } from "@/types/product";
-import { convertCurrency } from "../utils/currencyUtils";
+import { convertCurrency, getCurrentExchangeRates } from "../utils/currencyUtils";
 import { Textarea } from "@/components/ui/textarea";
 
 interface ProductDetailsDialogProps {
@@ -71,48 +71,8 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
       setOriginalCurrency(selectedProduct.currency || "TRY");
       
       // Set customPrice with the product's price if it hasn't been set manually
-      if (customPrice === undefined) {
-        let productPrice = selectedProduct.price;
-        
-        // Convert price to selected currency if needed
-        if (selectedProduct.currency !== selectedCurrency) {
-          const exchangeRates = {
-            TRY: 1,
-            USD: 32.5,
-            EUR: 35.2,
-            GBP: 41.3
-          };
-          productPrice = convertCurrency(
-            productPrice, 
-            selectedProduct.currency || "TRY", 
-            selectedCurrency, 
-            exchangeRates
-          );
-        }
-        
-        setCustomPrice(productPrice);
-        setConvertedPrice(productPrice);
-      } else {
-        let basePrice = customPrice;
-        
-        // Convert price to selected currency if needed
-        if (selectedProduct.currency !== selectedCurrency) {
-          const exchangeRates = {
-            TRY: 1,
-            USD: 32.5,
-            EUR: 35.2,
-            GBP: 41.3
-          };
-          basePrice = convertCurrency(
-            basePrice, 
-            selectedProduct.currency || "TRY", 
-            selectedCurrency, 
-            exchangeRates
-          );
-        }
-        
-        setConvertedPrice(basePrice);
-      }
+      setCustomPrice(selectedProduct.price);
+      setConvertedPrice(selectedProduct.price);
       
       // Apply discount and calculate total
       const currentPrice = customPrice !== undefined ? customPrice : convertedPrice;
@@ -131,7 +91,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
         setStockStatus("in_stock");
       }
     }
-  }, [selectedProduct, quantity, customPrice, discountRate, selectedCurrency, convertedPrice]);
+  }, [selectedProduct, quantity, customPrice, discountRate, convertedPrice]);
 
   // Update converted price when currency changes
   useEffect(() => {
@@ -140,12 +100,8 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
       const productPrice = selectedProduct.price;
       
       if (productCurrency !== selectedCurrency) {
-        const exchangeRates = {
-          TRY: 1,
-          USD: 32.5,
-          EUR: 35.2,
-          GBP: 41.3
-        };
+        // Get current exchange rates
+        const exchangeRates = getCurrentExchangeRates();
         
         const newConvertedPrice = convertCurrency(
           productPrice,
@@ -220,7 +176,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
       return (
         <div className="mt-2 text-sm text-yellow-600 flex items-center space-x-1">
           <AlertTriangle className="h-3 w-3" />
-          <span>Bu ürün düşük stok seviyesinde ({availableStock} adet).</span>
+          <span>Bu ürün düşük stok seviyesinde.</span>
         </div>
       );
     }
@@ -410,7 +366,6 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
 
 export default ProductDetailsDialog;
 
-// Aşağıdaki yardımcı fonksiyonlar dosyanın başına eklenmeli
 function getStockStatusText(status: string) {
   switch (status) {
     case "out_of_stock":
