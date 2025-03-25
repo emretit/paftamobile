@@ -1,287 +1,50 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Proposal, ProposalStatus, ProposalAttachment, ProposalItem } from "@/types/proposal";
+import { Proposal, ProposalStatus, ProposalAttachment } from "@/types/proposal";
 import { BaseService, ServiceOptions } from "../base/BaseService";
-import { Json } from "@/types/json";
+import { 
+  getProposals, 
+  getProposalById, 
+  createProposal, 
+  updateProposal, 
+  deleteProposal, 
+  updateProposalStatus 
+} from "./api/crudOperations";
+import { addProposalAttachment } from "./api/attachmentOperations";
+import { parseProposalData } from "./helpers/dataParser";
 
 export class ProposalService extends BaseService {
   async getProposals(options: ServiceOptions = {}) {
-    const {
-      pageSize = 10,
-      page = 1,
-      orderBy = 'created_at',
-      orderDirection = 'desc'
-    } = options;
-    
-    const startRow = (page - 1) * pageSize;
-    const endRow = startRow + pageSize - 1;
-    
-    try {
-      const { data, error, count } = await supabase
-        .from('proposals')
-        .select(`
-          *,
-          customer:customer_id(*),
-          employee:employee_id(*)
-        `, { count: 'exact' })
-        .order(orderBy, { ascending: orderDirection === 'asc' })
-        .range(startRow, endRow);
-      
-      if (error) throw error;
-      
-      return { data, count };
-    } catch (error) {
-      console.error('Error fetching proposals:', error);
-      return { data: [], count: 0 };
-    }
+    return getProposals(options);
   }
   
   async getProposalById(id: string) {
-    try {
-      const { data, error } = await supabase
-        .from('proposals')
-        .select(`
-          *,
-          customer:customer_id(*),
-          employee:employee_id(*)
-        `)
-        .eq('id', id)
-        .single();
-      
-      if (error) throw error;
-      
-      // Parse the JSON strings to convert back to proper types
-      const parsedData = this.parseProposalData(data);
-      
-      return { data: parsedData, error: null };
-    } catch (error) {
-      console.error('Error fetching proposal:', error);
-      return { data: null, error };
-    }
+    return getProposalById(id);
   }
   
   async createProposal(proposal: Partial<Proposal>) {
-    try {
-      // Generate proposal number
-      const proposalNumber = await this.generateProposalNumber();
-      
-      // Create proposal data object with required fields
-      const insertData: {
-        title: string;
-        description?: string;
-        customer_id?: string;
-        employee_id?: string;
-        opportunity_id?: string;
-        number: string;
-        status: string;
-        valid_until?: string;
-        payment_terms?: string;
-        delivery_terms?: string;
-        notes?: string;
-        terms?: string;
-        currency: string;
-        total_amount: number;
-        attachments?: Json;
-        items?: Json;
-        created_at: string;
-        updated_at: string;
-      } = {
-        title: proposal.title || "Untitled Proposal",
-        description: proposal.description,
-        customer_id: proposal.customer_id,
-        employee_id: proposal.employee_id,
-        opportunity_id: proposal.opportunity_id,
-        number: proposalNumber,
-        status: proposal.status || 'draft',
-        valid_until: proposal.valid_until,
-        payment_terms: proposal.payment_terms,
-        delivery_terms: proposal.delivery_terms,
-        notes: proposal.notes,
-        terms: proposal.terms,
-        currency: proposal.currency || 'TRY',
-        total_amount: proposal.total_amount || 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      // Handle complex types by proper serialization
-      if (proposal.attachments && proposal.attachments.length > 0) {
-        insertData.attachments = JSON.stringify(proposal.attachments) as unknown as Json;
-      }
-      
-      if (proposal.items && proposal.items.length > 0) {
-        insertData.items = JSON.stringify(proposal.items) as unknown as Json;
-      }
-      
-      const { data, error } = await supabase
-        .from('proposals')
-        .insert(insertData)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Parse response data
-      const parsedData = this.parseProposalData(data);
-      
-      return { data: parsedData, error: null };
-    } catch (error) {
-      console.error('Error creating proposal:', error);
-      return { data: null, error };
-    }
+    return createProposal(proposal);
   }
   
   async updateProposal(id: string, proposal: Partial<Proposal>) {
-    try {
-      // Create a properly typed update data object
-      const updateData: {
-        updated_at: string;
-        title?: string;
-        description?: string;
-        customer_id?: string;
-        employee_id?: string;
-        opportunity_id?: string;
-        status?: string;
-        valid_until?: string;
-        payment_terms?: string;
-        delivery_terms?: string;
-        notes?: string;
-        terms?: string;
-        currency?: string;
-        total_amount?: number;
-        attachments?: Json;
-        items?: Json;
-      } = { 
-        updated_at: new Date().toISOString() 
-      };
-      
-      // Copy simple properties
-      if (proposal.title !== undefined) updateData.title = proposal.title;
-      if (proposal.description !== undefined) updateData.description = proposal.description;
-      if (proposal.customer_id !== undefined) updateData.customer_id = proposal.customer_id;
-      if (proposal.employee_id !== undefined) updateData.employee_id = proposal.employee_id;
-      if (proposal.opportunity_id !== undefined) updateData.opportunity_id = proposal.opportunity_id;
-      if (proposal.status !== undefined) updateData.status = proposal.status;
-      if (proposal.valid_until !== undefined) updateData.valid_until = proposal.valid_until;
-      if (proposal.payment_terms !== undefined) updateData.payment_terms = proposal.payment_terms;
-      if (proposal.delivery_terms !== undefined) updateData.delivery_terms = proposal.delivery_terms;
-      if (proposal.notes !== undefined) updateData.notes = proposal.notes;
-      if (proposal.terms !== undefined) updateData.terms = proposal.terms;
-      if (proposal.currency !== undefined) updateData.currency = proposal.currency;
-      if (proposal.total_amount !== undefined) updateData.total_amount = proposal.total_amount;
-      
-      // Handle complex types with proper serialization
-      if (proposal.attachments !== undefined) {
-        updateData.attachments = JSON.stringify(proposal.attachments) as unknown as Json;
-      }
-      
-      if (proposal.items !== undefined) {
-        updateData.items = JSON.stringify(proposal.items) as unknown as Json;
-      }
-      
-      const { data, error } = await supabase
-        .from('proposals')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Parse response data
-      const parsedData = this.parseProposalData(data);
-      
-      return { data: parsedData, error: null };
-    } catch (error) {
-      console.error('Error updating proposal:', error);
-      return { data: null, error };
-    }
+    return updateProposal(id, proposal);
   }
   
   async deleteProposal(id: string) {
-    try {
-      const { error } = await supabase
-        .from('proposals')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      return { success: true, error: null };
-    } catch (error) {
-      console.error('Error deleting proposal:', error);
-      return { success: false, error };
-    }
+    return deleteProposal(id);
   }
   
   async updateProposalStatus(id: string, status: ProposalStatus) {
-    return this.updateProposal(id, { status });
+    return updateProposalStatus(id, status);
   }
   
   async addProposalAttachment(id: string, attachment: ProposalAttachment) {
-    try {
-      // First get the current proposal to get the existing attachments
-      const { data: currentProposal } = await this.getProposalById(id);
-      
-      if (!currentProposal) {
-        throw new Error('Proposal not found');
-      }
-      
-      const currentAttachments = currentProposal.attachments || [];
-      const updatedAttachments = [...currentAttachments, attachment];
-      
-      return this.updateProposal(id, { attachments: updatedAttachments });
-    } catch (error) {
-      console.error('Error adding proposal attachment:', error);
-      return { data: null, error };
-    }
+    return addProposalAttachment(id, attachment);
   }
 
   // Helper method to parse JSON data from proposal response
   private parseProposalData(data: any): Proposal | null {
-    if (!data) return null;
-    
-    try {
-      // Parse attachments
-      if (data.attachments) {
-        if (typeof data.attachments === 'string') {
-          data.attachments = JSON.parse(data.attachments) as ProposalAttachment[];
-        }
-      } else {
-        data.attachments = [];
-      }
-      
-      // Parse items
-      if (data.items) {
-        if (typeof data.items === 'string') {
-          data.items = JSON.parse(data.items) as ProposalItem[];
-        }
-      } else {
-        data.items = [];
-      }
-      
-      return data as Proposal;
-    } catch (e) {
-      console.error('Error parsing proposal data:', e);
-      return data;
-    }
-  }
-
-  private async generateProposalNumber(): Promise<string> {
-    // Get the count of existing proposals
-    const { count } = await supabase
-      .from('proposals')
-      .select('id', { count: 'exact' });
-    
-    // Generate a proposal number with date prefix and padded number
-    const date = new Date();
-    const year = date.getFullYear().toString().substring(2);
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    
-    const nextNumber = (count || 0) + 1;
-    const paddedNumber = nextNumber.toString().padStart(4, '0');
-    
-    return `TEK-${year}${month}-${paddedNumber}`;
+    return parseProposalData(data);
   }
 }
 
