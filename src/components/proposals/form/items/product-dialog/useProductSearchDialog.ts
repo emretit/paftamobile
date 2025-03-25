@@ -53,6 +53,8 @@ export const useProductSearchDialog = (
   });
 
   const formatCurrency = (amount: number, currency: string = "TRY") => {
+    // Ensure currency is not empty to avoid Intl.NumberFormat errors
+    if (!currency) currency = "TRY";
     return formatCurrencyValue(amount, currency);
   };
 

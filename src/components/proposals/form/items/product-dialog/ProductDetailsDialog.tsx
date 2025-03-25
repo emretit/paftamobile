@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Package, CheckCircle, AlertTriangle, CurrencyIcon } from "lucide-react";
+import { AlertCircle, Package, CheckCircle, AlertTriangle } from "lucide-react";
 import { Product } from "@/types/product";
 import { convertCurrency } from "../utils/currencyUtils";
 import { Textarea } from "@/components/ui/textarea";
@@ -83,7 +83,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
         };
         basePrice = convertCurrency(
           basePrice, 
-          selectedProduct.currency, 
+          selectedProduct.currency || "TRY", 
           selectedCurrency, 
           exchangeRates
         );
@@ -103,7 +103,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
       
       if (selectedProduct.stock_quantity <= 0) {
         setStockStatus("out_of_stock");
-      } else if (selectedProduct.stock_quantity <= selectedProduct.min_stock_level) {
+      } else if (selectedProduct.stock_quantity <= (selectedProduct.stock_threshold || 0)) {
         setStockStatus("low_stock");
       } else {
         setStockStatus("in_stock");
@@ -144,11 +144,11 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
   const getStockStatusClass = (status: string) => {
     switch (status) {
       case "out_of_stock":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800";
       case "low_stock":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800";
       case "in_stock":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800";
       default:
         return "";
     }

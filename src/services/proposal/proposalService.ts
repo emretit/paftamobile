@@ -50,12 +50,12 @@ export class ProposalService extends BaseService {
       
       if (error) throw error;
       
-      // Convert the attachments from JSON to the correct type
+      // Convert the attachments from JSON to the correct Type
       if (data && data.attachments) {
         data.attachments = data.attachments as unknown as ProposalAttachment[];
       }
       
-      // Convert items from JSON to the correct type
+      // Convert items from JSON to the correct Type
       if (data && data.items) {
         data.items = data.items as unknown as ProposalItem[];
       }
@@ -95,12 +95,12 @@ export class ProposalService extends BaseService {
       // Add attachments and items if they exist
       if (proposal.attachments && proposal.attachments.length > 0) {
         // The key is to parse and stringify to ensure it's a proper JSON structure
-        insertData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as Json;
+        insertData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as unknown as Json;
       }
       
       if (proposal.items && proposal.items.length > 0) {
         // The key is to parse and stringify to ensure it's a proper JSON structure
-        insertData.items = JSON.parse(JSON.stringify(proposal.items)) as Json;
+        insertData.items = JSON.parse(JSON.stringify(proposal.items)) as unknown as Json;
       }
       
       const { data, error } = await supabase
@@ -111,16 +111,14 @@ export class ProposalService extends BaseService {
       
       if (error) throw error;
       
-      // Convert the attachments from JSON to the correct type for the response
-      if (data) {
-        if (data.attachments) {
-          data.attachments = data.attachments as unknown as ProposalAttachment[];
-        }
-        
-        // Convert items from JSON to the correct type for the response
-        if (data.items) {
-          data.items = data.items as unknown as ProposalItem[];
-        }
+      // Convert the attachments from JSON to the correct Type for the response
+      if (data.attachments) {
+        data.attachments = data.attachments as unknown as ProposalAttachment[];
+      }
+      
+      // Convert items from JSON to the correct Type for the response
+      if (data.items) {
+        data.items = data.items as unknown as ProposalItem[];
       }
       
       return { data, error: null };
@@ -155,12 +153,12 @@ export class ProposalService extends BaseService {
       // Handle complex types that need conversion
       if (proposal.attachments !== undefined) {
         // Convert to JSON explicitly using a deep copy to avoid type issues
-        updateData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as Json;
+        updateData.attachments = JSON.parse(JSON.stringify(proposal.attachments)) as unknown as Json;
       }
       
       if (proposal.items !== undefined) {
         // Convert to JSON explicitly using a deep copy to avoid type issues
-        updateData.items = JSON.parse(JSON.stringify(proposal.items)) as Json;
+        updateData.items = JSON.parse(JSON.stringify(proposal.items)) as unknown as Json;
       }
       
       const { data, error } = await supabase

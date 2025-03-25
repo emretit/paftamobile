@@ -1,96 +1,54 @@
 
-export const convertCurrency = (
-  amount: number, 
-  fromCurrency: string, 
-  toCurrency: string, 
-  exchangeRates: {[key: string]: number}
-): number => {
-  if (fromCurrency === toCurrency) return amount;
-  
-  // Convert to base currency (TRY) first
-  const amountInTRY = amount * exchangeRates[fromCurrency];
-  
-  // Then convert from TRY to target currency
-  return amountInTRY / exchangeRates[toCurrency];
-};
+import { ExchangeRates } from "../types/currencyTypes";
 
-// Format a number as currency
+// Format a currency value for display
 export const formatCurrencyValue = (amount: number, currency: string = "TRY"): string => {
-  return new Intl.NumberFormat('tr-TR', { 
-    style: 'currency', 
-    currency: currency 
-  }).format(amount);
-};
-
-// Get currency symbol
-export const getCurrencySymbol = (currency: string = "TRY"): string => {
-  const symbols: Record<string, string> = {
-    TRY: "₺",
-    USD: "$",
-    EUR: "€",
-    GBP: "£"
-  };
+  // Ensure currency is not empty to avoid Intl.NumberFormat errors
+  if (!currency) currency = "TRY";
   
-  return symbols[currency] || currency;
-};
-
-// Get display name for currency with symbol
-export const getCurrencyDisplayName = (currency: string = "TRY"): string => {
-  const names: Record<string, string> = {
-    TRY: "Türk Lirası (₺)",
-    USD: "US Dollar ($)",
-    EUR: "Euro (€)",
-    GBP: "British Pound (£)"
-  };
+  const formatter = new Intl.NumberFormat('tr-TR', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
   
-  return names[currency] || currency;
+  return formatter.format(amount);
 };
 
-// Get a common list of currency options for select inputs
-export const getCurrencyOptions = (): { value: string; label: string }[] => {
-  return [
-    { value: "TRY", label: "TRY (₺)" },
-    { value: "USD", label: "USD ($)" },
-    { value: "EUR", label: "EUR (€)" },
-    { value: "GBP", label: "GBP (£)" }
-  ];
-};
-
-// Calculate total price with tax
-export const calculateTotalWithTax = (
-  unitPrice: number,
-  quantity: number,
-  taxRate: number = 0,
-  discountRate: number = 0
-): number => {
-  // Apply discount to unit price
-  const discountedUnitPrice = unitPrice * (1 - discountRate / 100);
-  
-  // Calculate subtotal
-  const subtotal = discountedUnitPrice * quantity;
-  
-  // Apply tax to subtotal
-  return subtotal * (1 + taxRate / 100);
-};
-
-// Get exchange rate for a specific currency
-export const getExchangeRate = (
-  currency: string,
-  exchangeRates: {[key: string]: number}
-): number => {
-  return exchangeRates[currency] || 1;
-};
-
-// Format a currency conversion display (e.g., "100₺ ≈ $3.08")
-export const formatCurrencyConversion = (
+// Convert an amount from one currency to another
+export const convertCurrency = (
   amount: number,
   fromCurrency: string,
   toCurrency: string,
-  exchangeRates: {[key: string]: number}
-): string => {
-  if (fromCurrency === toCurrency) return formatCurrencyValue(amount, fromCurrency);
+  rates: ExchangeRates
+): number => {
+  // If currencies are the same, no conversion needed
+  if (fromCurrency === toCurrency) return amount;
   
-  const convertedAmount = convertCurrency(amount, fromCurrency, toCurrency, exchangeRates);
+  // Handle TRY as the base currency 
+  if (fromCurrency === "TRY") {
+    return amount / (rates[toCurrency] || 1);
+  }
   
-  return `${formatCurrencyValue(amount, fromCurrency)} ≈ ${formatCurrencyValue(convertedAmount, toCurrency)}`;
+  // Convert from source currency to TRY first, then to target currency
+  const amountInTRY = amount * (rates[fromCurrency] || 1);
+  return toCurrency === "TRY" ? amountInTRY : amountInTRY / (rates[toCurrency] || 1);
+};
+
+// Format a price with a specified number of decimal places
+export const formatPrice = (price: number, decimals: number = 2): string => {
+  return price.toFixed(decimals);
+};
+
+// Add currency symbol to a formatted price
+export const addCurrencySymbol = (price: string, currency: string): string => {
+  const symbols: Record<string, string> = {
+    TRY: '₺',
+    USD: '$',
+    EUR: '€',
+    GBP: '£'
+  };
+  
+  return `${symbols[currency] || currency} ${price}`;
 };

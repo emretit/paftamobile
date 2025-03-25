@@ -34,7 +34,7 @@ const ProductSearchDialog: React.FC<ProductSearchDialogProps> = ({
   selectedCurrency,
   triggerRef,
   initialSelectedProduct = null
-}: ProductSearchDialogProps) => {
+}) => {
   const {
     searchQuery,
     setSearchQuery,
