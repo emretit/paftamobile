@@ -40,6 +40,8 @@ const ProductDetailsTabs = ({ product, onUpdate }: ProductDetailsTabsProps) => {
             discountPrice={product.discount_price}
             currency={product.currency}
             taxRate={product.tax_rate}
+            purchasePrice={product.purchase_price}
+            exchangeRate={product.exchange_rate}
             onUpdate={onUpdate}
           />
         </CustomTabsContent>

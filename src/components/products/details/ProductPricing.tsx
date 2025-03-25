@@ -1,9 +1,9 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Edit2 } from "lucide-react";
+import { DollarSign, Edit2, Check, X, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Select, 
@@ -13,18 +13,25 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import ExchangeRateInfo from "./ExchangeRateInfo";
+import { getCurrentExchangeRates } from "@/components/proposals/form/items/utils/currencyUtils";
+import { Tooltip } from "@/components/ui/tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 interface ProductPricingProps {
   price: number;
   discountPrice: number | null;
   currency: string;
   taxRate: number;
+  purchasePrice?: number | null;
+  exchangeRate?: number;
   onUpdate: (updates: {
     price?: number;
     discount_price?: number | null;
     tax_rate?: number;
     currency?: string;
     exchange_rate?: number;
+    purchase_price?: number | null;
   }) => void;
 }
 
@@ -33,15 +40,35 @@ const ProductPricing = ({
   discountPrice, 
   currency,
   taxRate,
+  purchasePrice,
+  exchangeRate,
   onUpdate
 }: ProductPricingProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
   const [editValues, setEditValues] = useState({
     price,
     discountPrice,
     taxRate,
-    currency
+    currency,
+    purchasePrice: purchasePrice || null,
+    exchangeRate: exchangeRate
   });
+
+  // Update edit values when props change
+  useEffect(() => {
+    if (!isEditing) {
+      setEditValues({
+        price,
+        discountPrice,
+        taxRate,
+        currency,
+        purchasePrice: purchasePrice || null,
+        exchangeRate: exchangeRate
+      });
+    }
+  }, [price, discountPrice, taxRate, currency, purchasePrice, exchangeRate, isEditing]);
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat('tr-TR', { 
@@ -56,27 +83,78 @@ const ProductPricing = ({
   };
 
   const handleCurrencyChange = (newCurrency: string) => {
-    setEditValues(prev => ({
-      ...prev,
-      currency: newCurrency
-    }));
+    setEditValues(prev => {
+      // Get current exchange rates
+      const rates = getCurrentExchangeRates();
+      const newExchangeRate = newCurrency === "TRY" ? undefined : rates[newCurrency];
+      
+      // Show currency change alert
+      if (prev.currency !== newCurrency) {
+        setShowAlert(true);
+        setTimeout(() => setShowAlert(false), 5000);
+      }
+      
+      return {
+        ...prev,
+        currency: newCurrency,
+        exchangeRate: newExchangeRate
+      };
+    });
   };
 
   const handleSave = () => {
+    setIsSaving(true);
+    
+    // Check for valid values
+    if (editValues.price < 0) {
+      toast.error("Fiyat 0'dan küçük olamaz");
+      setIsSaving(false);
+      return;
+    }
+
+    // Get exchange rates if needed
+    const rates = getCurrentExchangeRates();
+    
     // If currency changed, calculate and include the exchange rate
     const updateData: any = {
       price: Number(editValues.price),
       discount_price: editValues.discountPrice ? Number(editValues.discountPrice) : null,
       tax_rate: Number(editValues.taxRate),
-      currency: editValues.currency
+      currency: editValues.currency,
+      purchase_price: editValues.purchasePrice ? Number(editValues.purchasePrice) : null
     };
+
+    // Include exchange rate if not TRY
+    if (editValues.currency !== "TRY") {
+      updateData.exchange_rate = rates[editValues.currency] || 1;
+    } else {
+      updateData.exchange_rate = undefined;
+    }
 
     onUpdate(updateData);
     setIsEditing(false);
+    setIsSaving(false);
+    toast.success("Fiyat bilgileri güncellendi");
   };
 
+  const currencyOptions = [
+    { value: "TRY", label: "Türk Lirası (TRY)" },
+    { value: "USD", label: "Amerikan Doları (USD)" },
+    { value: "EUR", label: "Euro (EUR)" },
+    { value: "GBP", label: "İngiliz Sterlini (GBP)" }
+  ];
+  
   return (
-    <Card>
+    <Card className="overflow-hidden">
+      {showAlert && (
+        <Alert variant="warning" className="border-orange-300 bg-orange-50 p-3 mt-0 rounded-none">
+          <AlertCircle className="h-4 w-4 text-orange-500" />
+          <AlertDescription className="text-sm text-orange-700">
+            Para birimi değiştirildiğinde, döviz kuru otomatik olarak güncellenecektir.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -87,6 +165,7 @@ const ProductPricing = ({
             variant="ghost"
             size="icon"
             onClick={() => setIsEditing(!isEditing)}
+            disabled={isSaving}
           >
             <Edit2 className="h-4 w-4" />
           </Button>
@@ -137,6 +216,25 @@ const ProductPricing = ({
           </div>
 
           <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-500">Alış Fiyatı</span>
+            {isEditing ? (
+              <Input
+                type="number"
+                value={editValues.purchasePrice || ''}
+                onChange={(e) => setEditValues(prev => ({
+                  ...prev,
+                  purchasePrice: e.target.value ? e.target.valueAsNumber : null
+                }))}
+                className="w-32 text-right"
+              />
+            ) : purchasePrice ? (
+              <span className="text-lg font-medium">{formatPrice(purchasePrice)}</span>
+            ) : (
+              <span>-</span>
+            )}
+          </div>
+
+          <div className="flex justify-between items-center">
             <span className="text-sm text-gray-500">KDV Oranı</span>
             {isEditing ? (
               <Select 
@@ -180,10 +278,11 @@ const ProductPricing = ({
                     <SelectValue placeholder="Para birimi seç" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="TRY">Türk Lirası (TRY)</SelectItem>
-                    <SelectItem value="USD">Amerikan Doları (USD)</SelectItem>
-                    <SelectItem value="EUR">Euro (EUR)</SelectItem>
-                    <SelectItem value="GBP">İngiliz Sterlini (GBP)</SelectItem>
+                    {currencyOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 {editValues.currency !== "TRY" && (
@@ -191,7 +290,11 @@ const ProductPricing = ({
                 )}
               </div>
             ) : (
-              <span>{currency}</span>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-blue-50 text-blue-700 border-blue-200">
+                  {currency}
+                </Badge>
+              </div>
             )}
           </div>
 
@@ -200,14 +303,28 @@ const ProductPricing = ({
               <Button
                 variant="outline"
                 onClick={() => {
-                  setEditValues({ price, discountPrice, taxRate, currency });
+                  setEditValues({ 
+                    price, 
+                    discountPrice, 
+                    taxRate, 
+                    currency,
+                    purchasePrice: purchasePrice || null,
+                    exchangeRate
+                  });
                   setIsEditing(false);
+                  setShowAlert(false);
                 }}
+                disabled={isSaving}
+                className="flex items-center gap-1"
               >
-                İptal
+                <X className="h-4 w-4" /> İptal
               </Button>
-              <Button onClick={handleSave}>
-                Kaydet
+              <Button 
+                onClick={handleSave} 
+                disabled={isSaving}
+                className="flex items-center gap-1"
+              >
+                <Check className="h-4 w-4" /> Kaydet
               </Button>
             </div>
           )}
