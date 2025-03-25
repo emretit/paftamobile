@@ -1,16 +1,16 @@
 
-import { mockCrmOpportunityService } from './opportunityService';
 import { mockCrmOpportunitiesService } from './opportunitiesService';
 import { mockCrmProposalsService } from './proposalsService';
 import { mockCrmStatsService } from './statsService';
 import { mockCrmTasksService, mockTasksAPI } from './tasksService';
+import { crmService } from '@/services/crmService';
 
 // Exporting as the original mockCrmService object
 export const mockCrmService = {
   // Opportunities
   getOpportunities: mockCrmOpportunitiesService.getOpportunities,
   getOpportunityById: mockCrmOpportunitiesService.getOpportunityById,
-  updateOpportunity: mockCrmOpportunityService.updateOpportunity,
+  updateOpportunity: crmService.updateOpportunity.bind(crmService),
   
   // Proposals
   getProposals: mockCrmProposalsService.getProposals,

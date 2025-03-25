@@ -1,6 +1,8 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Proposal, ProposalStatus, ProposalAttachment } from "@/types/proposal";
 import { Json } from "@/types/json";
+import { Opportunity } from "@/types/crm";
 
 export interface CrmServiceOptions {
   pageSize?: number;
@@ -72,15 +74,28 @@ class CrmService {
       // Generate proposal number
       const proposalNumber = await this.generateProposalNumber();
       
+      // Prepare the data with type conversions for JSON compatibility
+      const insertData = {
+        ...proposal,
+        number: proposalNumber,
+        status: proposal.status || 'draft',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      // Ensure attachments are properly converted to JSON
+      if (insertData.attachments) {
+        insertData.attachments = insertData.attachments as unknown as Json;
+      }
+      
+      // Ensure items are properly converted to JSON
+      if (insertData.items) {
+        insertData.items = insertData.items as unknown as Json;
+      }
+      
       const { data, error } = await supabase
         .from('proposals')
-        .insert({
-          ...proposal,
-          number: proposalNumber,
-          status: proposal.status || 'draft',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .insert(insertData)
         .select()
         .single();
       
@@ -101,9 +116,16 @@ class CrmService {
   async updateProposal(id: string, proposal: Partial<Proposal>) {
     try {
       // Convert attachments to JSON type if needed
-      let updateData = { ...proposal, updated_at: new Date().toISOString() };
+      let updateData: any = { ...proposal, updated_at: new Date().toISOString() };
+      
+      // Ensure attachments are properly converted to JSON
       if (updateData.attachments) {
         updateData.attachments = updateData.attachments as unknown as Json;
+      }
+      
+      // Ensure items are properly converted to JSON
+      if (updateData.items) {
+        updateData.items = updateData.items as unknown as Json;
       }
       
       const { data, error } = await supabase
@@ -157,6 +179,36 @@ class CrmService {
       return this.updateProposal(id, { attachments: updatedAttachments });
     } catch (error) {
       console.error('Error adding proposal attachment:', error);
+      return { data: null, error };
+    }
+  }
+  
+  // Add method for updating opportunities
+  async updateOpportunity(id: string, updateData: Partial<Opportunity>) {
+    try {
+      // Need to handle contact_history specifically to convert to JSON if present
+      const dataToUpdate: any = { ...updateData };
+      
+      if (updateData.contact_history) {
+        dataToUpdate.contact_history = dataToUpdate.contact_history as unknown as Json;
+      }
+      
+      const { data, error } = await supabase
+        .from('opportunities')
+        .update(dataToUpdate)
+        .eq('id', id)
+        .select(`
+          *,
+          customer:customer_id (*),
+          employee:employee_id (*)
+        `)
+        .single();
+
+      if (error) throw error;
+      
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error updating opportunity:', error);
       return { data: null, error };
     }
   }
