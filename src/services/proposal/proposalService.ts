@@ -50,14 +50,34 @@ export class ProposalService extends BaseService {
       
       if (error) throw error;
       
-      // Convert the attachments from JSON to the correct Type
+      // Parse the JSON strings to convert back to proper types
       if (data && data.attachments) {
-        data.attachments = data.attachments as unknown as ProposalAttachment[];
+        try {
+          // Handle both string JSON and already parsed objects
+          if (typeof data.attachments === 'string') {
+            data.attachments = JSON.parse(data.attachments) as ProposalAttachment[];
+          } else {
+            data.attachments = data.attachments as unknown as ProposalAttachment[];
+          }
+        } catch (e) {
+          console.error('Error parsing attachments:', e);
+          data.attachments = [];
+        }
       }
       
-      // Convert items from JSON to the correct Type
+      // Parse items from JSON to the correct Type
       if (data && data.items) {
-        data.items = data.items as unknown as ProposalItem[];
+        try {
+          // Handle both string JSON and already parsed objects
+          if (typeof data.items === 'string') {
+            data.items = JSON.parse(data.items) as ProposalItem[];
+          } else {
+            data.items = data.items as unknown as ProposalItem[];
+          }
+        } catch (e) {
+          console.error('Error parsing items:', e);
+          data.items = [];
+        }
       }
       
       return { data, error: null };
@@ -73,7 +93,7 @@ export class ProposalService extends BaseService {
       const proposalNumber = await this.generateProposalNumber();
       
       // Create a clean insert data object without the complex types
-      const insertData: Record<string, any> = {
+      const insertData: any = {
         title: proposal.title,
         description: proposal.description,
         customer_id: proposal.customer_id,
@@ -92,13 +112,13 @@ export class ProposalService extends BaseService {
         updated_at: new Date().toISOString()
       };
       
-      // Handle attachments and items by proper casting to Json type
+      // Handle complex types by proper serialization
       if (proposal.attachments && proposal.attachments.length > 0) {
-        insertData.attachments = proposal.attachments as unknown as Json;
+        insertData.attachments = JSON.stringify(proposal.attachments);
       }
       
       if (proposal.items && proposal.items.length > 0) {
-        insertData.items = proposal.items as unknown as Json;
+        insertData.items = JSON.stringify(proposal.items);
       }
       
       const { data, error } = await supabase
@@ -109,14 +129,34 @@ export class ProposalService extends BaseService {
       
       if (error) throw error;
       
-      // For the response, treat data.attachments and data.items as the correct types
+      // Parse the response data back to proper types
       if (data) {
         if (data.attachments) {
-          data.attachments = data.attachments as unknown as ProposalAttachment[];
+          try {
+            // Handle both string JSON and already parsed objects
+            if (typeof data.attachments === 'string') {
+              data.attachments = JSON.parse(data.attachments) as ProposalAttachment[];
+            } else {
+              data.attachments = data.attachments as unknown as ProposalAttachment[];
+            }
+          } catch (e) {
+            console.error('Error parsing attachments:', e);
+            data.attachments = [];
+          }
         }
         
         if (data.items) {
-          data.items = data.items as unknown as ProposalItem[];
+          try {
+            // Handle both string JSON and already parsed objects
+            if (typeof data.items === 'string') {
+              data.items = JSON.parse(data.items) as ProposalItem[];
+            } else {
+              data.items = data.items as unknown as ProposalItem[];
+            }
+          } catch (e) {
+            console.error('Error parsing items:', e);
+            data.items = [];
+          }
         }
       }
       
@@ -130,7 +170,7 @@ export class ProposalService extends BaseService {
   async updateProposal(id: string, proposal: Partial<Proposal>) {
     try {
       // Create a clean update data object
-      const updateData: Record<string, any> = { 
+      const updateData: any = { 
         updated_at: new Date().toISOString() 
       };
       
@@ -149,13 +189,13 @@ export class ProposalService extends BaseService {
       if (proposal.currency !== undefined) updateData.currency = proposal.currency;
       if (proposal.total_amount !== undefined) updateData.total_amount = proposal.total_amount;
       
-      // Handle complex types with proper type casting to Json
+      // Handle complex types with proper serialization
       if (proposal.attachments !== undefined) {
-        updateData.attachments = proposal.attachments as unknown as Json;
+        updateData.attachments = JSON.stringify(proposal.attachments);
       }
       
       if (proposal.items !== undefined) {
-        updateData.items = proposal.items as unknown as Json;
+        updateData.items = JSON.stringify(proposal.items);
       }
       
       const { data, error } = await supabase
@@ -167,14 +207,34 @@ export class ProposalService extends BaseService {
       
       if (error) throw error;
       
-      // For the response, cast data.attachments and data.items back to their proper types
+      // Parse the response data back to proper types
       if (data) {
         if (data.attachments) {
-          data.attachments = data.attachments as unknown as ProposalAttachment[];
+          try {
+            // Handle both string JSON and already parsed objects
+            if (typeof data.attachments === 'string') {
+              data.attachments = JSON.parse(data.attachments) as ProposalAttachment[];
+            } else {
+              data.attachments = data.attachments as unknown as ProposalAttachment[];
+            }
+          } catch (e) {
+            console.error('Error parsing attachments:', e);
+            data.attachments = [];
+          }
         }
         
         if (data.items) {
-          data.items = data.items as unknown as ProposalItem[];
+          try {
+            // Handle both string JSON and already parsed objects
+            if (typeof data.items === 'string') {
+              data.items = JSON.parse(data.items) as ProposalItem[];
+            } else {
+              data.items = data.items as unknown as ProposalItem[];
+            }
+          } catch (e) {
+            console.error('Error parsing items:', e);
+            data.items = [];
+          }
         }
       }
       
