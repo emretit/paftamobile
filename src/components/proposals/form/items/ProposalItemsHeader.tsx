@@ -2,20 +2,15 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search } from "lucide-react";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+import CurrencyDropdown from "@/components/shared/CurrencyDropdown";
+import { CurrencyOption } from "../items/types/currencyTypes";
 
 interface ProposalItemsHeaderProps {
   selectedCurrency: string;
   onCurrencyChange: (currency: string) => void;
   onAddItem: () => void;
   onOpenProductDialog: () => void;
-  currencyOptions: { value: string; label: string }[];
+  currencyOptions: CurrencyOption[];
   isGlobalCurrencyEnabled?: boolean;
 }
 
@@ -35,21 +30,12 @@ const ProposalItemsHeader: React.FC<ProposalItemsHeaderProps> = ({
         {isGlobalCurrencyEnabled && (
           <div className="flex items-center gap-2 mr-2">
             <span className="text-sm text-muted-foreground">Para Birimi:</span>
-            <Select 
-              value={selectedCurrency} 
+            <CurrencyDropdown
+              value={selectedCurrency}
               onValueChange={onCurrencyChange}
-            >
-              <SelectTrigger className="w-[100px]">
-                <SelectValue placeholder="Para Birimi" />
-              </SelectTrigger>
-              <SelectContent>
-                {currencyOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              currencyOptions={currencyOptions}
+              triggerClassName="w-[100px]"
+            />
           </div>
         )}
         

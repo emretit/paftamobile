@@ -6,13 +6,6 @@ import {
   FormLabel, 
   FormMessage 
 } from "@/components/ui/form";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { ProductFormSchema } from "../ProductFormSchema";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +21,7 @@ import {
   TooltipProvider, 
   TooltipTrigger 
 } from "@/components/ui/tooltip";
+import CurrencyDropdown from "@/components/shared/CurrencyDropdown";
 
 interface CurrencySelectProps {
   form: UseFormReturn<ProductFormSchema>;
@@ -51,10 +45,10 @@ const CurrencySelect = ({ form }: CurrencySelectProps) => {
   }, [selectedCurrency, form]);
 
   const currencyOptions = [
-    { value: "TRY", label: "Türk Lirası (TRY)" },
-    { value: "USD", label: "Amerikan Doları (USD)" },
-    { value: "EUR", label: "Euro (EUR)" },
-    { value: "GBP", label: "İngiliz Sterlini (GBP)" }
+    { value: "TRY", label: "Türk Lirası (TRY)", symbol: "₺" },
+    { value: "USD", label: "Amerikan Doları (USD)", symbol: "$" },
+    { value: "EUR", label: "Euro (EUR)", symbol: "€" },
+    { value: "GBP", label: "İngiliz Sterlini (GBP)", symbol: "£" }
   ];
 
   return (
@@ -79,23 +73,13 @@ const CurrencySelect = ({ form }: CurrencySelectProps) => {
                 </TooltipProvider>
               )}
             </div>
-            <Select
-              onValueChange={field.onChange}
-              value={field.value || "TRY"}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Para birimi seçiniz" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {currencyOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <FormControl>
+              <CurrencyDropdown
+                value={field.value || "TRY"}
+                onValueChange={field.onChange}
+                currencyOptions={currencyOptions}
+              />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
