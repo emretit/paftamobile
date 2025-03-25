@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
@@ -7,7 +6,7 @@ import { toast } from "sonner";
 import ProposalColumn from "./kanban/ProposalColumn";
 import { FileText, Calendar, Check, X, Clock, AlertTriangle } from "lucide-react";
 import type { Proposal, ProposalStatus } from "@/types/proposal";
-import { updateProposalStatus } from "@/services/crmService";
+import { changeProposalStatus } from "@/services/crmService";
 
 interface ProposalKanbanProps {
   proposals: Proposal[];
@@ -27,14 +26,13 @@ export const ProposalKanban = ({ proposals, onProposalSelect }: ProposalKanbanPr
   const queryClient = useQueryClient();
   const [localProposals, setLocalProposals] = useState<Proposal[]>(proposals);
 
-  // Update local proposals when props change
   useEffect(() => {
     setLocalProposals(proposals);
   }, [proposals]);
 
   const updateProposalMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: ProposalStatus }) => {
-      await updateProposalStatus(id, status);
+      await changeProposalStatus(id, status);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proposals'] });

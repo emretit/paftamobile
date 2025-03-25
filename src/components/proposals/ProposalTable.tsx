@@ -4,7 +4,7 @@ import { Table, TableBody } from "@/components/ui/table";
 import { useProposals } from "@/hooks/useProposals";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { updateProposalStatus } from "@/services/crmService";
+import { changeProposalStatus } from "@/services/crmService";
 import { Proposal, ProposalStatus } from "@/types/proposal";
 import { ProposalFilters } from "./types";
 import { Column } from "./types";
@@ -47,7 +47,7 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
 
   const handleStatusUpdate = async (proposalId: string, newStatus: ProposalStatus) => {
     try {
-      await updateProposalStatus(proposalId, newStatus);
+      await changeProposalStatus(proposalId, newStatus);
       queryClient.invalidateQueries({ queryKey: ['proposals'] });
       
       toast({

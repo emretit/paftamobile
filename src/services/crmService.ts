@@ -1,12 +1,12 @@
 
 import { ServiceOptions } from "./base/BaseService";
-import { proposalService, updateProposalStatus } from "./proposal/proposalService";
+import { proposalService, changeProposalStatus } from "./proposal/proposalService";
 import { opportunityService } from "./opportunity/opportunityService";
 import { Proposal, ProposalStatus, ProposalAttachment } from "@/types/proposal";
 import { Opportunity } from "@/types/crm";
 
 // Re-export the services
-export { proposalService, opportunityService, updateProposalStatus };
+export { proposalService, opportunityService, changeProposalStatus };
 
 // Re-export the interface
 export type CrmServiceOptions = ServiceOptions;
