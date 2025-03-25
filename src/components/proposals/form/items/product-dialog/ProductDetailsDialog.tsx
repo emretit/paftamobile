@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import { 
   Dialog, 
   DialogContent,
@@ -6,18 +7,13 @@ import {
   DialogTitle,
   DialogFooter
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Product } from "@/types/product";
-import { convertCurrency, getCurrentExchangeRates, fetchTCMBExchangeRates } from "../utils/currencyUtils";
 
-// Import refactored components
-import ProductInfoSection from "./components/ProductInfoSection";
-import OriginalCurrencyInfo from "./components/OriginalCurrencyInfo";
-import QuantityDepoSection from "./components/QuantityDepoSection";
-import PriceAndDiscountSection from "./components/PriceAndDiscountSection";
-import NotesSection from "./components/NotesSection";
-import { toast } from "sonner";
-import PriceSummary from "./components/price-section/PriceSummary";
+import { Product } from "@/types/product";
+import { useProductDetailsState } from "./hooks/useProductDetailsState";
+import { useProductCalculations } from "./hooks/useProductCalculations";
+import DialogContent as ProductDialogContent from "./components/DialogContent";
+import ExchangeRatesNotice from "./components/ExchangeRatesNotice";
+import DialogFooterButtons from "./components/DialogFooterButtons";
 
 interface ProductDetailsDialogProps {
   open: boolean;
@@ -52,98 +48,45 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
   onSelectProduct,
   selectedCurrency
 }) => {
-  const [totalPrice, setTotalPrice] = useState(0);
-  const [availableStock, setAvailableStock] = useState(0);
-  const [stockStatus, setStockStatus] = useState("");
-  const [convertedPrice, setConvertedPrice] = useState(0);
-  const [notes, setNotes] = useState("");
-  const [originalPrice, setOriginalPrice] = useState(0);
-  const [originalCurrency, setOriginalCurrency] = useState("");
-  const [currentCurrency, setCurrentCurrency] = useState(selectedCurrency);
-  const [exchangeRates, setExchangeRates] = useState({
-    TRY: 1,
-    USD: 32.5,
-    EUR: 35.2,
-    GBP: 41.3
+  const {
+    totalPrice,
+    setTotalPrice,
+    availableStock,
+    setAvailableStock,
+    stockStatus,
+    setStockStatus,
+    convertedPrice,
+    setConvertedPrice,
+    notes,
+    setNotes,
+    originalPrice,
+    setOriginalPrice,
+    originalCurrency,
+    setOriginalCurrency,
+    currentCurrency,
+    setCurrentCurrency,
+    isLoadingRates,
+    calculatedTotal,
+    setCalculatedTotal,
+    handleCurrencyChange
+  } = useProductDetailsState(open, selectedProduct, selectedCurrency);
+
+  useProductCalculations({
+    selectedProduct,
+    quantity,
+    customPrice,
+    discountRate,
+    setTotalPrice,
+    setAvailableStock,
+    setStockStatus,
+    setCalculatedTotal,
+    open,
+    setOriginalPrice,
+    setOriginalCurrency,
+    setCurrentCurrency,
+    setCustomPrice,
+    setConvertedPrice
   });
-  const [isLoadingRates, setIsLoadingRates] = useState(false);
-  const [calculatedTotal, setCalculatedTotal] = useState(0);
-
-  useEffect(() => {
-    if (open) {
-      const getExchangeRates = async () => {
-        setIsLoadingRates(true);
-        try {
-          const rates = await fetchTCMBExchangeRates();
-          const completeRates = {
-            TRY: rates.TRY || 1,
-            USD: rates.USD || 32.5,
-            EUR: rates.EUR || 35.2,
-            GBP: rates.GBP || 41.3
-          };
-          setExchangeRates(completeRates);
-          console.log("Dialog Exchange rates loaded:", completeRates);
-        } catch (error) {
-          console.error("Error fetching exchange rates in dialog:", error);
-        } finally {
-          setIsLoadingRates(false);
-        }
-      };
-      
-      getExchangeRates();
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (selectedProduct) {
-      setOriginalPrice(selectedProduct.price);
-      setOriginalCurrency(selectedProduct.currency || "TRY");
-      
-      const currentPrice = customPrice !== undefined ? customPrice : selectedProduct.price;
-      const discountedPrice = currentPrice * (1 - discountRate / 100);
-      const total = quantity * discountedPrice * (1 + (selectedProduct.tax_rate || 0) / 100);
-      setTotalPrice(total);
-      setCalculatedTotal(total);
-      
-      setAvailableStock(selectedProduct.stock_quantity || 0);
-      
-      if (selectedProduct.stock_quantity <= 0) {
-        setStockStatus("out_of_stock");
-      } else if (selectedProduct.stock_quantity <= (selectedProduct.stock_threshold || 0)) {
-        setStockStatus("low_stock");
-      } else {
-        setStockStatus("in_stock");
-      }
-    }
-  }, [selectedProduct, quantity, customPrice, discountRate]);
-
-  useEffect(() => {
-    if (selectedProduct) {
-      const productCurrency = selectedProduct.currency || "TRY";
-      const productPrice = selectedProduct.price;
-      
-      setConvertedPrice(productPrice);
-      
-      if (customPrice === undefined || open) {
-        setCustomPrice(productPrice);
-      }
-    }
-  }, [selectedProduct, customPrice, open]);
-
-  useEffect(() => {
-    if (open && selectedProduct) {
-      setOriginalPrice(selectedProduct.price);
-      setOriginalCurrency(selectedProduct.currency || "TRY");
-      setCurrentCurrency(selectedProduct.currency || "TRY");
-      setCustomPrice(selectedProduct.price);
-    }
-  }, [open, selectedProduct]);
-
-  const handleCurrencyChange = (value: string) => {
-    console.log("Currency changed in dialog to:", value);
-    setCurrentCurrency(value);
-    window.dispatchEvent(new CustomEvent('currency-change', { detail: value }));
-  };
 
   if (!selectedProduct) {
     return null;
@@ -156,67 +99,35 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
           <DialogTitle>Ürün Detayları</DialogTitle>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4">
-          <ProductInfoSection 
-            product={selectedProduct}
-            stockStatus={stockStatus}
-            availableStock={availableStock}
-          />
-          
-          <OriginalCurrencyInfo 
-            originalCurrency={originalCurrency}
-            originalPrice={originalPrice}
-            formatCurrency={formatCurrency}
-          />
-          
-          <QuantityDepoSection 
-            quantity={quantity}
-            setQuantity={setQuantity}
-            selectedDepo={selectedDepo}
-            setSelectedDepo={setSelectedDepo}
-          />
-          
-          <PriceAndDiscountSection 
-            customPrice={customPrice}
-            setCustomPrice={setCustomPrice}
-            discountRate={discountRate}
-            setDiscountRate={setDiscountRate}
-            selectedCurrency={currentCurrency}
-            handleCurrencyChange={handleCurrencyChange}
-            convertedPrice={originalPrice}
-            originalCurrency={originalCurrency}
-            formatCurrency={formatCurrency}
-          />
-          
-          <NotesSection 
-            notes={notes}
-            setNotes={setNotes}
-          />
-          
-          <PriceSummary
-            convertedPrice={convertedPrice}
-            calculatedTotal={calculatedTotal}
-            selectedCurrency={originalCurrency}
-            formatCurrency={formatCurrency}
-            quantity={quantity}
-            discountRate={discountRate}
-            taxRate={selectedProduct.tax_rate || 0}
-          />
-        </div>
+        <ProductDialogContent
+          selectedProduct={selectedProduct}
+          stockStatus={stockStatus}
+          availableStock={availableStock}
+          originalCurrency={originalCurrency}
+          originalPrice={originalPrice}
+          quantity={quantity}
+          setQuantity={setQuantity}
+          selectedDepo={selectedDepo}
+          setSelectedDepo={setSelectedDepo}
+          customPrice={customPrice}
+          setCustomPrice={setCustomPrice}
+          discountRate={discountRate}
+          setDiscountRate={setDiscountRate}
+          currentCurrency={currentCurrency}
+          handleCurrencyChange={handleCurrencyChange}
+          convertedPrice={convertedPrice}
+          calculatedTotal={calculatedTotal}
+          notes={notes}
+          setNotes={setNotes}
+          formatCurrency={formatCurrency}
+        />
         
         <DialogFooter>
-          {isLoadingRates && (
-            <div className="mr-auto text-sm text-muted-foreground flex items-center">
-              <span className="animate-pulse mr-2">●</span>
-              Güncel kurlar yükleniyor...
-            </div>
-          )}
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            İptal
-          </Button>
-          <Button type="button" onClick={onSelectProduct} className="ml-2">
-            Ekle
-          </Button>
+          <ExchangeRatesNotice isLoadingRates={isLoadingRates} />
+          <DialogFooterButtons 
+            onClose={() => onOpenChange(false)} 
+            onSelectProduct={onSelectProduct} 
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>
