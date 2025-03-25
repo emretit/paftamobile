@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
       .insert({
         status: 'success',
         updated_at: new Date().toISOString(),
-        message: 'Exchange rates updated successfully',
+        message: 'Exchange rates updated successfully from TCMB',
         count: result.count || 0
       })
       .select();

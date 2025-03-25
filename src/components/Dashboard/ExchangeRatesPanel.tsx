@@ -142,7 +142,7 @@ export const ExchangeRatesPanel: React.FC = () => {
           throw new Error(`Döviz kurları çekilemedi: ${functionError.message}`);
         }
         
-        if (functionData.data && functionData.data.length > 0) {
+        if (functionData && functionData.data && functionData.data.length > 0) {
           setRates(functionData.data);
           setLastUpdated(functionData.update_date || new Date().toISOString());
         } else {
@@ -164,7 +164,7 @@ export const ExchangeRatesPanel: React.FC = () => {
       
       // Fetch the last update status
       fetchLastUpdateStatus();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch exchange rates:', err);
       setError(err.message);
       toast.error('Döviz kurları güncellenirken bir hata oluştu');
@@ -207,14 +207,14 @@ export const ExchangeRatesPanel: React.FC = () => {
         throw new Error(`Döviz kurları güncellenirken hata oluştu: ${error.message}`);
       }
       
-      if (data.success) {
+      if (data && data.success) {
         toast.success('Döviz kurları başarıyla güncellendi');
         // Fetch the updated rates
         fetchExchangeRates();
       } else {
-        throw new Error(data.message || 'Döviz kurları güncellenirken hata oluştu');
+        throw new Error(data?.message || 'Döviz kurları güncellenirken hata oluştu');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to refresh exchange rates:', err);
       toast.error('Döviz kurları güncellenirken bir hata oluştu');
       setIsRefreshing(false);

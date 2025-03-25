@@ -27,12 +27,15 @@ Deno.serve(async (req) => {
       auth: { persistSession: false }
     });
     
-    // Execute SQL to set up pg_cron job
+    // Call the SQL function to set up the cron job
     const { data, error } = await supabase.rpc('setup_exchange_rate_cron');
     
     if (error) {
+      console.error('RPC error:', error);
       throw new Error(`Error setting up cron job: ${error.message}`);
     }
+    
+    console.log('Cron job setup result:', data);
     
     return new Response(
       JSON.stringify({ 
