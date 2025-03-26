@@ -6,7 +6,8 @@ import ProposalForm from "@/components/proposals/form/ProposalForm";
 import { useProposalEdit } from "@/hooks/useProposalEdit";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProposalEditProps {
   isCollapsed: boolean;
@@ -16,7 +17,6 @@ interface ProposalEditProps {
 const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
   const { proposal, loading, saving, handleBack, handleSave } = useProposalEdit();
   const { isLoading: isSaving } = useProposalForm();
-  const navigate = useNavigate();
 
   return (
     <DefaultLayout
@@ -25,23 +25,35 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
       title="Teklif Düzenle"
       subtitle="Teklif bilgilerini güncelleyin"
     >
-      <div className="mb-6 flex flex-col md:flex-row md:items-center gap-4">
-        <Button variant="outline" size="sm" onClick={handleBack}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Teklife Dön
-        </Button>
+      <div className="container mx-auto pb-16">
+        <div className="mb-6">
+          <Button variant="outline" size="sm" onClick={handleBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Teklife Dön
+          </Button>
+        </div>
+        
+        <Card className="p-6">
+          {loading ? (
+            <div className="space-y-6">
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-64 w-full" />
+            </div>
+          ) : (
+            <ProposalForm
+              proposal={proposal}
+              loading={loading}
+              saving={saving || isSaving}
+              isNew={false}
+              onSave={handleSave}
+              onBack={handleBack}
+              title="Teklif Düzenle"
+              subtitle="Teklif bilgilerini güncelleyin"
+            />
+          )}
+        </Card>
       </div>
-      
-      <ProposalForm
-        proposal={proposal}
-        loading={loading}
-        saving={saving || isSaving}
-        isNew={false}
-        onSave={handleSave}
-        onBack={handleBack}
-        title="Teklif Düzenle"
-        subtitle="Teklif bilgilerini güncelleyin"
-      />
     </DefaultLayout>
   );
 };
