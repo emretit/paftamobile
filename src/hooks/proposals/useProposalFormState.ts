@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ProposalFormData } from "@/types/proposal-form";
@@ -76,12 +75,12 @@ export const useProposalFormState = (
   const validateForm = () => {
     const errors: Record<string, string> = {};
     
-    if (!formData.title.trim()) {
+    if (!formData.title?.trim()) {
       errors.title = "Teklif başlığı gereklidir";
     }
     
-    if (!formData.valid_until) {
-      errors.valid_until = "Geçerlilik tarihi gereklidir";
+    if (!formData.customer_id) {
+      errors.customer_id = "Müşteri seçimi gereklidir";
     }
     
     if (!formData.currency) {
@@ -194,20 +193,17 @@ export const useProposalFormState = (
     }
     
     try {
-      setSaving(true);
+      console.log("Preparing to save form data:", formData);
       
-      if (isNew) {
-        await saveDraft(formData);
-      } else {
-        await onSave(formData);
-      }
+      // Call the onSave function passed as a prop
+      await onSave(formData);
       
       setIsFormDirty(false);
+      return true;
     } catch (error) {
-      console.error("Error saving proposal:", error);
+      console.error("Error in handleSave:", error);
       toast.error("Teklif kaydedilirken bir hata oluştu");
-    } finally {
-      setSaving(false);
+      return false;
     }
   };
 
@@ -215,12 +211,11 @@ export const useProposalFormState = (
     formData,
     formErrors,
     isFormDirty,
-    saving: saving || isSavingDraft || isCreating,
     handleInputChange,
     handleSelectChange,
     handleDateChange,
     handleItemsChange,
-    handleCurrencyChange, // Para birimi değişikliği için fonksiyonu dışa aktar
+    handleCurrencyChange,
     handleSave,
     validateForm
   };

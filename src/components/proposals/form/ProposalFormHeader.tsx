@@ -1,15 +1,20 @@
 
 import React from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, Save } from "lucide-react";
 import { Proposal } from "@/types/proposal";
 
-export interface ProposalFormHeaderProps {
+interface ProposalFormHeaderProps {
   title: string;
   subtitle: string;
   loading: boolean;
   saving: boolean;
   isNew: boolean;
   proposal: Proposal | null;
+  onBack?: () => void;
+  onSave?: () => void;
+  isFormDirty?: boolean;
+  validateForm?: () => boolean;
 }
 
 const ProposalFormHeader: React.FC<ProposalFormHeaderProps> = ({
@@ -18,27 +23,47 @@ const ProposalFormHeader: React.FC<ProposalFormHeaderProps> = ({
   loading,
   saving,
   isNew,
-  proposal
+  proposal,
+  onBack,
+  onSave,
+  isFormDirty,
+  validateForm
 }) => {
-  return (
-    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6 gap-4">
-      {loading ? (
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-[250px]" />
-          <Skeleton className="h-4 w-[300px]" />
-        </div>
-      ) : (
-        <div>
-          <h1 className="text-2xl font-bold">{title}</h1>
-          <p className="text-muted-foreground">{subtitle}</p>
-        </div>
-      )}
+  const handleSave = () => {
+    if (onSave) {
+      onSave();
+    }
+  };
 
-      <div className="flex items-center gap-2">
-        {saving && (
-          <div className="text-sm text-muted-foreground animate-pulse">
-            Kaydediliyor...
-          </div>
+  return (
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b">
+      <div>
+        <h1 className="text-2xl font-semibold">{title}</h1>
+        <p className="text-muted-foreground">{subtitle}</p>
+      </div>
+      
+      <div className="flex gap-2 self-end">
+        {onBack && (
+          <Button
+            variant="outline"
+            onClick={onBack}
+            disabled={loading || saving}
+            className="hidden md:inline-flex"
+          >
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Geri
+          </Button>
+        )}
+        
+        {onSave && (
+          <Button
+            onClick={handleSave}
+            disabled={loading || saving || (!isFormDirty && !isNew)}
+            className="hidden md:inline-flex"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            {saving ? "Kaydediliyor..." : "Kaydet"}
+          </Button>
         )}
       </div>
     </div>

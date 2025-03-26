@@ -13,6 +13,7 @@ import { useProposalFormState } from "@/hooks/proposals/useProposalFormState";
 import ProposalTemplateSelect from "./ProposalTemplateSelect";
 import { Proposal } from "@/types/proposal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 interface ProposalFormProps {
   proposal: Proposal | null;
@@ -48,6 +49,21 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
     validateForm
   } = useProposalFormState(proposal, isNew, onSave);
 
+  // Function to handle the form submission
+  const submitForm = async () => {
+    try {
+      if (!validateForm()) {
+        toast.error("Lütfen gerekli alanları doldurun");
+        return;
+      }
+      
+      await handleSave();
+    } catch (error) {
+      console.error("Error saving proposal:", error);
+      toast.error("Teklif kaydedilirken bir hata oluştu");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center w-full h-48">
@@ -69,6 +85,10 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
         saving={saving}
         isNew={isNew}
         proposal={proposal}
+        onBack={onBack}
+        onSave={submitForm}
+        isFormDirty={isFormDirty}
+        validateForm={validateForm}
       />
 
       <div className="flex flex-col gap-6">
@@ -147,7 +167,7 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
             </Button>
             <Button
               type="button"
-              onClick={handleSave}
+              onClick={submitForm}
               className="flex-1"
               disabled={saving}
             >
