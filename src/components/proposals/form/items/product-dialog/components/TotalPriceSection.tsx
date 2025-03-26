@@ -1,35 +1,60 @@
 
-import React from "react";
+import React, { useEffect } from "react";
+import PriceSummary from "./price-section/PriceSummary";
 
 interface TotalPriceSectionProps {
-  totalPrice: number;
+  unitPrice: number;
+  quantity: number;
   discountRate: number;
-  taxRate: number | undefined;
-  formatCurrency: (amount: number, currency?: string) => string;
-  selectedCurrency: string;
+  taxRate: number;
+  calculatedTotal: number;
+  setCalculatedTotal: (value: number) => void;
+  originalCurrency: string;
+  currentCurrency: string;
+  formatCurrency: (value: number, currency?: string) => string;
 }
 
 const TotalPriceSection: React.FC<TotalPriceSectionProps> = ({
-  totalPrice,
+  unitPrice,
+  quantity,
   discountRate,
   taxRate,
-  formatCurrency,
-  selectedCurrency
+  calculatedTotal,
+  setCalculatedTotal,
+  originalCurrency,
+  currentCurrency,
+  formatCurrency
 }) => {
+  // Calculate total price with tax and discount
+  useEffect(() => {
+    // Base total
+    const baseTotal = quantity * unitPrice;
+    
+    // Apply discount
+    const discountAmount = baseTotal * (discountRate / 100);
+    const discountedTotal = baseTotal - discountAmount;
+    
+    // Apply tax
+    const taxAmount = discountedTotal * (taxRate / 100);
+    const finalTotal = discountedTotal + taxAmount;
+    
+    setCalculatedTotal(finalTotal);
+  }, [quantity, unitPrice, discountRate, taxRate, setCalculatedTotal]);
+
   return (
-    <div className="mt-4 p-3 bg-muted rounded-md">
-      <div className="flex justify-between items-center">
-        <span className="font-medium">Toplam:</span>
-        <span className="font-bold">{formatCurrency(totalPrice, selectedCurrency)}</span>
-      </div>
-      {discountRate > 0 && (
-        <div className="text-xs text-right text-muted-foreground mt-1">
-          <span>İndirim: %{discountRate}</span>
-        </div>
-      )}
-      <div className="text-xs text-right text-muted-foreground">
-        <span>KDV: %{taxRate || 0}</span>
-      </div>
+    <div>
+      <h3 className="text-sm font-medium mb-2">Fiyat Hesaplama</h3>
+      
+      <PriceSummary
+        unitPrice={unitPrice}
+        quantity={quantity}
+        discountRate={discountRate}
+        taxRate={taxRate}
+        calculatedTotal={calculatedTotal}
+        originalCurrency={originalCurrency}
+        currentCurrency={currentCurrency}
+        formatCurrency={formatCurrency}
+      />
     </div>
   );
 };

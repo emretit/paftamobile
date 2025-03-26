@@ -1,143 +1,111 @@
 
-import React, { useState, useEffect } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getCurrencyOptions } from "../../../utils/currencyUtils";
-import { ArrowRightLeft } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Label } from "@/components/ui/label";
+import { ArrowRight, RefreshCw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
 
 interface PriceSummaryProps {
-  convertedPrice: number;
+  unitPrice: number;
+  quantity: number;
+  discountRate: number;
+  taxRate: number;
   calculatedTotal: number;
-  selectedCurrency: string;
-  formatCurrency: (amount: number, currency?: string) => string;
-  quantity?: number;
-  discountRate?: number;
-  taxRate?: number;
+  originalCurrency: string;
+  currentCurrency: string;
+  formatCurrency: (value: number, currency?: string) => string;
 }
 
 const PriceSummary: React.FC<PriceSummaryProps> = ({
-  convertedPrice,
+  unitPrice,
+  quantity,
+  discountRate,
+  taxRate,
   calculatedTotal,
-  selectedCurrency,
-  formatCurrency,
-  quantity = 1,
-  discountRate = 0,
-  taxRate = 0
+  originalCurrency,
+  currentCurrency,
+  formatCurrency
 }) => {
-  const [displayCurrency, setDisplayCurrency] = useState<string>(selectedCurrency);
-  const [convertedDisplayPrice, setConvertedDisplayPrice] = useState<number>(convertedPrice);
-  const [convertedDisplayTotal, setConvertedDisplayTotal] = useState<number>(calculatedTotal);
-  const currencyOptions = getCurrencyOptions();
+  // Get exchange rates from the global hook
+  const { exchangeRates, loading, convertCurrency } = useExchangeRates();
+  const [basePriceTotal, setBasePriceTotal] = useState<number>(0);
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [taxAmount, setTaxAmount] = useState<number>(0);
   
   useEffect(() => {
-    // When display currency changes, we would convert the prices
-    // For now we'll use dummy conversion rates
-    if (displayCurrency === selectedCurrency) {
-      setConvertedDisplayPrice(convertedPrice);
-      setConvertedDisplayTotal(calculatedTotal);
-    } else {
-      // This would be replaced with actual conversion logic
-      // based on exchange rates
-      const conversionRates: Record<string, number> = {
-        TRY: 1,
-        USD: 0.03,
-        EUR: 0.028,
-        GBP: 0.024
-      };
-      
-      const fromRate = conversionRates[selectedCurrency] || 1;
-      const toRate = conversionRates[displayCurrency] || 1;
-      const rate = toRate / fromRate;
-      
-      setConvertedDisplayPrice(convertedPrice * rate);
-      setConvertedDisplayTotal(calculatedTotal * rate);
+    // Calculate totals
+    const baseTotal = quantity * unitPrice;
+    const discount = baseTotal * (discountRate / 100);
+    const discountedTotal = baseTotal - discount;
+    const tax = discountedTotal * (taxRate / 100);
+    
+    setBasePriceTotal(baseTotal);
+    setDiscountAmount(discount);
+    setTaxAmount(tax);
+  }, [unitPrice, quantity, discountRate, taxRate]);
+  
+  // Get rate between currencies for display
+  const getExchangeRate = () => {
+    if (originalCurrency === currentCurrency) return null;
+    
+    if (loading) {
+      return <Badge variant="outline" className="animate-pulse">Yükleniyor...</Badge>;
     }
-  }, [displayCurrency, selectedCurrency, convertedPrice, calculatedTotal]);
-
-  // Calculate subtotal (price * quantity)
-  const subtotal = convertedDisplayPrice * quantity;
-  
-  // Calculate discount amount
-  const discountAmount = subtotal * (discountRate / 100);
-  
-  // Calculate amount after discount
-  const afterDiscount = subtotal - discountAmount;
-  
-  // Calculate tax amount
-  const taxAmount = afterDiscount * (taxRate / 100);
+    
+    // Use the global exchange rate converter
+    const rate = convertCurrency(1, originalCurrency, currentCurrency);
+    return (
+      <>
+        <RefreshCw className="h-3 w-3 mr-1 text-muted-foreground" />
+        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-normal">
+          1 {originalCurrency} = {rate.toFixed(4)} {currentCurrency}
+        </Badge>
+      </>
+    );
+  };
 
   return (
     <div className="mt-4 p-3 bg-muted/40 rounded-md border">
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-medium">Fiyat Özeti</h4>
-        <div className="flex items-center gap-2">
-          <ArrowRightLeft className="h-3.5 w-3.5 text-muted-foreground" />
-          <Select value={displayCurrency} onValueChange={setDisplayCurrency}>
-            <SelectTrigger className="h-7 w-24 text-xs">
-              <SelectValue placeholder="Para birimi" />
-            </SelectTrigger>
-            <SelectContent>
-              {currencyOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.symbol} {option.value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <h3 className="font-medium text-sm mb-2">Fiyat Özeti</h3>
+      
+      {/* Exchange rate info */}
+      {originalCurrency !== currentCurrency && (
+        <div className="flex items-center text-xs mb-3">
+          {getExchangeRate()}
         </div>
-      </div>
+      )}
       
       <div className="space-y-1 text-sm">
         <div className="flex justify-between">
-          <span className="text-muted-foreground">Birim Fiyat:</span>
-          <div className="flex flex-col items-end">
-            <span>{formatCurrency(convertedDisplayPrice, displayCurrency)}</span>
-            {displayCurrency !== selectedCurrency && (
-              <span className="text-xs text-muted-foreground">
-                ({formatCurrency(convertedPrice, selectedCurrency)})
-              </span>
-            )}
-          </div>
+          <Label>Birim Fiyat:</Label>
+          <span>{formatCurrency(unitPrice)}</span>
         </div>
         
         <div className="flex justify-between">
-          <span className="text-muted-foreground">Miktar:</span>
-          <span>{quantity} adet</span>
+          <Label>Miktar:</Label>
+          <span>x {quantity}</span>
         </div>
         
         <div className="flex justify-between">
-          <span className="text-muted-foreground">Ara Toplam:</span>
-          <span>{formatCurrency(subtotal, displayCurrency)}</span>
+          <Label>Ara Toplam:</Label>
+          <span>{formatCurrency(basePriceTotal)}</span>
         </div>
         
         {discountRate > 0 && (
           <div className="flex justify-between text-red-500">
-            <span>İndirim ({discountRate}%):</span>
-            <span>-{formatCurrency(discountAmount, displayCurrency)}</span>
-          </div>
-        )}
-        
-        {discountRate > 0 && (
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">İndirimli Tutar:</span>
-            <span>{formatCurrency(afterDiscount, displayCurrency)}</span>
+            <Label>İndirim ({discountRate}%):</Label>
+            <span>-{formatCurrency(discountAmount)}</span>
           </div>
         )}
         
         <div className="flex justify-between">
-          <span className="text-muted-foreground">KDV ({taxRate}%):</span>
-          <span>{formatCurrency(taxAmount, displayCurrency)}</span>
+          <Label>Vergi (%{taxRate}):</Label>
+          <span>{formatCurrency(taxAmount)}</span>
         </div>
         
-        <div className="flex justify-between font-medium pt-1 border-t mt-1">
-          <span>Toplam:</span>
-          <div className="flex flex-col items-end">
-            <span>{formatCurrency(convertedDisplayTotal, displayCurrency)}</span>
-            {displayCurrency !== selectedCurrency && (
-              <span className="text-xs text-muted-foreground">
-                ({formatCurrency(calculatedTotal, selectedCurrency)})
-              </span>
-            )}
-          </div>
+        <div className="flex justify-between font-medium pt-2 border-t dark:border-gray-700">
+          <Label>Toplam:</Label>
+          <span>{formatCurrency(calculatedTotal)}</span>
         </div>
       </div>
     </div>
