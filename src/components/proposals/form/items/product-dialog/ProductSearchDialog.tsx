@@ -16,13 +16,14 @@ import { useProductSearchDialog } from "./useProductSearchDialog";
 interface ProductSearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectProduct: (
+  onSelectProduct?: (
     product: Product, 
     quantity?: number, 
     customPrice?: number,
     discountRate?: number
   ) => void;
-  selectedCurrency: string;
+  onProductSelect?: (product: Product) => void; // For backward compatibility
+  selectedCurrency?: string;
   triggerRef?: React.RefObject<HTMLButtonElement>;
   initialSelectedProduct?: Product | null;
 }
@@ -31,7 +32,8 @@ const ProductSearchDialog: React.FC<ProductSearchDialogProps> = ({
   open, 
   onOpenChange, 
   onSelectProduct,
-  selectedCurrency,
+  onProductSelect,
+  selectedCurrency = "TRY",
   triggerRef,
   initialSelectedProduct = null
 }) => {
@@ -56,26 +58,22 @@ const ProductSearchDialog: React.FC<ProductSearchDialogProps> = ({
     resetForm
   } = useProductSearchDialog(open, initialSelectedProduct);
 
-  const handleSelectProduct = () => {
-    if (selectedProduct) {
-      // When selecting a product, preserve its original currency and price
-      const productWithOriginalValues = {
-        ...selectedProduct,
-        original_currency: selectedProduct.currency,
-        original_price: selectedProduct.price
-      };
-      
-      onSelectProduct(
-        productWithOriginalValues, 
-        quantity, 
-        customPrice, 
-        discountRate
-      );
-      
-      onOpenChange(false);
-      setDetailsDialogOpen(false);
-      resetForm();
+  const handleSelectProduct = (
+    product: Product,
+    quantity: number,
+    customPrice?: number,
+    discountRate?: number
+  ) => {
+    // Handle both callback types for backward compatibility
+    if (onSelectProduct) {
+      onSelectProduct(product, quantity, customPrice, discountRate);
+    } else if (onProductSelect) {
+      onProductSelect(product);
     }
+    
+    onOpenChange(false);
+    setDetailsDialogOpen(false);
+    resetForm();
   };
 
   return (

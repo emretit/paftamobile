@@ -14,7 +14,7 @@ interface ProposalFormContentProps {
   proposal: Proposal | null;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
-  handleDateChange: (date: Date | undefined) => void;
+  handleDateChange: (name: string, date: Date | undefined) => void;
   handleItemsChange: (items: any[]) => void;
   formatDate: (dateString?: string | null) => string;
 }
@@ -42,7 +42,7 @@ const ProposalFormContent: React.FC<ProposalFormContentProps> = ({
           formErrors={formErrors}
           handleInputChange={handleInputChange}
           handleSelectChange={handleSelectChange}
-          handleDateChange={handleDateChange}
+          handleDateChange={(date) => handleDateChange("valid_until", date)}
           formatDate={formatDate}
         />
         

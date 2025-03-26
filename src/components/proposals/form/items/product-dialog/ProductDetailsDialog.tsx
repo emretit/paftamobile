@@ -33,13 +33,13 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
   setSelectedDepo,
   discountRate = 0,
   setDiscountRate,
-  formatCurrency,
+  formatCurrency = (amount: number) => `${amount.toFixed(2)}`,
   onSelectProduct,
   selectedCurrency = "TRY"
 }) => {
   // Support for simple mode where we don't have external state
   const [internalQuantity, setInternalQuantity] = React.useState(quantity);
-  const [internalCustomPrice, setInternalCustomPrice] = React.useState(customPrice);
+  const [internalCustomPrice, setInternalCustomPrice] = React.useState(customPrice || 0);
   const [internalDiscountRate, setInternalDiscountRate] = React.useState(discountRate);
   const [internalDepo, setInternalDepo] = React.useState(selectedDepo || "");
 
@@ -51,13 +51,13 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
 
   // Reset internal state when dialog opens with new product
   React.useEffect(() => {
-    if (open) {
+    if (open && selectedProduct) {
       setInternalQuantity(quantity);
-      setInternalCustomPrice(selectedProduct?.price || 0);
+      setInternalCustomPrice(selectedProduct.price);
       setInternalDiscountRate(discountRate);
       setInternalDepo(selectedDepo || "");
     }
-  }, [open, selectedProduct, quantity, discountRate]);
+  }, [open, selectedProduct, quantity, discountRate, selectedDepo]);
 
   const handleSelectProduct = () => {
     if (selectedProduct) {
@@ -95,7 +95,7 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
         
         {selectedProduct && (
           <ProductDetailsForm
-            product={selectedProduct}
+            selectedProduct={selectedProduct}
             quantity={setQuantity ? quantity : internalQuantity}
             setQuantity={handleQuantityChange}
             customPrice={setCustomPrice ? customPrice : internalCustomPrice}

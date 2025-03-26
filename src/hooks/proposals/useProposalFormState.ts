@@ -1,3 +1,4 @@
+
 import { ProposalFormData } from "@/types/proposal-form";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
@@ -5,7 +6,7 @@ import { ProposalItem, ProposalStatus } from "@/types/proposal";
 
 export type { ProposalFormData };
 
-export const useProposalFormState = () => {
+export const useProposalFormState = (initialProposal = null, isNew = true, onSaveCallback?: (data: any) => Promise<void>) => {
   const [formData, setFormData] = useState<ProposalFormData>({
     title: "",
     status: "draft" as ProposalStatus,
@@ -14,10 +15,13 @@ export const useProposalFormState = () => {
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isFormDirty, setIsFormDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    setIsFormDirty(true);
     
     // Clear error when field is edited
     if (formErrors[name]) {
@@ -31,6 +35,7 @@ export const useProposalFormState = () => {
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
+    setIsFormDirty(true);
     
     // Clear error when field is edited
     if (formErrors[name]) {
@@ -47,6 +52,7 @@ export const useProposalFormState = () => {
       ...prev, 
       [name]: date ? date.toISOString() : undefined 
     }));
+    setIsFormDirty(true);
     
     // Clear error when field is edited
     if (formErrors[name]) {
@@ -60,10 +66,12 @@ export const useProposalFormState = () => {
 
   const handleItemsChange = (items: ProposalItem[]) => {
     setFormData(prev => ({ ...prev, items }));
+    setIsFormDirty(true);
   };
 
   const handleCurrencyChange = (currency: string) => {
     setFormData(prev => ({ ...prev, currency }));
+    setIsFormDirty(true);
   };
 
   const addItem = () => {
@@ -80,6 +88,7 @@ export const useProposalFormState = () => {
       ...prev,
       items: [...(prev.items || []), newItem]
     }));
+    setIsFormDirty(true);
   };
 
   const removeItem = (id: string) => {
@@ -87,6 +96,7 @@ export const useProposalFormState = () => {
       ...prev,
       items: prev.items?.filter(item => item.id !== id) || []
     }));
+    setIsFormDirty(true);
   };
 
   const validateForm = (): boolean => {
@@ -118,6 +128,22 @@ export const useProposalFormState = () => {
     return Object.keys(errors).length === 0;
   };
 
+  const handleSave = async () => {
+    if (!validateForm()) return;
+    
+    if (onSaveCallback) {
+      try {
+        setSaving(true);
+        await onSaveCallback(formData);
+        setIsFormDirty(false);
+      } catch (error) {
+        console.error("Error saving form:", error);
+      } finally {
+        setSaving(false);
+      }
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       title: "",
@@ -126,6 +152,7 @@ export const useProposalFormState = () => {
       items: []
     });
     setFormErrors({});
+    setIsFormDirty(false);
   };
 
   return {
@@ -133,11 +160,14 @@ export const useProposalFormState = () => {
     setFormData,
     formErrors,
     setFormErrors,
+    isFormDirty,
+    saving,
     handleInputChange,
     handleSelectChange,
     handleDateChange,
     handleItemsChange,
     handleCurrencyChange,
+    handleSave,
     addItem,
     removeItem,
     validateForm,

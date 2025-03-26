@@ -10,6 +10,12 @@ interface ProposalCurrencySelectorProps {
   onCurrencyChange?: (value: string) => void;
 }
 
+// For direct usage without react-hook-form
+interface DirectProposalCurrencySelectorProps {
+  selectedCurrency: string;
+  onCurrencyChange: (value: string) => void;
+}
+
 export const ProposalCurrencySelector = ({ 
   form, 
   onCurrencyChange 
@@ -50,6 +56,30 @@ export const ProposalCurrencySelector = ({
         </FormItem>
       )}
     />
+  );
+};
+
+// Direct selector component without react-hook-form
+export const DirectCurrencySelector = ({
+  selectedCurrency,
+  onCurrencyChange
+}: DirectProposalCurrencySelectorProps) => {
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium">Para Birimi</label>
+      <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
+        <SelectTrigger>
+          <SelectValue placeholder="Para birimi seçin" />
+        </SelectTrigger>
+        <SelectContent>
+          {getCurrencyOptions().map(option => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 };
 
