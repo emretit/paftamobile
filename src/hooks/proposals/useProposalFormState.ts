@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ProposalFormData } from "@/types/proposal-form";
@@ -7,6 +8,7 @@ import { useProposalCreation } from "./useProposalCreation";
 import { useProposalCalculations } from "./useProposalCalculations";
 import { useTechnicianNames } from "@/components/service/hooks/useTechnicianNames";
 import { useAuthState } from "@/components/navbar/useAuthState";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
 
 export const useProposalFormState = (
   initialProposal: Proposal | null,
@@ -29,6 +31,7 @@ export const useProposalFormState = (
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [formInitialized, setFormInitialized] = useState(false);
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   
@@ -37,6 +40,7 @@ export const useProposalFormState = (
   const { saveDraft, isLoading: isSavingDraft } = useProposalDraft();
   const { createProposal, isLoading: isCreating } = useProposalCreation();
   const { calculateTotals } = useProposalCalculations();
+  const { convertCurrency } = useExchangeRates();
 
   // Initialize form with proposal data if editing
   useEffect(() => {
@@ -54,6 +58,7 @@ export const useProposalFormState = (
         items: initialProposal.items || [],
         currency: initialProposal.currency || "TRY" // Mevcut teklifteki para birimi
       });
+      setFormInitialized(true);
     } else if (isNew) {
       if (user) {
         const currentUserAsEmployee = employees.find(
@@ -69,6 +74,7 @@ export const useProposalFormState = (
           }));
         }
       }
+      setFormInitialized(true);
     }
   }, [initialProposal, isNew, employees, user]);
 
@@ -85,6 +91,20 @@ export const useProposalFormState = (
     
     if (!formData.currency) {
       errors.currency = "Para birimi seçilmelidir";
+    }
+    
+    // Ürün kalemleri için validasyon
+    if (!formData.items || formData.items.length === 0) {
+      errors.items = "En az bir teklif kalemi eklenmelidir";
+    } else {
+      // Kalem validasyonları (örnek: ürün adı, miktar, fiyat kontrolü)
+      const invalidItems = formData.items.filter(item => 
+        !item.name?.trim() || !item.quantity || item.quantity <= 0 || !item.unit_price || item.unit_price < 0
+      );
+      
+      if (invalidItems.length > 0) {
+        errors.items = "Bazı teklif kalemleri eksik veya hatalı bilgiler içeriyor";
+      }
     }
     
     setFormErrors(errors);
@@ -143,11 +163,21 @@ export const useProposalFormState = (
   };
   
   const handleItemsChange = (items: any[]) => {
+    console.log("Items changed:", items);
+    
     setFormData(prev => ({
       ...prev,
       items
     }));
     setIsFormDirty(true);
+    
+    // Clear items error when items are updated
+    if (formErrors.items) {
+      setFormErrors(prev => ({
+        ...prev,
+        items: ""
+      }));
+    }
     
     // Recalculate totals
     const total = calculateTotals(items);
@@ -155,12 +185,20 @@ export const useProposalFormState = (
     // Update formData with new total
     setFormData(prev => ({
       ...prev,
+      items,
       total_amount: total
     }));
   };
 
   // Para birimi değişikliğini yönetme
   const handleCurrencyChange = (currency: string) => {
+    const prevCurrency = formData.currency || "TRY";
+    
+    // Eğer para birimi değişmiyorsa işlem yapma
+    if (currency === prevCurrency) return;
+    
+    console.log(`Currency changing from ${prevCurrency} to ${currency}`);
+    
     // Teklif para birimini güncelle
     setFormData(prev => ({
       ...prev,
@@ -170,11 +208,49 @@ export const useProposalFormState = (
     
     // Teklif kalemlerini yeni para birimine göre dönüştürme işlemi
     if (formData.items && formData.items.length > 0) {
-      toast.info(`Tüm kalemler ${currency} para birimine dönüştürülecek`);
+      console.log(`Converting ${formData.items.length} items from ${prevCurrency} to ${currency}`);
       
-      // Teklif kalemleri için para birimi güncelleme işlemi burada yapılabilir
-      // Bu işlem useProposalItems veya useProposalItemsManagement hook'unda 
-      // yapılacağı için şimdilik boş bırakıyoruz
+      const updatedItems = formData.items.map(item => {
+        // Eğer ürünün orijinal para birimi saklanmışsa, dönüşümü oradan yap
+        const sourceCurrency = item.original_currency || item.currency || prevCurrency;
+        const sourcePrice = 
+          sourceCurrency === item.original_currency && item.original_price !== undefined
+            ? item.original_price
+            : item.unit_price;
+            
+        console.log(`Converting item ${item.name} from ${sourceCurrency} to ${currency}`);
+        console.log(`Original price: ${sourcePrice} ${sourceCurrency}`);
+
+        // Para birimi dönüşümünü yap
+        const convertedPrice = convertCurrency(sourcePrice, sourceCurrency, currency);
+        console.log(`Converted price: ${convertedPrice} ${currency}`);
+        
+        // Vergi ve indirim oranlarını hesaba katarak toplam fiyatı güncelle
+        const quantity = Number(item.quantity || 1);
+        const discountRate = Number(item.discount_rate || 0);
+        const taxRate = Number(item.tax_rate || 0);
+        
+        // Apply discount
+        const discountedPrice = convertedPrice * (1 - discountRate / 100);
+        // Calculate total with tax
+        const totalPrice = quantity * discountedPrice * (1 + taxRate / 100);
+
+        return {
+          ...item,
+          unit_price: convertedPrice,
+          total_price: totalPrice,
+          currency: currency
+        };
+      });
+      
+      // Güncellenmiş kalemleri form state'ine ekle
+      setFormData(prev => ({
+        ...prev,
+        items: updatedItems
+      }));
+      
+      console.log("Items after currency conversion:", updatedItems);
+      toast.success(`Tüm kalemler ${currency} para birimine dönüştürüldü`);
     }
     
     // Para birimi hata mesajını temizle
@@ -189,20 +265,23 @@ export const useProposalFormState = (
   const handleSave = async () => {
     if (!validateForm()) {
       toast.error("Lütfen gerekli alanları doldurun");
-      return;
+      return false;
     }
     
     try {
-      console.log("Preparing to save form data:", formData);
+      setSaving(true);
+      console.log("Saving form data:", formData);
       
       // Call the onSave function passed as a prop
       await onSave(formData);
       
       setIsFormDirty(false);
+      setSaving(false);
       return true;
     } catch (error) {
       console.error("Error in handleSave:", error);
       toast.error("Teklif kaydedilirken bir hata oluştu");
+      setSaving(false);
       return false;
     }
   };
@@ -211,12 +290,14 @@ export const useProposalFormState = (
     formData,
     formErrors,
     isFormDirty,
+    formInitialized,
     handleInputChange,
     handleSelectChange,
     handleDateChange,
     handleItemsChange,
     handleCurrencyChange,
     handleSave,
-    validateForm
+    validateForm,
+    saving
   };
 };

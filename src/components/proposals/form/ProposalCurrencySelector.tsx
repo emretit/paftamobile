@@ -8,12 +8,13 @@ import { CurrencyRatePopover } from "@/components/currency/CurrencyRatePopover";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { ProposalItem } from "@/types/proposal";
 
 interface ProposalCurrencySelectorProps {
   selectedCurrency: string;
   onCurrencyChange: (currency: string) => void;
-  items?: any[];
-  onItemsChange?: (items: any[]) => void;
+  items?: ProposalItem[];
+  onItemsChange?: (items: ProposalItem[]) => void;
 }
 
 const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({ 

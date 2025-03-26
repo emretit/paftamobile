@@ -63,6 +63,12 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
     }
   };
 
+  // Handle the currency change and update all items' prices
+  const handleGlobalCurrencyChange = (currency: string) => {
+    // This will trigger the currency change in the form state
+    handleCurrencyChange(currency);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center w-full h-48">
@@ -94,7 +100,7 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
         <div className="space-y-6 w-full">
           <ProposalCurrencySelector 
             selectedCurrency={formData.currency || "TRY"} 
-            onCurrencyChange={handleCurrencyChange}
+            onCurrencyChange={handleGlobalCurrencyChange}
             items={formData.items}
             onItemsChange={handleItemsChange}
           />

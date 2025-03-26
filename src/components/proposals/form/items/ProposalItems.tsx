@@ -58,7 +58,9 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
   // Global para birimi değiştiğinde tüm kalemleri güncelle
   useEffect(() => {
     if (globalCurrency && globalCurrency !== selectedCurrency) {
+      console.log(`Global currency changed to ${globalCurrency}, updating items...`);
       setSelectedCurrency(globalCurrency);
+      
       // Tüm kalemlerin para birimini güncelle
       if (items.length > 0) {
         const updatedItems = updateAllItemsCurrency(globalCurrency);
@@ -185,6 +187,30 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     }
   };
 
+  // Özellikle para birimi değişikliğini ele alma
+  const onItemCurrencyChange = (index: number, newCurrency: string) => {
+    const item = items[index];
+    const itemId = item.id;
+    
+    // Ürünün orijinal para birimi ve fiyatını kullan
+    const sourceCurrency = item.currency || globalCurrency;
+    const sourcePrice = item.unit_price || 0;
+    
+    // Yeni para birimine dönüştür
+    const convertedPrice = dashboardConvert(sourcePrice, sourceCurrency, newCurrency);
+    
+    // Güncellenmiş birim fiyatı ile item'ı güncelle
+    const updatedItems = handleItemChange(itemId, "unit_price", convertedPrice);
+    if (updatedItems) {
+      // Ayrıca currency alanını da güncelle
+      const finalUpdatedItems = handleItemChange(itemId, "currency", newCurrency);
+      if (finalUpdatedItems) {
+        onItemsChange(finalUpdatedItems);
+        toast.success(`Kalem para birimi ${newCurrency} olarak güncellendi`);
+      }
+    }
+  };
+
   // Check for stock warnings
   const hasLowStockItems = items.some(item => item.stock_status === 'low_stock');
   const hasOutOfStockItems = items.some(item => item.stock_status === 'out_of_stock');
@@ -229,7 +255,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
       )}
 
       <ProposalItemsHeader
-        selectedCurrency={selectedCurrency}
+        selectedCurrency={globalCurrency || "TRY"}
         onCurrencyChange={handleGlobalCurrencyChange}
         onAddItem={onAddItem}
         onOpenProductDialog={() => setProductDialogOpen(true)}
@@ -257,10 +283,11 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
           items={items}
           handleItemChange={onItemChange}
           handleRemoveItem={onRemoveItem}
-          selectedCurrency={selectedCurrency}
+          selectedCurrency={globalCurrency || "TRY"}
           formatCurrency={formatCurrency}
           currencyOptions={currencyOptions}
           taxRateOptions={taxRateOptions}
+          handleItemCurrencyChange={onItemCurrencyChange}
         />
       </div>
 
@@ -314,7 +341,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
         open={productDialogOpen}
         onOpenChange={setProductDialogOpen}
         onSelectProduct={handleProductSelect}
-        selectedCurrency={selectedCurrency}
+        selectedCurrency={globalCurrency || "TRY"}
       />
     </div>
   );

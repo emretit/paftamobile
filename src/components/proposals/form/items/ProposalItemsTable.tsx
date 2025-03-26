@@ -18,6 +18,7 @@ interface ProposalItemsTableProps {
   items: ProposalItem[];
   handleItemChange: (index: number, field: keyof ProposalItem | 'currency' | 'discount_rate', value: string | number) => void;
   handleRemoveItem: (index: number) => void;
+  handleItemCurrencyChange?: (index: number, currency: string) => void;
   selectedCurrency: string;
   formatCurrency: (amount: number, currency?: string) => string;
   currencyOptions: { value: string; label: string }[];
@@ -28,11 +29,23 @@ const ProposalItemsTable = ({
   items,
   handleItemChange,
   handleRemoveItem,
+  handleItemCurrencyChange,
   selectedCurrency,
   formatCurrency,
   currencyOptions,
   taxRateOptions,
 }: ProposalItemsTableProps) => {
+  // Para birimi değişikliğini ele alma
+  const onCurrencyChange = (index: number, value: string) => {
+    if (handleItemCurrencyChange) {
+      // Özel para birimi değişikliği işleyicisini kullan
+      handleItemCurrencyChange(index, value);
+    } else {
+      // Standart item değişikliği işleyicisini kullan
+      handleItemChange(index, "currency", value);
+    }
+  };
+
   return (
     <div className="min-w-full overflow-auto">
       <table className="w-full text-sm">
@@ -110,7 +123,7 @@ const ProposalItemsTable = ({
                 <td className="py-3 px-4">
                   <Select 
                     value={(item as any).currency || selectedCurrency} 
-                    onValueChange={(value) => handleItemChange(index, "currency", value)}
+                    onValueChange={(value) => onCurrencyChange(index, value)}
                   >
                     <SelectTrigger className="border-0 bg-transparent focus-visible:ring-0 h-8 w-full">
                       <SelectValue placeholder="Para Birimi" />
