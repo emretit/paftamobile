@@ -4,16 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ProposalHeader from "./ProposalHeader";
-import ProposalBasicInfo from "./ProposalBasicInfo";
-import ProposalCustomerSelect from "./ProposalCustomerSelect";
+import ProposalFormHeader from "./ProposalFormHeader"; // Corrected import path
+import ProposalBasicInfo from "./ProposalFormBasicInfo"; // Corrected import path
+import ProposalCustomerSelect from "./ProposalFormCustomerSelect"; // Corrected import path
 import ProposalItems from "./items/ProposalItems";
-import ProposalTerms from "./ProposalTerms";
+import ProposalTerms from "./ProposalFormTerms"; // Corrected import path
 import ProposalCurrencySelector from "./ProposalCurrencySelector";
 import { useProposalFormState } from "@/hooks/proposals/useProposalFormState";
-import ProposalTemplateSelect from "./ProposalTemplateSelect";
+import ProposalTemplateSelect from "./ProposalTemplateSelect"; // This may need update if the file doesn't exist
 import { Proposal } from "@/types/proposal";
-import PageLoading from "@/components/ui/page-loading";
+import { Skeleton } from "@/components/ui/skeleton"; // Added for loading state
 
 interface ProposalFormProps {
   proposal: Proposal | null;
@@ -52,19 +52,26 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
   } = useProposalFormState(proposal, isNew, onSave);
 
   if (loading) {
-    return <PageLoading />;
+    return (
+      <div className="flex items-center justify-center w-full h-48">
+        <div className="space-y-4">
+          <Skeleton className="h-12 w-[300px]" />
+          <Skeleton className="h-8 w-[250px]" />
+          <Skeleton className="h-8 w-[200px]" />
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <ProposalHeader
+      <ProposalFormHeader
         title={title}
         subtitle={subtitle}
-        onBack={onBack}
-        onSave={handleSave}
-        isFormDirty={isFormDirty}
+        loading={loading}
         saving={saving}
-        validateForm={validateForm}
+        isNew={isNew}
+        proposal={proposal}
       />
 
       <div className="flex flex-col md:flex-row gap-6">
