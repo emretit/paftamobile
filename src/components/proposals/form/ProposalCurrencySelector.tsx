@@ -7,19 +7,24 @@ import { getCurrencyOptions } from "./items/utils/currencyUtils";
 import { CurrencyRatePopover } from "@/components/currency/CurrencyRatePopover";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface ProposalCurrencySelectorProps {
   selectedCurrency: string;
   onCurrencyChange: (currency: string) => void;
+  items?: any[];
+  onItemsChange?: (items: any[]) => void;
 }
 
 const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({ 
   selectedCurrency, 
-  onCurrencyChange 
+  onCurrencyChange,
+  items = [],
+  onItemsChange
 }) => {
   const currencyOptions = getCurrencyOptions();
   // Use the dashboard exchange rates to show the TRY equivalent
-  const { exchangeRates, formatCurrency, refreshExchangeRates } = useExchangeRates();
+  const { exchangeRates, formatCurrency, refreshExchangeRates, convertCurrency } = useExchangeRates();
 
   // Bileşen yüklendiğinde döviz kurlarını yenileme
   useEffect(() => {
@@ -48,6 +53,56 @@ const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({
     return null;
   };
 
+  // Para birimi değişikliğini ele alma ve tüm ürünlerin fiyatlarını otomatik dönüştürme
+  const handleCurrencyChange = (newCurrency: string) => {
+    if (newCurrency === selectedCurrency) return;
+    
+    // Önce para birimini değiştir
+    onCurrencyChange(newCurrency);
+    
+    // Eğer ürün listesi ve onItemsChange callback'i varsa, ürünlerin para birimlerini dönüştür
+    if (items.length > 0 && onItemsChange) {
+      console.log(`Converting all items from ${selectedCurrency} to ${newCurrency}`);
+      
+      const updatedItems = items.map(item => {
+        // Eğer ürünün orijinal para birimi saklanmışsa, dönüşümü oradan yap
+        const sourceCurrency = item.original_currency || item.currency || selectedCurrency;
+        const sourcePrice = 
+          sourceCurrency === item.original_currency && item.original_price !== undefined
+            ? item.original_price
+            : item.unit_price;
+            
+        console.log(`Converting item ${item.name} from ${sourceCurrency} to ${newCurrency}`);
+        console.log(`Original price: ${sourcePrice} ${sourceCurrency}`);
+
+        // Para birimi dönüşümünü yap
+        const convertedPrice = convertCurrency(sourcePrice, sourceCurrency, newCurrency);
+        console.log(`Converted price: ${convertedPrice} ${newCurrency}`);
+        
+        // Vergi ve indirim oranlarını hesaba katarak toplam fiyatı güncelle
+        const quantity = Number(item.quantity || 1);
+        const discountRate = Number(item.discount_rate || 0);
+        const taxRate = Number(item.tax_rate || 0);
+        
+        // Apply discount
+        const discountedPrice = convertedPrice * (1 - discountRate / 100);
+        // Calculate total with tax
+        const totalPrice = quantity * discountedPrice * (1 + taxRate / 100);
+
+        return {
+          ...item,
+          unit_price: convertedPrice,
+          total_price: totalPrice,
+          currency: newCurrency
+        };
+      });
+      
+      // Güncellenmiş ürün listesini üst bileşene bildir
+      onItemsChange(updatedItems);
+      toast.success(`Tüm kalemler ${newCurrency} para birimine dönüştürüldü`);
+    }
+  };
+
   const exchangeRateInfo = getExchangeRateInfo();
   
   // Debug için kurları ve seçili para birimini konsola yazma
@@ -68,7 +123,7 @@ const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({
           
           <CurrencyRatePopover
             selectedCurrency={selectedCurrency}
-            onCurrencyChange={onCurrencyChange}
+            onCurrencyChange={handleCurrencyChange}
             triggerClassName="w-[130px]"
           />
           
