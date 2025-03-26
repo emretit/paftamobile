@@ -79,6 +79,7 @@ export const CurrencyRatePopover: React.FC<CurrencyRatePopoverProps> = ({
         <Button 
           variant="outline" 
           className={`flex items-center gap-1 font-medium ${triggerClassName}`}
+          size="sm"
         >
           {getCurrencyIcon(selectedCurrency)}
           <span>{selectedCurrency}</span>

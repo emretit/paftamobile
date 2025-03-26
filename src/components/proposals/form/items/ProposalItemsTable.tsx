@@ -54,8 +54,7 @@ const ProposalItemsTable = ({
             <th className="py-3 px-4 text-left font-medium">Ürün/Hizmet</th>
             <th className="py-3 px-4 text-left font-medium w-28">Grup</th>
             <th className="py-3 px-4 text-right font-medium w-20">Miktar</th>
-            <th className="py-3 px-4 text-right font-medium w-32">Birim Fiyat</th>
-            <th className="py-3 px-4 text-center font-medium w-20">Para Birimi</th>
+            <th className="py-3 px-4 text-right font-medium w-48">Birim Fiyat</th>
             <th className="py-3 px-4 text-center font-medium w-20">KDV %</th>
             <th className="py-3 px-4 text-center font-medium w-20">İndirim %</th>
             <th className="py-3 px-4 text-right font-medium w-32">Toplam</th>
@@ -65,7 +64,7 @@ const ProposalItemsTable = ({
         <tbody>
           {items.length === 0 ? (
             <tr>
-              <td colSpan={9} className="py-3 px-4 text-center text-muted-foreground">
+              <td colSpan={8} className="py-3 px-4 text-center text-muted-foreground">
                 Henüz ürün eklenmedi. Ürün eklemek için yukarıdaki butonları kullanın.
               </td>
             </tr>
@@ -113,29 +112,29 @@ const ProposalItemsTable = ({
                   />
                 </td>
                 <td className="py-3 px-4">
-                  <Input
-                    type="number"
-                    value={item.unit_price}
-                    onChange={(e) => handleItemChange(index, "unit_price", e.target.value)}
-                    className="text-right border-0 bg-transparent focus-visible:ring-0"
-                  />
-                </td>
-                <td className="py-3 px-4">
-                  <Select 
-                    value={(item as any).currency || selectedCurrency} 
-                    onValueChange={(value) => onCurrencyChange(index, value)}
-                  >
-                    <SelectTrigger className="border-0 bg-transparent focus-visible:ring-0 h-8 w-full">
-                      <SelectValue placeholder="Para Birimi" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {currencyOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      value={item.unit_price}
+                      onChange={(e) => handleItemChange(index, "unit_price", e.target.value)}
+                      className="text-right border-0 bg-transparent focus-visible:ring-0"
+                    />
+                    <Select 
+                      value={(item as any).currency || selectedCurrency} 
+                      onValueChange={(value) => onCurrencyChange(index, value)}
+                    >
+                      <SelectTrigger className="border-0 bg-transparent focus-visible:ring-0 h-8 w-[70px]">
+                        <SelectValue placeholder="Para Birimi" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {currencyOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </td>
                 <td className="py-3 px-4">
                   <Select 

@@ -105,11 +105,6 @@ const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({
   };
 
   const exchangeRateInfo = getExchangeRateInfo();
-  
-  // Debug için kurları ve seçili para birimini konsola yazma
-  console.log("Selected currency:", selectedCurrency);
-  console.log("Exchange rates:", exchangeRates);
-  console.log("Exchange rate info:", exchangeRateInfo);
 
   return (
     <Card className="mb-6">
@@ -125,7 +120,7 @@ const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({
           <CurrencyRatePopover
             selectedCurrency={selectedCurrency}
             onCurrencyChange={handleCurrencyChange}
-            triggerClassName="w-[130px]"
+            triggerClassName="w-[100px]"
           />
           
           {exchangeRateInfo ? (
