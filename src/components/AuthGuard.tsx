@@ -13,19 +13,19 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      setIsAuthenticated(!!data.session);
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
     };
 
     checkAuth();
 
-    const { data } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setIsAuthenticated(!!session);
       }
     );
 
-    return () => data.subscription.unsubscribe();
+    return () => subscription.unsubscribe();
   }, []);
 
   if (isAuthenticated === null) {

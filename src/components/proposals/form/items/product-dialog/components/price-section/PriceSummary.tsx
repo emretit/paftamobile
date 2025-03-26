@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCurrencyOptions } from "../../../utils/currencyUtils";
@@ -28,10 +29,14 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({
   const currencyOptions = getCurrencyOptions();
   
   useEffect(() => {
+    // When display currency changes, we would convert the prices
+    // For now we'll use dummy conversion rates
     if (displayCurrency === selectedCurrency) {
       setConvertedDisplayPrice(convertedPrice);
       setConvertedDisplayTotal(calculatedTotal);
     } else {
+      // This would be replaced with actual conversion logic
+      // based on exchange rates
       const conversionRates: Record<string, number> = {
         TRY: 1,
         USD: 0.03,
@@ -48,12 +53,16 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({
     }
   }, [displayCurrency, selectedCurrency, convertedPrice, calculatedTotal]);
 
+  // Calculate subtotal (price * quantity)
   const subtotal = convertedDisplayPrice * quantity;
   
+  // Calculate discount amount
   const discountAmount = subtotal * (discountRate / 100);
   
+  // Calculate amount after discount
   const afterDiscount = subtotal - discountAmount;
   
+  // Calculate tax amount
   const taxAmount = afterDiscount * (taxRate / 100);
 
   return (

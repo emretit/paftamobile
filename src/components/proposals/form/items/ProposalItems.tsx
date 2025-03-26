@@ -1,228 +1,287 @@
 
-import React from "react";
+import React, { useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Search } from "lucide-react";
+import { Plus, Search, AlertCircle, Info } from "lucide-react";
 import { ProposalItem } from "@/types/proposal";
 import { Product } from "@/types/product";
+import ProposalItemsHeader from "./ProposalItemsHeader";
+import ProposalItemsTable from "./ProposalItemsTable";
+import ProductSearchDialog from "./product-dialog/ProductSearchDialog";
 import { useProposalItems } from "./useProposalItems";
-import ProductDetailsDialog from "./product-dialog/ProductDetailsDialog";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { PROPOSAL_ITEM_GROUPS } from "./proposalItemsConstants";
 
 interface ProposalItemsProps {
   items: ProposalItem[];
   onItemsChange: (items: ProposalItem[]) => void;
-  globalCurrency?: string;
+  globalCurrency?: string; // Global para birimi
 }
 
-export const ProposalItems = ({
-  items,
+const ProposalItems: React.FC<ProposalItemsProps> = ({ 
+  items, 
   onItemsChange,
-  globalCurrency
-}: ProposalItemsProps) => {
+  globalCurrency = "TRY"
+}) => {
   const {
     selectedCurrency,
     setSelectedCurrency,
     productDialogOpen,
     setProductDialogOpen,
     exchangeRates,
-    currencyOptions,
     formatCurrency,
-    getCurrencySymbol,
+    currencyOptions,
     handleCurrencyChange,
     handleAddItem,
     handleSelectProduct,
     handleRemoveItem,
     handleItemChange,
-    updateAllItemsCurrency,
-    convertCurrency,
     products,
     isLoading,
-    setItems
+    updateAllItemsCurrency
   } = useProposalItems();
 
-  // If a global currency is provided, use it to initialize
-  React.useEffect(() => {
+  // Tax rate options
+  const taxRateOptions = [
+    { value: 0, label: "%0" },
+    { value: 1, label: "%1" },
+    { value: 8, label: "%8" },
+    { value: 18, label: "%18" },
+    { value: 20, label: "%20" }
+  ];
+
+  // Global para birimi değiştiğinde tüm kalemleri güncelle
+  useEffect(() => {
     if (globalCurrency && globalCurrency !== selectedCurrency) {
       setSelectedCurrency(globalCurrency);
-      // Update all items to use this currency
-      const updatedItems = updateAllItemsCurrency(globalCurrency);
-      onItemsChange(updatedItems);
+      // Tüm kalemlerin para birimini güncelle
+      if (items.length > 0) {
+        const updatedItems = updateAllItemsCurrency(globalCurrency);
+        if (updatedItems) {
+          onItemsChange(updatedItems);
+          toast.success(`Tüm kalemler ${globalCurrency} para birimine dönüştürüldü`);
+        }
+      }
     }
-  }, [globalCurrency, selectedCurrency]);
+  }, [globalCurrency, selectedCurrency, setSelectedCurrency, updateAllItemsCurrency, items, onItemsChange]);
 
-  const addItem = () => {
-    const newItems = handleAddItem();
-    onItemsChange(newItems);
-  };
-
-  const removeItem = (id: string) => {
-    const newItems = handleRemoveItem(id);
-    onItemsChange(newItems);
-  };
-
-  const updateItem = (id: string, field: keyof ProposalItem, value: any) => {
-    const newItems = handleItemChange(id, field, value);
-    onItemsChange(newItems);
-  };
-
-  const formatMoney = (amount: number, currency: string = selectedCurrency) => {
-    return formatCurrency(amount, currency);
-  };
-
+  // Calculate totals
   const calculateSubtotal = () => {
-    return items.reduce((sum, item) => sum + Number(item.total_price), 0);
+    return items.reduce((sum, item) => sum + Number(item.total_price || 0), 0);
   };
+
+  // Calculate tax total
+  const calculateTaxTotal = () => {
+    return items.reduce((sum, item) => {
+      const unitPrice = item.unit_price || 0;
+      const quantity = item.quantity || 0;
+      const taxRate = item.tax_rate || 0;
+      const discountRate = item.discount_rate || 0;
+      
+      // Apply discount to unit price
+      const discountedUnitPrice = unitPrice * (1 - discountRate / 100);
+      
+      // Calculate tax amount
+      const itemSubtotal = discountedUnitPrice * quantity;
+      const taxAmount = itemSubtotal * (taxRate / 100);
+      
+      return sum + taxAmount;
+    }, 0);
+  };
+
+  // Calculate discount total
+  const calculateDiscountTotal = () => {
+    return items.reduce((sum, item) => {
+      const unitPrice = item.unit_price || 0;
+      const quantity = item.quantity || 0;
+      const discountRate = item.discount_rate || 0;
+      
+      // Calculate discount amount
+      const itemFullPrice = unitPrice * quantity;
+      const discountAmount = itemFullPrice * (discountRate / 100);
+      
+      return sum + discountAmount;
+    }, 0);
+  };
+
+  // Gruplar bazında toplam hesaplama
+  const groupTotals = useMemo(() => {
+    const totals: Record<string, number> = {};
+    
+    PROPOSAL_ITEM_GROUPS.forEach(group => {
+      totals[group.value] = 0;
+    });
+
+    items.forEach(item => {
+      const group = item.group || 'diger';
+      totals[group] = (totals[group] || 0) + (item.total_price || 0);
+    });
+    
+    return totals;
+  }, [items]);
 
   const handleProductSelect = (product: Product) => {
-    const newItems = handleSelectProduct(product);
-    onItemsChange(newItems);
+    const updatedItems = handleSelectProduct(product);
+    if (updatedItems) {
+      onItemsChange(updatedItems);
+      toast.success(`${product.name} teklif kalemine eklendi`);
+    }
+  };
+
+  // Handle adding a new item
+  const onAddItem = () => {
+    const updatedItems = handleAddItem();
+    if (updatedItems) {
+      onItemsChange(updatedItems);
+    }
+  };
+
+  // Handle removing an item
+  const onRemoveItem = (index: number) => {
+    const itemId = items[index].id;
+    const updatedItems = handleRemoveItem(itemId);
+    if (updatedItems) {
+      onItemsChange(updatedItems);
+    }
+  };
+
+  // Handle item changes
+  const onItemChange = (index: number, field: keyof ProposalItem, value: any) => {
+    const itemId = items[index].id;
+    const updatedItems = handleItemChange(itemId, field, value);
+    if (updatedItems) {
+      onItemsChange(updatedItems);
+    }
+  };
+
+  // Check for stock warnings
+  const hasLowStockItems = items.some(item => item.stock_status === 'low_stock');
+  const hasOutOfStockItems = items.some(item => item.stock_status === 'out_of_stock');
+
+  // Gruplara göre ürün sayısı
+  const itemCountByGroup = useMemo(() => {
+    const counts: Record<string, number> = {};
+    
+    items.forEach(item => {
+      const group = item.group || 'diger';
+      counts[group] = (counts[group] || 0) + 1;
+    });
+    
+    return counts;
+  }, [items]);
+
+  // Para birimi değişikliğini ele alma
+  const handleGlobalCurrencyChange = (currency: string) => {
+    // Para birimi değişikliği için handleCurrencyChange fonksiyonunu çağır
+    handleCurrencyChange(currency);
+    
+    // Tüm kalemlerin para birimini güncelle
+    if (items.length > 0) {
+      const updatedItems = updateAllItemsCurrency(currency);
+      if (updatedItems) {
+        onItemsChange(updatedItems);
+      }
+    }
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-lg font-medium">Teklif Kalemleri</h3>
-        <div className="flex gap-2">
-          <Button
-            onClick={() => setProductDialogOpen(true)}
-            size="sm"
-            variant="outline"
-            disabled={isLoading}
-          >
-            <Search className="h-4 w-4 mr-2" />
-            Ürün Ekle
-          </Button>
-          <Button onClick={addItem} size="sm" variant="outline">
-            <Plus className="h-4 w-4 mr-2" />
-            Manuel Ekle
-          </Button>
-        </div>
+      {items.length === 0 && (
+        <Alert variant="default" className="border-blue-500 text-blue-800 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Teklif Kalemleri Ekleme</AlertTitle>
+          <AlertDescription>
+            "Ürün Ekle" butonu ile mevcut ürünlerden seçim yapabilir veya "Manuel Ekle" ile yeni kalemler oluşturabilirsiniz. Eklenen ürünler aşağıda listelenecektir.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <ProposalItemsHeader
+        selectedCurrency={selectedCurrency}
+        onCurrencyChange={handleGlobalCurrencyChange}
+        onAddItem={onAddItem}
+        onOpenProductDialog={() => setProductDialogOpen(true)}
+        currencyOptions={currencyOptions}
+        isGlobalCurrencyEnabled={false} // Artık global para birimi kullanıyoruz
+      />
+      
+      {/* Stock warnings */}
+      {(hasLowStockItems || hasOutOfStockItems) && (
+        <Alert variant={hasOutOfStockItems ? "destructive" : "default"} className={!hasOutOfStockItems ? "border-yellow-500 text-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800" : ""}>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>
+            {hasOutOfStockItems ? "Stokta olmayan ürünler" : "Düşük stoklu ürünler"}
+          </AlertTitle>
+          <AlertDescription>
+            {hasOutOfStockItems 
+              ? "Teklifinizde stokta olmayan ürünler bulunmaktadır. Lütfen stok durumunu kontrol edin."
+              : "Teklifinizde düşük stok seviyesinde ürünler bulunmaktadır. Stok durumunu kontrol etmeniz önerilir."}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <div className="border dark:border-gray-700 rounded-md overflow-hidden">
+        <ProposalItemsTable
+          items={items}
+          handleItemChange={onItemChange}
+          handleRemoveItem={onRemoveItem}
+          selectedCurrency={selectedCurrency}
+          formatCurrency={formatCurrency}
+          currencyOptions={currencyOptions}
+          taxRateOptions={taxRateOptions}
+        />
       </div>
 
-      <div className="border rounded-md overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[250px]">Ürün/Hizmet</TableHead>
-              <TableHead>Adet</TableHead>
-              <TableHead>Birim Fiyat</TableHead>
-              <TableHead>İndirim %</TableHead>
-              <TableHead>Vergi %</TableHead>
-              <TableHead className="text-right">Toplam</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="text-center py-6 text-muted-foreground"
-                >
-                  Henüz teklif kalemi eklenmemiş
-                </TableCell>
-              </TableRow>
-            ) : (
-              <>
-                {items.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <Input
-                        value={item.name}
-                        onChange={(e) =>
-                          updateItem(item.id, "name", e.target.value)
-                        }
-                        placeholder="Ürün/Hizmet adı"
-                        className="max-w-[250px]"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          updateItem(item.id, "quantity", parseInt(e.target.value))
-                        }
-                        className="w-20"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.unit_price}
-                        onChange={(e) =>
-                          updateItem(item.id, "unit_price", parseFloat(e.target.value))
-                        }
-                        className="w-28"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={item.discount_rate || 0}
-                        onChange={(e) =>
-                          updateItem(item.id, "discount_rate", parseFloat(e.target.value))
-                        }
-                        className="w-20"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={item.tax_rate}
-                        onChange={(e) =>
-                          updateItem(item.id, "tax_rate", parseFloat(e.target.value))
-                        }
-                        className="w-20"
-                      />
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatMoney(item.total_price, item.currency)}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeItem(item.id)}
-                        className="h-8 w-8 p-0 text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Sil</span>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </>
+      {items.length > 0 && (
+        <div className="flex flex-col md:flex-row justify-between gap-4">
+          {/* Grup bazlı dağılım */}
+          <div className="space-y-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-md flex-grow">
+            <h3 className="text-sm font-medium mb-2">Teklif Kalemleri Dağılımı</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {PROPOSAL_ITEM_GROUPS.map(group => (
+                itemCountByGroup[group.value] ? (
+                  <div key={group.value} className="flex justify-between text-xs">
+                    <span className="flex items-center">
+                      <Badge variant="outline" className="mr-2 py-0 h-5">
+                        {itemCountByGroup[group.value]}
+                      </Badge>
+                      {group.label}:
+                    </span>
+                    <span>{formatCurrency(groupTotals[group.value])}</span>
+                  </div>
+                ) : null
+              ))}
+            </div>
+          </div>
+          
+          {/* Toplam özeti */}
+          <div className="space-y-2 min-w-[300px] p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
+            <div className="flex justify-between text-sm">
+              <span>Ara Toplam:</span>
+              <span>{formatCurrency(calculateSubtotal() - calculateTaxTotal())}</span>
+            </div>
+            {calculateDiscountTotal() > 0 && (
+              <div className="flex justify-between text-sm text-red-500">
+                <span>İndirim Tutarı:</span>
+                <span>-{formatCurrency(calculateDiscountTotal())}</span>
+              </div>
             )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <div className="flex justify-end">
-        <div className="space-y-1 min-w-[200px]">
-          <div className="flex justify-between text-sm">
-            <span>Ara Toplam:</span>
-            <span>{formatMoney(calculateSubtotal())}</span>
-          </div>
-          <div className="flex justify-between font-medium">
-            <span>Toplam:</span>
-            <span>{formatMoney(calculateSubtotal())}</span>
+            <div className="flex justify-between text-sm">
+              <span>KDV Toplamı:</span>
+              <span>{formatCurrency(calculateTaxTotal())}</span>
+            </div>
+            <div className="flex justify-between font-medium pt-2 border-t dark:border-gray-700">
+              <span>Genel Toplam:</span>
+              <span>{formatCurrency(calculateSubtotal())}</span>
+            </div>
           </div>
         </div>
-      </div>
-
-      <ProductDetailsDialog
+      )}
+      
+      <ProductSearchDialog
         open={productDialogOpen}
         onOpenChange={setProductDialogOpen}
-        selectedProduct={null}
         onSelectProduct={handleProductSelect}
         selectedCurrency={selectedCurrency}
       />

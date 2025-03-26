@@ -1,15 +1,17 @@
 
 import React, { useMemo } from "react";
-import { Calendar } from "react-big-calendar";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useServiceRequests, ServiceRequest } from "@/hooks/useServiceRequests";
 import { useTechnicianNames } from "./hooks/useTechnicianNames";
 import { Card } from "@/components/ui/card";
 import { TECHNICIAN_COLORS } from "@/types/calendar";
-import { localizer, turkishMessages } from "./calendar/calendarLocalizer";
 
 // Import additional components
 import "./calendar/calendar-styles.css";
+
+const localizer = momentLocalizer(moment);
 
 interface ServiceRequestCalendarProps {
   searchQuery: string;
@@ -139,7 +141,19 @@ export const ServiceRequestCalendar: React.FC<ServiceRequestCalendarProps> = ({
         onSelectEvent={handleEventClick}
         eventPropGetter={eventStyleGetter}
         views={['month', 'week', 'day']}
-        messages={turkishMessages}
+        messages={{
+          month: 'Ay',
+          week: 'Hafta',
+          day: 'Gün',
+          today: 'Bugün',
+          previous: 'Önceki',
+          next: 'Sonraki',
+          agenda: 'Ajanda',
+          date: 'Tarih',
+          time: 'Saat',
+          event: 'Olay',
+          noEventsInRange: 'Bu aralıkta hiç servis talebi yok.'
+        }}
       />
     </div>
   );

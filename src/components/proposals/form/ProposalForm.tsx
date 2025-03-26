@@ -3,12 +3,10 @@ import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Proposal } from "@/types/proposal";
 import { useProposalFormState } from "@/hooks/proposals/useProposalFormState";
-import { useForm } from "react-hook-form";
 import ProposalFormHeader from "./ProposalFormHeader";
 import ProposalFormContent from "./ProposalFormContent";
 import ProposalFormActions from "./ProposalFormActions";
-import { DirectCurrencySelector } from "./ProposalCurrencySelector";
-import { ProposalFormData } from "@/types/proposal-form";
+import ProposalCurrencySelector from "./ProposalCurrencySelector";
 
 interface ProposalFormProps {
   proposal: Proposal | null;
@@ -24,22 +22,13 @@ interface ProposalFormProps {
 const ProposalForm: React.FC<ProposalFormProps> = ({
   proposal,
   loading,
-  saving: externalSaving,
+  saving,
   isNew,
   onSave,
   onBack,
   title,
   subtitle
 }) => {
-  const form = useForm<ProposalFormData>({
-    defaultValues: {
-      title: proposal?.title || "",
-      status: proposal?.status || "draft",
-      currency: proposal?.currency || "TRY",
-      items: proposal?.items || []
-    }
-  });
-
   const {
     formData,
     formErrors,
@@ -49,15 +38,10 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
     handleSelectChange,
     handleDateChange,
     handleItemsChange,
-    handleCurrencyChange,
     handleSave,
-    validateForm
+    validateForm,
+    handleCurrencyChange,
   } = useProposalFormState(proposal, isNew, onSave);
-
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return "";
-    return new Date(dateString).toLocaleDateString("tr-TR");
-  };
 
   return (
     <>
@@ -65,18 +49,16 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
         title={title}
         subtitle={subtitle}
         loading={loading}
-        saving={externalSaving || formSaving}
+        saving={saving || formSaving}
         isNew={isNew}
         proposal={proposal}
       />
 
       {/* Global Para Birimi Seçici */}
-      <div className="mb-6">
-        <DirectCurrencySelector 
-          selectedCurrency={formData.currency || "TRY"}
-          onCurrencyChange={handleCurrencyChange}
-        />
-      </div>
+      <ProposalCurrencySelector 
+        selectedCurrency={formData.currency || "TRY"}
+        onCurrencyChange={handleCurrencyChange}
+      />
 
       {loading ? (
         <div className="space-y-4">
@@ -92,15 +74,18 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
           proposal={proposal}
           handleInputChange={handleInputChange}
           handleSelectChange={handleSelectChange}
-          handleDateChange={(name, date) => handleDateChange(name, date)}
+          handleDateChange={handleDateChange}
           handleItemsChange={handleItemsChange}
-          formatDate={formatDate}
+          formatDate={(dateString) => {
+            if (!dateString) return "";
+            return new Date(dateString).toLocaleDateString("tr-TR");
+          }}
         />
       )}
 
       <ProposalFormActions 
         isNew={isNew}
-        saving={externalSaving || formSaving}
+        saving={saving || formSaving}
         onSave={handleSave}
         onBack={onBack}
         isFormDirty={isFormDirty}

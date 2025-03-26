@@ -12,7 +12,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Product } from "@/types/product";
-import { Button } from "@/components/ui/button";
 
 interface ProductDetailsFormProps {
   selectedProduct: Product;
@@ -24,9 +23,7 @@ interface ProductDetailsFormProps {
   setSelectedDepo: (depo: string) => void;
   discountRate: number;
   setDiscountRate: (rate: number) => void;
-  onSelectProduct: () => void;
-  formatCurrency?: (amount: number, currency?: string) => string;
-  selectedCurrency?: string;
+  formatCurrency: (amount: number, currency?: string) => string;
 }
 
 const ProductDetailsForm: React.FC<ProductDetailsFormProps> = ({
@@ -39,9 +36,7 @@ const ProductDetailsForm: React.FC<ProductDetailsFormProps> = ({
   setSelectedDepo,
   discountRate,
   setDiscountRate,
-  onSelectProduct,
-  formatCurrency = (amount: number) => `${amount.toFixed(2)}`,
-  selectedCurrency = "TRY",
+  formatCurrency,
 }) => {
   // Simple depo options - in a real app would be fetched from backend
   const depoOptions = [
@@ -135,10 +130,6 @@ const ProductDetailsForm: React.FC<ProductDetailsFormProps> = ({
             className="my-2"
           />
         </div>
-
-        <Button onClick={onSelectProduct} className="w-full mt-4">
-          Ekle
-        </Button>
       </div>
 
       <div className="space-y-4">

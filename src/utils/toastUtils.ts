@@ -1,11 +1,11 @@
 
-import { toast as sonnerToast } from "sonner";
+import { toast as reactToastify } from "react-toastify";
 import { toast as useToastHook } from "@/hooks/use-toast";
 
 type ToastOptions = {
   /** Duration in milliseconds */
   duration?: number;
-  /** Whether to use the shadcn/ui toast or sonner */
+  /** Whether to use the shadcn/ui toast or react-toastify */
   useBuiltIn?: boolean;
 };
 
@@ -23,8 +23,13 @@ export const showSuccess = (message: string, options?: ToastOptions) => {
     });
   }
   
-  return sonnerToast.success(message, {
-    duration: options?.duration || 5000,
+  return reactToastify.success(message, {
+    autoClose: options?.duration || 5000,
+    position: "bottom-right",
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
   });
 };
 
@@ -43,8 +48,13 @@ export const showError = (message: string, options?: ToastOptions) => {
     });
   }
   
-  return sonnerToast.error(message, {
-    duration: options?.duration || 5000,
+  return reactToastify.error(message, {
+    autoClose: options?.duration || 5000,
+    position: "bottom-right",
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
   });
 };
 
@@ -62,8 +72,13 @@ export const showWarning = (message: string, options?: ToastOptions) => {
     });
   }
   
-  return sonnerToast.warning(message, {
-    duration: options?.duration || 5000,
+  return reactToastify.warning(message, {
+    autoClose: options?.duration || 5000,
+    position: "bottom-right",
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
   });
 };
 
@@ -81,10 +96,15 @@ export const showInfo = (message: string, options?: ToastOptions) => {
     });
   }
   
-  return sonnerToast.info(message, {
-    duration: options?.duration || 5000,
+  return reactToastify.info(message, {
+    autoClose: options?.duration || 5000,
+    position: "bottom-right",
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
   });
 };
 
 // Re-export the toast objects in case direct access is needed
-export { sonnerToast, useToastHook };
+export { reactToastify, useToastHook };

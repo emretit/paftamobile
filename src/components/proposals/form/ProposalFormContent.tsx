@@ -5,7 +5,7 @@ import { ProposalFormData } from "@/types/proposal-form";
 import ProposalFormBasicInfo from "./ProposalFormBasicInfo";
 import ProposalFormCustomerInfo from "./ProposalFormCustomerInfo";
 import ProposalFormDetails from "./ProposalFormDetails";
-import { ProposalItems } from "./items/ProposalItems";
+import ProposalItems from "./items/ProposalItems";
 
 interface ProposalFormContentProps {
   formData: ProposalFormData;
@@ -14,7 +14,7 @@ interface ProposalFormContentProps {
   proposal: Proposal | null;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
-  handleDateChange: (name: string, date: Date | undefined) => void;
+  handleDateChange: (date: Date | undefined) => void;
   handleItemsChange: (items: any[]) => void;
   formatDate: (dateString?: string | null) => string;
 }
@@ -42,7 +42,7 @@ const ProposalFormContent: React.FC<ProposalFormContentProps> = ({
           formErrors={formErrors}
           handleInputChange={handleInputChange}
           handleSelectChange={handleSelectChange}
-          handleDateChange={(date) => handleDateChange("valid_until", date)}
+          handleDateChange={handleDateChange}
           formatDate={formatDate}
         />
         

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -94,8 +95,8 @@ export const usePurchaseOrders = () => {
     items: any[] 
   }) => {
     // Get current user
-    const { data, error: userError } = await supabase.auth.getUser();
-    if (userError || !data.user) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       toast.error("Kullanıcı kimliği alınamadı");
       throw new Error("User not authenticated");
     }
@@ -107,7 +108,7 @@ export const usePurchaseOrders = () => {
         request_id: requestId,
         supplier_id: supplierId,
         status: 'draft' as PurchaseOrderStatus,
-        issued_by: data.user.id,
+        issued_by: user.id,
       }])
       .select()
       .single();
