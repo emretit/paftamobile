@@ -1,4 +1,5 @@
-import React, { useCallback, useState } from "react";
+
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,23 +8,17 @@ import { ProposalItem } from "@/types/proposal";
 import { Product } from "@/types/product";
 import { useProposalItems } from "./useProposalItems";
 import ProductDetailsDialog from "./product-dialog/ProductDetailsDialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { getCurrencyOptions } from "./utils/currencyUtils";
 
 interface ProposalItemsProps {
   items: ProposalItem[];
   onItemsChange: (items: ProposalItem[]) => void;
+  globalCurrency?: string;
 }
 
 export const ProposalItems = ({
   items,
   onItemsChange,
+  globalCurrency
 }: ProposalItemsProps) => {
   const {
     selectedCurrency,
@@ -45,6 +40,16 @@ export const ProposalItems = ({
     isLoading,
     setItems
   } = useProposalItems();
+
+  // If a global currency is provided, use it to initialize
+  React.useEffect(() => {
+    if (globalCurrency && globalCurrency !== selectedCurrency) {
+      setSelectedCurrency(globalCurrency);
+      // Update all items to use this currency
+      const updatedItems = updateAllItemsCurrency(globalCurrency);
+      onItemsChange(updatedItems);
+    }
+  }, [globalCurrency, selectedCurrency]);
 
   const addItem = () => {
     const newItems = handleAddItem();
@@ -73,8 +78,6 @@ export const ProposalItems = ({
     const newItems = handleSelectProduct(product);
     onItemsChange(newItems);
   };
-
-  const currencyOptions = getCurrencyOptions();
 
   return (
     <div className="space-y-4">
@@ -219,8 +222,12 @@ export const ProposalItems = ({
       <ProductDetailsDialog
         open={productDialogOpen}
         onOpenChange={setProductDialogOpen}
-        onProductSelect={handleProductSelect}
+        selectedProduct={null}
+        onSelectProduct={handleProductSelect}
+        selectedCurrency={selectedCurrency}
       />
     </div>
   );
 };
+
+export default ProposalItems;

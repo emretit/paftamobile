@@ -1,134 +1,114 @@
 
-import React, { useState } from "react";
-import { 
-  Dialog, 
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from "@/components/ui/dialog";
-
+import React from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Product } from "@/types/product";
-import { useProductDetailsState } from "./hooks/useProductDetailsState";
-import { useProductCalculations } from "./hooks/useProductCalculations";
-import ProductDialogContent from "./components/DialogContent";
-import ExchangeRatesNotice from "./components/ExchangeRatesNotice";
-import DialogFooterButtons from "./components/DialogFooterButtons";
+import ProductDetailsForm from "./ProductDetailsForm";
 
-interface ProductDetailsDialogProps {
+export interface ProductDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedProduct: Product | null;
-  quantity: number;
-  setQuantity: (value: number) => void;
-  customPrice: number | undefined;
-  setCustomPrice: (value: number | undefined) => void;
-  selectedDepo: string;
-  setSelectedDepo: (value: string) => void;
-  discountRate: number;
-  setDiscountRate: (value: number) => void;
-  formatCurrency: (amount: number, currency?: string) => string;
-  onSelectProduct: () => void;
-  selectedCurrency: string;
+  selectedProduct?: Product | null;
+  quantity?: number;
+  setQuantity?: (value: number) => void;
+  customPrice?: number;
+  setCustomPrice?: (value: number) => void;
+  selectedDepo?: string;
+  setSelectedDepo?: (value: string) => void;
+  discountRate?: number;
+  setDiscountRate?: (value: number) => void;
+  formatCurrency?: (amount: number, currency?: string) => string;
+  onSelectProduct: (product: Product, quantity?: number, customPrice?: number, discountRate?: number) => void;
+  selectedCurrency?: string;
 }
 
 const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
   open,
   onOpenChange,
-  selectedProduct,
-  quantity,
+  selectedProduct = null,
+  quantity = 1,
   setQuantity,
   customPrice,
   setCustomPrice,
   selectedDepo,
   setSelectedDepo,
-  discountRate,
+  discountRate = 0,
   setDiscountRate,
   formatCurrency,
   onSelectProduct,
-  selectedCurrency
+  selectedCurrency = "TRY"
 }) => {
-  const {
-    totalPrice,
-    setTotalPrice,
-    availableStock,
-    setAvailableStock,
-    stockStatus,
-    setStockStatus,
-    convertedPrice,
-    setConvertedPrice,
-    notes,
-    setNotes,
-    originalPrice,
-    setOriginalPrice,
-    originalCurrency,
-    setOriginalCurrency,
-    currentCurrency,
-    setCurrentCurrency,
-    isLoadingRates,
-    calculatedTotal,
-    setCalculatedTotal,
-    handleCurrencyChange
-  } = useProductDetailsState(open, selectedProduct, selectedCurrency);
+  // Support for simple mode where we don't have external state
+  const [internalQuantity, setInternalQuantity] = React.useState(quantity);
+  const [internalCustomPrice, setInternalCustomPrice] = React.useState(customPrice);
+  const [internalDiscountRate, setInternalDiscountRate] = React.useState(discountRate);
+  const [internalDepo, setInternalDepo] = React.useState(selectedDepo || "");
 
-  useProductCalculations({
-    selectedProduct,
-    quantity,
-    customPrice,
-    discountRate,
-    setTotalPrice,
-    setAvailableStock,
-    setStockStatus,
-    setCalculatedTotal,
-    open,
-    setOriginalPrice,
-    setOriginalCurrency,
-    setCurrentCurrency,
-    setCustomPrice,
-    setConvertedPrice
-  });
+  // Use external handlers if provided, otherwise use internal state
+  const handleQuantityChange = setQuantity || setInternalQuantity;
+  const handleCustomPriceChange = setCustomPrice || setInternalCustomPrice;
+  const handleDiscountRateChange = setDiscountRate || setInternalDiscountRate;
+  const handleDepoChange = setSelectedDepo || setInternalDepo;
 
-  if (!selectedProduct) {
-    return null;
+  // Reset internal state when dialog opens with new product
+  React.useEffect(() => {
+    if (open) {
+      setInternalQuantity(quantity);
+      setInternalCustomPrice(selectedProduct?.price || 0);
+      setInternalDiscountRate(discountRate);
+      setInternalDepo(selectedDepo || "");
+    }
+  }, [open, selectedProduct, quantity, discountRate]);
+
+  const handleSelectProduct = () => {
+    if (selectedProduct) {
+      onSelectProduct(
+        selectedProduct,
+        setQuantity ? quantity : internalQuantity,
+        setCustomPrice ? customPrice : internalCustomPrice,
+        setDiscountRate ? discountRate : internalDiscountRate
+      );
+      onOpenChange(false);
+    }
+  };
+
+  if (!selectedProduct && open) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ürün Detayı</DialogTitle>
+          </DialogHeader>
+          <div className="py-6 text-center text-muted-foreground">
+            Lütfen bir ürün seçin.
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Ürün Detayları</DialogTitle>
         </DialogHeader>
         
-        <ProductDialogContent
-          selectedProduct={selectedProduct}
-          stockStatus={stockStatus}
-          availableStock={availableStock}
-          originalCurrency={originalCurrency}
-          originalPrice={originalPrice}
-          quantity={quantity}
-          setQuantity={setQuantity}
-          selectedDepo={selectedDepo}
-          setSelectedDepo={setSelectedDepo}
-          customPrice={customPrice}
-          setCustomPrice={setCustomPrice}
-          discountRate={discountRate}
-          setDiscountRate={setDiscountRate}
-          currentCurrency={currentCurrency}
-          handleCurrencyChange={handleCurrencyChange}
-          convertedPrice={convertedPrice}
-          calculatedTotal={calculatedTotal}
-          notes={notes}
-          setNotes={setNotes}
-          formatCurrency={formatCurrency}
-        />
-        
-        <DialogFooter>
-          <ExchangeRatesNotice isLoadingRates={isLoadingRates} />
-          <DialogFooterButtons 
-            onClose={() => onOpenChange(false)} 
-            onSelectProduct={onSelectProduct} 
+        {selectedProduct && (
+          <ProductDetailsForm
+            product={selectedProduct}
+            quantity={setQuantity ? quantity : internalQuantity}
+            setQuantity={handleQuantityChange}
+            customPrice={setCustomPrice ? customPrice : internalCustomPrice}
+            setCustomPrice={handleCustomPriceChange}
+            selectedDepo={setSelectedDepo ? selectedDepo : internalDepo}
+            setSelectedDepo={handleDepoChange}
+            discountRate={setDiscountRate ? discountRate : internalDiscountRate}
+            setDiscountRate={handleDiscountRateChange}
+            onSelectProduct={handleSelectProduct}
+            formatCurrency={formatCurrency}
+            selectedCurrency={selectedCurrency}
           />
-        </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

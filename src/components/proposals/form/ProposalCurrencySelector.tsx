@@ -3,7 +3,7 @@ import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/for
 import { UseFormReturn } from "react-hook-form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCurrencyOptions } from "./items/utils/currencyUtils";
-import { ProposalFormData } from "@/hooks/proposals/useProposalFormState";
+import { ProposalFormData } from "@/types/proposal-form";
 
 interface ProposalCurrencySelectorProps {
   form: UseFormReturn<ProposalFormData>;
@@ -52,3 +52,5 @@ export const ProposalCurrencySelector = ({
     />
   );
 };
+
+export default ProposalCurrencySelector;

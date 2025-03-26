@@ -5,7 +5,7 @@ import { ProposalFormData } from "@/types/proposal-form";
 import ProposalFormBasicInfo from "./ProposalFormBasicInfo";
 import ProposalFormCustomerInfo from "./ProposalFormCustomerInfo";
 import ProposalFormDetails from "./ProposalFormDetails";
-import ProposalItems from "./items/ProposalItems";
+import { ProposalItems } from "./items/ProposalItems";
 
 interface ProposalFormContentProps {
   formData: ProposalFormData;
