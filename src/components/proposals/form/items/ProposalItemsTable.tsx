@@ -69,34 +69,6 @@ const ProposalItemsTable = ({
     } else {
       // Standart item değişikliği işleyicisini kullan
       handleItemChange(index, "currency", value);
-      
-      // Manuel dönüşüm için basit oran hesabı
-      const getRatesMap = () => {
-        const ratesMap: Record<string, number> = { TRY: 1 };
-        
-        exchangeRates.forEach(rate => {
-          if (rate.currency_code && rate.forex_buying) {
-            ratesMap[rate.currency_code] = rate.forex_buying;
-          }
-        });
-        
-        return ratesMap;
-      };
-      
-      const rates = getRatesMap();
-      
-      if (Object.keys(rates).includes(currentCurrency) && Object.keys(rates).includes(value)) {
-        const currentRate = rates[currentCurrency] || 1;
-        const newRate = rates[value] || 1;
-        const conversionRate = currentRate / newRate;
-        
-        const currentPrice = currentItem.unit_price;
-        const convertedPrice = currentPrice * conversionRate;
-        
-        handleItemChange(index, "unit_price", convertedPrice);
-        
-        toast.info(`Birim fiyat ${currentCurrency}'dan ${value}'a dönüştürüldü`);
-      }
     }
   };
 

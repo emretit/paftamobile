@@ -211,26 +211,6 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
           onOpenProductDialog={() => setIsAddProductDialogOpen(true)}
           currencyOptions={currencyOptions}
         />
-        <div className="flex flex-wrap gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleAddItem}
-            className="gap-1"
-          >
-            <Plus className="h-4 w-4" />
-            Yeni Kalem
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setIsAddProductDialogOpen(true)}
-            className="gap-1"
-          >
-            <Search className="h-4 w-4" />
-            Ürün Ara
-          </Button>
-        </div>
         
         <Separator className="my-4" />
         
@@ -251,10 +231,6 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
       <ProductSearchDialog
         open={isAddProductDialogOpen}
         onOpenChange={setIsAddProductDialogOpen}
-        onProductSelect={(product) => {
-          // Add logic to add selected product to items
-          console.log("Selected product:", product);
-        }}
         currentCurrency={selectedCurrency}
       />
     </>
