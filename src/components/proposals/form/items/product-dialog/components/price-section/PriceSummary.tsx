@@ -1,7 +1,7 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { CurrencyRatePopover } from "@/components/currency/CurrencyRatePopover";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
 
 interface PriceSummaryProps {
   unitPrice: number;
@@ -32,6 +32,30 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({
   const subtotal = baseTotal - discountAmount;
   const taxAmount = subtotal * (taxRate / 100);
   const total = subtotal + taxAmount;
+  
+  const { exchangeRates, loading } = useExchangeRates();
+  const [rate, setRate] = useState<number | null>(null);
+  
+  // Get exchange rate from TCMB data
+  useEffect(() => {
+    if (exchangeRates && exchangeRates.length > 0 && originalCurrency !== currentCurrency) {
+      // Find the currency rates
+      const sourceCurrencyRate = exchangeRates.find(r => r.currency_code === originalCurrency);
+      const targetCurrencyRate = exchangeRates.find(r => r.currency_code === currentCurrency);
+      
+      if (sourceCurrencyRate && targetCurrencyRate && sourceCurrencyRate.forex_selling && targetCurrencyRate.forex_selling) {
+        // Calculate cross-rate
+        const crossRate = targetCurrencyRate.forex_selling / sourceCurrencyRate.forex_selling;
+        setRate(crossRate);
+      } else if (originalCurrency === 'TRY' && targetCurrencyRate && targetCurrencyRate.forex_selling) {
+        // TRY to foreign currency
+        setRate(1 / targetCurrencyRate.forex_selling);
+      } else if (currentCurrency === 'TRY' && sourceCurrencyRate && sourceCurrencyRate.forex_selling) {
+        // Foreign currency to TRY
+        setRate(sourceCurrencyRate.forex_selling);
+      }
+    }
+  }, [exchangeRates, originalCurrency, currentCurrency]);
 
   return (
     <Card className="bg-muted/40">
@@ -71,6 +95,19 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({
               {formatCurrency(taxAmount, originalCurrency)}
             </span>
           </div>
+          
+          {originalCurrency !== currentCurrency && (
+            <div className="mt-1 p-1.5 rounded-sm bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center justify-between text-xs text-blue-700 dark:text-blue-400">
+                <span>TCMB Döviz Kuru:</span>
+                <span className="font-medium">
+                  {loading ? 'Yükleniyor...' : rate ? 
+                    `1 ${originalCurrency} = ${rate.toFixed(4)} ${currentCurrency}` : 
+                    'Kur bilgisi bulunamadı'}
+                </span>
+              </div>
+            </div>
+          )}
           
           <div className="pt-2 border-t flex justify-between items-center">
             <div className="flex items-center gap-2">
