@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PROPOSAL_ITEM_GROUPS } from "./proposalItemsConstants";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
 
 interface ProposalItemsProps {
   items: ProposalItem[];
@@ -24,6 +25,9 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
   onItemsChange,
   globalCurrency = "TRY"
 }) => {
+  // Get dashboard exchange rates
+  const { exchangeRates: dashboardRates, convertCurrency: dashboardConvert } = useExchangeRates();
+  
   const {
     selectedCurrency,
     setSelectedCurrency,
@@ -68,7 +72,14 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
 
   // Calculate totals
   const calculateSubtotal = () => {
-    return items.reduce((sum, item) => sum + Number(item.total_price || 0), 0);
+    return items.reduce((sum, item) => {
+      // Item para birimi ile teklif para birimi farklı ise dönüştür
+      if (item.currency && item.currency !== globalCurrency) {
+        const convertedPrice = dashboardConvert(Number(item.total_price || 0), item.currency, globalCurrency);
+        return sum + convertedPrice;
+      }
+      return sum + Number(item.total_price || 0);
+    }, 0);
   };
 
   // Calculate tax total
@@ -86,6 +97,11 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
       const itemSubtotal = discountedUnitPrice * quantity;
       const taxAmount = itemSubtotal * (taxRate / 100);
       
+      // Eğer para birimi farklı ise dönüştür
+      if (item.currency && item.currency !== globalCurrency) {
+        return sum + dashboardConvert(taxAmount, item.currency, globalCurrency);
+      }
+      
       return sum + taxAmount;
     }, 0);
   };
@@ -101,6 +117,11 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
       const itemFullPrice = unitPrice * quantity;
       const discountAmount = itemFullPrice * (discountRate / 100);
       
+      // Eğer para birimi farklı ise dönüştür
+      if (item.currency && item.currency !== globalCurrency) {
+        return sum + dashboardConvert(discountAmount, item.currency, globalCurrency);
+      }
+      
       return sum + discountAmount;
     }, 0);
   };
@@ -115,11 +136,18 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
 
     items.forEach(item => {
       const group = item.group || 'diger';
-      totals[group] = (totals[group] || 0) + (item.total_price || 0);
+      let itemTotal = item.total_price || 0;
+      
+      // Eğer para birimi farklı ise dönüştür
+      if (item.currency && item.currency !== globalCurrency) {
+        itemTotal = dashboardConvert(itemTotal, item.currency, globalCurrency);
+      }
+      
+      totals[group] = (totals[group] || 0) + itemTotal;
     });
     
     return totals;
-  }, [items]);
+  }, [items, globalCurrency, dashboardConvert]);
 
   const handleProductSelect = (product: Product) => {
     // Ürünün kendi para birimini koruyacak şekilde teklife ekleme
@@ -183,6 +211,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
       const updatedItems = updateAllItemsCurrency(currency);
       if (updatedItems) {
         onItemsChange(updatedItems);
+        toast.success(`Tüm kalemler ${currency} para birimine dönüştürüldü`);
       }
     }
   };

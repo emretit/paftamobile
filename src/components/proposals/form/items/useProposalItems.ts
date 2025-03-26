@@ -3,15 +3,18 @@ import { useState, useCallback, useEffect } from "react";
 import { useCurrencyManagement } from "./hooks/useCurrencyManagement";
 import { ProposalItem } from "@/types/proposal";
 import { Product } from "@/types/product";
-import { convertCurrency } from "./utils/currencyUtils";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { showError } from "@/utils/toastUtils";
 import { v4 as uuidv4 } from "uuid";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
 
 export const useProposalItems = () => {
   const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [items, setItems] = useState<ProposalItem[]>([]);
+  
+  // Use dashboard exchange rates
+  const dashboardRates = useExchangeRates();
   
   const {
     selectedCurrency,
@@ -152,7 +155,7 @@ export const useProposalItems = () => {
     return updatedItems;
   }, [items]);
 
-  // Update all items' currency
+  // Update all items' currency using dashboard exchange rates
   const updateAllItemsCurrency = useCallback((newCurrency: string) => {
     if (newCurrency === selectedCurrency) return items;
 
@@ -164,11 +167,11 @@ export const useProposalItems = () => {
           ? item.original_price
           : item.unit_price;
 
-      const convertedPrice = convertCurrency(
+      // Use dashboard exchange rates for conversion
+      const convertedPrice = dashboardRates.convertCurrency(
         sourcePrice,
         sourceCurrency,
-        newCurrency,
-        exchangeRates
+        newCurrency
       );
 
       // Recalculate total price with tax and discount
@@ -191,7 +194,12 @@ export const useProposalItems = () => {
 
     setItems(updatedItems);
     return updatedItems;
-  }, [items, selectedCurrency, exchangeRates]);
+  }, [items, selectedCurrency, dashboardRates]);
+
+  // Convert using dashboard exchange rates
+  const convertCurrency = useCallback((amount: number, fromCurrency: string, toCurrency: string) => {
+    return dashboardRates.convertCurrency(amount, fromCurrency, toCurrency);
+  }, [dashboardRates]);
 
   return {
     selectedCurrency,
