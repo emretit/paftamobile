@@ -20,13 +20,13 @@ interface ProposalItemsProps {
   globalCurrency?: string; // Global para birimi
 }
 
-const ProposalItems: React.FC<ProposalItemsProps> = ({
-  items = [],
+const ProposalItems: React.FC<ProposalItemsProps> = ({ 
+  items, 
   onItemsChange,
   globalCurrency = "TRY"
 }) => {
   // Get dashboard exchange rates
-  const { exchangeRates: dashboardRates, convertCurrency: dashboardConvert, formatCurrency: dashboardFormatCurrency } = useExchangeRates();
+  const { exchangeRates: dashboardRates, convertCurrency: dashboardConvert } = useExchangeRates();
   
   const {
     selectedCurrency,
@@ -55,20 +55,6 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     { value: 20, label: "%20" }
   ];
 
-  // Create a simplified exchange rates object (Record<string, number>) for the table component
-  const exchangeRatesMap = useMemo(() => {
-    const ratesMap: Record<string, number> = { TRY: 1 };
-    
-    // Convert the array of exchange rate objects to a simple object map
-    dashboardRates.forEach(rate => {
-      if (rate.currency_code && rate.forex_buying) {
-        ratesMap[rate.currency_code] = rate.forex_buying;
-      }
-    });
-    
-    return ratesMap;
-  }, [dashboardRates]);
-
   // Global para birimi değiştiğinde tüm kalemleri güncelle
   useEffect(() => {
     if (globalCurrency && globalCurrency !== selectedCurrency) {
@@ -85,33 +71,6 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
       }
     }
   }, [globalCurrency, selectedCurrency, setSelectedCurrency, updateAllItemsCurrency, items, onItemsChange]);
-
-  // Listen for global currency change events from CurrencyRatePopover
-  useEffect(() => {
-    const handleGlobalCurrencyChangeEvent = (event: CustomEvent<{currency: string, source: string}>) => {
-      console.log(`Global currency change event received: ${event.detail.currency} from ${event.detail.source}`);
-      
-      if (event.detail.currency !== selectedCurrency) {
-        // Update local currency state
-        setSelectedCurrency(event.detail.currency);
-        
-        // Convert all items to the new currency
-        if (items.length > 0) {
-          const updatedItems = updateAllItemsCurrency(event.detail.currency);
-          if (updatedItems) {
-            onItemsChange(updatedItems);
-            toast.success(`Tüm kalemler ${event.detail.currency} para birimine dönüştürüldü`);
-          }
-        }
-      }
-    };
-
-    window.addEventListener('global-currency-change', handleGlobalCurrencyChangeEvent as EventListener);
-    
-    return () => {
-      window.removeEventListener('global-currency-change', handleGlobalCurrencyChangeEvent as EventListener);
-    };
-  }, [items, selectedCurrency, setSelectedCurrency, updateAllItemsCurrency, onItemsChange]);
 
   // Calculate totals
   const calculateSubtotal = () => {
@@ -281,19 +240,10 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
         toast.success(`Tüm kalemler ${currency} para birimine dönüştürüldü`);
       }
     }
-    
-    // Dispatch a custom event to notify other components
-    const event = new CustomEvent('global-currency-change', { 
-      detail: { 
-        currency,
-        source: 'proposal-items' 
-      } 
-    });
-    window.dispatchEvent(event);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {items.length === 0 && (
         <Alert variant="default" className="border-blue-500 text-blue-800 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
           <Info className="h-4 w-4" />
@@ -334,11 +284,10 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
           handleItemChange={onItemChange}
           handleRemoveItem={onRemoveItem}
           selectedCurrency={globalCurrency || "TRY"}
-          formatCurrency={dashboardFormatCurrency} // Use dashboard formatter for consistency
+          formatCurrency={formatCurrency}
           currencyOptions={currencyOptions}
           taxRateOptions={taxRateOptions}
           handleItemCurrencyChange={onItemCurrencyChange}
-          exchangeRates={exchangeRatesMap} // Pass the simplified exchange rates map
         />
       </div>
 

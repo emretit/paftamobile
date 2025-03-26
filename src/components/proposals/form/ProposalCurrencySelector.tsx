@@ -33,24 +33,7 @@ const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({
     refreshExchangeRates();
   }, [refreshExchangeRates]);
 
-  // Listen for global currency change events from other components
-  useEffect(() => {
-    const handleGlobalCurrencyChangeEvent = (event: CustomEvent<{currency: string, source: string}>) => {
-      // If the event wasn't triggered by this component, update our state
-      if (event.detail.source !== 'proposal-currency-selector' && event.detail.currency !== selectedCurrency) {
-        console.log(`ProposalCurrencySelector received currency change event: ${event.detail.currency} from ${event.detail.source}`);
-        onCurrencyChange(event.detail.currency);
-      }
-    };
-
-    window.addEventListener('global-currency-change', handleGlobalCurrencyChangeEvent as EventListener);
-    
-    return () => {
-      window.removeEventListener('global-currency-change', handleGlobalCurrencyChangeEvent as EventListener);
-    };
-  }, [selectedCurrency, onCurrencyChange]);
-
-  // Get the exchange rate for the selected currency from the dashboard rates
+  // Get the exchange rate for the selected currency
   const getExchangeRateInfo = () => {
     if (selectedCurrency === "TRY") {
       return null; // No need to show conversion for TRY
@@ -119,19 +102,9 @@ const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({
       onItemsChange(updatedItems);
       toast.success(`Tüm kalemler ${newCurrency} para birimine dönüştürüldü`);
     }
-    
-    // Dispatch a custom event to notify other components
-    const event = new CustomEvent('global-currency-change', { 
-      detail: { 
-        currency: newCurrency,
-        source: 'proposal-currency-selector' 
-      } 
-    });
-    window.dispatchEvent(event);
   };
 
-  // Get the exchange rate info once and cache it to avoid constant recalculation
-  const exchangeRateInfo = React.useMemo(() => getExchangeRateInfo(), [selectedCurrency, exchangeRates]);
+  const exchangeRateInfo = getExchangeRateInfo();
   
   // Debug için kurları ve seçili para birimini konsola yazma
   console.log("Selected currency:", selectedCurrency);

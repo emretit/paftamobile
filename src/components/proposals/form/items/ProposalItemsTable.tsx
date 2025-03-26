@@ -2,7 +2,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Trash2, Tag, Info } from "lucide-react";
+import { Trash2, Tag } from "lucide-react";
 import { ProposalItem } from "@/types/proposal";
 import {
   Select,
@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PROPOSAL_ITEM_GROUPS } from "./proposalItemsConstants";
-import { Badge } from "@/components/ui/badge";
 
 interface ProposalItemsTableProps {
   items: ProposalItem[];
@@ -24,7 +23,6 @@ interface ProposalItemsTableProps {
   formatCurrency: (amount: number, currency?: string) => string;
   currencyOptions: { value: string; label: string }[];
   taxRateOptions: { value: number; label: string }[];
-  exchangeRates?: Record<string, number>;
 }
 
 const ProposalItemsTable = ({
@@ -36,7 +34,6 @@ const ProposalItemsTable = ({
   formatCurrency,
   currencyOptions,
   taxRateOptions,
-  exchangeRates = { TRY: 1, USD: 38, EUR: 40, GBP: 48 }, // Default fallback values if no rates provided
 }: ProposalItemsTableProps) => {
   // Para birimi değişikliğini ele alma
   const onCurrencyChange = (index: number, value: string) => {
@@ -47,15 +44,6 @@ const ProposalItemsTable = ({
       // Standart item değişikliği işleyicisini kullan
       handleItemChange(index, "currency", value);
     }
-  };
-
-  // Get the exchange rate for a specific currency
-  const getExchangeRate = (currency: string): number => {
-    // If the currency is not in the exchange rates or the rates are not available, return a default
-    return exchangeRates[currency] || 
-      (currency === "USD" ? 38 : 
-       currency === "EUR" ? 40 : 
-       currency === "GBP" ? 48 : 1);
   };
 
   return (
@@ -71,16 +59,13 @@ const ProposalItemsTable = ({
             <th className="py-3 px-4 text-center font-medium w-20">KDV %</th>
             <th className="py-3 px-4 text-center font-medium w-20">İndirim %</th>
             <th className="py-3 px-4 text-right font-medium w-32">Toplam</th>
-            {selectedCurrency !== "TRY" && (
-              <th className="py-3 px-4 text-right font-medium w-32">TRY Karşılığı</th>
-            )}
             <th className="py-3 px-4 text-center font-medium w-16"></th>
           </tr>
         </thead>
         <tbody>
           {items.length === 0 ? (
             <tr>
-              <td colSpan={selectedCurrency !== "TRY" ? 10 : 9} className="py-3 px-4 text-center text-muted-foreground">
+              <td colSpan={9} className="py-3 px-4 text-center text-muted-foreground">
                 Henüz ürün eklenmedi. Ürün eklemek için yukarıdaki butonları kullanın.
               </td>
             </tr>
@@ -182,27 +167,6 @@ const ProposalItemsTable = ({
                 <td className="py-3 px-4 text-right font-medium">
                   {formatCurrency(item.total_price, (item as any).currency || selectedCurrency)}
                 </td>
-                {selectedCurrency !== "TRY" && (
-                  <td className="py-3 px-4 text-right font-medium">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <div className="flex items-center justify-end">
-                            {formatCurrency(
-                              // Güncel kur oranını kullanarak dönüşüm yap
-                              item.total_price * getExchangeRate((item as any).currency || selectedCurrency),
-                              "TRY"
-                            )}
-                            <Info className="h-3 w-3 ml-1 text-muted-foreground" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>TCMB güncel kuruna göre TL karşılığı</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </td>
-                )}
                 <td className="py-3 px-4 text-center">
                   <Button
                     type="button"
