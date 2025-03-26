@@ -1,5 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
+import { ExchangeRates, CurrencyOption } from '../types/currencyTypes';
 
 const supabase = createClient(
   'https://vwhwufnckpqirxptwncw.supabase.co',
