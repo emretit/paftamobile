@@ -1,25 +1,11 @@
 
-import { dateFnsLocalizer } from "react-big-calendar";
-import { format, parse, getDay, getMonth, getYear, startOfWeek, parseISO } from "date-fns";
-import { tr } from "date-fns/locale";
+import { momentLocalizer } from "react-big-calendar";
+import moment from "moment";
 
-// Set up calendar localizer with Turkish locale
-const locales = {
-  'tr': tr
-};
+// Create a pre-configured localizer with moment
+export const localizer = momentLocalizer(moment);
 
-export const getTurkishLocalizer = () => {
-  return dateFnsLocalizer({
-    format,
-    parse: (value: string) => parseISO(value),
-    startOfWeek: () => startOfWeek(new Date(), { locale: tr }),
-    getDay,
-    getMonth,
-    getYear,
-    locales,
-  });
-};
-
+// Messages for Turkish localization
 export const turkishMessages = {
   today: 'Bugün',
   previous: 'Önceki',
@@ -30,7 +16,7 @@ export const turkishMessages = {
   agenda: 'Ajanda',
   date: 'Tarih',
   time: 'Saat',
-  event: 'Etkinlik',
+  event: 'Olay',
   allDay: 'Tüm gün',
   noEventsInRange: 'Bu aralıkta servis talebi yok'
 };
