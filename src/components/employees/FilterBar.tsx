@@ -36,8 +36,10 @@ export const FilterBar = ({
         .order('department');
 
       if (!error && data) {
-        // Extract unique departments
-        const uniqueDepartments = [...new Set(data.map(item => item.department))];
+        // Extract unique departments and ensure they're strings
+        const departmentValues = data.map(item => item.department);
+        const validDepartments = departmentValues.filter(Boolean) as string[];
+        const uniqueDepartments = [...new Set(validDepartments)];
         setDepartments(uniqueDepartments);
       }
     };

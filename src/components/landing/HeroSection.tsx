@@ -9,19 +9,19 @@ const HeroSection = () => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
+      const { data } = await supabase.auth.getSession();
+      setIsLoggedIn(!!data.session);
     };
     
     checkSession();
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setIsLoggedIn(!!session);
       }
     );
     
-    return () => subscription.unsubscribe();
+    return () => data.subscription.unsubscribe();
   }, []);
 
   return (

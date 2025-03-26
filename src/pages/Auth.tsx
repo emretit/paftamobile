@@ -72,8 +72,8 @@ const Auth = () => {
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
         navigate("/crm"); // Always redirect to the dashboard
       }
     };
@@ -81,7 +81,7 @@ const Auth = () => {
     checkSession();
     
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_IN' && session) {
           navigate("/crm"); // Always redirect to the dashboard
@@ -89,7 +89,7 @@ const Auth = () => {
       }
     );
     
-    return () => subscription.unsubscribe();
+    return () => data.subscription.unsubscribe();
   }, [navigate]);
 
   const handleViewChange = (newView: "signup" | "forgotten_password") => {

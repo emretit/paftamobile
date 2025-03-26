@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -8,20 +7,20 @@ export const useAuthState = () => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user || null);
+      const { data } = await supabase.auth.getSession();
+      setUser(data.session?.user || null);
       setLoading(false);
     };
     
     checkSession();
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setUser(session?.user || null);
       }
     );
     
-    return () => subscription.unsubscribe();
+    return () => data.subscription.unsubscribe();
   }, []);
 
   // Calculate user initials from name or email

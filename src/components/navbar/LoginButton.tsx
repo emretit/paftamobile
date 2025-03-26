@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,19 +9,19 @@ const LoginButton = () => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
+      const { data } = await supabase.auth.getSession();
+      setIsLoggedIn(!!data.session);
     };
     
     checkSession();
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setIsLoggedIn(!!session);
       }
     );
     
-    return () => subscription.unsubscribe();
+    return () => data.subscription.unsubscribe();
   }, []);
 
   const handleClick = () => {

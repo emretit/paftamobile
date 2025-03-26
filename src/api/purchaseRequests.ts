@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
@@ -83,8 +82,13 @@ export const createPurchaseRequest = async (requestData: PurchaseRequestFormData
   const { items, ...requestDetails } = requestData;
   
   // Get current user from Supabase
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
+  const { data, error: userError } = await supabase.auth.getUser();
+  if (userError) {
+    toast.error("Kullanıcı kimliği alınamadı");
+    throw userError;
+  }
+  
+  if (!data.user) {
     toast.error("Kullanıcı kimliği alınamadı");
     throw new Error("User not authenticated");
   }
@@ -93,7 +97,7 @@ export const createPurchaseRequest = async (requestData: PurchaseRequestFormData
   const { data: request, error: requestError } = await supabase
     .from("purchase_requests")
     .insert([
-      { ...requestDetails, requester_id: user.id }
+      { ...requestDetails, requester_id: data.user.id }
     ])
     .select()
     .single();
