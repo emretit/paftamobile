@@ -100,7 +100,7 @@ const ExchangeRateCard: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto relative">
             {loading && (
               <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
                 <div className="animate-pulse text-primary font-medium">Güncelleniyor...</div>

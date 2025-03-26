@@ -112,7 +112,8 @@ Deno.serve(async (req) => {
         success: true,
         message: 'Exchange rates updated successfully',
         count: exchangeRates.length + 1, // +1 for TRY
-        update_date: today
+        update_date: today,
+        rates: exchangeRates
       }),
       {
         headers: {
