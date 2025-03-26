@@ -1,5 +1,5 @@
+
 import { ExchangeRates, CurrencyOption } from "../types/currencyTypes";
-import { supabase } from "@/integrations/supabase/client";
 
 // Format a currency value for display
 export const formatCurrencyValue = (amount: number, currency: string = "TRY"): string => {
@@ -16,61 +16,42 @@ export const formatCurrencyValue = (amount: number, currency: string = "TRY"): s
   return formatter.format(amount);
 };
 
-// Fetch exchange rates from the database with better error handling
+// Fetch exchange rates directly from TCMB
 export const fetchTCMBExchangeRates = async (): Promise<ExchangeRates> => {
   try {
-    // First try to get from the database
-    const { data, error } = await supabase
-      .from('exchange_rates')
-      .select('*')
-      .order('update_date', { ascending: false });
+    const response = await fetch('https://www.tcmb.gov.tr/kurlar/today.xml');
     
-    if (error) {
-      console.error("Database error:", error);
-      throw new Error(`Database error: ${error.message}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
     
-    if (data && data.length > 0) {
-      // Transform the data into the expected format
-      const rates: ExchangeRates = { TRY: 1 };
-      const updateDate = data[0].update_date;
+    const xmlText = await response.text();
+    
+    // Parse XML using browser's DOMParser
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+    
+    // Create the rates object
+    const rates: ExchangeRates = { TRY: 1 };
+    
+    // Get all Currency nodes
+    const currencyNodes = xmlDoc.getElementsByTagName("Currency");
+    
+    for (let i = 0; i < currencyNodes.length; i++) {
+      const currencyNode = currencyNodes[i];
+      const currencyCode = currencyNode.getAttribute("CurrencyCode");
       
-      data.forEach(rate => {
-        if (rate.currency_code && rate.forex_buying) {
-          rates[rate.currency_code] = rate.forex_buying;
+      if (currencyCode && ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD'].includes(currencyCode)) {
+        const forexBuyingNode = currencyNode.getElementsByTagName("ForexBuying")[0];
+        if (forexBuyingNode && forexBuyingNode.textContent) {
+          // Convert comma to dot for decimal and parse as float
+          rates[currencyCode] = parseFloat(forexBuyingNode.textContent.replace(',', '.'));
         }
-      });
-      
-      console.log(`Exchange rates fetched (${updateDate}):`, rates);
-      return rates;
+      }
     }
     
-    // If no data in database, try the edge function
-    console.log("No rates in database, trying edge function");
-    const { data: functionData, error: functionError } = await supabase.functions.invoke('fetch-exchange-rates', {
-      method: 'GET'
-    });
-    
-    if (functionError) {
-      console.error("Function error:", functionError);
-      throw new Error(`Function error: ${functionError.message}`);
-    }
-    
-    if (functionData && functionData.data) {
-      // Transform the function data into the expected format
-      const rates: ExchangeRates = { TRY: 1 };
-      functionData.data.forEach((rate: any) => {
-        if (rate.currency_code && rate.forex_buying) {
-          rates[rate.currency_code] = rate.forex_buying;
-        }
-      });
-      
-      console.log("Function Exchange rates fetched:", rates);
-      return rates;
-    }
-    
-    console.warn("No exchange rate data available, using fallback rates");
-    throw new Error('No exchange rate data available');
+    console.log("Fetched exchange rates:", rates);
+    return rates;
   } catch (error) {
     console.error("Error fetching exchange rates:", error);
     // Return fallback exchange rates if API call fails
