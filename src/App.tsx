@@ -2,8 +2,7 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { Toaster as SonnerToaster } from "sonner";
 import { Toaster } from "@/components/ui/toaster";
 import Index from "@/pages/Index";
 import Products from "@/pages/Products";
@@ -179,17 +178,16 @@ function App() {
       </Router>
       
       {/* Toast notification systems */}
-      <ToastContainer 
+      <SonnerToaster 
         position="bottom-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: "white",
+            color: "black",
+            border: "1px solid #f3f4f6",
+          },
+        }}
       />
       <Toaster />
     </QueryClientProvider>

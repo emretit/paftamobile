@@ -1,11 +1,11 @@
 
-import { toast as reactToastify } from "react-toastify";
+import { toast as sonnerToast } from "sonner";
 import { toast as useToastHook } from "@/hooks/use-toast";
 
 type ToastOptions = {
   /** Duration in milliseconds */
   duration?: number;
-  /** Whether to use the shadcn/ui toast or react-toastify */
+  /** Whether to use the shadcn/ui toast or sonner */
   useBuiltIn?: boolean;
 };
 
@@ -23,13 +23,8 @@ export const showSuccess = (message: string, options?: ToastOptions) => {
     });
   }
   
-  return reactToastify.success(message, {
-    autoClose: options?.duration || 5000,
-    position: "bottom-right",
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
+  return sonnerToast.success(message, {
+    duration: options?.duration || 5000,
   });
 };
 
@@ -48,13 +43,8 @@ export const showError = (message: string, options?: ToastOptions) => {
     });
   }
   
-  return reactToastify.error(message, {
-    autoClose: options?.duration || 5000,
-    position: "bottom-right",
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
+  return sonnerToast.error(message, {
+    duration: options?.duration || 5000,
   });
 };
 
@@ -72,13 +62,8 @@ export const showWarning = (message: string, options?: ToastOptions) => {
     });
   }
   
-  return reactToastify.warning(message, {
-    autoClose: options?.duration || 5000,
-    position: "bottom-right",
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
+  return sonnerToast.warning(message, {
+    duration: options?.duration || 5000,
   });
 };
 
@@ -96,15 +81,10 @@ export const showInfo = (message: string, options?: ToastOptions) => {
     });
   }
   
-  return reactToastify.info(message, {
-    autoClose: options?.duration || 5000,
-    position: "bottom-right",
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
+  return sonnerToast.info(message, {
+    duration: options?.duration || 5000,
   });
 };
 
 // Re-export the toast objects in case direct access is needed
-export { reactToastify, useToastHook };
+export { sonnerToast, useToastHook };
