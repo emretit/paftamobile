@@ -43,13 +43,18 @@ export const fetchExchangeRatesFromDB = async (): Promise<ExchangeRate[]> => {
 
 export const invokeEdgeFunction = async (): Promise<ExchangeRate[]> => {
   try {
+    console.log('Invoking exchange-rates edge function...');
     const { data, error } = await supabase.functions.invoke('exchange-rates', {
-      method: 'POST'
+      method: 'GET'
     });
     
-    if (error) throw error;
+    if (error) {
+      console.error('Edge function error:', error);
+      throw error;
+    }
     
-    if (data && data.success && data.data) {
+    if (data && data.success && data.data && data.data.length > 0) {
+      console.log('Successfully received data from edge function:', data.data.length);
       return data.data as ExchangeRate[];
     }
     
