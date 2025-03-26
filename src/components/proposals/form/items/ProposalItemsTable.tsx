@@ -24,6 +24,7 @@ interface ProposalItemsTableProps {
   formatCurrency: (amount: number, currency?: string) => string;
   currencyOptions: { value: string; label: string }[];
   taxRateOptions: { value: number; label: string }[];
+  exchangeRates?: Record<string, number>;
 }
 
 const ProposalItemsTable = ({
@@ -35,6 +36,7 @@ const ProposalItemsTable = ({
   formatCurrency,
   currencyOptions,
   taxRateOptions,
+  exchangeRates = { TRY: 1, USD: 38, EUR: 40, GBP: 48 }, // Default fallback values if no rates provided
 }: ProposalItemsTableProps) => {
   // Para birimi değişikliğini ele alma
   const onCurrencyChange = (index: number, value: string) => {
@@ -45,6 +47,15 @@ const ProposalItemsTable = ({
       // Standart item değişikliği işleyicisini kullan
       handleItemChange(index, "currency", value);
     }
+  };
+
+  // Get the exchange rate for a specific currency
+  const getExchangeRate = (currency: string): number => {
+    // If the currency is not in the exchange rates or the rates are not available, return a default
+    return exchangeRates[currency] || 
+      (currency === "USD" ? 38 : 
+       currency === "EUR" ? 40 : 
+       currency === "GBP" ? 48 : 1);
   };
 
   return (
@@ -178,14 +189,8 @@ const ProposalItemsTable = ({
                         <TooltipTrigger>
                           <div className="flex items-center justify-end">
                             {formatCurrency(
-                              // Eğer item currency TRY değilse ve global currency de TRY değilse, kur dönüşümünü göster
-                              item.total_price * (
-                                // Varsayalım exchange rate 38 - gerçekte burada useExchangeRates hook'undan alınan kur bilgisi kullanılmalı
-                                // Burada sadece görsel amaçlı bir değer gösteriyoruz
-                                (item as any).currency === "USD" ? 38 : 
-                                (item as any).currency === "EUR" ? 40 : 
-                                (item as any).currency === "GBP" ? 48 : 1
-                              ), 
+                              // Güncel kur oranını kullanarak dönüşüm yap
+                              item.total_price * getExchangeRate((item as any).currency || selectedCurrency),
                               "TRY"
                             )}
                             <Info className="h-3 w-3 ml-1 text-muted-foreground" />

@@ -1,4 +1,3 @@
-
 import React, { useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, AlertCircle, Info } from "lucide-react";
@@ -20,8 +19,8 @@ interface ProposalItemsProps {
   globalCurrency?: string; // Global para birimi
 }
 
-const ProposalItems: React.FC<ProposalItemsProps> = ({ 
-  items, 
+const ProposalItems: React.FC<ProposalItemsProps> = ({
+  items = [],
   onItemsChange,
   globalCurrency = "TRY"
 }) => {
@@ -243,7 +242,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {items.length === 0 && (
         <Alert variant="default" className="border-blue-500 text-blue-800 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
           <Info className="h-4 w-4" />
@@ -288,6 +287,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
           currencyOptions={currencyOptions}
           taxRateOptions={taxRateOptions}
           handleItemCurrencyChange={onItemCurrencyChange}
+          exchangeRates={dashboardRates} // Pass the exchange rates to the table
         />
       </div>
 
