@@ -89,28 +89,18 @@ export const useProposalItems = () => {
     const originalCurrency = product.original_currency || productCurrency;
     const originalPriceValue = product.original_price !== undefined ? product.original_price : originalPrice;
 
-    // Bu ürünün fiyatını seçilen para birimine çevir (UI gösterimi için)
-    let unitPrice = originalPrice;
-    if (productCurrency !== selectedCurrency) {
-      unitPrice = convertCurrency(
-        originalPrice,
-        productCurrency,
-        selectedCurrency,
-        exchangeRates
-      );
-    }
-
+    // Ürün kendi para birimi ile eklenecek, dönüşüm yapılmadan
     const newItem: ProposalItem = {
       id: uuidv4(),
       product_id: product.id,
       name: product.name,
       description: product.description,
       quantity: 1,
-      unit_price: unitPrice,
+      unit_price: originalPrice, // Ürünün kendi fiyatı
       tax_rate: product.tax_rate || 18,
       discount_rate: 0, // Default discount rate
-      total_price: unitPrice, // Quantity is 1, so total = unit price
-      currency: selectedCurrency,
+      total_price: originalPrice * (1 + (product.tax_rate || 0) / 100), // Quantity is 1, so total = unit price with tax
+      currency: productCurrency, // Ürünün kendi para birimi ile ekle
       original_currency: originalCurrency, // Ürünün orijinal para birimini sakla
       original_price: originalPriceValue, // Ürünün orijinal fiyatını sakla
       stock_status: product.stock_quantity && product.stock_quantity > 0 
@@ -118,13 +108,15 @@ export const useProposalItems = () => {
         : 'out_of_stock',
     };
     
+    console.log("Eklenen ürün para birimi:", productCurrency);
+    console.log("Eklenen ürün fiyatı:", originalPrice);
     console.log("Eklenen ürün orijinal para birimi:", originalCurrency);
     console.log("Eklenen ürün orijinal fiyatı:", originalPriceValue);
     
     const updatedItems = [...items, newItem];
     setItems(updatedItems);
     return updatedItems;
-  }, [items, selectedCurrency, exchangeRates]);
+  }, [items]);
 
   // Handle removing an item
   const handleRemoveItem = useCallback((id: string) => {

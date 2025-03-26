@@ -122,10 +122,12 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
   }, [items]);
 
   const handleProductSelect = (product: Product) => {
+    // Ürünün kendi para birimini koruyacak şekilde teklife ekleme
+    // Product will be added with its original currency
     const updatedItems = handleSelectProduct(product);
     if (updatedItems) {
       onItemsChange(updatedItems);
-      toast.success(`${product.name} teklif kalemine eklendi`);
+      toast.success(`${product.name} teklif kalemine ${product.currency || "TRY"} para birimi ile eklendi`);
     }
   };
 
