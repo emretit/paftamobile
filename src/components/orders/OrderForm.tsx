@@ -16,8 +16,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import OrderItems from "./OrderItems";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Proposal } from "@/types/proposal";
+import { Proposal, ProposalStatus } from "@/types/proposal";
 import { Loader2, Save, FileDown, FileText } from "lucide-react";
+import { parseProposalData } from "@/services/proposal/helpers/dataParser";
 
 interface OrderFormProps {
   proposalId?: string;
@@ -67,24 +68,35 @@ const OrderForm: React.FC<OrderFormProps> = ({ proposalId }) => {
 
       if (error) throw error;
 
-      setProposal(data);
+      // Parse the proposal data
+      const parsedProposal = parseProposalData(data);
       
-      // Pre-populate order data from proposal
-      setOrderData({
-        ...orderData,
-        customer_id: data.customer_id || "",
-        customer_name: data.customer?.name || "",
-        customer_email: data.customer?.email || "",
-        customer_address: data.customer?.address || "",
-        currency: data.currency || "TRY",
-        subtotal: data.total_amount || 0,
-        total: data.total_amount || 0,
-        items: Array.isArray(data.items) ? data.items.map((item: any) => ({
-          ...item,
-          delivered: false
-        })) : [],
-        notes: data.notes || ""
-      });
+      if (parsedProposal) {
+        // Ensure the status is of type ProposalStatus
+        const typedProposal: Proposal = {
+          ...parsedProposal,
+          status: parsedProposal.status as ProposalStatus
+        };
+        
+        setProposal(typedProposal);
+        
+        // Pre-populate order data from proposal
+        setOrderData({
+          ...orderData,
+          customer_id: typedProposal.customer_id || "",
+          customer_name: typedProposal.customer?.name || "",
+          customer_email: typedProposal.customer?.email || "",
+          customer_address: typedProposal.customer?.address || "",
+          currency: typedProposal.currency || "TRY",
+          subtotal: typedProposal.total_amount || 0,
+          total: typedProposal.total_amount || 0,
+          items: Array.isArray(typedProposal.items) ? typedProposal.items.map((item: any) => ({
+            ...item,
+            delivered: false
+          })) : [],
+          notes: typedProposal.notes || ""
+        });
+      }
     } catch (error) {
       console.error("Error loading proposal:", error);
       toast.error("Teklif bilgileri yüklenirken bir hata oluştu.");

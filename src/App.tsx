@@ -2,9 +2,7 @@
 import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
-import Customers from "./pages/Customers";
-import CustomerDetail from "./pages/CustomerDetail";
-import NotFound from "./pages/NotFound";
+import NotFound from "./components/NotFound";
 import Products from "./pages/Products";
 import Proposals from "./pages/Proposals";
 import ProposalDetail from "./pages/ProposalDetail";
@@ -22,24 +20,6 @@ function App() {
         path="/"
         element={
           <Dashboard
-            isCollapsed={isCollapsed}
-            setIsCollapsed={setIsCollapsed}
-          />
-        }
-      />
-      <Route
-        path="/customers"
-        element={
-          <Customers
-            isCollapsed={isCollapsed}
-            setIsCollapsed={setIsCollapsed}
-          />
-        }
-      />
-      <Route
-        path="/customers/:id"
-        element={
-          <CustomerDetail
             isCollapsed={isCollapsed}
             setIsCollapsed={setIsCollapsed}
           />
