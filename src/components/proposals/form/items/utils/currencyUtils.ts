@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ExchangeRates } from "../types/currencyTypes";
 
@@ -31,6 +30,30 @@ export const formatCurrencyValue = (
     // Fallback for invalid currency codes
     return `${getCurrencySymbol(currency)} ${amount.toFixed(2)}`;
   }
+};
+
+// Get current exchange rates from memory or fetch them
+let cachedRates: ExchangeRates | null = null;
+let lastFetchTime = 0;
+
+export const getCurrentExchangeRates = (): ExchangeRates => {
+  // If we have cached rates that are less than 10 minutes old, use them
+  const now = Date.now();
+  if (cachedRates && (now - lastFetchTime < 10 * 60 * 1000)) {
+    return cachedRates;
+  }
+  
+  // Otherwise use default rates
+  return getDefaultExchangeRates();
+};
+
+// Format exchange rate display
+export const formatExchangeRate = (
+  fromCurrency: string, 
+  toCurrency: string, 
+  rate: number
+): string => {
+  return `1 ${fromCurrency} = ${rate.toFixed(4)} ${toCurrency}`;
 };
 
 // Get exchange rates from database or use defaults
@@ -79,6 +102,10 @@ export const fetchTCMBExchangeRates = async (): Promise<ExchangeRates> => {
       rates.TRY = 1;
     }
     
+    // Update cache
+    cachedRates = rates;
+    lastFetchTime = Date.now();
+    
     return rates;
   } catch (error) {
     console.error("Error fetching exchange rates:", error);
@@ -120,10 +147,10 @@ export const convertCurrency = (
 // Get currency options for dropdown menus
 export const getCurrencyOptions = () => {
   return [
-    { value: "TRY", label: "Türk Lirası (₺)" },
-    { value: "USD", label: "US Dollar ($)" },
-    { value: "EUR", label: "Euro (€)" },
-    { value: "GBP", label: "British Pound (£)" }
+    { value: "TRY", label: "Türk Lirası (₺)", symbol: "₺" },
+    { value: "USD", label: "US Dollar ($)", symbol: "$" },
+    { value: "EUR", label: "Euro (€)", symbol: "€" },
+    { value: "GBP", label: "British Pound (£)", symbol: "£" }
   ];
 };
 

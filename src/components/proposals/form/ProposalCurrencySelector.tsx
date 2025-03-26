@@ -1,57 +1,54 @@
 
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { DollarSign, AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { UseFormReturn } from "react-hook-form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCurrencyOptions } from "./items/utils/currencyUtils";
-import CurrencyDropdown from "@/components/shared/CurrencyDropdown";
+import { ProposalFormData } from "@/hooks/proposals/useProposalFormState";
 
 interface ProposalCurrencySelectorProps {
-  selectedCurrency: string;
-  onCurrencyChange: (currency: string) => void;
+  form: UseFormReturn<ProposalFormData>;
+  onCurrencyChange?: (value: string) => void;
 }
 
-const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({ 
-  selectedCurrency, 
+export const ProposalCurrencySelector = ({ 
+  form, 
   onCurrencyChange 
-}) => {
-  const currencyOptions = getCurrencyOptions();
+}: ProposalCurrencySelectorProps) => {
+  const handleValueChange = (value: string) => {
+    if (onCurrencyChange) {
+      onCurrencyChange(value);
+    }
+  };
 
   return (
-    <Card className="mb-6">
-      <CardContent className="pt-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-muted-foreground" />
-            <span className="text-base font-medium">
-              Teklif Para Birimi:
-            </span>
-          </div>
-          
-          <CurrencyDropdown
-            value={selectedCurrency}
-            onValueChange={onCurrencyChange}
-            currencyOptions={currencyOptions}
-            triggerClassName="w-[130px]"
-          />
-          
-          <Alert variant="default" className="bg-muted/50 border-muted-foreground/20 ml-auto hidden sm:flex max-w-md">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Seçilen para birimi, tüm teklif kalemlerinin dönüştürüleceği ana para birimidir.
-            </AlertDescription>
-          </Alert>
-        </div>
-        
-        <Alert variant="default" className="bg-muted/50 border-muted-foreground/20 mt-4 sm:hidden">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Seçilen para birimi, tüm teklif kalemlerinin dönüştürüleceği ana para birimidir.
-          </AlertDescription>
-        </Alert>
-      </CardContent>
-    </Card>
+    <FormField
+      control={form.control}
+      name="currency"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Para Birimi</FormLabel>
+          <FormControl>
+            <Select
+              value={field.value}
+              onValueChange={(value) => {
+                field.onChange(value);
+                handleValueChange(value);
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Para birimi seçin" />
+              </SelectTrigger>
+              <SelectContent>
+                {getCurrencyOptions().map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormControl>
+        </FormItem>
+      )}
+    />
   );
 };
-
-export default ProposalCurrencySelector;
