@@ -1,10 +1,12 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { DollarSign, AlertCircle } from "lucide-react";
+import { DollarSign, AlertCircle, ArrowRightLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getCurrencyOptions } from "./items/utils/currencyUtils";
 import { CurrencyRatePopover } from "@/components/currency/CurrencyRatePopover";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
+import { Badge } from "@/components/ui/badge";
 
 interface ProposalCurrencySelectorProps {
   selectedCurrency: string;
@@ -16,6 +18,29 @@ const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({
   onCurrencyChange 
 }) => {
   const currencyOptions = getCurrencyOptions();
+  // Use the dashboard exchange rates to show the TRY equivalent
+  const { exchangeRates, formatCurrency } = useExchangeRates();
+
+  // Get the exchange rate for the selected currency
+  const getExchangeRateInfo = () => {
+    if (selectedCurrency === "TRY") {
+      return null; // No need to show conversion for TRY
+    }
+    
+    // Find the currency in the exchange rates
+    const rate = exchangeRates.find(rate => rate.currency_code === selectedCurrency);
+    
+    if (rate && rate.forex_selling) {
+      return {
+        rate: rate.forex_selling,
+        formattedRate: formatCurrency(rate.forex_selling, "TRY")
+      };
+    }
+    
+    return null;
+  };
+
+  const exchangeRateInfo = getExchangeRateInfo();
 
   return (
     <Card className="mb-6">
@@ -33,6 +58,15 @@ const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({
             onCurrencyChange={onCurrencyChange}
             triggerClassName="w-[130px]"
           />
+          
+          {exchangeRateInfo && (
+            <div className="flex items-center gap-2 ml-2">
+              <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+              <Badge variant="outline" className="font-normal">
+                1 {selectedCurrency} = {exchangeRateInfo.formattedRate}
+              </Badge>
+            </div>
+          )}
           
           <Alert variant="default" className="bg-muted/50 border-muted-foreground/20 ml-auto hidden sm:flex max-w-md">
             <AlertCircle className="h-4 w-4" />
