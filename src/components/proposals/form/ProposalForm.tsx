@@ -4,16 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ProposalFormHeader from "./ProposalFormHeader"; // Corrected import path
-import ProposalBasicInfo from "./ProposalFormBasicInfo"; // Corrected import path
-import ProposalCustomerSelect from "./ProposalFormCustomerSelect"; // Corrected import path
+import ProposalFormHeader from "./ProposalFormHeader";
+import ProposalBasicInfo from "./ProposalFormBasicInfo";
+import ProposalFormCustomerSelect from "./ProposalFormCustomerSelect";
 import ProposalItems from "./items/ProposalItems";
-import ProposalTerms from "./ProposalFormTerms"; // Corrected import path
+import ProposalFormTerms from "./ProposalFormTerms";
 import ProposalCurrencySelector from "./ProposalCurrencySelector";
 import { useProposalFormState } from "@/hooks/proposals/useProposalFormState";
-import ProposalTemplateSelect from "./ProposalTemplateSelect"; // This may need update if the file doesn't exist
+import ProposalTemplateSelect from "./ProposalTemplateSelect";
 import { Proposal } from "@/types/proposal";
-import { Skeleton } from "@/components/ui/skeleton"; // Added for loading state
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProposalFormProps {
   proposal: Proposal | null;
@@ -103,19 +103,21 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
             <TabsContent value="details" className="space-y-6">
               <Card className="p-6">
                 <ProposalBasicInfo
-                  title={formData.title}
-                  description={formData.description}
-                  validUntil={formData.valid_until}
-                  employeeId={formData.employee_id}
-                  errors={formErrors}
-                  onInputChange={handleInputChange}
-                  onDateChange={handleDateChange}
-                  onSelectChange={handleSelectChange}
+                  formData={{
+                    title: formData.title,
+                    status: formData.status,
+                    valid_until: formData.valid_until
+                  }}
+                  formErrors={formErrors}
+                  handleInputChange={handleInputChange}
+                  handleSelectChange={handleSelectChange}
+                  handleDateChange={handleDateChange}
+                  formatDate={(date) => date ? new Date(date).toLocaleDateString() : ''}
                 />
               </Card>
 
               <Card className="p-6">
-                <ProposalCustomerSelect
+                <ProposalFormCustomerSelect
                   selectedCustomerId={formData.customer_id}
                   onSelectCustomer={(customerId) => handleSelectChange("customer_id", customerId)}
                   error={formErrors.customer_id}
@@ -135,7 +137,7 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
 
             <TabsContent value="terms">
               <Card className="p-6">
-                <ProposalTerms
+                <ProposalFormTerms
                   paymentTerms={formData.payment_terms}
                   deliveryTerms={formData.delivery_terms}
                   notes={formData.notes}
