@@ -50,7 +50,7 @@ const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({
     };
   }, [selectedCurrency, onCurrencyChange]);
 
-  // Get the exchange rate for the selected currency
+  // Get the exchange rate for the selected currency from the dashboard rates
   const getExchangeRateInfo = () => {
     if (selectedCurrency === "TRY") {
       return null; // No need to show conversion for TRY
@@ -130,7 +130,8 @@ const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({
     window.dispatchEvent(event);
   };
 
-  const exchangeRateInfo = getExchangeRateInfo();
+  // Get the exchange rate info once and cache it to avoid constant recalculation
+  const exchangeRateInfo = React.useMemo(() => getExchangeRateInfo(), [selectedCurrency, exchangeRates]);
   
   // Debug için kurları ve seçili para birimini konsola yazma
   console.log("Selected currency:", selectedCurrency);
