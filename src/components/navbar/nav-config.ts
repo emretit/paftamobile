@@ -37,16 +37,16 @@ export const navItems = [
         label: "Teklifler",
       },
       {
-        path: "/orders/purchase",
-        icon: PackageCheck,
-        label: "Siparişler",
-      },
-      {
         path: "/opportunities",
         icon: BarChart2,
         label: "Fırsatlar",
       },
     ],
+  },
+  {
+    path: "/orders/purchase",
+    icon: PackageCheck,
+    label: "Satın Alma",
   },
   {
     path: "/contacts",
