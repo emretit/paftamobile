@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -144,11 +145,13 @@ export const useExchangeRates = (pollingInterval = 300000) => { // 5 minutes by 
 
   const enableRealtime = async () => {
     try {
-      const { error } = await supabase.functions.invoke('enable-realtime');
+      console.log('Enabling realtime for exchange_rates table...');
+      const { data, error } = await supabase.functions.invoke('enable-realtime');
+      
       if (error) {
         console.warn('Failed to enable realtime:', error);
       } else {
-        console.log('Realtime enabled for exchange_rates table');
+        console.log('Realtime response:', data);
       }
     } catch (err) {
       console.warn('Error enabling realtime:', err);
@@ -157,6 +160,7 @@ export const useExchangeRates = (pollingInterval = 300000) => { // 5 minutes by 
 
   const fetchExchangeRatesFromDB = async (): Promise<ExchangeRate[]> => {
     try {
+      console.log('Fetching exchange rates from database...');
       const { data: latestDateData, error: dateError } = await supabase
         .from('exchange_rates')
         .select('update_date')
@@ -180,6 +184,7 @@ export const useExchangeRates = (pollingInterval = 300000) => { // 5 minutes by 
         }
         
         if (rates && rates.length > 0) {
+          console.log('Successfully fetched rates from DB:', rates.length);
           return rates as ExchangeRate[];
         }
       }
@@ -232,54 +237,44 @@ export const useExchangeRates = (pollingInterval = 300000) => { // 5 minutes by 
     const loadExchangeRates = async () => {
       try {
         setLoading(true);
+        setError(null);
         
-        try {
-          const dbRates = await fetchExchangeRatesFromDB();
-          
-          if (dbRates.length > 0) {
-            setExchangeRates(dbRates);
-            setLastUpdate(dbRates[0].update_date);
-            console.log("Exchange rates loaded from database:", dbRates.length);
-            return;
-          }
-        } catch (dbError) {
-          console.warn("Couldn't fetch from database, trying TCMB directly:", dbError);
-        }
+        // Try each method in sequence, using the first successful one
+        const methods = [
+          { name: 'Database', fn: fetchExchangeRatesFromDB },
+          { name: 'Edge Function', fn: invokeEdgeFunction },
+          { name: 'TCMB Direct', fn: fetchExchangeRatesFromTCMB }
+        ];
         
-        try {
-          const tcmbRates = await fetchExchangeRatesFromTCMB();
-          
-          if (tcmbRates.length > 0) {
-            setExchangeRates(tcmbRates);
-            setLastUpdate(tcmbRates[0].update_date);
-            console.log("Exchange rates loaded from TCMB XML:", tcmbRates.length);
+        for (const method of methods) {
+          try {
+            console.log(`Trying to fetch rates using ${method.name}...`);
+            const rates = await method.fn();
             
-            invokeEdgeFunction().catch(e => 
-              console.warn("Background refresh of exchange rates failed:", e));
-            
-            return;
+            if (rates && rates.length > 0) {
+              setExchangeRates(rates);
+              setLastUpdate(rates[0].update_date);
+              console.log(`Exchange rates loaded via ${method.name}:`, rates.length);
+              
+              // If we succeeded with anything other than the edge function,
+              // trigger the edge function in the background to refresh rates
+              if (method.name !== 'Edge Function') {
+                invokeEdgeFunction().catch(e => 
+                  console.warn("Background refresh of exchange rates failed:", e));
+              }
+              
+              return;
+            }
+          } catch (methodError) {
+            console.warn(`${method.name} method failed:`, methodError);
+            // Continue to the next method
           }
-        } catch (tcmbError) {
-          console.warn("Couldn't fetch from TCMB directly, trying edge function:", tcmbError);
         }
         
-        try {
-          const functionRates = await invokeEdgeFunction();
-          
-          if (functionRates.length > 0) {
-            setExchangeRates(functionRates);
-            setLastUpdate(functionRates[0].update_date);
-            console.log("Exchange rates loaded from edge function:", functionRates.length);
-            return;
-          }
-        } catch (functionError) {
-          console.error("Edge function also failed:", functionError);
-          throw functionError;
-        }
-        
+        // If we get here, all methods failed
+        console.warn("All methods failed, using fallback rates");
         setExchangeRates(fallbackRates);
         setLastUpdate(fallbackRates[0].update_date);
-        console.warn("Using fallback exchange rates (all methods failed)");
         
       } catch (err) {
         console.error("Error loading exchange rates:", err);
@@ -300,6 +295,7 @@ export const useExchangeRates = (pollingInterval = 300000) => { // 5 minutes by 
       loadExchangeRates();
     }, pollingInterval);
     
+    // Setup Supabase Realtime subscription
     const channel = supabase
       .channel('public:exchange_rates')
       .on('postgres_changes', 
@@ -314,7 +310,9 @@ export const useExchangeRates = (pollingInterval = 300000) => { // 5 minutes by 
           console.log('Exchange rate updated:', payload);
           loadExchangeRates();
         })
-      .subscribe();
+      .subscribe(status => {
+        console.log('Realtime subscription status:', status);
+      });
     
     return () => {
       clearInterval(pollingTimer);
@@ -325,38 +323,51 @@ export const useExchangeRates = (pollingInterval = 300000) => { // 5 minutes by 
   const refreshExchangeRates = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
       toast.info('Döviz kurları güncelleniyor...', {
         duration: 2000
       });
       
-      const rates = await invokeEdgeFunction();
-      
-      if (rates.length > 0) {
-        setExchangeRates(rates);
-        setLastUpdate(rates[0].update_date);
+      // Try Edge Function first
+      try {
+        const rates = await invokeEdgeFunction();
         
-        toast.success('Döviz kurları başarıyla güncellendi', {
-          description: `${rates.length} adet kur bilgisi alındı.`,
-        });
-      } else {
-        const tcmbRates = await fetchExchangeRatesFromTCMB();
-        
-        if (tcmbRates.length > 0) {
-          setExchangeRates(tcmbRates);
-          setLastUpdate(tcmbRates[0].update_date);
+        if (rates.length > 0) {
+          setExchangeRates(rates);
+          setLastUpdate(rates[0].update_date);
           
           toast.success('Döviz kurları başarıyla güncellendi', {
-            description: `${tcmbRates.length} adet kur bilgisi TCMB'den alındı.`,
+            description: `${rates.length} adet kur bilgisi alındı.`,
           });
-        } else {
-          setExchangeRates(fallbackRates);
-          setLastUpdate(fallbackRates[0].update_date);
           
-          toast.warning('Varsayılan kurlar kullanılıyor', {
-            description: 'Güncel kurlar alınamadı, geçici referans değerler kullanılıyor.',
-          });
+          return;
+        }
+      } catch (functionError) {
+        console.warn("Edge function failed, trying TCMB direct:", functionError);
+        
+        // Try TCMB Direct next
+        try {
+          const tcmbRates = await fetchExchangeRatesFromTCMB();
+          
+          if (tcmbRates.length > 0) {
+            setExchangeRates(tcmbRates);
+            setLastUpdate(tcmbRates[0].update_date);
+            
+            toast.success('Döviz kurları başarıyla güncellendi', {
+              description: `${tcmbRates.length} adet kur bilgisi TCMB'den alındı.`,
+            });
+            
+            return;
+          }
+        } catch (tcmbError) {
+          console.error("TCMB direct also failed:", tcmbError);
         }
       }
+      
+      // If we got here, both methods failed
+      throw new Error("Döviz kurları güncellenemedi. Lütfen daha sonra tekrar deneyin.");
+      
     } catch (err) {
       console.error("Error refreshing exchange rates:", err);
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -365,8 +376,15 @@ export const useExchangeRates = (pollingInterval = 300000) => { // 5 minutes by 
         description: err instanceof Error ? err.message : 'Bilinmeyen hata',
       });
       
-      setExchangeRates(fallbackRates);
-      setLastUpdate(fallbackRates[0].update_date);
+      // Only fallback if we have no rates already
+      if (exchangeRates.length === 0) {
+        setExchangeRates(fallbackRates);
+        setLastUpdate(fallbackRates[0].update_date);
+        
+        toast.warning('Varsayılan kurlar kullanılıyor', {
+          description: 'Güncel kurlar alınamadı, geçici referans değerler kullanılıyor.',
+        });
+      }
     } finally {
       setLoading(false);
     }

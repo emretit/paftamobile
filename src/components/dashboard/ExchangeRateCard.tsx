@@ -19,9 +19,9 @@ const CurrencyIcon = ({ code }: { code: string }) => {
     case 'GBP':
       return <PoundSterling className="h-4 w-4" />;
     case 'JPY':
-      return <CircleDollarSign className="h-4 w-4" />; // Alternatif ikon kullanımı
+      return <CircleDollarSign className="h-4 w-4" />; 
     case 'CHF':
-      return <Coins className="h-4 w-4" />; // Alternatif ikon kullanımı
+      return <Coins className="h-4 w-4" />; 
     default:
       return null;
   }
@@ -84,7 +84,7 @@ const ExchangeRateCard: React.FC = () => {
               <p className="text-sm">{error.message}</p>
             </div>
           </div>
-        ) : loading ? (
+        ) : loading && exchangeRates.length === 0 ? (
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex justify-between items-center py-2">
@@ -100,6 +100,11 @@ const ExchangeRateCard: React.FC = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
+            {loading && (
+              <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
+                <div className="animate-pulse text-primary font-medium">Güncelleniyor...</div>
+              </div>
+            )}
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
@@ -116,7 +121,8 @@ const ExchangeRateCard: React.FC = () => {
                   .sort((a, b) => {
                     // Order currencies: USD, EUR, GBP, CHF, JPY, others
                     const order = { USD: 1, EUR: 2, GBP: 3, CHF: 4, JPY: 5 };
-                    return (order[a.currency_code] || 99) - (order[b.currency_code] || 99);
+                    return (order[a.currency_code as keyof typeof order] || 99) - 
+                           (order[b.currency_code as keyof typeof order] || 99);
                   })
                   .map((rate: ExchangeRate) => (
                   <tr key={rate.id} className="border-b border-border hover:bg-muted/50 transition-colors">
