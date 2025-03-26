@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, PackageCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import OrderForm from "@/components/orders/OrderForm";
@@ -31,12 +31,17 @@ const Orders = ({ isCollapsed, setIsCollapsed }: OrdersProps) => {
     }
   };
 
+  const pageTitle = proposalId ? "Tekliften Sipariş Oluştur" : "Siparişler";
+  const pageSubtitle = proposalId 
+    ? "Onaylanan tekliften yeni sipariş oluşturuyorsunuz" 
+    : "Siparişleri yönetin ve takip edin";
+
   return (
     <DefaultLayout
       isCollapsed={isCollapsed}
       setIsCollapsed={setIsCollapsed}
-      title="Sipariş Oluştur"
-      subtitle={proposalId ? "Tekliften sipariş oluştur" : "Yeni sipariş oluştur"}
+      title={pageTitle}
+      subtitle={pageSubtitle}
     >
       <div className="mb-6">
         <Button variant="outline" size="sm" onClick={handleBack}>

@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { Proposal } from "@/types/proposal";
+import { Proposal, ProposalItem } from "@/types/proposal";
 import { mockCrmService } from "@/services/mockCrm";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ proposalId }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [proposal, setProposal] = useState<Proposal | null>(null);
-  const [orderItems, setOrderItems] = useState<any[]>([]);
+  const [orderItems, setOrderItems] = useState<ProposalItem[]>([]);
   
   useEffect(() => {
     const fetchProposalData = async () => {
@@ -39,10 +39,24 @@ const OrderForm: React.FC<OrderFormProps> = ({ proposalId }) => {
         }
         
         if (data) {
-          setProposal(data);
+          // Make sure that items are properly parsed
+          let parsedData = data;
+          if (typeof data.items === 'string') {
+            try {
+              parsedData = {
+                ...data,
+                items: JSON.parse(data.items)
+              };
+            } catch (e) {
+              console.error("Failed to parse items:", e);
+            }
+          }
+          
+          setProposal(parsedData);
+          
           // Initialize order items from proposal items
-          if (data.items && Array.isArray(data.items)) {
-            setOrderItems(data.items);
+          if (parsedData.items && Array.isArray(parsedData.items)) {
+            setOrderItems(parsedData.items);
           }
         }
       } catch (error) {

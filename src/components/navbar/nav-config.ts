@@ -11,7 +11,8 @@ import {
   Users,
   Wrench,
   BarChart2,
-  ListTodo
+  ListTodo,
+  PackageCheck
 } from "lucide-react";
 
 export const navItems = [
@@ -34,6 +35,11 @@ export const navItems = [
         path: "/proposals",
         icon: FileText,
         label: "Teklifler",
+      },
+      {
+        path: "/orders/purchase",
+        icon: PackageCheck,
+        label: "Siparişler",
       },
       {
         path: "/opportunities",
