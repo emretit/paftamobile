@@ -1,149 +1,149 @@
 
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ExchangeRate, FetchError } from "./exchange-rates/types";
-import { fallbackRates } from "./exchange-rates/fallbackRates";
-import { fetchExchangeRatesFromDB, fetchTCMBRates } from "./exchange-rates/exchangeRatesFetcher";
-import { 
-  getRatesMap, 
-  convertCurrency, 
-  formatCurrency 
-} from "./exchange-rates/currencyUtils";
+import { toast } from "sonner";
 
-export const useExchangeRates = (pollingInterval = 3600000) => { // 1 hour by default
+export interface ExchangeRate {
+  id: string;
+  currency_code: string;
+  forex_buying: number | null;
+  forex_selling: number | null;
+  banknote_buying: number | null;
+  banknote_selling: number | null;
+  update_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const useExchangeRates = () => {
   const [exchangeRates, setExchangeRates] = useState<ExchangeRate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<FetchError | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
 
-  const loadExchangeRates = async () => {
+  const fetchRatesFromDatabase = async () => {
     try {
-      setLoading(true);
-      setError(null);
+      // First, get the most recent update date
+      const { data: dateData, error: dateError } = await supabase
+        .from('exchange_rates')
+        .select('update_date')
+        .order('update_date', { ascending: false })
+        .limit(1);
+
+      if (dateError) throw dateError;
       
-      // Try to get rates from the database
-      try {
-        console.log('Trying to fetch rates from database...');
-        const rates = await fetchExchangeRatesFromDB();
-        
-        if (rates && rates.length > 0) {
-          setExchangeRates(rates);
-          setLastUpdate(rates[0].update_date);
-          console.log(`Exchange rates loaded from database:`, rates.length);
-          return;
-        }
-      } catch (dbError) {
-        console.warn(`Database fetch method failed:`, dbError);
+      if (!dateData || dateData.length === 0) {
+        console.info("No exchange rates found in database");
+        return [];
       }
       
-      // If we get here, use fallback rates
-      console.warn("Using fallback rates");
-      setExchangeRates(fallbackRates);
-      setLastUpdate(fallbackRates[0].update_date);
+      const mostRecentDate = dateData[0].update_date;
+      setLastUpdate(mostRecentDate);
       
-    } catch (err) {
-      console.error("Error loading exchange rates:", err);
-      setError(err instanceof Error ? err : new Error(String(err)));
+      // Then get all rates for that date
+      const { data, error } = await supabase
+        .from('exchange_rates')
+        .select('*')
+        .eq('update_date', mostRecentDate);
+        
+      if (error) throw error;
       
-      setExchangeRates(fallbackRates);
-      setLastUpdate(fallbackRates[0].update_date);
-      console.warn("Using fallback exchange rates (error)");
-    } finally {
-      setLoading(false);
+      console.info(`Successfully fetched rates from DB: ${data?.length}`);
+      return data || [];
+    } catch (error) {
+      console.error("Error fetching exchange rates from database:", error);
+      throw error;
     }
   };
 
-  const refreshExchangeRates = async () => {
+  const fetchRates = useCallback(async (showToast = false) => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      setError(null);
+      // First try to get rates from the database
+      const dbRates = await fetchRatesFromDatabase();
       
-      toast.info('Döviz kurları güncelleniyor...', {
-        duration: 2000
-      });
-      
-      // Directly fetch from TCMB via our function
-      const rates = await fetchTCMBRates();
-      
-      if (rates.length > 0) {
-        setExchangeRates(rates);
-        setLastUpdate(rates[0].update_date);
-        
-        toast.success('Döviz kurları başarıyla güncellendi', {
-          description: `${rates.length} adet kur bilgisi alındı.`,
-        });
-        
+      if (dbRates && dbRates.length > 0) {
+        setExchangeRates(dbRates);
+        console.info("Exchange rates loaded via Database:", dbRates.length);
+        if (showToast) {
+          toast.success("Döviz kurları başarıyla güncellendi");
+        }
         return;
       }
       
-      throw new Error("Döviz kurları güncellenemedi. Lütfen daha sonra tekrar deneyin.");
+      // If no rates in DB, fetch from the edge function
+      console.info("Invoking exchange-rates edge function...");
+      const { data: functionData, error: functionError } = await supabase.functions.invoke('fetch-tcmb-rates');
       
-    } catch (err) {
-      console.error("Error refreshing exchange rates:", err);
-      setError(err instanceof Error ? err : new Error(String(err)));
+      if (functionError) throw functionError;
       
-      toast.error('Döviz kurları güncelleme hatası', {
-        description: err instanceof Error ? err.message : 'Bilinmeyen hata',
-      });
-      
-      // Only fallback if we have no rates already
-      if (exchangeRates.length === 0) {
-        setExchangeRates(fallbackRates);
-        setLastUpdate(fallbackRates[0].update_date);
+      if (functionData?.success) {
+        console.info("Successfully received data from edge function:", functionData.count);
         
-        toast.warning('Varsayılan kurlar kullanılıyor', {
-          description: 'Güncel kurlar alınamadı, geçici referans değerler kullanılıyor.',
-        });
+        // Refetch from database after the edge function has updated it
+        const updatedRates = await fetchRatesFromDatabase();
+        setExchangeRates(updatedRates);
+        
+        if (showToast) {
+          toast.success("Döviz kurları başarıyla güncellendi");
+        }
+      } else {
+        throw new Error(functionData?.error || "Unknown error fetching exchange rates");
+      }
+    } catch (error) {
+      console.error("Error fetching exchange rates:", error);
+      setError(error instanceof Error ? error : new Error(String(error)));
+      
+      if (showToast) {
+        toast.error("Döviz kurları güncellenirken bir hata oluştu");
       }
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const refreshExchangeRates = useCallback(() => {
+    return fetchRates(true);
+  }, [fetchRates]);
 
   useEffect(() => {
-    loadExchangeRates();
+    fetchRates();
     
-    const pollingTimer = setInterval(() => {
-      console.log("Polling for exchange rate updates...");
-      loadExchangeRates();
-    }, pollingInterval);
-    
-    // Setup Supabase Realtime subscription
-    const channel = supabase
-      .channel('public:exchange_rates')
-      .on('postgres_changes', 
-        { event: 'INSERT', schema: 'public', table: 'exchange_rates' },
-        payload => {
-          console.log('New exchange rate inserted:', payload);
-          loadExchangeRates();
-        })
-      .on('postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'exchange_rates' },
-        payload => {
-          console.log('Exchange rate updated:', payload);
-          loadExchangeRates();
-        })
-      .subscribe(status => {
-        console.log('Realtime subscription status:', status);
-      });
-    
-    return () => {
-      clearInterval(pollingTimer);
-      supabase.removeChannel(channel);
-    };
-  }, [pollingInterval]);
+    // Set up realtime subscription for exchange_rates table
+    try {
+      const channel = supabase
+        .channel('exchange-rates-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'exchange_rates',
+          },
+          (payload) => {
+            console.log('Exchange rates updated via realtime:', payload);
+            fetchRates();
+          }
+        )
+        .subscribe();
+      
+      console.info("Realtime subscription status:", channel.state);
+      
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } catch (error) {
+      console.warn("Failed to enable realtime:", error);
+    }
+  }, [fetchRates]);
 
   return {
     exchangeRates,
     loading,
     error,
     lastUpdate,
-    refreshExchangeRates,
-    getRatesMap: () => getRatesMap(exchangeRates),
-    convertCurrency,
-    formatCurrency
+    refreshExchangeRates
   };
 };
-
-export type { ExchangeRate };

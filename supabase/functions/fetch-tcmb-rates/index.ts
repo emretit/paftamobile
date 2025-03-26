@@ -1,153 +1,149 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
-import { XMLParser } from 'https://esm.sh/fast-xml-parser@4.2.7'
+import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts';
 
+// CORS headers for browser requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// Initialize Supabase client
+const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
-
+  
   try {
-    console.log('Fetching exchange rates from TCMB...')
+    console.log('Starting TCMB exchange rate fetch process')
+    const today = new Date().toISOString().split('T')[0]
     
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
-    const supabase = createClient(supabaseUrl, supabaseKey)
-    
-    const today = new Date()
-    const formattedDate = today.toISOString().split('T')[0]
-    
-    // Fetch data from TCMB
+    // Try to fetch exchange rates from TCMB
     const response = await fetch('https://www.tcmb.gov.tr/kurlar/today.xml')
     
     if (!response.ok) {
-      throw new Error(`Failed to fetch from TCMB: ${response.statusText}`)
+      throw new Error(`TCMB API returned ${response.status}: ${response.statusText}`)
     }
     
     const xmlData = await response.text()
+    const parser = new DOMParser()
+    const xmlDoc = parser.parseFromString(xmlData, 'text/xml')
     
-    // Parse XML
-    const parser = new XMLParser({
-      ignoreAttributes: false,
-      attributeNamePrefix: "_"
-    })
-    const result = parser.parse(xmlData)
-    
-    if (!result.Tarih_Date || !result.Tarih_Date.Currency) {
-      throw new Error('Invalid XML format from TCMB')
-    }
-
-    // Add TRY as base currency
-    const tryRate = {
-      id: crypto.randomUUID(),
-      currency_code: 'TRY',
-      forex_buying: 1,
-      forex_selling: 1,
-      banknote_buying: 1,
-      banknote_selling: 1,
-      cross_rate: null,
-      update_date: formattedDate
+    if (!xmlDoc) {
+      throw new Error('Failed to parse XML data')
     }
     
-    // Process currencies
-    const currencies = Array.isArray(result.Tarih_Date.Currency) 
-      ? result.Tarih_Date.Currency 
-      : [result.Tarih_Date.Currency]
+    const currencies = xmlDoc.querySelectorAll('Currency')
+    const exchangeRates = []
     
-    const exchangeRates = currencies.map(currency => ({
-      id: crypto.randomUUID(),
-      currency_code: currency._CurrencyCode,
-      forex_buying: parseFloat(currency.ForexBuying || 0) || null,
-      forex_selling: parseFloat(currency.ForexSelling || 0) || null,
-      banknote_buying: parseFloat(currency.BanknoteBuying || 0) || null,
-      banknote_selling: parseFloat(currency.BanknoteSelling || 0) || null,
-      cross_rate: parseFloat(currency.CrossRateOther || 0) || null,
-      update_date: formattedDate
-    }))
+    // Process each currency
+    for (const currency of currencies) {
+      const currencyCode = currency.getAttribute('CurrencyCode')
+      
+      // Skip if currencyCode is null
+      if (!currencyCode) continue
+      
+      const forexBuying = parseFloat(currency.querySelector('ForexBuying')?.textContent || '0')
+      const forexSelling = parseFloat(currency.querySelector('ForexSelling')?.textContent || '0')
+      const banknoteBuying = parseFloat(currency.querySelector('BanknoteBuying')?.textContent || '0')
+      const banknoteSelling = parseFloat(currency.querySelector('BanknoteSelling')?.textContent || '0')
+      
+      // Store in the database
+      const { data, error } = await supabase
+        .from('exchange_rates')
+        .upsert({
+          currency_code: currencyCode,
+          forex_buying: forexBuying || null,
+          forex_selling: forexSelling || null,
+          banknote_buying: banknoteBuying || null,
+          banknote_selling: banknoteSelling || null,
+          update_date: today
+        }, {
+          onConflict: 'currency_code, update_date'
+        })
+        .select()
+      
+      if (error) {
+        console.error(`Error upserting ${currencyCode}:`, error)
+      } else {
+        exchangeRates.push(data[0])
+      }
+    }
     
-    // Add TRY to exchangeRates
-    exchangeRates.push(tryRate)
-    
-    console.log(`Parsed ${exchangeRates.length} currencies from TCMB`)
-    
-    // Store in Supabase
-    const { error: deleteError } = await supabase
+    // Always add TRY as base currency with rate 1
+    const { error: tryError } = await supabase
       .from('exchange_rates')
-      .delete()
-      .eq('update_date', formattedDate)
+      .upsert({
+        currency_code: 'TRY',
+        forex_buying: 1,
+        forex_selling: 1,
+        banknote_buying: 1,
+        banknote_selling: 1,
+        update_date: today
+      }, {
+        onConflict: 'currency_code, update_date'
+      })
     
-    if (deleteError) {
-      console.error('Error deleting existing rates:', deleteError)
+    if (tryError) {
+      console.error('Error upserting TRY:', tryError)
     }
     
-    const { data, error } = await supabase
-      .from('exchange_rates')
-      .upsert(exchangeRates)
-      .select()
-    
-    if (error) {
-      throw new Error(`Error inserting exchange rates: ${error.message}`)
-    }
-    
-    // Record the update
-    await supabase
+    // Log the result in exchange_rate_updates table
+    const { error: logError } = await supabase
       .from('exchange_rate_updates')
       .insert({
         status: 'success',
+        message: 'TCMB exchange rates updated successfully',
         count: exchangeRates.length,
-        message: 'Updated from TCMB',
         updated_at: new Date().toISOString()
       })
     
+    if (logError) {
+      console.error('Error logging update:', logError)
+    }
+    
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         message: 'Exchange rates updated successfully',
-        count: exchangeRates.length,
-        rates: exchangeRates
+        count: exchangeRates.length + 1, // +1 for TRY
+        update_date: today
       }),
-      { 
-        headers: { 
+      {
+        headers: {
           'Content-Type': 'application/json',
           ...corsHeaders
-        } 
+        }
       }
     )
-    
   } catch (error) {
     console.error('Error in fetch-tcmb-rates function:', error)
     
-    // Record the error
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
-    const supabase = createClient(supabaseUrl, supabaseKey)
-    
+    // Log error to exchange_rate_updates table
     await supabase
       .from('exchange_rate_updates')
       .insert({
         status: 'error',
-        count: 0,
         message: error.message || 'Unknown error',
         updated_at: new Date().toISOString()
       })
     
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message || 'Unknown error' 
+      JSON.stringify({
+        success: false,
+        error: error.message || 'Unknown error'
       }),
-      { 
+      {
         status: 500,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           ...corsHeaders
-        } 
+        }
       }
     )
   }

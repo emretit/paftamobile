@@ -1,160 +1,138 @@
-import { createClient } from '@supabase/supabase-js';
-import { ExchangeRates, CurrencyOption } from '../types/currencyTypes';
-import { fallbackRates } from '@/hooks/exchange-rates/fallbackRates';
 
-const supabase = createClient(
-  'https://vwhwufnckpqirxptwncw.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aHd1Zm5ja3BxaXJ4cHR3bmN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkzODI5MjAsImV4cCI6MjA1NDk1ODkyMH0.Wjw8MAnsBrHxB6-J-bNGObgDQ4fl3zPYrgYI5tOrcKo' // Proper anon key
-);
+import { supabase } from "@/integrations/supabase/client";
+import { ExchangeRates } from "../types/currencyTypes";
 
-// Function to fetch exchange rates from Supabase - now uses fallback rates
-export const fetchTCMBExchangeRates = async (): Promise<Record<string, number>> => {
-  try {
-    // First try to get latest rates from database
-    const { data: dbRates, error: dbError } = await supabase
-      .from('exchange_rates')
-      .select('currency_code, forex_buying')
-      .order('update_date', { ascending: false })
-      .limit(10);
-    
-    // If we have data from the database, use it
-    if (dbRates && dbRates.length > 0) {
-      const rates: Record<string, number> = {};
-      
-      // Convert array of objects to a simple object with currency codes as keys
-      dbRates.forEach(rate => {
-        rates[rate.currency_code] = rate.forex_buying;
-      });
-      
-      console.log('Exchange rates fetched from database:', rates);
-      return rates;
-    }
-    
-    // If no data in database, use fallback rates
-    console.log('No data in database, using fallback rates');
-    const fallbackRatesMap: Record<string, number> = {};
-    fallbackRates.forEach(rate => {
-      fallbackRatesMap[rate.currency_code] = rate.forex_buying || 1;
-    });
-    
-    return fallbackRatesMap;
-  } catch (error) {
-    console.error('Error fetching exchange rates:', error);
-    
-    // Return fallback exchange rates if everything fails
-    return {
-      TRY: 1,
-      USD: 32.5,
-      EUR: 35.2,
-      GBP: 41.3
-    };
-  }
-};
-
-// Format a currency value for display
-export const formatCurrencyValue = (amount: number, currency: string = "TRY"): string => {
-  // Ensure currency is not empty to avoid Intl.NumberFormat errors
-  if (!currency) currency = "TRY";
-  
-  const formatter = new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-  
-  return formatter.format(amount);
-};
-
-// Convert an amount from one currency to another
-export const convertCurrency = (
-  amount: number,
-  fromCurrency: string,
-  toCurrency: string,
-  rates: ExchangeRates
-): number => {
-  // If currencies are the same, no conversion needed
-  if (fromCurrency === toCurrency) return amount;
-  
-  // Handle TRY as the base currency 
-  if (fromCurrency === "TRY") {
-    return amount / (rates[toCurrency] || 1);
-  }
-  
-  // Convert from source currency to TRY first, then to target currency
-  const amountInTRY = amount * (rates[fromCurrency] || 1);
-  return toCurrency === "TRY" ? amountInTRY : amountInTRY / (rates[toCurrency] || 1);
-};
-
-// Format a price with a specified number of decimal places
-export const formatPrice = (price: number, decimals: number = 2): string => {
-  return price.toFixed(decimals);
-};
-
-// Add currency symbol to a formatted price
-export const addCurrencySymbol = (price: string, currency: string): string => {
-  const symbols: Record<string, string> = {
-    TRY: '₺',
-    USD: '$',
-    EUR: '€',
-    GBP: '£'
-  };
-  
-  return `${symbols[currency] || currency} ${price}`;
-};
-
-// Get currency symbol for a given currency code
-export const getCurrencySymbol = (currency: string): string => {
-  const symbols: Record<string, string> = {
-    TRY: '₺',
-    USD: '$',
-    EUR: '€',
-    GBP: '£'
+export const getCurrencySymbol = (currency: string = "TRY"): string => {
+  const symbols: { [key: string]: string } = {
+    TRY: "₺",
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    JPY: "¥",
+    CHF: "₣"
   };
   
   return symbols[currency] || currency;
 };
 
-// Get currency options for dropdowns
-export const getCurrencyOptions = (): CurrencyOption[] => {
+export const formatCurrencyValue = (
+  amount: number,
+  currency: string = "TRY"
+): string => {
+  try {
+    const formatter = new Intl.NumberFormat("tr-TR", {
+      style: "currency",
+      currency: currency,
+      minimumFractionDigits: 2,
+    });
+    
+    return formatter.format(amount);
+  } catch (error) {
+    // Fallback for invalid currency codes
+    return `${getCurrencySymbol(currency)} ${amount.toFixed(2)}`;
+  }
+};
+
+// Get exchange rates from database or use defaults
+export const fetchTCMBExchangeRates = async (): Promise<ExchangeRates> => {
+  try {
+    // Get most recent date
+    const { data: dateData, error: dateError } = await supabase
+      .from('exchange_rates')
+      .select('update_date')
+      .order('update_date', { ascending: false })
+      .limit(1);
+      
+    if (dateError) throw dateError;
+    
+    if (!dateData || dateData.length === 0) {
+      console.warn("No exchange rate data found, using defaults");
+      return getDefaultExchangeRates();
+    }
+    
+    const mostRecentDate = dateData[0].update_date;
+    
+    // Get rates for that date
+    const { data, error } = await supabase
+      .from('exchange_rates')
+      .select('*')
+      .eq('update_date', mostRecentDate);
+      
+    if (error) throw error;
+    
+    if (!data || data.length === 0) {
+      console.warn("No exchange rate data found for date", mostRecentDate, "using defaults");
+      return getDefaultExchangeRates();
+    }
+    
+    // Convert to ExchangeRates object
+    const rates: ExchangeRates = { TRY: 1 };
+    
+    data.forEach(rate => {
+      if (rate.currency_code && rate.forex_selling) {
+        rates[rate.currency_code] = rate.forex_selling;
+      }
+    });
+    
+    // Ensure we have the base currency
+    if (!rates.TRY) {
+      rates.TRY = 1;
+    }
+    
+    return rates;
+  } catch (error) {
+    console.error("Error fetching exchange rates:", error);
+    return getDefaultExchangeRates();
+  }
+};
+
+// Convert amount between currencies
+export const convertCurrency = (
+  amount: number,
+  fromCurrency: string,
+  toCurrency: string,
+  exchangeRates: ExchangeRates
+): number => {
+  if (fromCurrency === toCurrency) return amount;
+  
+  // Ensure we have exchange rates
+  const rates = { ...exchangeRates };
+  if (!rates.TRY) rates.TRY = 1;
+  
+  // If rates are missing, use defaults
+  if (!rates[fromCurrency] || !rates[toCurrency]) {
+    const defaultRates = getDefaultExchangeRates();
+    if (!rates[fromCurrency]) rates[fromCurrency] = defaultRates[fromCurrency] || 1;
+    if (!rates[toCurrency]) rates[toCurrency] = defaultRates[toCurrency] || 1;
+  }
+  
+  // Convert to TRY first (base currency)
+  const amountInTRY = fromCurrency === "TRY" 
+    ? amount 
+    : amount * (1 / rates[fromCurrency]);
+  
+  // Then convert from TRY to target currency
+  return toCurrency === "TRY" 
+    ? amountInTRY 
+    : amountInTRY * rates[toCurrency];
+};
+
+// Get currency options for dropdown menus
+export const getCurrencyOptions = () => {
   return [
-    { value: "TRY", label: "₺ TRY", symbol: "₺" },
-    { value: "USD", label: "$ USD", symbol: "$" },
-    { value: "EUR", label: "€ EUR", symbol: "€" },
-    { value: "GBP", label: "£ GBP", symbol: "£" }
+    { value: "TRY", label: "Türk Lirası (₺)" },
+    { value: "USD", label: "US Dollar ($)" },
+    { value: "EUR", label: "Euro (€)" },
+    { value: "GBP", label: "British Pound (£)" }
   ];
 };
 
-// Get current exchange rates (for synchronous contexts)
-export const getCurrentExchangeRates = (): ExchangeRates => {
-  // Default rates (these will be replaced by API values when available)
+// Default exchange rates as fallback
+export const getDefaultExchangeRates = (): ExchangeRates => {
   return {
     TRY: 1,
     USD: 32.5,
     EUR: 35.2,
     GBP: 41.3
   };
-};
-
-// Format exchange rate display
-export const formatExchangeRate = (fromCurrency: string, toCurrency: string, rate: number): string => {
-  return `1 ${fromCurrency} = ${rate.toFixed(2)} ${toCurrency}`;
-};
-
-// Calculate exchange rate between two currencies
-export const calculateExchangeRate = (fromCurrency: string, toCurrency: string, rates: ExchangeRates): number => {
-  if (fromCurrency === toCurrency) return 1;
-  
-  if (fromCurrency === 'TRY') {
-    return 1 / (rates[toCurrency] || 1);
-  }
-  
-  if (toCurrency === 'TRY') {
-    return rates[fromCurrency] || 1;
-  }
-  
-  // Cross-currency rate
-  const fromRate = rates[fromCurrency] || 1;
-  const toRate = rates[toCurrency] || 1;
-  return fromRate / toRate;
 };
