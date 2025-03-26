@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -37,6 +36,7 @@ import Tasks from "@/pages/Tasks";
 import Opportunities from "@/pages/crm/Opportunities";
 import CrmDashboard from "@/pages/crm/CrmDashboard";
 import Orders from "@/pages/Orders";
+import OrdersList from "@/pages/OrdersList";
 
 const queryClient = new QueryClient();
 
@@ -177,7 +177,10 @@ function App() {
             element={<ProtectedRoute><CrmDashboard isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
           
-          {/* New order routes */}
+          <Route
+            path="/orders/list"
+            element={<ProtectedRoute><OrdersList isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
           <Route
             path="/orders/purchase"
             element={<ProtectedRoute><Orders isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
@@ -185,7 +188,6 @@ function App() {
         </Routes>
       </Router>
       
-      {/* Toast notification systems */}
       <ToastContainer 
         position="bottom-right"
         autoClose={5000}

@@ -44,6 +44,11 @@ export const navItems = [
     ],
   },
   {
+    path: "/orders/list",
+    icon: ShoppingCart,
+    label: "Siparişler",
+  },
+  {
     path: "/orders/purchase",
     icon: PackageCheck,
     label: "Satın Alma",

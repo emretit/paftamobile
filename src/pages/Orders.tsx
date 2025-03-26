@@ -31,10 +31,10 @@ const Orders = ({ isCollapsed, setIsCollapsed }: OrdersProps) => {
     }
   };
 
-  const pageTitle = proposalId ? "Tekliften Sipariş Oluştur" : "Siparişler";
+  const pageTitle = proposalId ? "Tekliften Sipariş Oluştur" : "Satın Alma";
   const pageSubtitle = proposalId 
     ? "Onaylanan tekliften yeni sipariş oluşturuyorsunuz" 
-    : "Siparişleri yönetin ve takip edin";
+    : "Satın alma süreçlerini yönetin ve takip edin";
 
   return (
     <DefaultLayout
