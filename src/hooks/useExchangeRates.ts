@@ -13,50 +13,6 @@ export interface ExchangeRate {
   update_date: string;
 }
 
-// Fallback exchange rates when API fails
-const fallbackRates: ExchangeRate[] = [
-  {
-    id: "fallback-try",
-    currency_code: "TRY",
-    forex_buying: 1,
-    forex_selling: 1,
-    banknote_buying: 1,
-    banknote_selling: 1,
-    cross_rate: null,
-    update_date: new Date().toISOString().split('T')[0]
-  },
-  {
-    id: "fallback-usd",
-    currency_code: "USD",
-    forex_buying: 32.5,
-    forex_selling: 32.7,
-    banknote_buying: 32.4,
-    banknote_selling: 32.8,
-    cross_rate: 1,
-    update_date: new Date().toISOString().split('T')[0]
-  },
-  {
-    id: "fallback-eur",
-    currency_code: "EUR",
-    forex_buying: 35.2,
-    forex_selling: 35.4,
-    banknote_buying: 35.1,
-    banknote_selling: 35.5,
-    cross_rate: 1.08,
-    update_date: new Date().toISOString().split('T')[0]
-  },
-  {
-    id: "fallback-gbp",
-    currency_code: "GBP",
-    forex_buying: 41.3,
-    forex_selling: 41.5,
-    banknote_buying: 41.2,
-    banknote_selling: 41.6,
-    cross_rate: 1.27,
-    update_date: new Date().toISOString().split('T')[0]
-  }
-];
-
 // Direct TCMB XML parser function
 const parseTCMBExchangeRates = (xmlText: string): ExchangeRate[] => {
   try {
@@ -123,6 +79,50 @@ const parseTCMBExchangeRates = (xmlText: string): ExchangeRate[] => {
     throw new Error(`Failed to parse exchange rates: ${error}`);
   }
 };
+
+// Fallback exchange rates when API fails
+const fallbackRates: ExchangeRate[] = [
+  {
+    id: "fallback-try",
+    currency_code: "TRY",
+    forex_buying: 1,
+    forex_selling: 1,
+    banknote_buying: 1,
+    banknote_selling: 1,
+    cross_rate: null,
+    update_date: new Date().toISOString().split('T')[0]
+  },
+  {
+    id: "fallback-usd",
+    currency_code: "USD",
+    forex_buying: 32.5,
+    forex_selling: 32.7,
+    banknote_buying: 32.4,
+    banknote_selling: 32.8,
+    cross_rate: 1,
+    update_date: new Date().toISOString().split('T')[0]
+  },
+  {
+    id: "fallback-eur",
+    currency_code: "EUR",
+    forex_buying: 35.2,
+    forex_selling: 35.4,
+    banknote_buying: 35.1,
+    banknote_selling: 35.5,
+    cross_rate: 1.08,
+    update_date: new Date().toISOString().split('T')[0]
+  },
+  {
+    id: "fallback-gbp",
+    currency_code: "GBP",
+    forex_buying: 41.3,
+    forex_selling: 41.5,
+    banknote_buying: 41.2,
+    banknote_selling: 41.6,
+    cross_rate: 1.27,
+    update_date: new Date().toISOString().split('T')[0]
+  }
+];
 
 export const useExchangeRates = () => {
   const [exchangeRates, setExchangeRates] = useState<ExchangeRate[]>([]);
