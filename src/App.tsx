@@ -1,19 +1,15 @@
 
 import React, { useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AppProviders } from "./providers/AppProviders";
 import { AppRoutes } from "./routes";
-import { ToastProvider } from "./components/toast/ToastProvider";
-
-const queryClient = new QueryClient();
 
 function App() {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <AppProviders>
       <AppRoutes isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <ToastProvider />
-    </QueryClientProvider>
+    </AppProviders>
   );
 }
 
