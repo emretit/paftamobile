@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ExchangeRate, FetchError } from "./types";
 import { toast } from "sonner";
+import { fallbackRates } from "./fallbackRates";
 
 export const fetchExchangeRatesFromDB = async (): Promise<ExchangeRate[]> => {
   try {
@@ -34,48 +34,16 @@ export const fetchExchangeRatesFromDB = async (): Promise<ExchangeRate[]> => {
       }
     }
     
-    throw new Error('No exchange rates found in database');
+    console.log('No exchange rates found in database, returning fallback rates');
+    return fallbackRates;
   } catch (error) {
     console.error('Error fetching from database:', error);
-    throw error;
+    console.log('Returning fallback rates due to error');
+    return fallbackRates;
   }
 };
 
 export const invokeEdgeFunction = async (): Promise<ExchangeRate[]> => {
-  try {
-    console.log('Invoking exchange-rates edge function...');
-    const { data, error } = await supabase.functions.invoke('exchange-rates', {
-      method: 'GET'
-    });
-    
-    if (error) {
-      console.error('Edge function error:', error);
-      throw error;
-    }
-    
-    if (data && data.success && data.data && data.data.length > 0) {
-      console.log('Successfully received data from edge function:', data.data.length);
-      return data.data as ExchangeRate[];
-    }
-    
-    throw new Error('No data returned from edge function');
-  } catch (error) {
-    console.error('Error invoking edge function:', error);
-    throw error;
-  }
-};
-
-export const enableRealtime = async () => {
-  try {
-    console.log('Enabling realtime for exchange_rates table...');
-    const { data, error } = await supabase.functions.invoke('enable-realtime');
-    
-    if (error) {
-      console.warn('Failed to enable realtime:', error);
-    } else {
-      console.log('Realtime response:', data);
-    }
-  } catch (err) {
-    console.warn('Error enabling realtime:', err);
-  }
+  console.log('Edge function removed, using fallback rates');
+  return fallbackRates;
 };

@@ -1,13 +1,13 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { ExchangeRates, CurrencyOption } from '../types/currencyTypes';
+import { fallbackRates } from '@/hooks/exchange-rates/fallbackRates';
 
 const supabase = createClient(
   'https://vwhwufnckpqirxptwncw.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aHd1Zm5ja3BxaXJ4cHR3bmN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkzODI5MjAsImV4cCI6MjA1NDk1ODkyMH0.Wjw8MAnsBrHxB6-J-bNGObgDQ4fl3zPYrgYI5tOrcKo' // Proper anon key
 );
 
-// Function to fetch exchange rates from Supabase
+// Function to fetch exchange rates from Supabase - now uses fallback rates
 export const fetchTCMBExchangeRates = async (): Promise<Record<string, number>> => {
   try {
     // First try to get latest rates from database
@@ -30,23 +30,14 @@ export const fetchTCMBExchangeRates = async (): Promise<Record<string, number>> 
       return rates;
     }
     
-    // If no data in database, try to fetch from edge function
-    const { data: functionData, error: functionError } = await supabase.functions.invoke('fetch-exchange-rates');
+    // If no data in database, use fallback rates
+    console.log('No data in database, using fallback rates');
+    const fallbackRatesMap: Record<string, number> = {};
+    fallbackRates.forEach(rate => {
+      fallbackRatesMap[rate.currency_code] = rate.forex_buying || 1;
+    });
     
-    if (functionError) throw functionError;
-    
-    if (functionData) {
-      console.log('Exchange rates fetched from edge function:', functionData);
-      return functionData;
-    }
-    
-    // Fallback to default values if both methods fail
-    return {
-      TRY: 1,
-      USD: 32.5,
-      EUR: 35.2,
-      GBP: 41.3
-    };
+    return fallbackRatesMap;
   } catch (error) {
     console.error('Error fetching exchange rates:', error);
     

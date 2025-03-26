@@ -49,7 +49,7 @@ const ExchangeRateCard: React.FC = () => {
     <Card className="border border-border shadow-md">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-muted/30">
         <div>
-          <CardTitle className="text-xl font-bold text-primary">TCMB Döviz Kurları</CardTitle>
+          <CardTitle className="text-xl font-bold text-primary">Döviz Kurları</CardTitle>
           <CardDescription>
             {lastUpdate 
               ? `Son güncelleme: ${formatLastUpdate(lastUpdate)}`

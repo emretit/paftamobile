@@ -4,11 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ExchangeRate, FetchError } from "./exchange-rates/types";
 import { fallbackRates } from "./exchange-rates/fallbackRates";
-import { 
-  fetchExchangeRatesFromDB, 
-  invokeEdgeFunction, 
-  enableRealtime 
-} from "./exchange-rates/exchangeRatesFetcher";
+import { fetchExchangeRatesFromDB } from "./exchange-rates/exchangeRatesFetcher";
 import { 
   getRatesMap, 
   convertCurrency, 
@@ -26,39 +22,23 @@ export const useExchangeRates = (pollingInterval = 300000) => { // 5 minutes by 
       setLoading(true);
       setError(null);
       
-      // Try each method in sequence, using the first successful one
-      const methods = [
-        { name: 'Database', fn: fetchExchangeRatesFromDB },
-        { name: 'Edge Function', fn: invokeEdgeFunction }
-      ];
-      
-      for (const method of methods) {
-        try {
-          console.log(`Trying to fetch rates using ${method.name}...`);
-          const rates = await method.fn();
-          
-          if (rates && rates.length > 0) {
-            setExchangeRates(rates);
-            setLastUpdate(rates[0].update_date);
-            console.log(`Exchange rates loaded via ${method.name}:`, rates.length);
-            
-            // If we succeeded with anything other than the edge function,
-            // trigger the edge function in the background to refresh rates
-            if (method.name !== 'Edge Function') {
-              invokeEdgeFunction().catch(e => 
-                console.warn("Background refresh of exchange rates failed:", e));
-            }
-            
-            return;
-          }
-        } catch (methodError) {
-          console.warn(`${method.name} method failed:`, methodError);
-          // Continue to the next method
+      // Try to get rates from the database
+      try {
+        console.log('Trying to fetch rates from database...');
+        const rates = await fetchExchangeRatesFromDB();
+        
+        if (rates && rates.length > 0) {
+          setExchangeRates(rates);
+          setLastUpdate(rates[0].update_date);
+          console.log(`Exchange rates loaded from database:`, rates.length);
+          return;
         }
+      } catch (dbError) {
+        console.warn(`Database fetch method failed:`, dbError);
       }
       
-      // If we get here, all methods failed
-      console.warn("All methods failed, using fallback rates");
+      // If we get here, use fallback rates
+      console.warn("Using fallback rates");
       setExchangeRates(fallbackRates);
       setLastUpdate(fallbackRates[0].update_date);
       
@@ -83,7 +63,7 @@ export const useExchangeRates = (pollingInterval = 300000) => { // 5 minutes by 
         duration: 2000
       });
       
-      const rates = await invokeEdgeFunction();
+      const rates = await fetchExchangeRatesFromDB();
       
       if (rates.length > 0) {
         setExchangeRates(rates);
@@ -121,7 +101,6 @@ export const useExchangeRates = (pollingInterval = 300000) => { // 5 minutes by 
   };
 
   useEffect(() => {
-    enableRealtime();
     loadExchangeRates();
     
     const pollingTimer = setInterval(() => {
