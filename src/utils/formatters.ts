@@ -1,73 +1,87 @@
 
 /**
- * Utility functions for formatting values
+ * Format a date string to a localized format
+ * @param dateString ISO date string
+ * @returns Formatted date string
  */
+export const formatDate = (dateString?: string | null): string => {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleDateString('tr-TR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
 
 /**
- * Format a currency value with proper currency symbol
+ * Format a date string to a short format (DD.MM.YYYY)
+ * @param dateString ISO date string
+ * @returns Formatted date string
  */
-export const formatCurrency = (value: number, currency: string = 'TRY'): string => {
-  try {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: currency || 'TRY',
-      minimumFractionDigits: 2
-    }).format(value);
-  } catch (error) {
-    // Fallback in case of invalid currency code
-    return `${value.toFixed(2)} ${currency}`;
-  }
+export const formatShortDate = (dateString?: string | null): string => {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleDateString('tr-TR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+};
+
+/**
+ * Format a number as currency
+ * @param amount Number to format
+ * @param currency Currency code (default: TRY)
+ * @returns Formatted currency string
+ */
+export const formatCurrency = (amount: number, currency = 'TRY'): string => {
+  return new Intl.NumberFormat('tr-TR', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount);
+};
+
+/**
+ * Format a number as percentage
+ * @param value Number to format
+ * @returns Formatted percentage string
+ */
+export const formatPercent = (value: number): string => {
+  return new Intl.NumberFormat('tr-TR', {
+    style: 'percent',
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 2
+  }).format(value / 100);
 };
 
 /**
  * Format a number with thousands separator
+ * @param value Number to format
+ * @returns Formatted number string
  */
 export const formatNumber = (value: number): string => {
   return new Intl.NumberFormat('tr-TR').format(value);
 };
 
 /**
- * Format a date to locale string
+ * Truncate a string to a maximum length
+ * @param text Text to truncate
+ * @param maxLength Maximum length
+ * @returns Truncated text
  */
-export const formatDate = (date: Date | string): string => {
-  if (!date) return '';
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return dateObj.toLocaleDateString('tr-TR');
+export const truncateText = (text: string, maxLength: number): string => {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
 };
 
 /**
- * Format a date with time
+ * Capitalize the first letter of a string
+ * @param text Text to capitalize
+ * @returns Capitalized text
  */
-export const formatDateTime = (date: Date | string): string => {
-  if (!date) return '';
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return dateObj.toLocaleString('tr-TR');
-};
-
-/**
- * Format a percentage value
- */
-export const formatPercent = (value: number): string => {
-  return `%${value.toFixed(2)}`;
-};
-
-/**
- * Format a phone number in Turkish format
- */
-export const formatPhoneNumber = (phone: string): string => {
-  if (!phone) return '';
-  
-  // Remove all non-numeric characters
-  const cleaned = phone.replace(/\D/g, '');
-  
-  // Format the phone number
-  if (cleaned.length === 10) {
-    // Format as: (555) 123 45 67
-    return `(${cleaned.substring(0, 3)}) ${cleaned.substring(3, 6)} ${cleaned.substring(6, 8)} ${cleaned.substring(8, 10)}`;
-  }
-  
-  // Return original if format doesn't match
-  return phone;
+export const capitalizeFirstLetter = (text: string): string => {
+  if (!text) return '';
+  return text.charAt(0).toUpperCase() + text.slice(1);
 };

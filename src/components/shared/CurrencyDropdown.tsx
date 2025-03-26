@@ -2,7 +2,7 @@
 import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CurrencyOption } from "@/components/proposals/form/items/types/currencyTypes";
-import { BadgeDollarSign, BadgeEuro, BadgePoundSterling, BadgeYen } from "lucide-react";
+import { BadgeDollarSign, BadgeEuro, BadgePoundSterling, BadgeJapaneseYen } from "lucide-react";
 
 interface CurrencyDropdownProps {
   value: string;
@@ -31,7 +31,7 @@ const CurrencyDropdown: React.FC<CurrencyDropdownProps> = ({
       case "GBP":
         return <BadgePoundSterling className="h-4 w-4 mr-2" />;
       case "JPY":
-        return <BadgeYen className="h-4 w-4 mr-2" />;
+        return <BadgeJapaneseYen className="h-4 w-4 mr-2" />;
       default:
         return null;
     }

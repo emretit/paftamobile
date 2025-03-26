@@ -1,23 +1,29 @@
 
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { importCustomersFromExcel } from '@/utils/excelUtils';
-import { useQueryClient } from '@tanstack/react-query';
-import type { Customer } from '@/types/customer';
+import { Customer } from '@/types/customer';
 
-export const useExcelImport = (onClose: () => void) => {
+interface ImportStats {
+  success: number;
+  failed: number;
+  duplicates: number;
+  invalidRows: number;
+  total: number;
+}
+
+export const useExcelImport = (onSuccess?: () => void) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [progress, setProgress] = useState(0);
-  const [stats, setStats] = useState({ 
-    total: 0, 
-    success: 0, 
-    failed: 0, 
+  const [stats, setStats] = useState<ImportStats>({
+    success: 0,
+    failed: 0,
     duplicates: 0,
-    invalidRows: 0 
+    invalidRows: 0,
+    total: 0
   });
-  const queryClient = useQueryClient();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -26,128 +32,138 @@ export const useExcelImport = (onClose: () => void) => {
   };
 
   const handleImport = async () => {
-    if (!selectedFile) {
-      toast.error('Lütfen bir Excel dosyası seçin');
-      return;
-    }
-
+    if (!selectedFile) return;
+    
+    setIsLoading(true);
+    setProgress(0);
+    setStats({
+      success: 0,
+      failed: 0,
+      duplicates: 0,
+      invalidRows: 0,
+      total: 0
+    });
+    
     try {
-      setIsLoading(true);
-      setProgress(10);
+      // Import and parse Excel file
+      const importedData = await importCustomersFromExcel(selectedFile);
       
-      // Parse Excel file
-      const { customers: importedCustomers, duplicates, invalidRows } = await importCustomersFromExcel(selectedFile);
-      
-      // Update stats for UI with duplicates information
-      setStats({ 
-        total: selectedFile.size > 0 ? importedCustomers.length + duplicates + invalidRows : 0, 
-        success: 0, 
-        failed: 0, 
-        duplicates,
-        invalidRows
-      });
-      setProgress(30);
-      
-      console.log(`İçe aktarılacak toplam yeni müşteri sayısı: ${importedCustomers.length}`);
-      console.log(`Mükerrer müşteri sayısı: ${duplicates}`);
-      console.log(`Geçersiz satır sayısı: ${invalidRows}`);
-      
-      if (importedCustomers.length === 0) {
-        setProgress(100);
-        setTimeout(() => {
-          onClose();
-          setSelectedFile(null);
-          if (duplicates > 0 && invalidRows === 0) {
-            toast.info('Tüm müşteriler zaten sisteme eklenmiş');
-          } else if (invalidRows > 0 && duplicates === 0) {
-            toast.error(`${invalidRows} satır geçersiz veri içeriyor. Hiçbir müşteri içe aktarılamadı.`);
-          } else if (invalidRows > 0 && duplicates > 0) {
-            toast.error(`${duplicates} müşteri zaten mevcut ve ${invalidRows} satır geçersiz veri içeriyor.`);
-          }
-        }, 1500);
+      if (!importedData || importedData.length === 0) {
+        toast.error('Excel dosyası boş veya geçersiz');
+        setIsLoading(false);
         return;
       }
       
-      // Process in batches to avoid timeout issues
-      const BATCH_SIZE = 50;
+      // Set total for progress calculation
+      setStats(prev => ({ ...prev, total: importedData.length }));
+      
+      // Process each customer record
       let successCount = 0;
       let failedCount = 0;
+      let duplicateCount = 0;
+      let invalidCount = 0;
       
-      for (let i = 0; i < importedCustomers.length; i += BATCH_SIZE) {
-        const batch = importedCustomers.slice(i, i + BATCH_SIZE);
-        console.log(`${i+1}-${i+batch.length} arası müşteriler işleniyor (Toplam: ${importedCustomers.length})`);
+      for (let i = 0; i < importedData.length; i++) {
+        const row = importedData[i];
         
-        // Prepare batch for insertion
-        const insertBatch = batch.map(customer => ({
-          name: customer.name,
-          email: customer.email,
-          mobile_phone: customer.mobile_phone,
-          office_phone: customer.office_phone,
-          company: customer.company,
-          type: customer.type,
-          status: customer.status,
-          representative: customer.representative,
-          balance: customer.balance,
-          address: customer.address,
-          tax_number: customer.tax_number,
-          tax_office: customer.tax_office
-        }));
-        
-        // Insert batch
-        const { data, error } = await supabase
-          .from('customers')
-          .insert(insertBatch)
-          .select();
+        // Check for required fields
+        if (!row.name || !row.type || !row.status) {
+          invalidCount++;
+          setStats({
+            success: successCount,
+            failed: failedCount,
+            duplicates: duplicateCount,
+            invalidRows: invalidCount,
+            total: importedData.length
+          });
           
-        if (error) {
-          console.error('Batch insert error:', error);
-          failedCount += batch.length;
-        } else {
-          successCount += data?.length || 0;
-          console.log(`${data?.length || 0} müşteri başarıyla eklendi`);
+          // Update progress
+          setProgress(Math.floor(((i + 1) / importedData.length) * 100));
+          continue;
         }
         
-        // Update stats and progress
+        // Check if customer already exists by name
+        const { data: existingCustomer, error: checkError } = await supabase
+          .from('customers')
+          .select('id, name')
+          .eq('name', row.name)
+          .maybeSingle();
+        
+        if (checkError) {
+          console.error('Error checking existing customer:', checkError);
+          failedCount++;
+        } else if (existingCustomer) {
+          duplicateCount++;
+        } else {
+          // Insert new customer
+          const { error: insertError } = await supabase
+            .from('customers')
+            .insert({
+              name: row.name,
+              type: row.type,
+              status: row.status,
+              email: row.email || null,
+              mobile_phone: row.mobile_phone || null,
+              office_phone: row.office_phone || null,
+              company: row.company || null,
+              representative: row.representative || null,
+              balance: row.balance || 0,
+              address: row.address || null,
+              tax_number: row.tax_number || null,
+              tax_office: row.tax_office || null
+            });
+            
+          if (insertError) {
+            console.error('Error inserting customer:', insertError);
+            failedCount++;
+          } else {
+            successCount++;
+          }
+        }
+        
+        // Update stats
         setStats({
-          total: importedCustomers.length + duplicates + invalidRows,
           success: successCount,
           failed: failedCount,
-          duplicates,
-          invalidRows
+          duplicates: duplicateCount,
+          invalidRows: invalidCount,
+          total: importedData.length
         });
         
-        const newProgress = 30 + Math.floor((i + batch.length) / importedCustomers.length * 70);
-        setProgress(Math.min(newProgress, 95));
+        // Update progress
+        setProgress(Math.floor(((i + 1) / importedData.length) * 100));
       }
       
-      // Complete import
+      // Final update
       setProgress(100);
       
-      // Close dialog and refresh data
-      setTimeout(() => {
-        onClose();
-        setSelectedFile(null);
-        queryClient.invalidateQueries({ queryKey: ['customers'] });
-        
-        let message = `${successCount} müşteri başarıyla içe aktarıldı`;
-        if (failedCount > 0) message += `, ${failedCount} başarısız`;
-        if (stats.duplicates > 0) message += `, ${stats.duplicates} mükerrer`;
-        if (stats.invalidRows > 0) message += `, ${stats.invalidRows} geçersiz veri`;
-        
-        if (successCount > 0) {
-          toast.success(message);
-        } else if (failedCount > 0) {
-          toast.error(message);
-        } else {
-          toast.info(message);
-        }
-      }, 1500);
+      // Show success message
+      if (successCount > 0) {
+        toast.success(`${successCount} müşteri başarıyla içe aktarıldı`);
+        if (onSuccess) onSuccess();
+      }
+      
+      if (duplicateCount > 0) {
+        toast.info(`${duplicateCount} müşteri zaten sistemde mevcut`);
+      }
+      
+      if (invalidCount > 0) {
+        toast.warning(`${invalidCount} satır geçersiz veri nedeniyle içe aktarılamadı`);
+      }
+      
+      if (failedCount > 0) {
+        toast.error(`${failedCount} müşteri içe aktarılırken hata oluştu`);
+      }
       
     } catch (error) {
       console.error('Import error:', error);
       toast.error('İçe aktarma sırasında bir hata oluştu');
     } finally {
       setIsLoading(false);
+      // Reset file input
+      setTimeout(() => {
+        setSelectedFile(null);
+      }, 1000);
     }
   };
 

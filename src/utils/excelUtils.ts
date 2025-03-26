@@ -1,9 +1,12 @@
 
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import { Customer } from '@/types/customer';
+import { Proposal } from '@/types/proposal';
+import { Product } from '@/types/product';
 
 // Export customers to Excel
-export const exportCustomersToExcel = (customers: any[], fileName = 'customers.xlsx') => {
+export const exportCustomersToExcel = (customers: Customer[], fileName = 'customers.xlsx') => {
   try {
     // Convert data to worksheet
     const worksheet = XLSX.utils.json_to_sheet(customers);
@@ -58,7 +61,7 @@ export const importCustomersFromExcel = async (file: File): Promise<any[]> => {
 };
 
 // Export proposals to Excel
-export const exportProposalsToExcel = (proposals: any[], fileName = 'proposals.xlsx') => {
+export const exportProposalsToExcel = (proposals: Proposal[], fileName = 'proposals.xlsx') => {
   try {
     // Convert data to worksheet
     const worksheet = XLSX.utils.json_to_sheet(proposals);
@@ -82,7 +85,7 @@ export const exportProposalsToExcel = (proposals: any[], fileName = 'proposals.x
 };
 
 // Export products to Excel
-export const exportProductsToExcel = (products: any[], fileName = 'products.xlsx') => {
+export const exportProductsToExcel = (products: Product[], fileName = 'products.xlsx') => {
   try {
     // Convert data to worksheet
     const worksheet = XLSX.utils.json_to_sheet(products);
