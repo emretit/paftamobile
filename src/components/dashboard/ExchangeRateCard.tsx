@@ -1,6 +1,6 @@
 
 import React from "react";
-import { RefreshCw, AlertCircle, DollarSign, Euro, PoundSterling, Yen, Franc } from "lucide-react";
+import { RefreshCw, AlertCircle, DollarSign, Euro, PoundSterling, CircleDollarSign, Coins } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -19,9 +19,9 @@ const CurrencyIcon = ({ code }: { code: string }) => {
     case 'GBP':
       return <PoundSterling className="h-4 w-4" />;
     case 'JPY':
-      return <Yen className="h-4 w-4" />;
+      return <CircleDollarSign className="h-4 w-4" />; // Alternatif ikon kullanımı
     case 'CHF':
-      return <Franc className="h-4 w-4" />;
+      return <Coins className="h-4 w-4" />; // Alternatif ikon kullanımı
     default:
       return null;
   }
