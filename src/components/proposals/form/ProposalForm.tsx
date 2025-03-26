@@ -10,7 +10,6 @@ import ProposalItems from "./items/ProposalItems";
 import ProposalFormTerms from "./ProposalFormTerms";
 import ProposalCurrencySelector from "./ProposalCurrencySelector";
 import { useProposalFormState } from "@/hooks/proposals/useProposalFormState";
-import ProposalTemplateSelect from "./ProposalTemplateSelect";
 import { Proposal } from "@/types/proposal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -93,10 +92,6 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
 
       <div className="flex flex-col gap-6">
         <div className="space-y-6 w-full">
-          {isNew && (
-            <ProposalTemplateSelect />
-          )}
-
           <ProposalCurrencySelector 
             selectedCurrency={formData.currency || "TRY"} 
             onCurrencyChange={handleCurrencyChange}

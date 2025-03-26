@@ -25,7 +25,6 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
       setSaving(true);
       console.log("Saving proposal with data:", formData);
       
-      // Use the createProposal function directly
       const result = await createProposal(formData);
       
       if (result) {
