@@ -36,6 +36,7 @@ import ProposalEdit from "@/pages/ProposalEdit";
 import Tasks from "@/pages/Tasks";
 import Opportunities from "@/pages/crm/Opportunities";
 import CrmDashboard from "@/pages/crm/CrmDashboard";
+import Orders from "@/pages/Orders";
 
 const queryClient = new QueryClient();
 
@@ -174,6 +175,12 @@ function App() {
           <Route
             path="/crm"
             element={<ProtectedRoute><CrmDashboard isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
+          />
+          
+          {/* New order routes */}
+          <Route
+            path="/orders/purchase"
+            element={<ProtectedRoute><Orders isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /></ProtectedRoute>}
           />
         </Routes>
       </Router>

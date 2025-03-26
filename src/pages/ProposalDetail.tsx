@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
@@ -18,7 +17,8 @@ import {
   Edit,
   Trash2,
   Clock,
-  Send
+  Send,
+  ShoppingCart
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -83,14 +83,12 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
 
   const handleEdit = () => {
     if (proposal) {
-      // İlgili düzenleme sayfasına yönlendirme yapacak şekilde değiştirildi
       navigate(`/proposal/edit/${proposal.id}`);
       toast.info("Teklif düzenleme sayfasına yönlendiriliyorsunuz");
     }
   };
 
   const handleDelete = () => {
-    // In a real implementation, this would actually delete the proposal
     toast.success("Teklif silindi");
     navigate("/proposals");
   };
@@ -99,14 +97,11 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
     if (!proposal) return;
     
     try {
-      // In a real implementation, you would call an API to update the status
-      // For now, we'll just update the local state and show a success message
       setProposal({
         ...proposal,
         status: newStatus
       });
       
-      // Handle any side effects of status change
       await handleProposalStatusChange(
         proposal.id,
         proposal.title,
@@ -135,13 +130,18 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
   };
 
   const handleDownloadPdf = () => {
-    // In a real implementation, this would generate and download a PDF
     toast.success("PDF indiriliyor");
   };
 
   const handleSendEmail = () => {
-    // In a real implementation, this would open an email dialog
     toast.success("E-posta gönderme penceresi açıldı");
+  };
+
+  const handleConvertToOrder = () => {
+    if (!proposal) return;
+    
+    navigate(`/orders/purchase?proposalId=${proposal.id}`);
+    toast.success("Sipariş oluşturma sayfasına yönlendiriliyorsunuz");
   };
 
   const getStatusActions = () => {
@@ -149,7 +149,6 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
     
     const actions = [];
     
-    // Taslak -> Gönder (sent), Onay Bekliyor (pending_approval)
     if (proposal.status === 'draft') {
       actions.push(
         <Button key="send" className="bg-blue-600 hover:bg-blue-700" onClick={handleSendProposal}>
@@ -165,7 +164,6 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
       );
     }
     
-    // Onay Bekliyor -> Taslak (draft), Gönder (sent)
     if (proposal.status === 'pending_approval') {
       actions.push(
         <Button key="send" className="bg-blue-600 hover:bg-blue-700" onClick={handleSendProposal}>
@@ -181,7 +179,6 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
       );
     }
     
-    // Gönderildi -> Kabul Edildi (accepted), Reddedildi (rejected)
     if (proposal.status === 'sent') {
       actions.push(
         <Button key="accept" className="bg-green-600 hover:bg-green-700" onClick={() => handleStatusChange('accepted')}>
@@ -191,6 +188,27 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
       actions.push(
         <Button key="reject" variant="destructive" onClick={() => handleStatusChange('rejected')}>
           Reddedildi
+        </Button>
+      );
+    }
+    
+    return actions.length > 0 ? (
+      <div className="flex flex-wrap gap-2 mt-4">
+        {actions}
+      </div>
+    ) : null;
+  };
+
+  const getAdditionalActions = () => {
+    if (!proposal) return null;
+    
+    const actions = [];
+    
+    if (proposal.status === 'accepted') {
+      actions.push(
+        <Button key="convert" onClick={handleConvertToOrder} className="bg-green-600 hover:bg-green-700">
+          <ShoppingCart className="h-4 w-4 mr-2" />
+          Siparişe Çevir
         </Button>
       );
     }
@@ -235,7 +253,6 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
     );
   }
 
-  // Calculate totals for display
   const totals = proposal.items && proposal.items.length > 0 
     ? calculateProposalTotals(proposal.items)
     : { subtotal: 0, taxAmount: 0, total: proposal.total_amount || 0 };
@@ -305,6 +322,8 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
       </div>
       
       {getStatusActions()}
+      
+      {getAdditionalActions()}
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         {viewMode === 'side' ? (
