@@ -14,8 +14,6 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PROPOSAL_ITEM_GROUPS } from "./proposalItemsConstants";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { ExchangeRate } from "@/hooks/useExchangeRates";
 
 interface ProposalItemsTableProps {
   items: ProposalItem[];
@@ -26,8 +24,7 @@ interface ProposalItemsTableProps {
   formatCurrency: (amount: number, currency?: string) => string;
   currencyOptions: { value: string; label: string }[];
   taxRateOptions: { value: number; label: string }[];
-  exchangeRates?: ExchangeRate[];
-  convertCurrency?: (amount: number, fromCurrency: string, toCurrency: string) => number;
+  exchangeRates?: Record<string, number>;
 }
 
 const ProposalItemsTable = ({
@@ -39,37 +36,26 @@ const ProposalItemsTable = ({
   formatCurrency,
   currencyOptions,
   taxRateOptions,
-  exchangeRates = [],
-  convertCurrency,
+  exchangeRates = { TRY: 1, USD: 38, EUR: 40, GBP: 48 }, // Default fallback values if no rates provided
 }: ProposalItemsTableProps) => {
   // Para birimi değişikliğini ele alma
   const onCurrencyChange = (index: number, value: string) => {
-    const currentItem = items[index];
-    const currentCurrency = currentItem.currency || selectedCurrency;
-    
-    // Eğer para birimi değişmiyorsa işlem yapma
-    if (value === currentCurrency) return;
-    
     if (handleItemCurrencyChange) {
       // Özel para birimi değişikliği işleyicisini kullan
       handleItemCurrencyChange(index, value);
-    } else if (convertCurrency) {
-      // Eğer doğrudan convertCurrency fonksiyonu sağlanmışsa, bunu kullan
-      const currentPrice = currentItem.unit_price;
-      const convertedPrice = convertCurrency(currentPrice, currentCurrency, value);
-      
-      // Önce para birimini güncelle
-      handleItemChange(index, "currency", value);
-      
-      // Sonra fiyatı güncelle
-      handleItemChange(index, "unit_price", convertedPrice);
-      
-      // Kullanıcıya bilgi ver
-      toast.info(`Birim fiyat ${currentCurrency}'dan ${value}'a dönüştürüldü`);
     } else {
       // Standart item değişikliği işleyicisini kullan
       handleItemChange(index, "currency", value);
     }
+  };
+
+  // Get the exchange rate for a specific currency
+  const getExchangeRate = (currency: string): number => {
+    // If the currency is not in the exchange rates or the rates are not available, return a default
+    return exchangeRates[currency] || 
+      (currency === "USD" ? 38 : 
+       currency === "EUR" ? 40 : 
+       currency === "GBP" ? 48 : 1);
   };
 
   return (
@@ -85,13 +71,16 @@ const ProposalItemsTable = ({
             <th className="py-3 px-4 text-center font-medium w-20">KDV %</th>
             <th className="py-3 px-4 text-center font-medium w-20">İndirim %</th>
             <th className="py-3 px-4 text-right font-medium w-32">Toplam</th>
+            {selectedCurrency !== "TRY" && (
+              <th className="py-3 px-4 text-right font-medium w-32">TRY Karşılığı</th>
+            )}
             <th className="py-3 px-4 text-center font-medium w-16"></th>
           </tr>
         </thead>
         <tbody>
           {items.length === 0 ? (
             <tr>
-              <td colSpan={9} className="py-3 px-4 text-center text-muted-foreground">
+              <td colSpan={selectedCurrency !== "TRY" ? 10 : 9} className="py-3 px-4 text-center text-muted-foreground">
                 Henüz ürün eklenmedi. Ürün eklemek için yukarıdaki butonları kullanın.
               </td>
             </tr>
@@ -193,6 +182,27 @@ const ProposalItemsTable = ({
                 <td className="py-3 px-4 text-right font-medium">
                   {formatCurrency(item.total_price, (item as any).currency || selectedCurrency)}
                 </td>
+                {selectedCurrency !== "TRY" && (
+                  <td className="py-3 px-4 text-right font-medium">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <div className="flex items-center justify-end">
+                            {formatCurrency(
+                              // Güncel kur oranını kullanarak dönüşüm yap
+                              item.total_price * getExchangeRate((item as any).currency || selectedCurrency),
+                              "TRY"
+                            )}
+                            <Info className="h-3 w-3 ml-1 text-muted-foreground" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>TCMB güncel kuruna göre TL karşılığı</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </td>
+                )}
                 <td className="py-3 px-4 text-center">
                   <Button
                     type="button"
