@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { DollarSign, AlertCircle, ArrowRightLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -19,7 +19,13 @@ const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({
 }) => {
   const currencyOptions = getCurrencyOptions();
   // Use the dashboard exchange rates to show the TRY equivalent
-  const { exchangeRates, formatCurrency } = useExchangeRates();
+  const { exchangeRates, formatCurrency, refreshExchangeRates } = useExchangeRates();
+
+  // Bileşen yüklendiğinde döviz kurlarını yenileme
+  useEffect(() => {
+    console.log("ProposalCurrencySelector loaded, refreshing rates");
+    refreshExchangeRates();
+  }, [refreshExchangeRates]);
 
   // Get the exchange rate for the selected currency
   const getExchangeRateInfo = () => {
@@ -31,16 +37,23 @@ const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({
     const rate = exchangeRates.find(rate => rate.currency_code === selectedCurrency);
     
     if (rate && rate.forex_selling) {
+      console.log(`Found rate for ${selectedCurrency}:`, rate.forex_selling);
       return {
         rate: rate.forex_selling,
         formattedRate: formatCurrency(rate.forex_selling, "TRY")
       };
     }
     
+    console.log(`No rate found for ${selectedCurrency} in:`, exchangeRates);
     return null;
   };
 
   const exchangeRateInfo = getExchangeRateInfo();
+  
+  // Debug için kurları ve seçili para birimini konsola yazma
+  console.log("Selected currency:", selectedCurrency);
+  console.log("Exchange rates:", exchangeRates);
+  console.log("Exchange rate info:", exchangeRateInfo);
 
   return (
     <Card className="mb-6">
@@ -59,11 +72,18 @@ const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({
             triggerClassName="w-[130px]"
           />
           
-          {exchangeRateInfo && (
+          {exchangeRateInfo ? (
             <div className="flex items-center gap-2 ml-2">
               <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
               <Badge variant="outline" className="font-normal">
                 1 {selectedCurrency} = {exchangeRateInfo.formattedRate}
+              </Badge>
+            </div>
+          ) : selectedCurrency !== "TRY" && (
+            <div className="flex items-center gap-2 ml-2">
+              <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+              <Badge variant="outline" className="font-normal text-muted-foreground">
+                Kur bilgisi yükleniyor...
               </Badge>
             </div>
           )}
