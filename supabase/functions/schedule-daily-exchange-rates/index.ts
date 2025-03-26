@@ -1,6 +1,5 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.48.1'
-import { XMLParser } from 'https://esm.sh/fast-xml-parser@4.3.3'
 
 // CORS headers
 const corsHeaders = {
@@ -9,7 +8,6 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,7 +15,6 @@ Deno.serve(async (req) => {
   try {
     console.log('Setting up daily exchange rate schedule...');
     
-    // Get Supabase credentials from environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
@@ -29,21 +26,10 @@ Deno.serve(async (req) => {
       auth: { persistSession: false }
     });
     
-    // Check if necessary tables exist
-    const { error: tableError } = await supabase
-      .from('exchange_rates')
-      .select('id')
-      .limit(1);
-      
-    if (tableError) {
-      console.error('Error accessing exchange_rates table:', tableError);
-      throw new Error(`Exchange rates table error: ${tableError.message}`);
-    }
-    
-    // Check if the cron function exists
-    const { data: functionExists, error: functionError } = await supabase
+    // Check if cron function exists
+    const { error: functionError } = await supabase
       .rpc('setup_exchange_rate_cron')
-      .catch(() => ({ data: null, error: { message: 'Function does not exist' } }));
+      .catch(() => ({ error: { message: 'Function does not exist' } }));
       
     if (functionError && functionError.message !== 'Function does not exist') {
       console.error('Error checking for cron function:', functionError);
@@ -65,8 +51,8 @@ Deno.serve(async (req) => {
           'daily-exchange-rate-update',  -- job name
           '0 16 * * *',                 -- cron schedule (16:00 daily)
           'SELECT net.http_post(
-            url:=''https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/exchange-rates'',
-            headers:=''{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aHd1Zm5ja3BxaXJ4cHR3bmN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkzODI5MjAsImV4cCI6MjA1NDk1ODkyMH0.Wjw8MAnsBrHxB6-J-bNGObgDQ4fl3zPYrgYI5tOrcKo"}''::jsonb,
+            url:=''${supabaseUrl}/functions/v1/exchange-rates'',
+            headers:=''{"Content-Type": "application/json", "Authorization": "Bearer ${supabaseKey}"}''::jsonb,
             body:=''{}''::jsonb
           ) AS request_id;'
         );
@@ -85,14 +71,12 @@ Deno.serve(async (req) => {
         throw new Error(`Failed to create cron function: ${sqlError.message}`);
       }
       
-      // Now call the function
       result = await supabase.rpc('setup_exchange_rate_cron');
     } else {
-      // Call the existing function
       result = await supabase.rpc('setup_exchange_rate_cron');
     }
     
-    // Log setup operation to exchange_rate_updates
+    // Log setup operation
     try {
       await supabase
         .from('exchange_rate_updates')
@@ -107,16 +91,14 @@ Deno.serve(async (req) => {
       console.warn('Could not log to exchange_rate_updates:', logError);
     }
     
-    // Manually trigger an immediate exchange rate update
+    // Trigger immediate update
     console.log('Triggering immediate exchange rate update...');
-    const { data: updateResult, error: updateError } = await supabase.functions.invoke('exchange-rates', {
+    const { error: updateError } = await supabase.functions.invoke('exchange-rates', {
       method: 'POST'
     });
     
     if (updateError) {
       console.error('Error triggering immediate update:', updateError);
-    } else {
-      console.log('Immediate update triggered successfully:', updateResult);
     }
     
     return new Response(
@@ -132,10 +114,9 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error setting up exchange rate schedule:', error);
     
-    // Log error to exchange_rate_updates
     try {
       const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+      const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
       if (supabaseUrl && supabaseKey) {
         const supabase = createClient(supabaseUrl, supabaseKey, {
           auth: { persistSession: false }
