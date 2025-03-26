@@ -54,6 +54,20 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     { value: 20, label: "%20" }
   ];
 
+  // Create a simplified exchange rates object (Record<string, number>) for the table component
+  const exchangeRatesMap = useMemo(() => {
+    const ratesMap: Record<string, number> = { TRY: 1 };
+    
+    // Convert the array of exchange rate objects to a simple object map
+    dashboardRates.forEach(rate => {
+      if (rate.currency_code && rate.forex_buying) {
+        ratesMap[rate.currency_code] = rate.forex_buying;
+      }
+    });
+    
+    return ratesMap;
+  }, [dashboardRates]);
+
   // Global para birimi değiştiğinde tüm kalemleri güncelle
   useEffect(() => {
     if (globalCurrency && globalCurrency !== selectedCurrency) {
@@ -287,7 +301,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
           currencyOptions={currencyOptions}
           taxRateOptions={taxRateOptions}
           handleItemCurrencyChange={onItemCurrencyChange}
-          exchangeRates={dashboardRates} // Pass the exchange rates to the table
+          exchangeRates={exchangeRatesMap} // Pass the simplified exchange rates map
         />
       </div>
 
