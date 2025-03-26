@@ -1,3 +1,4 @@
+
 import React, { useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, AlertCircle, Info } from "lucide-react";
@@ -84,6 +85,33 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
       }
     }
   }, [globalCurrency, selectedCurrency, setSelectedCurrency, updateAllItemsCurrency, items, onItemsChange]);
+
+  // Listen for global currency change events from CurrencyRatePopover
+  useEffect(() => {
+    const handleGlobalCurrencyChangeEvent = (event: CustomEvent<{currency: string, source: string}>) => {
+      console.log(`Global currency change event received: ${event.detail.currency} from ${event.detail.source}`);
+      
+      if (event.detail.currency !== selectedCurrency) {
+        // Update local currency state
+        setSelectedCurrency(event.detail.currency);
+        
+        // Convert all items to the new currency
+        if (items.length > 0) {
+          const updatedItems = updateAllItemsCurrency(event.detail.currency);
+          if (updatedItems) {
+            onItemsChange(updatedItems);
+            toast.success(`Tüm kalemler ${event.detail.currency} para birimine dönüştürüldü`);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('global-currency-change', handleGlobalCurrencyChangeEvent as EventListener);
+    
+    return () => {
+      window.removeEventListener('global-currency-change', handleGlobalCurrencyChangeEvent as EventListener);
+    };
+  }, [items, selectedCurrency, setSelectedCurrency, updateAllItemsCurrency, onItemsChange]);
 
   // Calculate totals
   const calculateSubtotal = () => {
@@ -253,6 +281,15 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
         toast.success(`Tüm kalemler ${currency} para birimine dönüştürüldü`);
       }
     }
+    
+    // Dispatch a custom event to notify other components
+    const event = new CustomEvent('global-currency-change', { 
+      detail: { 
+        currency,
+        source: 'proposal-items' 
+      } 
+    });
+    window.dispatchEvent(event);
   };
 
   return (

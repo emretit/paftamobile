@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -73,6 +72,23 @@ export const CurrencyRatePopover: React.FC<CurrencyRatePopoverProps> = ({
     };
   };
 
+  // Handle currency selection with clear intent for global conversion
+  const handleCurrencySelect = (currency: string) => {
+    if (currency === selectedCurrency) return;
+    
+    // Call the provided callback with the selected currency
+    onCurrencyChange(currency);
+    
+    // Dispatch a custom event that other components can listen for
+    const event = new CustomEvent('global-currency-change', { 
+      detail: { 
+        currency,
+        source: 'currency-popover'
+      }
+    });
+    window.dispatchEvent(event);
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -118,7 +134,7 @@ export const CurrencyRatePopover: React.FC<CurrencyRatePopoverProps> = ({
                     className={`w-full flex flex-col px-3 py-1.5 text-sm hover:bg-muted transition-colors ${
                       selectedCurrency === currency ? "bg-primary/10 text-primary font-medium" : ""
                     }`}
-                    onClick={() => onCurrencyChange(currency)}
+                    onClick={() => handleCurrencySelect(currency)}
                   >
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center">
