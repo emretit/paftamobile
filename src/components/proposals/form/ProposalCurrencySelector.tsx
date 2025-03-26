@@ -120,7 +120,7 @@ const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({
           <CurrencyRatePopover
             selectedCurrency={selectedCurrency}
             onCurrencyChange={handleCurrencyChange}
-            triggerClassName="w-[100px]"
+            triggerClassName="w-[50px]"
           />
           
           {exchangeRateInfo ? (

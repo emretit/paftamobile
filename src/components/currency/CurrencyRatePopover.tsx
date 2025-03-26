@@ -40,13 +40,13 @@ export const CurrencyRatePopover: React.FC<CurrencyRatePopoverProps> = ({
   const getCurrencyLabel = (currency: string) => {
     switch (currency) {
       case "TRY":
-        return "Türk Lirası (₺)";
+        return "₺";
       case "USD":
-        return "Amerikan Doları ($)";
+        return "$";
       case "EUR":
-        return "Euro (€)";
+        return "€";
       case "GBP":
-        return "İngiliz Sterlini (£)";
+        return "£";
       default:
         return currency;
     }
@@ -81,8 +81,7 @@ export const CurrencyRatePopover: React.FC<CurrencyRatePopoverProps> = ({
           className={`flex items-center gap-1 font-medium ${triggerClassName}`}
           size="sm"
         >
-          {getCurrencyIcon(selectedCurrency)}
-          <span>{selectedCurrency}</span>
+          {getCurrencyLabel(selectedCurrency)}
           <ChevronDown className="h-3.5 w-3.5 ml-1 opacity-70" />
         </Button>
       </PopoverTrigger>
@@ -124,7 +123,7 @@ export const CurrencyRatePopover: React.FC<CurrencyRatePopoverProps> = ({
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center">
                         {getCurrencyIcon(currency)}
-                        <span>{getCurrencyLabel(currency)}</span>
+                        <span>{currency}</span>
                       </div>
                     </div>
                     

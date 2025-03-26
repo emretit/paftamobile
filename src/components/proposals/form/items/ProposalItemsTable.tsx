@@ -112,28 +112,32 @@ const ProposalItemsTable = ({
                   />
                 </td>
                 <td className="py-3 px-4">
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      value={item.unit_price}
-                      onChange={(e) => handleItemChange(index, "unit_price", e.target.value)}
-                      className="text-right border-0 bg-transparent focus-visible:ring-0"
-                    />
-                    <Select 
-                      value={(item as any).currency || selectedCurrency} 
-                      onValueChange={(value) => onCurrencyChange(index, value)}
-                    >
-                      <SelectTrigger className="border-0 bg-transparent focus-visible:ring-0 h-8 w-[70px]">
-                        <SelectValue placeholder="Para Birimi" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {currencyOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="flex items-center">
+                    <div className="relative flex-1">
+                      <Input
+                        type="number"
+                        value={item.unit_price}
+                        onChange={(e) => handleItemChange(index, "unit_price", e.target.value)}
+                        className="text-right pr-16 border-0 bg-transparent focus-visible:ring-0"
+                      />
+                      <div className="absolute inset-y-0 right-0 flex items-center">
+                        <Select 
+                          value={(item as any).currency || selectedCurrency} 
+                          onValueChange={(value) => onCurrencyChange(index, value)}
+                        >
+                          <SelectTrigger className="border-0 bg-transparent focus-visible:ring-0 h-8 min-w-14">
+                            <SelectValue placeholder="" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {currencyOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
                 </td>
                 <td className="py-3 px-4">
