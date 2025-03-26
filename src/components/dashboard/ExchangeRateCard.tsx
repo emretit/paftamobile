@@ -16,11 +16,16 @@ const ExchangeRateCard: React.FC = () => {
     return rate.toFixed(4);
   };
 
+  // Filter rates to only show USD, EUR, and GBP
+  const filteredRates = exchangeRates.filter(rate => 
+    ["USD", "EUR", "GBP"].includes(rate.currency_code)
+  );
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div>
-          <CardTitle className="text-xl font-bold">TCMB Döviz Kurları</CardTitle>
+          <CardTitle className="text-xl font-bold">Döviz Kurları</CardTitle>
           <CardDescription>
             {lastUpdate 
               ? `Son güncelleme: ${new Date(lastUpdate).toLocaleDateString('tr-TR')}`
@@ -56,7 +61,7 @@ const ExchangeRateCard: React.FC = () => {
           </div>
         ) : loading ? (
           <div className="space-y-2">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex justify-between items-center py-2">
                 <Skeleton className="h-5 w-10" />
                 <div className="flex gap-4">
@@ -81,9 +86,7 @@ const ExchangeRateCard: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {exchangeRates
-                  .filter(rate => rate.currency_code !== 'TRY')
-                  .map((rate: ExchangeRate) => (
+                {filteredRates.map((rate: ExchangeRate) => (
                   <tr key={rate.id} className="border-b hover:bg-muted/50">
                     <td className="p-2 font-medium">{rate.currency_code}</td>
                     <td className="text-right p-2">{formatRate(rate.forex_buying)}</td>
