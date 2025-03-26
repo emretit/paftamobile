@@ -1,5 +1,33 @@
+import { createClient } from '@supabase/supabase-js';
 
-import { ExchangeRates, CurrencyOption } from "../types/currencyTypes";
+const supabase = createClient(
+  'https://vwhwufnckpqirxptwncw.supabase.co',
+  'YOUR_ANON_KEY' // Replace with your actual anon key
+);
+
+// Fetch exchange rates from the new edge function
+export const fetchTCMBExchangeRates = async (): Promise<Record<string, number>> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('fetch-exchange-rates');
+    
+    if (error) throw error;
+    
+    return data || {
+      TRY: 1,
+      USD: 32.5,
+      EUR: 35.2,
+      GBP: 41.3
+    };
+  } catch (error) {
+    console.error('Error fetching exchange rates:', error);
+    return {
+      TRY: 1,
+      USD: 32.5,
+      EUR: 35.2,
+      GBP: 41.3
+    };
+  }
+};
 
 // Format a currency value for display
 export const formatCurrencyValue = (amount: number, currency: string = "TRY"): string => {
@@ -14,54 +42,6 @@ export const formatCurrencyValue = (amount: number, currency: string = "TRY"): s
   });
   
   return formatter.format(amount);
-};
-
-// Fetch exchange rates directly from TCMB
-export const fetchTCMBExchangeRates = async (): Promise<ExchangeRates> => {
-  try {
-    const response = await fetch('https://www.tcmb.gov.tr/kurlar/today.xml');
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    
-    const xmlText = await response.text();
-    
-    // Parse XML using browser's DOMParser
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-    
-    // Create the rates object
-    const rates: ExchangeRates = { TRY: 1 };
-    
-    // Get all Currency nodes
-    const currencyNodes = xmlDoc.getElementsByTagName("Currency");
-    
-    for (let i = 0; i < currencyNodes.length; i++) {
-      const currencyNode = currencyNodes[i];
-      const currencyCode = currencyNode.getAttribute("CurrencyCode");
-      
-      if (currencyCode && ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD'].includes(currencyCode)) {
-        const forexBuyingNode = currencyNode.getElementsByTagName("ForexBuying")[0];
-        if (forexBuyingNode && forexBuyingNode.textContent) {
-          // Convert comma to dot for decimal and parse as float
-          rates[currencyCode] = parseFloat(forexBuyingNode.textContent.replace(',', '.'));
-        }
-      }
-    }
-    
-    console.log("Fetched exchange rates:", rates);
-    return rates;
-  } catch (error) {
-    console.error("Error fetching exchange rates:", error);
-    // Return fallback exchange rates if API call fails
-    return {
-      TRY: 1,
-      USD: 32.5,
-      EUR: 35.2,
-      GBP: 41.3
-    };
-  }
 };
 
 // Convert an amount from one currency to another
