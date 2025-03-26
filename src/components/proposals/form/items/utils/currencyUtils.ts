@@ -1,18 +1,46 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   'https://vwhwufnckpqirxptwncw.supabase.co',
-  'YOUR_ANON_KEY' // Replace with your actual anon key
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aHd1Zm5ja3BxaXJ4cHR3bmN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkzODI5MjAsImV4cCI6MjA1NDk1ODkyMH0.Wjw8MAnsBrHxB6-J-bNGObgDQ4fl3zPYrgYI5tOrcKo' // Proper anon key
 );
 
-// Fetch exchange rates from the new edge function
+// Function to fetch exchange rates from Supabase
 export const fetchTCMBExchangeRates = async (): Promise<Record<string, number>> => {
   try {
-    const { data, error } = await supabase.functions.invoke('fetch-exchange-rates');
+    // First try to get latest rates from database
+    const { data: dbRates, error: dbError } = await supabase
+      .from('exchange_rates')
+      .select('currency_code, forex_buying')
+      .order('update_date', { ascending: false })
+      .limit(10);
     
-    if (error) throw error;
+    // If we have data from the database, use it
+    if (dbRates && dbRates.length > 0) {
+      const rates: Record<string, number> = {};
+      
+      // Convert array of objects to a simple object with currency codes as keys
+      dbRates.forEach(rate => {
+        rates[rate.currency_code] = rate.forex_buying;
+      });
+      
+      console.log('Exchange rates fetched from database:', rates);
+      return rates;
+    }
     
-    return data || {
+    // If no data in database, try to fetch from edge function
+    const { data: functionData, error: functionError } = await supabase.functions.invoke('fetch-exchange-rates');
+    
+    if (functionError) throw functionError;
+    
+    if (functionData) {
+      console.log('Exchange rates fetched from edge function:', functionData);
+      return functionData;
+    }
+    
+    // Fallback to default values if both methods fail
+    return {
       TRY: 1,
       USD: 32.5,
       EUR: 35.2,
@@ -20,6 +48,8 @@ export const fetchTCMBExchangeRates = async (): Promise<Record<string, number>> 
     };
   } catch (error) {
     console.error('Error fetching exchange rates:', error);
+    
+    // Return fallback exchange rates if everything fails
     return {
       TRY: 1,
       USD: 32.5,
