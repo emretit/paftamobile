@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { XMLParser } from "fast-xml-parser";
 import { toast } from "sonner";
 
 export interface ExchangeRate {
@@ -15,10 +14,10 @@ export interface ExchangeRate {
   update_date: string;
 }
 
-// Mock exchange rate data - will be used when API doesn't work
-const mockExchangeRates: ExchangeRate[] = [
+// Fallback exchange rates when API fails
+const fallbackRates: ExchangeRate[] = [
   {
-    id: "mock-try",
+    id: "fallback-try",
     currency_code: "TRY",
     forex_buying: 1,
     forex_selling: 1,
@@ -28,7 +27,7 @@ const mockExchangeRates: ExchangeRate[] = [
     update_date: new Date().toISOString().split('T')[0]
   },
   {
-    id: "mock-usd",
+    id: "fallback-usd",
     currency_code: "USD",
     forex_buying: 32.5,
     forex_selling: 32.7,
@@ -38,7 +37,7 @@ const mockExchangeRates: ExchangeRate[] = [
     update_date: new Date().toISOString().split('T')[0]
   },
   {
-    id: "mock-eur",
+    id: "fallback-eur",
     currency_code: "EUR",
     forex_buying: 35.2,
     forex_selling: 35.4,
@@ -48,7 +47,7 @@ const mockExchangeRates: ExchangeRate[] = [
     update_date: new Date().toISOString().split('T')[0]
   },
   {
-    id: "mock-gbp",
+    id: "fallback-gbp",
     currency_code: "GBP",
     forex_buying: 41.3,
     forex_selling: 41.5,
@@ -65,230 +64,72 @@ export const useExchangeRates = () => {
   const [error, setError] = useState<Error | null>(null);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
 
-  // Parse XML and extract exchange rates
-  const parseExchangeRates = (xmlText: string): ExchangeRate[] => {
-    try {
-      // Create a parser instance with options
-      const parser = new XMLParser({
-        ignoreAttributes: false,
-        attributeNamePrefix: '@_'
-      });
+  // Fetch exchange rates from database
+  const fetchExchangeRatesFromDB = async (): Promise<ExchangeRate[]> => {
+    const { data, error } = await supabase
+      .from('exchange_rates')
+      .select('*')
+      .order('update_date', { ascending: false });
       
-      // Parse the XML
-      const parsedData = parser.parse(xmlText);
-      
-      // Extract the Tarih_Date from the parsed data
-      const tarihDate = parsedData.Tarih_Date;
-      const updateDate = tarihDate['@_Date'] || new Date().toISOString().split('T')[0];
-      
-      // Define the currencies we want to extract
-      const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD', 'RUB', 'CNY', 'SAR', 'NOK', 'DKK', 'SEK'];
-      const exchangeRates: ExchangeRate[] = [];
-      
-      // Add TRY base currency
-      exchangeRates.push({
-        id: `tcmb-try-${updateDate}`,
-        currency_code: 'TRY',
-        forex_buying: 1,
-        forex_selling: 1,
-        banknote_buying: 1,
-        banknote_selling: 1,
-        cross_rate: null,
-        update_date: updateDate
-      });
-      
-      // Check if Tarih_Date.Currency is an array
-      const currencyList = Array.isArray(tarihDate.Currency) 
-        ? tarihDate.Currency 
-        : [tarihDate.Currency];
-      
-      // Extract data for each currency
-      for (const currencyData of currencyList) {
-        const currencyCode = currencyData['@_CurrencyCode'];
-        
-        // Only process currencies we're interested in
-        if (currencies.includes(currencyCode)) {
-          exchangeRates.push({
-            id: `tcmb-${currencyCode.toLowerCase()}-${updateDate}`,
-            currency_code: currencyCode,
-            forex_buying: parseFloat(currencyData.ForexBuying?.replace(',', '.') || '0') || null,
-            forex_selling: parseFloat(currencyData.ForexSelling?.replace(',', '.') || '0') || null,
-            banknote_buying: parseFloat(currencyData.BanknoteBuying?.replace(',', '.') || '0') || null,
-            banknote_selling: parseFloat(currencyData.BanknoteSelling?.replace(',', '.') || '0') || null,
-            cross_rate: parseFloat(currencyData.CrossRateUSD?.replace(',', '.') || '0') || null,
-            update_date: updateDate
-          });
-        }
-      }
-      
-      console.log(`Başarıyla ${exchangeRates.length} adet döviz kuru işlendi`);
-      return exchangeRates;
-    } catch (err) {
-      console.error('XML işlenirken hata oluştu:', err);
-      throw new Error('XML işlenirken hata oluştu');
-    }
+    if (error) throw error;
+    return data || [];
   };
 
-  // Store exchange rates in the database
-  const storeExchangeRates = async (rates: ExchangeRate[]) => {
-    try {
-      const today = rates[0].update_date;
-      
-      // First, check if we already have rates for today
-      const { data: existingRates } = await supabase
-        .from('exchange_rates')
-        .select('id')
-        .eq('update_date', today)
-        .limit(1);
-      
-      // If we have rates for today, delete them
-      if (existingRates && existingRates.length > 0) {
-        console.log(`${today} tarihli mevcut kurlar siliniyor...`);
-        await supabase
-          .from('exchange_rates')
-          .delete()
-          .eq('update_date', today);
-      }
-      
-      // Insert new rates
-      console.log(`${rates.length} adet döviz kuru ekleniyor...`);
-      const { data, error } = await supabase
-        .from('exchange_rates')
-        .insert(rates)
-        .select();
-      
-      if (error) {
-        throw error;
-      }
-      
-      // Record the update in the exchange_rate_updates table if it exists
-      try {
-        await supabase
-          .from('exchange_rate_updates')
-          .insert({
-            status: 'success',
-            updated_at: new Date().toISOString(),
-            message: 'Döviz kurları TCMB\'den başarıyla güncellendi',
-            count: rates.length
-          });
-        console.log('Güncelleme exchange_rate_updates tablosuna kaydedildi');
-      } catch (error) {
-        // This is not critical, so just log the error
-        console.warn('Güncelleme exchange_rate_updates tablosuna kaydedilemedi:', error);
-      }
-      
-      return data;
-    } catch (err) {
-      console.error('Döviz kurları veritabanına kaydedilirken hata oluştu:', err);
-      throw err;
-    }
+  // Trigger edge function to fetch fresh rates
+  const fetchFreshRates = async (): Promise<ExchangeRate[]> => {
+    const { data, error } = await supabase.functions.invoke('exchange-rates', {
+      method: 'POST'
+    });
+    
+    if (error) throw error;
+    return data?.rates || [];
   };
 
-  // Fetch TCMB exchange rates with improved error handling
-  const fetchTCMBExchangeRates = async (): Promise<ExchangeRate[]> => {
-    try {
-      console.log('TCMB döviz kurları alınıyor...');
-      
-      // Using a proxy service to avoid CORS issues
-      // You can replace this with a direct call if you set up proper CORS handling
-      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-      const targetUrl = 'https://www.tcmb.gov.tr/kurlar/today.xml';
-      
-      const response = await fetch(targetUrl, {
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        },
-        // Adding mode: 'no-cors' can help in some cases, but will limit the response usage
-        // mode: 'no-cors' 
-      });
-      
-      if (!response.ok) {
-        console.error(`HTTP hatası! Durum: ${response.status}`);
-        throw new Error(`HTTP hatası! Durum: ${response.status}`);
-      }
-      
-      // Get the XML as text
-      const xmlText = await response.text();
-      console.log('TCMB\'den XML verisi başarıyla alındı');
-      
-      // Parse exchange rates
-      return parseExchangeRates(xmlText);
-    } catch (error) {
-      console.error('TCMB döviz kurları alınırken hata oluştu:', error);
-      throw error;
-    }
-  };
-
-  // Fetch initial exchange rates
+  // Initial fetch on component mount
   useEffect(() => {
-    const fetchExchangeRates = async () => {
+    const loadExchangeRates = async () => {
       try {
         setLoading(true);
         
-        // First try to fetch from the database
-        const { data: rates, error } = await supabase
-          .from('exchange_rates')
-          .select('*')
-          .order('update_date', { ascending: false });
-
-        if (error) {
-          throw error;
-        }
-
-        if (rates && rates.length > 0) {
-          setExchangeRates(rates);
-          setLastUpdate(rates[0].update_date);
-          console.log("Veritabanından kur bilgileri yüklendi:", rates.length);
+        // First try to get from database
+        const dbRates = await fetchExchangeRatesFromDB();
+        
+        if (dbRates.length > 0) {
+          setExchangeRates(dbRates);
+          setLastUpdate(dbRates[0].update_date);
+          console.log("Exchange rates loaded from database:", dbRates.length);
           return;
         }
         
-        // If no data in database, try to fetch from TCMB
-        console.log("Veritabanında kur bilgisi bulunamadı, TCMB'den alınıyor");
+        // If no data in database, try to fetch fresh rates
+        console.log("No rates in database, fetching fresh rates");
         try {
-          const tcmbRates = await fetchTCMBExchangeRates();
-          
-          // Store rates in database
-          await storeExchangeRates(tcmbRates);
-          
-          setExchangeRates(tcmbRates);
-          setLastUpdate(tcmbRates[0].update_date);
-          console.log("TCMB'den kur bilgileri yüklendi:", tcmbRates.length);
-        } catch (tcmbErr) {
-          console.error("TCMB'den kurlar alınamadı, mock veriler kullanılıyor", tcmbErr);
-          // If TCMB fetch fails, use mock data
-          setExchangeRates(mockExchangeRates);
-          setLastUpdate(mockExchangeRates[0].update_date);
-          
-          // Don't show an error to the user since we have fallback data
-          // Just log it for debugging
+          const freshRates = await fetchFreshRates();
+          setExchangeRates(freshRates);
+          setLastUpdate(freshRates[0]?.update_date || new Date().toISOString().split('T')[0]);
+          console.log("Fresh exchange rates loaded:", freshRates.length);
+        } catch (freshError) {
+          console.error("Failed to fetch fresh rates:", freshError);
+          // Use fallback rates
+          setExchangeRates(fallbackRates);
+          setLastUpdate(fallbackRates[0].update_date);
+          console.log("Using fallback exchange rates");
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen hata';
-        console.error('Döviz kurları yüklenirken hata oluştu:', err);
-        setError(err instanceof Error ? err : new Error(errorMessage));
-        
-        // Hata durumunda mock verileri kullan
-        console.log("Hata nedeniyle mock veriler kullanılıyor");
-        setExchangeRates(mockExchangeRates);
-        setLastUpdate(mockExchangeRates[0].update_date);
-        
-        // Sadece veritabanı hatası varsa bildirim göster, mock veriler kullanıldığı için
-        // kullanıcıya hata göstermiyoruz
-        if (err instanceof Error && err.message.includes("database")) {
-          toast.error('Döviz kurları alınamadı', {
-            description: errorMessage,
-          });
-        }
+        console.error("Error loading exchange rates:", err);
+        setError(err instanceof Error ? err : new Error(String(err)));
+        // Use fallback rates
+        setExchangeRates(fallbackRates);
+        setLastUpdate(fallbackRates[0].update_date);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchExchangeRates();
+    loadExchangeRates();
   }, []);
 
-  // Manually refresh exchange rates
+  // Function to manually refresh exchange rates
   const refreshExchangeRates = async () => {
     try {
       setLoading(true);
@@ -296,65 +137,90 @@ export const useExchangeRates = () => {
         duration: 2000
       });
       
-      try {
-        // Fetch fresh rates from TCMB
-        const freshRates = await fetchTCMBExchangeRates();
-        
-        // Store in database
-        await storeExchangeRates(freshRates);
-        
+      const freshRates = await fetchFreshRates();
+      
+      if (freshRates.length > 0) {
         setExchangeRates(freshRates);
         setLastUpdate(freshRates[0].update_date);
         
         toast.success('Döviz kurları başarıyla güncellendi', {
-          description: `${freshRates.length} adet kur bilgisi TCMB'den alındı.`,
+          description: `${freshRates.length} adet kur bilgisi alındı.`,
         });
         return;
-      } catch (tcmbErr) {
-        console.error('TCMB\'den kurlar güncellenemedi:', tcmbErr);
-        toast.warning('TCMB bağlantı hatası', {
-          description: 'TCMB\'den kurlar alınamadı, alternatif kaynaklara bakılıyor.',
-        });
-        
-        // If we failed to refresh from TCMB, try to get latest from database
-        const { data: latestRates } = await supabase
-          .from('exchange_rates')
-          .select('*')
-          .order('update_date', { ascending: false });
-          
-        if (latestRates && latestRates.length > 0) {
-          setExchangeRates(latestRates);
-          setLastUpdate(latestRates[0].update_date);
-          
-          toast.info('Mevcut kur bilgileri yüklendi', {
-            description: `TCMB\'ye erişilemedi. Son güncelleme tarihi: ${new Date(latestRates[0].update_date).toLocaleDateString('tr-TR')}`,
-          });
-          return;
-        }
-        
-        // If still no data, use mock data
-        setExchangeRates(mockExchangeRates);
-        setLastUpdate(mockExchangeRates[0].update_date);
-        
-        toast.warning('Varsayılan kurlar kullanılıyor', {
-          description: 'Güncel kurlar alınamadı, geçici referans değerler kullanılıyor.',
-        });
       }
+      
+      // If no fresh rates, try database again
+      const dbRates = await fetchExchangeRatesFromDB();
+      
+      if (dbRates.length > 0) {
+        setExchangeRates(dbRates);
+        setLastUpdate(dbRates[0].update_date);
+        
+        toast.info('Mevcut kur bilgileri yüklendi', {
+          description: `Son güncelleme tarihi: ${new Date(dbRates[0].update_date).toLocaleDateString('tr-TR')}`,
+        });
+        return;
+      }
+      
+      // Last resort - use fallback rates
+      setExchangeRates(fallbackRates);
+      setLastUpdate(fallbackRates[0].update_date);
+      
+      toast.warning('Varsayılan kurlar kullanılıyor', {
+        description: 'Güncel kurlar alınamadı, geçici referans değerler kullanılıyor.',
+      });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen hata';
-      console.error('Döviz kurları güncellenirken hata oluştu:', err);
-      setError(err instanceof Error ? err : new Error(errorMessage));
+      console.error("Error refreshing exchange rates:", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
       
       toast.error('Döviz kurları güncelleme hatası', {
-        description: errorMessage,
+        description: err instanceof Error ? err.message : 'Bilinmeyen hata',
       });
       
-      // Fallback to mock data if everything fails
-      setExchangeRates(mockExchangeRates);
-      setLastUpdate(mockExchangeRates[0].update_date);
+      // Fallback to default rates
+      setExchangeRates(fallbackRates);
+      setLastUpdate(fallbackRates[0].update_date);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Get a simple map of currency codes to rates (for easier use in calculations)
+  const getRatesMap = () => {
+    const ratesMap: Record<string, number> = { TRY: 1 };
+    
+    exchangeRates.forEach(rate => {
+      if (rate.currency_code && rate.forex_buying) {
+        ratesMap[rate.currency_code] = rate.forex_buying;
+      }
+    });
+    
+    return ratesMap;
+  };
+
+  // Convert amount between currencies
+  const convertCurrency = (amount: number, fromCurrency: string, toCurrency: string): number => {
+    if (fromCurrency === toCurrency) return amount;
+    
+    const rates = getRatesMap();
+    
+    // Convert to TRY first (base currency)
+    const amountInTRY = fromCurrency === 'TRY' 
+      ? amount 
+      : amount * (rates[fromCurrency] || 1);
+    
+    // Then convert from TRY to target currency
+    return toCurrency === 'TRY' 
+      ? amountInTRY 
+      : amountInTRY / (rates[toCurrency] || 1);
+  };
+
+  // Format currency with proper symbol
+  const formatCurrency = (amount: number, currencyCode = 'TRY'): string => {
+    return new Intl.NumberFormat('tr-TR', {
+      style: 'currency',
+      currency: currencyCode
+    }).format(amount);
   };
 
   return {
@@ -362,6 +228,9 @@ export const useExchangeRates = () => {
     loading,
     error,
     lastUpdate,
-    refreshExchangeRates
+    refreshExchangeRates,
+    getRatesMap,
+    convertCurrency,
+    formatCurrency
   };
 };
