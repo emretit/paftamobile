@@ -1,4 +1,3 @@
-
 import React from "react";
 import { RefreshCw, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,7 +79,7 @@ const ExchangeRateCard: React.FC = () => {
                 <tr className="border-b">
                   <th className="text-left p-2 font-medium">Para Birimi</th>
                   <th className="text-right p-2 font-medium">Forex Alış</th>
-                  <th className="text-right p-2 font-medium">Forex Satış</th>
+                  <th className="text-right p-2 font-medium">Teklif Kuru (Satış)</th>
                   <th className="text-right p-2 font-medium">Efektif Alış</th>
                   <th className="text-right p-2 font-medium">Efektif Satış</th>
                 </tr>
