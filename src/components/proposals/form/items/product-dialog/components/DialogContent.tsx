@@ -72,6 +72,8 @@ const DialogContent: React.FC<DialogContentProps> = ({
         setQuantity={setQuantity}
         selectedDepo={selectedDepo}
         setSelectedDepo={setSelectedDepo}
+        availableStock={availableStock}
+        stockStatus={stockStatus}
       />
       
       <PriceAndDiscountSection 
@@ -92,13 +94,15 @@ const DialogContent: React.FC<DialogContentProps> = ({
       />
       
       <PriceSummary
-        convertedPrice={convertedPrice}
-        calculatedTotal={calculatedTotal}
-        selectedCurrency={originalCurrency}
-        formatCurrency={formatCurrency}
+        unitPrice={convertedPrice}
         quantity={quantity}
         discountRate={discountRate}
         taxRate={selectedProduct.tax_rate || 0}
+        calculatedTotal={calculatedTotal}
+        originalCurrency={originalCurrency}
+        currentCurrency={currentCurrency}
+        formatCurrency={formatCurrency}
+        convertedPrice={convertedPrice}
       />
     </div>
   );

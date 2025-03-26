@@ -11,14 +11,20 @@ import {
 
 interface ProductInfoSectionProps {
   product: Product;
-  stockStatus: string;
-  availableStock: number;
+  stockStatus?: string;
+  availableStock?: number;
+  originalCurrency?: string;
+  originalPrice?: number;
+  formatCurrency?: (amount: number, currency?: string) => string;
 }
 
 const ProductInfoSection: React.FC<ProductInfoSectionProps> = ({
   product,
-  stockStatus,
-  availableStock
+  stockStatus = 'in_stock',
+  availableStock = 0,
+  originalCurrency,
+  originalPrice,
+  formatCurrency
 }) => {
   return (
     <div>
@@ -41,6 +47,13 @@ const ProductInfoSection: React.FC<ProductInfoSectionProps> = ({
         <span>Stok: {availableStock} {product.unit}</span>
       </div>
       {getStockWarning(stockStatus)}
+      
+      {/* Display original currency and price if provided */}
+      {originalCurrency && originalPrice && formatCurrency && (
+        <div className="mt-2 text-sm text-blue-600 dark:text-blue-400">
+          <span>Orijinal Fiyat: {formatCurrency(originalPrice, originalCurrency)}</span>
+        </div>
+      )}
     </div>
   );
 };

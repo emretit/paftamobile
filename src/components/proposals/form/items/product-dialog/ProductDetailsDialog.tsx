@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/types/product";
-import { useProductDetailsState } from "./hooks/useProductDetailsState";
+
+// Import refactored components
 import ProductInfoSection from "./components/ProductInfoSection";
 import PriceAndDiscountSection from "./components/PriceAndDiscountSection";
 import QuantityDepoSection from "./components/QuantityDepoSection";
@@ -19,94 +20,81 @@ import TotalPriceSection from "./components/TotalPriceSection";
 interface ProductDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  product: Product | null;
-  onAddToProposal: (quantity: number, price: number, notes: string) => void;
+  selectedProduct: Product | null;
+  quantity: number;
+  setQuantity: React.Dispatch<React.SetStateAction<number>>;
+  customPrice: number | undefined;
+  setCustomPrice: (value: number | undefined) => void;
+  selectedDepo: string;
+  setSelectedDepo: (value: string) => void;
+  discountRate: number;
+  setDiscountRate: (value: number) => void;
+  formatCurrency: (amount: number, currency?: string) => string;
+  onSelectProduct: () => void;
   selectedCurrency: string;
 }
 
 const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
   open,
   onOpenChange,
-  product,
-  onAddToProposal,
+  selectedProduct,
+  quantity,
+  setQuantity,
+  customPrice,
+  setCustomPrice,
+  selectedDepo,
+  setSelectedDepo,
+  discountRate,
+  setDiscountRate,
+  formatCurrency,
+  onSelectProduct,
   selectedCurrency
 }) => {
-  const {
-    totalPrice,
-    setTotalPrice,
-    availableStock,
-    setAvailableStock,
-    stockStatus,
-    setStockStatus,
-    convertedPrice,
-    setConvertedPrice,
-    notes,
-    setNotes,
-    originalPrice,
-    setOriginalPrice,
-    originalCurrency,
-    setOriginalCurrency,
-    currentCurrency,
-    setCurrentCurrency,
-    exchangeRates,
-    isLoadingRates,
-    calculatedTotal,
-    setCalculatedTotal,
-    handleCurrencyChange
-  } = useProductDetailsState(open, product, selectedCurrency);
-
-  const [quantity, setQuantity] = React.useState(1);
-  const [discountRate, setDiscountRate] = React.useState(0);
+  const [notes, setNotes] = React.useState("");
+  const [availableStock, setAvailableStock] = React.useState(0);
+  const [stockStatus, setStockStatus] = React.useState("");
+  const [originalPrice, setOriginalPrice] = React.useState(0);
+  const [originalCurrency, setOriginalCurrency] = React.useState("");
+  const [currentCurrency, setCurrentCurrency] = React.useState(selectedCurrency);
+  const [calculatedTotal, setCalculatedTotal] = React.useState(0);
   const [taxRate, setTaxRate] = React.useState(18); // Default tax rate
 
   useEffect(() => {
-    if (product) {
-      setTaxRate(product.tax_rate || 18);
+    if (selectedProduct) {
+      setTaxRate(selectedProduct.tax_rate || 18);
     }
-  }, [product]);
+  }, [selectedProduct]);
 
   // Reset state when dialog opens with a product
   useEffect(() => {
-    if (open && product) {
+    if (open && selectedProduct) {
       setQuantity(1);
       setDiscountRate(0);
-      setAvailableStock(product.stock_quantity || 0);
+      setAvailableStock(selectedProduct.stock_quantity || 0);
       setStockStatus(
-        product.stock_quantity 
-          ? product.stock_quantity > (product.stock_threshold || 5) 
+        selectedProduct.stock_quantity 
+          ? selectedProduct.stock_quantity > (selectedProduct.stock_threshold || 5) 
             ? 'in_stock' 
             : 'low_stock'
           : 'out_of_stock'
       );
       
       // Set original price and currency
-      const productCurrency = product.currency || 'TRY';
+      const productCurrency = selectedProduct.currency || 'TRY';
       setOriginalCurrency(productCurrency);
-      setOriginalPrice(product.price || 0);
+      setOriginalPrice(selectedProduct.price || 0);
       
       // Initialize current currency from selected currency
       setCurrentCurrency(selectedCurrency);
     }
-  }, [open, product, selectedCurrency, setAvailableStock, setStockStatus, setOriginalCurrency, setOriginalPrice, setCurrentCurrency]);
-
-  // Format currency with symbol
-  const formatCurrency = (amount: number, currency: string = currentCurrency) => {
-    const formatter = new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 2
-    });
-    
-    return formatter.format(amount);
-  };
+  }, [open, selectedProduct, selectedCurrency, setQuantity, setDiscountRate]);
 
   // Handle clicking the Add to Proposal button
   const handleAddToProposal = () => {
-    onAddToProposal(quantity, convertedPrice, notes);
-    onOpenChange(false);
+    onSelectProduct();
   };
 
-  if (!product) return null;
+  if (!selectedProduct) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -118,20 +106,22 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
           <div className="space-y-6">
             <ProductInfoSection 
-              product={product} 
+              product={selectedProduct} 
               originalCurrency={originalCurrency}
               originalPrice={originalPrice}
               formatCurrency={formatCurrency}
+              stockStatus={stockStatus}
+              availableStock={availableStock}
             />
             
             <PriceAndDiscountSection 
-              customPrice={undefined}
-              setCustomPrice={setConvertedPrice}
+              customPrice={customPrice}
+              setCustomPrice={setCustomPrice}
               discountRate={discountRate}
               setDiscountRate={setDiscountRate}
               selectedCurrency={currentCurrency}
-              handleCurrencyChange={handleCurrencyChange}
-              convertedPrice={convertedPrice}
+              handleCurrencyChange={(value) => setCurrentCurrency(value)}
+              convertedPrice={customPrice || originalPrice}
               originalCurrency={originalCurrency}
               formatCurrency={formatCurrency}
             />
@@ -141,12 +131,14 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
             <QuantityDepoSection 
               quantity={quantity}
               setQuantity={setQuantity}
+              selectedDepo={selectedDepo}
+              setSelectedDepo={setSelectedDepo}
               availableStock={availableStock}
               stockStatus={stockStatus}
             />
             
             <TotalPriceSection 
-              unitPrice={convertedPrice}
+              unitPrice={customPrice || originalPrice}
               quantity={quantity}
               discountRate={discountRate}
               taxRate={taxRate}

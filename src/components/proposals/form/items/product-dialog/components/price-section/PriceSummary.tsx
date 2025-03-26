@@ -14,6 +14,7 @@ interface PriceSummaryProps {
   originalCurrency: string;
   currentCurrency: string;
   formatCurrency: (value: number, currency?: string) => string;
+  convertedPrice?: number;
 }
 
 const PriceSummary: React.FC<PriceSummaryProps> = ({
@@ -24,7 +25,8 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({
   calculatedTotal,
   originalCurrency,
   currentCurrency,
-  formatCurrency
+  formatCurrency,
+  convertedPrice
 }) => {
   // Get exchange rates from the global hook
   const { exchangeRates, loading, convertCurrency } = useExchangeRates();
