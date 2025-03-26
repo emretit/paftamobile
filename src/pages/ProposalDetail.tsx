@@ -18,7 +18,9 @@ import {
   Trash2,
   Clock,
   Send,
-  ShoppingCart
+  ShoppingCart,
+  Save,
+  X
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +35,7 @@ import ProposalDetailFullView from "@/components/proposals/detail/ProposalDetail
 import { calculateProposalTotals, formatProposalAmount } from "@/services/workflow/proposalWorkflow";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { handleProposalStatusChange } from "@/services/workflow/proposalWorkflow";
+import { crmService } from "@/services/crmService";
 
 interface ProposalDetailProps {
   isCollapsed: boolean;
@@ -46,6 +49,7 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'side' | 'full'>('side');
   const [isEditMode, setIsEditMode] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const fetchProposal = async () => {
@@ -81,10 +85,68 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
     setViewMode(viewMode === 'side' ? 'full' : 'side');
   };
 
-  const handleEdit = () => {
+  const toggleEditMode = () => {
+    setIsEditMode(!isEditMode);
+    if (isEditMode) {
+      if (id) {
+        fetchProposal();
+      }
+    }
+  };
+
+  const fetchProposal = async () => {
+    if (!id) return;
+    
+    try {
+      setLoading(true);
+      const { data, error } = await mockCrmService.getProposalById(id);
+      
+      if (error) {
+        toast.error("Teklif bilgileri yüklenemedi");
+        throw error;
+      }
+      
+      if (data) {
+        setProposal(data);
+      }
+    } catch (error) {
+      console.error("Error fetching proposal:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNavigateToEdit = () => {
     if (proposal) {
       navigate(`/proposal/edit/${proposal.id}`);
       toast.info("Teklif düzenleme sayfasına yönlendiriliyorsunuz");
+    }
+  };
+
+  const handleSaveChanges = async (updatedData: Partial<Proposal>) => {
+    if (!proposal || !id) return;
+    
+    try {
+      setSaving(true);
+      
+      const updatedProposal = {
+        ...proposal,
+        ...updatedData,
+        updated_at: new Date().toISOString()
+      };
+      
+      await crmService.updateProposal(id, updatedProposal);
+      
+      setProposal(updatedProposal);
+      
+      setIsEditMode(false);
+      
+      toast.success("Teklif başarıyla güncellendi");
+    } catch (error) {
+      console.error("Error saving proposal:", error);
+      toast.error("Teklif güncellenirken bir hata oluştu");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -280,56 +342,81 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={handlePrint}>
-            <Printer className="h-4 w-4 mr-2" />
-            Yazdır
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
-            <Download className="h-4 w-4 mr-2" />
-            PDF İndir
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleSendEmail}>
-            <Mail className="h-4 w-4 mr-2" />
-            E-posta Gönder
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleEdit} className="bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border-blue-200">
-            <Edit className="h-4 w-4 mr-2" />
-            Teklifi Düzenle
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Sil
+          {isEditMode ? (
+            <>
+              <Button onClick={() => handleSaveChanges(proposal)} disabled={saving} className="bg-green-600 hover:bg-green-700">
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
               </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Teklifi silmek istediğinize emin misiniz?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Bu işlem geri alınamaz. Teklif veritabanından tamamen silinecektir.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>İptal</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">
-                  Sil
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+              <Button variant="outline" size="sm" onClick={toggleEditMode} className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                <X className="h-4 w-4 mr-2" />
+                İptal
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" size="sm" onClick={handlePrint}>
+                <Printer className="h-4 w-4 mr-2" />
+                Yazdır
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
+                <Download className="h-4 w-4 mr-2" />
+                PDF İndir
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleSendEmail}>
+                <Mail className="h-4 w-4 mr-2" />
+                E-posta Gönder
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={toggleEditMode} 
+                className="bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border-blue-200"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Düzenleme Modunu Aç
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Sil
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Teklifi silmek istediğinize emin misiniz?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Bu işlem geri alınamaz. Teklif veritabanından tamamen silinecektir.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>İptal</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">
+                      Sil
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+          )}
         </div>
       </div>
       
-      {getStatusActions()}
+      {!isEditMode && getStatusActions && getStatusActions()}
       
-      {getAdditionalActions()}
+      {!isEditMode && getAdditionalActions && getAdditionalActions()}
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         {viewMode === 'side' ? (
           <>
             <div className="lg:col-span-2">
-              <ProposalDetailFullView proposal={proposal} isEditMode={isEditMode} />
+              <ProposalDetailFullView 
+                proposal={proposal} 
+                isEditMode={isEditMode} 
+                onSave={handleSaveChanges}
+                saving={saving}
+              />
             </div>
             <div className="lg:col-span-1">
               <ProposalDetailSidePanel proposal={proposal} onShowFullView={toggleViewMode} />
@@ -344,7 +431,12 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
                   Side Panel Görünümü
                 </Button>
               </div>
-              <ProposalDetailFullView proposal={proposal} isEditMode={isEditMode} />
+              <ProposalDetailFullView 
+                proposal={proposal} 
+                isEditMode={isEditMode} 
+                onSave={handleSaveChanges}
+                saving={saving}
+              />
             </Card>
           </div>
         )}

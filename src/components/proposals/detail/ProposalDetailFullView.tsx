@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon, Save } from "lucide-react";
 import { Proposal, proposalStatusColors, proposalStatusLabels } from "@/types/proposal";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -17,11 +20,34 @@ import ProposalAttachments from "@/components/proposals/form/ProposalAttachments
 interface ProposalDetailFullViewProps {
   proposal: Proposal;
   isEditMode?: boolean;
+  onSave?: (updatedData: Partial<Proposal>) => void;
+  saving?: boolean;
 }
 
-const ProposalDetailFullView = ({ proposal, isEditMode = false }: ProposalDetailFullViewProps) => {
+const ProposalDetailFullView = ({ 
+  proposal, 
+  isEditMode = false, 
+  onSave,
+  saving = false
+}: ProposalDetailFullViewProps) => {
   const [files, setFiles] = useState<File[]>([]);
   const [activeTab, setActiveTab] = useState('items');
+  const [editedData, setEditedData] = useState<Partial<Proposal>>({});
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  
+  // Initialize edited data with proposal data when edit mode is activated
+  useEffect(() => {
+    if (isEditMode) {
+      setEditedData({
+        title: proposal.title,
+        description: proposal.description || "",
+        valid_until: proposal.valid_until || "",
+        payment_terms: proposal.payment_terms || "",
+        delivery_terms: proposal.delivery_terms || "",
+        notes: proposal.notes || ""
+      });
+    }
+  }, [isEditMode, proposal]);
   
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "-";
@@ -39,6 +65,30 @@ const ProposalDetailFullView = ({ proposal, isEditMode = false }: ProposalDetail
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(amount);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditedData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleDateChange = (date?: Date) => {
+    if (date) {
+      setEditedData(prev => ({
+        ...prev,
+        valid_until: date.toISOString()
+      }));
+      setDatePickerOpen(false);
+    }
+  };
+
+  const handleSaveChanges = () => {
+    if (onSave) {
+      onSave(editedData);
+    }
   };
 
   return (
@@ -76,18 +126,22 @@ const ProposalDetailFullView = ({ proposal, isEditMode = false }: ProposalDetail
                       <div className="space-y-1 w-full">
                         {isEditMode ? (
                           <Input 
+                            name="customer_name"
                             defaultValue={proposal.customer.name || ''} 
                             className="font-medium"
                             placeholder="Müşteri Adı"
+                            disabled={true}
                           />
                         ) : (
                           <div className="font-medium">{proposal.customer.name}</div>
                         )}
                         {isEditMode ? (
                           <Input 
+                            name="customer_company"
                             defaultValue={proposal.customer.company || ''} 
                             className="text-sm"
                             placeholder="Şirket Adı"
+                            disabled={true}
                           />
                         ) : (
                           proposal.customer.company && (
@@ -96,10 +150,12 @@ const ProposalDetailFullView = ({ proposal, isEditMode = false }: ProposalDetail
                         )}
                         {isEditMode ? (
                           <Input 
+                            name="customer_email"
                             defaultValue={proposal.customer.email || ''} 
                             className="text-sm"
                             placeholder="E-posta"
                             type="email"
+                            disabled={true}
                           />
                         ) : (
                           proposal.customer.email && (
@@ -112,10 +168,10 @@ const ProposalDetailFullView = ({ proposal, isEditMode = false }: ProposalDetail
                     <div className="text-muted-foreground">
                       {isEditMode ? (
                         <div className="space-y-2 w-full">
-                          <Input placeholder="Müşteri Adı" />
-                          <Input placeholder="Şirket Adı" />
-                          <Input placeholder="E-posta" type="email" />
-                          <Input placeholder="Telefon" />
+                          <Input placeholder="Müşteri Adı" disabled={true} />
+                          <Input placeholder="Şirket Adı" disabled={true} />
+                          <Input placeholder="E-posta" type="email" disabled={true} />
+                          <Input placeholder="Telefon" disabled={true} />
                         </div>
                       ) : (
                         proposal.customer_name || "Müşteri bilgisi bulunmuyor"
@@ -141,11 +197,25 @@ const ProposalDetailFullView = ({ proposal, isEditMode = false }: ProposalDetail
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Geçerlilik Tarihi:</span>
                     {isEditMode ? (
-                      <Input 
-                        type="date" 
-                        defaultValue={proposal.valid_until ? new Date(proposal.valid_until).toISOString().split('T')[0] : ''} 
-                        className="w-40 text-right"
-                      />
+                      <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className="w-[180px] justify-start text-left font-normal">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {editedData.valid_until 
+                              ? formatDate(editedData.valid_until) 
+                              : "Tarih seçin"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="end">
+                          <Calendar
+                            mode="single"
+                            selected={editedData.valid_until ? new Date(editedData.valid_until) : undefined}
+                            onSelect={handleDateChange}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                     ) : (
                       <span className="font-medium">{formatDate(proposal.valid_until)}</span>
                     )}
@@ -176,7 +246,9 @@ const ProposalDetailFullView = ({ proposal, isEditMode = false }: ProposalDetail
                     <h3 className="font-medium text-sm">Ödeme Şartları</h3>
                     {isEditMode ? (
                       <Textarea 
-                        defaultValue={proposal.payment_terms || ""} 
+                        name="payment_terms"
+                        value={editedData.payment_terms || ""} 
+                        onChange={handleInputChange}
                         placeholder="Ödeme şartlarını belirtin"
                         className="min-h-[100px]"
                       />
@@ -191,7 +263,9 @@ const ProposalDetailFullView = ({ proposal, isEditMode = false }: ProposalDetail
                     <h3 className="font-medium text-sm">Teslimat Şartları</h3>
                     {isEditMode ? (
                       <Textarea 
-                        defaultValue={proposal.delivery_terms || ""} 
+                        name="delivery_terms"
+                        value={editedData.delivery_terms || ""} 
+                        onChange={handleInputChange}
                         placeholder="Teslimat şartlarını belirtin"
                         className="min-h-[100px]"
                       />
@@ -209,7 +283,9 @@ const ProposalDetailFullView = ({ proposal, isEditMode = false }: ProposalDetail
                   <h3 className="font-medium text-sm">Açıklama</h3>
                   {isEditMode ? (
                     <Textarea 
-                      defaultValue={proposal.description || ""} 
+                      name="description"
+                      value={editedData.description || ""} 
+                      onChange={handleInputChange}
                       placeholder="Teklif açıklaması"
                       className="min-h-[100px]"
                     />
@@ -224,7 +300,9 @@ const ProposalDetailFullView = ({ proposal, isEditMode = false }: ProposalDetail
                   <h3 className="font-medium text-sm">Notlar</h3>
                   {isEditMode ? (
                     <Textarea 
-                      defaultValue={proposal.notes || ""} 
+                      name="notes"
+                      value={editedData.notes || ""} 
+                      onChange={handleInputChange}
                       placeholder="Ekstra notlar"
                       className="min-h-[100px]"
                     />
@@ -322,7 +400,14 @@ const ProposalDetailFullView = ({ proposal, isEditMode = false }: ProposalDetail
         
         {isEditMode && activeTab !== 'attachments' && (
           <div className="mt-6 flex justify-end">
-            <Button>Değişiklikleri Kaydet</Button>
+            <Button 
+              onClick={handleSaveChanges}
+              disabled={saving}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
+            </Button>
           </div>
         )}
       </CardContent>
