@@ -250,7 +250,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
                       </Badge>
                       {group.label}:
                     </span>
-                    <span>{formatCurrency(groupTotals[group.value])}</span>
+                    <span>{formatCurrency(groupTotals[group.value], globalCurrency)}</span>
                   </div>
                 ) : null
               ))}
@@ -261,21 +261,21 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
           <div className="space-y-2 min-w-[300px] p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
             <div className="flex justify-between text-sm">
               <span>Ara Toplam:</span>
-              <span>{formatCurrency(calculateSubtotal() - calculateTaxTotal())}</span>
+              <span>{formatCurrency(calculateSubtotal() - calculateTaxTotal(), globalCurrency)}</span>
             </div>
             {calculateDiscountTotal() > 0 && (
               <div className="flex justify-between text-sm text-red-500">
                 <span>İndirim Tutarı:</span>
-                <span>-{formatCurrency(calculateDiscountTotal())}</span>
+                <span>-{formatCurrency(calculateDiscountTotal(), globalCurrency)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm">
               <span>KDV Toplamı:</span>
-              <span>{formatCurrency(calculateTaxTotal())}</span>
+              <span>{formatCurrency(calculateTaxTotal(), globalCurrency)}</span>
             </div>
             <div className="flex justify-between font-medium pt-2 border-t dark:border-gray-700">
               <span>Genel Toplam:</span>
-              <span>{formatCurrency(calculateSubtotal())}</span>
+              <span>{formatCurrency(calculateSubtotal(), globalCurrency)}</span>
             </div>
           </div>
         </div>
