@@ -2,9 +2,10 @@
 import React from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { BadgeDollarSign, BadgeEuro, BadgePoundSterling, ChevronDown, TrendingUp } from "lucide-react";
+import { BadgeDollarSign, BadgeEuro, BadgePoundSterling, BadgeJapaneseYen, ChevronDown, TrendingUp, AlertCircle } from "lucide-react";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface CurrencyRatePopoverProps {
   selectedCurrency: string;
@@ -17,7 +18,7 @@ export const CurrencyRatePopover: React.FC<CurrencyRatePopoverProps> = ({
   onCurrencyChange,
   triggerClassName = ""
 }) => {
-  const { exchangeRates, loading, formatCurrency } = useExchangeRates();
+  const { exchangeRates, loading, error } = useExchangeRates();
 
   // Get currency icon based on currency code
   const getCurrencyIcon = (currency: string) => {
@@ -28,6 +29,8 @@ export const CurrencyRatePopover: React.FC<CurrencyRatePopoverProps> = ({
         return <BadgeEuro className="h-4 w-4 mr-2" />;
       case "GBP":
         return <BadgePoundSterling className="h-4 w-4 mr-2" />;
+      case "JPY":
+        return <BadgeJapaneseYen className="h-4 w-4 mr-2" />;
       default:
         return <TrendingUp className="h-4 w-4 mr-2" />;
     }
@@ -49,12 +52,25 @@ export const CurrencyRatePopover: React.FC<CurrencyRatePopoverProps> = ({
     }
   };
 
-  const getCurrentRate = (currency: string) => {
-    const rate = exchangeRates.find(rate => rate.currency_code === currency);
-    if (rate && rate.forex_buying) {
-      return `1 ${currency} = ${rate.forex_buying.toFixed(4)} TRY`;
-    }
-    return "";
+  // Format exchange rate for display
+  const formatExchangeRate = (rate: number | null): string => {
+    if (rate === null) return '-';
+    return rate.toFixed(4);
+  };
+
+  // Get exchange rate information
+  const getExchangeRateInfo = (currency: string) => {
+    if (currency === "TRY") return null;
+    
+    const rate = exchangeRates.find(r => r.currency_code === currency);
+    if (!rate) return null;
+    
+    return {
+      buying: formatExchangeRate(rate.forex_buying),
+      selling: formatExchangeRate(rate.forex_selling),
+      forexBuying: rate.forex_buying,
+      forexSelling: rate.forex_selling
+    };
   };
 
   return (
@@ -69,10 +85,20 @@ export const CurrencyRatePopover: React.FC<CurrencyRatePopoverProps> = ({
           <ChevronDown className="h-3.5 w-3.5 ml-1 opacity-70" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[220px] p-0" align="end">
+      <PopoverContent className="w-[280px] p-0" align="end">
         <div className="bg-muted/50 p-2 text-xs font-medium">
           Para Birimi Seçiniz
         </div>
+        
+        {error && (
+          <Alert variant="destructive" className="mt-2 mb-1 mx-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Döviz kurları yüklenemedi
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="py-1">
           {loading ? (
             <div className="p-2 space-y-2">
@@ -83,25 +109,39 @@ export const CurrencyRatePopover: React.FC<CurrencyRatePopoverProps> = ({
             </div>
           ) : (
             <div>
-              {["TRY", "USD", "EUR", "GBP"].map((currency) => (
-                <button
-                  key={currency}
-                  className={`w-full flex items-center justify-between px-3 py-1.5 text-sm hover:bg-muted transition-colors ${
-                    selectedCurrency === currency ? "bg-primary/10 text-primary font-medium" : ""
-                  }`}
-                  onClick={() => onCurrencyChange(currency)}
-                >
-                  <div className="flex items-center">
-                    {getCurrencyIcon(currency)}
-                    <span>{getCurrencyLabel(currency)}</span>
-                  </div>
-                  {currency !== "TRY" && (
-                    <span className="text-xs text-muted-foreground">
-                      {getCurrentRate(currency)}
-                    </span>
-                  )}
-                </button>
-              ))}
+              {["TRY", "USD", "EUR", "GBP"].map((currency) => {
+                const rateInfo = getExchangeRateInfo(currency);
+                
+                return (
+                  <button
+                    key={currency}
+                    className={`w-full flex flex-col px-3 py-1.5 text-sm hover:bg-muted transition-colors ${
+                      selectedCurrency === currency ? "bg-primary/10 text-primary font-medium" : ""
+                    }`}
+                    onClick={() => onCurrencyChange(currency)}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center">
+                        {getCurrencyIcon(currency)}
+                        <span>{getCurrencyLabel(currency)}</span>
+                      </div>
+                    </div>
+                    
+                    {rateInfo && (
+                      <div className="ml-6 mt-1 text-xs grid grid-cols-2 gap-x-2 text-muted-foreground">
+                        <div className="flex items-center justify-between">
+                          <span>Alış:</span>
+                          <span className="font-medium">{rateInfo.buying}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Satış:</span>
+                          <span className="font-medium">{rateInfo.selling}</span>
+                        </div>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
