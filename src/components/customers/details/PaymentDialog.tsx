@@ -94,7 +94,7 @@ export function PaymentDialog({ open, onOpenChange, customer }: PaymentDialogPro
         payment_direction: "incoming",
         status: "completed", // Değişiklik burada: direkt "completed" olarak ayarlandı
         recipient_name: customer.name,
-        currency: "TRY",
+        currency: "TRY", // Always TRY
       });
 
       if (paymentError) throw paymentError;

@@ -8,15 +8,18 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { RefreshCcw } from "lucide-react";
-import { CurrencyOption } from "@/components/proposals/form/items/types/currencyTypes";
+
+interface CurrencyOption {
+  value: string;
+  label: string;
+  symbol: string;
+}
 
 interface CurrencyDropdownProps {
   value: string;
   onValueChange: (value: string) => void;
   currencyOptions: CurrencyOption[];
   label?: string;
-  isLoading?: boolean;
   className?: string;
   triggerClassName?: string;
 }
@@ -26,7 +29,6 @@ const CurrencyDropdown: React.FC<CurrencyDropdownProps> = ({
   onValueChange,
   currencyOptions,
   label,
-  isLoading = false,
   className = "",
   triggerClassName = ""
 }) => {
@@ -38,7 +40,6 @@ const CurrencyDropdown: React.FC<CurrencyDropdownProps> = ({
       <Select 
         value={value} 
         onValueChange={onValueChange}
-        disabled={isLoading}
       >
         <SelectTrigger id="currency-select" className={`w-full ${triggerClassName}`}>
           <SelectValue placeholder="Para Birimi" />
@@ -51,12 +52,6 @@ const CurrencyDropdown: React.FC<CurrencyDropdownProps> = ({
           ))}
         </SelectContent>
       </Select>
-      {isLoading && (
-        <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-          <RefreshCcw className="h-3 w-3 animate-spin" />
-          <span>Kurlar yükleniyor...</span>
-        </div>
-      )}
     </div>
   );
 };

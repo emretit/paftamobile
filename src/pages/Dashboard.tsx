@@ -4,7 +4,6 @@ import DefaultLayout from "@/components/layouts/DefaultLayout";
 import ChartWrapper from "@/components/ui/chart-wrapper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import ExchangeRateCard from "@/components/dashboard/ExchangeRateCard";
 
 interface DashboardProps {
   isCollapsed: boolean;
@@ -89,11 +88,6 @@ const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
               <CardContent></CardContent>
             </Card>
           ))}
-        </div>
-
-        {/* Exchange Rates */}
-        <div className="mt-8">
-          <ExchangeRateCard />
         </div>
         
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
