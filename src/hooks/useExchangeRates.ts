@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface ExchangeRate {
   id: string;
@@ -144,14 +144,53 @@ const parseTCMBExchangeRates = (xmlText: string): ExchangeRate[] => {
   }
 };
 
-export const useExchangeRates = () => {
+export const useExchangeRates = (pollingInterval = 300000) => { // 5 minutes by default
   const [exchangeRates, setExchangeRates] = useState<ExchangeRate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+
+  // Load exchange rates from Supabase database
+  const fetchExchangeRatesFromDB = async (): Promise<ExchangeRate[]> => {
+    try {
+      // First get the most recent date from the database
+      const { data: latestDateData, error: dateError } = await supabase
+        .from('exchange_rates')
+        .select('update_date')
+        .order('update_date', { ascending: false })
+        .limit(1);
+      
+      if (dateError) {
+        throw new Error(`Error fetching latest date: ${dateError.message}`);
+      }
+      
+      // If we have a date, fetch all rates for that date
+      if (latestDateData && latestDateData.length > 0) {
+        const latestDate = latestDateData[0].update_date;
+        
+        const { data: rates, error: ratesError } = await supabase
+          .from('exchange_rates')
+          .select('*')
+          .eq('update_date', latestDate);
+        
+        if (ratesError) {
+          throw new Error(`Error fetching exchange rates: ${ratesError.message}`);
+        }
+        
+        if (rates && rates.length > 0) {
+          return rates as ExchangeRate[];
+        }
+      }
+      
+      throw new Error('No exchange rates found in database');
+    } catch (error) {
+      console.error('Error fetching from database:', error);
+      throw error;
+    }
+  };
   
   // Load exchange rates directly from TCMB
-  const fetchExchangeRates = async (): Promise<ExchangeRate[]> => {
+  const fetchExchangeRatesFromTCMB = async (): Promise<ExchangeRate[]> => {
     try {
       const response = await fetch('https://www.tcmb.gov.tr/kurlar/today.xml');
       
@@ -166,26 +205,86 @@ export const useExchangeRates = () => {
       throw error;
     }
   };
+  
+  // Call edge function to refresh rates
+  const invokeEdgeFunction = async (): Promise<ExchangeRate[]> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('exchange-rates', {
+        method: 'POST'
+      });
+      
+      if (error) throw error;
+      
+      if (data && data.success && data.data) {
+        return data.data as ExchangeRate[];
+      }
+      
+      throw new Error('No data returned from edge function');
+    } catch (error) {
+      console.error('Error invoking edge function:', error);
+      throw error;
+    }
+  };
 
-  // Initial fetch on component mount
+  // Initial fetch and setup polling
   useEffect(() => {
     const loadExchangeRates = async () => {
       try {
         setLoading(true);
         
-        // Get rates from TCMB
-        const rates = await fetchExchangeRates();
-        
-        if (rates.length > 0) {
-          setExchangeRates(rates);
-          setLastUpdate(rates[0].update_date);
-          console.log("Exchange rates loaded:", rates.length);
-        } else {
-          // Use fallback rates if no data
-          setExchangeRates(fallbackRates);
-          setLastUpdate(fallbackRates[0].update_date);
-          console.log("Using fallback exchange rates (no data)");
+        // First, try to get rates from database
+        try {
+          const dbRates = await fetchExchangeRatesFromDB();
+          
+          if (dbRates.length > 0) {
+            setExchangeRates(dbRates);
+            setLastUpdate(dbRates[0].update_date);
+            console.log("Exchange rates loaded from database:", dbRates.length);
+            return;
+          }
+        } catch (dbError) {
+          console.warn("Couldn't fetch from database, trying TCMB directly:", dbError);
         }
+        
+        // If database fetch fails, try TCMB directly
+        try {
+          const tcmbRates = await fetchExchangeRatesFromTCMB();
+          
+          if (tcmbRates.length > 0) {
+            setExchangeRates(tcmbRates);
+            setLastUpdate(tcmbRates[0].update_date);
+            console.log("Exchange rates loaded from TCMB XML:", tcmbRates.length);
+            
+            // Also trigger the edge function to update the database for next time
+            invokeEdgeFunction().catch(e => 
+              console.warn("Background refresh of exchange rates failed:", e));
+            
+            return;
+          }
+        } catch (tcmbError) {
+          console.warn("Couldn't fetch from TCMB directly, trying edge function:", tcmbError);
+        }
+        
+        // If TCMB fetch fails, try edge function
+        try {
+          const functionRates = await invokeEdgeFunction();
+          
+          if (functionRates.length > 0) {
+            setExchangeRates(functionRates);
+            setLastUpdate(functionRates[0].update_date);
+            console.log("Exchange rates loaded from edge function:", functionRates.length);
+            return;
+          }
+        } catch (functionError) {
+          console.error("Edge function also failed:", functionError);
+          throw functionError;
+        }
+        
+        // If all methods fail, use fallback rates
+        setExchangeRates(fallbackRates);
+        setLastUpdate(fallbackRates[0].update_date);
+        console.warn("Using fallback exchange rates (all methods failed)");
+        
       } catch (err) {
         console.error("Error loading exchange rates:", err);
         setError(err instanceof Error ? err : new Error(String(err)));
@@ -193,21 +292,47 @@ export const useExchangeRates = () => {
         // Use fallback rates
         setExchangeRates(fallbackRates);
         setLastUpdate(fallbackRates[0].update_date);
-        console.log("Using fallback exchange rates (error)");
+        console.warn("Using fallback exchange rates (error)");
       } finally {
         setLoading(false);
       }
     };
 
+    // Initial load
     loadExchangeRates();
     
-    // Set up auto-refresh every 6 hours
-    const refreshInterval = setInterval(() => {
+    // Set up polling for updates
+    const pollingTimer = setInterval(() => {
+      console.log("Polling for exchange rate updates...");
       loadExchangeRates();
-    }, 6 * 60 * 60 * 1000); // 6 hours in milliseconds
+    }, pollingInterval);
     
-    return () => clearInterval(refreshInterval);
-  }, []);
+    // Optional: Set up real-time subscription for updates
+    // This requires the table to be configured for real-time
+    const channel = supabase
+      .channel('public:exchange_rates')
+      .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'exchange_rates' },
+        payload => {
+          console.log('New exchange rate inserted:', payload);
+          // Refresh rates when there's a new insertion
+          loadExchangeRates();
+        })
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'exchange_rates' },
+        payload => {
+          console.log('Exchange rate updated:', payload);
+          // Refresh rates when there's an update
+          loadExchangeRates();
+        })
+      .subscribe();
+    
+    // Cleanup
+    return () => {
+      clearInterval(pollingTimer);
+      supabase.removeChannel(channel);
+    };
+  }, [pollingInterval]);
 
   // Function to manually refresh exchange rates
   const refreshExchangeRates = async () => {
@@ -217,7 +342,8 @@ export const useExchangeRates = () => {
         duration: 2000
       });
       
-      const rates = await fetchExchangeRates();
+      // Try to invoke edge function to get fresh rates
+      const rates = await invokeEdgeFunction();
       
       if (rates.length > 0) {
         setExchangeRates(rates);
@@ -227,13 +353,25 @@ export const useExchangeRates = () => {
           description: `${rates.length} adet kur bilgisi alındı.`,
         });
       } else {
-        // If no data, use fallback rates
-        setExchangeRates(fallbackRates);
-        setLastUpdate(fallbackRates[0].update_date);
+        // If no data from edge function, fall back to direct TCMB
+        const tcmbRates = await fetchExchangeRatesFromTCMB();
         
-        toast.warning('Varsayılan kurlar kullanılıyor', {
-          description: 'Güncel kurlar alınamadı, geçici referans değerler kullanılıyor.',
-        });
+        if (tcmbRates.length > 0) {
+          setExchangeRates(tcmbRates);
+          setLastUpdate(tcmbRates[0].update_date);
+          
+          toast.success('Döviz kurları başarıyla güncellendi', {
+            description: `${tcmbRates.length} adet kur bilgisi TCMB'den alındı.`,
+          });
+        } else {
+          // If both fail, use fallback
+          setExchangeRates(fallbackRates);
+          setLastUpdate(fallbackRates[0].update_date);
+          
+          toast.warning('Varsayılan kurlar kullanılıyor', {
+            description: 'Güncel kurlar alınamadı, geçici referans değerler kullanılıyor.',
+          });
+        }
       }
     } catch (err) {
       console.error("Error refreshing exchange rates:", err);
