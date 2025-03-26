@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { ExchangeRate, FetchError } from "./types";
 import { toast } from "sonner";
@@ -43,7 +44,25 @@ export const fetchExchangeRatesFromDB = async (): Promise<ExchangeRate[]> => {
   }
 };
 
-export const invokeEdgeFunction = async (): Promise<ExchangeRate[]> => {
-  console.log('Edge function removed, using fallback rates');
-  return fallbackRates;
+export const fetchTCMBRates = async (): Promise<ExchangeRate[]> => {
+  try {
+    console.log('Fetching exchange rates from TCMB...');
+    const { data, error } = await supabase.functions.invoke('fetch-tcmb-rates');
+    
+    if (error) {
+      throw new Error(`Error invoking fetch-tcmb-rates function: ${error.message}`);
+    }
+    
+    if (data && data.success && data.rates && data.rates.length > 0) {
+      console.log('Successfully fetched rates from TCMB:', data.rates.length);
+      return data.rates;
+    }
+    
+    throw new Error('No rates returned from TCMB function');
+  } catch (error) {
+    console.error('Error fetching from TCMB:', error);
+    // Try database as fallback
+    const dbRates = await fetchExchangeRatesFromDB();
+    return dbRates;
+  }
 };

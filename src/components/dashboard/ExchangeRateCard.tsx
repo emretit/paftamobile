@@ -9,6 +9,7 @@ import { useExchangeRates, ExchangeRate } from "@/hooks/useExchangeRates";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 
 const CurrencyIcon = ({ code }: { code: string }) => {
   switch (code) {
@@ -49,7 +50,7 @@ const ExchangeRateCard: React.FC = () => {
     <Card className="border border-border shadow-md">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-muted/30">
         <div>
-          <CardTitle className="text-xl font-bold text-primary">Döviz Kurları</CardTitle>
+          <CardTitle className="text-xl font-bold text-primary">Döviz Kurları (TCMB)</CardTitle>
           <CardDescription>
             {lastUpdate 
               ? `Son güncelleme: ${formatLastUpdate(lastUpdate)}`
@@ -105,17 +106,17 @@ const ExchangeRateCard: React.FC = () => {
                 <div className="animate-pulse text-primary font-medium">Güncelleniyor...</div>
               </div>
             )}
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left p-2 font-medium">Para Birimi</th>
-                  <th className="text-right p-2 font-medium">Forex Alış</th>
-                  <th className="text-right p-2 font-medium">Forex Satış</th>
-                  <th className="text-right p-2 font-medium">Efektif Alış</th>
-                  <th className="text-right p-2 font-medium">Efektif Satış</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Para Birimi</TableHead>
+                  <TableHead className="text-right">Forex Alış</TableHead>
+                  <TableHead className="text-right">Forex Satış</TableHead>
+                  <TableHead className="text-right">Efektif Alış</TableHead>
+                  <TableHead className="text-right">Efektif Satış</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {exchangeRates
                   .filter(rate => rate.currency_code !== 'TRY')
                   .sort((a, b) => {
@@ -125,23 +126,23 @@ const ExchangeRateCard: React.FC = () => {
                            (order[b.currency_code as keyof typeof order] || 99);
                   })
                   .map((rate: ExchangeRate) => (
-                  <tr key={rate.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                    <td className="p-2">
+                  <TableRow key={rate.id}>
+                    <TableCell>
                       <div className="flex items-center gap-2">
                         <CurrencyIcon code={rate.currency_code} />
                         <Badge variant="outline" className="font-medium">
                           {rate.currency_code}
                         </Badge>
                       </div>
-                    </td>
-                    <td className="text-right p-2 font-mono">{formatRate(rate.forex_buying)}</td>
-                    <td className="text-right p-2 font-mono">{formatRate(rate.forex_selling)}</td>
-                    <td className="text-right p-2 font-mono">{formatRate(rate.banknote_buying)}</td>
-                    <td className="text-right p-2 font-mono">{formatRate(rate.banknote_selling)}</td>
-                  </tr>
+                    </TableCell>
+                    <TableCell className="text-right font-mono">{formatRate(rate.forex_buying)}</TableCell>
+                    <TableCell className="text-right font-mono">{formatRate(rate.forex_selling)}</TableCell>
+                    <TableCell className="text-right font-mono">{formatRate(rate.banknote_buying)}</TableCell>
+                    <TableCell className="text-right font-mono">{formatRate(rate.banknote_selling)}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
       </CardContent>

@@ -4,14 +4,14 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ExchangeRate, FetchError } from "./exchange-rates/types";
 import { fallbackRates } from "./exchange-rates/fallbackRates";
-import { fetchExchangeRatesFromDB } from "./exchange-rates/exchangeRatesFetcher";
+import { fetchExchangeRatesFromDB, fetchTCMBRates } from "./exchange-rates/exchangeRatesFetcher";
 import { 
   getRatesMap, 
   convertCurrency, 
   formatCurrency 
 } from "./exchange-rates/currencyUtils";
 
-export const useExchangeRates = (pollingInterval = 300000) => { // 5 minutes by default
+export const useExchangeRates = (pollingInterval = 3600000) => { // 1 hour by default
   const [exchangeRates, setExchangeRates] = useState<ExchangeRate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<FetchError | null>(null);
@@ -63,7 +63,8 @@ export const useExchangeRates = (pollingInterval = 300000) => { // 5 minutes by 
         duration: 2000
       });
       
-      const rates = await fetchExchangeRatesFromDB();
+      // Directly fetch from TCMB via our function
+      const rates = await fetchTCMBRates();
       
       if (rates.length > 0) {
         setExchangeRates(rates);
