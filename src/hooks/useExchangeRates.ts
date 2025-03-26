@@ -54,6 +54,26 @@ const fallbackRates: ExchangeRate[] = [
     banknote_selling: 41.6,
     cross_rate: 1.27,
     update_date: new Date().toISOString().split('T')[0]
+  },
+  {
+    id: "fallback-chf",
+    currency_code: "CHF",
+    forex_buying: 36.1,
+    forex_selling: 36.3,
+    banknote_buying: 36.0,
+    banknote_selling: 36.4,
+    cross_rate: 1.11,
+    update_date: new Date().toISOString().split('T')[0]
+  },
+  {
+    id: "fallback-jpy",
+    currency_code: "JPY",
+    forex_buying: 0.21,
+    forex_selling: 0.22,
+    banknote_buying: 0.21,
+    banknote_selling: 0.22,
+    cross_rate: 0.0065,
+    update_date: new Date().toISOString().split('T')[0]
   }
 ];
 

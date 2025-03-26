@@ -27,9 +27,13 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch today's exchange rates from TCMB EVDS API
+    // Fetch today's exchange rates from TCMB EVDS API with more currencies
     const currentDate = new Date().toISOString().split('T')[0];
-    const apiUrl = `https://evds2.tcmb.gov.tr/service/evds/series=TP.DK.USD.A-TP.DK.EUR.A-TP.DK.GBP.A&startDate=${currentDate}&endDate=${currentDate}&type=json&key=${apiKey}`;
+    // Format: YYYY-MM-DD to DD-MM-YYYY for TCMB API
+    const formattedDate = currentDate.split('-').reverse().join('-');
+    
+    // Using expanded currency list as requested
+    const apiUrl = `https://evds2.tcmb.gov.tr/service/evds/series=TP.DK.USD.A-TP.DK.EUR.A-TP.DK.CHF.A-TP.DK.GBP.A-TP.DK.JPY.A&startDate=${formattedDate}&endDate=${formattedDate}&type=json&key=${apiKey}`;
 
     const response = await fetch(apiUrl);
     const data = await response.json();
@@ -47,7 +51,9 @@ serve(async (req) => {
       TRY: 1,
       USD: parseFloat(data.items[0].TP_DK_USD_A),
       EUR: parseFloat(data.items[0].TP_DK_EUR_A),
-      GBP: parseFloat(data.items[0].TP_DK_GBP_A)
+      GBP: parseFloat(data.items[0].TP_DK_GBP_A),
+      CHF: parseFloat(data.items[0].TP_DK_CHF_A),
+      JPY: parseFloat(data.items[0].TP_DK_JPY_A)
     };
 
     // Store rates in the database
@@ -93,6 +99,24 @@ serve(async (req) => {
         banknote_buying: rates.GBP * 0.98,
         banknote_selling: rates.GBP * 1.03,
         cross_rate: rates.GBP / rates.USD,
+        update_date: currentDate
+      },
+      {
+        currency_code: 'CHF',
+        forex_buying: rates.CHF,
+        forex_selling: rates.CHF * 1.01,
+        banknote_buying: rates.CHF * 0.98,
+        banknote_selling: rates.CHF * 1.03,
+        cross_rate: rates.CHF / rates.USD,
+        update_date: currentDate
+      },
+      {
+        currency_code: 'JPY',
+        forex_buying: rates.JPY,
+        forex_selling: rates.JPY * 1.01,
+        banknote_buying: rates.JPY * 0.98,
+        banknote_selling: rates.JPY * 1.03,
+        cross_rate: rates.JPY / rates.USD,
         update_date: currentDate
       }
     ];

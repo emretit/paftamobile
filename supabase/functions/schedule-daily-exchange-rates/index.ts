@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
           'daily-exchange-rate-update',  -- job name
           '0 16 * * *',                 -- cron schedule (16:00 daily)
           'SELECT net.http_post(
-            url:=''${supabaseUrl}/functions/v1/exchange-rates'',
+            url:=''${supabaseUrl}/functions/v1/daily-exchange-rate-update'',
             headers:=''{"Content-Type": "application/json", "Authorization": "Bearer ${supabaseKey}"}''::jsonb,
             body:=''{}''::jsonb
           ) AS request_id;'
@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
     
     // Trigger immediate update
     console.log('Triggering immediate exchange rate update...');
-    const { error: updateError } = await supabase.functions.invoke('exchange-rates', {
+    const { error: updateError } = await supabase.functions.invoke('daily-exchange-rate-update', {
       method: 'POST'
     });
     
