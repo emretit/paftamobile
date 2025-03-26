@@ -12,6 +12,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import ExchangeRateInfo from "./ExchangeRateInfo";
+import { getCurrentExchangeRates } from "@/components/proposals/form/items/utils/currencyUtils";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
@@ -22,11 +24,13 @@ interface ProductPricingProps {
   currency: string;
   taxRate: number;
   purchasePrice?: number | null;
+  exchangeRate?: number;
   onUpdate: (updates: {
     price?: number;
     discount_price?: number | null;
     tax_rate?: number;
     currency?: string;
+    exchange_rate?: number;
     purchase_price?: number | null;
   }) => void;
 }
@@ -37,16 +41,19 @@ const ProductPricing = ({
   currency,
   taxRate,
   purchasePrice,
+  exchangeRate,
   onUpdate
 }: ProductPricingProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
   const [editValues, setEditValues] = useState({
     price,
     discountPrice,
     taxRate,
     currency,
-    purchasePrice: purchasePrice || null
+    purchasePrice: purchasePrice || null,
+    exchangeRate: exchangeRate
   });
 
   // Update edit values when props change
@@ -57,10 +64,11 @@ const ProductPricing = ({
         discountPrice,
         taxRate,
         currency,
-        purchasePrice: purchasePrice || null
+        purchasePrice: purchasePrice || null,
+        exchangeRate: exchangeRate
       });
     }
-  }, [price, discountPrice, taxRate, currency, purchasePrice, isEditing]);
+  }, [price, discountPrice, taxRate, currency, purchasePrice, exchangeRate, isEditing]);
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat('tr-TR', { 
@@ -74,6 +82,26 @@ const ProductPricing = ({
     return ((price - discountPrice) / price) * 100;
   };
 
+  const handleCurrencyChange = (newCurrency: string) => {
+    setEditValues(prev => {
+      // Get current exchange rates
+      const rates = getCurrentExchangeRates();
+      const newExchangeRate = newCurrency === "TRY" ? undefined : rates[newCurrency];
+      
+      // Show currency change alert
+      if (prev.currency !== newCurrency) {
+        setShowAlert(true);
+        setTimeout(() => setShowAlert(false), 5000);
+      }
+      
+      return {
+        ...prev,
+        currency: newCurrency,
+        exchangeRate: newExchangeRate
+      };
+    });
+  };
+
   const handleSave = () => {
     setIsSaving(true);
     
@@ -84,14 +112,24 @@ const ProductPricing = ({
       return;
     }
 
-    // Prepare update data
-    const updateData = {
+    // Get exchange rates if needed
+    const rates = getCurrentExchangeRates();
+    
+    // If currency changed, calculate and include the exchange rate
+    const updateData: any = {
       price: Number(editValues.price),
       discount_price: editValues.discountPrice ? Number(editValues.discountPrice) : null,
       tax_rate: Number(editValues.taxRate),
       currency: editValues.currency,
       purchase_price: editValues.purchasePrice ? Number(editValues.purchasePrice) : null
     };
+
+    // Include exchange rate if not TRY
+    if (editValues.currency !== "TRY") {
+      updateData.exchange_rate = rates[editValues.currency] || 1;
+    } else {
+      updateData.exchange_rate = undefined;
+    }
 
     onUpdate(updateData);
     setIsEditing(false);
@@ -100,11 +138,23 @@ const ProductPricing = ({
   };
 
   const currencyOptions = [
-    { value: "TRY", label: "Türk Lirası (TRY)" }
+    { value: "TRY", label: "Türk Lirası (TRY)" },
+    { value: "USD", label: "Amerikan Doları (USD)" },
+    { value: "EUR", label: "Euro (EUR)" },
+    { value: "GBP", label: "İngiliz Sterlini (GBP)" }
   ];
   
   return (
     <Card className="overflow-hidden">
+      {showAlert && (
+        <Alert variant="default" className="border-orange-300 bg-orange-50 p-3 mt-0 rounded-none">
+          <AlertCircle className="h-4 w-4 text-orange-500" />
+          <AlertDescription className="text-sm text-orange-700">
+            Para birimi değiştirildiğinde, döviz kuru otomatik olarak güncellenecektir.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -212,26 +262,33 @@ const ProductPricing = ({
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-500">Para Birimi</span>
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Para Birimi</span>
+              {!isEditing && currency !== "TRY" && (
+                <ExchangeRateInfo currency={currency} />
+              )}
+            </div>
             {isEditing ? (
-              <Select
-                value={editValues.currency}
-                onValueChange={(value) => setEditValues(prev => ({
-                  ...prev,
-                  currency: value
-                }))}
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Para birimi seç" />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencyOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex flex-col items-end">
+                <Select
+                  value={editValues.currency}
+                  onValueChange={handleCurrencyChange}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Para birimi seç" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencyOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {editValues.currency !== "TRY" && (
+                  <ExchangeRateInfo currency={editValues.currency} />
+                )}
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <Badge className="bg-blue-50 text-blue-700 border-blue-200">
@@ -252,8 +309,10 @@ const ProductPricing = ({
                     taxRate, 
                     currency,
                     purchasePrice: purchasePrice || null,
+                    exchangeRate
                   });
                   setIsEditing(false);
+                  setShowAlert(false);
                 }}
                 disabled={isSaving}
                 className="flex items-center gap-1"

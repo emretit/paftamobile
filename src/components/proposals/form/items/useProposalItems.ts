@@ -1,8 +1,9 @@
 
-import { useState, useCallback } from "react";
-import { toast } from "sonner";
+import { useState, useCallback, useEffect } from "react";
+import { useCurrencyManagement } from "./hooks/useCurrencyManagement";
 import { ProposalItem } from "@/types/proposal";
 import { Product } from "@/types/product";
+import { convertCurrency } from "./utils/currencyUtils";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { showError } from "@/utils/toastUtils";
@@ -11,32 +12,29 @@ import { v4 as uuidv4 } from "uuid";
 export const useProposalItems = () => {
   const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [items, setItems] = useState<ProposalItem[]>([]);
-  const [selectedCurrency, setSelectedCurrency] = useState("TRY");
+  
+  const {
+    selectedCurrency,
+    setSelectedCurrency,
+    exchangeRates,
+    currencyOptions,
+    formatCurrency,
+    getCurrencySymbol,
+    handleCurrencyChange
+  } = useCurrencyManagement();
 
-  // Currency options for select inputs
-  const currencyOptions = [
-    { value: "TRY", label: "₺ TRY", symbol: "₺" }
-  ];
+  // Listen for currency change events from ProductDetailsDialog
+  useEffect(() => {
+    const handleCurrencyChangeEvent = (event: CustomEvent) => {
+      setSelectedCurrency(event.detail);
+    };
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
-  };
-
-  // Get currency symbol
-  const getCurrencySymbol = () => {
-    return "₺";
-  };
-
-  // Handle currency change (no-op since we only support TRY)
-  const handleCurrencyChange = () => {
-    // Do nothing - only TRY is supported
-  };
+    window.addEventListener('currency-change', handleCurrencyChangeEvent as EventListener);
+    
+    return () => {
+      window.removeEventListener('currency-change', handleCurrencyChangeEvent as EventListener);
+    };
+  }, [setSelectedCurrency]);
 
   // Fetch products for realtime data with optimized query
   const { data: products = [], isLoading } = useQuery({
@@ -69,12 +67,12 @@ export const useProposalItems = () => {
       quantity: 1,
       unit_price: 0,
       total_price: 0,
-      currency: "TRY",
+      currency: selectedCurrency,
     };
     
     setItems(prev => [...prev, newItem]);
     return [...items, newItem];
-  }, [items]);
+  }, [selectedCurrency, items]);
 
   // Handle selecting a product
   const handleSelectProduct = useCallback((product: Product) => {
@@ -83,26 +81,50 @@ export const useProposalItems = () => {
       return items;
     }
 
+    // Ürünün orijinal para birimi ve fiyatını kullan
+    const productCurrency = product.currency || "TRY";
+    const originalPrice = product.price || 0;
+    
+    // Orijinal para birimi ve fiyat bilgisini sakla
+    const originalCurrency = product.original_currency || productCurrency;
+    const originalPriceValue = product.original_price !== undefined ? product.original_price : originalPrice;
+
+    // Bu ürünün fiyatını seçilen para birimine çevir (UI gösterimi için)
+    let unitPrice = originalPrice;
+    if (productCurrency !== selectedCurrency) {
+      unitPrice = convertCurrency(
+        originalPrice,
+        productCurrency,
+        selectedCurrency,
+        exchangeRates
+      );
+    }
+
     const newItem: ProposalItem = {
       id: uuidv4(),
       product_id: product.id,
       name: product.name,
       description: product.description,
       quantity: 1,
-      unit_price: product.price || 0,
+      unit_price: unitPrice,
       tax_rate: product.tax_rate || 18,
       discount_rate: 0, // Default discount rate
-      total_price: product.price || 0, // Quantity is 1, so total = unit price
-      currency: "TRY",
+      total_price: unitPrice, // Quantity is 1, so total = unit price
+      currency: selectedCurrency,
+      original_currency: originalCurrency, // Ürünün orijinal para birimini sakla
+      original_price: originalPriceValue, // Ürünün orijinal fiyatını sakla
       stock_status: product.stock_quantity && product.stock_quantity > 0 
         ? (product.stock_quantity > product.stock_threshold ? 'in_stock' : 'low_stock')
         : 'out_of_stock',
     };
     
+    console.log("Eklenen ürün orijinal para birimi:", originalCurrency);
+    console.log("Eklenen ürün orijinal fiyatı:", originalPriceValue);
+    
     const updatedItems = [...items, newItem];
     setItems(updatedItems);
     return updatedItems;
-  }, [items]);
+  }, [items, selectedCurrency, exchangeRates]);
 
   // Handle removing an item
   const handleRemoveItem = useCallback((id: string) => {
@@ -138,22 +160,53 @@ export const useProposalItems = () => {
     return updatedItems;
   }, [items]);
 
-  // Update all items' currency (no-op since we only support TRY)
-  const updateAllItemsCurrency = useCallback(() => {
-    // Do nothing since we only support TRY
-    return items;
-  }, [items]);
+  // Update all items' currency
+  const updateAllItemsCurrency = useCallback((newCurrency: string) => {
+    if (newCurrency === selectedCurrency) return items;
 
-  // Convert amount between currencies (no-op since we only support TRY)
-  const convertCurrency = (amount: number) => {
-    return amount;
-  };
+    const updatedItems = items.map((item) => {
+      // If original currency is available, convert from it to maintain accuracy
+      const sourceCurrency = item.original_currency || item.currency || selectedCurrency;
+      const sourcePrice = 
+        sourceCurrency === item.original_currency && item.original_price !== undefined
+          ? item.original_price
+          : item.unit_price;
+
+      const convertedPrice = convertCurrency(
+        sourcePrice,
+        sourceCurrency,
+        newCurrency,
+        exchangeRates
+      );
+
+      // Recalculate total price with tax and discount
+      const quantity = Number(item.quantity);
+      const discountRate = Number(item.discount_rate || 0);
+      const taxRate = Number(item.tax_rate || 0);
+      
+      // Apply discount
+      const discountedPrice = convertedPrice * (1 - discountRate / 100);
+      // Calculate total with tax
+      const totalPrice = quantity * discountedPrice * (1 + taxRate / 100);
+
+      return {
+        ...item,
+        unit_price: convertedPrice,
+        total_price: totalPrice,
+        currency: newCurrency,
+      };
+    });
+
+    setItems(updatedItems);
+    return updatedItems;
+  }, [items, selectedCurrency, exchangeRates]);
 
   return {
     selectedCurrency,
     setSelectedCurrency,
     productDialogOpen,
     setProductDialogOpen,
+    exchangeRates,
     currencyOptions,
     formatCurrency,
     getCurrencySymbol,
