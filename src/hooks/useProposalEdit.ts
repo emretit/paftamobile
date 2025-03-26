@@ -59,6 +59,10 @@ export const useProposalEdit = () => {
         delivery_terms: formData.delivery_terms,
         notes: formData.notes,
         status: formData.status,
+        currency: formData.currency,
+        items: formData.items,
+        customer_id: formData.customer_id,
+        total_amount: formData.total_amount || proposal.total_amount,
         updated_at: new Date().toISOString()
       };
       
