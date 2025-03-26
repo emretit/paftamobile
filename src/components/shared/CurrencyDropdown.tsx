@@ -1,63 +1,62 @@
 
 import React from "react";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { RefreshCcw } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CurrencyOption } from "@/components/proposals/form/items/types/currencyTypes";
+import { BadgeDollarSign, BadgeEuro, BadgePoundSterling, BadgeYen } from "lucide-react";
 
 interface CurrencyDropdownProps {
   value: string;
   onValueChange: (value: string) => void;
   currencyOptions: CurrencyOption[];
-  label?: string;
-  isLoading?: boolean;
-  className?: string;
   triggerClassName?: string;
+  placeholder?: string;
+  disabled?: boolean;
 }
 
 const CurrencyDropdown: React.FC<CurrencyDropdownProps> = ({
   value,
   onValueChange,
   currencyOptions,
-  label,
-  isLoading = false,
-  className = "",
-  triggerClassName = ""
+  triggerClassName = "",
+  placeholder = "Para Birimi",
+  disabled = false
 }) => {
+  // Get currency icon based on currency code
+  const getCurrencyIcon = (currency: string) => {
+    switch (currency) {
+      case "USD":
+        return <BadgeDollarSign className="h-4 w-4 mr-2" />;
+      case "EUR":
+        return <BadgeEuro className="h-4 w-4 mr-2" />;
+      case "GBP":
+        return <BadgePoundSterling className="h-4 w-4 mr-2" />;
+      case "JPY":
+        return <BadgeYen className="h-4 w-4 mr-2" />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className={`space-y-2 ${className}`}>
-      {label && (
-        <Label htmlFor="currency-select" className="font-medium">{label}</Label>
-      )}
-      <Select 
-        value={value} 
-        onValueChange={onValueChange}
-        disabled={isLoading}
-      >
-        <SelectTrigger id="currency-select" className={`w-full ${triggerClassName}`}>
-          <SelectValue placeholder="Para Birimi" />
-        </SelectTrigger>
-        <SelectContent position="popper" className="bg-white z-[100] min-w-[8rem]">
-          {currencyOptions.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.symbol} {option.value}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {isLoading && (
-        <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-          <RefreshCcw className="h-3 w-3 animate-spin" />
-          <span>Kurlar yükleniyor...</span>
-        </div>
-      )}
-    </div>
+    <Select
+      value={value}
+      onValueChange={onValueChange}
+      disabled={disabled}
+    >
+      <SelectTrigger className={triggerClassName}>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {currencyOptions.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            <div className="flex items-center">
+              {getCurrencyIcon(option.value)}
+              <span>{option.label}</span>
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 };
 

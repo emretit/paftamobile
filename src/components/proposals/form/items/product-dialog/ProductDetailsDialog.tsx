@@ -9,12 +9,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/types/product";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
 
 // Import refactored components
 import ProductInfoSection from "./components/ProductInfoSection";
 import PriceAndDiscountSection from "./components/PriceAndDiscountSection";
 import QuantityDepoSection from "./components/QuantityDepoSection";
 import NotesSection from "./components/NotesSection";
+import OriginalCurrencyInfo from "./components/OriginalCurrencyInfo";
 import TotalPriceSection from "./components/TotalPriceSection";
 
 interface ProductDetailsDialogProps {
@@ -58,6 +60,9 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
   const [currentCurrency, setCurrentCurrency] = React.useState(selectedCurrency);
   const [calculatedTotal, setCalculatedTotal] = React.useState(0);
   const [taxRate, setTaxRate] = React.useState(18); // Default tax rate
+  
+  // Use the central exchange rates from the dashboard
+  const { exchangeRates, loading: ratesLoading } = useExchangeRates();
 
   useEffect(() => {
     if (selectedProduct) {
@@ -103,56 +108,66 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
           <DialogTitle>Ürün Detayları</DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
-          <div className="space-y-6">
-            <ProductInfoSection 
-              product={selectedProduct} 
+        <div className="grid gap-6 py-4">
+          <ProductInfoSection 
+            product={selectedProduct} 
+            stockStatus={stockStatus}
+            availableStock={availableStock}
+            originalCurrency={originalCurrency}
+            originalPrice={originalPrice}
+            formatCurrency={formatCurrency}
+          />
+          
+          {originalCurrency !== selectedCurrency && (
+            <OriginalCurrencyInfo 
               originalCurrency={originalCurrency}
               originalPrice={originalPrice}
               formatCurrency={formatCurrency}
-              stockStatus={stockStatus}
-              availableStock={availableStock}
             />
-            
-            <PriceAndDiscountSection 
-              customPrice={customPrice}
-              setCustomPrice={setCustomPrice}
-              discountRate={discountRate}
-              setDiscountRate={setDiscountRate}
-              selectedCurrency={currentCurrency}
-              handleCurrencyChange={(value) => setCurrentCurrency(value)}
-              convertedPrice={customPrice || originalPrice}
-              originalCurrency={originalCurrency}
-              formatCurrency={formatCurrency}
-            />
-          </div>
+          )}
           
-          <div className="space-y-6">
-            <QuantityDepoSection 
-              quantity={quantity}
-              setQuantity={setQuantity}
-              selectedDepo={selectedDepo}
-              setSelectedDepo={setSelectedDepo}
-              availableStock={availableStock}
-              stockStatus={stockStatus}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <QuantityDepoSection 
+                quantity={quantity}
+                setQuantity={setQuantity}
+                selectedDepo={selectedDepo}
+                setSelectedDepo={setSelectedDepo}
+                availableStock={availableStock}
+                stockStatus={stockStatus}
+              />
+              
+              <PriceAndDiscountSection 
+                customPrice={customPrice}
+                setCustomPrice={setCustomPrice}
+                discountRate={discountRate}
+                setDiscountRate={setDiscountRate}
+                selectedCurrency={currentCurrency}
+                handleCurrencyChange={(value) => setCurrentCurrency(value)}
+                convertedPrice={originalPrice}
+                originalCurrency={originalCurrency}
+                formatCurrency={formatCurrency}
+              />
+            </div>
             
-            <TotalPriceSection 
-              unitPrice={customPrice || originalPrice}
-              quantity={quantity}
-              discountRate={discountRate}
-              taxRate={taxRate}
-              calculatedTotal={calculatedTotal}
-              setCalculatedTotal={setCalculatedTotal}
-              originalCurrency={originalCurrency}
-              currentCurrency={currentCurrency}
-              formatCurrency={formatCurrency}
-            />
-            
-            <NotesSection 
-              notes={notes} 
-              setNotes={setNotes} 
-            />
+            <div className="space-y-6">
+              <TotalPriceSection 
+                unitPrice={customPrice || originalPrice}
+                quantity={quantity}
+                discountRate={discountRate}
+                taxRate={taxRate}
+                calculatedTotal={calculatedTotal}
+                setCalculatedTotal={setCalculatedTotal}
+                originalCurrency={originalCurrency}
+                currentCurrency={currentCurrency}
+                formatCurrency={formatCurrency}
+              />
+              
+              <NotesSection 
+                notes={notes} 
+                setNotes={setNotes} 
+              />
+            </div>
           </div>
         </div>
         

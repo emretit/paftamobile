@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DollarSign, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getCurrencyOptions } from "./items/utils/currencyUtils";
-import CurrencyDropdown from "@/components/shared/CurrencyDropdown";
+import { CurrencyRatePopover } from "@/components/currency/CurrencyRatePopover";
 
 interface ProposalCurrencySelectorProps {
   selectedCurrency: string;
@@ -28,10 +28,9 @@ const ProposalCurrencySelector: React.FC<ProposalCurrencySelectorProps> = ({
             </span>
           </div>
           
-          <CurrencyDropdown
-            value={selectedCurrency}
-            onValueChange={onCurrencyChange}
-            currencyOptions={currencyOptions}
+          <CurrencyRatePopover
+            selectedCurrency={selectedCurrency}
+            onCurrencyChange={onCurrencyChange}
             triggerClassName="w-[130px]"
           />
           
