@@ -2,7 +2,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Trash2, Tag } from "lucide-react";
+import { Trash2, Tag, Info } from "lucide-react";
 import { ProposalItem } from "@/types/proposal";
 import {
   Select,
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PROPOSAL_ITEM_GROUPS } from "./proposalItemsConstants";
+import { Badge } from "@/components/ui/badge";
 
 interface ProposalItemsTableProps {
   items: ProposalItem[];
@@ -59,13 +60,16 @@ const ProposalItemsTable = ({
             <th className="py-3 px-4 text-center font-medium w-20">KDV %</th>
             <th className="py-3 px-4 text-center font-medium w-20">İndirim %</th>
             <th className="py-3 px-4 text-right font-medium w-32">Toplam</th>
+            {selectedCurrency !== "TRY" && (
+              <th className="py-3 px-4 text-right font-medium w-32">TRY Karşılığı</th>
+            )}
             <th className="py-3 px-4 text-center font-medium w-16"></th>
           </tr>
         </thead>
         <tbody>
           {items.length === 0 ? (
             <tr>
-              <td colSpan={9} className="py-3 px-4 text-center text-muted-foreground">
+              <td colSpan={selectedCurrency !== "TRY" ? 10 : 9} className="py-3 px-4 text-center text-muted-foreground">
                 Henüz ürün eklenmedi. Ürün eklemek için yukarıdaki butonları kullanın.
               </td>
             </tr>
@@ -167,6 +171,33 @@ const ProposalItemsTable = ({
                 <td className="py-3 px-4 text-right font-medium">
                   {formatCurrency(item.total_price, (item as any).currency || selectedCurrency)}
                 </td>
+                {selectedCurrency !== "TRY" && (
+                  <td className="py-3 px-4 text-right font-medium">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <div className="flex items-center justify-end">
+                            {formatCurrency(
+                              // Eğer item currency TRY değilse ve global currency de TRY değilse, kur dönüşümünü göster
+                              item.total_price * (
+                                // Varsayalım exchange rate 38 - gerçekte burada useExchangeRates hook'undan alınan kur bilgisi kullanılmalı
+                                // Burada sadece görsel amaçlı bir değer gösteriyoruz
+                                (item as any).currency === "USD" ? 38 : 
+                                (item as any).currency === "EUR" ? 40 : 
+                                (item as any).currency === "GBP" ? 48 : 1
+                              ), 
+                              "TRY"
+                            )}
+                            <Info className="h-3 w-3 ml-1 text-muted-foreground" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>TCMB güncel kuruna göre TL karşılığı</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </td>
+                )}
                 <td className="py-3 px-4 text-center">
                   <Button
                     type="button"

@@ -26,7 +26,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
   globalCurrency = "TRY"
 }) => {
   // Get dashboard exchange rates
-  const { exchangeRates: dashboardRates, convertCurrency: dashboardConvert } = useExchangeRates();
+  const { exchangeRates: dashboardRates, convertCurrency: dashboardConvert, formatCurrency: dashboardFormatCurrency } = useExchangeRates();
   
   const {
     selectedCurrency,
@@ -284,7 +284,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
           handleItemChange={onItemChange}
           handleRemoveItem={onRemoveItem}
           selectedCurrency={globalCurrency || "TRY"}
-          formatCurrency={formatCurrency}
+          formatCurrency={dashboardFormatCurrency} // Use dashboard formatter for consistency
           currencyOptions={currencyOptions}
           taxRateOptions={taxRateOptions}
           handleItemCurrencyChange={onItemCurrencyChange}
