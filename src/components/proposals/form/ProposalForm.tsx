@@ -137,7 +137,7 @@ const ProposalForm: React.FC<ProposalFormProps> = ({
               <ProposalItems
                 items={formData.items || []}
                 onItemsChange={handleItemsChange}
-                globalCurrency={formData.currency}
+                selectedCurrency={formData.currency || "TRY"}
               />
             </div>
           </Card>

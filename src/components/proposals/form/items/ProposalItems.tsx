@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Upload, Download } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import ProposalItemsTable from "./ProposalItemsTable";
 import ProposalItemsHeader from "./ProposalItemsHeader";
 import { ProposalItem } from "@/types/proposal";
 import { getCurrencyOptions } from "./utils/currencyUtils";
-import { ProductSearchDialog } from "./product-dialog/ProductSearchDialog";
+import ProductSearchDialog from "./product-dialog/ProductSearchDialog";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { Separator } from "@/components/ui/separator";
 
@@ -204,7 +204,13 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
   return (
     <>
       <div className="space-y-4">
-        <ProposalItemsHeader />
+        <ProposalItemsHeader 
+          selectedCurrency={selectedCurrency}
+          onCurrencyChange={() => {}} 
+          onAddItem={handleAddItem}
+          onOpenProductDialog={() => setIsAddProductDialogOpen(true)}
+          currencyOptions={currencyOptions}
+        />
         <div className="flex flex-wrap gap-2">
           <Button 
             variant="outline" 
@@ -237,7 +243,7 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
           formatCurrency={formatCurrency}
           currencyOptions={currencyOptions}
           taxRateOptions={TAX_RATE_OPTIONS}
-          exchangeRates={exchangeRates.getRatesMap()}
+          exchangeRates={exchangeRates}
           convertCurrency={convertCurrency}
         />
       </div>

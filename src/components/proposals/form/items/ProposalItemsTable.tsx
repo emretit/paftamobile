@@ -15,6 +15,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { PROPOSAL_ITEM_GROUPS } from "./proposalItemsConstants";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { ExchangeRate } from "@/hooks/useExchangeRates";
 
 interface ProposalItemsTableProps {
   items: ProposalItem[];
@@ -25,7 +26,7 @@ interface ProposalItemsTableProps {
   formatCurrency: (amount: number, currency?: string) => string;
   currencyOptions: { value: string; label: string }[];
   taxRateOptions: { value: number; label: string }[];
-  exchangeRates?: Record<string, number>;
+  exchangeRates?: ExchangeRate[];
   convertCurrency?: (amount: number, fromCurrency: string, toCurrency: string) => number;
 }
 
@@ -38,7 +39,7 @@ const ProposalItemsTable = ({
   formatCurrency,
   currencyOptions,
   taxRateOptions,
-  exchangeRates = { TRY: 1, USD: 38, EUR: 40, GBP: 48 }, // Default fallback values if no rates provided
+  exchangeRates = [],
   convertCurrency,
 }: ProposalItemsTableProps) => {
   // Para birimi değişikliğini ele alma
@@ -70,9 +71,23 @@ const ProposalItemsTable = ({
       handleItemChange(index, "currency", value);
       
       // Manuel dönüşüm için basit oran hesabı
-      if (exchangeRates && currentCurrency !== value) {
-        const currentRate = exchangeRates[currentCurrency] || 1;
-        const newRate = exchangeRates[value] || 1;
+      const getRatesMap = () => {
+        const ratesMap: Record<string, number> = { TRY: 1 };
+        
+        exchangeRates.forEach(rate => {
+          if (rate.currency_code && rate.forex_buying) {
+            ratesMap[rate.currency_code] = rate.forex_buying;
+          }
+        });
+        
+        return ratesMap;
+      };
+      
+      const rates = getRatesMap();
+      
+      if (Object.keys(rates).includes(currentCurrency) && Object.keys(rates).includes(value)) {
+        const currentRate = rates[currentCurrency] || 1;
+        const newRate = rates[value] || 1;
         const conversionRate = currentRate / newRate;
         
         const currentPrice = currentItem.unit_price;
