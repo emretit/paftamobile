@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.48.1'
 import { XMLParser } from 'https://esm.sh/fast-xml-parser@4.3.3'
 
@@ -149,13 +150,22 @@ function parseExchangeRates(xmlText: string) {
     
     // Only process currencies we're interested in
     if (currencies.includes(currencyCode)) {
+      // Fix: Handle string conversion properly
+      const forexBuying = parseFloat(String(currencyData.ForexBuying || '0').replace(',', '.'));
+      const forexSelling = parseFloat(String(currencyData.ForexSelling || '0').replace(',', '.'));
+      const banknoteBuying = parseFloat(String(currencyData.BanknoteBuying || '0').replace(',', '.'));
+      const banknoteSelling = parseFloat(String(currencyData.BanknoteSelling || '0').replace(',', '.'));
+      const crossRate = currencyData.CrossRateUSD ? 
+                        parseFloat(String(currencyData.CrossRateUSD).replace(',', '.')) : 
+                        null;
+      
       exchangeRates.push({
         currency_code: currencyCode,
-        forex_buying: parseFloat(currencyData.ForexBuying?.replace(',', '.') || '0'),
-        forex_selling: parseFloat(currencyData.ForexSelling?.replace(',', '.') || '0'),
-        banknote_buying: parseFloat(currencyData.BanknoteBuying?.replace(',', '.') || '0'),
-        banknote_selling: parseFloat(currencyData.BanknoteSelling?.replace(',', '.') || '0'),
-        cross_rate: parseFloat(currencyData.CrossRateUSD?.replace(',', '.') || '0') || null,
+        forex_buying: forexBuying,
+        forex_selling: forexSelling,
+        banknote_buying: banknoteBuying,
+        banknote_selling: banknoteSelling,
+        cross_rate: crossRate,
         update_date: updateDate
       });
     }
@@ -248,26 +258,46 @@ async function setupCronJob(supabase) {
 async function manuallyRefreshRates(supabase) {
   console.log('Manually refreshing exchange rates...');
   
-  // Fetch exchange rates from TCMB
-  const xmlText = await fetchTCMBExchangeRates();
-  
-  // Parse exchange rates
-  const exchangeRates = parseExchangeRates(xmlText);
-  
-  // Store in Supabase
-  const result = await storeExchangeRates(supabase, exchangeRates);
-  
-  return new Response(
-    JSON.stringify({ 
-      success: true, 
-      message: 'Exchange rates updated successfully',
-      count: exchangeRates.length,
-      data: result.data
-    }),
-    { 
-      headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+  try {
+    // Fetch exchange rates from TCMB
+    const xmlText = await fetchTCMBExchangeRates();
+    
+    // Parse exchange rates
+    const exchangeRates = parseExchangeRates(xmlText);
+    
+    // Store in Supabase
+    const result = await storeExchangeRates(supabase, exchangeRates);
+    
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'Exchange rates updated successfully',
+        count: exchangeRates.length,
+        rates: exchangeRates,
+        data: result.data
+      }),
+      { 
+        headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+      }
+    );
+  } catch (error) {
+    console.error("Error refreshing rates:", error);
+    
+    // Log the failure
+    try {
+      await supabase
+        .from('exchange_rate_updates')
+        .insert({
+          status: 'error',
+          updated_at: new Date().toISOString(),
+          message: `Error refreshing rates: ${error.message}`
+        });
+    } catch (logErr) {
+      console.warn("Could not log error to database:", logErr);
     }
-  );
+    
+    throw error;
+  }
 }
 
 // Get the latest exchange rates
