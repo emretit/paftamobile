@@ -195,11 +195,11 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <DatePickerWithRange
-                          date={{
+                          value={{
                             from: filters.dateRange.from,
                             to: filters.dateRange.to,
                           }}
-                          setDate={(range) => {
+                          onChange={(range) => {
                             setFilters({
                               ...filters,
                               dateRange: {
