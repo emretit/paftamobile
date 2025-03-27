@@ -4,8 +4,8 @@ import { usePurchaseInvoices } from "@/hooks/usePurchaseInvoices";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/custom-tabs";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Search, FileText, FileCheck, Clock, AlertCircle, Wallet, Plus, FileClock, FileX, Loader } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -211,7 +211,7 @@ const InvoiceManagementTab = () => {
                 </SelectContent>
               </Select>
               
-              <DateRangePicker
+              <DatePickerWithRange
                 value={{
                   from: purchaseFilters.dateRange.from,
                   to: purchaseFilters.dateRange.to
@@ -347,7 +347,7 @@ const InvoiceManagementTab = () => {
                 </SelectContent>
               </Select>
               
-              <DateRangePicker
+              <DatePickerWithRange
                 value={{
                   from: salesFilters.dateRange.from,
                   to: salesFilters.dateRange.to

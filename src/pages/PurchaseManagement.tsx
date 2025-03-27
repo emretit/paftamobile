@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, FileInvoice, Plus } from "lucide-react";
+import { ArrowLeft, FileText, FileDown, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PurchaseOrdersTab from "@/components/purchase/orders/PurchaseOrdersTab";
@@ -63,7 +63,7 @@ const PurchaseManagement = ({ isCollapsed, setIsCollapsed }: PurchaseManagementP
               Satın Alma Siparişleri
             </TabsTrigger>
             <TabsTrigger value="invoices" className="flex items-center">
-              <FileInvoice className="h-4 w-4 mr-2" />
+              <FileDown className="h-4 w-4 mr-2" />
               E-Fatura Yönetimi
             </TabsTrigger>
           </TabsList>

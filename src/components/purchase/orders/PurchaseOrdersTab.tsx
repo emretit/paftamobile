@@ -4,7 +4,7 @@ import { usePurchaseOrders } from "@/hooks/usePurchaseOrders";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { Card } from "@/components/ui/card";
 import { Search, FileDown, Filter, PackageCheck, PackageX, Loader, AlertCircle } from "lucide-react";
 import { 
@@ -159,7 +159,7 @@ const PurchaseOrdersTab = () => {
             </SelectContent>
           </Select>
           
-          <DateRangePicker
+          <DatePickerWithRange
             value={{
               from: filters.dateRange.from,
               to: filters.dateRange.to
