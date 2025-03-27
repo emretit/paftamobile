@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -37,7 +36,6 @@ const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
   const canReceiveItems = orderStatus === 'confirmed' || orderStatus === 'partially_received';
   
   const handleOpenReceiving = () => {
-    // Initialize received quantities with current values
     const initialQuantities: Record<string, number> = {};
     items.forEach(item => {
       initialQuantities[item.id] = 0;
@@ -125,7 +123,7 @@ const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
                       {item.received_quantity > 0 ? (
                         <Badge variant={
                           item.received_quantity >= item.quantity 
-                            ? "success" 
+                            ? "secondary" 
                             : "warning"
                         }>
                           {item.received_quantity}

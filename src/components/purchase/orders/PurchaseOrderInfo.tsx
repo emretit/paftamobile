@@ -6,8 +6,8 @@ import { Calendar, Check, Truck, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 import { PurchaseOrder, PurchaseOrderStatus } from "@/types/purchase";
-import { capitalizeFirstLetter } from "@/lib/utils";
 import { formatMoney } from "../constants";
+import { capitalizeFirstLetter } from "@/utils/formatters";
 import {
   DropdownMenu,
   DropdownMenuContent,
