@@ -22,6 +22,7 @@ import { Trash2, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
+import { useEffect, useRef } from "react";
 
 interface ProposalItemsTableProps {
   items: ProposalItem[];
@@ -45,6 +46,40 @@ const ProposalItemsTable: React.FC<ProposalItemsTableProps> = ({
   handleItemCurrencyChange,
 }) => {
   const { convertCurrency } = useExchangeRates();
+  const prevCurrencyRef = useRef<string>(selectedCurrency);
+  
+  // When global currency changes, automatically convert all unit prices
+  useEffect(() => {
+    // Skip if it's the initial render or currency hasn't changed
+    if (prevCurrencyRef.current === selectedCurrency) {
+      return;
+    }
+    
+    const fromCurrency = prevCurrencyRef.current;
+    const toCurrency = selectedCurrency;
+    
+    console.log(`Currency changed from ${fromCurrency} to ${toCurrency}, updating unit prices...`);
+    
+    // Update each item's price based on the currency conversion
+    items.forEach((item, index) => {
+      if (item.currency !== selectedCurrency) {
+        // Get source currency and price (use original when available)
+        const sourceCurrency = item.currency || fromCurrency;
+        const sourcePrice = item.unit_price || 0;
+        
+        // Convert to the new global currency
+        const convertedPrice = convertCurrency(sourcePrice, sourceCurrency, toCurrency);
+        console.log(`Converting ${item.name}: ${sourcePrice} ${sourceCurrency} → ${convertedPrice} ${toCurrency}`);
+        
+        // Update the item with the converted price
+        handleItemChange(index, "unit_price", convertedPrice);
+        handleItemChange(index, "currency", toCurrency);
+      }
+    });
+    
+    // Store the new currency for future comparison
+    prevCurrencyRef.current = selectedCurrency;
+  }, [selectedCurrency, items, handleItemChange, convertCurrency]);
   
   // Format number with 2 decimal places
   const formatNumber = (value: number) => {
