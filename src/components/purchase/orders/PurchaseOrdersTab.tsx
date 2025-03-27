@@ -150,7 +150,7 @@ const PurchaseOrdersTab = () => {
               <SelectValue placeholder="Tüm Durumlar" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tüm Durumlar</SelectItem>
+              <SelectItem value="all">Tüm Durumlar</SelectItem>
               {statusOptions.map(status => (
                 <SelectItem key={status.value} value={status.value}>
                   {status.label}

@@ -46,14 +46,14 @@ const OpportunityFilters = ({
 
       <div className="w-full sm:w-64">
         <Select
-          value={selectedEmployee || ""}
-          onValueChange={(value) => setSelectedEmployee(value || null)}
+          value={selectedEmployee || "all"}
+          onValueChange={(value) => setSelectedEmployee(value === "all" ? null : value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Satış Temsilcisi" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tüm Temsilciler</SelectItem>
+            <SelectItem value="all">Tüm Temsilciler</SelectItem>
             {employees.map((employee) => (
               <SelectItem key={employee.id} value={employee.id}>
                 {employee.first_name} {employee.last_name}
@@ -65,14 +65,14 @@ const OpportunityFilters = ({
 
       <div className="w-full sm:w-64">
         <Select
-          value={selectedCustomer || ""}
-          onValueChange={(value) => setSelectedCustomer(value || null)}
+          value={selectedCustomer || "all"}
+          onValueChange={(value) => setSelectedCustomer(value === "all" ? null : value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Müşteri" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tüm Müşteriler</SelectItem>
+            <SelectItem value="all">Tüm Müşteriler</SelectItem>
             {customers.map((customer) => (
               <SelectItem key={customer.id} value={customer.id}>
                 {customer.name}
