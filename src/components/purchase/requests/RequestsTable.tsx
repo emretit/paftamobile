@@ -143,7 +143,7 @@ export const RequestsTable = () => {
                   <TableCell>
                     <RequestStatusBadge status={request.status} />
                   </TableCell>
-                  <TableCell className="text-right">{formatMoney(request.total_budget)}</TableCell>
+                  <TableCell className="text-right">{formatMoney(request.total_budget, "TRY")}</TableCell>
                   <TableCell>
                     <div className="flex justify-center space-x-2">
                       <Button 
