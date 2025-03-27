@@ -1,18 +1,12 @@
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ChevronLeft } from "lucide-react";
-import ProposalFormHeader from "./ProposalFormHeader";
-import ProposalFormBasicInfo from "./ProposalFormBasicInfo";
-import ProposalFormCustomerSelect from "./ProposalFormCustomerSelect";
-import ProposalItems from "./items/ProposalItems";
-import ProposalFormTerms from "./ProposalFormTerms";
-import ProposalCurrencySelector from "./ProposalCurrencySelector";
-import { useProposalFormState } from "@/hooks/proposals/useProposalFormState";
+import React from "react";
 import { Proposal } from "@/types/proposal";
+import { ProposalFormData } from "@/types/proposal-form";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
+import { useProposalFormState } from "@/hooks/proposals/useProposalFormState";
+import ProposalFormContent from "./ProposalFormContent";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
 
 interface ProposalFormProps {
   proposal: Proposal | null;
@@ -25,159 +19,69 @@ interface ProposalFormProps {
   subtitle: string;
 }
 
-const ProposalForm: React.FC<ProposalFormProps> = ({
+const ProposalForm = ({
   proposal,
   loading,
   saving,
-  isNew = false,
+  isNew,
   onSave,
   onBack,
   title,
-  subtitle
-}) => {
+  subtitle,
+}: ProposalFormProps) => {
   const {
     formData,
     formErrors,
     isFormDirty,
+    formInitialized,
     handleInputChange,
     handleSelectChange,
     handleDateChange,
     handleItemsChange,
     handleCurrencyChange,
     handleSave,
-    validateForm
+    validateForm,
+    saving: isSaving
   } = useProposalFormState(proposal, isNew, onSave);
 
-  // Function to handle the form submission
-  const submitForm = async () => {
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return "";
     try {
-      if (!validateForm()) {
-        toast.error("Lütfen gerekli alanları doldurun");
-        return;
-      }
-      
-      await handleSave();
+      return format(new Date(dateString), "dd MMMM yyyy", { locale: tr });
     } catch (error) {
-      console.error("Error saving proposal:", error);
-      toast.error("Teklif kaydedilirken bir hata oluştu");
+      return "";
     }
   };
 
-  // Handle the currency change and update all items' prices
-  const handleGlobalCurrencyChange = (currency: string) => {
-    // This will trigger the currency change in the form state
-    handleCurrencyChange(currency);
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleSave();
   };
 
-  if (loading) {
+  if (loading || !formInitialized) {
     return (
-      <div className="flex items-center justify-center w-full h-48">
-        <div className="space-y-4">
-          <Skeleton className="h-12 w-[300px]" />
-          <Skeleton className="h-8 w-[250px]" />
-          <Skeleton className="h-8 w-[200px]" />
-        </div>
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-10 w-full" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <ProposalFormHeader
-        title={title}
-        subtitle={subtitle}
-        loading={loading}
-        saving={saving}
+    <form id="proposal-form" onSubmit={handleFormSubmit} className="space-y-6">
+      <ProposalFormContent
+        formData={formData}
+        formErrors={formErrors}
         isNew={isNew}
         proposal={proposal}
-        onBack={onBack}
-        onSave={submitForm}
-        isFormDirty={isFormDirty}
-        validateForm={validateForm}
+        handleInputChange={handleInputChange}
+        handleSelectChange={handleSelectChange}
+        handleDateChange={handleDateChange}
+        handleItemsChange={handleItemsChange}
+        formatDate={formatDate}
       />
-
-      <div className="flex flex-col gap-6">
-        <div className="space-y-6 w-full">
-          <ProposalCurrencySelector 
-            selectedCurrency={formData.currency || "TRY"} 
-            onCurrencyChange={handleGlobalCurrencyChange}
-            items={formData.items}
-            onItemsChange={handleItemsChange}
-          />
-
-          <Card className="p-6">
-            <div className="space-y-6">
-              <h3 className="text-lg font-medium">Teklif Detayları</h3>
-              
-              <ProposalFormBasicInfo
-                formData={{
-                  title: formData.title,
-                  status: formData.status,
-                  valid_until: formData.valid_until
-                }}
-                formErrors={formErrors}
-                handleInputChange={handleInputChange}
-                handleSelectChange={handleSelectChange}
-                handleDateChange={handleDateChange}
-                formatDate={(date) => date ? new Date(date).toLocaleDateString() : ''}
-              />
-              
-              <ProposalFormCustomerSelect
-                selectedCustomerId={formData.customer_id}
-                onSelectCustomer={(customerId) => handleSelectChange("customer_id", customerId)}
-                error={formErrors.customer_id}
-              />
-            </div>
-          </Card>
-
-          <Card className="p-6">
-            <div className="space-y-6">
-              <h3 className="text-lg font-medium">Ürünler / Hizmetler</h3>
-              
-              <ProposalItems
-                items={formData.items || []}
-                onItemsChange={handleItemsChange}
-                globalCurrency={formData.currency}
-              />
-            </div>
-          </Card>
-
-          <Card className="p-6">
-            <div className="space-y-6">
-              <h3 className="text-lg font-medium">Şartlar ve Koşullar</h3>
-              
-              <ProposalFormTerms
-                paymentTerms={formData.payment_terms}
-                deliveryTerms={formData.delivery_terms}
-                notes={formData.notes}
-                onInputChange={handleInputChange}
-              />
-            </div>
-          </Card>
-
-          <div className="flex gap-2 md:hidden">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onBack}
-              className="flex-1"
-              disabled={saving}
-            >
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              Geri
-            </Button>
-            <Button
-              type="button"
-              onClick={submitForm}
-              className="flex-1"
-              disabled={saving}
-            >
-              {saving ? "Kaydediliyor..." : "Kaydet"}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </form>
   );
 };
 

@@ -1,79 +1,58 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { mockCrmService } from "@/services/mockCrm";
 import { v4 as uuidv4 } from "uuid";
-import { toast } from "sonner";
 import { ProposalFormData } from "@/types/proposal-form";
-import { useProposalCalculations } from "./useProposalCalculations";
+import { calculateProposalTotals } from "@/services/workflow/proposalWorkflow";
 
 export const useProposalCreation = () => {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const { calculateTotals } = useProposalCalculations();
 
-  const handleCreateProposal = async (data: ProposalFormData) => {
-    setIsLoading(true);
+  const createProposal = async (formData: ProposalFormData) => {
     try {
-      // Calculate total amount
-      const total = calculateTotals(data.items || []);
+      setIsLoading(true);
       
-      // Create proposal record
-      const { data: newProposal, error } = await supabase
-        .from('proposals')
-        .insert({
-          title: data.title,
-          customer_id: data.customer_id,
-          employee_id: data.employee_id,
-          status: "draft",
-          number: Math.floor(Math.random() * 1000000).toString(),
-          total_amount: total,
-          currency: "TRY",
-          valid_until: data.valid_until,
-          payment_terms: data.payment_terms,
-          delivery_terms: data.delivery_terms,
-          notes: data.notes || "",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // If we have items, insert them with the new proposal ID
-      if (data.items && data.items.length > 0) {
-        const itemsWithProposalId = data.items.map(item => ({
-          ...item,
-          proposal_id: newProposal.id,
-          id: uuidv4(),
-        }));
-
-        // Add items as items field directly on the proposal
-        const { error: updateError } = await supabase
-          .from('proposals')
-          .update({ items: itemsWithProposalId })
-          .eq('id', newProposal.id);
-
-        if (updateError) {
-          console.error('Error adding proposal items:', updateError);
-        }
-      }
-
-      toast.success("Teklif başarıyla oluşturuldu");
-      navigate("/proposals");
-      return newProposal.id;
+      console.log("Creating proposal with data:", formData);
+      
+      // Calculate totals from items
+      const totals = formData.items ? calculateProposalTotals(formData.items) : { total: 0 };
+      
+      // Prepare proposal data
+      const proposal = {
+        id: uuidv4(),
+        number: `PRO-${Math.floor(10000 + Math.random() * 90000)}`, // Generate random number
+        title: formData.title,
+        description: formData.description,
+        customer_id: formData.customer_id,
+        employee_id: formData.employee_id,
+        opportunity_id: formData.opportunity_id,
+        valid_until: formData.valid_until,
+        payment_terms: formData.payment_terms,
+        delivery_terms: formData.delivery_terms,
+        notes: formData.notes,
+        status: formData.status,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        total_amount: totals.total || 0,
+        currency: formData.currency || "TRY",
+        items: formData.items || [],
+        internal_notes: formData.internalNotes,
+      };
+      
+      // Save proposal
+      const result = await mockCrmService.createProposal(proposal);
+      
+      return result;
     } catch (error) {
-      console.error('Error creating proposal:', error);
-      toast.error("Teklif oluşturulurken bir hata oluştu");
-      return null;
+      console.error("Error creating proposal:", error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
   return {
+    createProposal,
     isLoading,
-    createProposal: handleCreateProposal
   };
 };
