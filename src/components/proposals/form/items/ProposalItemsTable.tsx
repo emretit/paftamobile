@@ -160,14 +160,25 @@ const ProposalItemsTable: React.FC<ProposalItemsTableProps> = ({
                   </TableCell>
                   
                   <TableCell className="py-3 px-4">
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={formatNumber(item.unit_price)}
-                      onChange={(e) => handleItemChange(index, "unit_price", parseFloat(e.target.value) || 0)}
-                      className="h-9 w-full"
-                    />
+                    <div>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formatNumber(item.unit_price)}
+                        onChange={(e) => handleItemChange(index, "unit_price", parseFloat(e.target.value) || 0)}
+                        className="h-9 w-full"
+                      />
+                      
+                      {/* Teklif para birimi ile farklıysa, teklif para birimindeki karşılığını göster */}
+                      {item.currency && item.currency !== selectedCurrency && (
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          <span className="italic">
+                            ≈ {formatCurrency(convertCurrency(item.unit_price, item.currency, selectedCurrency), selectedCurrency)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   
                   <TableCell className="py-3 px-4">
