@@ -27,7 +27,7 @@ export const useProposalFormState = (
     customer_id: "",
     employee_id: "",
     items: [],
-    currency: "TRY" // Varsayılan para birimi
+    currency: "TRY" // Default currency
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -56,7 +56,7 @@ export const useProposalFormState = (
         customer_id: initialProposal.customer_id || "",
         employee_id: initialProposal.employee_id || "",
         items: initialProposal.items || [],
-        currency: initialProposal.currency || "TRY" // Mevcut teklifteki para birimi
+        currency: initialProposal.currency || "TRY" // Use existing proposal currency
       });
       setFormInitialized(true);
     } else if (isNew) {
@@ -93,11 +93,11 @@ export const useProposalFormState = (
       errors.currency = "Para birimi seçilmelidir";
     }
     
-    // Ürün kalemleri için validasyon
+    // Item validations
     if (!formData.items || formData.items.length === 0) {
       errors.items = "En az bir teklif kalemi eklenmelidir";
     } else {
-      // Kalem validasyonları (örnek: ürün adı, miktar, fiyat kontrolü)
+      // Check for invalid items (name, quantity, price)
       const invalidItems = formData.items.filter(item => 
         !item.name?.trim() || !item.quantity || item.quantity <= 0 || !item.unit_price || item.unit_price < 0
       );
@@ -190,28 +190,28 @@ export const useProposalFormState = (
     }));
   };
 
-  // Para birimi değişikliğini yönetme
+  // Handle currency change for the entire proposal
   const handleCurrencyChange = (currency: string) => {
     const prevCurrency = formData.currency || "TRY";
     
-    // Eğer para birimi değişmiyorsa işlem yapma
+    // If currency didn't change, do nothing
     if (currency === prevCurrency) return;
     
     console.log(`Currency changing from ${prevCurrency} to ${currency}`);
     
-    // Teklif para birimini güncelle
+    // Update proposal currency
     setFormData(prev => ({
       ...prev,
       currency
     }));
     setIsFormDirty(true);
     
-    // Teklif kalemlerini yeni para birimine göre dönüştürme işlemi
+    // Convert line items to new currency if needed
     if (formData.items && formData.items.length > 0) {
       console.log(`Converting ${formData.items.length} items from ${prevCurrency} to ${currency}`);
       
       const updatedItems = formData.items.map(item => {
-        // Eğer ürünün orijinal para birimi saklanmışsa, dönüşümü oradan yap
+        // If item has original currency info, convert from that
         const sourceCurrency = item.original_currency || item.currency || prevCurrency;
         const sourcePrice = 
           sourceCurrency === item.original_currency && item.original_price !== undefined
@@ -221,11 +221,11 @@ export const useProposalFormState = (
         console.log(`Converting item ${item.name} from ${sourceCurrency} to ${currency}`);
         console.log(`Original price: ${sourcePrice} ${sourceCurrency}`);
 
-        // Para birimi dönüşümünü yap
+        // Convert price to new currency
         const convertedPrice = convertCurrency(sourcePrice, sourceCurrency, currency);
         console.log(`Converted price: ${convertedPrice} ${currency}`);
         
-        // Vergi ve indirim oranlarını hesaba katarak toplam fiyatı güncelle
+        // Calculate total price with tax and discount
         const quantity = Number(item.quantity || 1);
         const discountRate = Number(item.discount_rate || 0);
         const taxRate = Number(item.tax_rate || 0);
@@ -243,7 +243,7 @@ export const useProposalFormState = (
         };
       });
       
-      // Güncellenmiş kalemleri form state'ine ekle
+      // Update formData with converted items
       setFormData(prev => ({
         ...prev,
         items: updatedItems
@@ -253,7 +253,7 @@ export const useProposalFormState = (
       toast.success(`Tüm kalemler ${currency} para birimine dönüştürüldü`);
     }
     
-    // Para birimi hata mesajını temizle
+    // Clear currency error if it exists
     if (formErrors.currency) {
       setFormErrors(prev => ({
         ...prev,

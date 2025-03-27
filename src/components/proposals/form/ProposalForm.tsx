@@ -7,6 +7,7 @@ import { useProposalFormState } from "@/hooks/proposals/useProposalFormState";
 import ProposalFormContent from "./ProposalFormContent";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import ProposalCurrencySelector from "./ProposalCurrencySelector";
 
 interface ProposalFormProps {
   proposal: Proposal | null;
@@ -70,6 +71,14 @@ const ProposalForm = ({
 
   return (
     <form id="proposal-form" onSubmit={handleFormSubmit} className="space-y-6">
+      {/* Add currency selector for the entire proposal */}
+      <ProposalCurrencySelector 
+        selectedCurrency={formData.currency || "TRY"} 
+        onCurrencyChange={handleCurrencyChange}
+        items={formData.items}
+        onItemsChange={handleItemsChange}
+      />
+
       <ProposalFormContent
         formData={formData}
         formErrors={formErrors}

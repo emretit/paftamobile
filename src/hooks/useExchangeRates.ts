@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -186,7 +186,7 @@ export const useExchangeRates = () => {
   };
 
   // Get a simple map of currency codes to rates (for easier use in calculations)
-  const getRatesMap = () => {
+  const getRatesMap = useCallback(() => {
     const ratesMap: Record<string, number> = { TRY: 1 };
     
     exchangeRates.forEach(rate => {
@@ -196,10 +196,10 @@ export const useExchangeRates = () => {
     });
     
     return ratesMap;
-  };
+  }, [exchangeRates]);
 
   // Convert amount between currencies
-  const convertCurrency = (amount: number, fromCurrency: string, toCurrency: string): number => {
+  const convertCurrency = useCallback((amount: number, fromCurrency: string, toCurrency: string): number => {
     if (fromCurrency === toCurrency) return amount;
     
     const rates = getRatesMap();
@@ -213,15 +213,15 @@ export const useExchangeRates = () => {
     return toCurrency === 'TRY' 
       ? amountInTRY 
       : amountInTRY / (rates[toCurrency] || 1);
-  };
+  }, [getRatesMap]);
 
   // Format currency with proper symbol
-  const formatCurrency = (amount: number, currencyCode = 'TRY'): string => {
+  const formatCurrency = useCallback((amount: number, currencyCode = 'TRY'): string => {
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
       currency: currencyCode
     }).format(amount);
-  };
+  }, []);
 
   return {
     exchangeRates,

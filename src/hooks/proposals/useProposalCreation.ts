@@ -35,7 +35,14 @@ export const useProposalCreation = () => {
         updated_at: new Date().toISOString(),
         total_amount: totals.total || 0,
         currency: formData.currency || "TRY",
-        items: formData.items || [],
+        items: formData.items?.map(item => ({
+          ...item,
+          // Ensure currency is set for each item
+          currency: item.currency || formData.currency || "TRY",
+          // Preserve original currency info if available
+          original_currency: item.original_currency || item.currency || formData.currency || "TRY",
+          original_price: item.original_price !== undefined ? item.original_price : item.unit_price
+        })) || [],
         internal_notes: formData.internalNotes,
       };
       
