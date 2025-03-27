@@ -1,3 +1,4 @@
+
 import { ExchangeRates, CurrencyOption } from "../types/currencyTypes";
 import { supabase } from "@/integrations/supabase/client";
 

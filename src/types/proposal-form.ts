@@ -18,7 +18,7 @@ export interface ProposalFormData {
   total_amount?: number;
   description?: string;
   status: ProposalStatus; // Changed from optional to required
-  currency?: string; // Teklif para birimi
+  currency?: string; // Proposal currency
 }
 
 // Export the ProposalItem type (using export type for isolatedModules)

@@ -1,21 +1,21 @@
 
-import { useState } from "react";
-import { toast } from "sonner";
+import { useState, useCallback } from "react";
 import { getCurrencyOptions } from "../../utils/currencyUtils";
+import { toast } from "sonner";
 
 export const useCurrencyState = () => {
-  const [selectedCurrency, setSelectedCurrency] = useState("TRY");
-  
-  // Get currency options for select inputs
+  const [selectedCurrency, setSelectedCurrency] = useState<string>("TRY");
   const currencyOptions = getCurrencyOptions();
-  
-  // Handle currency change
-  const handleCurrencyChange = (value: string) => {
-    if (value === selectedCurrency) return;
+
+  const handleCurrencyChange = useCallback((newCurrency: string) => {
+    console.log(`Currency changed to ${newCurrency}`);
+    setSelectedCurrency(newCurrency);
     
-    setSelectedCurrency(value);
-    toast.success(`Para birimi ${value} olarak değiştirildi`);
-  };
+    // Dispatch a custom event to notify other components about the currency change
+    window.dispatchEvent(new CustomEvent('currency-change', { detail: newCurrency }));
+    
+    toast.success(`Para birimi ${newCurrency} olarak değiştirildi`);
+  }, []);
 
   return {
     selectedCurrency,

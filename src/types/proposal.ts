@@ -36,10 +36,10 @@ export interface ProposalItem {
   discount_rate?: number;
   total_price: number;
   currency?: string;
-  group?: string; // Grup bilgisi (örn. ürün, hizmet)
+  group?: string; // Group information (e.g., product, service)
   stock_status?: 'in_stock' | 'low_stock' | 'out_of_stock';
-  original_currency?: string; // Ürünün orijinal para birimi
-  original_price?: number; // Ürünün orijinal fiyatı
+  original_currency?: string; // Original currency of the product
+  original_price?: number; // Original price of the product
 }
 
 export interface ProposalAttachment {
@@ -97,7 +97,7 @@ export interface Proposal {
   created_at: string;
   updated_at: string;
   total_amount: number;
-  currency?: string; // Para birimi
+  currency?: string; // Currency
   items?: ProposalItem[];
   attachments?: ProposalAttachment[];
   
@@ -125,5 +125,5 @@ export interface ProposalFormValues {
   notes?: string;
   status: ProposalStatus;
   items?: ProposalItem[];
-  currency?: string; // Para birimi
+  currency?: string; // Currency
 }
