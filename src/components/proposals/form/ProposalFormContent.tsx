@@ -7,8 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import ProposalItems from "./items/ProposalItems";
 import { DatePicker } from "@/components/ui/date-picker";
-import CustomerSelector from "../form/CustomerSelector";
-import EmployeeSelector from "../form/EmployeeSelector";
+import CustomerSelector from "./CustomerSelector";
+import EmployeeSelector from "./EmployeeSelector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
