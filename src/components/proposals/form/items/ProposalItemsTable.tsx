@@ -134,7 +134,7 @@ const ProposalItemsTable: React.FC<ProposalItemsTableProps> = ({
                   <Select
                     value={item.currency || selectedCurrency}
                     onValueChange={(value) => {
-                      // Here's where we call the currency change handler
+                      // Call the currency change handler which will handle conversion
                       handleItemCurrencyChange(index, value);
                     }}
                   >
