@@ -1,194 +1,274 @@
 
 import React, { useState } from "react";
-import { usePurchaseInvoices } from "@/hooks/usePurchaseInvoices";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { PlusCircle, Search, Filter, Eye, Receipt, FileText, MoreHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { Card } from "@/components/ui/card";
-import { Search, FileDown, Filter, Receipt, AlertCircle, Loader } from "lucide-react";
+import { InvoiceStatusBadge } from "../StatusBadge";
+import { usePurchaseInvoices } from "@/hooks/usePurchaseInvoices";
+import { formatMoney } from "../constants";
+import { format } from "date-fns";
 import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { InvoiceStatusBadge } from "@/components/purchase/StatusBadge";
-import { InvoiceStatus } from "@/types/purchase";
-import { formatMoney } from "@/components/purchase/constants";
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
-const InvoiceManagementTab = () => {
-  const { 
-    invoices, 
-    isLoading, 
-    error, 
-    filters, 
-    setFilters,
-    refetch 
-  } = usePurchaseInvoices();
-  
-  const handleStatusChange = (status: string) => {
-    setFilters({ ...filters, status: status === "all" ? "" : status });
-  };
+export const InvoiceManagementTab = () => {
+  const { invoices, isLoading, filters, setFilters, recordPaymentMutation } = usePurchaseInvoices();
+  const [searchValue, setSearchValue] = useState(filters.search);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters({ ...filters, search: e.target.value });
+    setSearchValue(e.target.value);
   };
 
-  const handleDateRangeChange = (range: { from: Date | null, to: Date | null }) => {
-    setFilters({ ...filters, dateRange: range });
+  const handleSearch = () => {
+    setFilters({ ...filters, search: searchValue });
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('tr-TR').format(date);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64">
-        <Loader className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-gray-500">Faturalar yükleniyor...</p>
-      </div>
-    );
-  }
+  const handleFilterChange = (status: string) => {
+    setFilters({ ...filters, status });
+  };
 
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-destructive">
-        <AlertCircle className="h-8 w-8 mb-4" />
-        <p>Veriler yüklenirken bir hata oluştu</p>
-        <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-4">
-          Yeniden Dene
-        </Button>
-      </div>
-    );
-  }
+  const handleCreateNew = () => {
+    // Implement new invoice creation
+    console.log("Create new invoice");
+  };
+
+  const handleViewInvoice = (invoice: any) => {
+    // Implement invoice viewing
+    console.log("View invoice", invoice);
+  };
+
+  const handleRecordPayment = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    setPaymentAmount((invoice.total_amount - invoice.paid_amount).toString());
+    setPaymentDialogOpen(true);
+  };
+
+  const submitPayment = () => {
+    if (selectedInvoice && paymentAmount) {
+      recordPaymentMutation.mutate({
+        id: selectedInvoice.id,
+        amount: parseFloat(paymentAmount)
+      });
+      setPaymentDialogOpen(false);
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card className="p-5 flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-500">Toplam Fatura</h3>
-            <Receipt className="h-5 w-5 text-primary" />
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between gap-2">
+        <div className="flex flex-1 items-center gap-2">
+          <div className="relative flex-1">
+            <Input
+              placeholder="Fatura Ara..."
+              value={searchValue}
+              onChange={handleSearchChange}
+              onKeyDown={handleKeyDown}
+              className="pl-8"
+            />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
           </div>
-          <p className="text-2xl font-bold">{invoices?.length || 0}</p>
-        </Card>
-        
-        <Card className="p-5 flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-500">Ödeme Bekleyen</h3>
-            <InvoiceStatusBadge status="pending" size="sm" />
-          </div>
-          <p className="text-2xl font-bold">
-            {invoices?.filter(invoice => invoice.status === 'pending').length || 0}
-          </p>
-        </Card>
-        
-        <Card className="p-5 flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-500">Kısmen Ödenen</h3>
-            <InvoiceStatusBadge status="partially_paid" size="sm" />
-          </div>
-          <p className="text-2xl font-bold">
-            {invoices?.filter(invoice => invoice.status === 'partially_paid').length || 0}
-          </p>
-        </Card>
-        
-        <Card className="p-5 flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-500">Vadesi Geçmiş</h3>
-            <InvoiceStatusBadge status="overdue" size="sm" />
-          </div>
-          <p className="text-2xl font-bold">
-            {invoices?.filter(invoice => invoice.status === 'overdue').length || 0}
-          </p>
-        </Card>
+          <Button variant="outline" size="sm" onClick={handleSearch}>
+            <Filter className="h-4 w-4 mr-2" />
+            Filtrele
+          </Button>
+        </div>
+        <Button onClick={handleCreateNew}>
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Yeni E-Fatura Ekle
+        </Button>
       </div>
 
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Fatura ara..."
-              className="pl-9"
-              value={filters.search}
-              onChange={handleSearchChange}
-            />
-          </div>
-          
-          <Select
-            value={filters.status || "all"}
-            onValueChange={handleStatusChange}
-          >
-            <SelectTrigger className="w-full md:w-[180px]">
-              <SelectValue placeholder="Tüm Durumlar" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tüm Durumlar</SelectItem>
-              <SelectItem value="pending">Ödeme Bekliyor</SelectItem>
-              <SelectItem value="partially_paid">Kısmen Ödendi</SelectItem>
-              <SelectItem value="paid">Ödendi</SelectItem>
-              <SelectItem value="overdue">Gecikmiş</SelectItem>
-              <SelectItem value="cancelled">İptal Edildi</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <DatePickerWithRange
-            value={{
-              from: filters.dateRange.from,
-              to: filters.dateRange.to
-            }}
-            onChange={handleDateRangeChange}
-            className="w-full md:w-auto"
-          />
-        </div>
+      <div className="flex space-x-2 mb-4 overflow-x-auto pb-2">
+        <Button
+          variant={filters.status === "" ? "default" : "outline"}
+          size="sm"
+          onClick={() => handleFilterChange("")}
+        >
+          Tümü
+        </Button>
+        <Button
+          variant={filters.status === "pending" ? "default" : "outline"}
+          size="sm"
+          onClick={() => handleFilterChange("pending")}
+        >
+          Ödenmemiş
+        </Button>
+        <Button
+          variant={filters.status === "partially_paid" ? "default" : "outline"}
+          size="sm"
+          onClick={() => handleFilterChange("partially_paid")}
+        >
+          Kısmen Ödenmiş
+        </Button>
+        <Button
+          variant={filters.status === "paid" ? "default" : "outline"}
+          size="sm"
+          onClick={() => handleFilterChange("paid")}
+        >
+          Ödenmiş
+        </Button>
+        <Button
+          variant={filters.status === "overdue" ? "default" : "outline"}
+          size="sm"
+          onClick={() => handleFilterChange("overdue")}
+        >
+          Gecikmiş
+        </Button>
+      </div>
 
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Fatura No</TableHead>
+              <TableHead>Tedarikçi</TableHead>
+              <TableHead>Fatura Tarihi</TableHead>
+              <TableHead>Son Ödeme Tarihi</TableHead>
+              <TableHead>Durum</TableHead>
+              <TableHead className="text-right">Toplam</TableHead>
+              <TableHead className="text-right">Ödenen</TableHead>
+              <TableHead className="text-center">İşlemler</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
               <TableRow>
-                <TableHead>Fatura No</TableHead>
-                <TableHead>Tedarikçi</TableHead>
-                <TableHead>Tutar</TableHead>
-                <TableHead>Fatura Tarihi</TableHead>
-                <TableHead>Son Ödeme Tarihi</TableHead>
-                <TableHead>Durum</TableHead>
-                <TableHead>İşlemler</TableHead>
+                <TableCell colSpan={8} className="text-center p-4">
+                  Yükleniyor...
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {invoices?.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    Fatura bulunamadı
+            ) : !invoices || invoices.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center p-4">
+                  Fatura bulunamadı
+                </TableCell>
+              </TableRow>
+            ) : (
+              invoices.map((invoice) => (
+                <TableRow 
+                  key={invoice.id} 
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleViewInvoice(invoice)}
+                >
+                  <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+                  <TableCell>{invoice.supplier_id}</TableCell>
+                  <TableCell>{format(new Date(invoice.invoice_date), "dd.MM.yyyy")}</TableCell>
+                  <TableCell>{format(new Date(invoice.due_date), "dd.MM.yyyy")}</TableCell>
+                  <TableCell>
+                    <InvoiceStatusBadge status={invoice.status} />
+                  </TableCell>
+                  <TableCell className="text-right">{formatMoney(invoice.total_amount, invoice.currency)}</TableCell>
+                  <TableCell className="text-right">{formatMoney(invoice.paid_amount, invoice.currency)}</TableCell>
+                  <TableCell>
+                    <div className="flex justify-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewInvoice(invoice);
+                          }}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Görüntüle
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRecordPayment(invoice);
+                            }}
+                            disabled={invoice.status === "paid"}
+                          >
+                            <Receipt className="h-4 w-4 mr-2" />
+                            Ödeme Kaydet
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
-              ) : (
-                invoices?.map((invoice) => (
-                  <TableRow key={invoice.id}>
-                    <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
-                    <TableCell>{invoice.supplier_id}</TableCell>
-                    <TableCell>{formatMoney(invoice.total_amount, invoice.currency)}</TableCell>
-                    <TableCell>{formatDate(invoice.invoice_date)}</TableCell>
-                    <TableCell>{formatDate(invoice.due_date)}</TableCell>
-                    <TableCell><InvoiceStatusBadge status={invoice.status} /></TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm">
-                        Detaylar
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
+
+      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ödeme Kaydet</DialogTitle>
+            <DialogDescription>
+              {selectedInvoice && (
+                <span>
+                  Fatura: {selectedInvoice.invoice_number} - Kalan: {
+                    formatMoney(
+                      selectedInvoice.total_amount - selectedInvoice.paid_amount,
+                      selectedInvoice.currency
+                    )
+                  }
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="payment-amount">Ödeme Tutarı</Label>
+              <Input
+                id="payment-amount"
+                type="number"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="payment-method">Ödeme Yöntemi</Label>
+              <Select defaultValue="bank_transfer">
+                <SelectTrigger id="payment-method">
+                  <SelectValue placeholder="Ödeme yöntemi seçiniz" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="bank_transfer">Banka Transferi</SelectItem>
+                    <SelectItem value="credit_card">Kredi Kartı</SelectItem>
+                    <SelectItem value="cash">Nakit</SelectItem>
+                    <SelectItem value="check">Çek</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
+              İptal
+            </Button>
+            <Button onClick={submitPayment}>
+              Ödemeyi Kaydet
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
