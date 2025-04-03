@@ -1,5 +1,4 @@
 
-import { Session } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { User as UserIcon, LogOut, Settings, Building2 } from "lucide-react";
 import {

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -94,23 +93,20 @@ export const usePurchaseOrders = () => {
     supplierId: string, 
     items: any[] 
   }) => {
-    // Get current user - Updated to use the correct method
-    const { data } = await supabase.auth.getUser();
-    const user = data.user;
+    const { data, error: userError } = await supabase.auth.getUser();
     
-    if (!user) {
+    if (userError || !data.user) {
       toast.error("Kullanıcı kimliği alınamadı");
       throw new Error("User not authenticated");
     }
 
-    // Create the base order
     const { data: order, error: orderError } = await supabase
       .from("purchase_orders")
       .insert([{
         request_id: requestId,
         supplier_id: supplierId,
         status: 'draft' as PurchaseOrderStatus,
-        issued_by: user.id,
+        issued_by: data.user.id,
       }])
       .select()
       .single();
@@ -120,7 +116,6 @@ export const usePurchaseOrders = () => {
       throw orderError;
     }
 
-    // Process items
     const orderItems = items.map(item => ({
       po_id: order.id,
       product_id: item.product_id,
@@ -132,7 +127,6 @@ export const usePurchaseOrders = () => {
       total_price: Number(item.quantity || 0) * Number(item.estimated_unit_price || 0)
     }));
 
-    // Insert order items
     const { error: itemsError } = await supabase
       .from("purchase_order_items")
       .insert(orderItems);
@@ -142,7 +136,6 @@ export const usePurchaseOrders = () => {
       throw itemsError;
     }
 
-    // Update request status to converted - FIX: Use correct type for PurchaseRequestStatus
     const { error: requestError } = await supabase
       .from("purchase_requests")
       .update({ status: 'converted' as PurchaseRequestStatus })
@@ -150,7 +143,6 @@ export const usePurchaseOrders = () => {
     
     if (requestError) {
       toast.error("Talep durumu güncellenirken hata oluştu");
-      // Don't throw here, the order is already created
     }
 
     toast.success("Sipariş başarıyla oluşturuldu");
@@ -160,7 +152,6 @@ export const usePurchaseOrders = () => {
   const updateOrder = async ({ id, data }: { id: string, data: any }) => {
     const { items, ...orderDetails } = data;
     
-    // Update the order
     const { error: orderError } = await supabase
       .from("purchase_orders")
       .update(orderDetails)
@@ -171,9 +162,7 @@ export const usePurchaseOrders = () => {
       throw orderError;
     }
 
-    // If items are provided, handle them
     if (items && items.length > 0) {
-      // Delete existing items
       const { error: deleteError } = await supabase
         .from("purchase_order_items")
         .delete()
@@ -184,7 +173,6 @@ export const usePurchaseOrders = () => {
         throw deleteError;
       }
 
-      // Insert new items
       const orderItems = items.map((item: any) => ({
         po_id: id,
         product_id: item.product_id,
@@ -233,7 +221,6 @@ export const usePurchaseOrders = () => {
     orderId: string, 
     items: { id: string, received_quantity: number }[] 
   }) => {
-    // Update each item's received quantity
     for (const item of items) {
       const { error } = await supabase
         .from("purchase_order_items")
@@ -246,7 +233,6 @@ export const usePurchaseOrders = () => {
       }
     }
     
-    // Determine if all items are fully received
     const { data: orderItems } = await supabase
       .from("purchase_order_items")
       .select("quantity, received_quantity")
@@ -267,7 +253,6 @@ export const usePurchaseOrders = () => {
       newStatus = 'partially_received';
     }
     
-    // Update order status
     await updateOrderStatus({ id: orderId, status: newStatus });
     
     toast.success("Ürün alımı başarıyla kaydedildi");
