@@ -1,4 +1,3 @@
-
 import { RouteConfig } from "./types";
 import { publicRoutes } from "./publicRoutes";
 import { dashboardRoutes } from "./dashboardRoutes";
@@ -12,7 +11,6 @@ import { orderRoutes } from "./orderRoutes";
 import { crmRoutes } from "./crmRoutes";
 import { settingsRoutes } from "./settingsRoutes";
 
-// Combine all route groups
 export const appRoutes: RouteConfig[] = [
   ...publicRoutes,
   ...dashboardRoutes,
