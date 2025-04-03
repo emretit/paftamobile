@@ -1,45 +1,13 @@
 
-import { useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import React from "react";
 
 interface AuthGuardProps {
   children: React.ReactNode;
 }
 
+// Temporarily modified to always allow access
 const AuthGuard = ({ children }: AuthGuardProps) => {
-  const location = useLocation();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      // Updated to use the correct method
-      const { data } = await supabase.auth.getSession();
-      setIsAuthenticated(!!data.session);
-    };
-
-    checkAuth();
-
-    // Updated to use the correct method
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setIsAuthenticated(!!session);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (isAuthenticated === null) {
-    // Still checking
-    return <div className="h-screen flex items-center justify-center">Yükleniyor...</div>;
-  }
-
-  if (!isAuthenticated) {
-    // Redirect to login page
-    return <Navigate to="/auth" state={{ from: location }} replace />;
-  }
-
+  // Simply return the children without any authentication check
   return <>{children}</>;
 };
 
