@@ -8,15 +8,17 @@ export const useAuthState = () => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user || null);
+      // Updated to use the correct method
+      const { data } = await supabase.auth.getSession();
+      setUser(data.session?.user || null);
       setLoading(false);
     };
     
     checkSession();
     
+    // Updated to use the correct method
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setUser(session?.user || null);
       }
     );

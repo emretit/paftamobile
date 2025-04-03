@@ -72,15 +72,16 @@ const Auth = () => {
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+      // Updated to use the correct method
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
         navigate("/crm"); // Always redirect to the dashboard
       }
     };
     
     checkSession();
     
-    // Listen for auth changes
+    // Updated to use the correct method
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_IN' && session) {

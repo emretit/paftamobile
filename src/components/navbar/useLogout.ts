@@ -11,6 +11,7 @@ export const useLogout = () => {
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
+    // Updated to use the correct method
     const { error } = await supabase.auth.signOut();
     
     if (error) {

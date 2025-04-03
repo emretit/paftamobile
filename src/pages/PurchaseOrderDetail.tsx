@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { useParams, useNavigate } from "react-router-dom";
@@ -16,7 +17,7 @@ import PurchaseOrderInfo from "@/components/purchase/orders/PurchaseOrderInfo";
 import PurchaseOrderItems from "@/components/purchase/orders/PurchaseOrderItems";
 import PurchaseInvoicesList from "@/components/purchase/invoices/PurchaseInvoicesList";
 import PurchaseInvoiceForm from "@/components/purchase/invoices/PurchaseInvoiceForm";
-import { OrderStatusBadge } from "@/components/purchase/StatusBadge";
+import { OrderStatusBadge } from "@/components/purchase/OrderStatusBadge";
 
 interface PurchaseOrderDetailProps {
   isCollapsed: boolean;

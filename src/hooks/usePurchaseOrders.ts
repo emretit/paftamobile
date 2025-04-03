@@ -94,8 +94,10 @@ export const usePurchaseOrders = () => {
     supplierId: string, 
     items: any[] 
   }) => {
-    // Get current user
-    const { data: { user } } = await supabase.auth.getUser();
+    // Get current user - Updated to use the correct method
+    const { data } = await supabase.auth.getUser();
+    const user = data.user;
+    
     if (!user) {
       toast.error("Kullanıcı kimliği alınamadı");
       throw new Error("User not authenticated");

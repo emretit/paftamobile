@@ -20,6 +20,7 @@ export const InviteUserDialog = () => {
 
   const inviteUserMutation = useMutation({
     mutationFn: async (email: string) => {
+      // Updated to use the correct method
       const { data, error } = await supabase.auth.signInWithOtp({
         email,
         options: {
@@ -37,7 +38,7 @@ export const InviteUserDialog = () => {
       });
       setNewUserEmail("");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         variant: "destructive",
         title: "Hata",

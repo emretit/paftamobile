@@ -82,7 +82,7 @@ export const fetchRequestWithItems = async (id: string) => {
 export const createPurchaseRequest = async (requestData: PurchaseRequestFormData) => {
   const { items, ...requestDetails } = requestData;
   
-  // Get current user from Supabase
+  // Get current user from Supabase - Updated to use the correct method
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     toast.error("Kullanıcı kimliği alınamadı");

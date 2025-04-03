@@ -13,14 +13,16 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
+      // Updated to use the correct method
+      const { data } = await supabase.auth.getSession();
+      setIsAuthenticated(!!data.session);
     };
 
     checkAuth();
 
+    // Updated to use the correct method
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setIsAuthenticated(!!session);
       }
     );

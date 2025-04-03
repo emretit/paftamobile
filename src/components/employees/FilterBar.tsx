@@ -36,8 +36,8 @@ export const FilterBar = ({
         .order('department');
 
       if (!error && data) {
-        // Extract unique departments
-        const uniqueDepartments = [...new Set(data.map(item => item.department))];
+        // Extract unique departments - Fix type issues with explicit casting
+        const uniqueDepartments = [...new Set(data.map(item => item.department))] as string[];
         setDepartments(uniqueDepartments);
       }
     };

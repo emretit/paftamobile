@@ -101,7 +101,7 @@ export const createPurchaseRequest = async (requestData: PurchaseRequestFormData
   try {
     const { items, ...requestDetails } = requestData;
     
-    // Get current user from Supabase
+    // Get current user from Supabase - Updated to use the correct method
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError) {

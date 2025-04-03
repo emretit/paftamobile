@@ -124,7 +124,7 @@ const PurchaseOrderItems: React.FC<PurchaseOrderItemsProps> = ({
                       {item.received_quantity > 0 ? (
                         <Badge variant={
                           item.received_quantity >= item.quantity 
-                            ? "secondary" 
+                            ? "secondary"
                             : "warning"
                         }>
                           {item.received_quantity}

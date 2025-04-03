@@ -1,5 +1,5 @@
 
-import { User } from "@supabase/supabase-js";
+import { Session } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { User as UserIcon, LogOut, Settings, Building2 } from "lucide-react";
 import {
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface UserMenuContentProps {
-  user: User;
+  user: any; // Changed from User to any
   onLogout: () => void;
 }
 

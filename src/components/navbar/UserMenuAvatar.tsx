@@ -1,10 +1,10 @@
 
-import { User } from "@supabase/supabase-js";
+import { Session } from "@supabase/supabase-js";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
 interface UserMenuAvatarProps {
-  user: User | null;
+  user: any | null; // Changed from User to any
   loading: boolean;
   userInitials: string;
 }

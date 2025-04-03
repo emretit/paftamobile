@@ -10,14 +10,16 @@ const LoginButton = () => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
+      // Updated to use the correct method
+      const { data } = await supabase.auth.getSession();
+      setIsLoggedIn(!!data.session);
     };
     
     checkSession();
     
+    // Updated to use the correct method
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setIsLoggedIn(!!session);
       }
     );

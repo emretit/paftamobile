@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -57,7 +56,6 @@ export const SignUpForm = ({ onSignUpSuccess, onError }: SignUpFormProps) => {
         description: error.message,
       });
     } else {
-      // Set emailSent to true if confirmationSentAt exists in the response
       setEmailSent(!!data?.user?.confirmation_sent_at);
       
       toast({

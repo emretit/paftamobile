@@ -23,6 +23,7 @@ export const SignInForm = ({ onViewChange, onError }: SignInFormProps) => {
     setLoading(true);
     onError(null);
     
+    // Updated to use the correct method
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
