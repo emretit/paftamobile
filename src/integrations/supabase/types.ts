@@ -1030,6 +1030,141 @@ export type Database = {
           },
         ]
       }
+      hr_budget: {
+        Row: {
+          base_salary: number
+          benefits: number | null
+          bonus: number | null
+          created_at: string | null
+          department: string
+          headcount: number
+          id: string
+          month: number
+          notes: string | null
+          position_name: string
+          total_cost: number | null
+          updated_at: string | null
+          user_id: string
+          year: number
+        }
+        Insert: {
+          base_salary?: number
+          benefits?: number | null
+          bonus?: number | null
+          created_at?: string | null
+          department: string
+          headcount?: number
+          id?: string
+          month: number
+          notes?: string | null
+          position_name: string
+          total_cost?: number | null
+          updated_at?: string | null
+          user_id: string
+          year: number
+        }
+        Update: {
+          base_salary?: number
+          benefits?: number | null
+          bonus?: number | null
+          created_at?: string | null
+          department?: string
+          headcount?: number
+          id?: string
+          month?: number
+          notes?: string | null
+          position_name?: string
+          total_cost?: number | null
+          updated_at?: string | null
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      monthly_financials: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          id: string
+          month: number
+          notes: string | null
+          subcategory: string | null
+          target_amount: number | null
+          updated_at: string | null
+          user_id: string
+          year: number
+        }
+        Insert: {
+          amount?: number
+          category: string
+          created_at?: string | null
+          id?: string
+          month: number
+          notes?: string | null
+          subcategory?: string | null
+          target_amount?: number | null
+          updated_at?: string | null
+          user_id: string
+          year: number
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          id?: string
+          month?: number
+          notes?: string | null
+          subcategory?: string | null
+          target_amount?: number | null
+          updated_at?: string | null
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      opex_matrix: {
+        Row: {
+          amount: number
+          attachment_url: string | null
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          month: number
+          subcategory: string | null
+          updated_at: string | null
+          user_id: string
+          year: number
+        }
+        Insert: {
+          amount?: number
+          attachment_url?: string | null
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          month: number
+          subcategory?: string | null
+          updated_at?: string | null
+          user_id: string
+          year: number
+        }
+        Update: {
+          amount?: number
+          attachment_url?: string | null
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          month?: number
+          subcategory?: string | null
+          updated_at?: string | null
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       opportunities: {
         Row: {
           contact_history: Json | null
@@ -1775,6 +1910,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sales_tracking: {
+        Row: {
+          actual_amount: number
+          created_at: string | null
+          id: string
+          month: number
+          notes: string | null
+          product_name: string
+          sales_channel: string
+          target_amount: number
+          unit_price: number | null
+          units_sold: number | null
+          updated_at: string | null
+          user_id: string
+          year: number
+        }
+        Insert: {
+          actual_amount?: number
+          created_at?: string | null
+          id?: string
+          month: number
+          notes?: string | null
+          product_name: string
+          sales_channel: string
+          target_amount?: number
+          unit_price?: number | null
+          units_sold?: number | null
+          updated_at?: string | null
+          user_id: string
+          year: number
+        }
+        Update: {
+          actual_amount?: number
+          created_at?: string | null
+          id?: string
+          month?: number
+          notes?: string | null
+          product_name?: string
+          sales_channel?: string
+          target_amount?: number
+          unit_price?: number | null
+          units_sold?: number | null
+          updated_at?: string | null
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
       }
       service_activities: {
         Row: {

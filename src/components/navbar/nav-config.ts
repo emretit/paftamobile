@@ -84,6 +84,11 @@ export const navItems = [
         label: "Genel Bakış",
       },
       {
+        path: "/cashflow/monthly-overview",
+        icon: BarChart2,
+        label: "Aylık Finansal Özet",
+      },
+      {
         path: "/cashflow/add-transaction",
         icon: FileText,
         label: "İşlem Ekle",
