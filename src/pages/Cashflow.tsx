@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
 import { 
@@ -24,6 +24,7 @@ interface CashflowProps {
 
 const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Determine active tab based on current route
   const getActiveTab = () => {
@@ -36,6 +37,38 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
     if (path.includes('/opex-matrix')) return 'opex-matrix';
     if (path.includes('/main-table')) return 'main-table';
     return 'overview';
+  };
+
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    switch (value) {
+      case 'overview':
+        navigate('/cashflow');
+        break;
+      case 'monthly-overview':
+        navigate('/cashflow/monthly-overview');
+        break;
+      case 'add-transaction':
+        navigate('/cashflow/add-transaction');
+        break;
+      case 'transactions':
+        navigate('/cashflow/transactions');
+        break;
+      case 'categories':
+        navigate('/cashflow/categories');
+        break;
+      case 'opex-entry':
+        navigate('/cashflow/opex-entry');
+        break;
+      case 'opex-matrix':
+        navigate('/cashflow/opex-matrix');
+        break;
+      case 'main-table':
+        navigate('/cashflow/main-table');
+        break;
+      default:
+        navigate('/cashflow');
+    }
   };
 
   return (
@@ -55,7 +88,7 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
           </div>
           </div>
 
-          <CustomTabs value={getActiveTab()} className="space-y-6">
+          <CustomTabs value={getActiveTab()} onValueChange={handleTabChange} className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2">
               <CustomTabsList className="w-full h-auto flex flex-wrap gap-2 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-1 shadow-sm">
                 <CustomTabsTrigger value="overview" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
