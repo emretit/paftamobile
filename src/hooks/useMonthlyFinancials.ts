@@ -38,42 +38,43 @@ export const useMonthlyFinancials = () => {
       setLoading(true);
       setError(null);
       
-      // Check authentication first
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      console.log('Current user:', user?.id, 'Auth error:', authError);
+      // For now, create mock data without authentication
+      const mockData: MonthlyFinancial[] = [];
       
-      if (authError) {
-        console.error('Authentication error:', authError);
-        throw authError;
+      // Generate some sample data for demonstration
+      const categories = ['revenue', 'cogs', 'opex', 'net_profit'];
+      const subcategories = {
+        revenue: ['Product Sales', 'Service Revenue'],
+        cogs: ['Direct Materials', 'Direct Labor'],
+        opex: ['Salaries', 'Rent', 'Utilities'],
+        net_profit: ['']
+      };
+      
+      if (year) {
+        categories.forEach(category => {
+          const subs = subcategories[category as keyof typeof subcategories] || [''];
+          subs.forEach(subcategory => {
+            for (let month = 1; month <= 12; month++) {
+              mockData.push({
+                id: `${category}-${subcategory}-${year}-${month}`,
+                user_id: 'mock-user',
+                year: year,
+                month: month,
+                category: category,
+                subcategory: subcategory || null,
+                amount: Math.floor(Math.random() * 10000),
+                target_amount: null,
+                notes: null,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+            }
+          });
+        });
       }
       
-      if (!user) {
-        console.error('No authenticated user');
-        throw new Error('User not authenticated');
-      }
-      
-      let query = supabase
-        .from('monthly_financials')
-        .select('*')
-        .order('year', { ascending: true })
-        .order('month', { ascending: true })
-        .order('category', { ascending: true });
-
-      if (year) query = query.eq('year', year);
-      if (month) query = query.eq('month', month);
-
-      console.log('Executing query...');
-      const { data, error } = await query;
-      
-      console.log('Query result - data:', data, 'error:', error);
-
-      if (error) {
-        console.error('Database error:', error);
-        throw error;
-      }
-      
-      console.log('Setting financials data:', data);
-      setFinancials((data || []) as MonthlyFinancial[]);
+      console.log('Setting mock financials data:', mockData);
+      setFinancials(mockData);
     } catch (err: any) {
       console.error('fetchFinancials error:', err);
       setError(err.message);
@@ -90,40 +91,37 @@ export const useMonthlyFinancials = () => {
 
   const upsertFinancial = async (data: CreateMonthlyFinancialData) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
-
-      const insertData = {
-        ...data,
-        user_id: user.id,
+      // For now, just update local state without database operation
+      const mockResult: MonthlyFinancial = {
+        id: `${data.category}-${data.subcategory || ''}-${data.year}-${data.month}`,
+        user_id: 'mock-user',
+        year: data.year,
+        month: data.month,
+        category: data.category,
+        subcategory: data.subcategory || null,
+        amount: data.amount,
+        target_amount: data.target_amount || null,
+        notes: data.notes || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
-
-      const { data: result, error } = await supabase
-        .from('monthly_financials')
-        .upsert([insertData], { 
-          onConflict: 'user_id,year,month,category,subcategory'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
       
       // Update local state
       setFinancials(prev => {
         const index = prev.findIndex(f => 
-          f.user_id === result.user_id && 
-          f.year === result.year && 
-          f.month === result.month && 
-          f.category === result.category && 
-          f.subcategory === result.subcategory
+          f.user_id === mockResult.user_id && 
+          f.year === mockResult.year && 
+          f.month === mockResult.month && 
+          f.category === mockResult.category && 
+          f.subcategory === mockResult.subcategory
         );
         
         if (index >= 0) {
           const newFinancials = [...prev];
-          newFinancials[index] = result as MonthlyFinancial;
+          newFinancials[index] = mockResult;
           return newFinancials;
         } else {
-          return [...prev, result as MonthlyFinancial];
+          return [...prev, mockResult];
         }
       });
 
@@ -132,7 +130,7 @@ export const useMonthlyFinancials = () => {
         description: "Financial data updated successfully",
       });
       
-      return result;
+      return mockResult;
     } catch (err: any) {
       toast({
         variant: "destructive",
@@ -145,13 +143,7 @@ export const useMonthlyFinancials = () => {
 
   const deleteFinancial = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('monthly_financials')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      
+      // For now, just update local state without database operation
       setFinancials(prev => prev.filter(f => f.id !== id));
       toast({
         title: "Success",

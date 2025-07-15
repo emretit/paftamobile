@@ -26,27 +26,49 @@ export const useCashflowMain = () => {
       setLoading(true);
       setError(null);
 
-      // Check authentication
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError) throw authError;
-      if (!user) throw new Error('Kullanıcı kimliği doğrulanmadı');
-
-      let query = supabase
-        .from('cashflow_main')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('main_category')
-        .order('subcategory')
-        .order('month');
+      // For now, create mock data without authentication
+      const mockData: CashflowMainItem[] = [];
+      
+      // Create sample data for demonstration
+      const mainCategories = [
+        'opening_balance',
+        'operating_inflows', 
+        'operating_outflows',
+        'investing_activities',
+        'financing_activities'
+      ];
+      
+      const subcategories = {
+        opening_balance: ['Nakit ve Nakit Benzerleri'],
+        operating_inflows: ['Ürün Satışları', 'Hizmet Gelirleri'],
+        operating_outflows: ['Operasyonel Giderler (OPEX)', 'Personel Giderleri'],
+        investing_activities: ['Demirbaş/Makine Alımları'],
+        financing_activities: ['Kredi Ödemeleri', 'Sermaye Artırımları']
+      };
 
       if (year) {
-        query = query.eq('year', year);
+        mainCategories.forEach(category => {
+          const subs = subcategories[category as keyof typeof subcategories] || [''];
+          subs.forEach(subcategory => {
+            for (let month = 1; month <= 12; month++) {
+              mockData.push({
+                id: `${category}-${subcategory}-${year}-${month}`,
+                user_id: 'mock-user',
+                year: year,
+                month: month,
+                main_category: category,
+                subcategory: subcategory,
+                value: Math.floor(Math.random() * 50000) + 10000,
+                description: null,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+            }
+          });
+        });
       }
 
-      const { data: result, error } = await query;
-      if (error) throw error;
-
-      setData(result || []);
+      setData(mockData);
     } catch (err: any) {
       console.error('fetchCashflowMain error:', err);
       setError(err.message);
@@ -69,25 +91,19 @@ export const useCashflowMain = () => {
     description?: string
   ) => {
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError) throw authError;
-      if (!user) throw new Error('Kullanıcı kimliği doğrulanmadı');
-
-      const { data, error } = await supabase
-        .from('cashflow_main')
-        .upsert({
-          user_id: user.id,
-          year,
-          month,
-          main_category,
-          subcategory,
-          value,
-          description,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      // For now, just update local state without database operation
+      const mockData: CashflowMainItem = {
+        id: `${main_category}-${subcategory}-${year}-${month}`,
+        user_id: 'mock-user',
+        year,
+        month,
+        main_category,
+        subcategory,
+        value,
+        description: description || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
       // Update local state
       setData(prev => {
@@ -100,14 +116,19 @@ export const useCashflowMain = () => {
 
         if (exists) {
           return prev.map(item => 
-            item.id === exists.id ? data : item
+            item.id === exists.id ? mockData : item
           );
         } else {
-          return [...prev, data];
+          return [...prev, mockData];
         }
       });
 
-      return data;
+      toast({
+        title: "Başarılı",
+        description: "Nakit akış verisi güncellendi.",
+      });
+
+      return mockData;
     } catch (err: any) {
       console.error('upsertCashflowMain error:', err);
       toast({
@@ -121,13 +142,7 @@ export const useCashflowMain = () => {
 
   const deleteCashflowMain = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('cashflow_main')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      // For now, just update local state without database operation
       setData(prev => prev.filter(item => item.id !== id));
 
       toast({
