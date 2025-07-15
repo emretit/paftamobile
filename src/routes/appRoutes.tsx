@@ -5,7 +5,7 @@ import { productRoutes } from "./productRoutes";
 import { customerRoutes } from "./customerRoutes";
 import { supplierRoutes } from "./supplierRoutes";
 import { employeeRoutes } from "./employeeRoutes";
-import { financeRoutes } from "./financeRoutes";
+import { financeRoutes, cashflowRoutes } from "./financeRoutes";
 import { serviceRoutes } from "./serviceRoutes";
 import { orderRoutes } from "./orderRoutes";
 import { crmRoutes } from "./crmRoutes";
@@ -19,6 +19,7 @@ export const appRoutes: RouteConfig[] = [
   ...supplierRoutes,
   ...employeeRoutes,
   ...financeRoutes,
+  ...cashflowRoutes,
   ...serviceRoutes,
   ...orderRoutes,
   ...crmRoutes,

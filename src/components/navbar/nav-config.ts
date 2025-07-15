@@ -74,9 +74,31 @@ export const navItems = [
     label: "Çalışanlar",
   },
   {
-    path: "/finance",
+    category: "Cashflow",
     icon: CreditCard,
-    label: "Finans",
+    path: "/cashflow",
+    items: [
+      {
+        path: "/cashflow",
+        icon: BarChart2,
+        label: "Overview",
+      },
+      {
+        path: "/cashflow/add-transaction",
+        icon: FileText,
+        label: "Add Transaction",
+      },
+      {
+        path: "/cashflow/transactions",
+        icon: ListTodo,
+        label: "Transactions",
+      },
+      {
+        path: "/cashflow/categories",
+        icon: Settings,
+        label: "Categories",
+      },
+    ],
   },
   {
     path: "/service",
