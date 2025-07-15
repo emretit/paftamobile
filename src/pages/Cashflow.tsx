@@ -97,7 +97,7 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
                 </CustomTabsTrigger>
                 <CustomTabsTrigger value="monthly-overview" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   <BarChart2 className="h-4 w-4" />
-                  <span>Aylık Finansal Özet</span>
+                  <span>Aylık Finansal Durum</span>
                 </CustomTabsTrigger>
                 <CustomTabsTrigger value="add-transaction" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   <Plus className="h-4 w-4" />
