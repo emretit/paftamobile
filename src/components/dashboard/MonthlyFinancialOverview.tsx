@@ -8,7 +8,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Download, TrendingUp, TrendingDown } from "lucide-react";
 import { useMonthlyFinancials } from "@/hooks/useMonthlyFinancials";
-import { supabase } from "@/integrations/supabase/client";
 
 const FINANCIAL_CATEGORIES = [
   { key: 'revenue', label: 'Revenue', subcategories: ['Product Sales', 'Service Revenue', 'Other Revenue'] },
@@ -43,28 +42,13 @@ const MonthlyFinancialOverview = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [editingCell, setEditingCell] = useState<{ category: string; subcategory: string; month: number } | null>(null);
   const [tempValue, setTempValue] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
   
   const { financials, loading, upsertFinancial, refetch } = useMonthlyFinancials();
 
-  // Check authentication
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('Auth check - user:', user?.id);
-      setIsAuthenticated(!!user);
-      setAuthLoading(false);
-    };
-    checkAuth();
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      console.log('User authenticated, fetching financials for year:', selectedYear);
-      refetch(selectedYear);
-    }
-  }, [selectedYear, refetch, isAuthenticated]);
+    console.log('Fetching financials for year:', selectedYear);
+    refetch(selectedYear);
+  }, [selectedYear, refetch]);
 
   const getFinancialValue = (category: string, subcategory: string, month: number) => {
     const financial = financials.find(f => 
@@ -193,23 +177,6 @@ const MonthlyFinancialOverview = () => {
     link.click();
     document.body.removeChild(link);
   };
-
-  if (authLoading) {
-    return <div className="flex justify-center items-center h-64">Checking authentication...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Card className="p-6">
-          <CardContent className="text-center">
-            <h3 className="text-lg font-semibold mb-2">Authentication Required</h3>
-            <p className="text-gray-600">Please log in to view financial data.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   if (loading) {
     return <div className="flex justify-center items-center h-64">Loading financial data...</div>;
