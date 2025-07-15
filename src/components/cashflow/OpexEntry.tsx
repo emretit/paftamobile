@@ -69,7 +69,7 @@ const OpexEntry = () => {
   const [activeTab, setActiveTab] = useState<'entry' | 'history'>('entry');
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL_CATEGORIES');
   
   const { transactions } = useCashflowTransactions();
   const { categories } = useCashflowCategories();
@@ -175,7 +175,7 @@ const OpexEntry = () => {
     const transactionDate = new Date(transaction.date);
     const matchesDateRange = (!dateFrom || transactionDate >= dateFrom) && 
                            (!dateTo || transactionDate <= dateTo);
-    const matchesCategory = !selectedCategory || transaction.category_id === selectedCategory;
+    const matchesCategory = !selectedCategory || selectedCategory === 'ALL_CATEGORIES' || transaction.category_id === selectedCategory;
 
     return matchesDateRange && matchesCategory;
   });
@@ -419,7 +419,7 @@ const OpexEntry = () => {
                     <SelectValue placeholder="Tüm kategoriler" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tüm kategoriler</SelectItem>
+                    <SelectItem value="ALL_CATEGORIES">Tüm kategoriler</SelectItem>
                     {opexCategories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}
