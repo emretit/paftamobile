@@ -108,6 +108,11 @@ export const navItems = [
         icon: FileText,
         label: "OPEX Girişi",
       },
+      {
+        path: "/cashflow/opex-matrix",
+        icon: BarChart2,
+        label: "OPEX Matrix",
+      },
     ],
   },
   {
