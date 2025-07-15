@@ -34,8 +34,23 @@ export const useMonthlyFinancials = () => {
 
   const fetchFinancials = async (year?: number, month?: number) => {
     try {
+      console.log('fetchFinancials called with year:', year, 'month:', month);
       setLoading(true);
       setError(null);
+      
+      // Check authentication first
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      console.log('Current user:', user?.id, 'Auth error:', authError);
+      
+      if (authError) {
+        console.error('Authentication error:', authError);
+        throw authError;
+      }
+      
+      if (!user) {
+        console.error('No authenticated user');
+        throw new Error('User not authenticated');
+      }
       
       let query = supabase
         .from('monthly_financials')
@@ -47,12 +62,20 @@ export const useMonthlyFinancials = () => {
       if (year) query = query.eq('year', year);
       if (month) query = query.eq('month', month);
 
+      console.log('Executing query...');
       const { data, error } = await query;
-
-      if (error) throw error;
       
+      console.log('Query result - data:', data, 'error:', error);
+
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+      
+      console.log('Setting financials data:', data);
       setFinancials((data || []) as MonthlyFinancial[]);
     } catch (err: any) {
+      console.error('fetchFinancials error:', err);
       setError(err.message);
       toast({
         variant: "destructive",
@@ -60,6 +83,7 @@ export const useMonthlyFinancials = () => {
         description: "Failed to fetch financial data: " + err.message,
       });
     } finally {
+      console.log('fetchFinancials completed, setting loading to false');
       setLoading(false);
     }
   };
