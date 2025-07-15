@@ -81,22 +81,27 @@ export const navItems = [
       {
         path: "/cashflow",
         icon: BarChart2,
-        label: "Overview",
+        label: "Genel Bakış",
       },
       {
         path: "/cashflow/add-transaction",
         icon: FileText,
-        label: "Add Transaction",
+        label: "İşlem Ekle",
       },
       {
         path: "/cashflow/transactions",
         icon: ListTodo,
-        label: "Transactions",
+        label: "İşlemler",
       },
       {
         path: "/cashflow/categories",
         icon: Settings,
-        label: "Categories",
+        label: "Kategoriler",
+      },
+      {
+        path: "/cashflow/opex-entry",
+        icon: FileText,
+        label: "OPEX Girişi",
       },
     ],
   },

@@ -10,6 +10,7 @@ export const cashflowRoutes: RouteConfig[] = [
   { path: "/cashflow/add-transaction", component: Cashflow, protected: true },
   { path: "/cashflow/transactions", component: Cashflow, protected: true },
   { path: "/cashflow/categories", component: Cashflow, protected: true },
+  { path: "/cashflow/opex-entry", component: Cashflow, protected: true },
 ];
 
 // Define finance routes (keeping existing purchase/sales invoice routes)

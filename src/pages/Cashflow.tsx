@@ -11,7 +11,8 @@ import CashflowOverview from "@/components/cashflow/CashflowOverview";
 import AddTransaction from "@/components/cashflow/AddTransaction";
 import TransactionsList from "@/components/cashflow/TransactionsList";
 import CategoryManagement from "@/components/cashflow/CategoryManagement";
-import { TrendingUp, Plus, List, Settings } from "lucide-react";
+import OpexEntry from "@/components/cashflow/OpexEntry";
+import { TrendingUp, Plus, List, Settings, FileText } from "lucide-react";
 
 interface CashflowProps {
   isCollapsed: boolean;
@@ -27,6 +28,7 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
     if (path.includes('/add-transaction')) return 'add-transaction';
     if (path.includes('/transactions')) return 'transactions';
     if (path.includes('/categories')) return 'categories';
+    if (path.includes('/opex-entry')) return 'opex-entry';
     return 'overview';
   };
 
@@ -66,6 +68,10 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
                   <Settings className="h-4 w-4" />
                   <span>Kategoriler</span>
                 </CustomTabsTrigger>
+                <CustomTabsTrigger value="opex-entry" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
+                  <FileText className="h-4 w-4" />
+                  <span>OPEX Girişi</span>
+                </CustomTabsTrigger>
               </CustomTabsList>
             </div>
 
@@ -83,6 +89,10 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
 
             <CustomTabsContent value="categories" className="mt-6 animate-fade-in">
               <CategoryManagement />
+            </CustomTabsContent>
+
+            <CustomTabsContent value="opex-entry" className="mt-6 animate-fade-in">
+              <OpexEntry />
             </CustomTabsContent>
           </CustomTabs>
         </div>
