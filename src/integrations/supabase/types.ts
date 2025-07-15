@@ -309,6 +309,45 @@ export type Database = {
         }
         Relationships: []
       }
+      cashflow_main: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          main_category: string
+          month: number
+          subcategory: string
+          updated_at: string
+          user_id: string
+          value: number
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          main_category: string
+          month: number
+          subcategory: string
+          updated_at?: string
+          user_id: string
+          value?: number
+          year: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          main_category?: string
+          month?: number
+          subcategory?: string
+          updated_at?: string
+          user_id?: string
+          value?: number
+          year?: number
+        }
+        Relationships: []
+      }
       cashflow_transactions: {
         Row: {
           amount: number

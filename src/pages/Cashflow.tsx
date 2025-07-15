@@ -14,7 +14,8 @@ import CategoryManagement from "@/components/cashflow/CategoryManagement";
 import OpexEntry from "@/components/cashflow/OpexEntry";
 import MonthlyFinancialOverview from "@/components/dashboard/MonthlyFinancialOverview";
 import { OpexMatrixView } from "@/components/dashboard/OpexMatrixView";
-import { TrendingUp, Plus, List, Settings, FileText, BarChart2, Grid } from "lucide-react";
+import { CashflowMainTable } from "@/components/dashboard/CashflowMainTable";
+import { TrendingUp, Plus, List, Settings, FileText, BarChart2, Grid, Calculator } from "lucide-react";
 
 interface CashflowProps {
   isCollapsed: boolean;
@@ -33,6 +34,7 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
     if (path.includes('/categories')) return 'categories';
     if (path.includes('/opex-entry')) return 'opex-entry';
     if (path.includes('/opex-matrix')) return 'opex-matrix';
+    if (path.includes('/main-table')) return 'main-table';
     return 'overview';
   };
 
@@ -84,6 +86,10 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
                   <Grid className="h-4 w-4" />
                   <span>OPEX Matrix</span>
                 </CustomTabsTrigger>
+                <CustomTabsTrigger value="main-table" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
+                  <Calculator className="h-4 w-4" />
+                  <span>Ana Nakit Akış Tablosu</span>
+                </CustomTabsTrigger>
               </CustomTabsList>
             </div>
 
@@ -113,6 +119,10 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
 
             <CustomTabsContent value="opex-matrix" className="mt-6 animate-fade-in">
               <OpexMatrixView />
+            </CustomTabsContent>
+
+            <CustomTabsContent value="main-table" className="mt-6 animate-fade-in">
+              <CashflowMainTable />
             </CustomTabsContent>
           </CustomTabs>
         </div>
