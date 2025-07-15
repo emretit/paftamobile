@@ -104,13 +104,13 @@ const AddTransaction = () => {
     <div className="max-w-2xl mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>Add New Transaction</CardTitle>
+          <CardTitle>Yeni İşlem Ekle</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Transaction Type */}
             <div className="space-y-3">
-              <Label>Transaction Type</Label>
+              <Label>İşlem Türü</Label>
               <RadioGroup
                 value={transactionType}
                 onValueChange={(value: 'income' | 'expense') => setValue('type', value)}
@@ -118,18 +118,18 @@ const AddTransaction = () => {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="income" id="income" />
-                  <Label htmlFor="income" className="text-green-600 font-medium">Income</Label>
+                  <Label htmlFor="income" className="text-green-600 font-medium">Gelir</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="expense" id="expense" />
-                  <Label htmlFor="expense" className="text-red-600 font-medium">Expense</Label>
+                  <Label htmlFor="expense" className="text-red-600 font-medium">Gider</Label>
                 </div>
               </RadioGroup>
             </div>
 
             {/* Amount */}
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount">Tutar</Label>
               <div className="relative">
                 <Input
                   id="amount"
@@ -138,8 +138,8 @@ const AddTransaction = () => {
                   placeholder="0.00"
                   className="pl-8"
                   {...register('amount', { 
-                    required: 'Amount is required',
-                    min: { value: 0.01, message: 'Amount must be greater than 0' }
+                    required: 'Tutar gereklidir',
+                    min: { value: 0.01, message: 'Tutar 0\'dan büyük olmalıdır' }
                   })}
                 />
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₺</span>
@@ -149,13 +149,13 @@ const AddTransaction = () => {
 
             {/* Category */}
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">Kategori</Label>
               <Select
                 onValueChange={(value) => setValue('category_id', value)}
-                {...register('category_id', { required: 'Category is required' })}
+                {...register('category_id', { required: 'Kategori gereklidir' })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
+                  <SelectValue placeholder="Kategori seçin" />
                 </SelectTrigger>
                 <SelectContent>
                   {filteredCategories.map((category) => (
@@ -170,12 +170,12 @@ const AddTransaction = () => {
 
             {/* Date */}
             <div className="space-y-2">
-              <Label>Date</Label>
+              <Label>Tarih</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? format(selectedDate, "PPP", { locale: tr }) : "Select date"}
+                    {selectedDate ? format(selectedDate, "PPP", { locale: tr }) : "Tarih seçin"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -192,10 +192,10 @@ const AddTransaction = () => {
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description">Description (Optional)</Label>
+              <Label htmlFor="description">Açıklama (İsteğe Bağlı)</Label>
               <Textarea
                 id="description"
-                placeholder="Enter transaction description..."
+                placeholder="İşlem açıklaması girin..."
                 rows={3}
                 {...register('description')}
               />
@@ -203,12 +203,12 @@ const AddTransaction = () => {
 
             {/* File Upload */}
             <div className="space-y-2">
-              <Label>Receipt/Invoice (Optional)</Label>
+              <Label>Fiş/Fatura (İsteğe Bağlı)</Label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
                 {selectedFile || attachmentUrl ? (
                   <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
                     <span className="text-sm truncate">
-                      {selectedFile?.name || 'Uploaded file'}
+                      {selectedFile?.name || 'Yüklenen dosya'}
                     </span>
                     <Button
                       type="button"
@@ -226,10 +226,10 @@ const AddTransaction = () => {
                     <div className="mt-4">
                       <label htmlFor="file-upload" className="cursor-pointer">
                         <span className="mt-2 block text-sm font-medium text-gray-900">
-                          Upload a file
+                          Dosya yükle
                         </span>
                         <span className="mt-1 block text-xs text-gray-500">
-                          PNG, JPG, PDF up to 10MB
+                          PNG, JPG, PDF 10MB'a kadar
                         </span>
                       </label>
                       <input
@@ -251,7 +251,7 @@ const AddTransaction = () => {
               className="w-full" 
               disabled={isSubmitting || uploading}
             >
-              {isSubmitting || uploading ? 'Creating Transaction...' : 'Create Transaction'}
+              {isSubmitting || uploading ? 'İşlem Oluşturuluyor...' : 'İşlem Oluştur'}
             </Button>
           </form>
         </CardContent>

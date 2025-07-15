@@ -25,17 +25,17 @@ const CashflowOverview = () => {
     <div className="space-y-6">
       {/* Filters */}
       <div className="flex flex-wrap gap-4 items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <h2 className="text-lg font-semibold">Cashflow Overview</h2>
+        <h2 className="text-lg font-semibold">Nakit Akış Genel Bakış</h2>
         <div className="flex gap-3">
           <Select value={period} onValueChange={setPeriod}>
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Select Period" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="daily">Daily</SelectItem>
-              <SelectItem value="weekly">Weekly</SelectItem>
-              <SelectItem value="monthly">Monthly</SelectItem>
-              <SelectItem value="yearly">Yearly</SelectItem>
+              <SelectItem value="daily">Günlük</SelectItem>
+              <SelectItem value="weekly">Haftalık</SelectItem>
+              <SelectItem value="monthly">Aylık</SelectItem>
+              <SelectItem value="yearly">Yıllık</SelectItem>
             </SelectContent>
           </Select>
 
@@ -43,7 +43,7 @@ const CashflowOverview = () => {
             <PopoverTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2">
                 <CalendarIcon className="h-4 w-4" />
-                {dateFrom ? format(dateFrom, "PP", { locale: tr }) : "From Date"}
+                {dateFrom ? format(dateFrom, "PP", { locale: tr }) : "Başlangıç Tarihi"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
@@ -60,7 +60,7 @@ const CashflowOverview = () => {
             <PopoverTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2">
                 <CalendarIcon className="h-4 w-4" />
-                {dateTo ? format(dateTo, "PP", { locale: tr }) : "To Date"}
+                {dateTo ? format(dateTo, "PP", { locale: tr }) : "Bitiş Tarihi"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
@@ -83,36 +83,36 @@ const CashflowOverview = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-green-800">Total Income</CardTitle>
+            <CardTitle className="text-sm font-medium text-green-800">Toplam Gelir</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-900">{formatCurrency(summary.totalIncome)}</div>
-            <p className="text-xs text-green-600 mt-1">+12% from last month</p>
+            <p className="text-xs text-green-600 mt-1">Geçen aydan +%12</p>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-red-800">Total Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium text-red-800">Toplam Gider</CardTitle>
             <TrendingDown className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-900">{formatCurrency(summary.totalExpenses)}</div>
-            <p className="text-xs text-red-600 mt-1">+8% from last month</p>
+            <p className="text-xs text-red-600 mt-1">Geçen aydan +%8</p>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-blue-800">Net Balance</CardTitle>
+            <CardTitle className="text-sm font-medium text-blue-800">Net Bakiye</CardTitle>
             <DollarSign className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${summary.netBalance >= 0 ? 'text-green-900' : 'text-red-900'}`}>
               {formatCurrency(summary.netBalance)}
             </div>
-            <p className="text-xs text-blue-600 mt-1">{summary.transactionCount} transactions</p>
+            <p className="text-xs text-blue-600 mt-1">{summary.transactionCount} işlem</p>
           </CardContent>
         </Card>
       </div>
@@ -122,7 +122,7 @@ const CashflowOverview = () => {
         {/* Monthly Income vs Expenses */}
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Income vs Expenses</CardTitle>
+            <CardTitle>Aylık Gelir vs Gider</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -143,7 +143,7 @@ const CashflowOverview = () => {
         {/* Category Breakdown */}
         <Card>
           <CardHeader>
-            <CardTitle>Expense Categories</CardTitle>
+            <CardTitle>Gider Kategorileri</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -174,7 +174,7 @@ const CashflowOverview = () => {
       {/* Cash Flow Trend */}
       <Card>
         <CardHeader>
-          <CardTitle>Cash Flow Trend</CardTitle>
+          <CardTitle>Nakit Akış Trendi</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-[300px]">

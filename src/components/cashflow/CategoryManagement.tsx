@@ -76,7 +76,7 @@ const CategoryManagement = () => {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to delete the category "${name}"?`)) {
+    if (window.confirm(`"${name}" kategorisini silmek istediğinizden emin misiniz?`)) {
       await deleteCategory(id);
     }
   };
@@ -97,34 +97,34 @@ const CategoryManagement = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-lg font-semibold">Category Management</h2>
-          <p className="text-gray-600 text-sm">Manage your income and expense categories</p>
+          <h2 className="text-lg font-semibold">Kategori Yönetimi</h2>
+          <p className="text-gray-600 text-sm">Gelir ve gider kategorilerinizi yönetin</p>
         </div>
         
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Add Category
+              Kategori Ekle
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Category</DialogTitle>
+              <DialogTitle>Yeni Kategori Oluştur</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmitCreate)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Category Name</Label>
+                <Label htmlFor="name">Kategori Adı</Label>
                 <Input
                   id="name"
-                  placeholder="Enter category name"
-                  {...register('name', { required: 'Category name is required' })}
+                  placeholder="Kategori adı girin"
+                  {...register('name', { required: 'Kategori adı gereklidir' })}
                 />
                 {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
               </div>
 
               <div className="space-y-3">
-                <Label>Category Type</Label>
+                <Label>Kategori Türü</Label>
                 <RadioGroup
                   value={watchedType}
                   onValueChange={(value: 'income' | 'expense') => setValue('type', value)}
@@ -132,11 +132,11 @@ const CategoryManagement = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="income" id="create-income" />
-                    <Label htmlFor="create-income" className="text-green-600 font-medium">Income</Label>
+                    <Label htmlFor="create-income" className="text-green-600 font-medium">Gelir</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="expense" id="create-expense" />
-                    <Label htmlFor="create-expense" className="text-red-600 font-medium">Expense</Label>
+                    <Label htmlFor="create-expense" className="text-red-600 font-medium">Gider</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -147,10 +147,10 @@ const CategoryManagement = () => {
                   variant="outline" 
                   onClick={() => setIsCreateOpen(false)}
                 >
-                  Cancel
+                  İptal
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Creating...' : 'Create Category'}
+                  {isSubmitting ? 'Oluşturuluyor...' : 'Kategori Oluştur'}
                 </Button>
               </div>
             </form>
@@ -164,7 +164,7 @@ const CategoryManagement = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Income Categories</p>
+                <p className="text-sm font-medium text-gray-600">Gelir Kategorileri</p>
                 <p className="text-2xl font-bold text-green-600">{incomeCategories.length}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-600" />
@@ -176,7 +176,7 @@ const CategoryManagement = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Expense Categories</p>
+                <p className="text-sm font-medium text-gray-600">Gider Kategorileri</p>
                 <p className="text-2xl font-bold text-red-600">{expenseCategories.length}</p>
               </div>
               <TrendingDown className="h-8 w-8 text-red-600" />
@@ -190,15 +190,15 @@ const CategoryManagement = () => {
         {/* Income Categories */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-green-600">Income Categories</CardTitle>
+            <CardTitle className="text-green-600">Gelir Kategorileri</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Ad</TableHead>
+                  <TableHead>Tür</TableHead>
+                  <TableHead className="text-right">İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -207,7 +207,7 @@ const CategoryManagement = () => {
                     <TableCell className="font-medium">{category.name}</TableCell>
                     <TableCell>
                       <Badge variant="default" className="bg-green-100 text-green-800">
-                        Income
+                        Gelir
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -238,7 +238,7 @@ const CategoryManagement = () => {
                 {incomeCategories.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center py-4 text-gray-500">
-                      No income categories found
+                      Hiçbir gelir kategorisi bulunamadı
                     </TableCell>
                   </TableRow>
                 )}
@@ -250,15 +250,15 @@ const CategoryManagement = () => {
         {/* Expense Categories */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-red-600">Expense Categories</CardTitle>
+            <CardTitle className="text-red-600">Gider Kategorileri</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Ad</TableHead>
+                  <TableHead>Tür</TableHead>
+                  <TableHead className="text-right">İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -267,7 +267,7 @@ const CategoryManagement = () => {
                     <TableCell className="font-medium">{category.name}</TableCell>
                     <TableCell>
                       <Badge variant="destructive" className="bg-red-100 text-red-800">
-                        Expense
+                        Gider
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -298,7 +298,7 @@ const CategoryManagement = () => {
                 {expenseCategories.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center py-4 text-gray-500">
-                      No expense categories found
+                      Hiçbir gider kategorisi bulunamadı
                     </TableCell>
                   </TableRow>
                 )}
@@ -312,21 +312,21 @@ const CategoryManagement = () => {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Category</DialogTitle>
+            <DialogTitle>Kategori Düzenle</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmitEdit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Category Name</Label>
+              <Label htmlFor="edit-name">Kategori Adı</Label>
               <Input
                 id="edit-name"
-                placeholder="Enter category name"
-                {...register('name', { required: 'Category name is required' })}
+                placeholder="Kategori adı girin"
+                {...register('name', { required: 'Kategori adı gereklidir' })}
               />
               {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
             </div>
 
             <div className="space-y-3">
-              <Label>Category Type</Label>
+              <Label>Kategori Türü</Label>
               <RadioGroup
                 value={watchedType}
                 onValueChange={(value: 'income' | 'expense') => setValue('type', value)}
@@ -334,11 +334,11 @@ const CategoryManagement = () => {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="income" id="edit-income" />
-                  <Label htmlFor="edit-income" className="text-green-600 font-medium">Income</Label>
+                  <Label htmlFor="edit-income" className="text-green-600 font-medium">Gelir</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="expense" id="edit-expense" />
-                  <Label htmlFor="edit-expense" className="text-red-600 font-medium">Expense</Label>
+                  <Label htmlFor="edit-expense" className="text-red-600 font-medium">Gider</Label>
                 </div>
               </RadioGroup>
             </div>
@@ -352,10 +352,10 @@ const CategoryManagement = () => {
                   setEditingCategory(null);
                 }}
               >
-                Cancel
+                İptal
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Updating...' : 'Update Category'}
+                {isSubmitting ? 'Güncelleniyor...' : 'Kategori Güncelle'}
               </Button>
             </div>
           </form>

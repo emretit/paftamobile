@@ -71,7 +71,7 @@ const TransactionsList = () => {
   const netAmount = filteredSummary.totalIncome - filteredSummary.totalExpenses;
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this transaction?')) {
+    if (window.confirm('Bu işlemi silmek istediğinizden emin misiniz?')) {
       await deleteTransaction(id);
     }
   };
@@ -99,7 +99,7 @@ const TransactionsList = () => {
       {/* Filters and Search */}
       <Card>
         <CardHeader>
-          <CardTitle>Transactions</CardTitle>
+          <CardTitle>İşlemler</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4 items-center">
@@ -107,7 +107,7 @@ const TransactionsList = () => {
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search transactions..."
+                placeholder="İşlem ara..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -120,19 +120,19 @@ const TransactionsList = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="income">Income</SelectItem>
-                <SelectItem value="expense">Expense</SelectItem>
+                <SelectItem value="all">Tüm Türler</SelectItem>
+                <SelectItem value="income">Gelir</SelectItem>
+                <SelectItem value="expense">Gider</SelectItem>
               </SelectContent>
             </Select>
 
             {/* Category Filter */}
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="All Categories" />
+                <SelectValue placeholder="Tüm Kategoriler" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">Tüm Kategoriler</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
@@ -146,7 +146,7 @@ const TransactionsList = () => {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" />
-                  {dateFrom ? format(dateFrom, "PP", { locale: tr }) : "From"}
+                  {dateFrom ? format(dateFrom, "PP", { locale: tr }) : "Başlangıç"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -163,7 +163,7 @@ const TransactionsList = () => {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" />
-                  {dateTo ? format(dateTo, "PP", { locale: tr }) : "To"}
+                  {dateTo ? format(dateTo, "PP", { locale: tr }) : "Bitiş"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -197,7 +197,7 @@ const TransactionsList = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Filtered Income</p>
+                <p className="text-sm font-medium text-gray-600">Filtrelenmiş Gelir</p>
                 <p className="text-2xl font-bold text-green-600">{formatCurrency(filteredSummary.totalIncome)}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-600" />
@@ -209,7 +209,7 @@ const TransactionsList = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Filtered Expenses</p>
+                <p className="text-sm font-medium text-gray-600">Filtrelenmiş Gider</p>
                 <p className="text-2xl font-bold text-red-600">{formatCurrency(filteredSummary.totalExpenses)}</p>
               </div>
               <TrendingDown className="h-8 w-8 text-red-600" />
@@ -221,13 +221,13 @@ const TransactionsList = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Net Amount</p>
+                <p className="text-sm font-medium text-gray-600">Net Tutar</p>
                 <p className={`text-2xl font-bold ${netAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {formatCurrency(netAmount)}
                 </p>
               </div>
               <div className="text-gray-600">
-                {filteredTransactions.length} transactions
+                {filteredTransactions.length} işlem
               </div>
             </div>
           </CardContent>
@@ -240,13 +240,13 @@ const TransactionsList = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead>Attachment</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Tarih</TableHead>
+                <TableHead>Tür</TableHead>
+                <TableHead>Kategori</TableHead>
+                <TableHead>Açıklama</TableHead>
+                <TableHead className="text-right">Tutar</TableHead>
+                <TableHead>Ek</TableHead>
+                <TableHead className="text-right">İşlemler</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -257,7 +257,7 @@ const TransactionsList = () => {
                   </TableCell>
                   <TableCell>
                     <Badge variant={transaction.type === 'income' ? 'default' : 'destructive'}>
-                      {transaction.type === 'income' ? 'Income' : 'Expense'}
+                      {transaction.type === 'income' ? 'Gelir' : 'Gider'}
                     </Badge>
                   </TableCell>
                   <TableCell>{transaction.category?.name}</TableCell>
@@ -301,7 +301,7 @@ const TransactionsList = () => {
               {filteredTransactions.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                    No transactions found
+                    Hiçbir işlem bulunamadı
                   </TableCell>
                 </TableRow>
               )}

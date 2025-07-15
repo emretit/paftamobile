@@ -41,10 +41,10 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
         <TopBar />
         <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6 animate-fade-in">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Cashflow Management</h1>
-              <p className="text-gray-600 mt-1">Manage your income and expenses</p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Nakit Akış Yönetimi</h1>
+            <p className="text-gray-600 mt-1">Gelir ve giderlerinizi yönetin</p>
+          </div>
           </div>
 
           <CustomTabs value={getActiveTab()} className="space-y-6">
@@ -52,19 +52,19 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
               <CustomTabsList className="w-full h-auto flex flex-wrap gap-2 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-1 shadow-sm">
                 <CustomTabsTrigger value="overview" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   <TrendingUp className="h-4 w-4" />
-                  <span>Overview</span>
+                  <span>Genel Bakış</span>
                 </CustomTabsTrigger>
                 <CustomTabsTrigger value="add-transaction" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   <Plus className="h-4 w-4" />
-                  <span>Add Transaction</span>
+                  <span>İşlem Ekle</span>
                 </CustomTabsTrigger>
                 <CustomTabsTrigger value="transactions" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   <List className="h-4 w-4" />
-                  <span>Transactions</span>
+                  <span>İşlemler</span>
                 </CustomTabsTrigger>
                 <CustomTabsTrigger value="categories" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   <Settings className="h-4 w-4" />
-                  <span>Categories</span>
+                  <span>Kategoriler</span>
                 </CustomTabsTrigger>
               </CustomTabsList>
             </div>
