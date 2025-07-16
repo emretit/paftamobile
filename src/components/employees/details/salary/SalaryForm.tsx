@@ -20,49 +20,93 @@ interface SalaryFormProps {
   existingSalary?: any; // For editing existing salary record
 }
 
+// Turkish Tax Brackets for 2025 (Yearly amounts in TL)
+const TAX_BRACKETS = [
+  { min: 0, max: 70000, rate: 0.15 },
+  { min: 70000, max: 190000, rate: 0.20 },
+  { min: 190000, max: 650000, rate: 0.27 },
+  { min: 650000, max: 1800000, rate: 0.35 },
+  { min: 1800000, max: Infinity, rate: 0.40 }
+];
+
 export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: SalaryFormProps) => {
   const { toast } = useToast();
   const [calculatedCosts, setCalculatedCosts] = useState({
     sgkEmployer: 0,
     unemploymentEmployer: 0,
     accidentInsurance: 0,
-    totalEmployerCost: 0
+    sgkEmployee: 0,
+    unemploymentEmployee: 0,
+    incomeTax: 0,
+    stampTax: 0,
+    totalDeductions: 0,
+    totalEmployerCost: 0,
+    netSalary: 0
   });
 
-  // Turkish minimum wage calculations for 2025 - Resimlerden alınan doğru değerler
-  const MINIMUM_WAGE_GROSS = 26005.50; // Brüt asgari ücret
-  const MINIMUM_WAGE_NET = 22104.67; // Net asgari ücret
+  // Turkish minimum wage for 2025
+  const MINIMUM_WAGE_GROSS = 26004.70; // From user's example
+  const MINIMUM_WAGE_NET = 22104; // From user's example
   
-  // Asgari ücret hesaplama formülleri (30881 + yol + yemek + net maaştan kalan)
-  const calculateMinimumWageCosts = () => {
-    // İşçi kesintileri (İkinci resimden)
-    const sgkEmployee = MINIMUM_WAGE_GROSS * 0.14; // SGK İşçi %14 = 3,640.77
-    const unemploymentEmployee = MINIMUM_WAGE_GROSS * 0.01; // İşsizlik İşçi %1 = 260.06
-    const totalDeductions = 3900.83; // Kesintiler toplamı (resimde yazıyor)
+  // Calculate progressive income tax based on cumulative yearly income
+  const calculateProgressiveIncomeTax = (monthlyGross: number, cumulativeYearlyGross: number) => {
+    const newCumulativeGross = cumulativeYearlyGross + monthlyGross;
     
-    // İşveren primleri (İlk resimden)
-    const sgkEmployer = 4355.92; // SGK Primi %16.75 (İşveren Payı)
-    const unemploymentEmployer = 520.11; // İşveren İşsizlik Sigorta Primi %2
+    let totalTax = 0;
+    let remainingIncome = newCumulativeGross;
     
-    // 30881 üzerinden hesaplama + yol + yemek + net maaştan kalan
-    const baseCost = 30881; // Kullanıcının belirttiği baz maliyet
-    const netSalary = MINIMUM_WAGE_NET; // 22104.67
+    for (const bracket of TAX_BRACKETS) {
+      if (remainingIncome <= 0) break;
+      
+      const taxableInThisBracket = Math.min(remainingIncome, bracket.max - bracket.min);
+      totalTax += taxableInThisBracket * bracket.rate;
+      remainingIncome -= taxableInThisBracket;
+    }
     
-    const totalEmployerCost = baseCost; // Başlangıç değeri, yol + yemek + kalan eklenecek
+    // Calculate previous cumulative tax
+    let prevTotalTax = 0;
+    let prevRemainingIncome = cumulativeYearlyGross;
+    
+    for (const bracket of TAX_BRACKETS) {
+      if (prevRemainingIncome <= 0) break;
+      
+      const taxableInThisBracket = Math.min(prevRemainingIncome, bracket.max - bracket.min);
+      prevTotalTax += taxableInThisBracket * bracket.rate;
+      prevRemainingIncome -= taxableInThisBracket;
+    }
+    
+    // Monthly tax is the difference
+    return totalTax - prevTotalTax;
+  };
+
+  // Calculate detailed Turkish salary breakdown
+  const calculateTurkishSalaryBreakdown = (grossSalary: number, cumulativeYearlyGross: number = 0) => {
+    // Employee Deductions
+    const sgkEmployee = grossSalary * 0.14; // 14% SSK Employee
+    const unemploymentEmployee = grossSalary * 0.01; // 1% Unemployment Employee
+    const stampTax = grossSalary * 0.00759; // 0.759% Stamp Tax
+    const incomeTax = calculateProgressiveIncomeTax(grossSalary, cumulativeYearlyGross);
+    
+    const totalDeductions = sgkEmployee + unemploymentEmployee + stampTax + incomeTax;
+    const netSalary = grossSalary - totalDeductions;
+    
+    // Employer Costs
+    const sgkEmployer = grossSalary * 0.1575; // 15.75% SSK Employer
+    const unemploymentEmployer = grossSalary * 0.02; // 2% Unemployment Employer
+    const accidentInsurance = grossSalary * 0.002; // 0.2% default accident insurance
     
     return {
       sgkEmployee,
       unemploymentEmployee,
+      incomeTax,
+      stampTax,
       totalDeductions,
+      netSalary,
       sgkEmployer,
       unemploymentEmployer,
-      totalEmployerCost,
-      netSalary,
-      baseCost
+      accidentInsurance
     };
   };
-  
-  const minimumWageCosts = calculateMinimumWageCosts();
 
   const form = useForm({
     defaultValues: {
@@ -72,12 +116,15 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
       calculateAsMinimumWage: existingSalary?.calculate_as_minimum_wage || false,
       mealAllowance: existingSalary?.meal_allowance?.toString() || "0",
       transportAllowance: existingSalary?.transport_allowance?.toString() || "0",
+      sgkEmployeeRate: existingSalary?.sgk_employee_rate?.toString() || "14.0",
       sgkEmployerRate: existingSalary?.sgk_employer_rate?.toString() || "15.75",
+      unemploymentEmployeeRate: existingSalary?.unemployment_employee_rate?.toString() || "1.0",
       unemploymentEmployerRate: existingSalary?.unemployment_employer_rate?.toString() || "2.0",
-      accidentInsuranceRate: existingSalary?.accident_insurance_rate?.toString() || "0.0",
-      stampTax: existingSalary?.stamp_tax?.toString() || "0",
+      accidentInsuranceRate: existingSalary?.accident_insurance_rate?.toString() || "0.2",
+      stampTaxRate: existingSalary?.stamp_tax_rate?.toString() || "0.759",
       severanceProvision: existingSalary?.severance_provision?.toString() || "0",
       bonusProvision: existingSalary?.bonus_provision?.toString() || "0",
+      cumulativeYearlyGross: existingSalary?.cumulative_yearly_gross?.toString() || "0",
       notes: existingSalary?.notes || ""
     }
   });
@@ -86,105 +133,122 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
   const grossSalary = form.watch("grossSalary");
   const netSalary = form.watch("netSalary");
   const calculateAsMinimumWage = form.watch("calculateAsMinimumWage");
+  const cumulativeYearlyGross = form.watch("cumulativeYearlyGross");
 
-  // Function to calculate gross from net salary based on 2025 rates
-  const calculateGrossFromNet = (netAmount: number) => {
-    // 2025 asgari ücret oranlarına göre hesaplama
-    // Net: 22.104,67 TL => Brüt: 26.005,50 TL
-    // Kesinti oranı: %15 (SGK %14 + İşsizlik %1)
-    const deductionRate = 0.15; // %15 toplam kesinti
-    const estimatedGross = netAmount / (1 - deductionRate);
+  // Calculate gross from net using accurate Turkish tax calculation
+  const calculateGrossFromNet = (netAmount: number, cumulativeYearly: number = 0) => {
+    // Iterative calculation to find gross that results in desired net
+    let estimatedGross = netAmount * 1.3; // Initial estimate
+    let iterations = 0;
+    const maxIterations = 10;
+    
+    while (iterations < maxIterations) {
+      const breakdown = calculateTurkishSalaryBreakdown(estimatedGross, cumulativeYearly);
+      const diff = breakdown.netSalary - netAmount;
+      
+      if (Math.abs(diff) < 1) break; // Close enough
+      
+      estimatedGross -= diff * 0.8; // Adjust with damping factor
+      iterations++;
+    }
+    
     return estimatedGross;
-  };
-
-  // Function to calculate net from gross salary based on 2025 rates  
-  const calculateNetFromGross = (grossAmount: number) => {
-    // 2025 asgari ücret oranlarına göre hesaplama
-    // Brüt: 26.005,50 TL => Net: 22.104,67 TL  
-    // Kesinti oranı: %15 (SGK %14 + İşsizlik %1)
-    const deductionRate = 0.15; // %15 toplam kesinti
-    const estimatedNet = grossAmount * (1 - deductionRate);
-    return estimatedNet;
   };
 
   useEffect(() => {
     let currentGross = 0;
+    const cumulativeYearly = parseFloat(cumulativeYearlyGross) || 0;
     
     if (salaryInputType === "gross" && grossSalary) {
       currentGross = parseFloat(grossSalary) || 0;
-      // Auto-calculate net from gross
-      const calculatedNet = calculateNetFromGross(currentGross);
-      form.setValue("netSalary", calculatedNet.toFixed(2), { shouldValidate: false });
+      // Auto-calculate net from gross using accurate Turkish calculations
+      const breakdown = calculateTurkishSalaryBreakdown(currentGross, cumulativeYearly);
+      form.setValue("netSalary", breakdown.netSalary.toFixed(2), { shouldValidate: false });
     } else if (salaryInputType === "net" && netSalary) {
-      currentGross = calculateGrossFromNet(parseFloat(netSalary) || 0);
+      currentGross = calculateGrossFromNet(parseFloat(netSalary) || 0, cumulativeYearly);
       // Auto-calculate gross from net
       form.setValue("grossSalary", currentGross.toFixed(2), { shouldValidate: false });
     }
 
     if (currentGross > 0) {
-      const sgkRate = parseFloat(form.getValues("sgkEmployerRate")) || 15.75;
-      const unemploymentRate = parseFloat(form.getValues("unemploymentEmployerRate")) || 2.0;
-      const accidentRate = parseFloat(form.getValues("accidentInsuranceRate")) || 0.0;
-      const stampTax = parseFloat(form.getValues("stampTax")) || 0;
+      const breakdown = calculateTurkishSalaryBreakdown(currentGross, cumulativeYearly);
+      const mealAllowance = parseFloat(form.getValues("mealAllowance")) || 0;
+      const transportAllowance = parseFloat(form.getValues("transportAllowance")) || 0;
       const severance = parseFloat(form.getValues("severanceProvision")) || 0;
       const bonus = parseFloat(form.getValues("bonusProvision")) || 0;
 
-      let sgkEmployer, unemploymentEmployer, accidentInsurance, totalEmployerCost;
+      let totalEmployerCost;
 
-      // Yemek ve yol yardımlarını al
-      const mealAllowance = parseFloat(form.getValues("mealAllowance")) || 0;
-      const transportAllowance = parseFloat(form.getValues("transportAllowance")) || 0;
-
-      if (calculateAsMinimumWage) {
-        // Asgari ücret formüllerine göre hesapla
-        sgkEmployer = minimumWageCosts.sgkEmployer; // 4,355.92
-        unemploymentEmployer = minimumWageCosts.unemploymentEmployer; // 520.11
-        accidentInsurance = 0; // Asgari ücrette iş kazası yok
-        
-        // Gerçek net maaşı al
-        const currentNetSalary = salaryInputType === "net" ? parseFloat(netSalary) || 0 : calculateNetFromGross(currentGross);
-        
-        // Asgari ücret net maaşı ile gerçek net maaş arasındaki fark (net maaştan kalan)
+      if (calculateAsMinimumWage && currentGross <= MINIMUM_WAGE_GROSS * 1.1) {
+        // Minimum wage calculation: Use 30881 base + allowances + extra net payment
+        const currentNetSalary = salaryInputType === "net" ? parseFloat(netSalary) || 0 : breakdown.netSalary;
         const extraPaymentFromNet = Math.max(0, currentNetSalary - MINIMUM_WAGE_NET);
-        
-        // 30881 + yol + yemek + net maaştan kalan
-        totalEmployerCost = minimumWageCosts.baseCost + mealAllowance + transportAllowance + extraPaymentFromNet;
+        totalEmployerCost = 30881 + mealAllowance + transportAllowance + extraPaymentFromNet;
       } else {
-        // Normal hesaplama: Tüm hesaplamalar gerçek brüt maaş üzerinden
-        sgkEmployer = currentGross * (sgkRate / 100);
-        unemploymentEmployer = currentGross * (unemploymentRate / 100);
-        accidentInsurance = currentGross * (accidentRate / 100);
-        
-        // Toplam maliyet = Brüt maaş + işveren primleri + yol + yemek + diğer maliyetler
-        totalEmployerCost = currentGross + sgkEmployer + unemploymentEmployer + accidentInsurance + mealAllowance + transportAllowance + stampTax + severance + bonus;
+        // Normal calculation: Gross + employer costs + allowances
+        totalEmployerCost = currentGross + 
+                           breakdown.sgkEmployer + 
+                           breakdown.unemploymentEmployer + 
+                           breakdown.accidentInsurance + 
+                           mealAllowance + 
+                           transportAllowance + 
+                           severance + 
+                           bonus;
       }
 
       setCalculatedCosts({
-        sgkEmployer,
-        unemploymentEmployer,
-        accidentInsurance,
+        sgkEmployer: breakdown.sgkEmployer,
+        unemploymentEmployer: breakdown.unemploymentEmployer,
+        accidentInsurance: breakdown.accidentInsurance,
+        sgkEmployee: breakdown.sgkEmployee,
+        unemploymentEmployee: breakdown.unemploymentEmployee,
+        incomeTax: breakdown.incomeTax,
+        stampTax: breakdown.stampTax,
+        totalDeductions: breakdown.totalDeductions,
+        netSalary: breakdown.netSalary,
         totalEmployerCost
       });
     }
-  }, [salaryInputType, grossSalary, netSalary, calculateAsMinimumWage, form.watch()]);
+  }, [salaryInputType, grossSalary, netSalary, calculateAsMinimumWage, cumulativeYearlyGross, form.watch()]);
 
   const handleSubmit = async (values: any) => {
     try {
+      const grossSalaryValue = parseFloat(values.grossSalary);
+      const breakdown = calculateTurkishSalaryBreakdown(grossSalaryValue, parseFloat(values.cumulativeYearlyGross || '0'));
+      
       const salaryData = {
         employee_id: employeeId,
-        gross_salary: parseFloat(values.grossSalary),
-        net_salary: parseFloat(values.netSalary),
+        gross_salary: grossSalaryValue,
+        net_salary: breakdown.netSalary,
         salary_input_type: values.salaryInputType,
         calculate_as_minimum_wage: values.calculateAsMinimumWage,
         meal_allowance: parseFloat(values.mealAllowance || '0'),
         transport_allowance: parseFloat(values.transportAllowance || '0'),
-        effective_date: new Date().toISOString().split('T')[0], // Always use current date
+        effective_date: new Date().toISOString().split('T')[0],
+        
+        // Employee deduction rates and amounts
+        sgk_employee_rate: parseFloat(values.sgkEmployeeRate),
+        sgk_employee_amount: breakdown.sgkEmployee,
+        unemployment_employee_rate: parseFloat(values.unemploymentEmployeeRate),
+        unemployment_employee_amount: breakdown.unemploymentEmployee,
+        income_tax_amount: breakdown.incomeTax,
+        stamp_tax_rate: parseFloat(values.stampTaxRate),
+        stamp_tax_amount: breakdown.stampTax,
+        total_deductions: breakdown.totalDeductions,
+        
+        // Employer rates and amounts
         sgk_employer_rate: parseFloat(values.sgkEmployerRate),
         unemployment_employer_rate: parseFloat(values.unemploymentEmployerRate),
         accident_insurance_rate: parseFloat(values.accidentInsuranceRate),
-        stamp_tax: parseFloat(values.stampTax),
-        severance_provision: parseFloat(values.severanceProvision),
-        bonus_provision: parseFloat(values.bonusProvision),
+        
+        // Additional costs
+        severance_provision: parseFloat(values.severanceProvision || '0'),
+        bonus_provision: parseFloat(values.bonusProvision || '0'),
+        
+        // Cumulative tracking
+        cumulative_yearly_gross: parseFloat(values.cumulativeYearlyGross || '0'),
+        tax_year: new Date().getFullYear(),
+        
         notes: values.notes
       };
 
@@ -276,6 +340,29 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
                         <p>• Toplam maliyet: <strong>30.881 + Yol + Yemek + Net maaştan kalan</strong></p>
                       </div>
                     </div>
+                  </FormItem>
+                )}
+              />
+
+              {/* Kümülatif Yıllık Brüt Maaş */}
+              <FormField
+                control={form.control}
+                name="cumulativeYearlyGross"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">📊 Kümülatif Yıllık Brüt Maaş (₺)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        type="number" 
+                        placeholder="Bu yıl önceki aylarda alınan toplam brüt maaş"
+                        className="text-lg h-12 border-2 border-yellow-300 focus:border-yellow-500"
+                      />
+                    </FormControl>
+                    <p className="text-sm text-muted-foreground">
+                      ℹ️ Gelir vergisinin doğru hesaplanması için gereklidir
+                    </p>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -378,77 +465,145 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
             </CardContent>
           </Card>
 
-          {/* Hesaplanan Maliyetler */}
+          {/* Hesaplanan Maliyetler ve Kesintiler */}
           {(grossSalary || netSalary) && (
-            <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2">
-                  📊 Hesaplanan İşveren Maliyetleri
-                  {calculateAsMinimumWage && (
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 border border-blue-300">
-                      Asgari ücret bazlı hesaplama
-                    </Badge>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-600">SGK İşveren Primi</Label>
-                    <div className="bg-white rounded-lg p-4 border-2 border-green-200">
-                      <div className="text-xl font-bold text-green-700">
-                        ₺{calculatedCosts.sgkEmployer.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+            <>
+              {/* İşçi Kesintileri */}
+              <Card className="border-2 border-red-200 bg-gradient-to-r from-red-50 to-pink-50">
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    📉 İşçi Kesintileri (Türk Vergi Sistemi)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-600">SGK İşçi (%14)</Label>
+                      <div className="bg-white rounded-lg p-3 border-2 border-red-200">
+                        <div className="text-lg font-bold text-red-700">
+                          ₺{calculatedCosts.sgkEmployee.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                        </div>
                       </div>
-                      {calculateAsMinimumWage && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          Asgari ücret x %16.75
-                        </p>
-                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-600">İşsizlik (%1)</Label>
+                      <div className="bg-white rounded-lg p-3 border-2 border-orange-200">
+                        <div className="text-lg font-bold text-orange-700">
+                          ₺{calculatedCosts.unemploymentEmployee.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-600">Gelir Vergisi (Kademeli)</Label>
+                      <div className="bg-white rounded-lg p-3 border-2 border-purple-200">
+                        <div className="text-lg font-bold text-purple-700">
+                          ₺{calculatedCosts.incomeTax.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-600">Damga Vergisi (%0.759)</Label>
+                      <div className="bg-white rounded-lg p-3 border-2 border-gray-200">
+                        <div className="text-lg font-bold text-gray-700">
+                          ₺{calculatedCosts.stampTax.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-600">NET MAAŞ</Label>
+                      <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-lg p-3 text-white">
+                        <div className="text-xl font-bold">
+                          ₺{calculatedCosts.netSalary.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-600">İşsizlik Sigortası</Label>
-                    <div className="bg-white rounded-lg p-4 border-2 border-yellow-200">
-                      <div className="text-xl font-bold text-yellow-700">
-                        ₺{calculatedCosts.unemploymentEmployer.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-600">İş Kazası Sigortası</Label>
-                    <div className="bg-white rounded-lg p-4 border-2 border-red-200">
-                      <div className="text-xl font-bold text-red-700">
-                        ₺{calculatedCosts.accidentInsurance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-600">TOPLAM MALİYET</Label>
-                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-4 text-white border-2 border-blue-300">
-                      <div className="text-2xl font-bold">
-                        ₺{calculatedCosts.totalEmployerCost.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Hesaplama Detayları */}
-                {calculateAsMinimumWage && (grossSalary || netSalary) && (
                   <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <h4 className="font-semibold text-gray-800 mb-2">📝 Hesaplama Detayları</h4>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <p>• Baz maliyet (30.881): <strong>₺{minimumWageCosts.baseCost.toLocaleString('tr-TR')}</strong></p>
-                      <p>• Yemek yardımı: <strong>₺{(parseFloat(form.getValues("mealAllowance")) || 0).toLocaleString('tr-TR')}</strong></p>
-                      <p>• Yol yardımı: <strong>₺{(parseFloat(form.getValues("transportAllowance")) || 0).toLocaleString('tr-TR')}</strong></p>
-                      <p>• Net maaştan kalan: <strong>₺{Math.max(0, (salaryInputType === "net" ? parseFloat(netSalary) || 0 : calculateNetFromGross(parseFloat(grossSalary) || 0)) - MINIMUM_WAGE_NET).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</strong></p>
+                    <h4 className="font-semibold text-gray-800 mb-2">📋 Toplam Kesinti Özeti</h4>
+                    <div className="text-lg">
+                      <span className="text-gray-600">Toplam Kesintiler: </span>
+                      <span className="font-bold text-red-700">
+                        ₺{calculatedCosts.totalDeductions.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                      </span>
+                      <span className="text-sm text-gray-500 ml-2">
+                        ({((calculatedCosts.totalDeductions / parseFloat(grossSalary || '1')) * 100).toFixed(1)}%)
+                      </span>
                     </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+
+              {/* İşveren Maliyetleri */}
+              <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    📊 İşveren Maliyetleri
+                    {calculateAsMinimumWage && (
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 border border-blue-300">
+                        Asgari ücret bazlı hesaplama
+                      </Badge>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-600">SGK İşveren (%15.75)</Label>
+                      <div className="bg-white rounded-lg p-4 border-2 border-green-200">
+                        <div className="text-xl font-bold text-green-700">
+                          ₺{calculatedCosts.sgkEmployer.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-600">İşsizlik İşveren (%2)</Label>
+                      <div className="bg-white rounded-lg p-4 border-2 border-yellow-200">
+                        <div className="text-xl font-bold text-yellow-700">
+                          ₺{calculatedCosts.unemploymentEmployer.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-600">İş Kazası (%0.2)</Label>
+                      <div className="bg-white rounded-lg p-4 border-2 border-red-200">
+                        <div className="text-xl font-bold text-red-700">
+                          ₺{calculatedCosts.accidentInsurance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-600">TOPLAM MALİYET</Label>
+                      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-4 text-white border-2 border-blue-300">
+                        <div className="text-2xl font-bold">
+                          ₺{calculatedCosts.totalEmployerCost.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Hesaplama Detayları */}
+                  {calculateAsMinimumWage && (grossSalary || netSalary) && (
+                    <div className="bg-white rounded-lg p-4 border border-gray-200">
+                      <h4 className="font-semibold text-gray-800 mb-2">📝 Asgari Ücret Hesaplama Detayları</h4>
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <p>• Baz maliyet: <strong>₺30.881</strong></p>
+                        <p>• Yemek yardımı: <strong>₺{(parseFloat(form.getValues("mealAllowance")) || 0).toLocaleString('tr-TR')}</strong></p>
+                        <p>• Yol yardımı: <strong>₺{(parseFloat(form.getValues("transportAllowance")) || 0).toLocaleString('tr-TR')}</strong></p>
+                        <p>• Net maaştan kalan: <strong>₺{Math.max(0, calculatedCosts.netSalary - MINIMUM_WAGE_NET).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</strong></p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </>
           )}
 
           {/* Notlar */}
