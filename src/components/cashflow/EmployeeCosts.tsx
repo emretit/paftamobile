@@ -398,17 +398,10 @@ const EmployeeCosts = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="min-w-[200px]">Kişisel Bilgiler</TableHead>
-                  <TableHead className="min-w-[120px]">İletişim</TableHead>
-                  <TableHead className="min-w-[150px]">İş Bilgileri</TableHead>
-                  <TableHead className="min-w-[120px]">Adres</TableHead>
-                  <TableHead className="min-w-[150px]">Acil Durum</TableHead>
-                  <TableHead className="text-right min-w-[100px]">Brüt Maaş</TableHead>
                   <TableHead className="text-right min-w-[100px]">Net Maaş</TableHead>
-                  <TableHead className="text-right min-w-[120px]">İşveren Maliyeti</TableHead>
+                  <TableHead className="text-right min-w-[100px]">SGK İşveren</TableHead>
                   <TableHead className="text-right min-w-[80px]">Yemek</TableHead>
                   <TableHead className="text-right min-w-[80px]">Ulaşım</TableHead>
-                  <TableHead className="text-right min-w-[100px]">SGK İşveren</TableHead>
-                  <TableHead className="min-w-[80px]">Durum</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -427,73 +420,17 @@ const EmployeeCosts = () => {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="space-y-1 text-sm">
-                        <div>{employee.email}</div>
-                        {employee.phone && <div className="text-gray-500">{employee.phone}</div>}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="font-medium">{employee.position}</div>
-                        <div className="text-sm text-gray-500">{employee.department}</div>
-                        {employee.hire_date && (
-                          <div className="text-xs text-gray-500">
-                            İşe Giriş: {new Date(employee.hire_date).toLocaleDateString('tr-TR')}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm space-y-1">
-                        {employee.address && <div>{employee.address}</div>}
-                        {(employee.district || employee.city) && (
-                          <div className="text-gray-500">
-                            {employee.district && `${employee.district}, `}
-                            {employee.city}
-                            {employee.postal_code && ` ${employee.postal_code}`}
-                          </div>
-                        )}
-                        {employee.country && employee.country !== 'Turkey' && (
-                          <div className="text-gray-500">{employee.country}</div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm space-y-1">
-                        {employee.emergency_contact_name && (
-                          <div className="font-medium">{employee.emergency_contact_name}</div>
-                        )}
-                        {employee.emergency_contact_phone && (
-                          <div className="text-gray-500">{employee.emergency_contact_phone}</div>
-                        )}
-                        {employee.emergency_contact_relation && (
-                          <div className="text-xs text-gray-500">{employee.emergency_contact_relation}</div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatCurrency(employee.gross_salary)}
-                    </TableCell>
                     <TableCell className="text-right font-medium">
                       {formatCurrency(employee.net_salary)}
                     </TableCell>
-                    <TableCell className="text-right font-bold text-red-600">
-                      {formatCurrency(employee.total_employer_cost)}
+                    <TableCell className="text-right">
+                      {formatCurrency(employee.sgk_employer_amount)}
                     </TableCell>
                     <TableCell className="text-right">
                       {formatCurrency(employee.meal_allowance)}
                     </TableCell>
                     <TableCell className="text-right">
                       {formatCurrency(employee.transport_allowance)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(employee.sgk_employer_amount)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="default" className="bg-green-100 text-green-800">
-                        Aktif
-                      </Badge>
                     </TableCell>
                   </TableRow>
                 ))}
