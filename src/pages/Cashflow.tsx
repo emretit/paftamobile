@@ -13,8 +13,7 @@ import EmployeeCosts from "@/components/cashflow/EmployeeCosts";
 import { LoansAndChecks } from "@/components/cashflow/LoansAndChecks";
 import InvoicesManager from "@/components/cashflow/InvoicesManager";
 
-import { EnhancedCashflowTable } from "@/components/dashboard/EnhancedCashflowTable";
-import { TrendingUp, FileText, BarChart2, Calculator, Users2, CreditCard, Receipt } from "lucide-react";
+import { TrendingUp, FileText, BarChart2, Users2, CreditCard, Receipt } from "lucide-react";
 
 interface CashflowProps {
   isCollapsed: boolean;
@@ -30,9 +29,12 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
     const path = location.pathname;
     if (path.includes('/opex-entry')) return 'opex-entry';
     if (path.includes('/employee-costs')) return 'employee-costs';
-    if (path.includes('/main-table')) return 'main-table';
     if (path.includes('/loans-and-checks')) return 'loans-and-checks';
     if (path.includes('/invoices')) return 'invoices';
+    // Redirect old main-table route to overview
+    if (path.includes('/main-table')) {
+      navigate('/cashflow', { replace: true });
+    }
     return 'overview';
   };
 
@@ -47,9 +49,6 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
         break;
       case 'employee-costs':
         navigate('/cashflow/employee-costs');
-        break;
-      case 'main-table':
-        navigate('/cashflow/main-table');
         break;
       case 'loans-and-checks':
         navigate('/cashflow/loans-and-checks');
@@ -94,13 +93,9 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
                   <Users2 className="h-4 w-4" />
                   <span>Personel Maliyetleri</span>
                 </CustomTabsTrigger>
-                <CustomTabsTrigger value="main-table" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
-                  <Calculator className="h-4 w-4" />
-                  <span>Ana Nakit Akış Tablosu</span>
-                </CustomTabsTrigger>
                 <CustomTabsTrigger value="invoices" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   <Receipt className="h-4 w-4" />
-                  <span>Faturalar</span>
+                  <span>Fatura Analizi</span>
                 </CustomTabsTrigger>
                 <CustomTabsTrigger value="loans-and-checks" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   <CreditCard className="h-4 w-4" />
@@ -121,10 +116,6 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
 
             <CustomTabsContent value="employee-costs" className="mt-6 animate-fade-in">
               <EmployeeCosts />
-            </CustomTabsContent>
-
-            <CustomTabsContent value="main-table" className="mt-6 animate-fade-in">
-              <EnhancedCashflowTable />
             </CustomTabsContent>
 
             <CustomTabsContent value="invoices" className="mt-6 animate-fade-in">

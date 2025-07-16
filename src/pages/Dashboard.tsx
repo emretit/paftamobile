@@ -3,7 +3,7 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
 import { DetailedFinancialOverview } from "@/components/dashboard/DetailedFinancialOverview";
-import { EnhancedCashflowTable } from "@/components/dashboard/EnhancedCashflowTable";
+import CashflowOverview from "@/components/cashflow/CashflowOverview";
 
 interface DashboardProps {
   isCollapsed: boolean;
@@ -33,10 +33,9 @@ const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
             <DetailedFinancialOverview />
           </div>
 
-          {/* Ana Nakit Akış Tablosu */}
+          {/* Finansal Genel Bakış */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Ana Nakit Akış Tablosu</h2>
-            <EnhancedCashflowTable />
+            <CashflowOverview />
           </div>
         </div>
       </main>
