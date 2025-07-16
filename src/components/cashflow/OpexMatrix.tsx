@@ -47,8 +47,13 @@ const OPEX_CATEGORIES: OpexCategory[] = [
     type: 'other'
   },
   {
+    name: "Finansman Giderleri",
+    subcategories: ["Kredi Faizleri", "Kart Komisyonları", "Banka Masrafları", "Kambiyo Giderleri", "Faktoring Giderleri", "Leasing Giderleri", "Diğer Finansman Giderleri"],
+    type: 'other'
+  },
+  {
     name: "Genel Giderler",
-    subcategories: ["Danışmanlık", "Sigorta", "Vergiler", "Banka Masrafları", "Diğer"],
+    subcategories: ["Danışmanlık", "Sigorta", "Vergiler", "Yasal Giderler", "Diğer"],
     type: 'other'
   }
 ];
