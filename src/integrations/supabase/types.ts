@@ -792,7 +792,7 @@ export type Database = {
           {
             foreignKeyName: "employee_salaries_employee_id_fkey"
             columns: ["employee_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
