@@ -44,7 +44,7 @@ export const EmployeeSalaryTab = ({ employee, refetch }: EmployeeSalaryTabProps)
               Maaş Bilgilerini Düzenle
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-[900px] max-h-[95vh] overflow-y-auto p-2">
             <DialogHeader>
               <DialogTitle>
                 {editingSalary ? "Maaş Bilgilerini Güncelle" : "Yeni Maaş Kaydı"}

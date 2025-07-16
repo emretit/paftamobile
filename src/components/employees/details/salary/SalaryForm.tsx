@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 interface SalaryFormProps {
   employeeId: string;
@@ -43,11 +44,11 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
     const sgkEmployer = 4355.92; // SGK Primi %16.75 (İşveren Payı)
     const unemploymentEmployer = 520.11; // İşveren İşsizlik Sigorta Primi %2
     
-    // 30881 + yol + yemek + net maaştan kalan hesaplama
+    // 30881 üzerinden hesaplama + yol + yemek + net maaştan kalan
     const baseCost = 30881; // Kullanıcının belirttiği baz maliyet
-    const netSalary = MINIMUM_WAGE_GROSS - totalDeductions; // 22104 - 3900.83 = 18203.17
+    const netSalary = MINIMUM_WAGE_NET; // 22104.67
     
-    const totalEmployerCost = baseCost; // Başlangıç değeri, yol + yemek eklenecek
+    const totalEmployerCost = baseCost; // Başlangıç değeri, yol + yemek + kalan eklenecek
     
     return {
       sgkEmployee,
@@ -56,7 +57,8 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
       sgkEmployer,
       unemploymentEmployer,
       totalEmployerCost,
-      netSalary
+      netSalary,
+      baseCost
     };
   };
   
@@ -142,11 +144,11 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
         // Gerçek net maaşı al
         const currentNetSalary = salaryInputType === "net" ? parseFloat(netSalary) || 0 : calculateNetFromGross(currentGross);
         
-        // Asgari ücret ile gerçek maaş arasındaki fark (ek ödeme/kara)
-        const extraPayment = Math.max(0, currentNetSalary - MINIMUM_WAGE_NET);
+        // Asgari ücret net maaşı ile gerçek net maaş arasındaki fark (net maaştan kalan)
+        const extraPaymentFromNet = Math.max(0, currentNetSalary - MINIMUM_WAGE_NET);
         
-        // Toplam maliyet = Resmi asgari ücret maliyeti + ek ödeme + yol + yemek
-        totalEmployerCost = minimumWageCosts.totalEmployerCost + extraPayment + mealAllowance + transportAllowance;
+        // 30881 + yol + yemek + net maaştan kalan
+        totalEmployerCost = minimumWageCosts.baseCost + mealAllowance + transportAllowance + extraPaymentFromNet;
       } else {
         // Normal hesaplama: Tüm hesaplamalar gerçek brüt maaş üzerinden
         sgkEmployer = currentGross * (sgkRate / 100);
@@ -213,219 +215,286 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {/* Temel Maaş Bilgileri */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Temel Maaş Bilgileri</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Maaş Giriş Tipi Seçimi */}
-            <FormField
-              control={form.control}
-              name="salaryInputType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Maaş Giriş Tipi</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-row space-x-6"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="gross" id="gross" />
-                        <Label htmlFor="gross">Brüt Maaş Gir</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="net" id="net" />
-                        <Label htmlFor="net">Net Maaş Gir</Label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Asgari Ücret Hesaplama Seçeneği */}
-            <FormField
-              control={form.control}
-              name="calculateAsMinimumWage"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Asgari ücret olarak hesapla
-                    </FormLabel>
-                     <p className="text-sm text-muted-foreground">
-                       İşveren maliyetleri asgari ücret (₺{MINIMUM_WAGE_GROSS.toLocaleString('tr-TR')}) üzerinden hesaplanır
-                     </p>
-                  </div>
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="grossSalary"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Brüt Maaş (₺)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        type="number" 
-                        placeholder="Brüt maaşı girin"
-                        disabled={salaryInputType === "net"}
-                        className={salaryInputType === "net" ? "bg-gray-100" : ""}
-                      />
-                    </FormControl>
-                    {salaryInputType === "net" && (
-                      <p className="text-xs text-muted-foreground">Otomatik hesaplanıyor</p>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="netSalary"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Net Maaş (₺)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        type="number" 
-                        placeholder="Net maaşı girin"
-                        disabled={salaryInputType === "gross"}
-                        className={salaryInputType === "gross" ? "bg-gray-100" : ""}
-                      />
-                    </FormControl>
-                    {salaryInputType === "gross" && (
-                      <p className="text-xs text-muted-foreground">Otomatik hesaplanıyor</p>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              
-              <FormField
-                control={form.control}
-                name="mealAllowance"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Yemek Yardımı (₺)</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="number" placeholder="0" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="transportAllowance"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Yol Yardımı (₺)</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="number" placeholder="0" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-
-        {/* Hesaplanan Maliyetler */}
-        {(grossSalary || netSalary) && (
+    <div className="space-y-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          {/* Temel Maaş Bilgileri */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">
-                Hesaplanan İşveren Maliyetleri
-                {calculateAsMinimumWage && (
-                  <Badge variant="outline" className="ml-2">
-                    Asgari ücret bazlı hesaplama
-                  </Badge>
-                )}
+              <CardTitle className="text-lg flex items-center gap-2">
+                💰 Temel Maaş Bilgileri
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>SGK İşveren Primi</Label>
-                  <Badge variant="secondary" className="w-full justify-center py-2">
-                    ₺{calculatedCosts.sgkEmployer.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                  </Badge>
-                   {calculateAsMinimumWage && (
-                     <p className="text-xs text-muted-foreground">
-                       Asgari ücret formülü: ₺{MINIMUM_WAGE_GROSS.toLocaleString('tr-TR')} x %16.75 = ₺{minimumWageCosts.sgkEmployer.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                     </p>
-                   )}
-                </div>
-                <div className="space-y-2">
-                  <Label>İşsizlik Sigortası</Label>
-                  <Badge variant="secondary" className="w-full justify-center py-2">
-                    ₺{calculatedCosts.unemploymentEmployer.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                  </Badge>
-                </div>
-                <div className="space-y-2">
-                  <Label>İş Kazası Sigortası</Label>
-                  <Badge variant="secondary" className="w-full justify-center py-2">
-                    ₺{calculatedCosts.accidentInsurance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                  </Badge>
-                </div>
-                <div className="space-y-2">
-                  <Label>Toplam İşveren Maliyeti</Label>
-                  <Badge variant="default" className="w-full justify-center py-2 text-lg">
-                    ₺{calculatedCosts.totalEmployerCost.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                  </Badge>
-                </div>
+            <CardContent className="space-y-6">
+              {/* Maaş Giriş Tipi Seçimi */}
+              <FormField
+                control={form.control}
+                name="salaryInputType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-semibold">Maaş Giriş Şekli</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-row space-x-8"
+                      >
+                        <div className="flex items-center space-x-3 border rounded-lg p-4">
+                          <RadioGroupItem value="gross" id="gross" />
+                          <Label htmlFor="gross" className="font-medium">Brüt Maaş Gir</Label>
+                        </div>
+                        <div className="flex items-center space-x-3 border rounded-lg p-4">
+                          <RadioGroupItem value="net" id="net" />
+                          <Label htmlFor="net" className="font-medium">Net Maaş Gir</Label>
+                        </div>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Asgari Ücret Hesaplama Seçeneği */}
+              <FormField
+                control={form.control}
+                name="calculateAsMinimumWage"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className="mt-1"
+                      />
+                    </FormControl>
+                    <div className="space-y-2 leading-none">
+                      <FormLabel className="text-base font-semibold text-blue-800">
+                        🎯 Asgari ücret olarak hesapla
+                      </FormLabel>
+                      <div className="text-sm text-blue-700 space-y-1">
+                        <p>• İşveren maliyetleri asgari ücret (₺{MINIMUM_WAGE_GROSS.toLocaleString('tr-TR')}) üzerinden hesaplanır</p>
+                        <p>• Toplam maliyet: <strong>30.881 + Yol + Yemek + Net maaştan kalan</strong></p>
+                      </div>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              {/* Maaş Girişi */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="grossSalary"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-semibold">Brüt Maaş (₺)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          placeholder="Brüt maaşı girin"
+                          disabled={salaryInputType === "net"}
+                          className={cn(
+                            "text-lg h-12",
+                            salaryInputType === "net" ? "bg-gray-100 text-gray-600" : "border-2 border-green-300 focus:border-green-500"
+                          )}
+                        />
+                      </FormControl>
+                      {salaryInputType === "net" && (
+                        <p className="text-sm text-muted-foreground">✨ Otomatik hesaplanıyor</p>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="netSalary"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-semibold">Net Maaş (₺)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          placeholder="Net maaşı girin"
+                          disabled={salaryInputType === "gross"}
+                          className={cn(
+                            "text-lg h-12",
+                            salaryInputType === "gross" ? "bg-gray-100 text-gray-600" : "border-2 border-blue-300 focus:border-blue-500"
+                          )}
+                        />
+                      </FormControl>
+                      {salaryInputType === "gross" && (
+                        <p className="text-sm text-muted-foreground">✨ Otomatik hesaplanıyor</p>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Yardımlar */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="mealAllowance"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-semibold">🍽️ Yemek Yardımı (₺)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          placeholder="0"
+                          className="text-lg h-12 border-2 border-orange-300 focus:border-orange-500"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="transportAllowance"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-semibold">🚗 Yol Yardımı (₺)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          placeholder="0"
+                          className="text-lg h-12 border-2 border-purple-300 focus:border-purple-500"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </CardContent>
           </Card>
-        )}
 
-        {/* Notlar */}
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notlar</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Ek notlar girin" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+          {/* Hesaplanan Maliyetler */}
+          {(grossSalary || netSalary) && (
+            <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  📊 Hesaplanan İşveren Maliyetleri
+                  {calculateAsMinimumWage && (
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 border border-blue-300">
+                      Asgari ücret bazlı hesaplama
+                    </Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-600">SGK İşveren Primi</Label>
+                    <div className="bg-white rounded-lg p-4 border-2 border-green-200">
+                      <div className="text-xl font-bold text-green-700">
+                        ₺{calculatedCosts.sgkEmployer.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                      </div>
+                      {calculateAsMinimumWage && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Asgari ücret x %16.75
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-600">İşsizlik Sigortası</Label>
+                    <div className="bg-white rounded-lg p-4 border-2 border-yellow-200">
+                      <div className="text-xl font-bold text-yellow-700">
+                        ₺{calculatedCosts.unemploymentEmployer.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-600">İş Kazası Sigortası</Label>
+                    <div className="bg-white rounded-lg p-4 border-2 border-red-200">
+                      <div className="text-xl font-bold text-red-700">
+                        ₺{calculatedCosts.accidentInsurance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-600">TOPLAM MALİYET</Label>
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-4 text-white border-2 border-blue-300">
+                      <div className="text-2xl font-bold">
+                        ₺{calculatedCosts.totalEmployerCost.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Hesaplama Detayları */}
+                {calculateAsMinimumWage && (grossSalary || netSalary) && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <h4 className="font-semibold text-gray-800 mb-2">📝 Hesaplama Detayları</h4>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <p>• Baz maliyet (30.881): <strong>₺{minimumWageCosts.baseCost.toLocaleString('tr-TR')}</strong></p>
+                      <p>• Yemek yardımı: <strong>₺{(parseFloat(form.getValues("mealAllowance")) || 0).toLocaleString('tr-TR')}</strong></p>
+                      <p>• Yol yardımı: <strong>₺{(parseFloat(form.getValues("transportAllowance")) || 0).toLocaleString('tr-TR')}</strong></p>
+                      <p>• Net maaştan kalan: <strong>₺{Math.max(0, (salaryInputType === "net" ? parseFloat(netSalary) || 0 : calculateNetFromGross(parseFloat(grossSalary) || 0)) - MINIMUM_WAGE_NET).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</strong></p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           )}
-        />
-        
-        <div className="flex gap-2">
-          <Button type="submit" className="flex-1">
-            {existingSalary ? "Maaş Bilgilerini Güncelle" : "Maaş Kaydını Kaydet"}
-          </Button>
-          <Button type="button" variant="outline" onClick={onClose}>
-            İptal
-          </Button>
-        </div>
-      </form>
-    </Form>
+
+          {/* Notlar */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">📝 Notlar</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="Ek notlar girin..."
+                        className="text-base h-12"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+          
+          {/* Butonlar */}
+          <div className="flex gap-3 pt-4">
+            <Button 
+              type="submit" 
+              className="flex-1 h-12 text-lg bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
+            >
+              {existingSalary ? "✏️ Maaş Bilgilerini Güncelle" : "💾 Maaş Kaydını Kaydet"}
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              className="h-12 px-8 text-lg border-2"
+            >
+              ❌ İptal
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </div>
   );
 };
