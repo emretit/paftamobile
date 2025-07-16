@@ -27,8 +27,9 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
     totalEmployerCost: 0
   });
 
-  // Turkish minimum wage for 2024 (this should ideally come from a settings table)
-  const MINIMUM_WAGE = 22104; // 2025 asgari ücret
+  // Turkish minimum wage for 2025 - Brüt asgari ücret
+  const MINIMUM_WAGE = 26005.50; // 2025 brüt asgari ücret
+  const MINIMUM_WAGE_NET = 22104.67; // 2025 net asgari ücret
 
   const form = useForm({
     defaultValues: {
@@ -38,9 +39,9 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
       calculateAsMinimumWage: false,
       allowances: "{}",
       effectiveDate: "",
-      sgkEmployerRate: "20.5",
-      unemploymentEmployerRate: "3.0",
-      accidentInsuranceRate: "2.0",
+      sgkEmployerRate: "15.75", // 2025 doğru SGK işveren primi
+      unemploymentEmployerRate: "2.0", // 2025 doğru işsizlik işveren primi
+      accidentInsuranceRate: "0.0", // İş kazası ayrı hesaplanacak
       stampTax: "0",
       severanceProvision: "0",
       bonusProvision: "0",
@@ -53,19 +54,23 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
   const netSalary = form.watch("netSalary");
   const calculateAsMinimumWage = form.watch("calculateAsMinimumWage");
 
-  // Function to calculate gross from net salary
+  // Function to calculate gross from net salary based on 2025 rates
   const calculateGrossFromNet = (netAmount: number) => {
-    // Simplified calculation - this should be more accurate in production
-    // Assumes approximately 30% total deductions (SGK employee + income tax)
-    const estimatedGross = netAmount / 0.70; // Rough estimation
+    // 2025 asgari ücret oranlarına göre hesaplama
+    // Net: 22.104,67 TL => Brüt: 26.005,50 TL
+    // Kesinti oranı: %15 (SGK %14 + İşsizlik %1)
+    const deductionRate = 0.15; // %15 toplam kesinti
+    const estimatedGross = netAmount / (1 - deductionRate);
     return estimatedGross;
   };
 
-  // Function to calculate net from gross salary  
+  // Function to calculate net from gross salary based on 2025 rates  
   const calculateNetFromGross = (grossAmount: number) => {
-    // Simplified calculation - this should be more accurate in production
-    // Assumes approximately 30% total deductions
-    const estimatedNet = grossAmount * 0.70; // Rough estimation
+    // 2025 asgari ücret oranlarına göre hesaplama
+    // Brüt: 26.005,50 TL => Net: 22.104,67 TL  
+    // Kesinti oranı: %15 (SGK %14 + İşsizlik %1)
+    const deductionRate = 0.15; // %15 toplam kesinti
+    const estimatedNet = grossAmount * (1 - deductionRate);
     return estimatedNet;
   };
 
@@ -84,9 +89,9 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
     }
 
     if (currentGross > 0) {
-      const sgkRate = parseFloat(form.getValues("sgkEmployerRate")) || 20.5;
-      const unemploymentRate = parseFloat(form.getValues("unemploymentEmployerRate")) || 3.0;
-      const accidentRate = parseFloat(form.getValues("accidentInsuranceRate")) || 2.0;
+      const sgkRate = parseFloat(form.getValues("sgkEmployerRate")) || 15.75;
+      const unemploymentRate = parseFloat(form.getValues("unemploymentEmployerRate")) || 2.0;
+      const accidentRate = parseFloat(form.getValues("accidentInsuranceRate")) || 0.0;
       const stampTax = parseFloat(form.getValues("stampTax")) || 0;
       const severance = parseFloat(form.getValues("severanceProvision")) || 0;
       const bonus = parseFloat(form.getValues("bonusProvision")) || 0;
