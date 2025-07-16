@@ -1,26 +1,20 @@
-import { useState, useEffect } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CalendarIcon, Plus, Save, Trash2, Upload, X, Download } from "lucide-react";
+import { CalendarIcon, Download } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { useCashflowTransactions } from "@/hooks/useCashflowTransactions";
 import { useCashflowCategories } from "@/hooks/useCashflowCategories";
 import { useCashflowAnalytics } from "@/hooks/useCashflowAnalytics";
-import { useFileUpload } from "@/hooks/useFileUpload";
-import { useBulkTransactions } from "@/hooks/useBulkTransactions";
-import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import OpexMatrix from "./OpexMatrix";
 
 // OPEX categories for 10+ employee companies in Turkey
 const DEFAULT_OPEX_CATEGORIES = [
@@ -41,30 +35,6 @@ const DEFAULT_OPEX_CATEGORIES = [
   "Diğer"
 ];
 
-const opexItemSchema = z.object({
-  categoryId: z.string().min(1, "Kategori seçilmelidir"),
-  amount: z.number().min(0.01, "Tutar 0'dan büyük olmalıdır"),
-  date: z.date(),
-  description: z.string().optional(),
-  attachmentUrl: z.string().optional(),
-});
-
-const opexFormSchema = z.object({
-  items: z.array(opexItemSchema),
-});
-
-type OpexFormData = z.infer<typeof opexFormSchema>;
-
-interface OpexItem {
-  id: string;
-  categoryId: string;
-  amount: number;
-  date: Date;
-  description?: string;
-  attachmentUrl?: string;
-  file?: File;
-}
-
 const OpexEntry = () => {
   const [activeTab, setActiveTab] = useState<'entry' | 'history'>('entry');
   const [dateFrom, setDateFrom] = useState<Date>();
@@ -74,35 +44,6 @@ const OpexEntry = () => {
   const { transactions } = useCashflowTransactions();
   const { categories } = useCashflowCategories();
   const { formatCurrency } = useCashflowAnalytics(transactions);
-  const { uploadFile, uploading } = useFileUpload();
-  const { createBulkTransactions, loading } = useBulkTransactions();
-  const { toast } = useToast();
-
-  const {
-    register,
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<OpexFormData>({
-    resolver: zodResolver(opexFormSchema),
-    defaultValues: {
-      items: [
-        {
-          categoryId: '',
-          amount: 0,
-          date: new Date(),
-          description: '',
-          attachmentUrl: '',
-        },
-      ],
-    },
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "items",
-  });
 
   const expenseCategories = categories.filter(cat => cat.type === 'expense');
   const opexCategories = expenseCategories.filter(cat => 
@@ -111,56 +52,6 @@ const OpexEntry = () => {
       opex.toLowerCase().includes(cat.name.toLowerCase())
     )
   );
-
-  const addNewRow = () => {
-    append({
-      categoryId: '',
-      amount: 0,
-      date: new Date(),
-      description: '',
-      attachmentUrl: '',
-    });
-  };
-
-  const onSubmit = async (data: OpexFormData) => {
-    try {
-      const validItems = data.items.filter(item => item.categoryId && item.amount > 0);
-      
-      if (validItems.length === 0) {
-        toast({
-          variant: "destructive",
-          title: "Hata",
-          description: "En az bir geçerli OPEX kalemi girmeniz gerekiyor.",
-        });
-        return;
-      }
-
-      const transactionData = validItems.map(item => ({
-        type: 'expense' as const,
-        category_id: item.categoryId,
-        amount: item.amount,
-        date: format(item.date, 'yyyy-MM-dd'),
-        description: item.description || '',
-        attachment_url: item.attachmentUrl || '',
-      }));
-
-      await createBulkTransactions(transactionData);
-
-      reset({
-        items: [
-          {
-            categoryId: '',
-            amount: 0,
-            date: new Date(),
-            description: '',
-            attachmentUrl: '',
-          },
-        ],
-      });
-    } catch (error) {
-      console.error('Error saving OPEX items:', error);
-    }
-  };
 
   const filteredOpexTransactions = transactions.filter(transaction => {
     const isOpex = transaction.type === 'expense' && 
@@ -216,7 +107,7 @@ const OpexEntry = () => {
               : "text-gray-500 hover:text-gray-700"
           )}
         >
-          OPEX Girişi
+          OPEX Matrix
         </button>
         <button
           onClick={() => setActiveTab('history')}
@@ -232,131 +123,7 @@ const OpexEntry = () => {
       </div>
 
       {activeTab === 'entry' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>OPEX Toplu Giriş</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Kategori</TableHead>
-                      <TableHead>Tutar</TableHead>
-                      <TableHead>Tarih</TableHead>
-                      <TableHead>Açıklama</TableHead>
-                      <TableHead>Ek Dosya</TableHead>
-                      <TableHead>İşlem</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {fields.map((field, index) => (
-                      <TableRow key={field.id}>
-                        <TableCell>
-                          <Select
-                            value={field.categoryId}
-                            onValueChange={(value) => {
-                              const newItems = [...fields];
-                              newItems[index] = { ...newItems[index], categoryId: value };
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Kategori seçin" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {opexCategories.map((category) => (
-                                <SelectItem key={category.id} value={category.id}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            {...register(`items.${index}.amount`, { valueAsNumber: true })}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline" className="w-full justify-start">
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.date ? format(field.date, "PPP", { locale: tr }) : "Tarih seçin"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.date}
-                                onSelect={(date) => {
-                                  if (date) {
-                                    const newItems = [...fields];
-                                    newItems[index] = { ...newItems[index], date };
-                                  }
-                                }}
-                                initialFocus
-                                className="pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            placeholder="Açıklama (isteğe bağlı)"
-                            {...register(`items.${index}.description`)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="file"
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const attachmentUrl = await uploadFile(file, 'opex-receipts');
-                                if (attachmentUrl) {
-                                  const newItems = [...fields];
-                                  newItems[index] = { ...newItems[index], attachmentUrl };
-                                }
-                              }
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => remove(index)}
-                            disabled={fields.length === 1}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              <div className="flex justify-between">
-                <Button type="button" variant="outline" onClick={addNewRow}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Yeni Satır Ekle
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  <Save className="mr-2 h-4 w-4" />
-                  Tümünü Kaydet
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <OpexMatrix />
       )}
 
       {activeTab === 'history' && (
