@@ -10,12 +10,12 @@ export const useBulkTransactions = () => {
   const createBulkTransactions = async (transactions: CreateTransactionData[]) => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      // Auth disabled - no user check needed
+      const user_id = '00000000-0000-0000-0000-000000000000'; // Dummy user ID
 
       const transactionsWithUserId = transactions.map(transaction => ({
         ...transaction,
-        user_id: user.id,
+        user_id: user_id,
       }));
 
       const { data, error } = await supabase

@@ -89,11 +89,10 @@ export function LoansAndChecks() {
   // Loan mutations
   const saveLoanMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      // Auth disabled - no user check needed
 
       const loanData = {
-        user_id: user.id,
+        user_id: '00000000-0000-0000-0000-000000000000', // Dummy user ID
         loan_name: formData.get("loan_name") as string,
         bank: formData.get("bank") as string,
         amount: parseFloat(formData.get("amount") as string),
@@ -133,11 +132,10 @@ export function LoansAndChecks() {
   // Check mutations
   const saveCheckMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      // Auth disabled - no user check needed
 
       const checkData = {
-        user_id: user.id,
+        user_id: '00000000-0000-0000-0000-000000000000', // Dummy user ID
         check_number: formData.get("check_number") as string,
         issue_date: formData.get("issue_date") as string,
         due_date: formData.get("due_date") as string,

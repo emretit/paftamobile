@@ -49,12 +49,12 @@ export const useCashflowCategories = () => {
 
   const createCategory = async (data: CreateCategoryData) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      // Auth disabled - no user check needed
+      const user_id = '00000000-0000-0000-0000-000000000000'; // Dummy user ID
 
       const insertData = {
         ...data,
-        user_id: user.id,
+        user_id: user_id,
       };
 
       const { data: newCategory, error } = await supabase

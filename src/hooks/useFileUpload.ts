@@ -12,13 +12,11 @@ export const useFileUpload = () => {
     try {
       setUploading(true);
       
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      // Auth disabled - no user check needed
 
       // Create unique filename
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${folder ? folder + '/' : ''}${Date.now()}.${fileExt}`;
+      const fileName = `dummy-user/${folder ? folder + '/' : ''}${Date.now()}.${fileExt}`;
 
       // Upload file to Supabase Storage
       const { data, error } = await supabase.storage

@@ -44,18 +44,13 @@ export const useInvoiceAnalysis = (year?: number) => {
       setLoading(true);
       setError(null);
       
-      const { data: user, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
+      // Auth disabled - no user check needed
+      const user_id = '00000000-0000-0000-0000-000000000000'; // Dummy user ID
       
-      if (!user?.user) {
-        setError('User not authenticated');
-        return;
-      }
-
+      // Auth disabled - use dummy query without user filtering
       let query = supabase
         .from('invoice_analysis')
         .select('*')
-        .eq('user_id', user.user.id)
         .order('year', { ascending: true })
         .order('month', { ascending: true });
 
@@ -84,17 +79,14 @@ export const useInvoiceAnalysis = (year?: number) => {
   // Upsert invoice analysis data
   const upsertInvoiceAnalysis = async (input: InvoiceAnalysisInput) => {
     try {
-      const { data: user, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
+      // Auth disabled - no user check needed
+      const user_id = '00000000-0000-0000-0000-000000000000'; // Dummy user ID
       
-      if (!user?.user) {
-        throw new Error('User not authenticated');
-      }
-
+      // Auth disabled - use dummy user ID
       const { error } = await supabase
         .from('invoice_analysis')
         .upsert({
-          user_id: user.user.id,
+          user_id: user_id,
           year: input.year,
           month: input.month,
           purchase_vat: input.purchase_vat || 0,
@@ -143,17 +135,14 @@ export const useInvoiceAnalysis = (year?: number) => {
   // Delete invoice analysis data
   const deleteInvoiceAnalysis = async (year: number, month: number) => {
     try {
-      const { data: user, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
+      // Auth disabled - no user check needed
+      const user_id = '00000000-0000-0000-0000-000000000000'; // Dummy user ID
       
-      if (!user?.user) {
-        throw new Error('User not authenticated');
-      }
-
+      // Auth disabled - use dummy user ID
       const { error } = await supabase
         .from('invoice_analysis')
         .delete()
-        .eq('user_id', user.user.id)
+        .eq('user_id', user_id)
         .eq('year', year)
         .eq('month', month);
 
