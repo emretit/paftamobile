@@ -63,7 +63,7 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
       netSalary: "",
       calculateAsMinimumWage: false,
       allowances: "{}",
-      effectiveDate: "",
+      effectiveDate: new Date().toISOString().split('T')[0], // Bugünün tarihi
       sgkEmployerRate: "15.75", // 2025 doğru SGK işveren primi
       unemploymentEmployerRate: "2.0", // 2025 doğru işsizlik işveren primi
       accidentInsuranceRate: "0.0", // İş kazası ayrı hesaplanacak
