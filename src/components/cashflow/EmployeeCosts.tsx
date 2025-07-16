@@ -49,18 +49,11 @@ interface EmployeeCostData {
   accident_insurance_amount: number;
 }
 
-interface DepartmentSummary {
-  department: string;
-  employee_count: number;
-  total_gross_salary: number;
-  total_net_salary: number;
-  total_employer_cost: number;
-}
 
 const EmployeeCosts = () => {
   const [employeeCosts, setEmployeeCosts] = useState<EmployeeCostData[]>([]);
   const [filteredCosts, setFilteredCosts] = useState<EmployeeCostData[]>([]);
-  const [departmentSummary, setDepartmentSummary] = useState<DepartmentSummary[]>([]);
+  
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
@@ -164,7 +157,6 @@ const EmployeeCosts = () => {
       console.log('Processed data:', processedData);
 
       setEmployeeCosts(processedData);
-      calculateDepartmentSummary(processedData);
     } catch (error) {
       console.error('Error fetching employee costs:', error);
       toast({
@@ -177,29 +169,6 @@ const EmployeeCosts = () => {
     }
   };
 
-  const calculateDepartmentSummary = (data: EmployeeCostData[]) => {
-    const summary = data.reduce((acc, employee) => {
-      const dept = employee.department;
-      if (!acc[dept]) {
-        acc[dept] = {
-          department: dept,
-          employee_count: 0,
-          total_gross_salary: 0,
-          total_net_salary: 0,
-          total_employer_cost: 0,
-        };
-      }
-      
-      acc[dept].employee_count += 1;
-      acc[dept].total_gross_salary += employee.gross_salary;
-      acc[dept].total_net_salary += employee.net_salary;
-      acc[dept].total_employer_cost += employee.total_employer_cost;
-      
-      return acc;
-    }, {} as Record<string, DepartmentSummary>);
-
-    setDepartmentSummary(Object.values(summary));
-  };
 
   const filterData = () => {
     let filtered = employeeCosts;
@@ -392,40 +361,6 @@ const EmployeeCosts = () => {
         </Card>
       </div>
 
-      {/* Department Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Departman Özeti</CardTitle>
-          <CardDescription>Departman bazında personel maliyetleri</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {departmentSummary.map((dept) => (
-              <div key={dept.department} className="p-4 border rounded-lg">
-                <h4 className="font-medium text-gray-900 mb-2">{dept.department}</h4>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Çalışan Sayısı:</span>
-                    <span className="font-medium">{dept.employee_count}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Toplam Brüt:</span>
-                    <span className="font-medium">{formatCurrency(dept.total_gross_salary)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Toplam Net:</span>
-                    <span className="font-medium">{formatCurrency(dept.total_net_salary)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">İşveren Maliyeti:</span>
-                    <span className="font-medium text-red-600">{formatCurrency(dept.total_employer_cost)}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
