@@ -96,16 +96,25 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
       const severance = parseFloat(form.getValues("severanceProvision")) || 0;
       const bonus = parseFloat(form.getValues("bonusProvision")) || 0;
 
-      // Use minimum wage for calculations if option is selected
-      const calculationBase = calculateAsMinimumWage ? MINIMUM_WAGE : currentGross;
+      let sgkEmployer, unemploymentEmployer, accidentInsurance, totalEmployerCost;
 
-      const sgkEmployer = calculationBase * (sgkRate / 100);
-      const unemploymentEmployer = calculationBase * (unemploymentRate / 100);
-      const accidentInsurance = calculationBase * (accidentRate / 100);
-      
-      // Toplam maliyet: Gerçek maaş + primlerin asgari ücret bazlı hesaplanması durumunda da gerçek maaş kullanılır
-      // Sadece SGK primleri asgari ücret üzerinden hesaplanır, toplam maliyete gerçek maaş eklenir
-      const totalEmployerCost = currentGross + sgkEmployer + unemploymentEmployer + accidentInsurance + stampTax + severance + bonus;
+      if (calculateAsMinimumWage) {
+        // Asgari ücret olarak hesapla: Primler asgari ücret üzerinden hesaplanır
+        sgkEmployer = MINIMUM_WAGE * (sgkRate / 100);
+        unemploymentEmployer = MINIMUM_WAGE * (unemploymentRate / 100);
+        accidentInsurance = MINIMUM_WAGE * (accidentRate / 100);
+        
+        // Toplam maliyet = Gerçek net maaş + asgari ücret primleri + diğer masraflar
+        const currentNetSalary = salaryInputType === "net" ? parseFloat(netSalary) || 0 : calculateNetFromGross(currentGross);
+        totalEmployerCost = currentNetSalary + sgkEmployer + unemploymentEmployer + accidentInsurance + stampTax + severance + bonus;
+      } else {
+        // Normal hesaplama: Tüm hesaplamalar gerçek brüt maaş üzerinden
+        sgkEmployer = currentGross * (sgkRate / 100);
+        unemploymentEmployer = currentGross * (unemploymentRate / 100);
+        accidentInsurance = currentGross * (accidentRate / 100);
+        
+        totalEmployerCost = currentGross + sgkEmployer + unemploymentEmployer + accidentInsurance + stampTax + severance + bonus;
+      }
 
       setCalculatedCosts({
         sgkEmployer,
