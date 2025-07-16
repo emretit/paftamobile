@@ -5,9 +5,9 @@ interface AuthGuardProps {
   children: React.ReactNode;
 }
 
-// Temporarily modified to always allow access
+// Authentication completely disabled
 const AuthGuard = ({ children }: AuthGuardProps) => {
-  // Simply return the children without any authentication check
+  // No authentication checks - always allow access
   return <>{children}</>;
 };
 

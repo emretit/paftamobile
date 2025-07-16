@@ -4,26 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useAuthState = () => {
   const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
+  // Authentication disabled - no auth checks
   useEffect(() => {
-    const checkSession = async () => {
-      // Updated to use the correct method
-      const { data } = await supabase.auth.getSession();
-      setUser(data.session?.user || null);
-      setLoading(false);
-    };
-    
-    checkSession();
-    
-    // Updated to use the correct method
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user || null);
-      }
-    );
-    
-    return () => subscription.unsubscribe();
+    setUser(null);
+    setLoading(false);
   }, []);
 
   // Calculate user initials from name or email

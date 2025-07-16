@@ -8,9 +8,7 @@ type RouteGuardProps = {
 
 export const PublicRoute: React.FC<RouteGuardProps> = ({ children }) => children;
 
-// Temporarily modified to not require authentication
+// Authentication disabled - all routes are public
 export const ProtectedRoute: React.FC<RouteGuardProps> = ({ children }) => (
-  // Temporarily bypassing AuthGuard
   <>{children}</>
-  // Will be restored later: <AuthGuard>{children}</AuthGuard>
 );
