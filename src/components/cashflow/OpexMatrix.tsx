@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, ChevronDown, Download, Users, Calculator } from "lucide-react";
+import { ChevronRight, ChevronDown, Download, Users, Calculator, Save } from "lucide-react";
 import { useOpexMatrix } from "@/hooks/useOpexMatrix";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -350,6 +350,45 @@ const OpexMatrix = () => {
     document.body.removeChild(link);
   };
 
+  // Save all data functionality
+  const saveAllData = async () => {
+    try {
+      setLoading(true);
+      
+      // Save all non-zero values in the matrix
+      const savePromises = [];
+      
+      for (const category of OPEX_CATEGORIES) {
+        for (const subcategory of category.subcategories) {
+          for (let month = 1; month <= 12; month++) {
+            const value = getCellValue(category.name, subcategory, month);
+            if (value > 0) {
+              savePromises.push(
+                upsertOpexMatrix(selectedYear, month, category.name, subcategory, value)
+              );
+            }
+          }
+        }
+      }
+      
+      await Promise.all(savePromises);
+      
+      toast({
+        title: "Başarılı",
+        description: "Tüm veriler kaydedildi.",
+      });
+    } catch (error) {
+      console.error('Error saving data:', error);
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Veriler kaydedilirken bir hata oluştu.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -373,6 +412,10 @@ const OpexMatrix = () => {
               <Button onClick={exportToExcel} variant="outline">
                 <Download className="mr-2 h-4 w-4" />
                 Excel'e Aktar
+              </Button>
+              <Button onClick={saveAllData} disabled={loading}>
+                <Save className="mr-2 h-4 w-4" />
+                Kaydet
               </Button>
             </div>
           </CardTitle>
