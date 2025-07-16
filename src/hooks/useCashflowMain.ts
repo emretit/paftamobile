@@ -47,10 +47,14 @@ export const useCashflowMain = () => {
       };
 
       if (year) {
-        mainCategories.forEach(category => {
+        mainCategories.forEach((category, categoryIndex) => {
           const subs = subcategories[category as keyof typeof subcategories] || [''];
-          subs.forEach(subcategory => {
+          subs.forEach((subcategory, subIndex) => {
             for (let month = 1; month <= 12; month++) {
+              // Create deterministic values based on category, subcategory, and month
+              const baseValue = (categoryIndex + 1) * 10000 + (subIndex + 1) * 1000 + month * 100;
+              const value = category === 'operating_outflows' ? baseValue * 0.8 : baseValue;
+              
               mockData.push({
                 id: `${category}-${subcategory}-${year}-${month}`,
                 user_id: 'mock-user',
@@ -58,7 +62,7 @@ export const useCashflowMain = () => {
                 month: month,
                 main_category: category,
                 subcategory: subcategory,
-                value: Math.floor(Math.random() * 50000) + 10000,
+                value: Math.floor(value),
                 description: null,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
