@@ -15,7 +15,7 @@ import EmployeeCosts from "@/components/cashflow/EmployeeCosts";
 import { LoansAndChecks } from "@/components/cashflow/LoansAndChecks";
 
 import { EnhancedCashflowTable } from "@/components/dashboard/EnhancedCashflowTable";
-import { TrendingUp, Plus, List, Settings, FileText, BarChart2, Calculator, Users2 } from "lucide-react";
+import { TrendingUp, Plus, List, Settings, FileText, BarChart2, Calculator, Users2, CreditCard } from "lucide-react";
 
 interface CashflowProps {
   isCollapsed: boolean;
@@ -34,6 +34,7 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
     if (path.includes('/opex-entry')) return 'opex-entry';
     if (path.includes('/employee-costs')) return 'employee-costs';
     if (path.includes('/main-table')) return 'main-table';
+    if (path.includes('/loans-and-checks')) return 'loans-and-checks';
     return 'overview';
   };
 
@@ -57,6 +58,9 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
         break;
       case 'main-table':
         navigate('/cashflow/main-table');
+        break;
+      case 'loans-and-checks':
+        navigate('/cashflow/loans-and-checks');
         break;
       default:
         navigate('/cashflow');
@@ -107,6 +111,10 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
                   <Calculator className="h-4 w-4" />
                   <span>Ana Nakit Akış Tablosu</span>
                 </CustomTabsTrigger>
+                <CustomTabsTrigger value="loans-and-checks" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
+                  <CreditCard className="h-4 w-4" />
+                  <span>Krediler ve Çekler</span>
+                </CustomTabsTrigger>
               </CustomTabsList>
             </div>
 
@@ -133,6 +141,10 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
 
             <CustomTabsContent value="main-table" className="mt-6 animate-fade-in">
               <EnhancedCashflowTable />
+            </CustomTabsContent>
+
+            <CustomTabsContent value="loans-and-checks" className="mt-6 animate-fade-in">
+              <LoansAndChecks />
             </CustomTabsContent>
           </CustomTabs>
         </div>

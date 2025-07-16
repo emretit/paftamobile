@@ -13,6 +13,7 @@ export const cashflowRoutes: RouteConfig[] = [
   { path: "/cashflow/categories", component: Cashflow, protected: true },
   { path: "/cashflow/opex-entry", component: Cashflow, protected: true },
   { path: "/cashflow/employee-costs", component: Cashflow, protected: true },
+  { path: "/cashflow/loans-and-checks", component: Cashflow, protected: true },
   
   { path: "/cashflow/main-table", component: Cashflow, protected: true },
 ];
