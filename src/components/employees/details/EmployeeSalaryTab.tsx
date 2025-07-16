@@ -16,11 +16,13 @@ interface EmployeeSalaryTabProps {
 export const EmployeeSalaryTab = ({ employee, refetch }: EmployeeSalaryTabProps) => {
   const [open, setOpen] = useState(false);
   const [editingSalary, setEditingSalary] = useState<any>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleSaveSalary = async (values: any) => {
     setOpen(false);
     setEditingSalary(null);
     await refetch();
+    setRefreshTrigger(prev => prev + 1); // Trigger SalaryInfo refresh
   };
 
   const handleEditSalary = (salaryData: any) => {
@@ -60,7 +62,7 @@ export const EmployeeSalaryTab = ({ employee, refetch }: EmployeeSalaryTabProps)
         </Dialog>
       </div>
 
-      <SalaryInfo employeeId={employee.id} onEdit={handleEditSalary} />
+      <SalaryInfo employeeId={employee.id} onEdit={handleEditSalary} refreshTrigger={refreshTrigger} />
     </div>
   );
 };

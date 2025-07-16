@@ -29,16 +29,17 @@ interface SalaryRecord {
 interface SalaryInfoProps {
   employeeId: string;
   onEdit?: (salaryData: SalaryRecord) => void;
+  refreshTrigger?: number;
 }
 
-export const SalaryInfo = ({ employeeId, onEdit }: SalaryInfoProps) => {
+export const SalaryInfo = ({ employeeId, onEdit, refreshTrigger }: SalaryInfoProps) => {
   const [currentSalary, setCurrentSalary] = useState<SalaryRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchCurrentSalary();
-  }, [employeeId]);
+  }, [employeeId, refreshTrigger]);
 
   const fetchCurrentSalary = async () => {
     try {
