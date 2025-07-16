@@ -144,7 +144,11 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
         unemploymentEmployer = currentGross * (unemploymentRate / 100);
         accidentInsurance = currentGross * (accidentRate / 100);
         
-        totalEmployerCost = currentGross + sgkEmployer + unemploymentEmployer + accidentInsurance + stampTax + severance + bonus;
+        // Yardımları da toplam maliyete dahil et
+        const mealAllowance = parseFloat(form.getValues("mealAllowance")) || 0;
+        const transportAllowance = parseFloat(form.getValues("transportAllowance")) || 0;
+        
+        totalEmployerCost = currentGross + sgkEmployer + unemploymentEmployer + accidentInsurance + stampTax + severance + bonus + mealAllowance + transportAllowance;
       }
 
       setCalculatedCosts({
