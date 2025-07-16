@@ -28,7 +28,7 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
   });
 
   // Turkish minimum wage for 2024 (this should ideally come from a settings table)
-  const MINIMUM_WAGE = 17002; // 2024 asgari ücret
+  const MINIMUM_WAGE = 22104; // 2025 asgari ücret
 
   const form = useForm({
     defaultValues: {
