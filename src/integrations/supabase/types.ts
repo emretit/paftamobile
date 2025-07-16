@@ -720,31 +720,20 @@ export type Database = {
           bonus_provision: number | null
           calculate_as_minimum_wage: boolean | null
           created_at: string | null
-          cumulative_yearly_gross: number | null
-          cumulative_yearly_tax: number | null
           effective_date: string
           employee_id: string | null
           gross_salary: number
           id: string
-          income_tax_amount: number | null
           meal_allowance: number | null
           net_salary: number
           notes: string | null
           salary_input_type: string | null
           severance_provision: number | null
-          sgk_employee_amount: number | null
-          sgk_employee_rate: number | null
           sgk_employer_amount: number | null
           sgk_employer_rate: number | null
           stamp_tax: number | null
-          stamp_tax_amount: number | null
-          stamp_tax_rate: number | null
-          tax_year: number | null
-          total_deductions: number | null
           total_employer_cost: number | null
           transport_allowance: number | null
-          unemployment_employee_amount: number | null
-          unemployment_employee_rate: number | null
           unemployment_employer_amount: number | null
           unemployment_employer_rate: number | null
           updated_at: string | null
@@ -756,31 +745,20 @@ export type Database = {
           bonus_provision?: number | null
           calculate_as_minimum_wage?: boolean | null
           created_at?: string | null
-          cumulative_yearly_gross?: number | null
-          cumulative_yearly_tax?: number | null
           effective_date: string
           employee_id?: string | null
           gross_salary: number
           id?: string
-          income_tax_amount?: number | null
           meal_allowance?: number | null
           net_salary: number
           notes?: string | null
           salary_input_type?: string | null
           severance_provision?: number | null
-          sgk_employee_amount?: number | null
-          sgk_employee_rate?: number | null
           sgk_employer_amount?: number | null
           sgk_employer_rate?: number | null
           stamp_tax?: number | null
-          stamp_tax_amount?: number | null
-          stamp_tax_rate?: number | null
-          tax_year?: number | null
-          total_deductions?: number | null
           total_employer_cost?: number | null
           transport_allowance?: number | null
-          unemployment_employee_amount?: number | null
-          unemployment_employee_rate?: number | null
           unemployment_employer_amount?: number | null
           unemployment_employer_rate?: number | null
           updated_at?: string | null
@@ -792,31 +770,20 @@ export type Database = {
           bonus_provision?: number | null
           calculate_as_minimum_wage?: boolean | null
           created_at?: string | null
-          cumulative_yearly_gross?: number | null
-          cumulative_yearly_tax?: number | null
           effective_date?: string
           employee_id?: string | null
           gross_salary?: number
           id?: string
-          income_tax_amount?: number | null
           meal_allowance?: number | null
           net_salary?: number
           notes?: string | null
           salary_input_type?: string | null
           severance_provision?: number | null
-          sgk_employee_amount?: number | null
-          sgk_employee_rate?: number | null
           sgk_employer_amount?: number | null
           sgk_employer_rate?: number | null
           stamp_tax?: number | null
-          stamp_tax_amount?: number | null
-          stamp_tax_rate?: number | null
-          tax_year?: number | null
-          total_deductions?: number | null
           total_employer_cost?: number | null
           transport_allowance?: number | null
-          unemployment_employee_amount?: number | null
-          unemployment_employee_rate?: number | null
           unemployment_employer_amount?: number | null
           unemployment_employer_rate?: number | null
           updated_at?: string | null
