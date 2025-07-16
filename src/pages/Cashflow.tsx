@@ -8,8 +8,7 @@ import {
   CustomTabsTrigger 
 } from "@/components/ui/custom-tabs";
 import CashflowOverview from "@/components/cashflow/CashflowOverview";
-import AddTransaction from "@/components/cashflow/AddTransaction";
-import TransactionsList from "@/components/cashflow/TransactionsList";
+import TransactionsManager from "@/components/cashflow/TransactionsManager";
 import CategoryManagement from "@/components/cashflow/CategoryManagement";
 import OpexEntry from "@/components/cashflow/OpexEntry";
 import MonthlyFinancialOverview from "@/components/dashboard/MonthlyFinancialOverview";
@@ -30,7 +29,6 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
   const getActiveTab = () => {
     const path = location.pathname;
     if (path.includes('/monthly-overview')) return 'monthly-overview';
-    if (path.includes('/add-transaction')) return 'add-transaction';
     if (path.includes('/transactions')) return 'transactions';
     if (path.includes('/categories')) return 'categories';
     if (path.includes('/opex-entry')) return 'opex-entry';
@@ -47,9 +45,6 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
         break;
       case 'monthly-overview':
         navigate('/cashflow/monthly-overview');
-        break;
-      case 'add-transaction':
-        navigate('/cashflow/add-transaction');
         break;
       case 'transactions':
         navigate('/cashflow/transactions');
@@ -99,10 +94,6 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
                   <BarChart2 className="h-4 w-4" />
                   <span>Aylık Finansal Durum</span>
                 </CustomTabsTrigger>
-                <CustomTabsTrigger value="add-transaction" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
-                  <Plus className="h-4 w-4" />
-                  <span>İşlem Ekle</span>
-                </CustomTabsTrigger>
                 <CustomTabsTrigger value="transactions" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   <List className="h-4 w-4" />
                   <span>İşlemler</span>
@@ -134,12 +125,8 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
               <MonthlyFinancialOverview />
             </CustomTabsContent>
 
-            <CustomTabsContent value="add-transaction" className="mt-6 animate-fade-in">
-              <AddTransaction />
-            </CustomTabsContent>
-
             <CustomTabsContent value="transactions" className="mt-6 animate-fade-in">
-              <TransactionsList />
+              <TransactionsManager />
             </CustomTabsContent>
 
             <CustomTabsContent value="categories" className="mt-6 animate-fade-in">
