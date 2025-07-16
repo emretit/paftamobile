@@ -724,6 +724,7 @@ export type Database = {
           employee_id: string | null
           gross_salary: number
           id: string
+          meal_allowance: number | null
           net_salary: number
           notes: string | null
           salary_input_type: string | null
@@ -732,6 +733,7 @@ export type Database = {
           sgk_employer_rate: number | null
           stamp_tax: number | null
           total_employer_cost: number | null
+          transport_allowance: number | null
           unemployment_employer_amount: number | null
           unemployment_employer_rate: number | null
           updated_at: string | null
@@ -747,6 +749,7 @@ export type Database = {
           employee_id?: string | null
           gross_salary: number
           id?: string
+          meal_allowance?: number | null
           net_salary: number
           notes?: string | null
           salary_input_type?: string | null
@@ -755,6 +758,7 @@ export type Database = {
           sgk_employer_rate?: number | null
           stamp_tax?: number | null
           total_employer_cost?: number | null
+          transport_allowance?: number | null
           unemployment_employer_amount?: number | null
           unemployment_employer_rate?: number | null
           updated_at?: string | null
@@ -770,6 +774,7 @@ export type Database = {
           employee_id?: string | null
           gross_salary?: number
           id?: string
+          meal_allowance?: number | null
           net_salary?: number
           notes?: string | null
           salary_input_type?: string | null
@@ -778,6 +783,7 @@ export type Database = {
           sgk_employer_rate?: number | null
           stamp_tax?: number | null
           total_employer_cost?: number | null
+          transport_allowance?: number | null
           unemployment_employer_amount?: number | null
           unemployment_employer_rate?: number | null
           updated_at?: string | null

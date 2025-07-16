@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SalaryForm } from "./salary/SalaryForm";
-import { SalaryHistory } from "./salary/SalaryHistory";
+import { SalaryInfo } from "./salary/SalaryInfo";
 import { Plus } from "lucide-react";
 
 interface EmployeeSalaryTabProps {
@@ -24,17 +24,17 @@ export const EmployeeSalaryTab = ({ employee, refetch }: EmployeeSalaryTabProps)
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Maaş Bilgileri ve İşveren Maliyetleri</h2>
+        <h2 className="text-2xl font-bold">Maaş Bilgileri</h2>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Yeni Maaş Kaydı
+              Maaş Bilgilerini Düzenle
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Yeni Maaş Kaydı Ekle</DialogTitle>
+              <DialogTitle>Maaş Bilgilerini Düzenle</DialogTitle>
             </DialogHeader>
             <SalaryForm
               employeeId={employee.id}
@@ -45,7 +45,7 @@ export const EmployeeSalaryTab = ({ employee, refetch }: EmployeeSalaryTabProps)
         </Dialog>
       </div>
 
-      <SalaryHistory employeeId={employee.id} />
+      <SalaryInfo employeeId={employee.id} />
     </div>
   );
 };

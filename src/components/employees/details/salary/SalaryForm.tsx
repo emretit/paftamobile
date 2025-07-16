@@ -62,7 +62,8 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
       grossSalary: "",
       netSalary: "",
       calculateAsMinimumWage: false,
-      allowances: "{}",
+      mealAllowance: "0",
+      transportAllowance: "0",
       effectiveDate: new Date().toISOString().split('T')[0], // Bugünün tarihi
       sgkEmployerRate: "15.75", // 2025 doğru SGK işveren primi
       unemploymentEmployerRate: "2.0", // 2025 doğru işsizlik işveren primi
@@ -165,7 +166,8 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
           net_salary: parseFloat(values.netSalary),
           salary_input_type: values.salaryInputType,
           calculate_as_minimum_wage: values.calculateAsMinimumWage,
-          allowances: JSON.parse(values.allowances || '{}'),
+          meal_allowance: parseFloat(values.mealAllowance || '0'),
+          transport_allowance: parseFloat(values.transportAllowance || '0'),
           effective_date: values.effectiveDate,
           sgk_employer_rate: parseFloat(values.sgkEmployerRate),
           unemployment_employer_rate: parseFloat(values.unemploymentEmployerRate),
@@ -318,12 +320,26 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
               
               <FormField
                 control={form.control}
-                name="allowances"
+                name="mealAllowance"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Yan Haklar (JSON)</FormLabel>
+                    <FormLabel>Yemek Yardımı (₺)</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder='{"yemek": 500, "yol": 300}' />
+                      <Input {...field} type="number" placeholder="0" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="transportAllowance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Yol Yardımı (₺)</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="number" placeholder="0" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
