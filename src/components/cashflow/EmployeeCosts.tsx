@@ -44,7 +44,7 @@ interface EmployeeCostData {
   meal_allowance: number;
   transport_allowance: number;
   effective_date: string;
-  sgk_employer_amount: number;
+  manual_employer_sgk_cost: number;
   unemployment_employer_amount: number;
   accident_insurance_amount: number;
 }
@@ -103,7 +103,7 @@ const EmployeeCosts = () => {
             meal_allowance,
             transport_allowance,
             effective_date,
-            sgk_employer_amount,
+            manual_employer_sgk_cost,
             unemployment_employer_amount,
             accident_insurance_amount
           )
@@ -148,7 +148,7 @@ const EmployeeCosts = () => {
           meal_allowance: latestSalary?.meal_allowance || 0,
           transport_allowance: latestSalary?.transport_allowance || 0,
           effective_date: latestSalary?.effective_date,
-          sgk_employer_amount: latestSalary?.sgk_employer_amount || 0,
+          manual_employer_sgk_cost: latestSalary?.manual_employer_sgk_cost || 0,
           unemployment_employer_amount: latestSalary?.unemployment_employer_amount || 0,
           accident_insurance_amount: latestSalary?.accident_insurance_amount || 0,
         };
@@ -260,7 +260,7 @@ const EmployeeCosts = () => {
         employee.total_employer_cost,
         employee.meal_allowance,
         employee.transport_allowance,
-        employee.sgk_employer_amount,
+        employee.manual_employer_sgk_cost,
         employee.unemployment_employer_amount,
         employee.accident_insurance_amount
       ].join(','))
@@ -424,7 +424,7 @@ const EmployeeCosts = () => {
                       {formatCurrency(employee.net_salary)}
                     </TableCell>
                     <TableCell className="text-right">
-                      {formatCurrency(employee.sgk_employer_amount)}
+                      {formatCurrency(employee.manual_employer_sgk_cost)}
                     </TableCell>
                     <TableCell className="text-right">
                       {formatCurrency(employee.meal_allowance)}
