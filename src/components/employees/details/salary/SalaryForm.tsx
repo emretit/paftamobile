@@ -42,7 +42,7 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
     const sgkEmployer = 4355.92; // SGK Primi %16.75 (İşveren Payı)
     const unemploymentEmployer = 520.11; // İşveren İşsizlik Sigorta Primi %2
     
-    const totalEmployerCost = 30621.53; // İşverene Toplam Maliyet (resimde yazıyor)
+    const totalEmployerCost = 30881.53; // İşverene Toplam Maliyet (resimde yazıyor)
     
     return {
       sgkEmployee,
