@@ -22,12 +22,19 @@ interface EmployeeSalaryData {
   department: string;
   total_employer_cost: number;
   employee_count: number;
+  gross_salary: number;
+  net_salary: number;
+  meal_allowance: number;
+  transport_allowance: number;
+  manual_employer_sgk_cost: number;
+  unemployment_employer_amount: number;
+  accident_insurance_amount: number;
 }
 
 const OPEX_CATEGORIES: OpexCategory[] = [
   {
     name: "Personel Giderleri",
-    subcategories: ["Maaşlar", "Prim & Bonus", "Sosyal Güvenlik", "Yemek Yardımı", "Ulaşım Yardımı", "Diğer Personel Giderleri"],
+    subcategories: ["Net Maaşlar", "SGK İşveren Payı", "İşsizlik Sigortası", "İş Kazası Sigortası", "Yemek Yardımı", "Ulaşım Yardımı"],
     isAutoPopulated: true,
     type: 'personnel'
   },
@@ -86,7 +93,14 @@ const OpexMatrix = () => {
           department,
           employee_salaries!inner (
             total_employer_cost,
-            effective_date
+            effective_date,
+            gross_salary,
+            net_salary,
+            meal_allowance,
+            transport_allowance,
+            manual_employer_sgk_cost,
+            unemployment_employer_amount,
+            accident_insurance_amount
           )
         `)
         .eq('status', 'aktif')
@@ -98,21 +112,54 @@ const OpexMatrix = () => {
       const departmentTotals = data?.reduce((acc, employee) => {
         const department = employee.department;
         const salary = employee.employee_salaries as any;
-        const cost = salary?.total_employer_cost || 0;
 
         if (!acc[department]) {
-          acc[department] = { total_cost: 0, count: 0 };
+          acc[department] = { 
+            total_cost: 0, 
+            count: 0,
+            gross_salary: 0,
+            net_salary: 0,
+            meal_allowance: 0,
+            transport_allowance: 0,
+            manual_employer_sgk_cost: 0,
+            unemployment_employer_amount: 0,
+            accident_insurance_amount: 0
+          };
         }
-        acc[department].total_cost += cost;
+        acc[department].total_cost += salary?.total_employer_cost || 0;
         acc[department].count += 1;
+        acc[department].gross_salary += salary?.gross_salary || 0;
+        acc[department].net_salary += salary?.net_salary || 0;
+        acc[department].meal_allowance += salary?.meal_allowance || 0;
+        acc[department].transport_allowance += salary?.transport_allowance || 0;
+        acc[department].manual_employer_sgk_cost += salary?.manual_employer_sgk_cost || 0;
+        acc[department].unemployment_employer_amount += salary?.unemployment_employer_amount || 0;
+        acc[department].accident_insurance_amount += salary?.accident_insurance_amount || 0;
 
         return acc;
-      }, {} as Record<string, { total_cost: number; count: number }>);
+      }, {} as Record<string, { 
+        total_cost: number; 
+        count: number;
+        gross_salary: number;
+        net_salary: number;
+        meal_allowance: number;
+        transport_allowance: number;
+        manual_employer_sgk_cost: number;
+        unemployment_employer_amount: number;
+        accident_insurance_amount: number;
+      }>);
 
       const personnelDataArray = Object.entries(departmentTotals || {}).map(([department, data]) => ({
         department,
         total_employer_cost: data.total_cost,
-        employee_count: data.count
+        employee_count: data.count,
+        gross_salary: data.gross_salary,
+        net_salary: data.net_salary,
+        meal_allowance: data.meal_allowance,
+        transport_allowance: data.transport_allowance,
+        manual_employer_sgk_cost: data.manual_employer_sgk_cost,
+        unemployment_employer_amount: data.unemployment_employer_amount,
+        accident_insurance_amount: data.accident_insurance_amount
       }));
 
       setPersonnelData(personnelDataArray);
@@ -230,10 +277,22 @@ const OpexMatrix = () => {
 
   // Get auto-populated value for personnel expenses
   const getAutoPopulatedValue = (subcategory: string, month: number): number => {
-    if (subcategory === "Maaşlar") {
-      return personnelData.reduce((sum, dept) => sum + dept.total_employer_cost, 0);
+    switch (subcategory) {
+      case "Net Maaşlar":
+        return personnelData.reduce((sum, dept) => sum + dept.net_salary, 0);
+      case "SGK İşveren Payı":
+        return personnelData.reduce((sum, dept) => sum + dept.manual_employer_sgk_cost, 0);
+      case "İşsizlik Sigortası":
+        return personnelData.reduce((sum, dept) => sum + dept.unemployment_employer_amount, 0);
+      case "İş Kazası Sigortası":
+        return personnelData.reduce((sum, dept) => sum + dept.accident_insurance_amount, 0);
+      case "Yemek Yardımı":
+        return personnelData.reduce((sum, dept) => sum + dept.meal_allowance, 0);
+      case "Ulaşım Yardımı":
+        return personnelData.reduce((sum, dept) => sum + dept.transport_allowance, 0);
+      default:
+        return 0;
     }
-    return 0;
   };
 
   // Calculate category total (sum of all subcategories in a category)
