@@ -51,23 +51,31 @@ const InvoiceAnalysisTable = () => {
   const handleCellChange = (field: string, month: number, value: string) => {
     const amount = parseFloat(value) || 0;
     
+    // Get current values for this month to preserve existing data
+    const currentPurchaseInvoice = matrixData.purchase_invoice?.[month] || 0;
+    const currentSalesInvoice = matrixData.sales_invoice?.[month] || 0;
+    
     // Calculate VAT from VAT-inclusive amount (KDV dahil tutardan KDV hesaplama)
-    const calculatedData: any = {
-      [field]: amount
-    };
+    const calculatedData: any = {};
 
     if (field === 'purchase_invoice') {
-      // KDV dahil tutardan KDV'yi ayırma: KDV = tutar * (20/120)
+      // Update purchase values
+      calculatedData.purchase_invoice = amount;
       calculatedData.purchase_vat = amount * (20/120);
+      // Preserve sales values
+      calculatedData.sales_invoice = currentSalesInvoice;
+      calculatedData.sales_vat = currentSalesInvoice * (20/120);
     } else if (field === 'sales_invoice') {
-      // KDV dahil tutardan KDV'yi ayırma: KDV = tutar * (20/120)
+      // Update sales values  
+      calculatedData.sales_invoice = amount;
       calculatedData.sales_vat = amount * (20/120);
+      // Preserve purchase values
+      calculatedData.purchase_invoice = currentPurchaseInvoice;
+      calculatedData.purchase_vat = currentPurchaseInvoice * (20/120);
     }
 
     // Calculate VAT difference
-    const currentPurchaseVat = field === 'purchase_invoice' ? calculatedData.purchase_vat : (matrixData.purchase_vat?.[month] || 0);
-    const currentSalesVat = field === 'sales_invoice' ? calculatedData.sales_vat : (matrixData.sales_vat?.[month] || 0);
-    calculatedData.vat_difference = currentSalesVat - currentPurchaseVat;
+    calculatedData.vat_difference = calculatedData.sales_vat - calculatedData.purchase_vat;
     
     setMatrixData(prev => {
       const newData = { ...prev };
