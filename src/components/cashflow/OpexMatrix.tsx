@@ -365,8 +365,8 @@ const OpexMatrix = () => {
                   </>
                 ))}
                 
-                {/* Total Row */}
-                <TableRow className="bg-primary/10 font-bold">
+                 {/* Total Row - Always visible */}
+                <TableRow className="bg-primary/10 font-bold border-t-2 border-primary">
                   <TableCell className="sticky left-0 bg-primary/10 z-10">TOPLAM</TableCell>
                   <TableCell className="sticky left-[200px] bg-primary/10 z-10"></TableCell>
                   {MONTHS.map((_, monthIndex) => (
