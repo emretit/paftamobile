@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,6 +66,7 @@ const MONTHS = [
 const OpexMatrix = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [expandedSubcategories, setExpandedSubcategories] = useState<Set<string>>(new Set());
   const [personnelData, setPersonnelData] = useState<EmployeeSalaryData[]>([]);
   const [matrixData, setMatrixData] = useState<Record<string, Record<number, number>>>({});
   const [loading, setLoading] = useState(false);
@@ -156,6 +157,18 @@ const OpexMatrix = () => {
       newExpanded.add(categoryName);
     }
     setExpandedCategories(newExpanded);
+  };
+
+  // Toggle subcategory expansion
+  const toggleSubcategory = (categoryName: string, subcategory: string) => {
+    const key = `${categoryName}|${subcategory}`;
+    const newExpanded = new Set(expandedSubcategories);
+    if (newExpanded.has(key)) {
+      newExpanded.delete(key);
+    } else {
+      newExpanded.add(key);
+    }
+    setExpandedSubcategories(newExpanded);
   };
 
   // Auto-save cell value with debounce
@@ -358,43 +371,89 @@ const OpexMatrix = () => {
                       </TableCell>
                     </TableRow>
                     {expandedCategories.has(category.name) && category.subcategories.map((subcategory) => (
-                      <TableRow key={`${category.name}-${subcategory}`}>
-                        <TableCell className="sticky left-0 bg-background z-10"></TableCell>
-                        <TableCell className="sticky left-[200px] bg-background z-10">
-                          <div className="flex items-center gap-2">
-                            {subcategory}
-                            {category.isAutoPopulated && (
-                              <Badge variant="outline">Auto</Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        {MONTHS.map((_, monthIndex) => {
-                          const month = monthIndex + 1;
-                          const value = getCellValue(category.name, subcategory, month);
-                          const autoValue = category.isAutoPopulated ? getAutoPopulatedValue(subcategory, month) : 0;
-                          
-                          return (
-                            <TableCell key={monthIndex} className="text-center p-2">
-                              {category.isAutoPopulated ? (
-                                <div className="text-sm font-medium text-muted-foreground">
-                                  {formatCurrency(autoValue)}
-                                </div>
-                              ) : (
-                                <Input
-                                  type="number"
-                                  value={value || ''}
-                                  onChange={(e) => handleCellChange(category.name, subcategory, month, e.target.value)}
-                                  className="w-full text-center border-0 bg-transparent focus:bg-background"
-                                  placeholder="0"
-                                />
-                              )}
-                            </TableCell>
-                          );
-                        })}
-                        <TableCell className="text-center font-medium">
-                          {formatCurrency(getRowTotal(category.name, subcategory))}
-                        </TableCell>
-                      </TableRow>
+                       <React.Fragment key={`${category.name}-${subcategory}`}>
+                         <TableRow className="animate-fade-in">
+                           <TableCell className="sticky left-0 bg-background z-10"></TableCell>
+                           <TableCell className="sticky left-[200px] bg-background z-10">
+                             <div className="flex items-center gap-2">
+                               <button
+                                 onClick={() => toggleSubcategory(category.name, subcategory)}
+                                 className="p-0.5 rounded hover:bg-muted/50 transition-colors"
+                               >
+                                 {expandedSubcategories.has(`${category.name}|${subcategory}`) ? (
+                                   <ChevronDown className="h-3 w-3" />
+                                 ) : (
+                                   <ChevronRight className="h-3 w-3" />
+                                 )}
+                               </button>
+                               <span>{subcategory}</span>
+                               {category.isAutoPopulated && (
+                                 <Badge variant="outline">Auto</Badge>
+                               )}
+                             </div>
+                           </TableCell>
+                           {MONTHS.map((_, monthIndex) => {
+                             const month = monthIndex + 1;
+                             const value = getCellValue(category.name, subcategory, month);
+                             const autoValue = category.isAutoPopulated ? getAutoPopulatedValue(subcategory, month) : 0;
+                             
+                             return (
+                               <TableCell key={monthIndex} className="text-center p-2">
+                                 {category.isAutoPopulated ? (
+                                   <div className="text-sm font-medium text-muted-foreground">
+                                     {formatCurrency(autoValue)}
+                                   </div>
+                                 ) : (
+                                   <Input
+                                     type="number"
+                                     value={value || ''}
+                                     onChange={(e) => handleCellChange(category.name, subcategory, month, e.target.value)}
+                                     className="w-full text-center border-0 bg-transparent focus:bg-background"
+                                     placeholder="0"
+                                   />
+                                 )}
+                               </TableCell>
+                             );
+                           })}
+                           <TableCell className="text-center font-medium">
+                             {formatCurrency(getRowTotal(category.name, subcategory))}
+                           </TableCell>
+                         </TableRow>
+                         
+                         {/* Subcategory Details Row */}
+                         {expandedSubcategories.has(`${category.name}|${subcategory}`) && (
+                           <TableRow className="animate-accordion-down bg-muted/20">
+                             <TableCell className="sticky left-0 bg-muted/20 z-10"></TableCell>
+                             <TableCell className="sticky left-[200px] bg-muted/20 z-10">
+                               <div className="text-xs text-muted-foreground pl-6">
+                                 Detaylar
+                               </div>
+                             </TableCell>
+                             {MONTHS.map((_, monthIndex) => {
+                               const month = monthIndex + 1;
+                               const value = getCellValue(category.name, subcategory, month);
+                               
+                               return (
+                                 <TableCell key={monthIndex} className="text-center p-2 bg-muted/20">
+                                   <div className="text-xs space-y-1">
+                                     <div className="font-medium">
+                                       {formatCurrency(value)}
+                                     </div>
+                                     <div className="text-muted-foreground">
+                                       {value > 0 ? `${month}/${selectedYear}` : 'Boş'}
+                                     </div>
+                                   </div>
+                                 </TableCell>
+                               );
+                             })}
+                             <TableCell className="text-center bg-muted/20">
+                               <div className="text-xs text-muted-foreground">
+                                 Yıllık Toplam
+                               </div>
+                             </TableCell>
+                           </TableRow>
+                         )}
+                       </React.Fragment>
                     ))}
                   </>
                 ))}
