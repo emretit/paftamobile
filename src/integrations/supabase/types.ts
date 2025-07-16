@@ -395,6 +395,51 @@ export type Database = {
           },
         ]
       }
+      checks: {
+        Row: {
+          amount: number
+          bank: string
+          check_number: string
+          created_at: string
+          due_date: string
+          id: string
+          issue_date: string
+          notes: string | null
+          payee: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          bank: string
+          check_number: string
+          created_at?: string
+          due_date: string
+          id?: string
+          issue_date: string
+          notes?: string | null
+          payee: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          bank?: string
+          check_number?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          issue_date?: string
+          notes?: string | null
+          payee?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           address: string | null
@@ -1198,6 +1243,57 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           year?: number
+        }
+        Relationships: []
+      }
+      loans: {
+        Row: {
+          amount: number
+          bank: string
+          created_at: string
+          end_date: string
+          id: string
+          installment_amount: number
+          interest_rate: number
+          loan_name: string
+          notes: string | null
+          remaining_debt: number
+          start_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          bank: string
+          created_at?: string
+          end_date: string
+          id?: string
+          installment_amount: number
+          interest_rate: number
+          loan_name: string
+          notes?: string | null
+          remaining_debt?: number
+          start_date: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          bank?: string
+          created_at?: string
+          end_date?: string
+          id?: string
+          installment_amount?: number
+          interest_rate?: number
+          loan_name?: string
+          notes?: string | null
+          remaining_debt?: number
+          start_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

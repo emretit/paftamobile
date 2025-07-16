@@ -12,6 +12,7 @@ import TransactionsManager from "@/components/cashflow/TransactionsManager";
 import CategoryManagement from "@/components/cashflow/CategoryManagement";
 import OpexEntry from "@/components/cashflow/OpexEntry";
 import EmployeeCosts from "@/components/cashflow/EmployeeCosts";
+import { LoansAndChecks } from "@/components/cashflow/LoansAndChecks";
 
 import { EnhancedCashflowTable } from "@/components/dashboard/EnhancedCashflowTable";
 import { TrendingUp, Plus, List, Settings, FileText, BarChart2, Calculator, Users2 } from "lucide-react";
