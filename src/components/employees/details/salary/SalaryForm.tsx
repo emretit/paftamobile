@@ -16,9 +16,10 @@ interface SalaryFormProps {
   employeeId: string;
   onSave: (values: any) => Promise<void>;
   onClose: () => void;
+  existingSalary?: any; // For editing existing salary record
 }
 
-export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => {
+export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: SalaryFormProps) => {
   const { toast } = useToast();
   const [calculatedCosts, setCalculatedCosts] = useState({
     sgkEmployer: 0,
@@ -58,20 +59,19 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
 
   const form = useForm({
     defaultValues: {
-      salaryInputType: "gross", // "gross" or "net"
-      grossSalary: "",
-      netSalary: "",
-      calculateAsMinimumWage: false,
-      mealAllowance: "0",
-      transportAllowance: "0",
-      effectiveDate: new Date().toISOString().split('T')[0], // Bugünün tarihi
-      sgkEmployerRate: "15.75", // 2025 doğru SGK işveren primi
-      unemploymentEmployerRate: "2.0", // 2025 doğru işsizlik işveren primi
-      accidentInsuranceRate: "0.0", // İş kazası ayrı hesaplanacak
-      stampTax: "0",
-      severanceProvision: "0",
-      bonusProvision: "0",
-      notes: ""
+      salaryInputType: existingSalary?.salary_input_type || "gross",
+      grossSalary: existingSalary?.gross_salary?.toString() || "",
+      netSalary: existingSalary?.net_salary?.toString() || "",
+      calculateAsMinimumWage: existingSalary?.calculate_as_minimum_wage || false,
+      mealAllowance: existingSalary?.meal_allowance?.toString() || "0",
+      transportAllowance: existingSalary?.transport_allowance?.toString() || "0",
+      sgkEmployerRate: existingSalary?.sgk_employer_rate?.toString() || "15.75",
+      unemploymentEmployerRate: existingSalary?.unemployment_employer_rate?.toString() || "2.0",
+      accidentInsuranceRate: existingSalary?.accident_insurance_rate?.toString() || "0.0",
+      stampTax: existingSalary?.stamp_tax?.toString() || "0",
+      severanceProvision: existingSalary?.severance_provision?.toString() || "0",
+      bonusProvision: existingSalary?.bonus_provision?.toString() || "0",
+      notes: existingSalary?.notes || ""
     }
   });
 
@@ -158,31 +158,37 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
 
   const handleSubmit = async (values: any) => {
     try {
+      const salaryData = {
+        employee_id: employeeId,
+        gross_salary: parseFloat(values.grossSalary),
+        net_salary: parseFloat(values.netSalary),
+        salary_input_type: values.salaryInputType,
+        calculate_as_minimum_wage: values.calculateAsMinimumWage,
+        meal_allowance: parseFloat(values.mealAllowance || '0'),
+        transport_allowance: parseFloat(values.transportAllowance || '0'),
+        effective_date: new Date().toISOString().split('T')[0], // Always use current date
+        sgk_employer_rate: parseFloat(values.sgkEmployerRate),
+        unemployment_employer_rate: parseFloat(values.unemploymentEmployerRate),
+        accident_insurance_rate: parseFloat(values.accidentInsuranceRate),
+        stamp_tax: parseFloat(values.stampTax),
+        severance_provision: parseFloat(values.severanceProvision),
+        bonus_provision: parseFloat(values.bonusProvision),
+        notes: values.notes
+      };
+
+      // Use UPSERT to handle both insert and update
       const { data, error } = await supabase
         .from('employee_salaries')
-        .insert({
-          employee_id: employeeId,
-          gross_salary: parseFloat(values.grossSalary),
-          net_salary: parseFloat(values.netSalary),
-          salary_input_type: values.salaryInputType,
-          calculate_as_minimum_wage: values.calculateAsMinimumWage,
-          meal_allowance: parseFloat(values.mealAllowance || '0'),
-          transport_allowance: parseFloat(values.transportAllowance || '0'),
-          effective_date: values.effectiveDate,
-          sgk_employer_rate: parseFloat(values.sgkEmployerRate),
-          unemployment_employer_rate: parseFloat(values.unemploymentEmployerRate),
-          accident_insurance_rate: parseFloat(values.accidentInsuranceRate),
-          stamp_tax: parseFloat(values.stampTax),
-          severance_provision: parseFloat(values.severanceProvision),
-          bonus_provision: parseFloat(values.bonusProvision),
-          notes: values.notes
+        .upsert(salaryData, { 
+          onConflict: 'employee_id',
+          ignoreDuplicates: false 
         });
 
       if (error) throw error;
 
       toast({
         title: "Başarılı",
-        description: "Maaş kaydı başarıyla eklendi",
+        description: existingSalary ? "Maaş bilgileri başarıyla güncellendi" : "Maaş kaydı başarıyla eklendi",
       });
 
       await onSave(values);
@@ -191,7 +197,7 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
       toast({
         variant: "destructive",
         title: "Hata",
-        description: error.message || "Maaş kaydı eklenirken hata oluştu",
+        description: error.message || "Maaş bilgileri kaydedilirken hata oluştu",
       });
     }
   };
@@ -304,19 +310,6 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="effectiveDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Geçerlilik Tarihi</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="date" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               
               <FormField
                 control={form.control}
@@ -416,7 +409,7 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
         
         <div className="flex gap-2">
           <Button type="submit" className="flex-1">
-            Maaş Kaydını Kaydet
+            {existingSalary ? "Maaş Bilgilerini Güncelle" : "Maaş Kaydını Kaydet"}
           </Button>
           <Button type="button" variant="outline" onClick={onClose}>
             İptal

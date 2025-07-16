@@ -15,10 +15,22 @@ interface EmployeeSalaryTabProps {
 
 export const EmployeeSalaryTab = ({ employee, refetch }: EmployeeSalaryTabProps) => {
   const [open, setOpen] = useState(false);
+  const [editingSalary, setEditingSalary] = useState<any>(null);
 
   const handleSaveSalary = async (values: any) => {
     setOpen(false);
+    setEditingSalary(null);
     await refetch();
+  };
+
+  const handleEditSalary = (salaryData: any) => {
+    setEditingSalary(salaryData);
+    setOpen(true);
+  };
+
+  const handleNewSalary = () => {
+    setEditingSalary(null);
+    setOpen(true);
   };
 
   return (
@@ -27,17 +39,20 @@ export const EmployeeSalaryTab = ({ employee, refetch }: EmployeeSalaryTabProps)
         <h2 className="text-2xl font-bold">Maaş Bilgileri</h2>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={handleNewSalary}>
               <Plus className="h-4 w-4 mr-2" />
               Maaş Bilgilerini Düzenle
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Maaş Bilgilerini Düzenle</DialogTitle>
+              <DialogTitle>
+                {editingSalary ? "Maaş Bilgilerini Güncelle" : "Yeni Maaş Kaydı"}
+              </DialogTitle>
             </DialogHeader>
             <SalaryForm
               employeeId={employee.id}
+              existingSalary={editingSalary}
               onSave={handleSaveSalary}
               onClose={() => setOpen(false)}
             />
@@ -45,7 +60,7 @@ export const EmployeeSalaryTab = ({ employee, refetch }: EmployeeSalaryTabProps)
         </Dialog>
       </div>
 
-      <SalaryInfo employeeId={employee.id} />
+      <SalaryInfo employeeId={employee.id} onEdit={handleEditSalary} />
     </div>
   );
 };

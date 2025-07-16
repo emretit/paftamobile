@@ -30,9 +30,10 @@ interface SalaryRecord {
 
 interface SalaryInfoProps {
   employeeId: string;
+  onEdit?: (salaryData: SalaryRecord) => void;
 }
 
-export const SalaryInfo = ({ employeeId }: SalaryInfoProps) => {
+export const SalaryInfo = ({ employeeId, onEdit }: SalaryInfoProps) => {
   const [currentSalary, setCurrentSalary] = useState<SalaryRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -177,6 +178,12 @@ export const SalaryInfo = ({ employeeId }: SalaryInfoProps) => {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Güncel Maaş Bilgileri</CardTitle>
           <div className="flex gap-2">
+            {onEdit && (
+              <Button onClick={() => onEdit(currentSalary)} variant="outline" size="sm">
+                <Edit className="h-4 w-4 mr-2" />
+                Düzenle
+              </Button>
+            )}
             <Button onClick={exportToCSV} variant="outline" size="sm">
               <Download className="h-4 w-4 mr-2" />
               CSV İndir
