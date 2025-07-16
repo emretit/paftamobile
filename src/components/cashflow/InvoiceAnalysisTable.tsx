@@ -24,14 +24,11 @@ const InvoiceAnalysisTable = () => {
   ];
 
   const FIELDS = [
-    { key: 'purchase_vat', label: 'Alış KDV' },
-    { key: 'sales_vat', label: 'Satış KDV' },
-    { key: 'vat_difference', label: 'Fark KDV' },
-    { key: 'purchase_invoice', label: 'Alış Faturası' },
-    { key: 'returns_received', label: 'İade Alınan' },
-    { key: 'sales_invoice', label: 'Satış Faturası' },
-    { key: 'returns_given', label: 'İade Verilen' },
-    { key: 'profit_loss', label: 'Kar\\Zarar' }
+    { key: 'purchase_invoice', label: 'Alış Faturası', editable: true },
+    { key: 'purchase_vat', label: 'Alış KDV (%20)', editable: false },
+    { key: 'sales_invoice', label: 'Satış Faturası', editable: true },
+    { key: 'sales_vat', label: 'Satış KDV (%20)', editable: false },
+    { key: 'vat_difference', label: 'Fark KDV', editable: false }
   ];
 
   // Transform data from hook to matrix format
@@ -54,13 +51,32 @@ const InvoiceAnalysisTable = () => {
   const handleCellChange = (field: string, month: number, value: string) => {
     const amount = parseFloat(value) || 0;
     
-    setMatrixData(prev => ({
-      ...prev,
-      [field]: {
-        ...prev[field],
-        [month]: amount
-      }
-    }));
+    // Calculate VAT (20%)
+    const calculatedData: any = {
+      [field]: amount
+    };
+
+    if (field === 'purchase_invoice') {
+      calculatedData.purchase_vat = amount * 0.20;
+    } else if (field === 'sales_invoice') {
+      calculatedData.sales_vat = amount * 0.20;
+    }
+
+    // Calculate VAT difference
+    const currentPurchaseVat = field === 'purchase_invoice' ? calculatedData.purchase_vat : (matrixData.purchase_vat?.[month] || 0);
+    const currentSalesVat = field === 'sales_invoice' ? calculatedData.sales_vat : (matrixData.sales_vat?.[month] || 0);
+    calculatedData.vat_difference = currentSalesVat - currentPurchaseVat;
+    
+    setMatrixData(prev => {
+      const newData = { ...prev };
+      Object.keys(calculatedData).forEach(key => {
+        newData[key] = {
+          ...newData[key],
+          [month]: calculatedData[key]
+        };
+      });
+      return newData;
+    });
 
     // Clear existing timeout
     if (saveTimeout) {
@@ -73,7 +89,7 @@ const InvoiceAnalysisTable = () => {
         await upsertInvoiceAnalysis({
           year: selectedYear,
           month: month,
-          [field]: amount
+          ...calculatedData
         });
       } catch (error) {
         console.error('Auto-save error:', error);
@@ -197,13 +213,20 @@ const InvoiceAnalysisTable = () => {
                     <td className="border p-3 font-medium">{String(month).padStart(2, '0')}-{monthName.toUpperCase()}</td>
                     {FIELDS.map(field => (
                       <td key={field.key} className="border p-1">
-                        <Input
-                          type="number"
-                          value={getCellValue(field.key, month)}
-                          onChange={(e) => handleCellChange(field.key, month, e.target.value)}
-                          className="w-full text-right border-none bg-transparent focus:bg-white"
-                          step="0.01"
-                        />
+                        {field.editable ? (
+                          <Input
+                            type="number"
+                            value={getCellValue(field.key, month)}
+                            onChange={(e) => handleCellChange(field.key, month, e.target.value)}
+                            className="w-full text-right border-none bg-transparent focus:bg-white"
+                            step="0.01"
+                            placeholder="0.00"
+                          />
+                        ) : (
+                          <div className="w-full text-right p-2 bg-gray-50 text-gray-700 font-medium">
+                            {formatTurkishCurrency(getCellValue(field.key, month))}
+                          </div>
+                        )}
                       </td>
                     ))}
                     <td className="border p-3 text-right font-medium">
@@ -217,7 +240,7 @@ const InvoiceAnalysisTable = () => {
                 <td className="border p-3 text-left">TOPLAM</td>
                 {FIELDS.map(field => (
                   <td key={field.key} className="border p-3 text-right">
-                    {field.key === 'profit_loss' ? (
+                    {field.key === 'vat_difference' ? (
                       <Badge variant={getRowTotal(field.key) > 0 ? "default" : "destructive"}>
                         {formatTurkishCurrency(getRowTotal(field.key))}
                       </Badge>
