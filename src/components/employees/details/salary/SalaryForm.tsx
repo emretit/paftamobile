@@ -27,27 +27,27 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
     totalEmployerCost: 0
   });
 
-  // Turkish minimum wage calculations for 2025 - Excel tablosuna göre
-  const MINIMUM_WAGE_GROSS = 26004.70; // Brüt asgari ücret
-  const MINIMUM_WAGE_NET = 22104; // Net asgari ücret
+  // Turkish minimum wage calculations for 2025 - Resimlerden alınan doğru değerler
+  const MINIMUM_WAGE_GROSS = 26005.50; // Brüt asgari ücret
+  const MINIMUM_WAGE_NET = 22104.67; // Net asgari ücret
   
-  // Asgari ücret hesaplama formülleri (Excel tablosuna göre)
+  // Asgari ücret hesaplama formülleri (Resimlerdeki doğru değerler)
   const calculateMinimumWageCosts = () => {
+    // İşçi kesintileri (İkinci resimden)
     const sgkEmployee = MINIMUM_WAGE_GROSS * 0.14; // SGK İşçi %14 = 3,640.77
     const unemploymentEmployee = MINIMUM_WAGE_GROSS * 0.01; // İşsizlik İşçi %1 = 260.06
-    const incomeTax = 3315.58; // Aylık Gelir Vergisi (sabit)
-    const stampTax = MINIMUM_WAGE_GROSS * 0.00759; // Damga Vergisi %0.759 = 197.38
+    const totalDeductions = 3900.83; // Kesintiler toplamı (resimde yazıyor)
     
-    const sgkEmployer = MINIMUM_WAGE_GROSS * 0.1575; // SGK İşveren %15.75 = 4,095.74
-    const unemploymentEmployer = MINIMUM_WAGE_GROSS * 0.02; // İşsizlik İşveren %2 = 520.09
+    // İşveren primleri (İlk resimden)
+    const sgkEmployer = 4355.92; // SGK Primi %16.75 (İşveren Payı)
+    const unemploymentEmployer = 520.11; // İşveren İşsizlik Sigorta Primi %2
     
-    const totalEmployerCost = MINIMUM_WAGE_NET + sgkEmployer + unemploymentEmployer; // 30,620.53
+    const totalEmployerCost = 30881.53; // İşverene Toplam Maliyet (resimde yazıyor)
     
     return {
       sgkEmployee,
       unemploymentEmployee,
-      incomeTax,
-      stampTax,
+      totalDeductions,
       sgkEmployer,
       unemploymentEmployer,
       totalEmployerCost
@@ -351,7 +351,7 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
                   </Badge>
                    {calculateAsMinimumWage && (
                      <p className="text-xs text-muted-foreground">
-                       Asgari ücret formülü: ₺{MINIMUM_WAGE_GROSS.toLocaleString('tr-TR')} x %15.75 = ₺{minimumWageCosts.sgkEmployer.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                       Asgari ücret formülü: ₺{MINIMUM_WAGE_GROSS.toLocaleString('tr-TR')} x %16.75 = ₺{minimumWageCosts.sgkEmployer.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                      </p>
                    )}
                 </div>
