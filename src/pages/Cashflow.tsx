@@ -13,7 +13,7 @@ import CategoryManagement from "@/components/cashflow/CategoryManagement";
 import OpexEntry from "@/components/cashflow/OpexEntry";
 import MonthlyFinancialOverview from "@/components/dashboard/MonthlyFinancialOverview";
 import { OpexMatrixView } from "@/components/dashboard/OpexMatrixView";
-import { CashflowMainTable } from "@/components/dashboard/CashflowMainTable";
+import { EnhancedCashflowTable } from "@/components/dashboard/EnhancedCashflowTable";
 import { TrendingUp, Plus, List, Settings, FileText, BarChart2, Grid, Calculator } from "lucide-react";
 
 interface CashflowProps {
@@ -142,7 +142,7 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
             </CustomTabsContent>
 
             <CustomTabsContent value="main-table" className="mt-6 animate-fade-in">
-              <CashflowMainTable />
+              <EnhancedCashflowTable />
             </CustomTabsContent>
           </CustomTabs>
         </div>
