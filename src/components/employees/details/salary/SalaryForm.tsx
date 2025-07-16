@@ -32,7 +32,7 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
   const MINIMUM_WAGE_GROSS = 26005.50; // Brüt asgari ücret
   const MINIMUM_WAGE_NET = 22104.67; // Net asgari ücret
   
-  // Asgari ücret hesaplama formülleri (Resimlerdeki doğru değerler)
+  // Asgari ücret hesaplama formülleri (30881 + yol + yemek + net maaştan kalan)
   const calculateMinimumWageCosts = () => {
     // İşçi kesintileri (İkinci resimden)
     const sgkEmployee = MINIMUM_WAGE_GROSS * 0.14; // SGK İşçi %14 = 3,640.77
@@ -43,7 +43,11 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
     const sgkEmployer = 4355.92; // SGK Primi %16.75 (İşveren Payı)
     const unemploymentEmployer = 520.11; // İşveren İşsizlik Sigorta Primi %2
     
-    const totalEmployerCost = 30881.53; // İşverene Toplam Maliyet (resimde yazıyor)
+    // 30881 + yol + yemek + net maaştan kalan hesaplama
+    const baseCost = 30881; // Kullanıcının belirttiği baz maliyet
+    const netSalary = MINIMUM_WAGE_GROSS - totalDeductions; // 22104 - 3900.83 = 18203.17
+    
+    const totalEmployerCost = baseCost; // Başlangıç değeri, yol + yemek eklenecek
     
     return {
       sgkEmployee,
@@ -51,7 +55,8 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
       totalDeductions,
       sgkEmployer,
       unemploymentEmployer,
-      totalEmployerCost
+      totalEmployerCost,
+      netSalary
     };
   };
   
