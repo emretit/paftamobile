@@ -29,36 +29,25 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
     totalEmployerCost: 0
   });
 
-  // Turkish minimum wage calculations for 2025 - Resimlerden alınan doğru değerler
+  // Turkish minimum wage calculations for 2025 - YENİ FORMÜL
   const MINIMUM_WAGE_GROSS = 26005.50; // Brüt asgari ücret
   const MINIMUM_WAGE_NET = 22104.67; // Net asgari ücret
+  const MINIMUM_WAGE_EMPLOYER_COST = 8516; // Sabit işveren maliyeti
   
-  // Asgari ücret hesaplama formülleri (30881 + yol + yemek + net maaştan kalan)
+  // Asgari ücret hesaplama formülleri - YENİ MANTIK
   const calculateMinimumWageCosts = () => {
-    // İşçi kesintileri (İkinci resimden)
-    const sgkEmployee = MINIMUM_WAGE_GROSS * 0.14; // SGK İşçi %14 = 3,640.77
-    const unemploymentEmployee = MINIMUM_WAGE_GROSS * 0.01; // İşsizlik İşçi %1 = 260.06
-    const totalDeductions = 3900.83; // Kesintiler toplamı (resimde yazıyor)
-    
-    // İşveren primleri (İlk resimden)
+    // İşveren primleri (sabit değerler)
     const sgkEmployer = 4355.92; // SGK Primi %16.75 (İşveren Payı)
     const unemploymentEmployer = 520.11; // İşveren İşsizlik Sigorta Primi %2
     
-    // 30881 üzerinden hesaplama + yol + yemek + net maaştan kalan
-    const baseCost = 30881; // Kullanıcının belirttiği baz maliyet
-    const netSalary = MINIMUM_WAGE_NET; // 22104.67
-    
-    const totalEmployerCost = baseCost; // Başlangıç değeri, yol + yemek + kalan eklenecek
+    // Toplam işveren maliyeti sabit
+    const totalEmployerCost = MINIMUM_WAGE_EMPLOYER_COST; // 8516 TL sabit
     
     return {
-      sgkEmployee,
-      unemploymentEmployee,
-      totalDeductions,
       sgkEmployer,
       unemploymentEmployer,
       totalEmployerCost,
-      netSalary,
-      baseCost
+      netSalary: MINIMUM_WAGE_NET
     };
   };
   
@@ -135,20 +124,17 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
       const mealAllowance = parseFloat(form.getValues("mealAllowance")) || 0;
       const transportAllowance = parseFloat(form.getValues("transportAllowance")) || 0;
 
-      if (calculateAsMinimumWage) {
-        // Asgari ücret formüllerine göre hesapla
-        sgkEmployer = minimumWageCosts.sgkEmployer; // 4,355.92
-        unemploymentEmployer = minimumWageCosts.unemploymentEmployer; // 520.11
-        accidentInsurance = 0; // Asgari ücrette iş kazası yok
-        
-        // Gerçek net maaşı al
-        const currentNetSalary = salaryInputType === "net" ? parseFloat(netSalary) || 0 : calculateNetFromGross(currentGross);
-        
-        // Asgari ücret net maaşı ile gerçek net maaş arasındaki fark (net maaştan kalan)
-        const extraPaymentFromNet = Math.max(0, currentNetSalary - MINIMUM_WAGE_NET);
-        
-        // 30881 + yol + yemek + net maaştan kalan
-        totalEmployerCost = minimumWageCosts.baseCost + mealAllowance + transportAllowance + extraPaymentFromNet;
+              if (calculateAsMinimumWage) {
+          // Asgari ücret formüllerine göre hesapla - YENİ MANTIK
+          sgkEmployer = minimumWageCosts.sgkEmployer; // 4,355.92 (sadece gösterim için)
+          unemploymentEmployer = minimumWageCosts.unemploymentEmployer; // 520.11 (sadece gösterim için)
+          accidentInsurance = 0; // Asgari ücrette iş kazası yok
+          
+          // Gerçek net maaşı al
+          const currentNetSalary = salaryInputType === "net" ? parseFloat(netSalary) || 0 : calculateNetFromGross(currentGross);
+          
+          // YENİ FORMÜL: Net maaş + 8516 TL sabit işveren maliyeti + yol + yemek yardımları
+          totalEmployerCost = currentNetSalary + MINIMUM_WAGE_EMPLOYER_COST + mealAllowance + transportAllowance;
       } else {
         // Normal hesaplama: Tüm hesaplamalar gerçek brüt maaş üzerinden
         sgkEmployer = currentGross * (sgkRate / 100);
@@ -272,8 +258,8 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
                         🎯 Asgari ücret olarak hesapla
                       </FormLabel>
                       <div className="text-sm text-blue-700 space-y-1">
-                        <p>• İşveren maliyetleri asgari ücret (₺{MINIMUM_WAGE_GROSS.toLocaleString('tr-TR')}) üzerinden hesaplanır</p>
-                        <p>• Toplam maliyet: <strong>30.881 + Yol + Yemek + Net maaştan kalan</strong></p>
+                        <p>• İşveren maliyetleri sabit ₺{MINIMUM_WAGE_EMPLOYER_COST.toLocaleString('tr-TR')} olarak hesaplanır</p>
+                        <p>• Toplam maliyet: <strong>Net maaş + ₺{MINIMUM_WAGE_EMPLOYER_COST.toLocaleString('tr-TR')} + Yol + Yemek</strong></p>
                       </div>
                     </div>
                   </FormItem>
@@ -438,12 +424,14 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
                 {/* Hesaplama Detayları */}
                 {calculateAsMinimumWage && (grossSalary || netSalary) && (
                   <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <h4 className="font-semibold text-gray-800 mb-2">📝 Hesaplama Detayları</h4>
+                    <h4 className="font-semibold text-gray-800 mb-2">📝 Hesaplama Detayları (Yeni Formül)</h4>
                     <div className="text-sm text-gray-600 space-y-1">
-                      <p>• Baz maliyet (30.881): <strong>₺{minimumWageCosts.baseCost.toLocaleString('tr-TR')}</strong></p>
+                      <p>• Net maaş: <strong>₺{(salaryInputType === "net" ? parseFloat(netSalary) || 0 : calculateNetFromGross(parseFloat(grossSalary) || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</strong></p>
+                      <p>• Sabit işveren maliyeti: <strong>₺{MINIMUM_WAGE_EMPLOYER_COST.toLocaleString('tr-TR')}</strong></p>
                       <p>• Yemek yardımı: <strong>₺{(parseFloat(form.getValues("mealAllowance")) || 0).toLocaleString('tr-TR')}</strong></p>
                       <p>• Yol yardımı: <strong>₺{(parseFloat(form.getValues("transportAllowance")) || 0).toLocaleString('tr-TR')}</strong></p>
-                      <p>• Net maaştan kalan: <strong>₺{Math.max(0, (salaryInputType === "net" ? parseFloat(netSalary) || 0 : calculateNetFromGross(parseFloat(grossSalary) || 0)) - MINIMUM_WAGE_NET).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</strong></p>
+                      <hr className="my-2" />
+                      <p className="font-semibold">• Toplam: <strong>₺{calculatedCosts.totalEmployerCost.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</strong></p>
                     </div>
                   </div>
                 )}
