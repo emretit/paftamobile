@@ -29,8 +29,6 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
   // Determine active tab based on current route
   const getActiveTab = () => {
     const path = location.pathname;
-    if (path.includes('/transactions')) return 'transactions';
-    if (path.includes('/categories')) return 'categories';
     if (path.includes('/opex-entry')) return 'opex-entry';
     if (path.includes('/employee-costs')) return 'employee-costs';
     if (path.includes('/main-table')) return 'main-table';
@@ -43,12 +41,6 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
     switch (value) {
       case 'overview':
         navigate('/cashflow');
-        break;
-      case 'transactions':
-        navigate('/cashflow/transactions');
-        break;
-      case 'categories':
-        navigate('/cashflow/categories');
         break;
       case 'opex-entry':
         navigate('/cashflow/opex-entry');
@@ -91,14 +83,6 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
                   <TrendingUp className="h-4 w-4" />
                   <span>Genel Bakış</span>
                 </CustomTabsTrigger>
-                <CustomTabsTrigger value="transactions" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
-                  <List className="h-4 w-4" />
-                  <span>İşlemler</span>
-                </CustomTabsTrigger>
-                <CustomTabsTrigger value="categories" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
-                  <Settings className="h-4 w-4" />
-                  <span>Kategoriler</span>
-                </CustomTabsTrigger>
                 <CustomTabsTrigger value="opex-entry" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   <FileText className="h-4 w-4" />
                   <span>OPEX Girişi</span>
@@ -123,13 +107,6 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
             </CustomTabsContent>
 
 
-            <CustomTabsContent value="transactions" className="mt-6 animate-fade-in">
-              <TransactionsManager />
-            </CustomTabsContent>
-
-            <CustomTabsContent value="categories" className="mt-6 animate-fade-in">
-              <CategoryManagement />
-            </CustomTabsContent>
 
             <CustomTabsContent value="opex-entry" className="mt-6 animate-fade-in">
               <OpexEntry />
