@@ -22,7 +22,7 @@ const InvoicesManager = () => {
   const salesInvoices = null;
   const salesLoading = false;
   const [salesFilters, setSalesFilters] = useState({
-    status: "",
+    status: "all",
     search: "",
     dateRange: { from: null as Date | null, to: null as Date | null }
   });
@@ -152,7 +152,7 @@ const InvoicesManager = () => {
                     <SelectValue placeholder="Ödeme Durumu" />
                   </SelectTrigger>
                   <SelectContent className="bg-white z-50">
-                    <SelectItem value="">Tümü</SelectItem>
+                    <SelectItem value="all">Tümü</SelectItem>
                     <SelectItem value="odendi">Ödendi</SelectItem>
                     <SelectItem value="kismi_odendi">Kısmi Ödendi</SelectItem>
                     <SelectItem value="odenmedi">Ödenmedi</SelectItem>
@@ -191,7 +191,7 @@ const InvoicesManager = () => {
             </div>
             
             <Button variant="secondary" onClick={() => setSalesFilters({
-              status: "",
+              status: "all",
               search: "",
               dateRange: { from: null, to: null }
             })}>
