@@ -133,22 +133,27 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
         // Gerçek net maaşı al
         const currentNetSalary = salaryInputType === "net" ? parseFloat(netSalary) || 0 : calculateNetFromGross(currentGross);
         
-        // Asgari ücret ile gerçek maaş arasındaki fark (ek ödeme/kara)
-        const extraPayment = Math.max(0, currentNetSalary - MINIMUM_WAGE_NET);
+        // Yardımları da ekle
+        const mealAllowance = parseFloat(form.getValues("mealAllowance")) || 0;
+        const transportAllowance = parseFloat(form.getValues("transportAllowance")) || 0;
         
-        // Toplam maliyet = Resmi asgari ücret maliyeti + ek ödeme
-        totalEmployerCost = minimumWageCosts.totalEmployerCost + extraPayment;
+        // Toplam maliyet = Net maaş + işveren primleri + yardımlar
+        totalEmployerCost = currentNetSalary + sgkEmployer + unemploymentEmployer + accidentInsurance + stampTax + severance + bonus + mealAllowance + transportAllowance;
       } else {
-        // Normal hesaplama: Tüm hesaplamalar gerçek brüt maaş üzerinden
+        // Normal hesaplama: Net maaş + işveren primleri + yardımlar
         sgkEmployer = currentGross * (sgkRate / 100);
         unemploymentEmployer = currentGross * (unemploymentRate / 100);
         accidentInsurance = currentGross * (accidentRate / 100);
+        
+        // Gerçek net maaşı al
+        const currentNetSalary = salaryInputType === "net" ? parseFloat(netSalary) || 0 : calculateNetFromGross(currentGross);
         
         // Yardımları da toplam maliyete dahil et
         const mealAllowance = parseFloat(form.getValues("mealAllowance")) || 0;
         const transportAllowance = parseFloat(form.getValues("transportAllowance")) || 0;
         
-        totalEmployerCost = currentGross + sgkEmployer + unemploymentEmployer + accidentInsurance + stampTax + severance + bonus + mealAllowance + transportAllowance;
+        // Toplam maliyet = Net maaş + işveren primleri + yardımlar
+        totalEmployerCost = currentNetSalary + sgkEmployer + unemploymentEmployer + accidentInsurance + stampTax + severance + bonus + mealAllowance + transportAllowance;
       }
 
       setCalculatedCosts({
