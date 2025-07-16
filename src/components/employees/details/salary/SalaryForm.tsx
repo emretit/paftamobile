@@ -97,6 +97,9 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
       const sgkEmployer = calculationBase * (sgkRate / 100);
       const unemploymentEmployer = calculationBase * (unemploymentRate / 100);
       const accidentInsurance = calculationBase * (accidentRate / 100);
+      
+      // Toplam maliyet: Gerçek maaş + primlerin asgari ücret bazlı hesaplanması durumunda da gerçek maaş kullanılır
+      // Sadece SGK primleri asgari ücret üzerinden hesaplanır, toplam maliyete gerçek maaş eklenir
       const totalEmployerCost = currentGross + sgkEmployer + unemploymentEmployer + accidentInsurance + stampTax + severance + bonus;
 
       setCalculatedCosts({
