@@ -21,9 +21,23 @@ interface EmployeeCostData {
   first_name: string;
   last_name: string;
   email: string;
+  phone: string | null;
   department: string;
   position: string;
   status: string;
+  hire_date: string;
+  date_of_birth: string | null;
+  gender: string | null;
+  marital_status: string | null;
+  address: string | null;
+  city: string | null;
+  district: string | null;
+  postal_code: string | null;
+  country: string | null;
+  id_ssn: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  emergency_contact_relation: string | null;
   gross_salary: number;
   net_salary: number;
   total_employer_cost: number;
@@ -70,9 +84,23 @@ const EmployeeCosts = () => {
           first_name,
           last_name,
           email,
+          phone,
           department,
           position,
           status,
+          hire_date,
+          date_of_birth,
+          gender,
+          marital_status,
+          address,
+          city,
+          district,
+          postal_code,
+          country,
+          id_ssn,
+          emergency_contact_name,
+          emergency_contact_phone,
+          emergency_contact_relation,
           employee_salaries (
             gross_salary,
             net_salary,
@@ -101,9 +129,23 @@ const EmployeeCosts = () => {
             first_name: employee.first_name,
             last_name: employee.last_name,
             email: employee.email,
+            phone: employee.phone,
             department: employee.department,
             position: employee.position,
             status: employee.status,
+            hire_date: employee.hire_date,
+            date_of_birth: employee.date_of_birth,
+            gender: employee.gender,
+            marital_status: employee.marital_status,
+            address: employee.address,
+            city: employee.city,
+            district: employee.district,
+            postal_code: employee.postal_code,
+            country: employee.country,
+            id_ssn: employee.id_ssn,
+            emergency_contact_name: employee.emergency_contact_name,
+            emergency_contact_phone: employee.emergency_contact_phone,
+            emergency_contact_relation: employee.emergency_contact_relation,
             gross_salary: latestSalary.gross_salary || 0,
             net_salary: latestSalary.net_salary || 0,
             total_employer_cost: latestSalary.total_employer_cost || 0,
@@ -162,7 +204,9 @@ const EmployeeCosts = () => {
         employee.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         employee.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        employee.position.toLowerCase().includes(searchTerm.toLowerCase())
+        employee.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (employee.phone && employee.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (employee.id_ssn && employee.id_ssn.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -190,8 +234,22 @@ const EmployeeCosts = () => {
     const headers = [
       'Ad Soyad',
       'E-posta',
+      'Telefon',
       'Departman',
       'Pozisyon',
+      'İşe Giriş Tarihi',
+      'Doğum Tarihi',
+      'Cinsiyet',
+      'Medeni Durum',
+      'Adres',
+      'Şehir',
+      'İlçe',
+      'Posta Kodu',
+      'Ülke',
+      'TC/SSN',
+      'Acil Durum Kişisi',
+      'Acil Durum Telefon',
+      'Acil Durum Yakınlık',
       'Brüt Maaş',
       'Net Maaş',
       'Toplam İşveren Maliyeti',
@@ -206,9 +264,23 @@ const EmployeeCosts = () => {
       headers.join(','),
       ...filteredCosts.map(employee => [
         `"${employee.first_name} ${employee.last_name}"`,
-        `"${employee.email}"`,
+        `"${employee.email || ''}"`,
+        `"${employee.phone || ''}"`,
         `"${employee.department}"`,
         `"${employee.position}"`,
+        `"${employee.hire_date || ''}"`,
+        `"${employee.date_of_birth || ''}"`,
+        `"${employee.gender || ''}"`,
+        `"${employee.marital_status || ''}"`,
+        `"${employee.address || ''}"`,
+        `"${employee.city || ''}"`,
+        `"${employee.district || ''}"`,
+        `"${employee.postal_code || ''}"`,
+        `"${employee.country || ''}"`,
+        `"${employee.id_ssn || ''}"`,
+        `"${employee.emergency_contact_name || ''}"`,
+        `"${employee.emergency_contact_phone || ''}"`,
+        `"${employee.emergency_contact_relation || ''}"`,
         employee.gross_salary,
         employee.net_salary,
         employee.total_employer_cost,
@@ -385,29 +457,81 @@ const EmployeeCosts = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Ad Soyad</TableHead>
-                  <TableHead>Departman</TableHead>
-                  <TableHead>Pozisyon</TableHead>
-                  <TableHead className="text-right">Brüt Maaş</TableHead>
-                  <TableHead className="text-right">Net Maaş</TableHead>
-                  <TableHead className="text-right">İşveren Maliyeti</TableHead>
-                  <TableHead className="text-right">Yemek</TableHead>
-                  <TableHead className="text-right">Ulaşım</TableHead>
-                  <TableHead className="text-right">SGK İşveren</TableHead>
-                  <TableHead>Durum</TableHead>
+                  <TableHead className="min-w-[200px]">Kişisel Bilgiler</TableHead>
+                  <TableHead className="min-w-[120px]">İletişim</TableHead>
+                  <TableHead className="min-w-[150px]">İş Bilgileri</TableHead>
+                  <TableHead className="min-w-[120px]">Adres</TableHead>
+                  <TableHead className="min-w-[150px]">Acil Durum</TableHead>
+                  <TableHead className="text-right min-w-[100px]">Brüt Maaş</TableHead>
+                  <TableHead className="text-right min-w-[100px]">Net Maaş</TableHead>
+                  <TableHead className="text-right min-w-[120px]">İşveren Maliyeti</TableHead>
+                  <TableHead className="text-right min-w-[80px]">Yemek</TableHead>
+                  <TableHead className="text-right min-w-[80px]">Ulaşım</TableHead>
+                  <TableHead className="text-right min-w-[100px]">SGK İşveren</TableHead>
+                  <TableHead className="min-w-[80px]">Durum</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredCosts.map((employee) => (
                   <TableRow key={employee.id}>
                     <TableCell className="font-medium">
-                      <div>
+                      <div className="space-y-1">
                         <div className="font-medium">{employee.first_name} {employee.last_name}</div>
-                        <div className="text-sm text-gray-500">{employee.email}</div>
+                        <div className="text-xs text-gray-500">
+                          {employee.date_of_birth && (
+                            <div>Doğum: {new Date(employee.date_of_birth).toLocaleDateString('tr-TR')}</div>
+                          )}
+                          {employee.gender && <div>Cinsiyet: {employee.gender}</div>}
+                          {employee.marital_status && <div>Medeni: {employee.marital_status}</div>}
+                          {employee.id_ssn && <div>TC: {employee.id_ssn}</div>}
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell>{employee.department}</TableCell>
-                    <TableCell>{employee.position}</TableCell>
+                    <TableCell>
+                      <div className="space-y-1 text-sm">
+                        <div>{employee.email}</div>
+                        {employee.phone && <div className="text-gray-500">{employee.phone}</div>}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="font-medium">{employee.position}</div>
+                        <div className="text-sm text-gray-500">{employee.department}</div>
+                        {employee.hire_date && (
+                          <div className="text-xs text-gray-500">
+                            İşe Giriş: {new Date(employee.hire_date).toLocaleDateString('tr-TR')}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm space-y-1">
+                        {employee.address && <div>{employee.address}</div>}
+                        {(employee.district || employee.city) && (
+                          <div className="text-gray-500">
+                            {employee.district && `${employee.district}, `}
+                            {employee.city}
+                            {employee.postal_code && ` ${employee.postal_code}`}
+                          </div>
+                        )}
+                        {employee.country && employee.country !== 'Turkey' && (
+                          <div className="text-gray-500">{employee.country}</div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm space-y-1">
+                        {employee.emergency_contact_name && (
+                          <div className="font-medium">{employee.emergency_contact_name}</div>
+                        )}
+                        {employee.emergency_contact_phone && (
+                          <div className="text-gray-500">{employee.emergency_contact_phone}</div>
+                        )}
+                        {employee.emergency_contact_relation && (
+                          <div className="text-xs text-gray-500">{employee.emergency_contact_relation}</div>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right font-medium">
                       {formatCurrency(employee.gross_salary)}
                     </TableCell>
