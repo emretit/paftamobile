@@ -6,9 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { EditableEmployeeDetails } from "@/components/employees/details/form/EditableEmployeeDetails";
+import { EmployeeEditForm } from "@/components/employees/edit/EmployeeEditForm";
 import { Employee } from "@/types/employee";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface EmployeeFormProps {
   isCollapsed: boolean;
@@ -46,13 +46,34 @@ const EmployeeForm = ({ isCollapsed, setIsCollapsed }: EmployeeFormProps) => {
     },
   });
 
-  const handleSuccess = async () => {
-    await refetch();
-    navigate(`/employees/${id}`);
-    toast({
-      title: "Başarılı",
-      description: "Çalışan bilgileri başarıyla güncellendi",
-    });
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async (updatedEmployee: Partial<Employee>) => {
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('employees')
+        .update(updatedEmployee)
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Başarılı",
+        description: "Çalışan bilgileri başarıyla güncellendi",
+      });
+
+      navigate(`/employees/${id}`);
+    } catch (error) {
+      console.error('Error updating employee:', error);
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Çalışan bilgileri güncellenirken bir hata oluştu",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -75,15 +96,23 @@ const EmployeeForm = ({ isCollapsed, setIsCollapsed }: EmployeeFormProps) => {
           </div>
 
           {isLoading ? (
-            <div className="py-10 text-center">Çalışan bilgileri yükleniyor...</div>
+            <div className="flex items-center justify-center py-20">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-gray-600">Çalışan bilgileri yükleniyor...</p>
+              </div>
+            </div>
           ) : employee ? (
-            <EditableEmployeeDetails
+            <EmployeeEditForm
               employee={employee}
+              onSave={handleSave}
               onCancel={() => navigate(`/employees/${id}`)}
-              onSuccess={handleSuccess}
+              isSaving={isSaving}
             />
           ) : (
-            <div className="py-10 text-center">Çalışan bulunamadı</div>
+            <div className="text-center py-20">
+              <p className="text-gray-600">Çalışan bulunamadı</p>
+            </div>
           )}
         </div>
       </main>
