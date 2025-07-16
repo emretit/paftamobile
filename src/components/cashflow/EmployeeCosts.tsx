@@ -402,6 +402,7 @@ const EmployeeCosts = () => {
                   <TableHead className="text-right min-w-[100px]">SGK İşveren</TableHead>
                   <TableHead className="text-right min-w-[80px]">Yemek</TableHead>
                   <TableHead className="text-right min-w-[80px]">Ulaşım</TableHead>
+                  <TableHead className="text-right min-w-[120px]">Toplam Maliyet</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -431,6 +432,9 @@ const EmployeeCosts = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       {formatCurrency(employee.transport_allowance)}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-red-600">
+                      {formatCurrency(employee.total_employer_cost)}
                     </TableCell>
                   </TableRow>
                 ))}
