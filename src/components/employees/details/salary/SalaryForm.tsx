@@ -27,9 +27,10 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
     totalEmployerCost: 0
   });
 
-  // Turkish minimum wage for 2025 - Brüt asgari ücret
-  const MINIMUM_WAGE = 26005.50; // 2025 brüt asgari ücret
-  const MINIMUM_WAGE_NET = 22104.67; // 2025 net asgari ücret
+  // Turkish minimum wage for 2025 - Excel tablosuna göre
+  const MINIMUM_WAGE = 26004.70; // 2025 brüt asgari ücret (Excel değeri)
+  const MINIMUM_WAGE_NET = 22104; // 2025 net asgari ücret
+  const MINIMUM_WAGE_TOTAL_COST = 30620.53; // 2025 asgari ücret toplam işveren maliyeti
 
   const form = useForm({
     defaultValues: {
