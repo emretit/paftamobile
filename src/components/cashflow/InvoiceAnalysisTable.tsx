@@ -212,7 +212,6 @@ const InvoiceAnalysisTable = () => {
                 {FIELDS.map(field => (
                   <th key={field.key} className="border p-3 text-right font-medium">{field.label}</th>
                 ))}
-                <th className="border p-3 text-right font-medium">Toplam</th>
               </tr>
             </thead>
             <tbody>
@@ -238,13 +237,10 @@ const InvoiceAnalysisTable = () => {
                           </div>
                         )}
                       </td>
-                    ))}
-                    <td className="border p-3 text-right font-medium">
-                      {formatTurkishCurrency(getColumnTotal(month))}
-                    </td>
-                  </tr>
-                );
-              })}
+                     ))}
+                   </tr>
+                 );
+               })}
               {/* Totals row */}
               <tr className="bg-gray-100 font-bold">
                 <td className="border p-3 text-left">TOPLAM</td>
@@ -259,9 +255,6 @@ const InvoiceAnalysisTable = () => {
                     )}
                   </td>
                 ))}
-                <td className="border p-3 text-right font-bold">
-                  {formatTurkishCurrency(getGrandTotal())}
-                </td>
               </tr>
             </tbody>
           </table>
