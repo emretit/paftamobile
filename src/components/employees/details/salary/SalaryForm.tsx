@@ -124,6 +124,10 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
 
       let sgkEmployer, unemploymentEmployer, accidentInsurance, totalEmployerCost;
 
+      // Yemek ve yol yardımlarını al
+      const mealAllowance = parseFloat(form.getValues("mealAllowance")) || 0;
+      const transportAllowance = parseFloat(form.getValues("transportAllowance")) || 0;
+
       if (calculateAsMinimumWage) {
         // Asgari ücret formüllerine göre hesapla
         sgkEmployer = minimumWageCosts.sgkEmployer; // 4,355.92
@@ -136,15 +140,19 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
         // Asgari ücret ile gerçek maaş arasındaki fark (ek ödeme/kara)
         const extraPayment = Math.max(0, currentNetSalary - MINIMUM_WAGE_NET);
         
-        // Toplam maliyet = Resmi asgari ücret maliyeti + ek ödeme
-        totalEmployerCost = minimumWageCosts.totalEmployerCost + extraPayment;
+        // Toplam maliyet = Net maaş + Asgari ücret işveren primleri + Yardımlar + Ek ödeme
+        totalEmployerCost = currentNetSalary + sgkEmployer + unemploymentEmployer + mealAllowance + transportAllowance + extraPayment;
       } else {
-        // Normal hesaplama: Tüm hesaplamalar gerçek brüt maaş üzerinden
+        // Normal hesaplama: Net maaş + işveren primleri + yardımlar
         sgkEmployer = currentGross * (sgkRate / 100);
         unemploymentEmployer = currentGross * (unemploymentRate / 100);
         accidentInsurance = currentGross * (accidentRate / 100);
         
-        totalEmployerCost = currentGross + sgkEmployer + unemploymentEmployer + accidentInsurance + stampTax + severance + bonus;
+        // Gerçek net maaşı al
+        const currentNetSalary = salaryInputType === "net" ? parseFloat(netSalary) || 0 : calculateNetFromGross(currentGross);
+        
+        // Toplam maliyet = Net maaş + işveren primleri + yardımlar + diğer maliyetler
+        totalEmployerCost = currentNetSalary + sgkEmployer + unemploymentEmployer + accidentInsurance + mealAllowance + transportAllowance + stampTax + severance + bonus;
       }
 
       setCalculatedCosts({
