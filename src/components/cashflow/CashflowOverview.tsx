@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCashflowMain } from "@/hooks/useCashflowMain";
-import FinancialOverview from "@/components/dashboard/FinancialOverview";
 
 const CASHFLOW_STRUCTURE = [
   {
@@ -209,8 +208,6 @@ const CashflowOverview = () => {
         </Card>
       </div>
 
-      {/* Comprehensive Financial Overview */}
-      <FinancialOverview />
     </div>
   );
 };
