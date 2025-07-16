@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download, Edit } from "lucide-react";
+import { Download, Edit, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
@@ -19,9 +19,7 @@ interface SalaryRecord {
   gross_salary: number;
   net_salary: number;
   total_employer_cost: number;
-  sgk_employer_amount: number;
-  unemployment_employer_amount: number;
-  accident_insurance_amount: number;
+  manual_employer_sgk_cost: number;
   effective_date: string;
   meal_allowance: number;
   transport_allowance: number;
@@ -44,6 +42,7 @@ export const SalaryInfo = ({ employeeId, onEdit }: SalaryInfoProps) => {
 
   const fetchCurrentSalary = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('employee_salaries')
         .select('*')
@@ -70,26 +69,20 @@ export const SalaryInfo = ({ employeeId, onEdit }: SalaryInfoProps) => {
 
     const headers = [
       'Kayıt Tarihi',
-      'Brüt Maaş',
       'Net Maaş',
+      'SGK İşveren Maliyeti',
       'Yemek Yardımı',
       'Yol Yardımı',
-      'SGK İşveren Primi',
-      'İşsizlik Sigortası',
-      'İş Kazası Sigortası',
       'Toplam İşveren Maliyeti',
       'Notlar'
     ];
 
     const csvData = [[
       new Date(currentSalary.effective_date).toLocaleDateString('tr-TR'),
-      currentSalary.gross_salary.toLocaleString('tr-TR'),
       currentSalary.net_salary.toLocaleString('tr-TR'),
+      (currentSalary.manual_employer_sgk_cost || 0).toLocaleString('tr-TR'),
       currentSalary.meal_allowance.toLocaleString('tr-TR'),
       currentSalary.transport_allowance.toLocaleString('tr-TR'),
-      currentSalary.sgk_employer_amount.toLocaleString('tr-TR'),
-      currentSalary.unemployment_employer_amount.toLocaleString('tr-TR'),
-      currentSalary.accident_insurance_amount.toLocaleString('tr-TR'),
       currentSalary.total_employer_cost.toLocaleString('tr-TR'),
       currentSalary.notes || ''
     ]];
@@ -136,20 +129,6 @@ export const SalaryInfo = ({ employeeId, onEdit }: SalaryInfoProps) => {
     <div className="space-y-6 animate-fade-in">
       {/* Özet Kartları */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-100">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="text-3xl">💰</div>
-              <div>
-                <div className="text-sm font-medium text-green-700">Brüt Maaş</div>
-                <div className="text-2xl font-bold text-green-800">
-                  ₺{currentSalary.gross_salary.toLocaleString('tr-TR')}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
         <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-sky-100">
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
@@ -158,6 +137,20 @@ export const SalaryInfo = ({ employeeId, onEdit }: SalaryInfoProps) => {
                 <div className="text-sm font-medium text-blue-700">Net Maaş</div>
                 <div className="text-2xl font-bold text-blue-800">
                   ₺{currentSalary.net_salary.toLocaleString('tr-TR')}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-100">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="text-3xl">🏢</div>
+              <div>
+                <div className="text-sm font-medium text-green-700">SGK İşveren Maliyeti</div>
+                <div className="text-2xl font-bold text-green-800">
+                  ₺{(currentSalary.manual_employer_sgk_cost || 0).toLocaleString('tr-TR')}
                 </div>
               </div>
             </div>
@@ -200,6 +193,15 @@ export const SalaryInfo = ({ employeeId, onEdit }: SalaryInfoProps) => {
             📋 Güncel Maaş Bilgileri
           </CardTitle>
           <div className="flex gap-3">
+            <Button 
+              onClick={fetchCurrentSalary} 
+              variant="outline" 
+              size="sm"
+              className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Yenile
+            </Button>
             {onEdit && (
               <Button 
                 onClick={() => onEdit(currentSalary)} 
@@ -228,11 +230,10 @@ export const SalaryInfo = ({ employeeId, onEdit }: SalaryInfoProps) => {
               <TableHeader>
                 <TableRow className="bg-gray-50">
                   <TableHead className="font-semibold text-gray-700">📅 Kayıt Tarihi</TableHead>
-                  <TableHead className="font-semibold text-gray-700">💰 Brüt Maaş</TableHead>
                   <TableHead className="font-semibold text-gray-700">🏦 Net Maaş</TableHead>
+                  <TableHead className="font-semibold text-gray-700">🏢 SGK İşveren</TableHead>
                   <TableHead className="font-semibold text-gray-700">🍽️ Yemek</TableHead>
                   <TableHead className="font-semibold text-gray-700">🚗 Yol</TableHead>
-                  <TableHead className="font-semibold text-gray-700">🏢 SGK İşveren</TableHead>
                   <TableHead className="font-semibold text-gray-700">📊 Toplam Maliyet</TableHead>
                   <TableHead className="font-semibold text-gray-700">📝 Notlar</TableHead>
                 </TableRow>
@@ -242,20 +243,17 @@ export const SalaryInfo = ({ employeeId, onEdit }: SalaryInfoProps) => {
                   <TableCell className="font-medium">
                     {new Date(currentSalary.effective_date).toLocaleDateString('tr-TR')}
                   </TableCell>
-                  <TableCell className="font-bold text-green-700">
-                    ₺{currentSalary.gross_salary.toLocaleString('tr-TR')}
-                  </TableCell>
                   <TableCell className="font-bold text-blue-700">
                     ₺{currentSalary.net_salary.toLocaleString('tr-TR')}
+                  </TableCell>
+                  <TableCell className="font-bold text-green-700">
+                    ₺{(currentSalary.manual_employer_sgk_cost || 0).toLocaleString('tr-TR')}
                   </TableCell>
                   <TableCell className="font-medium text-orange-700">
                     ₺{currentSalary.meal_allowance.toLocaleString('tr-TR')}
                   </TableCell>
                   <TableCell className="font-medium text-purple-700">
                     ₺{currentSalary.transport_allowance.toLocaleString('tr-TR')}
-                  </TableCell>
-                  <TableCell className="font-medium text-gray-700">
-                    ₺{currentSalary.sgk_employer_amount.toLocaleString('tr-TR')}
                   </TableCell>
                   <TableCell className="font-bold text-xl text-purple-800 bg-purple-50">
                     ₺{currentSalary.total_employer_cost.toLocaleString('tr-TR')}
