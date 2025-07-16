@@ -4,7 +4,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useCashflowMain } from "@/hooks/useCashflowMain";
 import FinancialOverview from "@/components/dashboard/FinancialOverview";
-import InvoicesManager from "@/components/cashflow/InvoicesManager";
 
 const CASHFLOW_STRUCTURE = [
   {
@@ -280,9 +279,6 @@ const CashflowOverview = () => {
 
       {/* Comprehensive Financial Overview */}
       <FinancialOverview />
-      
-      {/* Invoice Analysis */}
-      <InvoicesManager />
     </div>
   );
 };
