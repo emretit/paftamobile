@@ -29,6 +29,7 @@ export const EmployeeDetailTabs = ({
       <EmployeeTabsContent 
         employee={employee} 
         handleEmployeeUpdate={handleEmployeeUpdate}
+        refetch={refetch}
       />
     </Tabs>
   );

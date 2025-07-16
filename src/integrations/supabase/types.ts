@@ -714,33 +714,66 @@ export type Database = {
       }
       employee_salaries: {
         Row: {
+          accident_insurance_amount: number | null
+          accident_insurance_rate: number | null
           allowances: Json | null
+          bonus_provision: number | null
           created_at: string | null
           effective_date: string
           employee_id: string | null
           gross_salary: number
           id: string
           net_salary: number
+          notes: string | null
+          severance_provision: number | null
+          sgk_employer_amount: number | null
+          sgk_employer_rate: number | null
+          stamp_tax: number | null
+          total_employer_cost: number | null
+          unemployment_employer_amount: number | null
+          unemployment_employer_rate: number | null
           updated_at: string | null
         }
         Insert: {
+          accident_insurance_amount?: number | null
+          accident_insurance_rate?: number | null
           allowances?: Json | null
+          bonus_provision?: number | null
           created_at?: string | null
           effective_date: string
           employee_id?: string | null
           gross_salary: number
           id?: string
           net_salary: number
+          notes?: string | null
+          severance_provision?: number | null
+          sgk_employer_amount?: number | null
+          sgk_employer_rate?: number | null
+          stamp_tax?: number | null
+          total_employer_cost?: number | null
+          unemployment_employer_amount?: number | null
+          unemployment_employer_rate?: number | null
           updated_at?: string | null
         }
         Update: {
+          accident_insurance_amount?: number | null
+          accident_insurance_rate?: number | null
           allowances?: Json | null
+          bonus_provision?: number | null
           created_at?: string | null
           effective_date?: string
           employee_id?: string | null
           gross_salary?: number
           id?: string
           net_salary?: number
+          notes?: string | null
+          severance_provision?: number | null
+          sgk_employer_amount?: number | null
+          sgk_employer_rate?: number | null
+          stamp_tax?: number | null
+          total_employer_cost?: number | null
+          unemployment_employer_amount?: number | null
+          unemployment_employer_rate?: number | null
           updated_at?: string | null
         }
         Relationships: [

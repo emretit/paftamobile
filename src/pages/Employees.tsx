@@ -2,6 +2,7 @@
 import Navbar from "@/components/Navbar";
 import { EmployeeList } from "@/components/employees/EmployeeList";
 import { EmployeeSummaryStats } from "@/components/employees/stats/EmployeeSummaryStats";
+import { SalaryOverviewCards } from "@/components/employees/SalaryOverviewCards";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -36,6 +37,8 @@ const Employees = ({ isCollapsed, setIsCollapsed }: EmployeesPageProps) => {
           </div>
           
           <EmployeeSummaryStats />
+          
+          <SalaryOverviewCards />
           
           <EmployeeList />
         </div>

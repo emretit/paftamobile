@@ -10,11 +10,13 @@ import { EmployeeTasksTab } from "../EmployeeTasksTab";
 interface TabsContentProps {
   employee: Employee;
   handleEmployeeUpdate: (employee: Employee) => void;
+  refetch?: () => Promise<void>;
 }
 
 export const EmployeeTabsContent = ({ 
   employee, 
-  handleEmployeeUpdate
+  handleEmployeeUpdate,
+  refetch
 }: TabsContentProps) => {
   return (
     <>
@@ -26,7 +28,7 @@ export const EmployeeTabsContent = ({
       </TabsContent>
       
       <TabsContent value="salary" className="mt-6">
-        <EmployeeSalaryTab employee={employee} />
+        <EmployeeSalaryTab employee={employee} refetch={refetch || (async () => {})} />
       </TabsContent>
       
       <TabsContent value="leave" className="mt-6">

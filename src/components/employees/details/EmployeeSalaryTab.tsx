@@ -5,30 +5,36 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SalaryForm } from "./salary/SalaryForm";
+import { SalaryHistory } from "./salary/SalaryHistory";
+import { Plus } from "lucide-react";
 
 interface EmployeeSalaryTabProps {
   employee: Employee;
+  refetch: () => Promise<void>;
 }
 
-export const EmployeeSalaryTab = ({ employee }: EmployeeSalaryTabProps) => {
+export const EmployeeSalaryTab = ({ employee, refetch }: EmployeeSalaryTabProps) => {
   const [open, setOpen] = useState(false);
 
   const handleSaveSalary = async (values: any) => {
-    // The logic is in the SalaryForm component
     setOpen(false);
+    await refetch();
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Salary Information</h2>
+        <h2 className="text-2xl font-bold">Maaş Bilgileri ve İşveren Maliyetleri</h2>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button>Add Salary Record</Button>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Yeni Maaş Kaydı
+            </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Add New Salary Record</DialogTitle>
+              <DialogTitle>Yeni Maaş Kaydı Ekle</DialogTitle>
             </DialogHeader>
             <SalaryForm
               employeeId={employee.id}
@@ -39,14 +45,7 @@ export const EmployeeSalaryTab = ({ employee }: EmployeeSalaryTabProps) => {
         </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Salary History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">No salary records found.</p>
-        </CardContent>
-      </Card>
+      <SalaryHistory employeeId={employee.id} />
     </div>
   );
 };
