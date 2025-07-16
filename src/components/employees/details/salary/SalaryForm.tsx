@@ -140,19 +140,16 @@ export const SalaryForm = ({ employeeId, onSave, onClose, existingSalary }: Sala
         // Asgari ücret ile gerçek maaş arasındaki fark (ek ödeme/kara)
         const extraPayment = Math.max(0, currentNetSalary - MINIMUM_WAGE_NET);
         
-        // Toplam maliyet = Net maaş + Asgari ücret işveren primleri + Yardımlar + Ek ödeme
-        totalEmployerCost = currentNetSalary + sgkEmployer + unemploymentEmployer + mealAllowance + transportAllowance + extraPayment;
+        // Toplam maliyet = Resmi asgari ücret maliyeti + ek ödeme + yol + yemek
+        totalEmployerCost = minimumWageCosts.totalEmployerCost + extraPayment + mealAllowance + transportAllowance;
       } else {
-        // Normal hesaplama: Net maaş + işveren primleri + yardımlar
+        // Normal hesaplama: Tüm hesaplamalar gerçek brüt maaş üzerinden
         sgkEmployer = currentGross * (sgkRate / 100);
         unemploymentEmployer = currentGross * (unemploymentRate / 100);
         accidentInsurance = currentGross * (accidentRate / 100);
         
-        // Gerçek net maaşı al
-        const currentNetSalary = salaryInputType === "net" ? parseFloat(netSalary) || 0 : calculateNetFromGross(currentGross);
-        
-        // Toplam maliyet = Net maaş + işveren primleri + yardımlar + diğer maliyetler
-        totalEmployerCost = currentNetSalary + sgkEmployer + unemploymentEmployer + accidentInsurance + mealAllowance + transportAllowance + stampTax + severance + bonus;
+        // Toplam maliyet = Brüt maaş + işveren primleri + yol + yemek + diğer maliyetler
+        totalEmployerCost = currentGross + sgkEmployer + unemploymentEmployer + accidentInsurance + mealAllowance + transportAllowance + stampTax + severance + bonus;
       }
 
       setCalculatedCosts({
