@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
+import { DetailedFinancialOverview } from "@/components/dashboard/DetailedFinancialOverview";
 
 interface DashboardProps {
   isCollapsed: boolean;
@@ -14,7 +14,7 @@ const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
         <div className="p-6">
-          <FinancialOverview />
+          <DetailedFinancialOverview />
         </div>
       </main>
     </div>
