@@ -1246,6 +1246,57 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_analysis: {
+        Row: {
+          created_at: string
+          id: string
+          month: number
+          profit_loss: number
+          purchase_invoice: number
+          purchase_vat: number
+          returns_given: number
+          returns_received: number
+          sales_invoice: number
+          sales_vat: number
+          updated_at: string
+          user_id: string
+          vat_difference: number
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          month: number
+          profit_loss?: number
+          purchase_invoice?: number
+          purchase_vat?: number
+          returns_given?: number
+          returns_received?: number
+          sales_invoice?: number
+          sales_vat?: number
+          updated_at?: string
+          user_id: string
+          vat_difference?: number
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          month?: number
+          profit_loss?: number
+          purchase_invoice?: number
+          purchase_vat?: number
+          returns_given?: number
+          returns_received?: number
+          sales_invoice?: number
+          sales_vat?: number
+          updated_at?: string
+          user_id?: string
+          vat_difference?: number
+          year?: number
+        }
+        Relationships: []
+      }
       loans: {
         Row: {
           amount: number

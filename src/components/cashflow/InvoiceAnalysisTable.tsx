@@ -1,87 +1,112 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Save, Calculator } from "lucide-react";
+import { useInvoiceAnalysis } from "@/hooks/useInvoiceAnalysis";
+import { useToast } from "@/components/ui/use-toast";
 
 const InvoiceAnalysisTable = () => {
-  // Sample data - in real app this would come from API
-  const monthlyData = [
-    {
-      month: "01-OCAK",
-      purchaseVAT: 223924.79,
-      salesVAT: 315203.25,
-      vatDifference: 91278.46,
-      purchaseInvoice: 1343548.91,
-      returnsReceived: 0.00,
-      salesInvoice: 1881616.31,
-      returnsGiven: 47003.20,
-      profitLoss: 440626.65
-    },
-    {
-      month: "02-ŞUBAT",
-      purchaseVAT: 203310.91,
-      salesVAT: 386568.51,
-      vatDifference: 183257.60,
-      purchaseInvoice: 1221631.16,
-      returnsReceived: 0.00,
-      salesInvoice: 2317241.60,
-      returnsGiven: 4169.47,
-      profitLoss: 947371.84
-    },
-    {
-      month: "03-MART",
-      purchaseVAT: 185077.36,
-      salesVAT: 345230.20,
-      vatDifference: 160152.84,
-      purchaseInvoice: 1111569.43,
-      returnsReceived: 0.00,
-      salesInvoice: 2068614.73,
-      returnsGiven: 2766.65,
-      profitLoss: 819955.35
-    },
-    {
-      month: "04-NİSAN",
-      purchaseVAT: 120235.78,
-      salesVAT: 283832.52,
-      vatDifference: 163596.74,
-      purchaseInvoice: 723414.71,
-      returnsReceived: 0.00,
-      salesInvoice: 1712635.44,
-      returnsGiven: 59472.46,
-      profitLoss: 857928.37
-    },
-    {
-      month: "05-MAYIS",
-      purchaseVAT: 168642.88,
-      salesVAT: 314755.36,
-      vatDifference: 146112.48,
-      purchaseInvoice: 1012357.21,
-      returnsReceived: 0.00,
-      salesInvoice: 1888532.10,
-      returnsGiven: 0.00,
-      profitLoss: 743546.87
-    },
-    {
-      month: "06-HAZİRAN",
-      purchaseVAT: 110047.53,
-      salesVAT: 293848.22,
-      vatDifference: 183800.69,
-      purchaseInvoice: 684440.98,
-      returnsReceived: 0.00,
-      salesInvoice: 1719528.98,
-      returnsGiven: 47182.94,
-      profitLoss: 844423.81
-    },
-    {
-      month: "07-TEMMUZ",
-      purchaseVAT: 15278.00,
-      salesVAT: 129631.46,
-      vatDifference: 114353.46,
-      purchaseInvoice: 91668.04,
-      returnsReceived: 0.00,
-      salesInvoice: 777788.70,
-      returnsGiven: 0.00,
-      profitLoss: 484575.40
-    }
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [matrixData, setMatrixData] = useState<Record<string, Record<number, number>>>({});
+  const [loading, setLoading] = useState(false);
+  const { data, upsertInvoiceAnalysis, getDataForMonth, loading: dataLoading } = useInvoiceAnalysis(selectedYear);
+  const { toast } = useToast();
+
+  // Auto-save timeout
+  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  const MONTHS = [
+    'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
   ];
+
+  const FIELDS = [
+    { key: 'purchase_vat', label: 'Alış KDV' },
+    { key: 'sales_vat', label: 'Satış KDV' },
+    { key: 'vat_difference', label: 'Fark KDV' },
+    { key: 'purchase_invoice', label: 'Alış Faturası' },
+    { key: 'returns_received', label: 'İade Alınan' },
+    { key: 'sales_invoice', label: 'Satış Faturası' },
+    { key: 'returns_given', label: 'İade Verilen' },
+    { key: 'profit_loss', label: 'Kar\\Zarar' }
+  ];
+
+  // Transform data from hook to matrix format
+  useEffect(() => {
+    const matrix: Record<string, Record<number, number>> = {};
+    
+    FIELDS.forEach(field => {
+      matrix[field.key] = {};
+      MONTHS.forEach((_, monthIndex) => {
+        const month = monthIndex + 1;
+        const monthData = getDataForMonth(selectedYear, month);
+        matrix[field.key][month] = monthData?.[field.key as keyof typeof monthData] as number || 0;
+      });
+    });
+
+    setMatrixData(matrix);
+  }, [data, selectedYear]);
+
+  // Auto-save cell value with debounce
+  const handleCellChange = (field: string, month: number, value: string) => {
+    const amount = parseFloat(value) || 0;
+    
+    setMatrixData(prev => ({
+      ...prev,
+      [field]: {
+        ...prev[field],
+        [month]: amount
+      }
+    }));
+
+    // Clear existing timeout
+    if (saveTimeout) {
+      clearTimeout(saveTimeout);
+    }
+
+    // Set new timeout for auto-save
+    const newTimeout = setTimeout(async () => {
+      try {
+        await upsertInvoiceAnalysis({
+          year: selectedYear,
+          month: month,
+          [field]: amount
+        });
+      } catch (error) {
+        console.error('Auto-save error:', error);
+      }
+    }, 1000);
+
+    setSaveTimeout(newTimeout);
+  };
+
+  // Get cell value
+  const getCellValue = (field: string, month: number): number => {
+    return matrixData[field]?.[month] || 0;
+  };
+
+  // Calculate row total
+  const getRowTotal = (field: string): number => {
+    const row = matrixData[field] || {};
+    return Object.values(row).reduce((sum, value) => sum + value, 0);
+  };
+
+  // Calculate column total
+  const getColumnTotal = (month: number): number => {
+    return FIELDS.reduce((total, field) => {
+      return total + getCellValue(field.key, month);
+    }, 0);
+  };
+
+  // Calculate grand total
+  const getGrandTotal = (): number => {
+    return MONTHS.reduce((total, _, monthIndex) => {
+      return total + getColumnTotal(monthIndex + 1);
+    }, 0);
+  };
 
   const formatTurkishCurrency = (amount: number) => {
     return new Intl.NumberFormat('tr-TR', {
@@ -90,10 +115,67 @@ const InvoiceAnalysisTable = () => {
     }).format(amount);
   };
 
+  // Save all data functionality
+  const saveAllData = async () => {
+    try {
+      setLoading(true);
+      
+      // Save all months data
+      const savePromises = [];
+      
+      for (let month = 1; month <= 12; month++) {
+        const monthData: any = { year: selectedYear, month };
+        
+        FIELDS.forEach(field => {
+          monthData[field.key] = getCellValue(field.key, month);
+        });
+        
+        savePromises.push(upsertInvoiceAnalysis(monthData));
+      }
+      
+      await Promise.all(savePromises);
+      
+      toast({
+        title: "Başarılı",
+        description: "Tüm veriler kaydedildi.",
+      });
+    } catch (error) {
+      console.error('Error saving data:', error);
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Veriler kaydedilirken bir hata oluştu.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-xl font-bold">Fatura Analizi</CardTitle>
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Calculator className="h-5 w-5" />
+            Fatura Analizi
+          </span>
+          <div className="flex items-center gap-4">
+            <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={saveAllData} disabled={loading || dataLoading}>
+              <Save className="mr-2 h-4 w-4" />
+              Kaydet
+            </Button>
+          </div>
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
@@ -101,34 +183,53 @@ const InvoiceAnalysisTable = () => {
             <thead>
               <tr className="bg-gray-100">
                 <th className="border p-3 text-left font-medium">Aylar</th>
-                <th className="border p-3 text-right font-medium">Alış KDV</th>
-                <th className="border p-3 text-right font-medium">Satış KDV</th>
-                <th className="border p-3 text-right font-medium">Fark KDV</th>
-                <th className="border p-3 text-right font-medium">Alış Faturası</th>
-                <th className="border p-3 text-right font-medium">İade Alınan</th>
-                <th className="border p-3 text-right font-medium">Satış Faturası</th>
-                <th className="border p-3 text-right font-medium">İade Verilen</th>
-                <th className="border p-3 text-right font-medium">Kar\Zarar</th>
+                {FIELDS.map(field => (
+                  <th key={field.key} className="border p-3 text-right font-medium">{field.label}</th>
+                ))}
+                <th className="border p-3 text-right font-medium">Toplam</th>
               </tr>
             </thead>
             <tbody>
-              {monthlyData.map((row, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="border p-3 font-medium">{row.month}</td>
-                  <td className="border p-3 text-right">{formatTurkishCurrency(row.purchaseVAT)}</td>
-                  <td className="border p-3 text-right">{formatTurkishCurrency(row.salesVAT)}</td>
-                  <td className="border p-3 text-right">{formatTurkishCurrency(row.vatDifference)}</td>
-                  <td className="border p-3 text-right">{formatTurkishCurrency(row.purchaseInvoice)}</td>
-                  <td className="border p-3 text-right">{formatTurkishCurrency(row.returnsReceived)}</td>
-                  <td className="border p-3 text-right">{formatTurkishCurrency(row.salesInvoice)}</td>
-                  <td className="border p-3 text-right">{formatTurkishCurrency(row.returnsGiven)}</td>
-                  <td className="border p-3 text-right">
-                    <Badge variant={row.profitLoss > 0 ? "default" : "destructive"}>
-                      {formatTurkishCurrency(row.profitLoss)}
-                    </Badge>
+              {MONTHS.map((monthName, monthIndex) => {
+                const month = monthIndex + 1;
+                return (
+                  <tr key={month} className="hover:bg-gray-50">
+                    <td className="border p-3 font-medium">{String(month).padStart(2, '0')}-{monthName.toUpperCase()}</td>
+                    {FIELDS.map(field => (
+                      <td key={field.key} className="border p-1">
+                        <Input
+                          type="number"
+                          value={getCellValue(field.key, month)}
+                          onChange={(e) => handleCellChange(field.key, month, e.target.value)}
+                          className="w-full text-right border-none bg-transparent focus:bg-white"
+                          step="0.01"
+                        />
+                      </td>
+                    ))}
+                    <td className="border p-3 text-right font-medium">
+                      {formatTurkishCurrency(getColumnTotal(month))}
+                    </td>
+                  </tr>
+                );
+              })}
+              {/* Totals row */}
+              <tr className="bg-gray-100 font-bold">
+                <td className="border p-3 text-left">TOPLAM</td>
+                {FIELDS.map(field => (
+                  <td key={field.key} className="border p-3 text-right">
+                    {field.key === 'profit_loss' ? (
+                      <Badge variant={getRowTotal(field.key) > 0 ? "default" : "destructive"}>
+                        {formatTurkishCurrency(getRowTotal(field.key))}
+                      </Badge>
+                    ) : (
+                      formatTurkishCurrency(getRowTotal(field.key))
+                    )}
                   </td>
-                </tr>
-              ))}
+                ))}
+                <td className="border p-3 text-right font-bold">
+                  {formatTurkishCurrency(getGrandTotal())}
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
