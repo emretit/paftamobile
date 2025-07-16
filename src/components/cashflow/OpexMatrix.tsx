@@ -198,15 +198,15 @@ const OpexMatrix = () => {
 
   // Calculate column total
   const getColumnTotal = (month: number): number => {
-    return Object.values(matrixData).reduce((sum, row) => {
-      return sum + (row[month] || 0);
+    return OPEX_CATEGORIES.reduce((total, category) => {
+      return total + getCategoryTotal(category.name, month);
     }, 0);
   };
 
   // Calculate grand total
   const getGrandTotal = (): number => {
-    return Object.values(matrixData).reduce((sum, row) => {
-      return sum + Object.values(row).reduce((rowSum, value) => rowSum + value, 0);
+    return MONTHS.reduce((total, _, monthIndex) => {
+      return total + getColumnTotal(monthIndex + 1);
     }, 0);
   };
 
@@ -216,6 +216,25 @@ const OpexMatrix = () => {
       return personnelData.reduce((sum, dept) => sum + dept.total_employer_cost, 0);
     }
     return 0;
+  };
+
+  // Calculate category total (sum of all subcategories in a category)
+  const getCategoryTotal = (category: string, month: number): number => {
+    const categoryData = OPEX_CATEGORIES.find(c => c.name === category);
+    if (!categoryData) return 0;
+
+    return categoryData.subcategories.reduce((total, subcategory) => {
+      const cellValue = getCellValue(category, subcategory, month);
+      const autoValue = categoryData.isAutoPopulated ? getAutoPopulatedValue(subcategory, month) : 0;
+      return total + cellValue + autoValue;
+    }, 0);
+  };
+
+  // Calculate category row total (sum across all months)
+  const getCategoryRowTotal = (category: string): number => {
+    return MONTHS.reduce((total, _, monthIndex) => {
+      return total + getCategoryTotal(category, monthIndex + 1);
+    }, 0);
   };
 
   // Format currency
@@ -317,11 +336,21 @@ const OpexMatrix = () => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="sticky left-[200px] bg-muted/50 z-10"></TableCell>
-                      {MONTHS.map((_, monthIndex) => (
-                        <TableCell key={monthIndex} className="text-center bg-muted/50"></TableCell>
-                      ))}
-                      <TableCell className="text-center bg-muted/50"></TableCell>
+                      <TableCell className="sticky left-[200px] bg-muted/50 z-10 font-medium">
+                        Kategori Toplamı
+                      </TableCell>
+                      {MONTHS.map((_, monthIndex) => {
+                        const month = monthIndex + 1;
+                        const total = getCategoryTotal(category.name, month);
+                        return (
+                          <TableCell key={monthIndex} className="text-center bg-muted/50 font-medium">
+                            {formatCurrency(total)}
+                          </TableCell>
+                        );
+                      })}
+                      <TableCell className="text-center bg-muted/50 font-bold">
+                        {formatCurrency(getCategoryRowTotal(category.name))}
+                      </TableCell>
                     </TableRow>
                     {expandedCategories.has(category.name) && category.subcategories.map((subcategory) => (
                       <TableRow key={`${category.name}-${subcategory}`}>
