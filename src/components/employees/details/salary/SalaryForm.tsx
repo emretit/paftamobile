@@ -124,13 +124,19 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
       let sgkEmployer, unemploymentEmployer, accidentInsurance, totalEmployerCost;
 
       if (calculateAsMinimumWage) {
-        // Asgari ücret formüllerine göre hesapla - SABİT TOPLAM MALİYET
+        // Asgari ücret formüllerine göre hesapla
         sgkEmployer = minimumWageCosts.sgkEmployer; // 4,355.92
         unemploymentEmployer = minimumWageCosts.unemploymentEmployer; // 520.11
         accidentInsurance = 0; // Asgari ücrette iş kazası yok
         
-        // Asgari ücret modunda toplam maliyet her zaman sabit: 30.881,53 TL
-        totalEmployerCost = minimumWageCosts.totalEmployerCost; // 30.881,53
+        // Gerçek net maaşı al
+        const currentNetSalary = salaryInputType === "net" ? parseFloat(netSalary) || 0 : calculateNetFromGross(currentGross);
+        
+        // Asgari ücret ile gerçek maaş arasındaki fark (ek ödeme/kara)
+        const extraPayment = Math.max(0, currentNetSalary - MINIMUM_WAGE_NET);
+        
+        // Toplam maliyet = Resmi asgari ücret maliyeti + ek ödeme
+        totalEmployerCost = minimumWageCosts.totalEmployerCost + extraPayment;
       } else {
         // Normal hesaplama: Tüm hesaplamalar gerçek brüt maaş üzerinden
         sgkEmployer = currentGross * (sgkRate / 100);
