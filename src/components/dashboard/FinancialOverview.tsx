@@ -209,69 +209,11 @@ const FinancialOverview = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="trend" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="trend">Trend Analizi</TabsTrigger>
+      <Tabs defaultValue="breakdown" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="breakdown">Gider Dağılımı</TabsTrigger>
           <TabsTrigger value="profitability">Karlılık</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="trend" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Aylık Gelir Trendi</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                    <Line 
-                      type="monotone" 
-                      dataKey="revenue" 
-                      stroke={COLORS.primary} 
-                      strokeWidth={2}
-                      name="Ciro"
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="netProfit" 
-                      stroke={COLORS.success} 
-                      strokeWidth={2}
-                      name="Net Kar"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Karlılık Trendi</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => `${Number(value).toFixed(1)}%`} />
-                    <Line 
-                      type="monotone" 
-                      dataKey="profitMargin" 
-                      stroke={COLORS.warning} 
-                      strokeWidth={2}
-                      name="Kar Marjı %"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
 
         <TabsContent value="breakdown" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
