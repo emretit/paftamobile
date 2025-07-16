@@ -209,119 +209,63 @@ const FinancialOverview = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="breakdown" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="breakdown">Gider Dağılımı</TabsTrigger>
-          <TabsTrigger value="profitability">Karlılık</TabsTrigger>
-        </TabsList>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Aylık Karlılık</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                  <Bar dataKey="grossProfit" fill={COLORS.success} name="Brüt Kar" />
+                  <Bar dataKey="netProfit" fill={COLORS.primary} name="Net Kar" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-        <TabsContent value="breakdown" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">OPEX Dağılımı</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <RechartsPieChart>
-                    <Pie
-                      data={opexPieData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {opexPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                  </RechartsPieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Aylık Gider Analizi</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                    <Bar dataKey="purchases" fill={COLORS.danger} name="Alışlar" />
-                    <Bar dataKey="opex" fill={COLORS.warning} name="OPEX" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="profitability" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Aylık Karlılık</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                    <Bar dataKey="grossProfit" fill={COLORS.success} name="Brüt Kar" />
-                    <Bar dataKey="netProfit" fill={COLORS.primary} name="Net Kar" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Finansal Özet</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span className="text-sm font-medium">Toplam Ciro</span>
-                    <span className="font-bold">{formatCurrency(totalRevenue)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span className="text-sm font-medium">Toplam Alışlar</span>
-                    <span className="font-bold text-red-600">{formatCurrency(totalPurchases)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span className="text-sm font-medium">Brüt Kar</span>
-                    <span className="font-bold text-green-600">{formatCurrency(totalGrossProfit)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span className="text-sm font-medium">Toplam OPEX</span>
-                    <span className="font-bold text-orange-600">{formatCurrency(totalOpex)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span className="text-sm font-medium">Net Kar</span>
-                    <span className="font-bold text-purple-600">{formatCurrency(totalNetProfit)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-sm font-medium">Kar Marjı</span>
-                    <Badge variant={overallMargin > 0 ? "default" : "destructive"}>
-                      {formatPercentage(overallMargin)}
-                    </Badge>
-                  </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Finansal Özet</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-2 border-b">
+                  <span className="text-sm font-medium">Toplam Ciro</span>
+                  <span className="font-bold">{formatCurrency(totalRevenue)}</span>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+                <div className="flex justify-between items-center py-2 border-b">
+                  <span className="text-sm font-medium">Toplam Alışlar</span>
+                  <span className="font-bold text-red-600">{formatCurrency(totalPurchases)}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b">
+                  <span className="text-sm font-medium">Brüt Kar</span>
+                  <span className="font-bold text-green-600">{formatCurrency(totalGrossProfit)}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b">
+                  <span className="text-sm font-medium">Toplam OPEX</span>
+                  <span className="font-bold text-orange-600">{formatCurrency(totalOpex)}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b">
+                  <span className="text-sm font-medium">Net Kar</span>
+                  <span className="font-bold text-purple-600">{formatCurrency(totalNetProfit)}</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm font-medium">Kar Marjı</span>
+                  <Badge variant={overallMargin > 0 ? "default" : "destructive"}>
+                    {formatPercentage(overallMargin)}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Detailed Monthly Table */}
       <Card>
