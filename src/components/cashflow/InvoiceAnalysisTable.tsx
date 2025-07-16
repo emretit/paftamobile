@@ -51,15 +51,17 @@ const InvoiceAnalysisTable = () => {
   const handleCellChange = (field: string, month: number, value: string) => {
     const amount = parseFloat(value) || 0;
     
-    // Calculate VAT (20%)
+    // Calculate VAT from VAT-inclusive amount (KDV dahil tutardan KDV hesaplama)
     const calculatedData: any = {
       [field]: amount
     };
 
     if (field === 'purchase_invoice') {
-      calculatedData.purchase_vat = amount * 0.20;
+      // KDV dahil tutardan KDV'yi ayırma: KDV = tutar * (20/120)
+      calculatedData.purchase_vat = amount * (20/120);
     } else if (field === 'sales_invoice') {
-      calculatedData.sales_vat = amount * 0.20;
+      // KDV dahil tutardan KDV'yi ayırma: KDV = tutar * (20/120)
+      calculatedData.sales_vat = amount * (20/120);
     }
 
     // Calculate VAT difference
