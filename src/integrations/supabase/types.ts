@@ -718,6 +718,7 @@ export type Database = {
           accident_insurance_rate: number | null
           allowances: Json | null
           bonus_provision: number | null
+          calculate_as_minimum_wage: boolean | null
           created_at: string | null
           effective_date: string
           employee_id: string | null
@@ -725,6 +726,7 @@ export type Database = {
           id: string
           net_salary: number
           notes: string | null
+          salary_input_type: string | null
           severance_provision: number | null
           sgk_employer_amount: number | null
           sgk_employer_rate: number | null
@@ -739,6 +741,7 @@ export type Database = {
           accident_insurance_rate?: number | null
           allowances?: Json | null
           bonus_provision?: number | null
+          calculate_as_minimum_wage?: boolean | null
           created_at?: string | null
           effective_date: string
           employee_id?: string | null
@@ -746,6 +749,7 @@ export type Database = {
           id?: string
           net_salary: number
           notes?: string | null
+          salary_input_type?: string | null
           severance_provision?: number | null
           sgk_employer_amount?: number | null
           sgk_employer_rate?: number | null
@@ -760,6 +764,7 @@ export type Database = {
           accident_insurance_rate?: number | null
           allowances?: Json | null
           bonus_provision?: number | null
+          calculate_as_minimum_wage?: boolean | null
           created_at?: string | null
           effective_date?: string
           employee_id?: string | null
@@ -767,6 +772,7 @@ export type Database = {
           id?: string
           net_salary?: number
           notes?: string | null
+          salary_input_type?: string | null
           severance_provision?: number | null
           sgk_employer_amount?: number | null
           sgk_employer_rate?: number | null

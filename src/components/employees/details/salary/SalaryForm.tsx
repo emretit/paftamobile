@@ -9,6 +9,8 @@ import { useForm } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, Form } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface SalaryFormProps {
   employeeId: string;
@@ -25,10 +27,15 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
     totalEmployerCost: 0
   });
 
+  // Turkish minimum wage for 2024 (this should ideally come from a settings table)
+  const MINIMUM_WAGE = 17002; // 2024 asgari ücret
+
   const form = useForm({
     defaultValues: {
+      salaryInputType: "gross", // "gross" or "net"
       grossSalary: "",
       netSalary: "",
+      calculateAsMinimumWage: false,
       allowances: "{}",
       effectiveDate: "",
       sgkEmployerRate: "20.5",
@@ -41,11 +48,42 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
     }
   });
 
+  const salaryInputType = form.watch("salaryInputType");
   const grossSalary = form.watch("grossSalary");
+  const netSalary = form.watch("netSalary");
+  const calculateAsMinimumWage = form.watch("calculateAsMinimumWage");
+
+  // Function to calculate gross from net salary
+  const calculateGrossFromNet = (netAmount: number) => {
+    // Simplified calculation - this should be more accurate in production
+    // Assumes approximately 30% total deductions (SGK employee + income tax)
+    const estimatedGross = netAmount / 0.70; // Rough estimation
+    return estimatedGross;
+  };
+
+  // Function to calculate net from gross salary  
+  const calculateNetFromGross = (grossAmount: number) => {
+    // Simplified calculation - this should be more accurate in production
+    // Assumes approximately 30% total deductions
+    const estimatedNet = grossAmount * 0.70; // Rough estimation
+    return estimatedNet;
+  };
 
   useEffect(() => {
-    if (grossSalary) {
-      const gross = parseFloat(grossSalary) || 0;
+    let currentGross = 0;
+    
+    if (salaryInputType === "gross" && grossSalary) {
+      currentGross = parseFloat(grossSalary) || 0;
+      // Auto-calculate net from gross
+      const calculatedNet = calculateNetFromGross(currentGross);
+      form.setValue("netSalary", calculatedNet.toFixed(2), { shouldValidate: false });
+    } else if (salaryInputType === "net" && netSalary) {
+      currentGross = calculateGrossFromNet(parseFloat(netSalary) || 0);
+      // Auto-calculate gross from net
+      form.setValue("grossSalary", currentGross.toFixed(2), { shouldValidate: false });
+    }
+
+    if (currentGross > 0) {
       const sgkRate = parseFloat(form.getValues("sgkEmployerRate")) || 20.5;
       const unemploymentRate = parseFloat(form.getValues("unemploymentEmployerRate")) || 3.0;
       const accidentRate = parseFloat(form.getValues("accidentInsuranceRate")) || 2.0;
@@ -53,10 +91,13 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
       const severance = parseFloat(form.getValues("severanceProvision")) || 0;
       const bonus = parseFloat(form.getValues("bonusProvision")) || 0;
 
-      const sgkEmployer = gross * (sgkRate / 100);
-      const unemploymentEmployer = gross * (unemploymentRate / 100);
-      const accidentInsurance = gross * (accidentRate / 100);
-      const totalEmployerCost = gross + sgkEmployer + unemploymentEmployer + accidentInsurance + stampTax + severance + bonus;
+      // Use minimum wage for calculations if option is selected
+      const calculationBase = calculateAsMinimumWage ? MINIMUM_WAGE : currentGross;
+
+      const sgkEmployer = calculationBase * (sgkRate / 100);
+      const unemploymentEmployer = calculationBase * (unemploymentRate / 100);
+      const accidentInsurance = calculationBase * (accidentRate / 100);
+      const totalEmployerCost = currentGross + sgkEmployer + unemploymentEmployer + accidentInsurance + stampTax + severance + bonus;
 
       setCalculatedCosts({
         sgkEmployer,
@@ -65,7 +106,7 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
         totalEmployerCost
       });
     }
-  }, [grossSalary, form.watch()]);
+  }, [salaryInputType, grossSalary, netSalary, calculateAsMinimumWage, form.watch()]);
 
   const handleSubmit = async (values: any) => {
     try {
@@ -75,6 +116,8 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
           employee_id: employeeId,
           gross_salary: parseFloat(values.grossSalary),
           net_salary: parseFloat(values.netSalary),
+          salary_input_type: values.salaryInputType,
+          calculate_as_minimum_wage: values.calculateAsMinimumWage,
           allowances: JSON.parse(values.allowances || '{}'),
           effective_date: values.effectiveDate,
           sgk_employer_rate: parseFloat(values.sgkEmployerRate),
@@ -113,6 +156,58 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
             <CardTitle className="text-lg">Temel Maaş Bilgileri</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Maaş Giriş Tipi Seçimi */}
+            <FormField
+              control={form.control}
+              name="salaryInputType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Maaş Giriş Tipi</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-row space-x-6"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="gross" id="gross" />
+                        <Label htmlFor="gross">Brüt Maaş Gir</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="net" id="net" />
+                        <Label htmlFor="net">Net Maaş Gir</Label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Asgari Ücret Hesaplama Seçeneği */}
+            <FormField
+              control={form.control}
+              name="calculateAsMinimumWage"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Asgari ücret olarak hesapla
+                    </FormLabel>
+                    <p className="text-sm text-muted-foreground">
+                      İşveren maliyetleri asgari ücret (₺{MINIMUM_WAGE.toLocaleString('tr-TR')}) üzerinden hesaplanır
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -121,8 +216,17 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
                   <FormItem>
                     <FormLabel>Brüt Maaş (₺)</FormLabel>
                     <FormControl>
-                      <Input {...field} type="number" placeholder="Brüt maaşı girin" />
+                      <Input 
+                        {...field} 
+                        type="number" 
+                        placeholder="Brüt maaşı girin"
+                        disabled={salaryInputType === "net"}
+                        className={salaryInputType === "net" ? "bg-gray-100" : ""}
+                      />
                     </FormControl>
+                    {salaryInputType === "net" && (
+                      <p className="text-xs text-muted-foreground">Otomatik hesaplanıyor</p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -135,8 +239,17 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
                   <FormItem>
                     <FormLabel>Net Maaş (₺)</FormLabel>
                     <FormControl>
-                      <Input {...field} type="number" placeholder="Net maaşı girin" />
+                      <Input 
+                        {...field} 
+                        type="number" 
+                        placeholder="Net maaşı girin"
+                        disabled={salaryInputType === "gross"}
+                        className={salaryInputType === "gross" ? "bg-gray-100" : ""}
+                      />
                     </FormControl>
+                    {salaryInputType === "gross" && (
+                      <p className="text-xs text-muted-foreground">Otomatik hesaplanıyor</p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -268,10 +381,17 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
         </Card>
 
         {/* Hesaplanan Maliyetler */}
-        {grossSalary && (
+        {(grossSalary || netSalary) && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Hesaplanan İşveren Maliyetleri</CardTitle>
+              <CardTitle className="text-lg">
+                Hesaplanan İşveren Maliyetleri
+                {calculateAsMinimumWage && (
+                  <Badge variant="outline" className="ml-2">
+                    Asgari ücret bazlı hesaplama
+                  </Badge>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
@@ -280,6 +400,11 @@ export const SalaryForm = ({ employeeId, onSave, onClose }: SalaryFormProps) => 
                   <Badge variant="secondary" className="w-full justify-center py-2">
                     ₺{calculatedCosts.sgkEmployer.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                   </Badge>
+                  {calculateAsMinimumWage && (
+                    <p className="text-xs text-muted-foreground">
+                      Hesaplama: ₺{MINIMUM_WAGE.toLocaleString('tr-TR')} x {form.getValues("sgkEmployerRate")}%
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>İşsizlik Sigortası</Label>
