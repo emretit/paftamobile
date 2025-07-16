@@ -50,8 +50,8 @@ export function LoansAndChecks() {
   const [checkDialog, setCheckDialog] = useState(false);
   const [editingLoan, setEditingLoan] = useState<Loan | null>(null);
   const [editingCheck, setEditingCheck] = useState<Check | null>(null);
-  const [loanFilters, setLoanFilters] = useState({ status: "", dateRange: "" });
-  const [checkFilters, setCheckFilters] = useState({ status: "", dateRange: "" });
+  const [loanFilters, setLoanFilters] = useState({ status: "all", dateRange: "" });
+  const [checkFilters, setCheckFilters] = useState({ status: "all", dateRange: "" });
   const [loanStatus, setLoanStatus] = useState("odenecek");
   const [checkStatus, setCheckStatus] = useState("odenecek");
   
@@ -527,7 +527,7 @@ export function LoansAndChecks() {
                       <SelectValue placeholder="Durum filtresi" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tümü</SelectItem>
+                      <SelectItem value="all">Tümü</SelectItem>
                       <SelectItem value="odenecek">Ödenecek</SelectItem>
                       <SelectItem value="odendi">Ödendi</SelectItem>
                     </SelectContent>
@@ -575,7 +575,7 @@ export function LoansAndChecks() {
                   </TableHeader>
                   <TableBody>
                     {loans
-                      .filter(loan => !loanFilters.status || loan.status === loanFilters.status)
+                      .filter(loan => loanFilters.status === "all" || loan.status === loanFilters.status)
                       .map((loan) => (
                         <TableRow key={loan.id}>
                           <TableCell className="font-medium">{loan.loan_name}</TableCell>
@@ -628,7 +628,7 @@ export function LoansAndChecks() {
                       <SelectValue placeholder="Durum filtresi" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tümü</SelectItem>
+                      <SelectItem value="all">Tümü</SelectItem>
                       <SelectItem value="odenecek">Ödenecek</SelectItem>
                       <SelectItem value="odendi">Ödendi</SelectItem>
                       <SelectItem value="karsilik_yok">Karşılıksız</SelectItem>
@@ -675,7 +675,7 @@ export function LoansAndChecks() {
                   </TableHeader>
                   <TableBody>
                     {checks
-                      .filter(check => !checkFilters.status || check.status === checkFilters.status)
+                      .filter(check => checkFilters.status === "all" || check.status === checkFilters.status)
                       .map((check) => (
                         <TableRow key={check.id}>
                           <TableCell className="font-medium">{check.check_number}</TableCell>
