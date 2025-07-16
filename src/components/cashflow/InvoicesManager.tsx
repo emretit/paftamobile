@@ -9,9 +9,10 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Plus, FileUp, FileDown, Search, Filter, Calendar, ExternalLink } from "lucide-react";
+import { Plus, FileUp, FileDown, Search, Filter, Calendar, ExternalLink, BarChart3 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import InvoiceAnalysisTable from "./InvoiceAnalysisTable";
 
 const InvoicesManager = () => {
   const [activeTab, setActiveTab] = useState("sales");
@@ -295,7 +296,11 @@ const InvoicesManager = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsTrigger value="analysis" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Fatura Analizi
+          </TabsTrigger>
           <TabsTrigger value="sales" className="flex items-center gap-2">
             <FileUp className="h-4 w-4" />
             Satış Faturaları
@@ -305,6 +310,10 @@ const InvoicesManager = () => {
             Alış Faturaları
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="analysis" className="space-y-6">
+          <InvoiceAnalysisTable />
+        </TabsContent>
 
         <TabsContent value="sales" className="space-y-6">
           {renderSalesInvoices()}
