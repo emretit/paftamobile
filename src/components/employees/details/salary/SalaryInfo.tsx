@@ -225,12 +225,7 @@ export const SalaryInfo = ({ employeeId, onEdit }: SalaryInfoProps) => {
                   ₺{currentSalary.sgk_employer_amount.toLocaleString('tr-TR')}
                 </TableCell>
                 <TableCell className="font-medium">
-                  ₺{(currentSalary.net_salary + 
-                      currentSalary.sgk_employer_amount + 
-                      currentSalary.unemployment_employer_amount + 
-                      currentSalary.accident_insurance_amount + 
-                      (currentSalary.meal_allowance || 0) + 
-                      (currentSalary.transport_allowance || 0)).toLocaleString('tr-TR')}
+                  ₺{currentSalary.total_employer_cost.toLocaleString('tr-TR')}
                 </TableCell>
                 <TableCell className="max-w-[200px] truncate">
                   {currentSalary.notes}
