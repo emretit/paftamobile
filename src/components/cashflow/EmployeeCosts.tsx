@@ -77,6 +77,8 @@ const EmployeeCosts = () => {
 
   const fetchEmployeeCosts = async () => {
     try {
+      console.log('Fetching employee costs...');
+      
       const { data, error } = await supabase
         .from('employees')
         .select(`
@@ -101,7 +103,7 @@ const EmployeeCosts = () => {
           emergency_contact_name,
           emergency_contact_phone,
           emergency_contact_relation,
-          employee_salaries (
+          employee_salaries!inner (
             gross_salary,
             net_salary,
             total_employer_cost,
@@ -117,46 +119,49 @@ const EmployeeCosts = () => {
         .order('department')
         .order('last_name');
 
+      console.log('Query result:', { data, error });
+
       if (error) throw error;
 
-      const processedData = data
-        .filter(employee => employee.employee_salaries && Array.isArray(employee.employee_salaries) && employee.employee_salaries.length > 0)
-        .map(employee => {
-          const salariesArray = Array.isArray(employee.employee_salaries) ? employee.employee_salaries : [employee.employee_salaries];
-          const latestSalary = salariesArray[0]; // Get the latest salary record
-          return {
-            id: employee.id,
-            first_name: employee.first_name,
-            last_name: employee.last_name,
-            email: employee.email,
-            phone: employee.phone,
-            department: employee.department,
-            position: employee.position,
-            status: employee.status,
-            hire_date: employee.hire_date,
-            date_of_birth: employee.date_of_birth,
-            gender: employee.gender,
-            marital_status: employee.marital_status,
-            address: employee.address,
-            city: employee.city,
-            district: employee.district,
-            postal_code: employee.postal_code,
-            country: employee.country,
-            id_ssn: employee.id_ssn,
-            emergency_contact_name: employee.emergency_contact_name,
-            emergency_contact_phone: employee.emergency_contact_phone,
-            emergency_contact_relation: employee.emergency_contact_relation,
-            gross_salary: latestSalary.gross_salary || 0,
-            net_salary: latestSalary.net_salary || 0,
-            total_employer_cost: latestSalary.total_employer_cost || 0,
-            meal_allowance: latestSalary.meal_allowance || 0,
-            transport_allowance: latestSalary.transport_allowance || 0,
-            effective_date: latestSalary.effective_date,
-            sgk_employer_amount: latestSalary.sgk_employer_amount || 0,
-            unemployment_employer_amount: latestSalary.unemployment_employer_amount || 0,
-            accident_insurance_amount: latestSalary.accident_insurance_amount || 0,
-          };
-        });
+      const processedData = data?.map(employee => {
+        console.log('Processing employee:', employee);
+        const salariesArray = Array.isArray(employee.employee_salaries) ? employee.employee_salaries : [employee.employee_salaries];
+        const latestSalary = salariesArray[0]; // Get the latest salary record
+        return {
+          id: employee.id,
+          first_name: employee.first_name,
+          last_name: employee.last_name,
+          email: employee.email,
+          phone: employee.phone,
+          department: employee.department,
+          position: employee.position,
+          status: employee.status,
+          hire_date: employee.hire_date,
+          date_of_birth: employee.date_of_birth,
+          gender: employee.gender,
+          marital_status: employee.marital_status,
+          address: employee.address,
+          city: employee.city,
+          district: employee.district,
+          postal_code: employee.postal_code,
+          country: employee.country,
+          id_ssn: employee.id_ssn,
+          emergency_contact_name: employee.emergency_contact_name,
+          emergency_contact_phone: employee.emergency_contact_phone,
+          emergency_contact_relation: employee.emergency_contact_relation,
+          gross_salary: latestSalary?.gross_salary || 0,
+          net_salary: latestSalary?.net_salary || 0,
+          total_employer_cost: latestSalary?.total_employer_cost || 0,
+          meal_allowance: latestSalary?.meal_allowance || 0,
+          transport_allowance: latestSalary?.transport_allowance || 0,
+          effective_date: latestSalary?.effective_date,
+          sgk_employer_amount: latestSalary?.sgk_employer_amount || 0,
+          unemployment_employer_amount: latestSalary?.unemployment_employer_amount || 0,
+          accident_insurance_amount: latestSalary?.accident_insurance_amount || 0,
+        };
+      }) || [];
+
+      console.log('Processed data:', processedData);
 
       setEmployeeCosts(processedData);
       calculateDepartmentSummary(processedData);
