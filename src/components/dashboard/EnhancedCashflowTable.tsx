@@ -4,8 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { 
+  CustomTabs, 
+  CustomTabsContent, 
+  CustomTabsList, 
+  CustomTabsTrigger 
+} from "@/components/ui/custom-tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
-import { Download, TrendingUp, TrendingDown, Target, Calculator, DollarSign } from "lucide-react";
+import { Download, TrendingUp, TrendingDown, Target, Calculator, DollarSign, BarChart2 } from "lucide-react";
+import { DetailedFinancialOverview } from "./DetailedFinancialOverview";
 
 // Sample data structure with realistic values
 const SAMPLE_DATA = {
@@ -128,6 +135,7 @@ export const EnhancedCashflowTable = () => {
   const [editingCell, setEditingCell] = useState<{ category: string; subcategory: string; month: number } | null>(null);
   const [tempValue, setTempValue] = useState('');
   const [data, setData] = useState(SAMPLE_DATA);
+  const [activeTab, setActiveTab] = useState("cashflow");
 
   const getValue = (category: string, subcategory: string, month: number) => {
     return data[selectedYear]?.[category]?.[subcategory]?.[month - 1] || 0;
@@ -279,7 +287,7 @@ export const EnhancedCashflowTable = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">NAKİT AKIŞ TABLOSU - VERİ TABANI</h1>
+        <h1 className="text-3xl font-bold text-gray-900">FİNANSAL YÖNETİM MERKEZİ</h1>
         <div className="flex gap-4 items-center">
           <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
             <SelectTrigger className="w-32">
@@ -297,6 +305,23 @@ export const EnhancedCashflowTable = () => {
           </Button>
         </div>
       </div>
+
+      {/* Tabs */}
+      <CustomTabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2">
+          <CustomTabsList className="w-full h-auto flex gap-2 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-1 shadow-sm">
+            <CustomTabsTrigger value="cashflow" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
+              <Calculator className="h-4 w-4" />
+              <span>Nakit Akış Analizi</span>
+            </CustomTabsTrigger>
+            <CustomTabsTrigger value="income-expense" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
+              <BarChart2 className="h-4 w-4" />
+              <span>Gelir-Gider Analizi</span>
+            </CustomTabsTrigger>
+          </CustomTabsList>
+        </div>
+
+        <CustomTabsContent value="cashflow" className="space-y-6">
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -536,7 +561,13 @@ export const EnhancedCashflowTable = () => {
             </CardContent>
           </Card>
         ))}
-      </div>
+        </div>
+        </CustomTabsContent>
+
+        <CustomTabsContent value="income-expense" className="space-y-6">
+          <DetailedFinancialOverview />
+        </CustomTabsContent>
+      </CustomTabs>
     </div>
   );
 };

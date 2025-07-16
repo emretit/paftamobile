@@ -7,7 +7,7 @@ import { RouteConfig } from "./types";
 // Define cashflow routes
 export const cashflowRoutes: RouteConfig[] = [
   { path: "/cashflow", component: Cashflow, protected: true },
-  { path: "/cashflow/monthly-overview", component: Cashflow, protected: true },
+  
   { path: "/cashflow/add-transaction", component: Cashflow, protected: true },
   { path: "/cashflow/transactions", component: Cashflow, protected: true },
   { path: "/cashflow/categories", component: Cashflow, protected: true },
