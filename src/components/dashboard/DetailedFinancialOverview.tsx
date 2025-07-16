@@ -42,11 +42,11 @@ export const DetailedFinancialOverview = () => {
       setLoading(true);
 
       // Fetch monthly financials
+      // Fetch monthly financials without user filtering
       const { data: monthlyData, error: monthlyError } = await supabase
         .from('monthly_financials')
         .select('*')
-        .eq('year', selectedYear)
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('year', selectedYear);
 
       if (monthlyError) throw monthlyError;
 

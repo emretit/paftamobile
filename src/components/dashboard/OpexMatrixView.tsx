@@ -37,14 +37,10 @@ export const OpexMatrixView = () => {
   
   const { data, loading, upsertOpexMatrix, refetch } = useOpexMatrix();
 
-  // Check authentication
+  // Removed auth check - no authentication required
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setIsAuthenticated(!!user);
-      setAuthLoading(false);
-    };
-    checkAuth();
+    setIsAuthenticated(true); // Always authenticated
+    setAuthLoading(false);
   }, []);
 
   useEffect(() => {
