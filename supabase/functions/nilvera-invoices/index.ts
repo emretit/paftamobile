@@ -143,6 +143,9 @@ serve(async (req) => {
         }
       })
 
+      console.log('PDF response status:', response.status)
+      console.log('PDF response headers:', Object.fromEntries(response.headers.entries()))
+
       if (!response.ok) {
         const errorText = await response.text()
         console.error('Nilvera PDF error:', errorText)
@@ -152,6 +155,9 @@ serve(async (req) => {
       // PDF'i buffer olarak al
       const pdfBuffer = await response.arrayBuffer()
       const pdfBytes = new Uint8Array(pdfBuffer)
+      
+      console.log('PDF buffer size:', pdfBuffer.byteLength)
+      console.log('PDF bytes first 20:', Array.from(pdfBytes.slice(0, 20)).map(b => b.toString(16)).join(' '))
       
       // Supabase Storage'a yükle
       const fileName = `invoice-${invoiceId}-${Date.now()}.pdf`
