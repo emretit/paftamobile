@@ -66,8 +66,24 @@ serve(async (req) => {
         console.error('Nilvera API error:', errorText)
         throw new Error(`Faturalar getirilemedi: ${response.status} - ${errorText}`)
       }
-
-      const invoices = await response.json()
+      
+      const response_data = await response.json()
+      console.log('Nilvera API response:', response_data)
+      
+      // Nilvera API response yapısını kontrol edelim
+      let invoices = []
+      if (Array.isArray(response_data)) {
+        invoices = response_data
+      } else if (response_data && response_data.data && Array.isArray(response_data.data)) {
+        invoices = response_data.data
+      } else if (response_data && response_data.invoices && Array.isArray(response_data.invoices)) {
+        invoices = response_data.invoices
+      } else if (response_data && response_data.result && Array.isArray(response_data.result)) {
+        invoices = response_data.result
+      } else {
+        console.log('Unexpected response structure:', response_data)
+        invoices = []
+      }
 
       return new Response(
         JSON.stringify({ 
