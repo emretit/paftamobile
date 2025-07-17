@@ -31,6 +31,10 @@ interface ExpenseItem {
 
 const EXPENSE_CATEGORIES = [
   {
+    name: "Personel Giderleri",
+    subcategories: ["Net Maaşlar", "SGK İşveren Payı", "İşsizlik Sigortası", "İş Kazası Sigortası", "Yemek Yardımı", "Ulaşım Yardımı"]
+  },
+  {
     name: "Operasyonel Giderler",
     subcategories: ["Kira", "Elektrik", "Su", "Doğalgaz", "İnternet", "Telefon", "Temizlik", "Güvenlik", "Bakım"]
   },
@@ -44,15 +48,15 @@ const EXPENSE_CATEGORIES = [
   },
   {
     name: "Finansman Giderleri",
-    subcategories: ["Kredi Faizleri", "Kart Komisyonları", "Banka Masrafları", "Kambiyo Giderleri"]
+    subcategories: ["Kredi Faizleri", "Kart Komisyonları", "Banka Masrafları", "Kambiyo Giderleri", "Faktoring Giderleri", "Leasing Giderleri", "Diğer Finansman Giderleri"]
   },
   {
     name: "Genel Giderler",
-    subcategories: ["Danışmanlık", "Hukuki Giderler", "Sigorta", "Vergiler", "Diğer"]
+    subcategories: ["Danışmanlık", "Hukuki Giderler", "Sigorta", "Vergiler", "Yasal Giderler", "Diğer"]
   },
   {
     name: "Seyahat Giderleri",
-    subcategories: ["Uçak Bileti", "Otel", "Yemek", "Ulaşım", "Diğer"]
+    subcategories: ["Uçak Bileti", "Otel", "Yemek", "Ulaşım", "Diğer Seyahat"]
   }
 ];
 
