@@ -142,6 +142,8 @@ const ExpensesManager = () => {
     try {
       setLoading(true);
       
+      const adminUserId = '3efe360b-98fd-4718-9fb5-f65e4ad408a9'; // Admin user ID
+      
       let attachmentUrl = null;
       if (selectedFile) {
         attachmentUrl = await handleFileUpload(selectedFile);
@@ -163,7 +165,8 @@ const ExpensesManager = () => {
           .from('cashflow_categories')
           .insert({
             name: selectedCategory,
-            type: 'expense'
+            type: 'expense',
+            user_id: adminUserId
           })
           .select('id')
           .single();
@@ -172,7 +175,8 @@ const ExpensesManager = () => {
         categoryId = newCategory.id;
       }
 
-      const { error } = await supabase
+      // Add to cashflow_transactions
+      const { error: transactionError } = await supabase
         .from('cashflow_transactions')
         .insert({
           amount: parseFloat(amount),
@@ -181,10 +185,26 @@ const ExpensesManager = () => {
           date: format(date, 'yyyy-MM-dd'),
           description: description || null,
           attachment_url: attachmentUrl,
-          user_id: (await supabase.auth.getUser()).data.user?.id || '',
+          user_id: adminUserId,
         });
 
-      if (error) throw error;
+      if (transactionError) throw transactionError;
+
+      // Also add to opex_matrix for reporting
+      const { error: opexError } = await supabase
+        .from('opex_matrix')
+        .insert({
+          user_id: adminUserId,
+          year: date.getFullYear(),
+          month: date.getMonth() + 1,
+          category: selectedCategory,
+          subcategory: selectedSubcategory || null,
+          amount: parseFloat(amount),
+          description: description || null,
+          attachment_url: attachmentUrl,
+        });
+
+      if (opexError) throw opexError;
 
       toast({
         title: "Başarılı",
