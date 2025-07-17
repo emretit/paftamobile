@@ -163,6 +163,36 @@ export const InvoiceManagementTab = () => {
     }
   };
 
+  const handleViewPDF = async (invoiceId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
+        body: { 
+          action: 'get_pdf',
+          invoice: { invoiceId }
+        }
+      });
+      
+      if (error) throw error;
+      
+      if (data.success) {
+        // PDF'i yeni sekmede aç
+        window.open(data.pdfUrl, '_blank');
+        toast({
+          title: "Başarılı",
+          description: "PDF açılıyor...",
+        });
+      } else {
+        throw new Error(data.error || 'PDF getirilemedi');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Hata",
+        description: error.message || "PDF getirilemedi.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleExportToExcel = () => {
     const headers = [
       'Fatura No',
@@ -420,9 +450,9 @@ export const InvoiceManagementTab = () => {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleViewPDF(invoice.id)}>
                                   <FileText className="h-4 w-4 mr-2" />
-                                  PDF İndir
+                                  PDF Görüntüle
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>
                                   Detayları Görüntüle
