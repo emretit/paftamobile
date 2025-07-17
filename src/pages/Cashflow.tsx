@@ -12,8 +12,9 @@ import OpexEntry from "@/components/cashflow/OpexEntry";
 import EmployeeCosts from "@/components/cashflow/EmployeeCosts";
 import { LoansAndChecks } from "@/components/cashflow/LoansAndChecks";
 import InvoicesManager from "@/components/cashflow/InvoicesManager";
+import ExpensesManager from "@/components/cashflow/ExpensesManager";
 
-import { TrendingUp, FileText, BarChart2, Users2, CreditCard, Receipt } from "lucide-react";
+import { TrendingUp, FileText, BarChart2, Users2, CreditCard, Receipt, Wallet } from "lucide-react";
 
 interface CashflowProps {
   isCollapsed: boolean;
@@ -28,6 +29,7 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
   const getActiveTab = () => {
     const path = location.pathname;
     if (path.includes('/opex-entry')) return 'opex-entry';
+    if (path.includes('/expenses')) return 'expenses';
     if (path.includes('/employee-costs')) return 'employee-costs';
     if (path.includes('/loans-and-checks')) return 'loans-and-checks';
     if (path.includes('/invoices')) return 'invoices';
@@ -46,6 +48,9 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
         break;
       case 'opex-entry':
         navigate('/cashflow/opex-entry');
+        break;
+      case 'expenses':
+        navigate('/cashflow/expenses');
         break;
       case 'employee-costs':
         navigate('/cashflow/employee-costs');
@@ -89,6 +94,10 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
                   <FileText className="h-4 w-4" />
                   <span>OPEX Girişi</span>
                 </CustomTabsTrigger>
+                <CustomTabsTrigger value="expenses" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
+                  <Wallet className="h-4 w-4" />
+                  <span>Masraflar</span>
+                </CustomTabsTrigger>
                 <CustomTabsTrigger value="employee-costs" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
                   <Users2 className="h-4 w-4" />
                   <span>Personel Maliyetleri</span>
@@ -112,6 +121,10 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
 
             <CustomTabsContent value="opex-entry" className="mt-6 animate-fade-in">
               <OpexEntry />
+            </CustomTabsContent>
+
+            <CustomTabsContent value="expenses" className="mt-6 animate-fade-in">
+              <ExpensesManager />
             </CustomTabsContent>
 
             <CustomTabsContent value="employee-costs" className="mt-6 animate-fade-in">
