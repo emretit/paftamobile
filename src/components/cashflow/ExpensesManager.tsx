@@ -27,6 +27,10 @@ interface ExpenseItem {
   user_id: string;
   created_at: string;
   updated_at: string;
+  category?: {
+    name: string;
+  };
+  subcategory?: string;
 }
 
 const EXPENSE_CATEGORIES = [
@@ -78,16 +82,42 @@ const ExpensesManager = () => {
   const fetchExpenses = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Fetch from cashflow_transactions with category join
+      const { data: transactionData, error: transactionError } = await supabase
         .from('cashflow_transactions')
-        .select('*')
+        .select(`
+          *,
+          category:cashflow_categories(name)
+        `)
         .eq('type', 'expense')
         .gte('date', `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}-01`)
         .lt('date', `${selectedYear}-${(selectedMonth + 1).toString().padStart(2, '0')}-01`)
         .order('date', { ascending: false });
 
-      if (error) throw error;
-      setExpenses(data || []);
+      if (transactionError) throw transactionError;
+
+      // For each transaction, get subcategory from opex_matrix
+      const enrichedExpenses = await Promise.all(
+        (transactionData || []).map(async (expense) => {
+          const { data: opexData } = await supabase
+            .from('opex_matrix')
+            .select('subcategory')
+            .eq('year', new Date(expense.date).getFullYear())
+            .eq('month', new Date(expense.date).getMonth() + 1)
+            .eq('category', expense.category?.name || '')
+            .eq('amount', expense.amount)
+            .eq('user_id', expense.user_id)
+            .single();
+
+          return {
+            ...expense,
+            subcategory: opexData?.subcategory || null
+          };
+        })
+      );
+
+      setExpenses(enrichedExpenses);
     } catch (error) {
       console.error('Error fetching expenses:', error);
       toast({
@@ -466,9 +496,13 @@ const ExpensesManager = () => {
                           {format(new Date(expense.date), 'dd MMM yyyy', { locale: tr })}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary">Masraf</Badge>
+                          <Badge variant="secondary">
+                            {expense.category?.name || 'Kategorisiz'}
+                          </Badge>
                         </TableCell>
-                        <TableCell>-</TableCell>
+                        <TableCell>
+                          {expense.subcategory || '-'}
+                        </TableCell>
                         <TableCell className="max-w-xs truncate">
                           {expense.description || '-'}
                         </TableCell>
