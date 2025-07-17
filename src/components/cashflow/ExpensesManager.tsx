@@ -172,9 +172,6 @@ const ExpensesManager = () => {
         categoryId = newCategory.id;
       }
 
-      // Use a default user ID since RLS is disabled
-      const defaultUserId = "123e4567-e89b-12d3-a456-426614174000"; // Temporary user ID
-      
       const { error } = await supabase
         .from('cashflow_transactions')
         .insert({
@@ -184,7 +181,7 @@ const ExpensesManager = () => {
           date: format(date, 'yyyy-MM-dd'),
           description: description || null,
           attachment_url: attachmentUrl,
-          user_id: defaultUserId,
+          user_id: (await supabase.auth.getUser()).data.user?.id || '',
         });
 
       if (error) throw error;
