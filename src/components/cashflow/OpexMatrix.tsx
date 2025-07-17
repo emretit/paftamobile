@@ -175,6 +175,79 @@ const OpexMatrix = () => {
     }
   }, [toast]);
 
+  // Fetch expense data from cashflow_transactions
+  const fetchExpenseData = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cashflow_transactions')
+        .select(`
+          *,
+          cashflow_categories!inner(name)
+        `)
+        .eq('type', 'expense')
+        .gte('date', `${selectedYear}-01-01`)
+        .lte('date', `${selectedYear}-12-31`);
+
+      if (error) throw error;
+
+      // Group expenses by category, subcategory, and month
+      const expenseMatrix: Record<string, Record<number, number>> = {};
+      
+      data?.forEach(expense => {
+        const categoryName = (expense.cashflow_categories as any)?.name;
+        const date = new Date(expense.date);
+        const month = date.getMonth() + 1;
+        const amount = expense.amount;
+        
+        // Map cashflow category names to OPEX categories
+        let opexCategory = '';
+        let opexSubcategory = expense.description || 'Diğer';
+        
+        switch (categoryName) {
+          case 'Operasyonel Giderler':
+            opexCategory = 'Operasyonel Giderler';
+            break;
+          case 'Ofis Giderleri':
+            opexCategory = 'Ofis Giderleri';
+            break;
+          case 'Pazarlama & Satış':
+            opexCategory = 'Pazarlama & Satış';
+            break;
+          case 'Finansman Giderleri':
+            opexCategory = 'Finansman Giderleri';
+            break;
+          case 'Genel Giderler':
+            opexCategory = 'Genel Giderler';
+            break;
+          default:
+            opexCategory = 'Genel Giderler';
+            opexSubcategory = 'Diğer';
+        }
+        
+        const key = `${opexCategory}|${opexSubcategory}`;
+        
+        if (!expenseMatrix[key]) {
+          expenseMatrix[key] = {};
+        }
+        
+        if (!expenseMatrix[key][month]) {
+          expenseMatrix[key][month] = 0;
+        }
+        
+        expenseMatrix[key][month] += amount;
+      });
+
+      // Add expense data to matrix
+      setMatrixData(prev => ({
+        ...prev,
+        ...expenseMatrix
+      }));
+
+    } catch (error) {
+      console.error('Error fetching expense data:', error);
+    }
+  }, [selectedYear]);
+
   // Transform opex data to matrix format
   useEffect(() => {
     const matrix: Record<string, Record<number, number>> = {};
@@ -193,7 +266,8 @@ const OpexMatrix = () => {
   // Fetch data on component mount and year change
   useEffect(() => {
     fetchPersonnelData();
-  }, [fetchPersonnelData, selectedYear]);
+    fetchExpenseData();
+  }, [fetchPersonnelData, fetchExpenseData, selectedYear]);
 
   // Toggle category expansion
   const toggleCategory = (categoryName: string) => {

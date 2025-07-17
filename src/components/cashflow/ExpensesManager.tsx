@@ -446,9 +446,9 @@ const ExpensesManager = () => {
                           {format(new Date(expense.date), 'dd MMM yyyy', { locale: tr })}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary">{selectedCategory}</Badge>
+                          <Badge variant="secondary">Masraf</Badge>
                         </TableCell>
-                        <TableCell>{selectedSubcategory || '-'}</TableCell>
+                        <TableCell>-</TableCell>
                         <TableCell className="max-w-xs truncate">
                           {expense.description || '-'}
                         </TableCell>
