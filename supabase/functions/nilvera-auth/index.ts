@@ -33,7 +33,19 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    const { action } = await req.json()
+    const requestBody = await req.text()
+    let action = 'authenticate' // default action
+    
+    if (requestBody) {
+      try {
+        const parsedBody = JSON.parse(requestBody)
+        action = parsedBody.action || 'authenticate'
+      } catch (e) {
+        console.log('No JSON body provided, using default action:', e)
+      }
+    }
+    
+    console.log('Nilvera auth request received, action:', action)
 
     if (action === 'authenticate') {
       // Get Nilvera credentials from environment

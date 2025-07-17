@@ -75,7 +75,9 @@ export const InvoiceManagementTab = () => {
   const authenticateNilvera = async () => {
     setIsAuthenticating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('nilvera-auth');
+      const { data, error } = await supabase.functions.invoke('nilvera-auth', {
+        body: { action: 'authenticate' }
+      });
       
       if (error) throw error;
       
@@ -104,7 +106,7 @@ export const InvoiceManagementTab = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
-        body: { action: 'fetch' }
+        body: { action: 'fetch_incoming' }
       });
       
       if (error) throw error;
