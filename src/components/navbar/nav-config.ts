@@ -74,51 +74,9 @@ export const navItems = [
     label: "Çalışanlar",
   },
   {
-    category: "Cashflow",
-    icon: CreditCard,
     path: "/cashflow",
-    items: [
-      {
-        path: "/cashflow",
-        icon: BarChart2,
-        label: "Genel Bakış",
-      },
-      {
-        path: "/cashflow/monthly-overview",
-        icon: BarChart2,
-        label: "Aylık Finansal Özet",
-      },
-      {
-        path: "/cashflow/add-transaction",
-        icon: FileText,
-        label: "İşlem Ekle",
-      },
-      {
-        path: "/cashflow/transactions",
-        icon: ListTodo,
-        label: "İşlemler",
-      },
-      {
-        path: "/cashflow/categories",
-        icon: Settings,
-        label: "Kategoriler",
-      },
-      {
-        path: "/cashflow/opex-entry",
-        icon: FileText,
-        label: "OPEX Girişi",
-      },
-      {
-        path: "/cashflow/opex-matrix",
-        icon: BarChart2,
-        label: "OPEX Matrix",
-      },
-      {
-        path: "/cashflow/main-table",
-        icon: FileText,
-        label: "Ana Nakit Akış Tablosu",
-      },
-    ],
+    icon: CreditCard,
+    label: "Nakit Akış",
   },
   {
     path: "/service",
