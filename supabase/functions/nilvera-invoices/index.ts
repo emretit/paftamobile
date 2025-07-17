@@ -55,8 +55,23 @@ serve(async (req) => {
       console.log('Fetching incoming invoices from Nilvera...')
       console.log('Using token:', authData.access_token.substring(0, 10) + '...')
       
+      // Doğru endpoint: gelen faturaları query parametreleri ile listele
+      const now = new Date()
+      const startDate = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000)) // Son 30 gün
+      const endDate = now
+      
+      const queryParams = new URLSearchParams({
+        'StartDate': startDate.toISOString(),
+        'EndDate': endDate.toISOString(),
+        'IsArchive': 'false',
+        'Page': '1',
+        'PageSize': '50',
+        'SortColumn': 'IssueDate',
+        'SortType': 'DESC'
+      })
+      
       // Fetch incoming invoices from Nilvera
-      const response = await fetch('https://apitest.nilvera.com/einvoice/Purchase', {
+      const response = await fetch(`https://apitest.nilvera.com/einvoice/Purchase?${queryParams}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authData.access_token}`,
