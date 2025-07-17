@@ -44,7 +44,7 @@ const EXPENSE_CATEGORIES = [
   },
   {
     name: "Ofis Giderleri", 
-    subcategories: ["Ofis Malzemeleri", "Kırtasiye", "Mobilya", "Teknik Ekipman"]
+    subcategories: ["Ofis Malzemeleri", "Kırtasiye", "Mobilya", "Teknik Ekipman", "Aidat"]
   },
   {
     name: "Pazarlama & Satış",
