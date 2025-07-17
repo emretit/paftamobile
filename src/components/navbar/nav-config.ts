@@ -83,6 +83,11 @@ export const navItems = [
     icon: Wrench,
     label: "Servis",
   },
+  {
+    path: "/e-invoice",
+    icon: FileText,
+    label: "E-Fatura Yönetimi",
+  },
 ];
 
 export const settingsItem = {

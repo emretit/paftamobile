@@ -628,6 +628,69 @@ export type Database = {
         }
         Relationships: []
       }
+      einvoices: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          currency: string
+          due_date: string | null
+          id: string
+          invoice_date: string
+          invoice_number: string
+          nilvera_id: string | null
+          paid_amount: number
+          pdf_url: string | null
+          remaining_amount: number
+          status: string
+          supplier_name: string
+          supplier_tax_number: string | null
+          tax_amount: number
+          total_amount: number
+          updated_at: string
+          xml_data: Json | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due_date?: string | null
+          id?: string
+          invoice_date: string
+          invoice_number: string
+          nilvera_id?: string | null
+          paid_amount?: number
+          pdf_url?: string | null
+          remaining_amount?: number
+          status: string
+          supplier_name: string
+          supplier_tax_number?: string | null
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+          xml_data?: Json | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due_date?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          nilvera_id?: string | null
+          paid_amount?: number
+          pdf_url?: string | null
+          remaining_amount?: number
+          status?: string
+          supplier_name?: string
+          supplier_tax_number?: string | null
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+          xml_data?: Json | null
+        }
+        Relationships: []
+      }
       employee_documents: {
         Row: {
           created_at: string | null
@@ -1387,6 +1450,36 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           year?: number
+        }
+        Relationships: []
+      }
+      nilvera_auth: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string
+          id: string
+          refresh_token: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          refresh_token?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string | null
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
