@@ -126,6 +126,65 @@ serve(async (req) => {
       )
     }
 
+    if (action === 'get_pdf') {
+      const { invoiceId } = invoice
+      
+      if (!invoiceId) {
+        throw new Error('Fatura ID gerekli')
+      }
+
+      console.log('Fetching PDF for invoice:', invoiceId)
+      
+      // Fetch PDF from Nilvera
+      const response = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${invoiceId}/pdf`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authData.access_token}`
+        }
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Nilvera PDF error:', errorText)
+        throw new Error(`PDF getirilemedi: ${response.status} - ${errorText}`)
+      }
+
+      // PDF'i buffer olarak al
+      const pdfBuffer = await response.arrayBuffer()
+      const pdfBytes = new Uint8Array(pdfBuffer)
+      
+      // Supabase Storage'a yükle
+      const fileName = `invoice-${invoiceId}-${Date.now()}.pdf`
+      const { data: uploadData, error: uploadError } = await supabaseClient.storage
+        .from('invoices')
+        .upload(fileName, pdfBytes, {
+          contentType: 'application/pdf',
+          cacheControl: '3600'
+        })
+
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError)
+        throw new Error('PDF kaydedilemedi: ' + uploadError.message)
+      }
+
+      // Public URL'i al
+      const { data: { publicUrl } } = supabaseClient.storage
+        .from('invoices')
+        .getPublicUrl(fileName)
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          pdfUrl: publicUrl,
+          message: 'PDF başarıyla yüklendi'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
+
     if (action === 'create') {
       // Create invoice in Nilvera
       const invoiceData = {
