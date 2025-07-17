@@ -30,7 +30,7 @@ serve(async (req) => {
     const user = data.user
 
     if (!user) {
-      throw new Error('Unauthorized')
+      throw new Error('Yetkilendirme gereklidir')
     }
 
     const { action, invoice } = await req.json()
@@ -43,12 +43,12 @@ serve(async (req) => {
       .single()
 
     if (authError || !authData) {
-      throw new Error('Nilvera authentication not found')
+      throw new Error('Nilvera kimlik doğrulama bilgisi bulunamadı. Lütfen önce Nilvera\'ya giriş yapın.')
     }
 
     // Check if token is expired
     if (new Date(authData.expires_at) < new Date()) {
-      throw new Error('Nilvera token expired')
+      throw new Error('Nilvera oturum süresi dolmuş. Lütfen tekrar giriş yapın.')
     }
 
     if (action === 'fetch_incoming') {
@@ -62,7 +62,9 @@ serve(async (req) => {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to fetch invoices from Nilvera')
+        const errorText = await response.text()
+        console.error('Nilvera API error:', errorText)
+        throw new Error(`Faturalar getirilemedi: ${response.status} - ${errorText}`)
       }
 
       const invoices = await response.json()
@@ -121,7 +123,7 @@ serve(async (req) => {
       if (!response.ok) {
         const errorData = await response.text()
         console.error('Nilvera create error:', errorData)
-        throw new Error('Failed to create invoice in Nilvera')
+        throw new Error(`Fatura oluşturulamadı: ${response.status} - ${errorData}`)
       }
 
       const result = await response.json()
@@ -130,7 +132,7 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           invoiceId: result.id,
-          message: 'Invoice created successfully'
+          message: 'Fatura başarıyla oluşturuldu'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -140,7 +142,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ error: 'Invalid action' }),
+      JSON.stringify({ error: 'Geçersiz işlem türü' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
@@ -150,7 +152,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Nilvera invoices error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || 'Bir hata oluştu' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

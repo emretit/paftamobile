@@ -36,7 +36,16 @@ serve(async (req) => {
     const { action } = await req.json()
 
     if (action === 'authenticate') {
-      // Nilvera test credentials
+      // Get Nilvera credentials from environment
+      const nilveraApiKey = Deno.env.get('NILVERA_API_KEY')
+      const nilveraUsername = Deno.env.get('NILVERA_TEST_USERNAME')
+      const nilveraPassword = Deno.env.get('NILVERA_TEST_PASSWORD')
+
+      if (!nilveraApiKey || !nilveraUsername || !nilveraPassword) {
+        throw new Error('Nilvera credentials not configured')
+      }
+
+      // Nilvera authentication with real credentials
       const authResponse = await fetch('https://apitest.nilvera.com/oauth/token', {
         method: 'POST',
         headers: {
@@ -44,14 +53,16 @@ serve(async (req) => {
         },
         body: new URLSearchParams({
           'grant_type': 'client_credentials',
-          'client_id': 'test_client_id', // Replace with actual test credentials
-          'client_secret': 'test_client_secret', // Replace with actual test credentials
+          'client_id': nilveraApiKey,
+          'client_secret': nilveraApiKey,
           'scope': 'read write'
         })
       })
 
       if (!authResponse.ok) {
-        throw new Error('Nilvera authentication failed')
+        const errorData = await authResponse.text()
+        console.error('Nilvera authentication failed:', errorData)
+        throw new Error(`Nilvera kimlik doğrulama başarısız: ${authResponse.status} ${authResponse.statusText}`)
       }
 
       const authData = await authResponse.json()
@@ -75,7 +86,7 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ success: true, message: 'Authentication successful' }),
+        JSON.stringify({ success: true, message: 'Nilvera kimlik doğrulama başarılı' }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
@@ -84,7 +95,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ error: 'Invalid action' }),
+      JSON.stringify({ error: 'Geçersiz işlem' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
@@ -92,8 +103,9 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    console.error('Error in nilvera-auth function:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || 'Kimlik doğrulama hatası' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
