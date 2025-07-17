@@ -90,18 +90,13 @@ serve(async (req) => {
       const response_data = await response.json()
       console.log('Nilvera API response:', response_data)
       
-      // Nilvera API response yapısını kontrol edelim
+      // Nilvera API response yapısını doğru şekilde parse et
       let invoices = []
-      if (Array.isArray(response_data)) {
-        invoices = response_data
-      } else if (response_data && response_data.data && Array.isArray(response_data.data)) {
-        invoices = response_data.data
-      } else if (response_data && response_data.invoices && Array.isArray(response_data.invoices)) {
-        invoices = response_data.invoices
-      } else if (response_data && response_data.result && Array.isArray(response_data.result)) {
-        invoices = response_data.result
+      if (response_data && response_data.Content && Array.isArray(response_data.Content)) {
+        invoices = response_data.Content
+        console.log(`Found ${invoices.length} invoices in response`)
       } else {
-        console.log('Unexpected response structure:', response_data)
+        console.log('No Content array found in response:', response_data)
         invoices = []
       }
 
@@ -109,18 +104,18 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           invoices: invoices.map((inv: any) => ({
-            id: inv.id,
-            invoiceNumber: inv.invoiceSeriesNumber,
-            supplierName: inv.senderTitle,
-            supplierTaxNumber: inv.senderVKN,
-            invoiceDate: inv.issueDate,
-            dueDate: inv.paymentDate,
-            totalAmount: parseFloat(inv.totalPayableAmount || 0),
-            paidAmount: parseFloat(inv.paidAmount || 0),
-            currency: inv.documentCurrencyCode || 'TRY',
-            taxAmount: parseFloat(inv.totalTaxAmount || 0),
-            status: inv.statusDescription,
-            pdfUrl: inv.pdfUrl,
+            id: inv.UUID,
+            invoiceNumber: inv.InvoiceNumber,
+            supplierName: inv.SenderName,
+            supplierTaxNumber: inv.SenderTaxNumber,
+            invoiceDate: inv.IssueDate,
+            dueDate: inv.PaymentDate || null,
+            totalAmount: parseFloat(inv.PayableAmount || 0),
+            paidAmount: 0, // Gelen faturalar için ödenen tutar bilgisi genelde yoktur
+            currency: inv.CurrencyCode || 'TRY',
+            taxAmount: parseFloat(inv.TaxTotalAmount || 0),
+            status: inv.StatusDetail,
+            pdfUrl: null, // PDF URL ayrı bir API call ile alınır
             xmlData: inv
           }))
         }),
