@@ -40,7 +40,7 @@ serve(async (req) => {
       .from('nilvera_auth')
       .select('*')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
     if (authError || !authData) {
       throw new Error('Nilvera kimlik doğrulama bilgisi bulunamadı. Lütfen önce Nilvera\'ya giriş yapın.')
