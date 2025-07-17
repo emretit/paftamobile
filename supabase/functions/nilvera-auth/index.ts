@@ -30,29 +30,29 @@ serve(async (req) => {
     const user = data.user
 
     if (!user) {
-      throw new Error('Unauthorized')
+      console.error('User authentication failed')
+      throw new Error('Yetkilendirme gereklidir')
     }
 
-    const requestBody = await req.text()
-    let action = 'authenticate' // default action
-    
-    if (requestBody) {
-      try {
-        const parsedBody = JSON.parse(requestBody)
-        action = parsedBody.action || 'authenticate'
-      } catch (e) {
-        console.log('No JSON body provided, using default action:', e)
-      }
+    // Parse request body safely
+    let action = 'authenticate'
+    try {
+      const body = await req.json()
+      action = body.action || 'authenticate'
+    } catch (e) {
+      console.log('Using default action authenticate')
     }
     
-    console.log('Nilvera auth request received, action:', action)
+    console.log('Processing action:', action)
 
     if (action === 'authenticate') {
+      console.log('Starting Nilvera authentication...')
       // Get Nilvera API key from environment
       const nilveraApiKey = Deno.env.get('NILVERA_API_KEY')
 
       if (!nilveraApiKey) {
-        throw new Error('Nilvera API key not configured')
+        console.error('NILVERA_API_KEY not found in environment')
+        throw new Error('Nilvera API key yapılandırılmamış')
       }
 
       // Test the API key by making a simple request
