@@ -48,47 +48,35 @@ serve(async (req) => {
     console.log('Nilvera auth request received, action:', action)
 
     if (action === 'authenticate') {
-      // Get Nilvera credentials from environment
+      // Get Nilvera API key from environment
       const nilveraApiKey = Deno.env.get('NILVERA_API_KEY')
-      const nilveraUsername = Deno.env.get('NILVERA_TEST_USERNAME')
-      const nilveraPassword = Deno.env.get('NILVERA_TEST_PASSWORD')
 
-      if (!nilveraApiKey || !nilveraUsername || !nilveraPassword) {
-        throw new Error('Nilvera credentials not configured')
+      if (!nilveraApiKey) {
+        throw new Error('Nilvera API key not configured')
       }
 
-      // Nilvera authentication with real credentials
-      const authResponse = await fetch('https://apitest.nilvera.com/oauth/token', {
-        method: 'POST',
+      // Test the API key by making a simple request
+      const testResponse = await fetch('https://apitest.nilvera.com/general/Credits', {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          'grant_type': 'client_credentials',
-          'client_id': nilveraApiKey,
-          'client_secret': nilveraApiKey,
-          'scope': 'read write'
-        })
+          'Authorization': `Bearer ${nilveraApiKey}`,
+          'Content-Type': 'application/json'
+        }
       })
 
-      if (!authResponse.ok) {
-        const errorData = await authResponse.text()
-        console.error('Nilvera authentication failed:', errorData)
-        throw new Error(`Nilvera kimlik doğrulama başarısız: ${authResponse.status} ${authResponse.statusText}`)
+      if (!testResponse.ok) {
+        console.error('Nilvera API key test failed:', await testResponse.text())
+        throw new Error(`Nilvera API key geçersiz: ${testResponse.status}`)
       }
 
-      const authData = await authResponse.json()
-      
-      // Store token in database
-      const expiresAt = new Date(Date.now() + (authData.expires_in * 1000))
-      
+      // Store the API key in database for future use
       const { error } = await supabaseClient
         .from('nilvera_auth')
         .upsert({
           user_id: user.id,
-          access_token: authData.access_token,
-          refresh_token: authData.refresh_token,
-          expires_at: expiresAt.toISOString()
+          access_token: nilveraApiKey,
+          refresh_token: null,
+          expires_at: new Date(Date.now() + (365 * 24 * 60 * 60 * 1000)).toISOString() // 1 year
         }, {
           onConflict: 'user_id'
         })
@@ -98,7 +86,7 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ success: true, message: 'Nilvera kimlik doğrulama başarılı' }),
+        JSON.stringify({ success: true, message: 'Nilvera API key doğrulandı' }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
