@@ -173,8 +173,7 @@ const ExpensesManager = () => {
       }
 
       const user = await supabase.auth.getUser();
-      if (!user.data.user) throw new Error('Kullanıcı girişi gerekli');
-
+      
       const { error } = await supabase
         .from('cashflow_transactions')
         .insert({
@@ -184,7 +183,7 @@ const ExpensesManager = () => {
           date: format(date, 'yyyy-MM-dd'),
           description: description || null,
           attachment_url: attachmentUrl,
-          user_id: user.data.user.id,
+          user_id: user.data.user?.id || null,
         });
 
       if (error) throw error;
