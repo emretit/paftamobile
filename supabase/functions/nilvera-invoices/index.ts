@@ -52,6 +52,9 @@ serve(async (req) => {
     }
 
     if (action === 'fetch_incoming') {
+      console.log('Fetching incoming invoices from Nilvera...')
+      console.log('Using token:', authData.access_token.substring(0, 10) + '...')
+      
       // Fetch incoming invoices from Nilvera
       const response = await fetch('https://apitest.nilvera.com/einvoice/Purchase', {
         method: 'GET',
@@ -61,6 +64,8 @@ serve(async (req) => {
         }
       })
 
+      console.log('Nilvera API response status:', response.status)
+      
       if (!response.ok) {
         const errorText = await response.text()
         console.error('Nilvera API error:', errorText)
