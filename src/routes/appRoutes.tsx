@@ -10,7 +10,7 @@ import { serviceRoutes } from "./serviceRoutes";
 import { orderRoutes } from "./orderRoutes";
 import { crmRoutes } from "./crmRoutes";
 import { settingsRoutes } from "./settingsRoutes";
-import { einvoiceRoutes } from "./einvoiceRoutes";
+
 
 export const appRoutes: RouteConfig[] = [
   ...publicRoutes,
@@ -25,5 +25,5 @@ export const appRoutes: RouteConfig[] = [
   ...orderRoutes,
   ...crmRoutes,
   ...settingsRoutes,
-  ...einvoiceRoutes,
+  
 ];
