@@ -13,8 +13,9 @@ import EmployeeCosts from "@/components/cashflow/EmployeeCosts";
 import { LoansAndChecks } from "@/components/cashflow/LoansAndChecks";
 import InvoicesManager from "@/components/cashflow/InvoicesManager";
 import ExpensesManager from "@/components/cashflow/ExpensesManager";
+import BankAccounts from "@/components/cashflow/BankAccounts";
 
-import { TrendingUp, FileText, BarChart2, Users2, CreditCard, Receipt, Wallet } from "lucide-react";
+import { TrendingUp, FileText, BarChart2, Users2, CreditCard, Receipt, Wallet, Building2 } from "lucide-react";
 
 interface CashflowProps {
   isCollapsed: boolean;
@@ -33,6 +34,7 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
     if (path.includes('/employee-costs')) return 'employee-costs';
     if (path.includes('/loans-and-checks')) return 'loans-and-checks';
     if (path.includes('/invoices')) return 'invoices';
+    if (path.includes('/bank-accounts')) return 'bank-accounts';
     // Redirect old main-table route to overview
     if (path.includes('/main-table')) {
       navigate('/cashflow', { replace: true });
@@ -60,6 +62,9 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
         break;
       case 'invoices':
         navigate('/cashflow/invoices');
+        break;
+      case 'bank-accounts':
+        navigate('/cashflow/bank-accounts');
         break;
       default:
         navigate('/cashflow');
@@ -110,6 +115,10 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
                   <CreditCard className="h-4 w-4" />
                   <span>Krediler ve Çekler</span>
                 </CustomTabsTrigger>
+                <CustomTabsTrigger value="bank-accounts" className="flex items-center justify-center space-x-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white transition-all duration-200">
+                  <Building2 className="h-4 w-4" />
+                  <span>Banka Hesapları</span>
+                </CustomTabsTrigger>
               </CustomTabsList>
             </div>
 
@@ -137,6 +146,10 @@ const Cashflow = ({ isCollapsed, setIsCollapsed }: CashflowProps) => {
 
             <CustomTabsContent value="loans-and-checks" className="mt-6 animate-fade-in">
               <LoansAndChecks />
+            </CustomTabsContent>
+
+            <CustomTabsContent value="bank-accounts" className="mt-6 animate-fade-in">
+              <BankAccounts />
             </CustomTabsContent>
           </CustomTabs>
         </div>
