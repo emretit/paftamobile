@@ -14,6 +14,7 @@ export const cashflowRoutes: RouteConfig[] = [
   { path: "/cashflow/employee-costs", component: Cashflow, protected: true },
   { path: "/cashflow/loans-and-checks", component: Cashflow, protected: true },
   { path: "/cashflow/invoices", component: Cashflow, protected: true },
+  { path: "/cashflow/bank-accounts", component: Cashflow, protected: true },
 ];
 
 // Define finance routes (keeping existing purchase/sales invoice routes)
