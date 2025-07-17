@@ -57,13 +57,11 @@ export const InvoiceManagementTab = () => {
   
   const checkAuthStatus = async () => {
     try {
-      const { data } = await supabase
-        .from('nilvera_auth')
-        .select('*')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-        
-      if (data && new Date(data.expires_at) > new Date()) {
+      const { data, error } = await supabase.functions.invoke('nilvera-auth', {
+        body: { action: 'get_status' }
+      });
+      
+      if (data && data.success && data.connected) {
         setIsNilveraAuthenticated(true);
         fetchInvoices();
       }
@@ -240,8 +238,8 @@ export const InvoiceManagementTab = () => {
   };
 
   const filteredInvoices = einvoices.filter(invoice => {
-    const matchesSearch = invoice.invoice_number?.toLowerCase().includes(searchValue.toLowerCase()) ||
-                         invoice.supplier_name?.toLowerCase().includes(searchValue.toLowerCase());
+    const matchesSearch = invoice.invoiceNumber?.toLowerCase().includes(searchValue.toLowerCase()) ||
+                         invoice.supplierName?.toLowerCase().includes(searchValue.toLowerCase());
     const matchesStatus = statusFilter === "all" || invoice.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -388,14 +386,14 @@ export const InvoiceManagementTab = () => {
                     <TableBody>
                       {filteredInvoices.map((invoice) => (
                         <TableRow key={invoice.id}>
-                          <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
-                          <TableCell>{invoice.supplier_name}</TableCell>
+                          <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                          <TableCell>{invoice.supplierName}</TableCell>
                           <TableCell>
-                            {format(new Date(invoice.invoice_date), 'dd/MM/yyyy', { locale: tr })}
+                            {format(new Date(invoice.invoiceDate), 'dd/MM/yyyy', { locale: tr })}
                           </TableCell>
                           <TableCell>
-                            {invoice.due_date 
-                              ? format(new Date(invoice.due_date), 'dd/MM/yyyy', { locale: tr })
+                            {invoice.dueDate 
+                              ? format(new Date(invoice.dueDate), 'dd/MM/yyyy', { locale: tr })
                               : '-'
                             }
                           </TableCell>
@@ -403,13 +401,13 @@ export const InvoiceManagementTab = () => {
                             {getStatusBadge(invoice.status)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {invoice.total_amount.toLocaleString('tr-TR', { 
+                            {invoice.totalAmount.toLocaleString('tr-TR', { 
                               style: 'currency', 
                               currency: invoice.currency 
                             })}
                           </TableCell>
                           <TableCell className="text-right">
-                            {invoice.paid_amount.toLocaleString('tr-TR', { 
+                            {invoice.paidAmount.toLocaleString('tr-TR', { 
                               style: 'currency', 
                               currency: invoice.currency 
                             })}
