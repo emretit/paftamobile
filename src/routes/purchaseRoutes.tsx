@@ -7,12 +7,12 @@ const ProductMapping = lazy(() => import("@/pages/ProductMapping"));
 export const purchaseRoutes: RouteConfig[] = [
   {
     path: "/purchase-management",
-    element: <PurchaseManagement />,
-    isProtected: true,
+    component: PurchaseManagement,
+    protected: true,
   },
   {
     path: "/product-mapping/:invoiceId",
-    element: <ProductMapping />,
-    isProtected: true,
+    component: ProductMapping,
+    protected: true,
   },
-]; 
+];

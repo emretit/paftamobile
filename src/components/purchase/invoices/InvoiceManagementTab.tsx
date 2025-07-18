@@ -47,6 +47,49 @@ export default function InvoiceManagementTab() {
     window.location.href = `/product-mapping/${invoice.id}`;
   };
 
+  // PDF görüntüleme fonksiyonu
+  const handleViewPDF = async (invoice: Invoice) => {
+    try {
+      console.log('📄 PDF indiriliyor:', invoice.id);
+      
+      const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
+        body: { 
+          action: 'get_pdf',
+          invoiceId: invoice.id 
+        }
+      });
+
+      if (data && data.success && data.pdfData) {
+        // Base64 veriyi blob'a çevir
+        const binaryString = atob(data.pdfData);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        
+        // Yeni sekmede aç
+        window.open(url, '_blank');
+        
+        toast({
+          title: "✅ Başarılı",
+          description: "PDF açıldı"
+        });
+      } else {
+        throw new Error(data?.message || 'PDF alınamadı');
+      }
+    } catch (error: any) {
+      console.error('❌ PDF view error:', error);
+      toast({
+        title: "❌ Hata",
+        description: error.message || "PDF görüntülenirken hata oluştu",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Mevcut fatura yükleme fonksiyonu
   const loadInvoices = async () => {
     setIsLoading(true);
@@ -171,10 +214,11 @@ export default function InvoiceManagementTab() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => handleViewPDF(invoice)}
                       className="flex items-center gap-2"
                     >
                       <Eye className="w-4 h-4" />
-                      Detay
+                      PDF Görüntüle
                     </Button>
                   </div>
                 </div>
@@ -185,4 +229,4 @@ export default function InvoiceManagementTab() {
       </div>
     </div>
   );
-} 
+}
