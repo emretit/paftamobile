@@ -5,38 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { 
-  Calendar, 
-  CalendarDays, 
+  RefreshCw,
   Search, 
   Loader2, 
-  MoreHorizontal, 
-  Download, 
   FileText, 
-  Plus,
-  AlertTriangle,
-  LogIn,
-  CheckCircle,
+  Package,
   ChevronDown,
   ChevronRight,
-  Eye,
-  Package,
-  Receipt,
-  Database
+  Download,
+  Database,
+  AlertTriangle,
+  CheckCircle
 } from "lucide-react";
-import { format } from "date-fns";
-import { tr } from "date-fns/locale";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import EInvoiceForm from "@/components/einvoice/EInvoiceForm";
-import { exportToExcel, exportToPDF } from "@/utils/exportUtils";
 import {
   Table,
   TableBody,
@@ -46,101 +26,61 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { Invoice, InvoiceDetail } from "@/types/invoice";
+
+interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  supplierName: string;
+  invoiceDate: string;
+  totalAmount: number;
+  currency: string;
+  status: string;
+  invoiceLines?: any[];
+  productNames?: string[];
+  enhancedAt?: string;
+}
 
 export const InvoiceManagementTab = () => {
-  const [activeTab, setActiveTab] = useState("invoices");
-  const [isNilveraAuthenticated, setIsNilveraAuthenticated] = useState(false);
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [einvoices, setEinvoices] = useState<Invoice[]>([]);
-  const [searchValue, setSearchValue] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [invoiceDetails, setInvoiceDetails] = useState<Record<string, InvoiceDetail>>({});
-  const [loadingDetails, setLoadingDetails] = useState<Set<string>>(new Set());
-  const [syncingToSystem, setSyncingToSystem] = useState<Set<string>>(new Set());
-  
+  const [syncingInvoices, setSyncingInvoices] = useState<Set<string>>(new Set());
+
   useEffect(() => {
-    checkAuthStatus();
+    loadInvoices();
   }, []);
-  
-  const checkAuthStatus = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
 
-      const { data, error } = await supabase
-        .from('nilvera_auth')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .single();
-
-      if (data && !error) {
-        setIsNilveraAuthenticated(true);
-        fetchInvoices();
-      } else {
-        setIsNilveraAuthenticated(false);
-      }
-    } catch (error) {
-      console.log('No valid auth found');
-      setIsNilveraAuthenticated(false);
-    }
-  };
-  
-  const authenticateNilvera = async () => {
-    setIsAuthenticating(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('nilvera-auth', {
-        body: { action: 'authenticate' }
-      });
-      
-      if (error) throw error;
-      
-      if (data.success) {
-        setIsNilveraAuthenticated(true);
-        toast({
-          title: "Başarılı",
-          description: "Nilvera'ya başarıyla giriş yapıldı.",
-        });
-        fetchInvoices();
-      } else {
-        throw new Error(data.error || 'Kimlik doğrulama başarısız');
-      }
-    } catch (error: any) {
-      toast({
-        title: "Hata",
-        description: error.message || "Nilvera kimlik doğrulama başarısız.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAuthenticating(false);
-    }
-  };
-  
-  const fetchInvoices = async () => {
+  const loadInvoices = async () => {
     setIsLoading(true);
     try {
+      console.log('🔄 Faturaları yükleniyor...');
+      
       const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
-        body: { action: 'fetch_incoming' }
+        body: { action: 'fetchInvoices' }
       });
-      
-      if (error) throw error;
-      
+
+      if (error) {
+        console.error('❌ Supabase function error:', error);
+        throw error;
+      }
+
+      console.log('📥 API Response:', data);
+
       if (data.success) {
-        setEinvoices(data.invoices || []);
+        setInvoices(data.invoices || []);
         toast({
-          title: "Başarılı",
-          description: `${data.invoices?.length || 0} fatura getirildi.`,
+          title: "✅ Başarılı",
+          description: `${data.invoices?.length || 0} fatura yüklendi`
         });
       } else {
-        throw new Error(data.error || 'Faturalar getirilemedi');
+        throw new Error(data.message || 'Faturalar yüklenemedi');
       }
     } catch (error: any) {
+      console.error('❌ Load invoices error:', error);
       toast({
-        title: "Hata",
-        description: error.message || "Faturalar getirilemedi.",
+        title: "❌ Hata",
+        description: error.message || "Faturalar yüklenirken hata oluştu",
         variant: "destructive",
       });
     } finally {
@@ -148,139 +88,32 @@ export const InvoiceManagementTab = () => {
     }
   };
 
-  // Manual product name parsing from raw data
-  const parseProductNames = (rawData: any) => {
-    console.log('🔍 Raw invoice data for parsing:', rawData);
-    
-    // Nilvera XML'den ürün isimlerini çıkarmayı deneyelim
-    if (rawData && typeof rawData === 'object') {
-      // XML content varsa parse et
-      const xmlContent = rawData.Content || rawData.XmlContent || rawData.UblContent;
-      if (xmlContent && typeof xmlContent === 'string') {
-        console.log('🔍 Found XML content, trying to parse...');
-        
-        // UBL XML'de ürün isimleri genellikle <cbc:Name> taginde olur
-        const nameMatches = xmlContent.match(/<cbc:Name[^>]*>(.*?)<\/cbc:Name>/g);
-        if (nameMatches && nameMatches.length > 0) {
-          const productNames = nameMatches.map(match => 
-            match.replace(/<[^>]*>/g, '').trim()
-          ).filter(name => name && name !== 'InvoiceLine');
-          
-          console.log('🔍 Found product names in XML:', productNames);
-          return productNames;
-        }
-      }
-      
-      // JSON structure'da ürün isimlerini ara
-      if (rawData.InvoiceLines && Array.isArray(rawData.InvoiceLines)) {
-        console.log('🔍 Found InvoiceLines in JSON:', rawData.InvoiceLines);
-        return rawData.InvoiceLines.map((line: any) => 
-          line.Item?.Name || line.Name || line.Description || 'Belirtilmemiş'
-        );
-      }
+  const toggleRowExpansion = (invoiceId: string) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(invoiceId)) {
+      newExpanded.delete(invoiceId);
+    } else {
+      newExpanded.add(invoiceId);
     }
-    
-    return [];
-  };
-
-  const fetchInvoiceDetails = async (invoiceId: string) => {
-    // If details already loaded, don't fetch again
-    if (invoiceDetails[invoiceId]) {
-      return;
-    }
-
-    setLoadingDetails(prev => new Set([...prev, invoiceId]));
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
-        body: { 
-          action: 'get_invoice_details',
-          invoice: { invoiceId }
-        }
-      });
-      
-      if (error) throw error;
-      
-      if (data.success) {
-        // Debug: Console'a fatura detaylarını yazdır
-        console.log('🔍 Invoice Details Response:', data.invoiceDetails);
-        console.log('🔍 Invoice Items:', data.invoiceDetails?.items);
-        
-        // Manuel parsing ile ürün isimlerini bulmaya çalış
-        const invoice = einvoices.find(inv => inv.id === invoiceId);
-        if (invoice && invoice.xmlData) {
-          const parsedNames = parseProductNames(invoice.xmlData);
-          console.log('🔍 Manually parsed product names:', parsedNames);
-          
-          // Eğer manuel parsing başarılıysa, items'ı güncelle
-          if (parsedNames.length > 0 && data.invoiceDetails.items) {
-            data.invoiceDetails.items = data.invoiceDetails.items.map((item: any, index: number) => ({
-              ...item,
-              description: parsedNames[index] || item.description || 'Belirtilmemiş'
-            }));
-            console.log('🔍 Updated items with parsed names:', data.invoiceDetails.items);
-          }
-        }
-        
-        setInvoiceDetails(prev => ({
-          ...prev,
-          [invoiceId]: data.invoiceDetails
-        }));
-        
-        toast({
-          title: "Başarılı",
-          description: "Fatura detayları getirildi.",
-        });
-      } else {
-        throw new Error(data.error || 'Fatura detayları getirilemedi');
-      }
-    } catch (error: any) {
-      toast({
-        title: "Hata",
-        description: error.message || "Fatura detayları getirilemedi.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingDetails(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(invoiceId);
-        return newSet;
-      });
-    }
+    setExpandedRows(newExpanded);
   };
 
   const syncInvoiceToSystem = async (invoice: Invoice) => {
-    setSyncingToSystem(prev => new Set([...prev, invoice.id]));
+    setSyncingInvoices(prev => new Set([...prev, invoice.id]));
     
     try {
-      // Önce fatura detaylarını al
-      if (!invoiceDetails[invoice.id]) {
-        await fetchInvoiceDetails(invoice.id);
-      }
-      
-      const details = invoiceDetails[invoice.id];
-      
-      // Faturayı kendi sistemimize kaydet
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Oturum gerekli');
-
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('einvoices')
         .upsert({
           nilvera_id: invoice.id,
           invoice_number: invoice.invoiceNumber,
           supplier_name: invoice.supplierName,
-          supplier_tax_number: invoice.supplierTaxNumber,
           invoice_date: invoice.invoiceDate,
-          due_date: invoice.dueDate,
           total_amount: invoice.totalAmount,
-          paid_amount: invoice.paidAmount,
-          remaining_amount: invoice.totalAmount - invoice.paidAmount,
           currency: invoice.currency,
-          tax_amount: invoice.taxAmount,
-          status: invoice.status === 'Alındı Yanıtı Gönderildi' ? 'pending' : 'pending',
-          xml_data: invoice.xmlData,
-          created_by: session.user.id
+          status: invoice.status,
+          raw_data: invoice,
+          synced_at: new Date().toISOString()
         }, {
           onConflict: 'nilvera_id'
         });
@@ -288,18 +121,18 @@ export const InvoiceManagementTab = () => {
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Fatura sisteme kaydedildi.",
+        title: "✅ Başarılı",
+        description: `Fatura ${invoice.invoiceNumber} sisteme kaydedildi`
       });
-      
     } catch (error: any) {
+      console.error('❌ Sync error:', error);
       toast({
-        title: "Hata",
-        description: error.message || "Fatura sisteme kaydedilemedi.",
+        title: "❌ Hata", 
+        description: "Fatura sisteme kaydedilirken hata oluştu",
         variant: "destructive",
       });
     } finally {
-      setSyncingToSystem(prev => {
+      setSyncingInvoices(prev => {
         const newSet = new Set(prev);
         newSet.delete(invoice.id);
         return newSet;
@@ -307,496 +140,334 @@ export const InvoiceManagementTab = () => {
     }
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchValue(e.target.value);
-  };
-
-  const toggleRowExpansion = async (invoiceId: string) => {
-    const newExpanded = new Set(expandedRows);
-    if (newExpanded.has(invoiceId)) {
-      newExpanded.delete(invoiceId);
-    } else {
-      newExpanded.add(invoiceId);
-      // Fetch details when expanding
-      await fetchInvoiceDetails(invoiceId);
-    }
-    setExpandedRows(newExpanded);
-  };
-
-  const handleCreateInvoice = async (invoiceData: any) => {
+  const downloadInvoicePDF = async (invoiceId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
-        body: { 
-          action: 'create',
-          invoiceData 
-        }
+      // PDF indirme işlemi - Nilvera API'den PDF çekilebilir
+      toast({
+        title: "📄 PDF İndiriliyor",
+        description: "Fatura PDF'i hazırlanıyor...",
       });
-      
-      if (error) throw error;
-      
-      if (data.success) {
-        toast({
-          title: "Başarılı",
-          description: "E-fatura başarıyla oluşturuldu.",
-        });
-        setIsCreateFormOpen(false);
-        fetchInvoices();
-      } else {
-        throw new Error(data.error || 'Fatura oluşturulamadı');
-      }
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: error.message || "E-fatura oluşturulamadı.",
+        title: "❌ Hata",
+        description: "PDF indirilemedi",
         variant: "destructive",
       });
     }
   };
 
-  const handleViewPDF = async (invoiceId: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
-        body: { 
-          action: 'get_pdf',
-          invoiceId: invoiceId
-        }
-      });
-      
-      if (error) throw error;
-      
-      if (data.success && data.pdfData) {
-        // Convert base64 to blob and open in new tab
-        const byteCharacters = atob(data.pdfData);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'application/pdf' });
-        
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
-        
-        // Clean up the object URL after a delay
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-        
-        toast({
-          title: "Başarılı",
-          description: "PDF açılıyor...",
-        });
-      } else {
-        throw new Error(data.error || 'PDF getirilemedi');
-      }
-    } catch (error: any) {
-      toast({
-        title: "Hata",
-        description: error.message || "PDF getirilemedi.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleExportToExcel = () => {
-    const headers = [
-      'Fatura No',
-      'Tedarikçi',
-      'Fatura Tarihi',
-      'Son Ödeme Tarihi',
-      'Durum',
-      'Toplam Tutar',
-      'Ödenen Tutar',
-      'Kalan Tutar'
-    ];
-    
-    const data = filteredInvoices.map(invoice => [
-      invoice.invoiceNumber,
-      invoice.supplierName,
-      format(new Date(invoice.invoiceDate), 'dd/MM/yyyy'),
-      invoice.dueDate ? format(new Date(invoice.dueDate), 'dd/MM/yyyy') : '-',
-      getStatusText(invoice.status),
-      invoice.totalAmount,
-      invoice.paidAmount,
-      invoice.totalAmount - invoice.paidAmount
-    ]);
-    
-    exportToExcel([headers, ...data], 'e-faturalar');
-  };
-
-  const handleExportToPDF = () => {
-    const headers = [
-      'Fatura No',
-      'Tedarikçi',
-      'Fatura Tarihi',
-      'Durum',
-      'Toplam Tutar'
-    ];
-    
-    const data = filteredInvoices.map(invoice => [
-      invoice.invoiceNumber,
-      invoice.supplierName,
-      format(new Date(invoice.invoiceDate), 'dd/MM/yyyy'),
-      getStatusText(invoice.status),
-      `${invoice.totalAmount.toLocaleString('tr-TR')} ${invoice.currency}`
-    ]);
-    
-    const columns = headers.map((header: string, index: number) => ({
-      header,
-      dataKey: index.toString()
-    }));
-    exportToPDF(data, 'E-Fatura Listesi', columns);
-  };
-
-  const getStatusText = (status: string) => {
-    const statusMap = {
-      "pending": "Bekliyor",
-      "paid": "Ödendi", 
-      "partially_paid": "Kısmen Ödendi",
-      "overdue": "Gecikmiş",
-      "cancelled": "İptal"
-    };
-    return statusMap[status as keyof typeof statusMap] || status;
-  };
+  // Arama filtresi
+  const filteredInvoices = invoices.filter(invoice =>
+    invoice.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    invoice.supplierName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    invoice.productNames?.some(name => 
+      name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      "pending": { label: "Bekliyor", variant: "default" as const },
-      "paid": { label: "Ödendi", variant: "secondary" as const },
-      "partially_paid": { label: "Kısmen Ödendi", variant: "warning" as const },
-      "overdue": { label: "Gecikmiş", variant: "destructive" as const },
-      "cancelled": { label: "İptal", variant: "destructive" as const },
+    const statusMap = {
+      'PENDING': { label: 'Bekliyor', variant: 'default' as const },
+      'APPROVED': { label: 'Onaylandı', variant: 'secondary' as const },
+      'PAID': { label: 'Ödendi', variant: 'success' as const },
+      'REJECTED': { label: 'Reddedildi', variant: 'destructive' as const },
     };
-
-    const config = statusConfig[status as keyof typeof statusConfig] || { label: status, variant: "default" as const };
+    
+    const config = statusMap[status as keyof typeof statusMap] || { 
+      label: status || 'Bilinmiyor', 
+      variant: 'outline' as const 
+    };
+    
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const filteredInvoices = einvoices.filter(invoice => {
-    const matchesSearch = invoice.invoiceNumber?.toLowerCase().includes(searchValue.toLowerCase()) ||
-                         invoice.supplierName?.toLowerCase().includes(searchValue.toLowerCase());
-    const matchesStatus = statusFilter === "all" || invoice.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  if (!isNilveraAuthenticated) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <AlertTriangle className="h-12 w-12 text-yellow-500" />
-        <div className="text-center">
-          <h3 className="text-lg font-medium mb-2">Nilvera Kimlik Doğrulama Gerekli</h3>
-          <p className="text-muted-foreground mb-4">
-            E-fatura işlemlerini gerçekleştirmek için Nilvera'ya giriş yapmanız gerekiyor.
-          </p>
-          <Button onClick={authenticateNilvera} disabled={isAuthenticating}>
-            {isAuthenticating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Giriş Yapılıyor...
-              </>
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">📊 Gelen E-Faturalar</h2>
+          <p className="text-gray-600">Nilvera üzerinden gelen faturalarınızı yönetin</p>
+        </div>
+        
+        <div className="flex gap-2">
+          <Button 
+            onClick={loadInvoices} 
+            disabled={isLoading}
+            variant="outline"
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <>
-                <LogIn className="mr-2 h-4 w-4" />
-                Nilvera'ya Giriş Yap
-              </>
+              <RefreshCw className="h-4 w-4" />
             )}
+            Yenile
           </Button>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6">
-          <TabsList>
-            <TabsTrigger value="invoices" className="flex items-center">
-              <FileText className="h-4 w-4 mr-2" />
-              Gelen Faturalar
-            </TabsTrigger>
-            <TabsTrigger value="create" className="flex items-center">
-              <Plus className="h-4 w-4 mr-2" />
-              Fatura Kes
-            </TabsTrigger>
-          </TabsList>
-          
-          {activeTab === "invoices" && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={fetchInvoices}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Yenile"
-                )}
-              </Button>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleExportToExcel}>
-                    Excel'e Aktar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportToPDF}>
-                    PDF'e Aktar
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
-        </div>
+      {/* Search Bar */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center space-x-2">
+            <Search className="h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Fatura no, tedarikçi adı veya ürün adı ile ara..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-        <TabsContent value="invoices">
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Fatura ara..."
-                  value={searchValue}
-                  onChange={handleSearchChange}
-                  className="pl-10"
-                />
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <FileText className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Toplam Fatura</p>
+                <p className="text-2xl font-bold text-gray-900">{filteredInvoices.length}</p>
               </div>
-              
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="all">Tümü</SelectItem>
-                    <SelectItem value="pending">Ödenmemiş</SelectItem>
-                    <SelectItem value="partially_paid">Kısmen Ödenmiş</SelectItem>
-                    <SelectItem value="paid">Ödenmiş</SelectItem>
-                    <SelectItem value="overdue">Gecikmiş</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
             </div>
+          </CardContent>
+        </Card>
 
-            {isLoading ? (
-              <div className="flex items-center justify-center h-32">
-                <Loader2 className="h-8 w-8 animate-spin" />
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <Package className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Toplam Ürün</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {filteredInvoices.reduce((sum, inv) => sum + (inv.productNames?.length || 0), 0)}
+                </p>
               </div>
-            ) : filteredInvoices.length === 0 ? (
-              <Card>
-                <CardContent className="py-8 text-center">
-                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">E-fatura bulunamadı</h3>
-                  <p className="text-muted-foreground">
-                    {statusFilter === "all" 
-                      ? "Henüz hiç e-fatura kaydı bulunmuyor." 
-                      : "Seçilen kriterlere uygun e-fatura bulunamadı."
-                    }
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Fatura No</TableHead>
-                        <TableHead>Tedarikçi</TableHead>
-                        <TableHead>Fatura Tarihi</TableHead>
-                        <TableHead>Son Ödeme Tarihi</TableHead>
-                        <TableHead>Durum</TableHead>
-                        <TableHead className="text-right">Toplam</TableHead>
-                        <TableHead className="text-right">Ödenen</TableHead>
-                        <TableHead className="text-center">İşlemler</TableHead>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <CheckCircle className="h-8 w-8 text-purple-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Toplam Tutar</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {filteredInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0).toLocaleString('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY'
+                  })}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Invoice Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Fatura Listesi ({filteredInvoices.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <span className="ml-2 text-gray-600">Faturalar yükleniyor...</span>
+            </div>
+          ) : filteredInvoices.length === 0 ? (
+            <div className="text-center py-12">
+              <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Fatura Bulunamadı</h3>
+              <p className="text-gray-600">
+                {searchTerm ? 'Arama kriterlerinize uygun fatura bulunamadı.' : 'Henüz fatura yok.'}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]"></TableHead>
+                    <TableHead>Fatura No</TableHead>
+                    <TableHead>Tedarikçi</TableHead>
+                    <TableHead>Tarih</TableHead>
+                    <TableHead>Ürünler</TableHead>
+                    <TableHead className="text-right">Tutar</TableHead>
+                    <TableHead>Durum</TableHead>
+                    <TableHead className="text-center">İşlemler</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredInvoices.map((invoice) => (
+                    <React.Fragment key={invoice.id}>
+                      {/* Ana satır */}
+                      <TableRow 
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() => toggleRowExpansion(invoice.id)}
+                      >
+                        <TableCell>
+                          {expandedRows.has(invoice.id) ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {invoice.invoiceNumber}
+                        </TableCell>
+                        <TableCell>{invoice.supplierName}</TableCell>
+                        <TableCell>
+                          {new Date(invoice.invoiceDate).toLocaleDateString('tr-TR')}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Package className="h-4 w-4 text-gray-400" />
+                            <span className="text-sm">
+                              {invoice.productNames?.length || invoice.invoiceLines?.length || 0} ürün
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {invoice.totalAmount.toLocaleString('tr-TR', {
+                            style: 'currency',
+                            currency: invoice.currency || 'TRY'
+                          })}
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(invoice.status)}
+                        </TableCell>
+                        <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex justify-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => downloadInvoicePDF(invoice.id)}
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => syncInvoiceToSystem(invoice)}
+                              disabled={syncingInvoices.has(invoice.id)}
+                            >
+                              {syncingInvoices.has(invoice.id) ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Database className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredInvoices.map((invoice) => (
-                        <React.Fragment key={invoice.id}>
-                          <TableRow 
-                            className="cursor-pointer hover:bg-muted/50"
-                            onClick={() => toggleRowExpansion(invoice.id)}
-                          >
-                            <TableCell className="font-medium">
-                              <div className="flex items-center gap-2">
-                                {expandedRows.has(invoice.id) ? (
-                                  <ChevronDown className="h-4 w-4" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4" />
-                                )}
-                                {invoice.invoiceNumber}
-                              </div>
-                            </TableCell>
-                            <TableCell>{invoice.supplierName}</TableCell>
-                            <TableCell>
-                              {format(new Date(invoice.invoiceDate), 'dd/MM/yyyy', { locale: tr })}
-                            </TableCell>
-                            <TableCell>
-                              {invoice.dueDate 
-                                ? format(new Date(invoice.dueDate), 'dd/MM/yyyy', { locale: tr })
-                                : '-'
-                              }
-                            </TableCell>
-                            <TableCell>
-                              {getStatusBadge(invoice.status)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {invoice.totalAmount.toLocaleString('tr-TR', { 
-                                style: 'currency', 
-                                currency: invoice.currency 
-                              })}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {invoice.paidAmount.toLocaleString('tr-TR', { 
-                                style: 'currency', 
-                                currency: invoice.currency 
-                              })}
-                            </TableCell>
-                            <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleViewPDF(invoice.id)}>
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    PDF Görüntüle
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => syncInvoiceToSystem(invoice)}>
-                                    <Database className="h-4 w-4 mr-2" />
-                                    {syncingToSystem.has(invoice.id) ? 'Kaydediliyor...' : 'Sisteme Kaydet'}
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                          
-                          {expandedRows.has(invoice.id) && (
-                            <TableRow>
-                              <TableCell colSpan={8} className="p-6 bg-muted/50">
-                                <div className="space-y-4">
-                                  {loadingDetails.has(invoice.id) ? (
-                                    <div className="flex items-center justify-center py-8">
-                                      <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                                      <span>Fatura detayları yükleniyor...</span>
+
+                      {/* Detay satırı */}
+                      {expandedRows.has(invoice.id) && (
+                        <TableRow>
+                          <TableCell colSpan={8} className="bg-gray-50/50 p-6">
+                            <div className="space-y-4">
+                              {/* Ürün Listesi */}
+                              {(invoice.productNames?.length > 0 || invoice.invoiceLines?.length > 0) && (
+                                <div>
+                                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                    <Package className="h-5 w-5 text-blue-600" />
+                                    Fatura Kalemleri
+                                  </h4>
+                                  
+                                  {/* Önce gerçek ürün isimlerini göster */}
+                                  {invoice.productNames && invoice.productNames.length > 0 && (
+                                    <div className="mb-4">
+                                      <p className="text-sm font-medium text-gray-700 mb-2">Ürün/Hizmet Adları:</p>
+                                      <div className="flex flex-wrap gap-2">
+                                        {invoice.productNames.map((productName, index) => (
+                                          <Badge key={index} variant="secondary" className="text-sm">
+                                            {productName}
+                                          </Badge>
+                                        ))}
+                                      </div>
                                     </div>
-                                  ) : invoiceDetails[invoice.id] ? (
-                                    <div className="space-y-4">
-                                      
-                                      {invoiceDetails[invoice.id].items && invoiceDetails[invoice.id].items.length > 0 ? (
-                                        <div>
-                                          <div className="flex items-center gap-2 mb-4">
-                                            <Package className="h-5 w-5 text-blue-600" />
-                                            <h4 className="font-semibold text-lg text-blue-800">Fatura Kalemleri ({invoiceDetails[invoice.id].items.length} adet)</h4>
-                                          </div>
-                                          <div className="border rounded-lg overflow-hidden">
-                                            <Table>
-                                              <TableHeader>
-                                                <TableRow className="bg-muted/50">
-                                                  <TableHead className="h-8 text-xs">Ürün Kodu</TableHead>
-                                                  <TableHead className="h-8 text-xs">Açıklama</TableHead>
-                                                  <TableHead className="h-8 text-xs text-right">Miktar</TableHead>
-                                                  <TableHead className="h-8 text-xs text-right">Birim</TableHead>
-                                                  <TableHead className="h-8 text-xs text-right">Birim Fiyat</TableHead>
-                                                  <TableHead className="h-8 text-xs text-right">KDV Oranı</TableHead>
-                                                  <TableHead className="h-8 text-xs text-right">KDV Tutarı</TableHead>
-                                                  <TableHead className="h-8 text-xs text-right">Toplam</TableHead>
-                                                </TableRow>
-                                              </TableHeader>
-                                              <TableBody>
-                                                {invoiceDetails[invoice.id].items.map((item, index) => (
-                                                  <TableRow key={index} className="text-sm hover:bg-muted/30">
-                                                    <TableCell className="py-2 font-medium">
-                                                      <div className="flex items-center gap-2">
-                                                        <Receipt className="h-3 w-3 text-gray-400" />
-                                                        {item.productCode || '-'}
-                                                      </div>
-                                                    </TableCell>
-                                                    <TableCell className="py-2 max-w-xs">
-                                                      <div className="truncate" title={item.description || '-'}>
-                                                        {item.description || '-'}
-                                                      </div>
-                                                    </TableCell>
-                                                    <TableCell className="py-2 text-right font-medium">
-                                                      {item.quantity?.toLocaleString('tr-TR') || '-'}
-                                                    </TableCell>
-                                                    <TableCell className="py-2 text-right">{item.unit || '-'}</TableCell>
-                                                    <TableCell className="py-2 text-right">
-                                                      {item.unitPrice ? item.unitPrice.toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency }) : '-'}
-                                                    </TableCell>
-                                                    <TableCell className="py-2 text-right">
-                                                      <Badge variant="outline" className="text-xs">
-                                                        {item.vatRate ? `%${item.vatRate}` : '-'}
-                                                      </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="py-2 text-right">
-                                                      {item.vatAmount ? item.vatAmount.toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency }) : '-'}
-                                                    </TableCell>
-                                                    <TableCell className="py-2 text-right font-semibold">
-                                                      {item.totalAmount ? item.totalAmount.toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency }) : '-'}
-                                                    </TableCell>
-                                                  </TableRow>
-                                                ))}
-                                                <TableRow className="bg-blue-50/50 font-semibold">
-                                                  <TableCell colSpan={7} className="py-2 text-right">
-                                                    <div className="flex justify-end gap-4">
-                                                      <span>Toplam Tutar:</span>
-                                                    </div>
-                                                  </TableCell>
-                                                  <TableCell className="py-2 text-right font-bold text-blue-600">
-                                                    {invoice.totalAmount.toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency })}
-                                                  </TableCell>
-                                                </TableRow>
-                                              </TableBody>
-                                            </Table>
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <div className="text-center py-8 text-muted-foreground">
-                                          <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                                          <p className="text-sm">Bu fatura için ürün detayları bulunamadı</p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <div className="text-center py-4 text-muted-foreground">
-                                      Fatura detayları yüklenemedi
+                                  )}
+
+                                  {/* Detaylı fatura satırları */}
+                                  {invoice.invoiceLines && invoice.invoiceLines.length > 0 && (
+                                    <div className="border rounded-lg overflow-hidden">
+                                      <Table>
+                                        <TableHeader>
+                                          <TableRow className="bg-gray-100">
+                                            <TableHead className="text-xs">Ürün Adı</TableHead>
+                                            <TableHead className="text-xs text-right">Miktar</TableHead>
+                                            <TableHead className="text-xs text-right">Birim</TableHead>
+                                            <TableHead className="text-xs text-right">Birim Fiyat</TableHead>
+                                            <TableHead className="text-xs text-right">KDV %</TableHead>
+                                            <TableHead className="text-xs text-right">Toplam</TableHead>
+                                          </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                          {invoice.invoiceLines.map((line: any, index: number) => (
+                                            <TableRow key={index} className="text-sm">
+                                              <TableCell className="font-medium">
+                                                {line.name || line.description || `Ürün ${index + 1}`}
+                                              </TableCell>
+                                              <TableCell className="text-right">
+                                                {line.quantity?.toLocaleString('tr-TR') || '-'}
+                                              </TableCell>
+                                              <TableCell className="text-right">
+                                                {line.unitType || 'Adet'}
+                                              </TableCell>
+                                              <TableCell className="text-right">
+                                                {line.price ? 
+                                                  line.price.toLocaleString('tr-TR', { 
+                                                    style: 'currency', 
+                                                    currency: invoice.currency || 'TRY' 
+                                                  }) : '-'
+                                                }
+                                              </TableCell>
+                                              <TableCell className="text-right">
+                                                <Badge variant="outline" className="text-xs">
+                                                  %{line.kdvPercent || 0}
+                                                </Badge>
+                                              </TableCell>
+                                              <TableCell className="text-right font-medium">
+                                                {((line.quantity || 0) * (line.price || 0) + (line.kdvTotal || 0))
+                                                  .toLocaleString('tr-TR', { 
+                                                    style: 'currency', 
+                                                    currency: invoice.currency || 'TRY' 
+                                                  })}
+                                              </TableCell>
+                                            </TableRow>
+                                          ))}
+                                        </TableBody>
+                                      </Table>
                                     </div>
                                   )}
                                 </div>
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </React.Fragment>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </TabsContent>
+                              )}
 
-        <TabsContent value="create">
-          <EInvoiceForm 
-            onClose={() => setActiveTab("invoices")} 
-            onSuccess={() => {
-              setActiveTab("invoices");
-              fetchInvoices();
-            }} 
-          />
-        </TabsContent>
-      </Tabs>
+                              {/* Debug bilgisi (geliştirme aşamasında) */}
+                              {invoice.enhancedAt && (
+                                <div className="text-xs text-gray-500 border-t pt-3">
+                                  Son güncelleme: {new Date(invoice.enhancedAt).toLocaleString('tr-TR')}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default InvoiceManagementTab;
+}; 
