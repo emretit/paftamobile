@@ -314,124 +314,116 @@ export const InvoiceManagementTab = () => {
     setExpandedInvoices(newExpanded);
   };
 
-  const InvoiceDetailsRow = ({ invoice }: { invoice: any }) => {
+  const InvoiceDetailsContent = ({ invoice }: { invoice: any }) => {
     const invoiceItems = parseInvoiceItems(invoice.xmlData);
     
     return (
-      <TableRow>
-        <TableCell colSpan={8} className="p-0">
-          <Collapsible open={expandedInvoices.has(invoice.id)}>
-            <CollapsibleContent>
-              <div className="p-6 bg-muted/30 border-t">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Invoice Summary */}
-                  <div className="lg:col-span-1">
-                    <h4 className="font-medium mb-3 flex items-center">
-                      <FileText className="h-4 w-4 mr-2" />
-                      Fatura Bilgileri
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Fatura No:</span>
-                        <span className="font-medium">{invoice.invoiceNumber}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Tedarikçi:</span>
-                        <span className="font-medium">{invoice.supplierName}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Vergi No:</span>
-                        <span className="font-medium">{invoice.supplierTaxNumber || '-'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Para Birimi:</span>
-                        <span className="font-medium">{invoice.currency}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Toplam Tutar:</span>
-                        <span className="font-semibold text-primary">
-                          {invoice.totalAmount.toLocaleString('tr-TR', { 
-                            style: 'currency', 
-                            currency: invoice.currency 
-                          })}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">KDV Tutarı:</span>
-                        <span className="font-medium">
-                          {invoice.taxAmount.toLocaleString('tr-TR', { 
-                            style: 'currency', 
-                            currency: invoice.currency 
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Invoice Items */}
-                  <div className="lg:col-span-2">
-                    <h4 className="font-medium mb-3 flex items-center">
-                      <Package className="h-4 w-4 mr-2" />
-                      Fatura Kalemleri ({invoiceItems.length})
-                    </h4>
-                    {invoiceItems.length > 0 ? (
-                      <div className="border rounded-lg overflow-hidden">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="w-8">#</TableHead>
-                              <TableHead>Ürün/Hizmet</TableHead>
-                              <TableHead className="w-20">Miktar</TableHead>
-                              <TableHead className="w-16">Birim</TableHead>
-                              <TableHead className="w-24 text-right">Birim Fiyat</TableHead>
-                              <TableHead className="w-16 text-center">KDV %</TableHead>
-                              <TableHead className="w-24 text-right">Toplam</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {invoiceItems.map((item) => (
-                              <TableRow key={item.id}>
-                                <TableCell className="text-muted-foreground">{item.id}</TableCell>
-                                <TableCell className="font-medium">{item.description}</TableCell>
-                                <TableCell>{item.quantity.toLocaleString('tr-TR')}</TableCell>
-                                <TableCell>{item.unit}</TableCell>
-                                <TableCell className="text-right">
-                                  {item.unitPrice.toLocaleString('tr-TR', { 
-                                    style: 'currency', 
-                                    currency: invoice.currency 
-                                  })}
-                                </TableCell>
-                                <TableCell className="text-center">{item.taxRate}%</TableCell>
-                                <TableCell className="text-right font-medium">
-                                  {(item.lineTotal + item.taxAmount).toLocaleString('tr-TR', { 
-                                    style: 'currency', 
-                                    currency: invoice.currency 
-                                  })}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    ) : (
-                      <div className="border rounded-lg p-8 text-center text-muted-foreground">
-                        <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p>Bu fatura için detay bilgisi bulunamadı</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
+      <div className="p-6 bg-muted/30 border-t">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Invoice Summary */}
+          <div className="lg:col-span-1">
+            <h4 className="font-medium mb-3 flex items-center">
+              <FileText className="h-4 w-4 mr-2" />
+              Fatura Bilgileri
+            </h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Fatura No:</span>
+                <span className="font-medium">{invoice.invoice_number}</span>
               </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </TableCell>
-      </TableRow>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Tedarikçi:</span>
+                <span className="font-medium">{invoice.supplier_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Vergi No:</span>
+                <span className="font-medium">{invoice.supplier_tax_number || '-'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Para Birimi:</span>
+                <span className="font-medium">{invoice.currency}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Toplam Tutar:</span>
+                <span className="font-semibold text-primary">
+                  {invoice.total_amount.toLocaleString('tr-TR', { 
+                    style: 'currency', 
+                    currency: invoice.currency 
+                  })}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">KDV Tutarı:</span>
+                <span className="font-medium">
+                  {invoice.tax_amount.toLocaleString('tr-TR', { 
+                    style: 'currency', 
+                    currency: invoice.currency 
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Invoice Items */}
+          <div className="lg:col-span-2">
+            <h4 className="font-medium mb-3 flex items-center">
+              <Package className="h-4 w-4 mr-2" />
+              Fatura Kalemleri ({invoiceItems.length})
+            </h4>
+            {invoiceItems.length > 0 ? (
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-8">#</TableHead>
+                      <TableHead>Ürün/Hizmet</TableHead>
+                      <TableHead className="w-20">Miktar</TableHead>
+                      <TableHead className="w-16">Birim</TableHead>
+                      <TableHead className="w-24 text-right">Birim Fiyat</TableHead>
+                      <TableHead className="w-16 text-center">KDV %</TableHead>
+                      <TableHead className="w-24 text-right">Toplam</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoiceItems.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="text-muted-foreground">{item.id}</TableCell>
+                        <TableCell className="font-medium">{item.description}</TableCell>
+                        <TableCell>{item.quantity.toLocaleString('tr-TR')}</TableCell>
+                        <TableCell>{item.unit}</TableCell>
+                        <TableCell className="text-right">
+                          {item.unitPrice.toLocaleString('tr-TR', { 
+                            style: 'currency', 
+                            currency: invoice.currency 
+                          })}
+                        </TableCell>
+                        <TableCell className="text-center">{item.taxRate}%</TableCell>
+                        <TableCell className="text-right font-medium">
+                          {(item.lineTotal + item.taxAmount).toLocaleString('tr-TR', { 
+                            style: 'currency', 
+                            currency: invoice.currency 
+                          })}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="border rounded-lg p-8 text-center text-muted-foreground">
+                <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>Bu fatura için detay bilgisi bulunamadı</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     );
   };
 
   const filteredInvoices = einvoices.filter(invoice => {
-    const matchesSearch = invoice.invoiceNumber?.toLowerCase().includes(searchValue.toLowerCase()) ||
-                         invoice.supplierName?.toLowerCase().includes(searchValue.toLowerCase());
+    const matchesSearch = invoice.invoice_number?.toLowerCase().includes(searchValue.toLowerCase()) ||
+                         invoice.supplier_name?.toLowerCase().includes(searchValue.toLowerCase());
     const matchesStatus = statusFilter === "all" || invoice.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -577,68 +569,68 @@ export const InvoiceManagementTab = () => {
                     </TableHeader>
                     <TableBody>
                       {filteredInvoices.map((invoice) => (
-                        <React.Fragment key={invoice.id}>
-                          <TableRow 
-                            className="cursor-pointer hover:bg-muted/50"
-                            onClick={() => toggleInvoiceExpansion(invoice.id)}
-                          >
-                            <TableCell>
-                              <CollapsibleTrigger asChild>
-                                <Button variant="ghost" size="sm" className="p-0 w-8 h-8">
-                                  {expandedInvoices.has(invoice.id) ? (
-                                    <ChevronDown className="h-4 w-4" />
-                                  ) : (
-                                    <ChevronRight className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              </CollapsibleTrigger>
-                            </TableCell>
-                            <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                            <TableCell>{invoice.supplierName}</TableCell>
-                            <TableCell>
-                              {format(new Date(invoice.invoiceDate), 'dd/MM/yyyy', { locale: tr })}
-                            </TableCell>
-                            <TableCell>
-                              {invoice.dueDate 
-                                ? format(new Date(invoice.dueDate), 'dd/MM/yyyy', { locale: tr })
-                                : '-'
-                              }
-                            </TableCell>
-                            <TableCell>
-                              {getStatusBadge(invoice.status)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {invoice.totalAmount.toLocaleString('tr-TR', { 
-                                style: 'currency', 
-                                currency: invoice.currency 
-                              })}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleViewPDF(invoice.id)}>
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    PDF Görüntüle
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => toggleInvoiceExpansion(invoice.id)}>
-                                    <Package className="h-4 w-4 mr-2" />
-                                    Detayları Görüntüle
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                          <InvoiceDetailsRow invoice={invoice} />
-                        </React.Fragment>
+                        <Collapsible key={invoice.id} open={expandedInvoices.has(invoice.id)}>
+                          <CollapsibleTrigger asChild>
+                            <TableRow 
+                              className="cursor-pointer hover:bg-muted/50"
+                              onClick={() => toggleInvoiceExpansion(invoice.id)}
+                            >
+                              <TableCell>
+                                {expandedInvoices.has(invoice.id) ? (
+                                  <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4" />
+                                )}
+                              </TableCell>
+                              <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+                              <TableCell>{invoice.supplier_name}</TableCell>
+                              <TableCell>
+                                {format(new Date(invoice.invoice_date), 'dd/MM/yyyy', { locale: tr })}
+                              </TableCell>
+                              <TableCell>
+                                {invoice.due_date 
+                                  ? format(new Date(invoice.due_date), 'dd/MM/yyyy', { locale: tr })
+                                  : '-'
+                                }
+                              </TableCell>
+                              <TableCell>
+                                {getStatusBadge(invoice.status)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {invoice.total_amount.toLocaleString('tr-TR', { 
+                                  style: 'currency', 
+                                  currency: invoice.currency 
+                                })}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleViewPDF(invoice.nilvera_id)}>
+                                      <FileText className="h-4 w-4 mr-2" />
+                                      PDF Görüntüle
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <TableRow>
+                              <TableCell colSpan={8} className="p-0">
+                                <InvoiceDetailsContent invoice={invoice} />
+                              </TableCell>
+                            </TableRow>
+                          </CollapsibleContent>
+                        </Collapsible>
                       ))}
                     </TableBody>
                   </Table>
