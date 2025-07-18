@@ -36,9 +36,11 @@ serve(async (req) => {
 
     // Parse request body safely
     let action = 'authenticate'
+    let userApiKey = ''
     try {
       const body = await req.json()
       action = body.action || 'authenticate'
+      userApiKey = body.apiKey || ''
     } catch (e) {
       console.log('Using default action authenticate')
     }
@@ -47,19 +49,17 @@ serve(async (req) => {
 
     if (action === 'authenticate') {
       console.log('Starting Nilvera authentication...')
-      // Get Nilvera API key from environment
-      const nilveraApiKey = Deno.env.get('NILVERA_API_KEY')
-
-      if (!nilveraApiKey) {
-        console.error('NILVERA_API_KEY not found in environment')
-        throw new Error('Nilvera API key yapılandırılmamış')
+      
+      if (!userApiKey) {
+        console.error('User API key not provided')
+        throw new Error('Nilvera API key gerekli')
       }
 
-      // Test the API key by making a simple request
+      // Test the user provided API key by making a simple request
       const testResponse = await fetch('https://apitest.nilvera.com/general/Credits', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${nilveraApiKey}`,
+          'Authorization': `Bearer ${userApiKey}`,
           'Content-Type': 'application/json'
         }
       })
@@ -74,7 +74,7 @@ serve(async (req) => {
         .from('nilvera_auth')
         .upsert({
           user_id: user.id,
-          access_token: nilveraApiKey,
+          access_token: userApiKey,
           refresh_token: null,
           expires_at: new Date(Date.now() + (365 * 24 * 60 * 60 * 1000)).toISOString() // 1 year
         }, {
