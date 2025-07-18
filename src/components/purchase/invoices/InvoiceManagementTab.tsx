@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,7 +53,7 @@ export const InvoiceManagementTab = () => {
   const [searchValue, setSearchValue] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
-  const [expandedInvoices, setExpandedInvoices] = useState<Set<string>>(new Set());
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [invoiceDetails, setInvoiceDetails] = useState<Record<string, InvoiceDetail>>({});
   const [loadingDetails, setLoadingDetails] = useState<Set<string>>(new Set());
   
@@ -189,8 +188,8 @@ export const InvoiceManagementTab = () => {
     setSearchValue(e.target.value);
   };
 
-  const toggleInvoiceExpansion = async (invoiceId: string) => {
-    const newExpanded = new Set(expandedInvoices);
+  const toggleRowExpansion = async (invoiceId: string) => {
+    const newExpanded = new Set(expandedRows);
     if (newExpanded.has(invoiceId)) {
       newExpanded.delete(invoiceId);
     } else {
@@ -198,7 +197,7 @@ export const InvoiceManagementTab = () => {
       // Fetch details when expanding
       await fetchInvoiceDetails(invoiceId);
     }
-    setExpandedInvoices(newExpanded);
+    setExpandedRows(newExpanded);
   };
 
   const handleCreateInvoice = async (invoiceData: any) => {
@@ -486,11 +485,11 @@ export const InvoiceManagementTab = () => {
                         <React.Fragment key={invoice.id}>
                           <TableRow 
                             className="cursor-pointer hover:bg-muted/50"
-                            onClick={() => toggleInvoiceExpansion(invoice.id)}
+                            onClick={() => toggleRowExpansion(invoice.id)}
                           >
                             <TableCell className="font-medium">
                               <div className="flex items-center gap-2">
-                                {expandedInvoices.has(invoice.id) ? (
+                                {expandedRows.has(invoice.id) ? (
                                   <ChevronDown className="h-4 w-4" />
                                 ) : (
                                   <ChevronRight className="h-4 w-4" />
@@ -540,10 +539,10 @@ export const InvoiceManagementTab = () => {
                             </TableCell>
                           </TableRow>
                           
-                          {expandedInvoices.has(invoice.id) && (
+                          {expandedRows.has(invoice.id) && (
                             <TableRow>
-                              <TableCell colSpan={8} className="bg-muted/20 p-0">
-                                <div className="p-4 space-y-4">
+                              <TableCell colSpan={8} className="p-6 bg-muted/50">
+                                <div className="space-y-4">
                                   {loadingDetails.has(invoice.id) ? (
                                     <div className="flex items-center justify-center py-8">
                                       <Loader2 className="h-6 w-6 animate-spin mr-2" />
