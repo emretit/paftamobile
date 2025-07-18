@@ -220,14 +220,14 @@ export const InvoiceManagementTab = () => {
     ];
     
     const data = filteredInvoices.map(invoice => [
-      invoice.invoice_number,
-      invoice.supplier_name,
-      format(new Date(invoice.invoice_date), 'dd/MM/yyyy'),
-      invoice.due_date ? format(new Date(invoice.due_date), 'dd/MM/yyyy') : '-',
+      invoice.invoiceNumber,
+      invoice.supplierName,
+      invoice.issueDate ? format(new Date(invoice.issueDate), 'dd/MM/yyyy') : '-',
+      '-', // No due date in API response
       getStatusText(invoice.status),
-      invoice.total_amount,
-      invoice.paid_amount,
-      invoice.remaining_amount
+      invoice.payableAmount,
+      0, // No paid amount in current API
+      invoice.payableAmount
     ]);
     
     exportToExcel([headers, ...data], 'e-faturalar');
@@ -243,11 +243,11 @@ export const InvoiceManagementTab = () => {
     ];
     
     const data = filteredInvoices.map(invoice => [
-      invoice.invoice_number,
-      invoice.supplier_name,
-      format(new Date(invoice.invoice_date), 'dd/MM/yyyy'),
+      invoice.invoiceNumber,
+      invoice.supplierName,
+      invoice.issueDate ? format(new Date(invoice.issueDate), 'dd/MM/yyyy') : '-',
       getStatusText(invoice.status),
-      `${invoice.total_amount.toLocaleString('tr-TR')} ${invoice.currency}`
+      `${invoice.payableAmount?.toLocaleString('tr-TR') || '0'} ${invoice.currencyCode || 'TRY'}`
     ]);
     
     const columns = headers.map((header: string, index: number) => ({
@@ -330,35 +330,35 @@ export const InvoiceManagementTab = () => {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Fatura No:</span>
-                <span className="font-medium">{invoice.invoice_number}</span>
+                <span className="font-medium">{invoice.InvoiceNumber}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Tedarikçi:</span>
-                <span className="font-medium">{invoice.supplier_name}</span>
+                <span className="font-medium">{invoice.SenderName}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Vergi No:</span>
-                <span className="font-medium">{invoice.supplier_tax_number || '-'}</span>
+                <span className="font-medium">{invoice.SenderTaxNumber || '-'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Para Birimi:</span>
-                <span className="font-medium">{invoice.currency}</span>
+                <span className="font-medium">{invoice.CurrencyCode}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Toplam Tutar:</span>
                 <span className="font-semibold text-primary">
-                  {invoice.total_amount.toLocaleString('tr-TR', { 
+                  {invoice.PayableAmount?.toLocaleString('tr-TR', { 
                     style: 'currency', 
-                    currency: invoice.currency 
+                    currency: invoice.CurrencyCode || 'TRY'
                   })}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">KDV Tutarı:</span>
                 <span className="font-medium">
-                  {invoice.tax_amount.toLocaleString('tr-TR', { 
+                  {invoice.TaxTotalAmount?.toLocaleString('tr-TR', { 
                     style: 'currency', 
-                    currency: invoice.currency 
+                    currency: invoice.CurrencyCode || 'TRY'
                   })}
                 </span>
               </div>
@@ -395,14 +395,14 @@ export const InvoiceManagementTab = () => {
                         <TableCell className="text-right">
                           {item.unitPrice.toLocaleString('tr-TR', { 
                             style: 'currency', 
-                            currency: invoice.currency 
+                            currency: invoice.CurrencyCode || 'TRY'
                           })}
                         </TableCell>
                         <TableCell className="text-center">{item.taxRate}%</TableCell>
                         <TableCell className="text-right font-medium">
                           {(item.lineTotal + item.taxAmount).toLocaleString('tr-TR', { 
                             style: 'currency', 
-                            currency: invoice.currency 
+                            currency: invoice.CurrencyCode || 'TRY'
                           })}
                         </TableCell>
                       </TableRow>
@@ -423,9 +423,9 @@ export const InvoiceManagementTab = () => {
   };
 
   const filteredInvoices = einvoices.filter(invoice => {
-    const matchesSearch = invoice.invoiceNumber?.toLowerCase().includes(searchValue.toLowerCase()) ||
-                         invoice.supplierName?.toLowerCase().includes(searchValue.toLowerCase());
-    const matchesStatus = statusFilter === "all" || invoice.status?.toLowerCase().includes(statusFilter.toLowerCase());
+    const matchesSearch = invoice.InvoiceNumber?.toLowerCase().includes(searchValue.toLowerCase()) ||
+                         invoice.SenderName?.toLowerCase().includes(searchValue.toLowerCase());
+    const matchesStatus = statusFilter === "all" || invoice.StatusDetail?.toLowerCase().includes(statusFilter.toLowerCase());
     return matchesSearch && matchesStatus;
   });
 
@@ -570,37 +570,34 @@ export const InvoiceManagementTab = () => {
                     </TableHeader>
                     <TableBody>
                       {filteredInvoices.map((invoice) => (
-                        <Collapsible key={invoice.id} open={expandedInvoices.has(invoice.id)}>
+                        <Collapsible key={invoice.UUID} open={expandedInvoices.has(invoice.UUID)}>
                           <CollapsibleTrigger asChild>
                             <TableRow 
                               className="cursor-pointer hover:bg-muted/50"
-                              onClick={() => toggleInvoiceExpansion(invoice.id)}
+                              onClick={() => toggleInvoiceExpansion(invoice.UUID)}
                             >
                               <TableCell>
-                                {expandedInvoices.has(invoice.id) ? (
+                                {expandedInvoices.has(invoice.UUID) ? (
                                   <ChevronDown className="h-4 w-4" />
                                 ) : (
                                   <ChevronRight className="h-4 w-4" />
                                 )}
                               </TableCell>
-                              <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
-                              <TableCell>{invoice.supplier_name}</TableCell>
+                              <TableCell className="font-medium">{invoice.InvoiceNumber}</TableCell>
+                              <TableCell>{invoice.SenderName}</TableCell>
                               <TableCell>
-                                {format(new Date(invoice.invoice_date), 'dd/MM/yyyy', { locale: tr })}
+                                {invoice.IssueDate ? format(new Date(invoice.IssueDate), 'dd/MM/yyyy', { locale: tr }) : '-'}
                               </TableCell>
                               <TableCell>
-                                {invoice.due_date 
-                                  ? format(new Date(invoice.due_date), 'dd/MM/yyyy', { locale: tr })
-                                  : '-'
-                                }
+                                -
                               </TableCell>
                               <TableCell>
-                                {getStatusBadge(invoice.status)}
+                                {getStatusBadge(invoice.StatusDetail)}
                               </TableCell>
                               <TableCell className="text-right">
-                                {invoice.total_amount.toLocaleString('tr-TR', { 
+                                {invoice.PayableAmount?.toLocaleString('tr-TR', { 
                                   style: 'currency', 
-                                  currency: invoice.currency 
+                                  currency: invoice.CurrencyCode || 'TRY'
                                 })}
                               </TableCell>
                               <TableCell className="text-center">
@@ -615,7 +612,7 @@ export const InvoiceManagementTab = () => {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleViewPDF(invoice.nilvera_id)}>
+                                    <DropdownMenuItem onClick={() => handleViewPDF(invoice.UUID)}>
                                       <FileText className="h-4 w-4 mr-2" />
                                       PDF Görüntüle
                                     </DropdownMenuItem>
