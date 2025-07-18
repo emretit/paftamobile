@@ -158,7 +158,10 @@ serve(async (req) => {
       
       // Parse invoice lines from the response
       let invoiceLines = []
+      
+      // First try InvoiceLines array
       if (detailsData && detailsData.InvoiceLines && Array.isArray(detailsData.InvoiceLines)) {
+        console.log('Found InvoiceLines array with', detailsData.InvoiceLines.length, 'items')
         invoiceLines = detailsData.InvoiceLines.map((line: any) => ({
           description: line.Name || line.Description || '',
           productCode: line.Code || '',
@@ -171,6 +174,28 @@ serve(async (req) => {
           discountRate: parseFloat(line.DiscountRate || 0),
           discountAmount: parseFloat(line.DiscountAmount || 0)
         }))
+      } else {
+        // If no InvoiceLines, try to create a single item from the main invoice data
+        console.log('No InvoiceLines found, creating item from main invoice data')
+        if (detailsData && detailsData.NumberOfItems > 0) {
+          const invoiceAmount = parseFloat(detailsData.InvoiceAmount || 0)
+          const taxAmount = parseFloat(detailsData.TaxAmount || 0)
+          const netAmount = invoiceAmount - taxAmount
+          const vatRate = taxAmount > 0 ? ((taxAmount / netAmount) * 100) : 0
+          
+          invoiceLines = [{
+            description: `Fatura Kalemi - ${detailsData.InvoiceNumber}`,
+            productCode: '',
+            quantity: 1,
+            unit: 'Adet',
+            unitPrice: netAmount,
+            vatRate: vatRate,
+            vatAmount: taxAmount,
+            totalAmount: invoiceAmount,
+            discountRate: 0,
+            discountAmount: 0
+          }]
+        }
       }
 
       return new Response(
