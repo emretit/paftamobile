@@ -8,7 +8,7 @@ type RouteGuardProps = {
 
 export const PublicRoute: React.FC<RouteGuardProps> = ({ children }) => children;
 
-// Authentication disabled - all routes are public
+// Protected routes now require authentication
 export const ProtectedRoute: React.FC<RouteGuardProps> = ({ children }) => (
-  <>{children}</>
+  <AuthGuard>{children}</AuthGuard>
 );
