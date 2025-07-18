@@ -123,6 +123,7 @@ export const InvoiceManagementTab = () => {
       if (error) throw error;
       
       if (data.success) {
+        console.log('Received invoices:', data.invoices);
         setEinvoices(data.invoices || []);
         toast({
           title: "Başarılı",
@@ -427,6 +428,11 @@ export const InvoiceManagementTab = () => {
     const matchesStatus = statusFilter === "all" || invoice.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+  
+  console.log('Debug - einvoices:', einvoices);
+  console.log('Debug - filteredInvoices:', filteredInvoices);
+  console.log('Debug - searchValue:', searchValue);
+  console.log('Debug - statusFilter:', statusFilter);
 
   if (!isNilveraAuthenticated) {
     return (
