@@ -177,25 +177,28 @@ serve(async (req) => {
       } else {
         // If no InvoiceLines, try to create a single item from the main invoice data
         console.log('No InvoiceLines found, creating item from main invoice data')
-        if (detailsData && detailsData.NumberOfItems > 0) {
-          const invoiceAmount = parseFloat(detailsData.InvoiceAmount || 0)
-          const taxAmount = parseFloat(detailsData.TaxAmount || 0)
-          const netAmount = invoiceAmount - taxAmount
-          const vatRate = taxAmount > 0 ? ((taxAmount / netAmount) * 100) : 0
-          
-          invoiceLines = [{
-            description: `Fatura Kalemi - ${detailsData.InvoiceNumber}`,
-            productCode: '',
-            quantity: 1,
-            unit: 'Adet',
-            unitPrice: netAmount,
-            vatRate: vatRate,
-            vatAmount: taxAmount,
-            totalAmount: invoiceAmount,
-            discountRate: 0,
-            discountAmount: 0
-          }]
-        }
+        console.log('Available fields in detailsData:', Object.keys(detailsData || {}))
+        
+        // Always create at least one line from the invoice summary 
+        const invoiceAmount = parseFloat(detailsData?.PayableAmount || detailsData?.InvoiceAmount || 0)
+        const taxAmount = parseFloat(detailsData?.TaxTotalAmount || detailsData?.TaxAmount || 0) 
+        const netAmount = parseFloat(detailsData?.TaxExclusiveAmount || detailsData?.LineExtensionAmount || (invoiceAmount - taxAmount))
+        const vatRate = taxAmount > 0 && netAmount > 0 ? ((taxAmount / netAmount) * 100) : 0
+        
+        invoiceLines = [{
+          description: `Fatura Kalemi - ${detailsData?.InvoiceNumber || 'Belirtilmemiş'}`,
+          productCode: '',
+          quantity: 1,
+          unit: 'Adet', 
+          unitPrice: netAmount,
+          vatRate: vatRate,
+          vatAmount: taxAmount,
+          totalAmount: invoiceAmount,
+          discountRate: 0,
+          discountAmount: 0
+        }]
+        
+        console.log('Created fallback invoice line:', invoiceLines[0])
       }
 
       return new Response(
