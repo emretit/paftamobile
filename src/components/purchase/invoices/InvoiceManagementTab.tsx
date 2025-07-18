@@ -57,16 +57,24 @@ export const InvoiceManagementTab = () => {
   
   const checkAuthStatus = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('nilvera-auth', {
-        body: { action: 'get_status' }
-      });
-      
-      if (data && data.success && data.connected) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data, error } = await supabase
+        .from('nilvera_auth')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (data && !error) {
         setIsNilveraAuthenticated(true);
         fetchInvoices();
+      } else {
+        setIsNilveraAuthenticated(false);
       }
     } catch (error) {
       console.log('No valid auth found');
+      setIsNilveraAuthenticated(false);
     }
   };
   
