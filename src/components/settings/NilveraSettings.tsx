@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { AlertCircle, CheckCircle, Key } from "lucide-react";
 
 export const NilveraSettings = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -43,11 +45,11 @@ export const NilveraSettings = () => {
   };
 
   const handleAuthenticate = async () => {
-    if (!apiKey.trim()) {
+    if (!username.trim() || !password.trim() || !apiKey.trim()) {
       toast({
         variant: "destructive",
         title: "Hata",
-        description: "Lütfen Nilvera API Key girin",
+        description: "Lütfen tüm alanları doldurun",
       });
       return;
     }
@@ -66,6 +68,8 @@ export const NilveraSettings = () => {
         },
         body: {
           action: 'authenticate',
+          username: username,
+          password: password,
           apiKey: apiKey
         }
       });
@@ -75,10 +79,12 @@ export const NilveraSettings = () => {
       if (data?.success) {
         setIsConnected(true);
         setConnectionStatus("Nilvera bağlantısı başarılı");
+        setUsername("");
+        setPassword("");
         setApiKey("");
         toast({
           title: "Başarılı",
-          description: "Nilvera API key doğrulandı ve kaydedildi",
+          description: "Nilvera hesap bilgileri doğrulandı ve kaydedildi",
         });
       } else {
         throw new Error(data?.error || "Bilinmeyen hata");
@@ -132,7 +138,7 @@ export const NilveraSettings = () => {
             Nilvera E-Fatura Entegrasyonu
           </CardTitle>
           <CardDescription>
-            E-fatura işlemlerinizi gerçekleştirmek için Nilvera API key'inizi girin
+            E-fatura işlemlerinizi gerçekleştirmek için Nilvera hesap bilgilerinizi girin
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -149,6 +155,28 @@ export const NilveraSettings = () => {
           {!isConnected ? (
             <div className="space-y-4">
               <div className="space-y-2">
+                <Label htmlFor="username">Nilvera Kullanıcı Adı</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="Kullanıcı adınızı girin..."
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Nilvera Şifre</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Şifrenizi girin..."
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="apiKey">Nilvera API Key</Label>
                 <Input
                   id="apiKey"
@@ -164,7 +192,7 @@ export const NilveraSettings = () => {
 
               <Button 
                 onClick={handleAuthenticate} 
-                disabled={loading || !apiKey.trim()}
+                disabled={loading || !username.trim() || !password.trim() || !apiKey.trim()}
                 className="w-full"
               >
                 {loading ? "Doğrulanıyor..." : "Bağlan"}
