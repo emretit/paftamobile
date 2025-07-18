@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -118,6 +119,79 @@ serve(async (req) => {
             pdfUrl: null, // PDF URL ayrı bir API call ile alınır
             xmlData: inv
           }))
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
+
+    if (action === 'get_invoice_details') {
+      const { invoiceId } = invoice
+      
+      if (!invoiceId) {
+        throw new Error('Fatura ID gerekli')
+      }
+
+      console.log('Fetching invoice details for:', invoiceId)
+      
+      // Fetch invoice details from Nilvera
+      const response = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${invoiceId}/Details`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authData.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      console.log('Invoice details response status:', response.status)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Nilvera invoice details error:', errorText)
+        throw new Error(`Fatura detayları getirilemedi: ${response.status} - ${errorText}`)
+      }
+
+      const detailsData = await response.json()
+      console.log('Invoice details response:', detailsData)
+      
+      // Parse invoice lines from the response
+      let invoiceLines = []
+      if (detailsData && detailsData.InvoiceLines && Array.isArray(detailsData.InvoiceLines)) {
+        invoiceLines = detailsData.InvoiceLines.map((line: any) => ({
+          description: line.Name || line.Description || '',
+          productCode: line.Code || '',
+          quantity: parseFloat(line.Quantity || 0),
+          unit: line.UnitCode || '',
+          unitPrice: parseFloat(line.UnitPrice || 0),
+          vatRate: parseFloat(line.TaxRate || 0),
+          vatAmount: parseFloat(line.TaxAmount || 0),
+          totalAmount: parseFloat(line.LineExtensionAmount || 0),
+          discountRate: parseFloat(line.DiscountRate || 0),
+          discountAmount: parseFloat(line.DiscountAmount || 0)
+        }))
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          invoiceDetails: {
+            invoiceInfo: {
+              number: detailsData.InvoiceNumber || '',
+              date: detailsData.IssueDate || '',
+              totalAmount: parseFloat(detailsData.PayableAmount || 0),
+              currency: detailsData.CurrencyCode || 'TRY',
+              taxTotalAmount: parseFloat(detailsData.TaxTotalAmount || 0),
+              lineExtensionAmount: parseFloat(detailsData.LineExtensionAmount || 0)
+            },
+            supplier: {
+              name: detailsData.SenderName || '',
+              taxNumber: detailsData.SenderTaxNumber || '',
+              address: detailsData.SenderAddress || ''
+            },
+            items: invoiceLines
+          }
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
