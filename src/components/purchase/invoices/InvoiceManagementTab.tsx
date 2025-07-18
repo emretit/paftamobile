@@ -423,16 +423,11 @@ export const InvoiceManagementTab = () => {
   };
 
   const filteredInvoices = einvoices.filter(invoice => {
-    const matchesSearch = invoice.invoice_number?.toLowerCase().includes(searchValue.toLowerCase()) ||
-                         invoice.supplier_name?.toLowerCase().includes(searchValue.toLowerCase());
-    const matchesStatus = statusFilter === "all" || invoice.status === statusFilter;
+    const matchesSearch = invoice.invoiceNumber?.toLowerCase().includes(searchValue.toLowerCase()) ||
+                         invoice.supplierName?.toLowerCase().includes(searchValue.toLowerCase());
+    const matchesStatus = statusFilter === "all" || invoice.status?.toLowerCase().includes(statusFilter.toLowerCase());
     return matchesSearch && matchesStatus;
   });
-  
-  console.log('Debug - einvoices:', einvoices);
-  console.log('Debug - filteredInvoices:', filteredInvoices);
-  console.log('Debug - searchValue:', searchValue);
-  console.log('Debug - statusFilter:', statusFilter);
 
   if (!isNilveraAuthenticated) {
     return (
