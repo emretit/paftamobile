@@ -148,6 +148,41 @@ export const InvoiceManagementTab = () => {
     }
   };
 
+  // Manual product name parsing from raw data
+  const parseProductNames = (rawData: any) => {
+    console.log('🔍 Raw invoice data for parsing:', rawData);
+    
+    // Nilvera XML'den ürün isimlerini çıkarmayı deneyelim
+    if (rawData && typeof rawData === 'object') {
+      // XML content varsa parse et
+      const xmlContent = rawData.Content || rawData.XmlContent || rawData.UblContent;
+      if (xmlContent && typeof xmlContent === 'string') {
+        console.log('🔍 Found XML content, trying to parse...');
+        
+        // UBL XML'de ürün isimleri genellikle <cbc:Name> taginde olur
+        const nameMatches = xmlContent.match(/<cbc:Name[^>]*>(.*?)<\/cbc:Name>/g);
+        if (nameMatches && nameMatches.length > 0) {
+          const productNames = nameMatches.map(match => 
+            match.replace(/<[^>]*>/g, '').trim()
+          ).filter(name => name && name !== 'InvoiceLine');
+          
+          console.log('🔍 Found product names in XML:', productNames);
+          return productNames;
+        }
+      }
+      
+      // JSON structure'da ürün isimlerini ara
+      if (rawData.InvoiceLines && Array.isArray(rawData.InvoiceLines)) {
+        console.log('🔍 Found InvoiceLines in JSON:', rawData.InvoiceLines);
+        return rawData.InvoiceLines.map((line: any) => 
+          line.Item?.Name || line.Name || line.Description || 'Belirtilmemiş'
+        );
+      }
+    }
+    
+    return [];
+  };
+
   const fetchInvoiceDetails = async (invoiceId: string) => {
     // If details already loaded, don't fetch again
     if (invoiceDetails[invoiceId]) {
@@ -167,6 +202,26 @@ export const InvoiceManagementTab = () => {
       if (error) throw error;
       
       if (data.success) {
+        // Debug: Console'a fatura detaylarını yazdır
+        console.log('🔍 Invoice Details Response:', data.invoiceDetails);
+        console.log('🔍 Invoice Items:', data.invoiceDetails?.items);
+        
+        // Manuel parsing ile ürün isimlerini bulmaya çalış
+        const invoice = einvoices.find(inv => inv.id === invoiceId);
+        if (invoice && invoice.xmlData) {
+          const parsedNames = parseProductNames(invoice.xmlData);
+          console.log('🔍 Manually parsed product names:', parsedNames);
+          
+          // Eğer manuel parsing başarılıysa, items'ı güncelle
+          if (parsedNames.length > 0 && data.invoiceDetails.items) {
+            data.invoiceDetails.items = data.invoiceDetails.items.map((item: any, index: number) => ({
+              ...item,
+              description: parsedNames[index] || item.description || 'Belirtilmemiş'
+            }));
+            console.log('🔍 Updated items with parsed names:', data.invoiceDetails.items);
+          }
+        }
+        
         setInvoiceDetails(prev => ({
           ...prev,
           [invoiceId]: data.invoiceDetails
@@ -634,58 +689,13 @@ export const InvoiceManagementTab = () => {
                                       <span>Fatura detayları yükleniyor...</span>
                                     </div>
                                   ) : invoiceDetails[invoice.id] ? (
-                                    <div className="space-y-6">
-                                      {/* Fatura Özeti */}
-                                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
-                                        <div className="flex items-center gap-2 mb-3">
-                                          <Eye className="h-4 w-4 text-blue-500" />
-                                          <h4 className="font-semibold text-blue-800">Fatura Özeti</h4>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                          <div className="space-y-2">
-                                            <div className="text-sm">
-                                              <span className="font-medium text-gray-600">Tedarikçi:</span>
-                                              <p className="font-semibold text-gray-800">{invoice.supplierName}</p>
-                                            </div>
-                                            <div className="text-sm">
-                                              <span className="font-medium text-gray-600">Vergi No:</span>
-                                              <p className="font-medium text-gray-800">{invoice.supplierTaxNumber || '-'}</p>
-                                            </div>
-                                          </div>
-                                          
-                                          <div className="space-y-2">
-                                            <div className="text-sm">
-                                              <span className="font-medium text-gray-600">Toplam Tutar:</span>
-                                              <p className="text-lg font-bold text-green-600">
-                                                {invoice.totalAmount.toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency })}
-                                              </p>
-                                            </div>
-                                            <div className="text-sm">
-                                              <span className="font-medium text-gray-600">KDV Tutarı:</span>
-                                              <p className="font-medium text-gray-800">
-                                                {invoice.taxAmount?.toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency }) || '-'}
-                                              </p>
-                                            </div>
-                                          </div>
-                                          
-                                          <div className="space-y-2">
-                                            <div className="text-sm">
-                                              <span className="font-medium text-gray-600">Durum:</span>
-                                              <p className="font-medium">{getStatusBadge(invoice.status)}</p>
-                                            </div>
-                                            <div className="text-sm">
-                                              <span className="font-medium text-gray-600">Para Birimi:</span>
-                                              <p className="font-medium text-gray-800">{invoice.currency}</p>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
+                                    <div className="space-y-4">
                                       
-                                      {invoiceDetails[invoice.id].items && invoiceDetails[invoice.id].items.length > 0 && (
+                                      {invoiceDetails[invoice.id].items && invoiceDetails[invoice.id].items.length > 0 ? (
                                         <div>
-                                          <div className="flex items-center gap-2 mb-3">
-                                            <Package className="h-4 w-4 text-blue-500" />
-                                            <h4 className="font-medium text-sm">Fatura Kalemleri ({invoiceDetails[invoice.id].items.length} adet)</h4>
+                                          <div className="flex items-center gap-2 mb-4">
+                                            <Package className="h-5 w-5 text-blue-600" />
+                                            <h4 className="font-semibold text-lg text-blue-800">Fatura Kalemleri ({invoiceDetails[invoice.id].items.length} adet)</h4>
                                           </div>
                                           <div className="border rounded-lg overflow-hidden">
                                             <Table>
@@ -748,6 +758,11 @@ export const InvoiceManagementTab = () => {
                                               </TableBody>
                                             </Table>
                                           </div>
+                                        </div>
+                                      ) : (
+                                        <div className="text-center py-8 text-muted-foreground">
+                                          <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                                          <p className="text-sm">Bu fatura için ürün detayları bulunamadı</p>
                                         </div>
                                       )}
                                     </div>
