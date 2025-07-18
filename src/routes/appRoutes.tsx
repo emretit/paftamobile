@@ -10,6 +10,7 @@ import { serviceRoutes } from "./serviceRoutes";
 import { orderRoutes } from "./orderRoutes";
 import { crmRoutes } from "./crmRoutes";
 import { settingsRoutes } from "./settingsRoutes";
+import { purchaseRoutes } from "./purchaseRoutes";
 
 
 export const appRoutes: RouteConfig[] = [
@@ -25,5 +26,6 @@ export const appRoutes: RouteConfig[] = [
   ...orderRoutes,
   ...crmRoutes,
   ...settingsRoutes,
+  ...purchaseRoutes,
   
 ];

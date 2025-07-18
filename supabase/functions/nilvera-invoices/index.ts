@@ -7,6 +7,194 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// XML parsing helper functions
+const parseXMLProducts = (xmlContent: string) => {
+  try {
+    console.log('Parsing XML content for products...')
+    
+    // UBL InvoiceLine pattern'ini bul
+    const invoiceLineRegex = /<cac:InvoiceLine>(.*?)<\/cac:InvoiceLine>/gs
+    const invoiceLines = xmlContent.match(invoiceLineRegex) || []
+    
+    const products = invoiceLines.map((lineXml, index) => {
+      // Ürün bilgilerini çıkar
+      const itemName = extractXMLValue(lineXml, 'cbc:Name') || `Ürün ${index + 1}`
+      const itemCode = extractXMLValue(lineXml, 'cbc:ID') || ''
+      const quantity = parseFloat(extractXMLValue(lineXml, 'cbc:InvoicedQuantity') || '1')
+      const unitCode = extractXMLAttribute(lineXml, 'cbc:InvoicedQuantity', 'unitCode') || 'Adet'
+      const unitPrice = parseFloat(extractXMLValue(lineXml, 'cbc:PriceAmount') || '0')
+      const lineTotal = parseFloat(extractXMLValue(lineXml, 'cbc:LineExtensionAmount') || '0')
+      
+      // Vergi bilgilerini çıkar
+      const taxPercent = parseFloat(extractXMLValue(lineXml, 'cbc:Percent') || '18')
+      const taxAmount = parseFloat(extractXMLValue(lineXml, 'cbc:TaxAmount') || '0')
+      
+      // İndirim bilgilerini çıkar
+      const allowanceAmount = parseFloat(extractXMLValue(lineXml, 'cbc:Amount') || '0')
+      
+      console.log(`Parsed product ${index + 1}: ${itemName}, Code: ${itemCode}, Qty: ${quantity}, Price: ${unitPrice}`)
+      
+      return {
+        name: itemName,
+        sku: itemCode,
+        quantity: quantity,
+        unit: unitCode,
+        unit_price: unitPrice,
+        tax_rate: taxPercent,
+        tax_amount: taxAmount,
+        line_total: lineTotal,
+        discount_amount: allowanceAmount,
+        original_xml: lineXml
+      }
+    })
+    
+    console.log(`Successfully parsed ${products.length} products from XML`)
+    return products
+  } catch (error) {
+    console.error('Error parsing XML products:', error)
+    return []
+  }
+}
+
+// XML değer çıkarma helper'ı
+const extractXMLValue = (xml: string, tagName: string): string | null => {
+  const regex = new RegExp(`<${tagName}[^>]*>(.*?)<\/${tagName}>`, 'g')
+  const match = regex.exec(xml)
+  return match ? match[1].trim() : null
+}
+
+// XML attribute çıkarma helper'ı
+const extractXMLAttribute = (xml: string, tagName: string, attributeName: string): string | null => {
+  const regex = new RegExp(`<${tagName}[^>]*${attributeName}="([^"]*)"[^>]*>`, 'g')
+  const match = regex.exec(xml)
+  return match ? match[1] : null
+}
+
+// Ürün kaydetme fonksiyonu
+const saveProductsToDatabase = async (supabaseClient: any, products: any[], invoiceInfo: any) => {
+  console.log(`Saving ${products.length} products to database...`)
+  
+  const savedProducts = []
+  const errors = []
+  
+  for (const product of products) {
+    try {
+      // Gelişmiş duplicate kontrolü - SKU, isim ve fiyat bazlı
+      let existingProduct = null
+      
+      // 1. Önce SKU ile kontrol et
+      if (product.sku) {
+        const { data: existing } = await supabaseClient
+          .from('products')
+          .select('id, name, price, stock_quantity, sku')
+          .eq('sku', product.sku)
+          .maybeSingle()
+        
+        existingProduct = existing
+      }
+      
+      // 2. SKU yoksa isim ile kontrol et
+      if (!existingProduct && product.name) {
+        const { data: existing } = await supabaseClient
+          .from('products')
+          .select('id, name, price, stock_quantity, sku')
+          .ilike('name', `%${product.name.trim()}%`)
+          .maybeSingle()
+        
+        existingProduct = existing
+      }
+      
+      // Ürün verilerini hazırla
+      const productData = {
+        name: product.name,
+        sku: product.sku || null,
+        price: product.unit_price || 0,
+        tax_rate: product.tax_rate || 18,
+        unit: product.unit || 'Adet',
+        currency: invoiceInfo.currency || 'TRY',
+        category_type: 'product',
+        product_type: 'physical',
+        status: 'active',
+        is_active: true,
+        stock_quantity: 0, // Gelen faturalarda stok miktarı bilinmez
+        min_stock_level: 0,
+        stock_threshold: 0,
+        description: `Nilvera faturasından aktarılan ürün - Fatura No: ${invoiceInfo.number}`,
+        updated_at: new Date().toISOString()
+      }
+      
+      if (existingProduct) {
+        // Mevcut ürünü akıllı güncelle
+        const updateData: any = {
+          updated_at: productData.updated_at
+        }
+        
+        // Fiyat güncelleme kontrolü - sadece yeni fiyat farklıysa güncelle
+        if (productData.price !== existingProduct.price && productData.price > 0) {
+          updateData.price = productData.price
+        }
+        
+        // Tax rate güncelleme
+        if (productData.tax_rate !== existingProduct.tax_rate) {
+          updateData.tax_rate = productData.tax_rate
+        }
+        
+        // SKU eksikse ekle
+        if (!existingProduct.sku && productData.sku) {
+          updateData.sku = productData.sku
+        }
+        
+        const { data, error } = await supabaseClient
+          .from('products')
+          .update(updateData)
+          .eq('id', existingProduct.id)
+          .select()
+          .single()
+        
+        if (error) throw error
+        
+        savedProducts.push({
+          ...data,
+          action: 'updated',
+          original_name: existingProduct.name,
+          changes: Object.keys(updateData).filter(key => key !== 'updated_at')
+        })
+        
+        console.log(`Updated existing product: ${existingProduct.name} (${Object.keys(updateData).join(', ')})`)
+      } else {
+        // Yeni ürün oluştur
+        const { data, error } = await supabaseClient
+          .from('products')
+          .insert({
+            ...productData,
+            created_at: new Date().toISOString()
+          })
+          .select()
+          .single()
+        
+        if (error) throw error
+        
+        savedProducts.push({
+          ...data,
+          action: 'created'
+        })
+        
+        console.log(`Created new product: ${product.name}`)
+      }
+      
+    } catch (error) {
+      console.error(`Error saving product ${product.name}:`, error)
+      errors.push({
+        product: product.name,
+        error: error.message
+      })
+    }
+  }
+  
+  console.log(`Saved ${savedProducts.length} products, ${errors.length} errors`)
+  return { savedProducts, errors }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -53,6 +241,91 @@ serve(async (req) => {
     }
 
     const { action, invoice, invoiceId } = reqBody
+
+    // YENİ ACTION: XML formatında fatura getirme ve ürün kaydetme
+    if (action === 'process_xml_invoice') {
+      const targetInvoiceId = invoiceId || (invoice && invoice.invoiceId)
+      
+      if (!targetInvoiceId) {
+        throw new Error('Fatura ID gerekli')
+      }
+
+      console.log('Processing XML invoice for products:', targetInvoiceId)
+      
+      // 1. Fatura detaylarını al
+      const detailsResponse = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${targetInvoiceId}/Details`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authData.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (!detailsResponse.ok) {
+        const errorText = await detailsResponse.text()
+        throw new Error(`Fatura detayları alınamadı: ${detailsResponse.status} - ${errorText}`)
+      }
+      
+      const invoiceDetails = await detailsResponse.json()
+      
+      // 2. XML içeriğini al
+      const xmlResponse = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${targetInvoiceId}/ubl`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authData.access_token}`,
+          'Accept': 'application/xml'
+        }
+      })
+      
+      if (!xmlResponse.ok) {
+        const errorText = await xmlResponse.text()
+        throw new Error(`XML içeriği alınamadı: ${xmlResponse.status} - ${errorText}`)
+      }
+      
+      const xmlContent = await xmlResponse.text()
+      console.log('XML content length:', xmlContent.length)
+      
+      // 3. XML'den ürünleri parse et
+      const parsedProducts = parseXMLProducts(xmlContent)
+      
+      if (parsedProducts.length === 0) {
+        throw new Error('XML içeriğinde ürün bilgisi bulunamadı')
+      }
+      
+      // 4. Ürünleri veritabanına kaydet
+      const invoiceInfo = {
+        number: invoiceDetails.InvoiceNumber || '',
+        currency: invoiceDetails.CurrencyCode || 'TRY',
+        supplier: invoiceDetails.SenderName || '',
+        date: invoiceDetails.IssueDate || ''
+      }
+      
+      const { savedProducts, errors } = await saveProductsToDatabase(
+        supabaseClient, 
+        parsedProducts, 
+        invoiceInfo
+      )
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `${savedProducts.length} ürün başarıyla işlendi`,
+          invoice: invoiceInfo,
+          products: {
+            parsed: parsedProducts.length,
+            saved: savedProducts.length,
+            errors: errors.length
+          },
+          savedProducts: savedProducts,
+          errors: errors,
+          xmlParsed: parsedProducts
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
 
     if (action === 'fetch_incoming') {
       console.log('Using token:', authData.access_token.substring(0, 10) + '...')
@@ -119,7 +392,13 @@ serve(async (req) => {
             status: inv.StatusDetail,
             pdfUrl: null, // PDF URL ayrı bir API call ile alınır
             xmlData: inv
-          }))
+          })),
+          debug: {
+            total_invoices: invoices.length,
+            api_response_keys: Object.keys(response_data || {}),
+            has_content: !!(response_data && response_data.Content),
+            content_length: response_data?.Content?.length || 0
+          }
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
