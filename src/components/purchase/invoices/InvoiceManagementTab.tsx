@@ -235,15 +235,28 @@ export const InvoiceManagementTab = () => {
       const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
         body: { 
           action: 'get_pdf',
-          invoice: { invoiceId }
+          invoiceId: invoiceId
         }
       });
       
       if (error) throw error;
       
-      if (data.success) {
-        // PDF'i yeni sekmede aç
-        window.open(data.pdfUrl, '_blank');
+      if (data.success && data.pdfData) {
+        // Convert base64 to blob and open in new tab
+        const byteCharacters = atob(data.pdfData);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        
+        // Clean up the object URL after a delay
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        
         toast({
           title: "Başarılı",
           description: "PDF açılıyor...",

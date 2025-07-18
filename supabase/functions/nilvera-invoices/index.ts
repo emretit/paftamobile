@@ -34,7 +34,7 @@ serve(async (req) => {
       throw new Error('Yetkilendirme gereklidir')
     }
 
-    const { action, invoice } = await req.json()
+    const reqBody = await req.json()
 
     // Get stored Nilvera token
     const { data: authData, error: authError } = await supabaseClient
@@ -52,8 +52,9 @@ serve(async (req) => {
       throw new Error('Nilvera oturum süresi dolmuş. Lütfen tekrar giriş yapın.')
     }
 
+    const { action, invoice, invoiceId } = reqBody
+
     if (action === 'fetch_incoming') {
-      console.log('Fetching incoming invoices from Nilvera...')
       console.log('Using token:', authData.access_token.substring(0, 10) + '...')
       
       // Doğru endpoint: gelen faturaları query parametreleri ile listele
@@ -229,16 +230,16 @@ serve(async (req) => {
     }
 
     if (action === 'get_pdf') {
-      const { invoiceId } = invoice
+      const targetInvoiceId = invoiceId || (invoice && invoice.invoiceId)
       
-      if (!invoiceId) {
+      if (!targetInvoiceId) {
         throw new Error('Fatura ID gerekli')
       }
 
-      console.log('Fetching PDF for invoice:', invoiceId)
+      console.log('Fetching PDF for invoice:', targetInvoiceId)
       
       // Fetch PDF from Nilvera
-      const response = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${invoiceId}/pdf`, {
+      const response = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${targetInvoiceId}/pdf`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authData.access_token}`
@@ -261,30 +262,15 @@ serve(async (req) => {
       console.log('PDF buffer size:', pdfBuffer.byteLength)
       console.log('PDF bytes first 20:', Array.from(pdfBytes.slice(0, 20)).map(b => b.toString(16)).join(' '))
       
-      // Supabase Storage'a yükle
-      const fileName = `invoice-${invoiceId}-${Date.now()}.pdf`
-      const { data: uploadData, error: uploadError } = await supabaseClient.storage
-        .from('invoices')
-        .upload(fileName, pdfBytes, {
-          contentType: 'application/pdf',
-          cacheControl: '3600'
-        })
-
-      if (uploadError) {
-        console.error('Storage upload error:', uploadError)
-        throw new Error('PDF kaydedilemedi: ' + uploadError.message)
-      }
-
-      // Public URL'i al
-      const { data: { publicUrl } } = supabaseClient.storage
-        .from('invoices')
-        .getPublicUrl(fileName)
+      // Convert to base64 for frontend
+      const pdfBase64 = btoa(String.fromCharCode(...pdfBytes))
 
       return new Response(
         JSON.stringify({ 
           success: true, 
-          pdfUrl: publicUrl,
-          message: 'PDF başarıyla yüklendi'
+          pdfData: pdfBase64,
+          contentType: 'application/pdf',
+          message: 'PDF başarıyla alındı'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
