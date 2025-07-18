@@ -17,7 +17,11 @@ import {
   LogIn,
   CheckCircle,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Eye,
+  Package,
+  Receipt,
+  Database
 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -56,6 +60,7 @@ export const InvoiceManagementTab = () => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [invoiceDetails, setInvoiceDetails] = useState<Record<string, InvoiceDetail>>({});
   const [loadingDetails, setLoadingDetails] = useState<Set<string>>(new Set());
+  const [syncingToSystem, setSyncingToSystem] = useState<Set<string>>(new Set());
   
   useEffect(() => {
     checkAuthStatus();
@@ -166,6 +171,11 @@ export const InvoiceManagementTab = () => {
           ...prev,
           [invoiceId]: data.invoiceDetails
         }));
+        
+        toast({
+          title: "Başarılı",
+          description: "Fatura detayları getirildi.",
+        });
       } else {
         throw new Error(data.error || 'Fatura detayları getirilemedi');
       }
@@ -179,6 +189,64 @@ export const InvoiceManagementTab = () => {
       setLoadingDetails(prev => {
         const newSet = new Set(prev);
         newSet.delete(invoiceId);
+        return newSet;
+      });
+    }
+  };
+
+  const syncInvoiceToSystem = async (invoice: Invoice) => {
+    setSyncingToSystem(prev => new Set([...prev, invoice.id]));
+    
+    try {
+      // Önce fatura detaylarını al
+      if (!invoiceDetails[invoice.id]) {
+        await fetchInvoiceDetails(invoice.id);
+      }
+      
+      const details = invoiceDetails[invoice.id];
+      
+      // Faturayı kendi sistemimize kaydet
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Oturum gerekli');
+
+      const { data, error } = await supabase
+        .from('einvoices')
+        .upsert({
+          nilvera_id: invoice.id,
+          invoice_number: invoice.invoiceNumber,
+          supplier_name: invoice.supplierName,
+          supplier_tax_number: invoice.supplierTaxNumber,
+          invoice_date: invoice.invoiceDate,
+          due_date: invoice.dueDate,
+          total_amount: invoice.totalAmount,
+          paid_amount: invoice.paidAmount,
+          remaining_amount: invoice.totalAmount - invoice.paidAmount,
+          currency: invoice.currency,
+          tax_amount: invoice.taxAmount,
+          status: invoice.status === 'Alındı Yanıtı Gönderildi' ? 'pending' : 'pending',
+          xml_data: invoice.xmlData,
+          created_by: session.user.id
+        }, {
+          onConflict: 'nilvera_id'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Başarılı",
+        description: "Fatura sisteme kaydedildi.",
+      });
+      
+    } catch (error: any) {
+      toast({
+        title: "Hata",
+        description: error.message || "Fatura sisteme kaydedilemedi.",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncingToSystem(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(invoice.id);
         return newSet;
       });
     }
@@ -547,6 +615,10 @@ export const InvoiceManagementTab = () => {
                                     <FileText className="h-4 w-4 mr-2" />
                                     PDF Görüntüle
                                   </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => syncInvoiceToSystem(invoice)}>
+                                    <Database className="h-4 w-4 mr-2" />
+                                    {syncingToSystem.has(invoice.id) ? 'Kaydediliyor...' : 'Sisteme Kaydet'}
+                                  </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </TableCell>
@@ -562,38 +634,59 @@ export const InvoiceManagementTab = () => {
                                       <span>Fatura detayları yükleniyor...</span>
                                     </div>
                                   ) : invoiceDetails[invoice.id] ? (
-                                    <div className="space-y-4">
-                                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
-                                          <h4 className="font-medium text-sm mb-2">Fatura Bilgileri</h4>
-                                          <div className="space-y-1 text-sm">
-                                            <div><span className="font-medium">Vergi Numarası:</span> {invoice.supplierTaxNumber || '-'}</div>
-                                            <div><span className="font-medium">Para Birimi:</span> {invoice.currency}</div>
-                                            <div><span className="font-medium">Vergi Tutarı:</span> {invoice.taxAmount?.toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency }) || '-'}</div>
-                                          </div>
+                                    <div className="space-y-6">
+                                      {/* Fatura Özeti */}
+                                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                                        <div className="flex items-center gap-2 mb-3">
+                                          <Eye className="h-4 w-4 text-blue-500" />
+                                          <h4 className="font-semibold text-blue-800">Fatura Özeti</h4>
                                         </div>
-                                        
-                                        <div>
-                                          <h4 className="font-medium text-sm mb-2">Ödeme Bilgileri</h4>
-                                          <div className="space-y-1 text-sm">
-                                            <div><span className="font-medium">Toplam Tutar:</span> {invoice.totalAmount.toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency })}</div>
-                                            <div><span className="font-medium">Ödenen Tutar:</span> {invoice.paidAmount.toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency })}</div>
-                                            <div><span className="font-medium">Kalan Tutar:</span> {(invoice.totalAmount - invoice.paidAmount).toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency })}</div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                          <div className="space-y-2">
+                                            <div className="text-sm">
+                                              <span className="font-medium text-gray-600">Tedarikçi:</span>
+                                              <p className="font-semibold text-gray-800">{invoice.supplierName}</p>
+                                            </div>
+                                            <div className="text-sm">
+                                              <span className="font-medium text-gray-600">Vergi No:</span>
+                                              <p className="font-medium text-gray-800">{invoice.supplierTaxNumber || '-'}</p>
+                                            </div>
                                           </div>
-                                        </div>
-                                        
-                                        <div>
-                                          <h4 className="font-medium text-sm mb-2">Diğer Bilgiler</h4>
-                                          <div className="space-y-1 text-sm">
-                                            <div><span className="font-medium">Nilvera ID:</span> {invoice.id}</div>
-                                            <div><span className="font-medium">Oluşturma Tarihi:</span> {format(new Date(invoice.invoiceDate), 'dd/MM/yyyy HH:mm', { locale: tr })}</div>
+                                          
+                                          <div className="space-y-2">
+                                            <div className="text-sm">
+                                              <span className="font-medium text-gray-600">Toplam Tutar:</span>
+                                              <p className="text-lg font-bold text-green-600">
+                                                {invoice.totalAmount.toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency })}
+                                              </p>
+                                            </div>
+                                            <div className="text-sm">
+                                              <span className="font-medium text-gray-600">KDV Tutarı:</span>
+                                              <p className="font-medium text-gray-800">
+                                                {invoice.taxAmount?.toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency }) || '-'}
+                                              </p>
+                                            </div>
+                                          </div>
+                                          
+                                          <div className="space-y-2">
+                                            <div className="text-sm">
+                                              <span className="font-medium text-gray-600">Durum:</span>
+                                              <p className="font-medium">{getStatusBadge(invoice.status)}</p>
+                                            </div>
+                                            <div className="text-sm">
+                                              <span className="font-medium text-gray-600">Para Birimi:</span>
+                                              <p className="font-medium text-gray-800">{invoice.currency}</p>
+                                            </div>
                                           </div>
                                         </div>
                                       </div>
                                       
                                       {invoiceDetails[invoice.id].items && invoiceDetails[invoice.id].items.length > 0 && (
                                         <div>
-                                          <h4 className="font-medium text-sm mb-2">Fatura Kalemleri</h4>
+                                          <div className="flex items-center gap-2 mb-3">
+                                            <Package className="h-4 w-4 text-blue-500" />
+                                            <h4 className="font-medium text-sm">Fatura Kalemleri ({invoiceDetails[invoice.id].items.length} adet)</h4>
+                                          </div>
                                           <div className="border rounded-lg overflow-hidden">
                                             <Table>
                                               <TableHeader>
@@ -610,23 +703,48 @@ export const InvoiceManagementTab = () => {
                                               </TableHeader>
                                               <TableBody>
                                                 {invoiceDetails[invoice.id].items.map((item, index) => (
-                                                  <TableRow key={index} className="text-sm">
-                                                    <TableCell className="py-2 font-medium">{item.productCode || '-'}</TableCell>
-                                                    <TableCell className="py-2">{item.description || '-'}</TableCell>
-                                                    <TableCell className="py-2 text-right">{item.quantity?.toLocaleString('tr-TR') || '-'}</TableCell>
+                                                  <TableRow key={index} className="text-sm hover:bg-muted/30">
+                                                    <TableCell className="py-2 font-medium">
+                                                      <div className="flex items-center gap-2">
+                                                        <Receipt className="h-3 w-3 text-gray-400" />
+                                                        {item.productCode || '-'}
+                                                      </div>
+                                                    </TableCell>
+                                                    <TableCell className="py-2 max-w-xs">
+                                                      <div className="truncate" title={item.description || '-'}>
+                                                        {item.description || '-'}
+                                                      </div>
+                                                    </TableCell>
+                                                    <TableCell className="py-2 text-right font-medium">
+                                                      {item.quantity?.toLocaleString('tr-TR') || '-'}
+                                                    </TableCell>
                                                     <TableCell className="py-2 text-right">{item.unit || '-'}</TableCell>
                                                     <TableCell className="py-2 text-right">
                                                       {item.unitPrice ? item.unitPrice.toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency }) : '-'}
                                                     </TableCell>
-                                                    <TableCell className="py-2 text-right">{item.vatRate ? `%${item.vatRate}` : '-'}</TableCell>
+                                                    <TableCell className="py-2 text-right">
+                                                      <Badge variant="outline" className="text-xs">
+                                                        {item.vatRate ? `%${item.vatRate}` : '-'}
+                                                      </Badge>
+                                                    </TableCell>
                                                     <TableCell className="py-2 text-right">
                                                       {item.vatAmount ? item.vatAmount.toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency }) : '-'}
                                                     </TableCell>
-                                                    <TableCell className="py-2 text-right">
+                                                    <TableCell className="py-2 text-right font-semibold">
                                                       {item.totalAmount ? item.totalAmount.toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency }) : '-'}
                                                     </TableCell>
                                                   </TableRow>
                                                 ))}
+                                                <TableRow className="bg-blue-50/50 font-semibold">
+                                                  <TableCell colSpan={7} className="py-2 text-right">
+                                                    <div className="flex justify-end gap-4">
+                                                      <span>Toplam Tutar:</span>
+                                                    </div>
+                                                  </TableCell>
+                                                  <TableCell className="py-2 text-right font-bold text-blue-600">
+                                                    {invoice.totalAmount.toLocaleString('tr-TR', { style: 'currency', currency: invoice.currency })}
+                                                  </TableCell>
+                                                </TableRow>
                                               </TableBody>
                                             </Table>
                                           </div>
