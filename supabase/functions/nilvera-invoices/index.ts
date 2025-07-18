@@ -137,13 +137,25 @@ serve(async (req) => {
 
       console.log('Fetching invoice details for:', invoiceId)
       
-      // Fetch invoice details from Nilvera
+      // Fetch invoice details from Nilvera - try both Details and UBL endpoints
       const response = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${invoiceId}/Details`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authData.access_token}`,
           'Content-Type': 'application/json'
         }
+      })
+      
+      // Also try to get UBL XML content which contains more detailed product info
+      const ublResponse = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${invoiceId}/ubl`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authData.access_token}`,
+          'Accept': 'application/xml'
+        }
+      }).catch(e => {
+        console.log('UBL endpoint not available:', e.message)
+        return null
       })
 
       console.log('Invoice details response status:', response.status)
@@ -157,49 +169,151 @@ serve(async (req) => {
       const detailsData = await response.json()
       console.log('Invoice details response:', detailsData)
       
+      // Try to get UBL XML for better product details
+      let ublXmlContent = null
+      if (ublResponse && ublResponse.ok) {
+        try {
+          ublXmlContent = await ublResponse.text()
+          console.log('UBL XML content length:', ublXmlContent?.length || 0)
+        } catch (e) {
+          console.log('Could not parse UBL XML:', e)
+        }
+      }
+      
       // Parse invoice lines from the response
       let invoiceLines = []
       
       // First try InvoiceLines array
       if (detailsData && detailsData.InvoiceLines && Array.isArray(detailsData.InvoiceLines)) {
         console.log('Found InvoiceLines array with', detailsData.InvoiceLines.length, 'items')
-        invoiceLines = detailsData.InvoiceLines.map((line: any) => ({
-          description: line.Name || line.Description || '',
-          productCode: line.Code || '',
-          quantity: parseFloat(line.Quantity || 0),
-          unit: line.UnitCode || '',
-          unitPrice: parseFloat(line.UnitPrice || 0),
-          vatRate: parseFloat(line.TaxRate || 0),
-          vatAmount: parseFloat(line.TaxAmount || 0),
-          totalAmount: parseFloat(line.LineExtensionAmount || 0),
-          discountRate: parseFloat(line.DiscountRate || 0),
-          discountAmount: parseFloat(line.DiscountAmount || 0)
-        }))
+        console.log('Sample InvoiceLine:', detailsData.InvoiceLines[0])
+        
+        invoiceLines = detailsData.InvoiceLines.map((line: any) => {
+          // Try different possible field names for product/service description
+          const productName = line.Item?.Name || 
+                             line.Item?.Description || 
+                             line.Name || 
+                             line.Description || 
+                             line.ProductName ||
+                             line.ServiceName ||
+                             line.ItemName ||
+                             'Belirtilmemiş';
+          
+          console.log('Product name found:', productName, 'from line:', line);
+          
+          return {
+            description: productName,
+            productCode: line.Item?.Code || line.Code || line.ProductCode || '',
+            quantity: parseFloat(line.InvoicedQuantity || line.Quantity || 1),
+            unit: line.InvoicedQuantity?.unitCode || line.UnitCode || line.Unit || 'Adet',
+            unitPrice: parseFloat(line.Price?.PriceAmount || line.UnitPrice || line.PriceAmount || 0),
+            vatRate: parseFloat(line.TaxTotal?.TaxSubtotal?.[0]?.Percent || line.TaxRate || line.VatRate || 0),
+            vatAmount: parseFloat(line.TaxTotal?.TaxAmount || line.TaxAmount || line.VatAmount || 0),
+            totalAmount: parseFloat(line.LineExtensionAmount || line.TotalAmount || line.Amount || 0),
+            discountRate: parseFloat(line.AllowanceCharge?.Percent || line.DiscountRate || 0),
+            discountAmount: parseFloat(line.AllowanceCharge?.Amount || line.DiscountAmount || 0)
+          }
+        })
       } else {
-        // If no InvoiceLines, try to create a single item from the main invoice data
-        console.log('No InvoiceLines found, creating item from main invoice data')
+        // If no InvoiceLines, try to parse from XML content or other fields
+        console.log('No InvoiceLines found, trying alternative parsing methods')
         console.log('Available fields in detailsData:', Object.keys(detailsData || {}))
         
-        // Always create at least one line from the invoice summary 
-        const invoiceAmount = parseFloat(detailsData?.PayableAmount || detailsData?.InvoiceAmount || 0)
-        const taxAmount = parseFloat(detailsData?.TaxTotalAmount || detailsData?.TaxAmount || 0) 
-        const netAmount = parseFloat(detailsData?.TaxExclusiveAmount || detailsData?.LineExtensionAmount || (invoiceAmount - taxAmount))
-        const vatRate = taxAmount > 0 && netAmount > 0 ? ((taxAmount / netAmount) * 100) : 0
+                // Try to parse from UBL XML content if available
+         let xmlParsedLines = []
+         const xmlToParse = ublXmlContent || detailsData.Content || detailsData.XmlContent || detailsData.UblContent
+         
+         if (xmlToParse && typeof xmlToParse === 'string') {
+           try {
+             console.log('Trying to parse XML content for product details')
+             
+             // Simple regex parsing for UBL InvoiceLine elements
+             // This is a basic approach - a proper XML parser would be better
+             const invoiceLineRegex = /<cac:InvoiceLine>(.*?)<\/cac:InvoiceLine>/gs
+             const itemNameRegex = /<cbc:Name[^>]*>(.*?)<\/cbc:Name>/g
+             const quantityRegex = /<cbc:InvoicedQuantity[^>]*>(.*?)<\/cbc:InvoicedQuantity>/g
+             const priceRegex = /<cbc:PriceAmount[^>]*>(.*?)<\/cbc:PriceAmount>/g
+             const lineExtensionRegex = /<cbc:LineExtensionAmount[^>]*>(.*?)<\/cbc:LineExtensionAmount>/g
+             
+             const invoiceLines = xmlToParse.match(invoiceLineRegex)
+             
+             if (invoiceLines && invoiceLines.length > 0) {
+               console.log(`Found ${invoiceLines.length} invoice lines in XML`)
+               
+               xmlParsedLines = invoiceLines.map((lineXml, index) => {
+                 const nameMatch = lineXml.match(itemNameRegex)
+                 const quantityMatch = lineXml.match(quantityRegex)
+                 const priceMatch = lineXml.match(priceRegex)
+                 const extensionMatch = lineXml.match(lineExtensionRegex)
+                 
+                 const itemName = nameMatch?.[0]?.replace(/<[^>]*>/g, '').trim() || `Ürün ${index + 1}`
+                 const quantity = quantityMatch?.[0]?.replace(/<[^>]*>/g, '').trim() || '1'
+                 const price = priceMatch?.[0]?.replace(/<[^>]*>/g, '').trim() || '0'
+                 const lineTotal = extensionMatch?.[0]?.replace(/<[^>]*>/g, '').trim() || '0'
+                 
+                 console.log(`XML Line ${index + 1}: ${itemName}, Qty: ${quantity}, Price: ${price}`)
+                 
+                 return {
+                   description: itemName,
+                   productCode: '',
+                   quantity: parseFloat(quantity) || 1,
+                   unit: 'Adet',
+                   unitPrice: parseFloat(price) || 0,
+                   vatRate: 20, // Default, would need to parse from XML
+                   vatAmount: 0,
+                   totalAmount: parseFloat(lineTotal) || 0,
+                   discountRate: 0,
+                   discountAmount: 0
+                 }
+               })
+               
+               if (xmlParsedLines.length > 0) {
+                 invoiceLines = xmlParsedLines
+                 console.log('Successfully parsed', xmlParsedLines.length, 'lines from XML')
+               }
+             }
+           } catch (e) {
+             console.log('Could not parse XML content:', e)
+           }
+         }
         
-        invoiceLines = [{
-          description: `Fatura Kalemi - ${detailsData?.InvoiceNumber || 'Belirtilmemiş'}`,
-          productCode: '',
-          quantity: 1,
-          unit: 'Adet', 
-          unitPrice: netAmount,
-          vatRate: vatRate,
-          vatAmount: taxAmount,
-          totalAmount: invoiceAmount,
-          discountRate: 0,
-          discountAmount: 0
-        }]
-        
-        console.log('Created fallback invoice line:', invoiceLines[0])
+        // Check if there are line items in different structure
+        if (detailsData.LineItems && Array.isArray(detailsData.LineItems)) {
+          console.log('Found LineItems array:', detailsData.LineItems.length)
+          invoiceLines = detailsData.LineItems.map((item: any, index: number) => ({
+            description: item.Description || item.Name || item.ProductName || `Kalem ${index + 1}`,
+            productCode: item.Code || item.ProductCode || '',
+            quantity: parseFloat(item.Quantity || 1),
+            unit: item.Unit || item.UnitCode || 'Adet',
+            unitPrice: parseFloat(item.UnitPrice || item.Price || 0),
+            vatRate: parseFloat(item.VatRate || item.TaxRate || 0),
+            vatAmount: parseFloat(item.VatAmount || item.TaxAmount || 0),
+            totalAmount: parseFloat(item.TotalAmount || item.Amount || 0),
+            discountRate: 0,
+            discountAmount: 0
+          }))
+        } else {
+          // Create a fallback single line from the invoice summary 
+          const invoiceAmount = parseFloat(detailsData?.PayableAmount || detailsData?.InvoiceAmount || 0)
+          const taxAmount = parseFloat(detailsData?.TaxTotalAmount || detailsData?.TaxAmount || 0) 
+          const netAmount = parseFloat(detailsData?.TaxExclusiveAmount || detailsData?.LineExtensionAmount || (invoiceAmount - taxAmount))
+          const vatRate = taxAmount > 0 && netAmount > 0 ? ((taxAmount / netAmount) * 100) : 0
+          
+          invoiceLines = [{
+            description: `Fatura Kalemi - ${detailsData?.InvoiceNumber || 'Belirtilmemiş'}`,
+            productCode: '',
+            quantity: 1,
+            unit: 'Adet', 
+            unitPrice: netAmount,
+            vatRate: vatRate,
+            vatAmount: taxAmount,
+            totalAmount: invoiceAmount,
+            discountRate: 0,
+            discountAmount: 0
+          }]
+          
+          console.log('Created fallback invoice line:', invoiceLines[0])
+        }
       }
 
       return new Response(
