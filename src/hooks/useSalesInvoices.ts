@@ -58,7 +58,7 @@ export interface SalesInvoiceItem {
 export const useSalesInvoices = () => {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({
-    status: "all",
+    status: "",
     search: "",
     dateRange: { from: null, to: null } as { from: Date | null, to: Date | null }
   });
@@ -72,7 +72,7 @@ export const useSalesInvoices = () => {
       `)
       .order("created_at", { ascending: false });
 
-    if (filters.status && filters.status !== "all") {
+    if (filters.status) {
       query = query.eq("odeme_durumu", filters.status);
     }
 

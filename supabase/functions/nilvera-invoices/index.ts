@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -6,336 +7,70 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// ===== XML PARSING UTILITIES =====
+// XML parsing helper functions
+const parseXMLProducts = (xmlContent: string) => {
+  try {
+    console.log('Parsing XML content for products...')
+    
+    // UBL InvoiceLine pattern'ini bul
+    const invoiceLineRegex = /<cac:InvoiceLine>(.*?)<\/cac:InvoiceLine>/gs
+    const invoiceLines = xmlContent.match(invoiceLineRegex) || []
+    
+    const products = invoiceLines.map((lineXml, index) => {
+      // Ürün bilgilerini çıkar
+      const itemName = extractXMLValue(lineXml, 'cbc:Name') || `Ürün ${index + 1}`
+      const itemCode = extractXMLValue(lineXml, 'cbc:ID') || ''
+      const quantity = parseFloat(extractXMLValue(lineXml, 'cbc:InvoicedQuantity') || '1')
+      const unitCode = extractXMLAttribute(lineXml, 'cbc:InvoicedQuantity', 'unitCode') || 'Adet'
+      const unitPrice = parseFloat(extractXMLValue(lineXml, 'cbc:PriceAmount') || '0')
+      const lineTotal = parseFloat(extractXMLValue(lineXml, 'cbc:LineExtensionAmount') || '0')
+      
+      // Vergi bilgilerini çıkar
+      const taxPercent = parseFloat(extractXMLValue(lineXml, 'cbc:Percent') || '18')
+      const taxAmount = parseFloat(extractXMLValue(lineXml, 'cbc:TaxAmount') || '0')
+      
+      // İndirim bilgilerini çıkar
+      const allowanceAmount = parseFloat(extractXMLValue(lineXml, 'cbc:Amount') || '0')
+      
+      console.log(`Parsed product ${index + 1}: ${itemName}, Code: ${itemCode}, Qty: ${quantity}, Price: ${unitPrice}`)
+      
+      return {
+        name: itemName,
+        sku: itemCode,
+        quantity: quantity,
+        unit: unitCode,
+        unit_price: unitPrice,
+        tax_rate: taxPercent,
+        tax_amount: taxAmount,
+        line_total: lineTotal,
+        discount_amount: allowanceAmount,
+        original_xml: lineXml
+      }
+    })
+    
+    console.log(`Successfully parsed ${products.length} products from XML`)
+    return products
+  } catch (error) {
+    console.error('Error parsing XML products:', error)
+    return []
+  }
+}
+
+// XML değer çıkarma helper'ı
 const extractXMLValue = (xml: string, tagName: string): string | null => {
   const regex = new RegExp(`<${tagName}[^>]*>(.*?)<\/${tagName}>`, 'g')
   const match = regex.exec(xml)
   return match ? match[1].trim() : null
 }
 
+// XML attribute çıkarma helper'ı
 const extractXMLAttribute = (xml: string, tagName: string, attributeName: string): string | null => {
   const regex = new RegExp(`<${tagName}[^>]*${attributeName}="([^"]*)"[^>]*>`, 'g')
   const match = regex.exec(xml)
   return match ? match[1] : null
 }
 
-const extractProductNameFromText = (xml: string): string | null => {
-  const productPatterns = [
-    /(\d+(?:\.\d+)?\s+(?:KİLO|ADET|LİTRE|METRE|GRAM|TON|KUTU|PAKET)\s+[A-ZÇĞıÖŞÜİ\s]+)/gi,
-    /([A-ZÇĞıÖŞÜİ][A-ZÇĞıÖŞÜİ\s]+(?:DOMATES|PATATES|SOĞAN|EKMEK|SÜT|PEYNIR|ET|TAVUK|BALIK))/gi,
-    />([^<>]+(?:KİLO|ADET|LİTRE)\s+[A-ZÇĞıÖŞÜİ\s]+)</gi
-  ]
-  
-  for (const pattern of productPatterns) {
-    const matches = xml.match(pattern)
-    if (matches) {
-      for (const match of matches) {
-        const cleaned = match.replace(/^>/, '').trim()
-        if (cleaned && 
-            !cleaned.toUpperCase().includes('KDV') &&
-            !cleaned.toUpperCase().includes('VERGI') &&
-            !cleaned.toUpperCase().includes('TOPLAM') &&
-            !cleaned.toUpperCase().includes('TUTAR') &&
-            cleaned.length > 3) {
-          return cleaned
-        }
-      }
-    }
-  }
-  return null
-}
-
-const extractProductNameFromComplexXML = (xml: string): string | null => {
-  const textContent = xml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-  const matches = textContent.match(/(\d+(?:\.\d+)?\s+(?:KİLO|ADET|LİTRE|METRE|GRAM|TON)\s+[A-ZÇĞIÖŞÜİ\s]+)/gi)
-  if (matches) {
-    for (const match of matches) {
-      const cleaned = match.trim()
-      if (cleaned && 
-          !cleaned.toUpperCase().includes('KDV') &&
-          !cleaned.toUpperCase().includes('VERGI') &&
-          cleaned.length > 5) {
-        return cleaned
-      }
-    }
-  }
-  return null
-}
-
-const extractTextFromHTML = (html: string, fieldType: string): string | null => {
-  const patterns = {
-    name: [/class="[^"]*name[^"]*"[^>]*>([^<]+)/i, /data-name="([^"]+)"/i],
-    quantity: [/class="[^"]*qty[^"]*"[^>]*>([^<]+)/i, /data-qty="([^"]+)"/i],
-    price: [/class="[^"]*price[^"]*"[^>]*>([^<]+)/i, /data-price="([^"]+)"/i],
-    tax: [/class="[^"]*tax[^"]*"[^>]*>([^<]+)/i, /data-tax="([^"]+)"/i]
-  }
-  
-  const fieldPatterns = patterns[fieldType] || []
-  for (const pattern of fieldPatterns) {
-    const match = html.match(pattern)
-    if (match) {
-      return match[1].trim()
-    }
-  }
-  return null
-}
-
-// ===== XML PRODUCT PARSING =====
-const parseXMLProducts = (xmlContent: string) => {
-  try {
-    console.log('🔍 Parsing XML content for products...')
-    console.log('📄 XML content preview (first 1000 chars):', xmlContent.substring(0, 1000))
-    
-    const products = []
-    
-    // 1. UBL InvoiceLine pattern'i (standart XML format)
-    const invoiceLineRegex = /<cac:InvoiceLine[^>]*>(.*?)<\/cac:InvoiceLine>/gs
-    let invoiceLines = xmlContent.match(invoiceLineRegex) || []
-    
-    console.log(`📋 Found ${invoiceLines.length} UBL InvoiceLine entries`)
-    
-    if (invoiceLines.length > 0) {
-      invoiceLines.forEach((lineXml, index) => {
-        console.log(`\n🔍 Processing UBL InvoiceLine ${index + 1}:`)
-        console.log('📄 Line XML preview:', lineXml.substring(0, 300) + '...')
-        
-        let itemName = 
-          extractXMLValue(lineXml, 'cac:Item/cbc:Name') ||
-          extractXMLValue(lineXml, 'cac:Item/cbc:Description') ||
-          extractXMLValue(lineXml, 'cac:Item/cac:SellersItemIdentification/cbc:ID') ||
-          extractXMLValue(lineXml, 'cac:Item/cac:StandardItemIdentification/cbc:ID') ||
-          extractXMLValue(lineXml, 'Description') ||
-          extractProductNameFromText(lineXml) ||
-          `Ürün ${index + 1}`
-        
-        // Vergi adını değil, gerçek ürün adını filtrele
-        if (itemName === 'KDV' || itemName === 'ÖTV' || itemName === 'STOPAJ') {
-          itemName = 
-            extractXMLValue(lineXml, 'cac:Item/cac:Item/cbc:Name') ||
-            extractXMLValue(lineXml, 'Item/Name') ||
-            extractProductNameFromComplexXML(lineXml) ||
-            `Ürün ${index + 1}`
-        }
-        
-        let itemCode = 
-          extractXMLValue(lineXml, 'cbc:ID') ||
-          extractXMLValue(lineXml, 'cac:Item/cac:SellersItemIdentification/cbc:ID') ||
-          extractXMLValue(lineXml, 'cac:Item/cbc:ID') ||
-          ''
-        
-        let quantity = parseFloat(
-          extractXMLValue(lineXml, 'cbc:InvoicedQuantity') ||
-          extractXMLValue(lineXml, 'cbc:Quantity') ||
-          '1'
-        )
-        
-        let unitCode = 
-          extractXMLAttribute(lineXml, 'cbc:InvoicedQuantity', 'unitCode') ||
-          extractXMLAttribute(lineXml, 'cbc:Quantity', 'unitCode') ||
-          'Adet'
-        
-        let unitPrice = parseFloat(
-          extractXMLValue(lineXml, 'cbc:PriceAmount') ||
-          extractXMLValue(lineXml, 'cac:Price/cbc:PriceAmount') ||
-          '0'
-        )
-        
-        let lineTotal = parseFloat(
-          extractXMLValue(lineXml, 'cbc:LineExtensionAmount') ||
-          (quantity * unitPrice).toString()
-        )
-        
-        let taxPercent = parseFloat(
-          extractXMLValue(lineXml, 'cbc:Percent') ||
-          extractXMLValue(lineXml, 'cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:Percent') ||
-          '18'
-        )
-        
-        let taxAmount = parseFloat(
-          extractXMLValue(lineXml, 'cbc:TaxAmount') ||
-          extractXMLValue(lineXml, 'cac:TaxTotal/cbc:TaxAmount') ||
-          '0'
-        )
-        
-        console.log(`✅ UBL Parsed: Name="${itemName}", Code="${itemCode}", Qty=${quantity}, Price=${unitPrice}`)
-        
-        products.push({
-          name: itemName,
-          sku: itemCode,
-          quantity: quantity,
-          unit: unitCode,
-          unit_price: unitPrice,
-          tax_rate: taxPercent,
-          tax_amount: taxAmount,
-          line_total: lineTotal,
-          discount_amount: 0,
-          original_xml: lineXml.substring(0, 500)
-        })
-      })
-    }
-    
-    // 2. HTML tablo formatını dene (eğer UBL bulunamazsa)
-    if (products.length === 0) {
-      console.log('⚠️ No UBL InvoiceLines found, trying HTML table format...')
-      
-      const tablePatterns = [
-        /<table[^>]*class="[^"]*lineTable[^"]*"[^>]*>(.*?)<\/table>/gs,
-        /<table[^>]*class="[^"]*invoice[^"]*"[^>]*>(.*?)<\/table>/gs,
-        /<table[^>]*class="[^"]*product[^"]*"[^>]*>(.*?)<\/table>/gs,
-        /<table[^>]*class="[^"]*item[^"]*"[^>]*>(.*?)<\/table>/gs,
-        /<table[^>]*>(.*?)<\/table>/gs
-      ]
-      
-      let tableMatch = null
-      for (const pattern of tablePatterns) {
-        tableMatch = xmlContent.match(pattern)
-        if (tableMatch) break
-      }
-      
-      if (tableMatch) {
-        console.log('📋 Found invoice table, parsing rows...')
-        const tableContent = tableMatch[0]
-        
-        const rowRegex = /<tr[^>]*>(.*?)<\/tr>/gs
-        const rows = []
-        let rowMatch
-        while ((rowMatch = rowRegex.exec(tableContent)) !== null) {
-          rows.push(rowMatch[1])
-        }
-        
-        console.log(`📋 Found ${rows.length} table rows`)
-        
-        const dataRows = rows.slice(1) // Skip header row
-        
-        dataRows.forEach((rowHtml, index) => {
-          const cellRegex = /<td[^>]*>(.*?)<\/td>/gs
-          const cells = []
-          let cellMatch
-          while ((cellMatch = cellRegex.exec(rowHtml)) !== null) {
-            let cellContent = cellMatch[1]
-              .replace(/<[^>]*>/g, '')
-              .replace(/&nbsp;/g, ' ')
-              .replace(/&amp;/g, '&')
-              .replace(/&lt;/g, '<')
-              .replace(/&gt;/g, '>')
-              .trim()
-            cells.push(cellContent)
-          }
-          
-          if (cells.length >= 4) {
-            console.log(`📋 Table row ${index + 1}: [${cells.join(' | ')}]`)
-            
-            let name, quantity, unit, unitPrice, taxRate, lineTotal, sku
-            
-            if (cells.length >= 7) {
-              sku = cells[0] || ''
-              name = cells[1] || `Ürün ${index + 1}`
-              quantity = parseFloat(cells[2]) || 1
-              unit = cells[3] || 'Adet'
-              unitPrice = parseFloat(cells[4]?.replace(/[^\d.,]/g, '').replace(',', '.')) || 0
-              taxRate = cells[5] ? parseFloat(cells[5].replace(/[^\d.,]/g, '').replace(',', '.')) : 18
-              lineTotal = parseFloat(cells[6]?.replace(/[^\d.,]/g, '').replace(',', '.')) || (quantity * unitPrice)
-            } else if (cells.length >= 5) {
-              name = cells[0] || `Ürün ${index + 1}`
-              quantity = parseFloat(cells[1]) || 1
-              unitPrice = parseFloat(cells[2]?.replace(/[^\d.,]/g, '').replace(',', '.')) || 0
-              taxRate = cells[3] ? parseFloat(cells[3].replace(/[^\d.,]/g, '').replace(',', '.')) : 18
-              lineTotal = parseFloat(cells[4]?.replace(/[^\d.,]/g, '').replace(',', '.')) || (quantity * unitPrice)
-              unit = 'Adet'
-              sku = ''
-            } else {
-              name = cells[0] || `Ürün ${index + 1}`
-              quantity = parseFloat(cells[1]) || 1
-              unitPrice = parseFloat(cells[2]?.replace(/[^\d.,]/g, '').replace(',', '.')) || 0
-              lineTotal = parseFloat(cells[3]?.replace(/[^\d.,]/g, '').replace(',', '.')) || (quantity * unitPrice)
-              taxRate = 18
-              unit = 'Adet'
-              sku = ''
-            }
-            
-            if (name && 
-                name !== '' && 
-                name.length > 1 &&
-                !name.toLowerCase().includes('sıra') && 
-                !name.toLowerCase().includes('mal') &&
-                !name.toLowerCase().includes('hizmet') &&
-                !name.toLowerCase().includes('toplam') &&
-                !name.toLowerCase().includes('kdv') &&
-                quantity > 0) {
-              
-              products.push({
-                name: name,
-                sku: sku,
-                quantity: quantity,
-                unit: unit,
-                unit_price: unitPrice,
-                tax_rate: taxRate,
-                tax_amount: (lineTotal * taxRate) / (100 + taxRate),
-                line_total: lineTotal,
-                discount_amount: 0,
-                original_xml: rowHtml.substring(0, 200)
-              })
-              
-              console.log(`✅ Table product added: "${name}" - ${quantity} x ${unitPrice} = ${lineTotal}`)
-            }
-          }
-        })
-      }
-    }
-    
-    // 3. Son çare: Metin tabanlı parsing
-    if (products.length === 0) {
-      console.log('⚠️ No structured data found, trying text-based parsing...')
-      
-      const textLines = xmlContent.split('\n').map(line => line.trim()).filter(line => line.length > 0)
-      
-      textLines.forEach((line, index) => {
-        const productMatch = line.match(/(\d+(?:\.\d+)?)\s+(KİLO|ADET|LİTRE|METRE|GRAM|TON)?\s+(.+)/i)
-        if (productMatch) {
-          const quantity = parseFloat(productMatch[1])
-          const unit = productMatch[2] || 'Adet'
-          const name = productMatch[3].trim()
-          
-          let unitPrice = 0
-          for (let i = index + 1; i < Math.min(index + 5, textLines.length); i++) {
-            const priceMatch = textLines[i].match(/(\d+(?:,\d+)?(?:\.\d+)?)\s*TL/i)
-            if (priceMatch) {
-              unitPrice = parseFloat(priceMatch[1].replace(',', '.'))
-              break
-            }
-          }
-          
-          if (name && name.length > 2 && !name.includes('Sıra') && !name.includes('ETTN')) {
-            products.push({
-              name: name,
-              sku: '',
-              quantity: quantity,
-              unit: unit,
-              unit_price: unitPrice,
-              tax_rate: 18,
-              tax_amount: (unitPrice * quantity * 18) / 100,
-              line_total: unitPrice * quantity,
-              discount_amount: 0,
-              original_xml: line
-            })
-          }
-        }
-      })
-    }
-    
-    console.log(`✅ Successfully parsed ${products.length} products from XML`)
-    products.forEach((product, index) => {
-      console.log(`📦 Product ${index + 1}: ${product.name} - ${product.quantity} x ${product.unit_price} = ${product.line_total}`)
-    })
-    
-    return products
-  } catch (error) {
-    console.error('❌ Error parsing XML products:', error)
-    return []
-  }
-}
-
-// ===== DATABASE OPERATIONS =====
+// Ürün kaydetme fonksiyonu
 const saveProductsToDatabase = async (supabaseClient: any, products: any[], invoiceInfo: any) => {
   console.log(`Saving ${products.length} products to database...`)
   
@@ -344,9 +79,10 @@ const saveProductsToDatabase = async (supabaseClient: any, products: any[], invo
   
   for (const product of products) {
     try {
+      // Gelişmiş duplicate kontrolü - SKU, isim ve fiyat bazlı
       let existingProduct = null
       
-      // 1. SKU ile kontrol et
+      // 1. Önce SKU ile kontrol et
       if (product.sku) {
         const { data: existing } = await supabaseClient
           .from('products')
@@ -357,7 +93,7 @@ const saveProductsToDatabase = async (supabaseClient: any, products: any[], invo
         existingProduct = existing
       }
       
-      // 2. İsim ile kontrol et
+      // 2. SKU yoksa isim ile kontrol et
       if (!existingProduct && product.name) {
         const { data: existing } = await supabaseClient
           .from('products')
@@ -368,6 +104,7 @@ const saveProductsToDatabase = async (supabaseClient: any, products: any[], invo
         existingProduct = existing
       }
       
+      // Ürün verilerini hazırla
       const productData = {
         name: product.name,
         sku: product.sku || null,
@@ -379,7 +116,7 @@ const saveProductsToDatabase = async (supabaseClient: any, products: any[], invo
         product_type: 'physical',
         status: 'active',
         is_active: true,
-        stock_quantity: 0,
+        stock_quantity: 0, // Gelen faturalarda stok miktarı bilinmez
         min_stock_level: 0,
         stock_threshold: 0,
         description: `Nilvera faturasından aktarılan ürün - Fatura No: ${invoiceInfo.number}`,
@@ -387,18 +124,22 @@ const saveProductsToDatabase = async (supabaseClient: any, products: any[], invo
       }
       
       if (existingProduct) {
+        // Mevcut ürünü akıllı güncelle
         const updateData: any = {
           updated_at: productData.updated_at
         }
         
+        // Fiyat güncelleme kontrolü - sadece yeni fiyat farklıysa güncelle
         if (productData.price !== existingProduct.price && productData.price > 0) {
           updateData.price = productData.price
         }
         
+        // Tax rate güncelleme
         if (productData.tax_rate !== existingProduct.tax_rate) {
           updateData.tax_rate = productData.tax_rate
         }
         
+        // SKU eksikse ekle
         if (!existingProduct.sku && productData.sku) {
           updateData.sku = productData.sku
         }
@@ -421,6 +162,7 @@ const saveProductsToDatabase = async (supabaseClient: any, products: any[], invo
         
         console.log(`Updated existing product: ${existingProduct.name} (${Object.keys(updateData).join(', ')})`)
       } else {
+        // Yeni ürün oluştur
         const { data, error } = await supabaseClient
           .from('products')
           .insert({
@@ -453,359 +195,590 @@ const saveProductsToDatabase = async (supabaseClient: any, products: any[], invo
   return { savedProducts, errors }
 }
 
-const saveInvoiceToDatabase = async (supabaseClient: any, invoiceInfo: any) => {
-  console.log('💾 Saving invoice to einvoices table...')
-  
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   try {
-    const invoiceData = {
-      invoice_number: invoiceInfo.number,
-      supplier_name: invoiceInfo.supplier || '',
-      supplier_tax_number: invoiceInfo.taxNumber || '',
-      invoice_date: invoiceInfo.date,
-      total_amount: invoiceInfo.totalAmount || 0,
-      tax_amount: invoiceInfo.taxAmount || 0,
-      currency: invoiceInfo.currency || 'TRY',
-      status: 'received',
-      nilvera_uuid: invoiceInfo.uuid || null,
-      xml_content: invoiceInfo.xmlContent || '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
+    // Get the authorization header from the request
+    const authHeader = req.headers.get('Authorization')!
+    const token = authHeader.replace('Bearer ', '')
+    const { data } = await supabaseClient.auth.getUser(token)
+    const user = data.user
+
+    if (!user) {
+      throw new Error('Yetkilendirme gereklidir')
     }
-    
-    // Check if invoice already exists
-    const { data: existingInvoice } = await supabaseClient
-      .from('einvoices')
-      .select('id')
-      .eq('invoice_number', invoiceData.invoice_number)
+
+    const reqBody = await req.json()
+
+    // Get stored Nilvera token
+    const { data: authData, error: authError } = await supabaseClient
+      .from('nilvera_auth')
+      .select('*')
+      .eq('user_id', user.id)
       .maybeSingle()
-    
-    if (existingInvoice) {
-      console.log('✅ Invoice already exists, updating...')
-      const { data, error } = await supabaseClient
-        .from('einvoices')
-        .update({
-          ...invoiceData,
-          id: existingInvoice.id
+
+    if (authError || !authData) {
+      throw new Error('Nilvera kimlik doğrulama bilgisi bulunamadı. Lütfen önce Nilvera\'ya giriş yapın.')
+    }
+
+    // Check if token is expired
+    if (new Date(authData.expires_at) < new Date()) {
+      throw new Error('Nilvera oturum süresi dolmuş. Lütfen tekrar giriş yapın.')
+    }
+
+    const { action, invoice, invoiceId } = reqBody
+
+    // YENİ ACTION: XML formatında fatura getirme ve ürün kaydetme
+    if (action === 'process_xml_invoice') {
+      const targetInvoiceId = invoiceId || (invoice && invoice.invoiceId)
+      
+      if (!targetInvoiceId) {
+        console.error('❌ Fatura ID eksik:', { invoiceId, invoice })
+        throw new Error('Fatura ID gerekli')
+      }
+
+      console.log('🔄 Processing XML invoice for products:', targetInvoiceId)
+      console.log('🔑 Using token:', authData.access_token.substring(0, 10) + '...')
+      
+      try {
+        // 1. Fatura detaylarını al
+        console.log('📋 Fetching invoice details...')
+        const detailsResponse = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${targetInvoiceId}/Details`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${authData.access_token}`,
+            'Content-Type': 'application/json'
+          }
         })
-        .eq('id', existingInvoice.id)
-        .select()
-        .single()
-      
-      if (error) throw error
-      
-      return {
-        success: true,
-        invoice_id: data.id,
-        action: 'updated'
-      }
-    } else {
-      const { data, error } = await supabaseClient
-        .from('einvoices')
-        .insert(invoiceData)
-        .select()
-        .single()
-      
-      if (error) throw error
-      
-      return {
-        success: true,
-        invoice_id: data.id,
-        action: 'created'
-      }
-    }
-  } catch (error) {
-    console.error('❌ Error saving invoice:', error)
-    return {
-      success: false,
-      error: error.message
-    }
-  }
-}
-
-// ===== NILVERA API OPERATIONS =====
-const createSupabaseClient = (req: Request) => {
-  const authHeader = req.headers.get('Authorization')
-  const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-  const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
-  
-  if (authHeader) {
-    return createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-      auth: { persistSession: false }
-    })
-  }
-  
-  return createClient(supabaseUrl, supabaseKey, {
-    auth: { persistSession: false }
-  })
-}
-
-const fetchNilveraToken = async () => {
-  // Use the provided API key directly
-  const apiKey = 'BA2C9A936C7F251ACBB787F7E4D412ECBE8BE70B848AA0CDD91DC9FF4522C206'
-  console.log('✅ Using provided Nilvera API key')
-  return apiKey
-}
-
-const fetchIncomingInvoices = async (apiKey: string) => {
-  try {
-    console.log('📥 Fetching incoming invoices from Nilvera API...')
-    
-    const response = await fetch('https://developer.nilvera.com/api/e-fatura-api/gelen-faturalar/gelen-faturalari-listeler', {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      }
-    })
-    
-    console.log('Nilvera API response status:', response.status)
-    
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`❌ Nilvera API error: ${response.status} - ${errorText}`)
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    const data = await response.json()
-    console.log('✅ Nilvera API response:', JSON.stringify(data, null, 2))
-    
-    return data
-  } catch (error) {
-    console.error('❌ Error fetching incoming invoices:', error)
-    throw error
-  }
-}
-
-const fetchInvoiceDetails = async (token: string, invoiceId: string) => {
-  try {
-    console.log('📋 Fetching invoice details...')
-    console.log('🔑 Using token:', token.substring(0, 10) + '...')
-    
-    const response = await fetch(`https://api.nilvera.com/api/v1/einvoice/incoming/${invoiceId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-    
-    console.log('📋 Details response status:', response.status)
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    const data = await response.json()
-    console.log('✅ Invoice details received:', {
-      invoiceNumber: data.InvoiceNumber,
-      supplier: data.SenderName,
-      amount: data.PayableAmount
-    })
-    
-    return data
-  } catch (error) {
-    console.error('❌ Error fetching invoice details:', error)
-    throw error
-  }
-}
-
-const fetchInvoiceXML = async (token: string, invoiceId: string) => {
-  try {
-    console.log('📄 Fetching XML content first (primary source)...')
-    
-    const response = await fetch(`https://api.nilvera.com/api/v1/einvoice/incoming/${invoiceId}/xml`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    const xmlContent = await response.text()
-    console.log('📄 XML content preview:', xmlContent.substring(0, 500))
-    console.log('✅ XML content received, length:', xmlContent.length)
-    
-    return xmlContent
-  } catch (error) {
-    console.error('❌ Error fetching invoice XML:', error)
-    throw error
-  }
-}
-
-// ===== MAIN REQUEST HANDLER =====
-const handleFetchInvoices = async (supabaseClient: any) => {
-  try {
-    const token = await fetchNilveraToken()
-    const apiResponse = await fetchIncomingInvoices(token)
-    
-    const invoices = apiResponse.Content || []
-    console.log(`Found ${invoices.length} invoices in response`)
-    
-    const formattedInvoices = invoices.map((invoice: any) => ({
-      id: invoice.UUID,
-      invoiceNumber: invoice.InvoiceNumber,
-      supplierName: invoice.SenderName,
-      supplierTaxNumber: invoice.SenderTaxNumber,
-      invoiceDate: invoice.IssueDate,
-      dueDate: invoice.DueDate || null,
-      totalAmount: invoice.PayableAmount,
-      paidAmount: 0,
-      currency: invoice.CurrencyCode,
-      taxAmount: invoice.TaxTotalAmount,
-      status: invoice.StatusDetail,
-      pdfUrl: null,
-      xmlData: invoice
-    }))
-    
-    return {
-      success: true,
-      invoices: formattedInvoices,
-      debug: {
-        total_invoices: invoices.length,
-        api_response_keys: Object.keys(apiResponse),
-        has_content: !!apiResponse.Content,
-        content_length: apiResponse.Content?.length || 0
-      }
-    }
-  } catch (error) {
-    console.error('❌ Error in handleFetchInvoices:', error)
-    return {
-      success: false,
-      message: error.message,
-      invoices: []
-    }
-  }
-}
-
-const handleProcessXMLInvoice = async (supabaseClient: any, invoiceId: string) => {
-  try {
-    console.log('🔄 Processing XML invoice for products:', invoiceId)
-    
-    const token = await fetchNilveraToken()
-    const invoiceDetails = await fetchInvoiceDetails(token, invoiceId)
-    const xmlContent = await fetchInvoiceXML(token, invoiceId)
-    
-    console.log('🎯 XML'den parse edilen ürün sayısı:', products.length)
-    
-    const invoiceInfo = {
-      number: invoiceDetails.InvoiceNumber,
-      currency: invoiceDetails.CurrencyCode,
-      supplier: invoiceDetails.SenderName,
-      date: invoiceDetails.IssueDate?.split('T')[0],
-      uuid: invoiceDetails.UUID,
-      totalAmount: invoiceDetails.PayableAmount,
-      taxAmount: invoiceDetails.TaxTotalAmount,
-      taxNumber: invoiceDetails.SenderTaxNumber,
-      xmlContent: xmlContent
-    }
-    
-    console.log('💾 Invoice info prepared:', {
-      number: invoiceInfo.number,
-      currency: invoiceInfo.currency,
-      supplier: invoiceInfo.supplier,
-      date: invoiceInfo.date
-    })
-    
-    const products = parseXMLProducts(xmlContent)
-    
-    if (products.length > 0) {
-      const { savedProducts, errors } = await saveProductsToDatabase(supabaseClient, products, invoiceInfo)
-      const invoiceSaveResult = await saveInvoiceToDatabase(supabaseClient, invoiceInfo)
-      
-      console.log('💾 Invoice save result:', invoiceSaveResult)
-      
-      console.log('✅ Processing completed:', { 
-        parsed: products.length, 
-        saved: savedProducts.length, 
-        errors: errors.length,
-        invoice_saved: invoiceSaveResult.success
-      })
-      
-      return {
-        success: true,
-        message: `${products.length} ürün başarıyla işlendi`,
-        invoice: {
-          number: invoiceInfo.number,
-          currency: invoiceInfo.currency,
-          supplier: invoiceInfo.supplier,
-          date: invoiceInfo.date,
-          saved: invoiceSaveResult.success,
-          invoice_id: invoiceSaveResult.invoice_id
-        },
-        products: {
-          parsed: products.length,
+        
+        console.log('📋 Details response status:', detailsResponse.status)
+        
+        if (!detailsResponse.ok) {
+          const errorText = await detailsResponse.text()
+          console.error('❌ Details API error:', detailsResponse.status, errorText)
+          throw new Error(`Fatura detayları alınamadı: ${detailsResponse.status} - ${errorText}`)
+        }
+        
+        const invoiceDetails = await detailsResponse.json()
+        console.log('✅ Invoice details received:', {
+          invoiceNumber: invoiceDetails.InvoiceNumber,
+          supplier: invoiceDetails.SenderName,
+          amount: invoiceDetails.PayableAmount
+        })
+        
+        // 2. XML içeriğini al
+        const xmlResponse = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${targetInvoiceId}/xml`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${authData.access_token}`,
+            'Accept': 'application/xml'
+          }
+        })
+        
+        if (!xmlResponse.ok) {
+          const errorText = await xmlResponse.text()
+          console.error(`XML API Error: ${xmlResponse.status} - ${errorText}`)
+          throw new Error(`XML içeriği alınamadı: ${xmlResponse.status} - ${errorText}`)
+        }
+        
+        const xmlContent = await xmlResponse.text()
+        console.log('XML content length:', xmlContent.length)
+        console.log('XML content preview:', xmlContent.substring(0, 500))
+        
+        // 3. XML'den ürünleri parse et
+        const parsedProducts = parseXMLProducts(xmlContent)
+        
+        if (parsedProducts.length === 0) {
+          console.warn('⚠️ No products parsed from XML')
+          // XML içeriğini daha detaylı logla
+          console.log('📄 Full XML content for debugging:', xmlContent)
+        }
+        
+        // 4. Ürünleri veritabanına kaydet
+        const invoiceInfo = {
+          number: invoiceDetails.InvoiceNumber || '',
+          currency: invoiceDetails.CurrencyCode || 'TRY',
+          supplier: invoiceDetails.SenderName || '',
+          date: invoiceDetails.IssueDate || ''
+        }
+        
+        console.log('💾 Invoice info prepared:', invoiceInfo)
+        
+        const { savedProducts, errors } = await saveProductsToDatabase(
+          supabaseClient, 
+          parsedProducts, 
+          invoiceInfo
+        )
+        
+        console.log('✅ Processing completed:', {
+          parsed: parsedProducts.length,
           saved: savedProducts.length,
           errors: errors.length
-        },
-        savedProducts: savedProducts,
-        errors: errors,
-        xmlParsed: products
-      }
-    } else {
-      return {
-        success: false,
-        message: 'Faturada ürün bilgisi bulunamadı',
-        products: {
-          parsed: 0,
-          saved: 0,
-          errors: 0
-        }
+        })
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: `${savedProducts.length} ürün başarıyla işlendi`,
+            invoice: invoiceInfo,
+            products: {
+              parsed: parsedProducts.length,
+              saved: savedProducts.length,
+              errors: errors.length
+            },
+            savedProducts: savedProducts,
+            errors: errors,
+            xmlParsed: parsedProducts
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        )
+        
+      } catch (innerError: any) {
+        console.error('❌ Inner process_xml_invoice error:', innerError)
+        console.error('❌ Error stack:', innerError.stack)
+        
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: innerError.message || 'XML işleme hatası',
+            details: {
+              invoiceId: targetInvoiceId,
+              timestamp: new Date().toISOString(),
+              errorType: innerError.name || 'Unknown'
+            }
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        )
       }
     }
-  } catch (error) {
-    console.error('❌ Error processing XML invoice:', error)
-    return {
-      success: false,
-      message: error.message,
-      error: error.message
-    }
-  }
-}
 
-// ===== MAIN SERVE FUNCTION =====
-serve(async (req) => {
-  // Handle CORS
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-  
-  try {
-    const supabaseClient = createSupabaseClient(req)
-    const { action, invoiceId } = await req.json()
-    
-    console.log('📨 Received request:', { action, invoiceId })
-    
-    let result
-    switch (action) {
-      case 'fetch_incoming':
-        result = await handleFetchInvoices(supabaseClient)
-        break
-        
-      case 'process_xml_invoice':
-        if (!invoiceId) {
-          throw new Error('invoiceId is required for process_xml_invoice action')
+    if (action === 'fetch_incoming') {
+      console.log('Using token:', authData.access_token.substring(0, 10) + '...')
+      
+      // Doğru endpoint: gelen faturaları query parametreleri ile listele
+      const now = new Date()
+      const startDate = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000)) // Son 30 gün
+      const endDate = now
+      
+      const queryParams = new URLSearchParams({
+        'StartDate': startDate.toISOString(),
+        'EndDate': endDate.toISOString(),
+        'IsArchive': 'false',
+        'Page': '1',
+        'PageSize': '50',
+        'SortColumn': 'IssueDate',
+        'SortType': 'DESC'
+      })
+      
+      // Fetch incoming invoices from Nilvera
+      const response = await fetch(`https://apitest.nilvera.com/einvoice/Purchase?${queryParams}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authData.access_token}`,
+          'Content-Type': 'application/json'
         }
-        result = await handleProcessXMLInvoice(supabaseClient, invoiceId)
-        break
-        
-      default:
-        throw new Error(`Unknown action: ${action}`)
+      })
+
+      console.log('Nilvera API response status:', response.status)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Nilvera API error:', errorText)
+        throw new Error(`Faturalar getirilemedi: ${response.status} - ${errorText}`)
+      }
+      
+      const response_data = await response.json()
+      console.log('Nilvera API response:', response_data)
+      
+      // Nilvera API response yapısını doğru şekilde parse et
+      let invoices = []
+      if (response_data && response_data.Content && Array.isArray(response_data.Content)) {
+        invoices = response_data.Content
+        console.log(`Found ${invoices.length} invoices in response`)
+      } else {
+        console.log('No Content array found in response:', response_data)
+        invoices = []
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          invoices: invoices.map((inv: any) => ({
+            id: inv.UUID,
+            invoiceNumber: inv.InvoiceNumber,
+            supplierName: inv.SenderName,
+            supplierTaxNumber: inv.SenderTaxNumber,
+            invoiceDate: inv.IssueDate,
+            dueDate: inv.PaymentDate || null,
+            totalAmount: parseFloat(inv.PayableAmount || 0),
+            paidAmount: 0, // Gelen faturalar için ödenen tutar bilgisi genelde yoktur
+            currency: inv.CurrencyCode || 'TRY',
+            taxAmount: parseFloat(inv.TaxTotalAmount || 0),
+            status: inv.StatusDetail,
+            pdfUrl: null, // PDF URL ayrı bir API call ile alınır
+            xmlData: inv
+          })),
+          debug: {
+            total_invoices: invoices.length,
+            api_response_keys: Object.keys(response_data || {}),
+            has_content: !!(response_data && response_data.Content),
+            content_length: response_data?.Content?.length || 0
+          }
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
     }
-    
-    return new Response(JSON.stringify(result), {
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
-    })
-    
+
+    if (action === 'get_invoice_details') {
+      const { invoiceId } = invoice
+      
+      if (!invoiceId) {
+        throw new Error('Fatura ID gerekli')
+      }
+
+      console.log('Fetching invoice details for:', invoiceId)
+      
+      // Fetch invoice details from Nilvera - try both Details and UBL endpoints
+      const response = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${invoiceId}/Details`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authData.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      // Also try to get XML content which contains more detailed product info
+      const xmlResponse = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${invoiceId}/xml`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authData.access_token}`,
+          'Accept': 'application/xml'
+        }
+      }).catch(e => {
+        console.log('XML endpoint not available:', e.message)
+        return null
+      })
+
+      console.log('Invoice details response status:', response.status)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Nilvera invoice details error:', errorText)
+        throw new Error(`Fatura detayları getirilemedi: ${response.status} - ${errorText}`)
+      }
+
+      const detailsData = await response.json()
+      console.log('Invoice details response:', detailsData)
+      
+              // Try to get XML for better product details
+        let xmlContent = null
+        if (xmlResponse && xmlResponse.ok) {
+          try {
+            xmlContent = await xmlResponse.text()
+            console.log('XML content length:', xmlContent?.length || 0)
+          } catch (e) {
+            console.log('Could not parse XML:', e)
+          }
+        }
+      
+      // Parse invoice lines from the response
+      let invoiceLines = []
+      
+      // First try InvoiceLines array
+      if (detailsData && detailsData.InvoiceLines && Array.isArray(detailsData.InvoiceLines)) {
+        console.log('Found InvoiceLines array with', detailsData.InvoiceLines.length, 'items')
+        console.log('Sample InvoiceLine:', detailsData.InvoiceLines[0])
+        
+        invoiceLines = detailsData.InvoiceLines.map((line: any) => {
+          // Try different possible field names for product/service description
+          const productName = line.Item?.Name || 
+                             line.Item?.Description || 
+                             line.Name || 
+                             line.Description || 
+                             line.ProductName ||
+                             line.ServiceName ||
+                             line.ItemName ||
+                             'Belirtilmemiş';
+          
+          console.log('Product name found:', productName, 'from line:', line);
+          
+          return {
+            description: productName,
+            productCode: line.Item?.Code || line.Code || line.ProductCode || '',
+            quantity: parseFloat(line.InvoicedQuantity || line.Quantity || 1),
+            unit: line.InvoicedQuantity?.unitCode || line.UnitCode || line.Unit || 'Adet',
+            unitPrice: parseFloat(line.Price?.PriceAmount || line.UnitPrice || line.PriceAmount || 0),
+            vatRate: parseFloat(line.TaxTotal?.TaxSubtotal?.[0]?.Percent || line.TaxRate || line.VatRate || 0),
+            vatAmount: parseFloat(line.TaxTotal?.TaxAmount || line.TaxAmount || line.VatAmount || 0),
+            totalAmount: parseFloat(line.LineExtensionAmount || line.TotalAmount || line.Amount || 0),
+            discountRate: parseFloat(line.AllowanceCharge?.Percent || line.DiscountRate || 0),
+            discountAmount: parseFloat(line.AllowanceCharge?.Amount || line.DiscountAmount || 0)
+          }
+        })
+      } else {
+        // If no InvoiceLines, try to parse from XML content or other fields
+        console.log('No InvoiceLines found, trying alternative parsing methods')
+        console.log('Available fields in detailsData:', Object.keys(detailsData || {}))
+        
+                // Try to parse from XML content if available
+         let xmlParsedLines = []
+         const xmlToParse = xmlContent || detailsData.Content || detailsData.XmlContent || detailsData.UblContent
+         
+         if (xmlToParse && typeof xmlToParse === 'string') {
+           try {
+             console.log('Trying to parse XML content for product details')
+             
+             // Simple regex parsing for InvoiceLine elements
+             // This is a basic approach - a proper XML parser would be better
+             const invoiceLineRegex = /<cac:InvoiceLine>(.*?)<\/cac:InvoiceLine>/gs
+             const itemNameRegex = /<cbc:Name[^>]*>(.*?)<\/cbc:Name>/g
+             const quantityRegex = /<cbc:InvoicedQuantity[^>]*>(.*?)<\/cbc:InvoicedQuantity>/g
+             const priceRegex = /<cbc:PriceAmount[^>]*>(.*?)<\/cbc:PriceAmount>/g
+             const lineExtensionRegex = /<cbc:LineExtensionAmount[^>]*>(.*?)<\/cbc:LineExtensionAmount>/g
+             
+             const invoiceLines = xmlToParse.match(invoiceLineRegex)
+             
+             if (invoiceLines && invoiceLines.length > 0) {
+               console.log(`Found ${invoiceLines.length} invoice lines in XML`)
+               
+               xmlParsedLines = invoiceLines.map((lineXml, index) => {
+                 const nameMatch = lineXml.match(itemNameRegex)
+                 const quantityMatch = lineXml.match(quantityRegex)
+                 const priceMatch = lineXml.match(priceRegex)
+                 const extensionMatch = lineXml.match(lineExtensionRegex)
+                 
+                 const itemName = nameMatch?.[0]?.replace(/<[^>]*>/g, '').trim() || `Ürün ${index + 1}`
+                 const quantity = quantityMatch?.[0]?.replace(/<[^>]*>/g, '').trim() || '1'
+                 const price = priceMatch?.[0]?.replace(/<[^>]*>/g, '').trim() || '0'
+                 const lineTotal = extensionMatch?.[0]?.replace(/<[^>]*>/g, '').trim() || '0'
+                 
+                 console.log(`XML Line ${index + 1}: ${itemName}, Qty: ${quantity}, Price: ${price}`)
+                 
+                 return {
+                   description: itemName,
+                   productCode: '',
+                   quantity: parseFloat(quantity) || 1,
+                   unit: 'Adet',
+                   unitPrice: parseFloat(price) || 0,
+                   vatRate: 20, // Default, would need to parse from XML
+                   vatAmount: 0,
+                   totalAmount: parseFloat(lineTotal) || 0,
+                   discountRate: 0,
+                   discountAmount: 0
+                 }
+               })
+               
+               if (xmlParsedLines.length > 0) {
+                 invoiceLines = xmlParsedLines
+                 console.log('Successfully parsed', xmlParsedLines.length, 'lines from XML')
+               }
+             }
+           } catch (e) {
+             console.log('Could not parse XML content:', e)
+           }
+         }
+        
+        // Check if there are line items in different structure
+        if (detailsData.LineItems && Array.isArray(detailsData.LineItems)) {
+          console.log('Found LineItems array:', detailsData.LineItems.length)
+          invoiceLines = detailsData.LineItems.map((item: any, index: number) => ({
+            description: item.Description || item.Name || item.ProductName || `Kalem ${index + 1}`,
+            productCode: item.Code || item.ProductCode || '',
+            quantity: parseFloat(item.Quantity || 1),
+            unit: item.Unit || item.UnitCode || 'Adet',
+            unitPrice: parseFloat(item.UnitPrice || item.Price || 0),
+            vatRate: parseFloat(item.VatRate || item.TaxRate || 0),
+            vatAmount: parseFloat(item.VatAmount || item.TaxAmount || 0),
+            totalAmount: parseFloat(item.TotalAmount || item.Amount || 0),
+            discountRate: 0,
+            discountAmount: 0
+          }))
+        } else {
+          // Create a fallback single line from the invoice summary 
+          const invoiceAmount = parseFloat(detailsData?.PayableAmount || detailsData?.InvoiceAmount || 0)
+          const taxAmount = parseFloat(detailsData?.TaxTotalAmount || detailsData?.TaxAmount || 0) 
+          const netAmount = parseFloat(detailsData?.TaxExclusiveAmount || detailsData?.LineExtensionAmount || (invoiceAmount - taxAmount))
+          const vatRate = taxAmount > 0 && netAmount > 0 ? ((taxAmount / netAmount) * 100) : 0
+          
+          invoiceLines = [{
+            description: `Fatura Kalemi - ${detailsData?.InvoiceNumber || 'Belirtilmemiş'}`,
+            productCode: '',
+            quantity: 1,
+            unit: 'Adet', 
+            unitPrice: netAmount,
+            vatRate: vatRate,
+            vatAmount: taxAmount,
+            totalAmount: invoiceAmount,
+            discountRate: 0,
+            discountAmount: 0
+          }]
+          
+          console.log('Created fallback invoice line:', invoiceLines[0])
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          invoiceDetails: {
+            invoiceInfo: {
+              number: detailsData.InvoiceNumber || '',
+              date: detailsData.IssueDate || '',
+              totalAmount: parseFloat(detailsData.PayableAmount || 0),
+              currency: detailsData.CurrencyCode || 'TRY',
+              taxTotalAmount: parseFloat(detailsData.TaxTotalAmount || 0),
+              lineExtensionAmount: parseFloat(detailsData.LineExtensionAmount || 0)
+            },
+            supplier: {
+              name: detailsData.SenderName || '',
+              taxNumber: detailsData.SenderTaxNumber || '',
+              address: detailsData.SenderAddress || ''
+            },
+            items: invoiceLines
+          }
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
+
+    if (action === 'get_pdf') {
+      const targetInvoiceId = invoiceId || (invoice && invoice.invoiceId)
+      
+      if (!targetInvoiceId) {
+        throw new Error('Fatura ID gerekli')
+      }
+
+      console.log('Fetching PDF for invoice:', targetInvoiceId)
+      
+      // Fetch PDF from Nilvera
+      const response = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${targetInvoiceId}/pdf`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authData.access_token}`
+        }
+      })
+
+      console.log('PDF response status:', response.status)
+      console.log('PDF response headers:', Object.fromEntries(response.headers.entries()))
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Nilvera PDF error:', errorText)
+        throw new Error(`PDF getirilemedi: ${response.status} - ${errorText}`)
+      }
+
+      // PDF'i buffer olarak al
+      const pdfBuffer = await response.arrayBuffer()
+      const pdfBytes = new Uint8Array(pdfBuffer)
+      
+      console.log('PDF buffer size:', pdfBuffer.byteLength)
+      console.log('PDF bytes first 20:', Array.from(pdfBytes.slice(0, 20)).map(b => b.toString(16)).join(' '))
+      
+      // Convert to base64 for frontend
+      const pdfBase64 = btoa(String.fromCharCode(...pdfBytes))
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          pdfData: pdfBase64,
+          contentType: 'application/pdf',
+          message: 'PDF başarıyla alındı'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
+
+    if (action === 'create') {
+      // Create invoice in Nilvera
+      const invoiceData = {
+        invoiceType: 'SATIS',
+        invoiceSeriesNumber: invoice.invoiceNumber,
+        issueDate: invoice.invoiceDate,
+        senderTitle: 'NGS Teknoloji', // Your company name
+        receiverTitle: invoice.supplierName,
+        receiverVKN: invoice.supplierTaxNumber,
+        documentCurrencyCode: invoice.currency,
+        totalPayableAmount: invoice.totalAmount,
+        totalTaxAmount: invoice.taxAmount,
+        paymentDate: invoice.dueDate,
+        note: invoice.description
+      }
+
+      const response = await fetch('https://apitest.nilvera.com/einvoice/Create', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authData.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(invoiceData)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('Nilvera create error:', errorData)
+        throw new Error(`Fatura oluşturulamadı: ${response.status} - ${errorData}`)
+      }
+
+      const result = await response.json()
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          invoiceId: result.id,
+          message: 'Fatura başarıyla oluşturuldu'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
+
+    return new Response(
+      JSON.stringify({ error: 'Geçersiz işlem türü' }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      }
+    )
+
   } catch (error) {
-    console.error('❌ Request processing error:', error)
-    return new Response(JSON.stringify({
-      success: false,
-      message: error.message
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders }
-    })
+    console.error('Nilvera invoices error:', error)
+    return new Response(
+      JSON.stringify({ error: error.message || 'Bir hata oluştu' }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      }
+    )
   }
 })

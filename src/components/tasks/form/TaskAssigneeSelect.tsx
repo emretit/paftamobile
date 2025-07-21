@@ -52,8 +52,8 @@ const TaskAssigneeSelect = ({ form, defaultValue }: TaskAssigneeSelectProps) => 
           <FormLabel>Atanan</FormLabel>
           <Select
             disabled={isLoading}
-            onValueChange={(value) => field.onChange(value === "none" ? null : value)}
-            defaultValue={defaultValue || field.value || "none"}
+            onValueChange={field.onChange}
+            defaultValue={defaultValue || field.value}
           >
             <SelectTrigger>
               <SelectValue 
@@ -61,7 +61,7 @@ const TaskAssigneeSelect = ({ form, defaultValue }: TaskAssigneeSelectProps) => 
               />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Atanmamış</SelectItem>
+              <SelectItem value="">Atanmamış</SelectItem>
               {employees.map((employee) => (
                 <SelectItem key={employee.id} value={employee.id}>
                   <div className="flex items-center">
