@@ -51,6 +51,8 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
 
   const { data: allProducts = [], isLoading } = useQuery({
     queryKey: ["products", searchQuery, categoryFilter, stockFilter],
+    staleTime: 0, // Cache'i hemen stale yap
+    cacheTime: 0, // Cache'i hemen temizle
     queryFn: async () => {
       let query = supabase
         .from("products")
