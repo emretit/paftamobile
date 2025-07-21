@@ -541,42 +541,19 @@ const createSupabaseClient = (req: Request) => {
 }
 
 const fetchNilveraToken = async () => {
-  const apiKey = Deno.env.get('NILVERA_API_KEY')
-  if (!apiKey) {
-    throw new Error('NILVERA_API_KEY environment variable is not set')
-  }
-  
-  try {
-    const response = await fetch('https://api.nilvera.com/api/oauth2/access-token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        api_key: apiKey,
-        secret_key: apiKey // Assuming secret_key is same as api_key
-      })
-    })
-    
-    if (!response.ok) {
-      throw new Error(`Auth failed: ${response.status}`)
-    }
-    
-    const data = await response.json()
-    return data.access_token
-  } catch (error) {
-    console.error('❌ Error fetching Nilvera token:', error)
-    throw error
-  }
+  // Use the provided API key directly
+  const apiKey = 'BA2C9A936C7F251ACBB787F7E4D412ECBE8BE70B848AA0CDD91DC9FF4522C206'
+  console.log('✅ Using provided Nilvera API key')
+  return apiKey
 }
 
-const fetchIncomingInvoices = async (token: string) => {
+const fetchIncomingInvoices = async (apiKey: string) => {
   try {
-    console.log('Using token:', token.substring(0, 10) + '...')
+    console.log('📥 Fetching incoming invoices from Nilvera API...')
     
-    const response = await fetch('https://api.nilvera.com/api/v1/einvoice/incoming', {
+    const response = await fetch('https://developer.nilvera.com/api/e-fatura-api/gelen-faturalar/gelen-faturalari-listeler', {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       }
     })
@@ -584,11 +561,13 @@ const fetchIncomingInvoices = async (token: string) => {
     console.log('Nilvera API response status:', response.status)
     
     if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`❌ Nilvera API error: ${response.status} - ${errorText}`)
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     
     const data = await response.json()
-    console.log('Nilvera API response:', JSON.stringify(data, null, 2))
+    console.log('✅ Nilvera API response:', JSON.stringify(data, null, 2))
     
     return data
   } catch (error) {
