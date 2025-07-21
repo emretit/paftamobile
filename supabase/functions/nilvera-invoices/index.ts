@@ -708,7 +708,7 @@ const handleProcessXMLInvoice = async (supabaseClient: any, invoiceId: string) =
     const invoiceDetails = await fetchInvoiceDetails(token, invoiceId)
     const xmlContent = await fetchInvoiceXML(token, invoiceId)
     
-    console.log('🎯 XMLden parse edilen ürün sayısı:', products.length)
+    console.log('🎯 XML'den parse edilen ürün sayısı:', products.length)
     
     const invoiceInfo = {
       number: invoiceDetails.InvoiceNumber,
