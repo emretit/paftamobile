@@ -2,6 +2,7 @@
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Plus, FileDown } from "lucide-react";
+import InvoiceManagementTab from "@/components/purchase/invoices/InvoiceManagementTab";
 
 interface PurchaseInvoicesProps {
   isCollapsed: boolean;
@@ -33,54 +34,7 @@ const PurchaseInvoices = ({ isCollapsed, setIsCollapsed }: PurchaseInvoicesProps
             </Button>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="p-6 bg-gray-50/50 rounded-lg space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Toplam Fatura</span>
-                  <FileDown className="h-5 w-5 text-blue-500" />
-                </div>
-                <p className="text-2xl font-bold text-blue-600">84</p>
-                <span className="text-sm text-gray-500">Bu ay</span>
-              </div>
-              
-              <div className="p-6 bg-gray-50/50 rounded-lg space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Ödenen</span>
-                  <FileDown className="h-5 w-5 text-green-500" />
-                </div>
-                <p className="text-2xl font-bold text-green-600">₺125,000</p>
-                <span className="text-sm text-gray-500">Bu ay</span>
-              </div>
-              
-              <div className="p-6 bg-gray-50/50 rounded-lg space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Bekleyen</span>
-                  <FileDown className="h-5 w-5 text-orange-500" />
-                </div>
-                <p className="text-2xl font-bold text-orange-600">₺45,000</p>
-                <span className="text-sm text-gray-500">Bu ay</span>
-              </div>
-              
-              <div className="p-6 bg-gray-50/50 rounded-lg space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Vadesi Geçmiş</span>
-                  <FileDown className="h-5 w-5 text-red-500" />
-                </div>
-                <p className="text-2xl font-bold text-red-600">₺15,000</p>
-                <span className="text-sm text-gray-500">Bu ay</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold mb-4">Son Faturalar</h2>
-            <div className="bg-gray-50/50 rounded-lg p-4">
-              <p className="text-gray-500 text-center py-8">
-                Henüz fatura bulunmuyor
-              </p>
-            </div>
-          </div>
+          <InvoiceManagementTab />
         </div>
       </main>
     </div>

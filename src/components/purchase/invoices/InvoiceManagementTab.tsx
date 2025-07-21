@@ -231,6 +231,42 @@ export default function InvoiceManagementTab() {
     });
   };
 
+  // Kaydet fonksiyonu
+  const handleSaveInvoice = async (invoice: InvoiceSummary) => {
+    try {
+      const { data, error } = await supabase
+        .from('purchase_invoices')
+        .insert([
+          {
+            invoice_number: invoice.invoiceNumber,
+            supplier_id: invoice.supplierTaxNumber, // veya tedarikçi ID mapping'i yap
+            invoice_date: invoice.invoiceDate,
+            due_date: invoice.dueDate,
+            total_amount: invoice.totalAmount,
+            paid_amount: invoice.paidAmount,
+            currency: invoice.currency,
+            tax_amount: invoice.taxAmount,
+            status: invoice.status,
+            pdf_url: invoice.pdfUrl
+          }
+        ])
+        .select();
+
+      if (error) throw error;
+      
+      toast({
+        title: "✅ Kaydedildi",
+        description: "Fatura başarıyla sisteme kaydedildi"
+      });
+    } catch (error: any) {
+      toast({
+        title: "❌ Hata",
+        description: error.message || "Fatura kaydedilirken hata oluştu",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -426,6 +462,14 @@ export default function InvoiceManagementTab() {
                       className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
                     >
                       ✅ Ürün Eşleştir
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSaveInvoice(invoice)}
+                      className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+                    >
+                      💾 Kaydet
                     </Button>
                   </div>
                 </div>

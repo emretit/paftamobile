@@ -453,6 +453,83 @@ serve(async (req) => {
       )
     }
 
+    if (action === 'fetch_outgoing') {
+      console.log('Using token:', authData.access_token.substring(0, 10) + '...')
+      
+      const now = new Date()
+      const startDate = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000)) // Son 30 gün
+      const endDate = now
+      
+      const queryParams = new URLSearchParams({
+        'StartDate': startDate.toISOString(),
+        'EndDate': endDate.toISOString(),
+        'IsArchive': 'false',
+        'Page': '1',
+        'PageSize': '50',
+        'SortColumn': 'IssueDate',
+        'SortType': 'DESC'
+      })
+      
+      const response = await fetch(`https://apitest.nilvera.com/einvoice/Sales?${queryParams}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authData.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      console.log('Nilvera API response status:', response.status)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Nilvera API error:', errorText)
+        throw new Error(`Faturalar getirilemedi: ${response.status} - ${errorText}`)
+      }
+      
+      const response_data = await response.json()
+      console.log('Nilvera API response:', response_data)
+      
+      let invoices = []
+      if (response_data && response_data.Content && Array.isArray(response_data.Content)) {
+        invoices = response_data.Content
+        console.log(`Found ${invoices.length} invoices in response`)
+      } else {
+        console.log('No Content array found in response:', response_data)
+        invoices = []
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          invoices: invoices.map((inv: any) => ({
+            id: inv.UUID,
+            invoiceNumber: inv.InvoiceNumber,
+            customerName: inv.ReceiverName,
+            customerTaxNumber: inv.ReceiverTaxNumber,
+            invoiceDate: inv.IssueDate,
+            dueDate: inv.PaymentDate || null,
+            totalAmount: parseFloat(inv.PayableAmount || 0),
+            paidAmount: 0,
+            currency: inv.CurrencyCode || 'TRY',
+            taxAmount: parseFloat(inv.TaxTotalAmount || 0),
+            status: inv.StatusDetail,
+            pdfUrl: null,
+            xmlData: inv
+          })),
+          debug: {
+            total_invoices: invoices.length,
+            api_response_keys: Object.keys(response_data || {}),
+            has_content: !!(response_data && response_data.Content),
+            content_length: response_data?.Content?.length || 0
+          }
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
+
     if (action === 'get_invoice_details') {
       const { invoiceId } = invoice
       

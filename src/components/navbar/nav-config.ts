@@ -88,6 +88,22 @@ export const navItems = [
     icon: FileText,
     label: "E-Fatura Yönetimi",
   },
+  {
+    category: "Faturalar",
+    icon: FileText,
+    items: [
+      {
+        path: "/purchase-invoices",
+        icon: FileText,
+        label: "Alış Faturaları",
+      },
+      {
+        path: "/sales-invoices",
+        icon: FileText,
+        label: "Satış Faturaları",
+      },
+    ],
+  },
 ];
 
 export const settingsItem = {
