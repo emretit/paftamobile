@@ -1,12 +1,14 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Plus, LayoutGrid, Table as TableIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProductFilters from "@/components/products/ProductFilters";
 import ProductGrid from "@/components/products/ProductGrid";
 import ProductTable from "@/components/products/ProductTable";
+import ProductExcelActions from "@/components/products/excel/ProductExcelActions";
+import ProductImportDialog from "@/components/products/excel/ProductImportDialog";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
@@ -18,10 +20,12 @@ interface ProductsProps {
 
 const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [view, setView] = useState<"grid" | "table">("table");
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [stockFilter, setStockFilter] = useState("all");
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
@@ -80,6 +84,11 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
     console.log('Bulk action:', action);
   };
 
+  const handleImportSuccess = () => {
+    // Refresh products list after successful import
+    queryClient.invalidateQueries({ queryKey: ["products"] });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
@@ -100,7 +109,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
           />
 
           <div className="flex items-center justify-between mt-6">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-4">
               <div className="border rounded-lg p-1">
                 <Button
                   variant={view === "grid" ? "default" : "ghost"}
@@ -117,6 +126,11 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
                   <TableIcon className="h-4 w-4" />
                 </Button>
               </div>
+              
+              <ProductExcelActions 
+                products={products || []} 
+                onImportClick={() => setIsImportDialogOpen(true)}
+              />
             </div>
 
             <Button onClick={() => navigate("/product-form")} className="gap-2">
@@ -134,6 +148,12 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
           </div>
         </div>
       </main>
+      
+      <ProductImportDialog 
+        isOpen={isImportDialogOpen}
+        setIsOpen={setIsImportDialogOpen}
+        onImportSuccess={handleImportSuccess}
+      />
     </div>
   );
 };
