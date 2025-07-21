@@ -38,7 +38,7 @@ export interface Product {
   last_purchase_date?: string | null;
   related_products?: string[];
   product_categories: ProductCategory | null;
-  suppliers: Supplier | null;
+  suppliers?: Supplier | null;
   purchase_price?: number;
   // For proposal integration - storing original values
   original_currency?: string;
