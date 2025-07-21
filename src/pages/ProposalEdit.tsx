@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { useProposalEdit } from "@/hooks/useProposalEdit";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Printer, Download, Mail, Trash2, Clock, Send, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Save, Printer, Download, Mail, Trash2, Clock, Send, ShoppingCart, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ import ProposalItems from "@/components/proposals/form/items/ProposalItems";
 import ProposalCurrencySelector from "@/components/proposals/form/ProposalCurrencySelector";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import ProposalForm from "@/components/proposals/form/ProposalForm";
 
 interface ProposalEditProps {
   isCollapsed: boolean;
@@ -246,6 +247,11 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
     ) : null;
   };
 
+  const handleFormSave = async (formData: any) => {
+    await handleSave(formData);
+    toast.success("Teklif başarıyla güncellendi");
+  };
+
   return (
     <DefaultLayout
       isCollapsed={isCollapsed}
@@ -253,230 +259,57 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
       title="Teklif Düzenle"
       subtitle="Teklif bilgilerini güncelleyin ve kaydedin"
     >
-      {/* Header with Save Button */}
-      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 bg-background z-10 pb-4 border-b">
-        <div className="flex flex-col md:flex-row md:items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Geri
-          </Button>
-          <div className="flex flex-col md:flex-row md:items-center gap-2">
-            <h1 className="text-2xl font-bold">
-              {formData.title || proposal.title}
-            </h1>
-            <Badge className={proposalStatusColors[proposal.status]}>
-              {proposalStatusLabels[proposal.status]}
-            </Badge>
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={handleBack} className="hover:bg-muted">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Teklifler
+            </Button>
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-muted-foreground" />
+              <h1 className="text-xl font-semibold">Teklif Düzenle</h1>
+              <Badge className={proposalStatusColors[proposal.status]}>
+                {proposalStatusLabels[proposal.status]}
+              </Badge>
+            </div>
           </div>
-        </div>
 
-        <div className="flex flex-wrap gap-2">
-          {/* Primary Save Button */}
-          <Button 
-            onClick={handleSaveChanges}
-            disabled={!hasChanges || isSaving}
-            className={`${hasChanges ? 'bg-green-600 hover:bg-green-700 animate-pulse' : ''}`}
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {isSaving ? "Kaydediliyor..." : hasChanges ? "Değişiklikleri Kaydet" : "Kaydet"}
-          </Button>
-          
-          {/* Secondary Actions */}
-          <Button variant="outline" size="sm" onClick={handlePrint}>
-            <Printer className="h-4 w-4 mr-2" />
-            Yazdır
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
-            <Download className="h-4 w-4 mr-2" />
-            PDF İndir
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleSendEmail}>
-            <Mail className="h-4 w-4 mr-2" />
-            E-posta Gönder
-          </Button>
-          
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Sil
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Teklifi silmek istediğinize emin misiniz?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Bu işlem geri alınamaz. Teklif veritabanından tamamen silinecektir.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>İptal</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">
-                  Sil
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={() => document.getElementById('proposal-form')?.dispatchEvent(
+                new Event('submit', { bubbles: true, cancelable: true })
+              )} 
+              disabled={saving}
+              size="sm"
+              className="bg-primary hover:bg-primary/90 min-w-[120px]"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
+            {/* Add other actions like print, download, etc. */}
+          </div>
         </div>
       </div>
-      
+
+      {/* Status Actions */}
       {getStatusActions()}
 
-      <Separator className="my-6" />
-
-      {/* Inline Editable Form */}
+      {/* Main Content */}
       <div className="space-y-6">
-        {/* Basic Information */}
-        <Card className="p-6 hover:shadow-md transition-shadow">
-          <h2 className="text-xl font-semibold mb-4">Temel Bilgiler</h2>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Teklif Başlığı</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => handleFieldChange('title', e.target.value)}
-                  placeholder="Teklif başlığını girin"
-                  className="border-2 hover:border-primary/50 focus:border-primary transition-colors"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Geçerlilik Tarihi</Label>
-                <DatePicker 
-                  selected={formData.valid_until ? new Date(formData.valid_until) : undefined}
-                  onSelect={(date) => handleFieldChange('valid_until', date ? date.toISOString() : '')}
-                  className="border-2 hover:border-primary/50 focus:border-primary transition-colors"
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Müşteri</Label>
-                <CustomerSelector
-                  value={formData.customer_id}
-                  onChange={(value) => handleFieldChange('customer_id', value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Çalışan</Label>
-                <EmployeeSelector
-                  value={formData.employee_id}
-                  onChange={(value) => handleFieldChange('employee_id', value)}
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="description">Açıklama</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleFieldChange('description', e.target.value)}
-                placeholder="Teklif açıklaması girin"
-                rows={3}
-                className="border-2 hover:border-primary/50 focus:border-primary transition-colors"
-              />
-            </div>
-          </div>
-        </Card>
-
-        {/* Currency Selector */}
-        <Card className="p-6 hover:shadow-md transition-shadow">
-          <h2 className="text-xl font-semibold mb-4">Para Birimi</h2>
-          <ProposalCurrencySelector 
-            selectedCurrency={formData.currency} 
-            onCurrencyChange={(currency) => handleFieldChange('currency', currency)}
-            items={formData.items}
-            onItemsChange={(items) => handleFieldChange('items', items)}
-          />
-        </Card>
-
-        {/* Proposal Items */}
-        <Card className="p-6 hover:shadow-md transition-shadow">
-          <h2 className="text-xl font-semibold mb-4">Teklif Kalemleri</h2>
-          <ProposalItems 
-            items={formData.items} 
-            onItemsChange={(items) => handleFieldChange('items', items)}
-            globalCurrency={formData.currency} 
-          />
-        </Card>
-
-        {/* Terms and Conditions */}
-        <Card className="p-6 hover:shadow-md transition-shadow">
-          <h2 className="text-xl font-semibold mb-4">Şartlar ve Koşullar</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="payment_terms">Ödeme Koşulları</Label>
-              <Textarea
-                id="payment_terms"
-                value={formData.payment_terms}
-                onChange={(e) => handleFieldChange('payment_terms', e.target.value)}
-                placeholder="Ödeme koşullarını girin"
-                rows={3}
-                className="border-2 hover:border-primary/50 focus:border-primary transition-colors"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="delivery_terms">Teslimat Koşulları</Label>
-              <Textarea
-                id="delivery_terms"
-                value={formData.delivery_terms}
-                onChange={(e) => handleFieldChange('delivery_terms', e.target.value)}
-                placeholder="Teslimat koşullarını girin"
-                rows={3}
-                className="border-2 hover:border-primary/50 focus:border-primary transition-colors"
-              />
-            </div>
-          </div>
-          
-          <div className="mt-4 space-y-2">
-            <Label htmlFor="notes">Notlar</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => handleFieldChange('notes', e.target.value)}
-              placeholder="Ek notlar girin"
-              rows={4}
-              className="border-2 hover:border-primary/50 focus:border-primary transition-colors"
+        <Card className="p-6 hover:shadow-sm transition-shadow">
+          <div id="proposal-form">
+            <ProposalForm
+              proposal={proposal}
+              loading={loading}
+              saving={saving}
+              isNew={false}
+              onSave={handleFormSave}
+              onBack={handleBack}
+              title="Teklif Düzenle"
+              subtitle="Teklif bilgilerini güncelleyin"
             />
-          </div>
-        </Card>
-
-        {/* Summary */}
-        <Card className="p-6 bg-gray-50 border-2">
-          <h2 className="text-xl font-semibold mb-4">Teklif Özeti</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white p-4 rounded-lg border">
-              <div className="text-muted-foreground text-sm">Toplam Tutar</div>
-              <div className="text-2xl font-bold text-green-600">
-                {formatProposalAmount(totals.total, formData.currency)}
-              </div>
-            </div>
-            <div className="bg-white p-4 rounded-lg border">
-              <div className="text-muted-foreground text-sm">Geçerlilik Tarihi</div>
-              <div className="text-lg font-semibold">
-                {formData.valid_until 
-                  ? format(new Date(formData.valid_until), "dd MMMM yyyy", { locale: tr })
-                  : "Belirtilmemiş"}
-              </div>
-            </div>
-            <div className="bg-white p-4 rounded-lg border">
-              <div className="text-muted-foreground text-sm">Müşteri</div>
-              <div className="text-lg font-semibold">
-                {proposal.customer?.name || proposal.customer_name || "Belirtilmemiş"}
-              </div>
-            </div>
-            <div className="bg-white p-4 rounded-lg border">
-              <div className="text-muted-foreground text-sm">Kalem Sayısı</div>
-              <div className="text-lg font-semibold">
-                {formData.items?.length || 0} kalem
-              </div>
-            </div>
           </div>
         </Card>
       </div>
