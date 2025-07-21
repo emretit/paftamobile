@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Download, 
   Eye, 
@@ -15,14 +16,16 @@ import {
   Search,
   RefreshCw,
   X,
-  AlertCircle
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
-interface Invoice {
+// Fatura listesi için basit interface (fetch_incoming endpoint'inden gelen)
+interface InvoiceSummary {
   id: string;
   invoiceNumber: string;
   supplierName: string;
@@ -35,25 +38,64 @@ interface Invoice {
   taxAmount: number;
   status: string;
   pdfUrl: string | null;
-  xmlData: any;
+  xmlData: any; // Ham Nilvera response'u
+}
+
+// Fatura detayı için detaylı interface (get_invoice_details endpoint'inden gelen)
+interface InvoiceDetails {
+  invoiceInfo: {
+    number: string;
+    date: string;
+    totalAmount: number;
+    currency: string;
+    taxTotalAmount: number;
+    lineExtensionAmount: number;
+  };
+  supplier: {
+    name: string;
+    taxNumber: string;
+    address: string;
+  };
+  items: Array<{
+    description: string;
+    productCode: string;
+    quantity: number;
+    unit: string;
+    unitPrice: number;
+    vatRate: number;
+    vatAmount: number;
+    totalAmount: number;
+    discountRate: number;
+    discountAmount: number;
+  }>;
 }
 
 export default function InvoiceManagementTab() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
+  // Fatura listesi state'leri
+  const [invoices, setInvoices] = useState<InvoiceSummary[]>([]);
+  const [filteredInvoices, setFilteredInvoices] = useState<InvoiceSummary[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Filtreleme state'leri
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
-  const [selectedTab, setSelectedTab] = useState('gelen'); // gelen, giden, dikkate-alinmayanlar, reddedilenler
+  const [selectedTab, setSelectedTab] = useState('gelen');
+  
+  // Detay modal state'leri
+  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceSummary | null>(null);
+  const [invoiceDetails, setInvoiceDetails] = useState<InvoiceDetails | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isDetailsLoading, setIsDetailsLoading] = useState(false);
+  
   const { toast } = useToast();
 
   // Otomatik yenileme için useEffect
   useEffect(() => {
-    loadInvoices();
+    loadInvoicesList();
     
     // Her 30 saniyede bir otomatik yenile
     const interval = setInterval(() => {
-      loadInvoices();
+      loadInvoicesList();
     }, 30000);
 
     return () => clearInterval(interval);
@@ -92,86 +134,35 @@ export default function InvoiceManagementTab() {
     setFilteredInvoices(filtered);
   };
 
-  // Faturalardan ürünleri parse et ve eşleştirme sayfasına yönlendir
-  const processInvoiceForMapping = async (invoice: Invoice) => {
-    // Fatura verilerini session storage'a kaydet
-    sessionStorage.setItem(`invoice_${invoice.id}`, JSON.stringify(invoice));
-    
-    // Yeni sayfaya yönlendir
-    window.location.href = `/product-mapping/${invoice.id}`;
-  };
-
-  // PDF görüntüleme fonksiyonu
-  const handleViewPDF = async (invoice: Invoice) => {
-    try {
-      console.log('📄 PDF indiriliyor:', invoice.id);
-      
-      const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
-        body: { 
-          action: 'get_pdf',
-          invoiceId: invoice.id 
-        }
-      });
-
-      if (data && data.success && data.pdfData) {
-        // Base64 veriyi blob'a çevir
-        const binaryString = atob(data.pdfData);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        
-        const blob = new Blob([bytes], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        
-        // Yeni sekmede aç
-        window.open(url, '_blank');
-        
-        toast({
-          title: "✅ Başarılı",
-          description: "PDF açıldı"
-        });
-      } else {
-        throw new Error(data?.message || 'PDF alınamadı');
-      }
-    } catch (error: any) {
-      console.error('❌ PDF view error:', error);
-      toast({
-        title: "❌ Hata",
-        description: error.message || "PDF görüntülenirken hata oluştu",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Fatura yükleme fonksiyonu
-  const loadInvoices = async () => {
+  // 1️⃣ FATURA LİSTESİ YÜKLEME (fetch_incoming endpoint)
+  // Bu endpoint sadece özet bilgileri getirir: fatura no, tedarikçi, tutar, tarih vs.
+  const loadInvoicesList = async () => {
     setIsLoading(true);
     try {
-      console.log('🔄 Faturaları yükleniyor...');
+      console.log('🔄 Fatura listesi yükleniyor... (fetch_incoming)');
       
       const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
         body: { action: 'fetch_incoming' }
       });
 
-      console.log('📥 API Response:', data);
+      console.log('📥 Lista API Response:', data);
 
       if (data && data.success) {
         setInvoices(data.invoices || []);
-        console.log('🎯 Debug Info:', data.debug);
+        console.log('🎯 Yüklenen fatura sayısı:', data.invoices?.length || 0);
         toast({
-          title: "✅ Başarılı",
-          description: `${data.invoices?.length || 0} fatura yüklendi`
+          title: "✅ Liste Yüklendi",
+          description: `${data.invoices?.length || 0} fatura listelendi`
         });
       } else {
-        console.error('❌ API Response Error:', data);
-        throw new Error(data?.message || data?.error || 'Faturalar yüklenemedi');
+        console.error('❌ Lista API Error:', data);
+        throw new Error(data?.message || data?.error || 'Fatura listesi yüklenemedi');
       }
     } catch (error: any) {
-      console.error('❌ Load invoices error:', error);
+      console.error('❌ Load invoices list error:', error);
       toast({
-        title: "❌ Hata",
-        description: error.message || "Faturalar yüklenirken hata oluştu",
+        title: "❌ Liste Hatası",
+        description: error.message || "Fatura listesi yüklenirken hata oluştu",
         variant: "destructive",
       });
     } finally {
@@ -179,36 +170,65 @@ export default function InvoiceManagementTab() {
     }
   };
 
+  // 2️⃣ FATURA DETAYI YÜKLEME (get_invoice_details endpoint)
+  // Bu endpoint XML parsing yaparak detaylı bilgileri getirir: ürün kalemleri, tam detaylar vs.
+  const loadInvoiceDetails = async (invoice: InvoiceSummary) => {
+    try {
+      setSelectedInvoice(invoice);
+      setIsDetailsLoading(true);
+      setIsDetailsOpen(true);
+      setInvoiceDetails(null); // Önceki detayları temizle
+      
+      console.log('📄 Fatura detayları yükleniyor... (get_invoice_details)', invoice.id);
+      
+      const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
+        body: { 
+          action: 'get_invoice_details',
+          invoice: { invoiceId: invoice.id }
+        }
+      });
+
+      console.log('📥 Detay API Response:', data);
+
+      if (data && data.success && data.invoiceDetails) {
+        setInvoiceDetails(data.invoiceDetails);
+        console.log('🎯 Detay yüklendi:', data.invoiceDetails.items?.length || 0, 'kalem');
+        toast({
+          title: "✅ Detay Yüklendi",
+          description: `${data.invoiceDetails.items?.length || 0} kalem detayı yüklendi`
+        });
+      } else {
+        console.error('❌ Detay API Error:', data);
+        throw new Error(data?.message || 'Fatura detayları alınamadı');
+      }
+    } catch (error: any) {
+      console.error('❌ Invoice details error:', error);
+      toast({
+        title: "❌ Detay Hatası",
+        description: error.message || "Fatura detayları yüklenirken hata oluştu",
+        variant: "destructive",
+      });
+      setIsDetailsOpen(false);
+    } finally {
+      setIsDetailsLoading(false);
+    }
+  };
+
+  // Faturalardan ürünleri parse et ve eşleştirme sayfasına yönlendir
+  const processInvoiceForMapping = async (invoice: InvoiceSummary) => {
+    // Fatura verilerini session storage'a kaydet
+    sessionStorage.setItem(`invoice_${invoice.id}`, JSON.stringify(invoice));
+    
+    // Yeni sayfaya yönlendir
+    window.location.href = `/product-mapping/${invoice.id}`;
+  };
+
   // Dikkat alma fonksiyonu
-  const handleDikkateAlma = async (invoice: Invoice) => {
+  const handleDikkateAlma = async (invoice: InvoiceSummary) => {
     toast({
       title: "Dikkat Alma",
       description: "Bu fatura dikkate alınmayanlara eklendi"
     });
-  };
-
-  // Reddetme fonksiyonu  
-  const handleReddet = async (invoice: Invoice) => {
-    toast({
-      title: "Reddetme",
-      description: "Bu fatura reddedildi"
-    });
-  };
-
-  // Tab sayılarını hesapla
-  const getTabCount = (tabType: string) => {
-    switch(tabType) {
-      case 'gelen':
-        return filteredInvoices.filter(inv => inv.status === 'received' || inv.status === 'pending').length;
-      case 'giden':
-        return filteredInvoices.filter(inv => inv.status === 'sent').length;
-      case 'dikkate-alinmayanlar':
-        return 3; // Örnek sayı
-      case 'reddedilenler':
-        return 0; // Örnek sayı
-      default:
-        return 0;
-    }
   };
 
   return (
@@ -218,6 +238,9 @@ export default function InvoiceManagementTab() {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">SİZE GELEN E-FATURALAR ve E-İRSALİYELER</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Fatura listesi otomatik yenilenir. Detaylar için "Detaylar" butonuna tıklayın.
+            </p>
           </div>
           
           <div className="flex items-center gap-2">
@@ -256,7 +279,7 @@ export default function InvoiceManagementTab() {
               className="w-40"
             />
             <Button 
-              onClick={loadInvoices}
+              onClick={loadInvoicesList}
               disabled={isLoading}
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
@@ -329,7 +352,7 @@ export default function InvoiceManagementTab() {
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-              <span className="ml-2 text-gray-600">Faturalar yükleniyor...</span>
+              <span className="ml-2 text-gray-600">Fatura listesi yükleniyor...</span>
             </div>
           ) : filteredInvoices.length === 0 ? (
             <div className="text-center py-12">
@@ -343,7 +366,7 @@ export default function InvoiceManagementTab() {
             <div className="space-y-4">
               {filteredInvoices.map((invoice) => (
                 <div key={invoice.id} className="border rounded-lg p-6 hover:shadow-md transition-shadow bg-gray-50">
-                  {/* Fatura Header */}
+                  {/* Fatura Header - Sadece Özet Bilgiler */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-4 mb-2">
@@ -391,10 +414,10 @@ export default function InvoiceManagementTab() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleViewPDF(invoice)}
+                      onClick={() => loadInvoiceDetails(invoice)}
                       className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
                     >
-                      📄 Yazdır
+                      📄 Detaylar
                     </Button>
                     <Button
                       variant="outline"
@@ -402,7 +425,7 @@ export default function InvoiceManagementTab() {
                       onClick={() => processInvoiceForMapping(invoice)}
                       className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
                     >
-                      ✅ Detay
+                      ✅ Ürün Eşleştir
                     </Button>
                   </div>
                 </div>
@@ -411,6 +434,145 @@ export default function InvoiceManagementTab() {
           )}
         </div>
       </div>
+
+      {/* Fatura Detayları Modal - XML Parse Edilmiş Tam Detaylar */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Fatura Detayları - {selectedInvoice?.invoiceNumber}
+              <Badge variant="secondary" className="ml-2">XML Parse Edildi</Badge>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {isDetailsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+              <span className="ml-2">XML parse ediliyor ve detaylar yükleniyor...</span>
+            </div>
+          ) : invoiceDetails ? (
+            <div className="space-y-6">
+              {/* Fatura Bilgileri */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Fatura Bilgileri</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Fatura No</label>
+                      <p className="text-lg font-semibold">{invoiceDetails.invoiceInfo.number}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Tarih</label>
+                      <p className="text-lg">{invoiceDetails.invoiceInfo.date}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Toplam Tutar</label>
+                      <p className="text-lg font-semibold text-green-600">
+                        {invoiceDetails.invoiceInfo.totalAmount.toLocaleString('tr-TR', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })} {invoiceDetails.invoiceInfo.currency}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">KDV Tutarı</label>
+                      <p className="text-lg font-semibold">
+                        {invoiceDetails.invoiceInfo.taxTotalAmount.toLocaleString('tr-TR', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })} {invoiceDetails.invoiceInfo.currency}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Tedarikçi Bilgileri */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Tedarikçi Bilgileri</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Firma Adı</label>
+                      <p className="text-lg">{invoiceDetails.supplier.name}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Vergi No</label>
+                      <p className="text-lg">{invoiceDetails.supplier.taxNumber}</p>
+                    </div>
+                    {invoiceDetails.supplier.address && (
+                      <div className="col-span-2">
+                        <label className="text-sm font-medium text-gray-500">Adres</label>
+                        <p className="text-lg">{invoiceDetails.supplier.address}</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Ürün/Hizmet Kalemleri - XML'den Parse Edilmiş */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    Ürün/Hizmet Kalemleri 
+                    <Badge variant="secondary" className="ml-2">
+                      {invoiceDetails.items.length} Kalem
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse border border-gray-200">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="border border-gray-200 px-4 py-2 text-left">Açıklama</th>
+                          <th className="border border-gray-200 px-4 py-2 text-center">Miktar</th>
+                          <th className="border border-gray-200 px-4 py-2 text-center">Birim</th>
+                          <th className="border border-gray-200 px-4 py-2 text-right">Birim Fiyat</th>
+                          <th className="border border-gray-200 px-4 py-2 text-center">KDV %</th>
+                          <th className="border border-gray-200 px-4 py-2 text-right">Tutar</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {invoiceDetails.items.map((item, index) => (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="border border-gray-200 px-4 py-2">{item.description}</td>
+                            <td className="border border-gray-200 px-4 py-2 text-center">{item.quantity}</td>
+                            <td className="border border-gray-200 px-4 py-2 text-center">{item.unit}</td>
+                            <td className="border border-gray-200 px-4 py-2 text-right">
+                              {item.unitPrice.toLocaleString('tr-TR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                              })}
+                            </td>
+                            <td className="border border-gray-200 px-4 py-2 text-center">{item.vatRate}%</td>
+                            <td className="border border-gray-200 px-4 py-2 text-right font-semibold">
+                              {item.totalAmount.toLocaleString('tr-TR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                              })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <p className="text-gray-500">Fatura detayları yüklenemedi.</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
