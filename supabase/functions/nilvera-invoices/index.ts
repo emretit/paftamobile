@@ -10,48 +10,144 @@ const corsHeaders = {
 // XML parsing helper functions
 const parseXMLProducts = (xmlContent: string) => {
   try {
-    console.log('Parsing XML content for products...')
+    console.log('🔍 Parsing XML content for products...')
+    console.log('📄 XML content preview (first 1000 chars):', xmlContent.substring(0, 1000))
     
-    // UBL InvoiceLine pattern'ini bul
+    const products = []
+    
+    // Türkçe e-fatura için farklı yaklaşımlar deneyelim
+    
+    // 1. UBL InvoiceLine pattern'i (standart)
     const invoiceLineRegex = /<cac:InvoiceLine>(.*?)<\/cac:InvoiceLine>/gs
-    const invoiceLines = xmlContent.match(invoiceLineRegex) || []
+    let invoiceLines = xmlContent.match(invoiceLineRegex) || []
     
-    const products = invoiceLines.map((lineXml, index) => {
-      // Ürün bilgilerini çıkar
-      const itemName = extractXMLValue(lineXml, 'cbc:Name') || `Ürün ${index + 1}`
-      const itemCode = extractXMLValue(lineXml, 'cbc:ID') || ''
-      const quantity = parseFloat(extractXMLValue(lineXml, 'cbc:InvoicedQuantity') || '1')
-      const unitCode = extractXMLAttribute(lineXml, 'cbc:InvoicedQuantity', 'unitCode') || 'Adet'
-      const unitPrice = parseFloat(extractXMLValue(lineXml, 'cbc:PriceAmount') || '0')
-      const lineTotal = parseFloat(extractXMLValue(lineXml, 'cbc:LineExtensionAmount') || '0')
+    console.log(`📋 Found ${invoiceLines.length} InvoiceLine entries`)
+    
+    if (invoiceLines.length > 0) {
+      invoiceLines.forEach((lineXml, index) => {
+        console.log(`\n🔍 Processing InvoiceLine ${index + 1}:`)
+        console.log('📄 Line XML preview:', lineXml.substring(0, 200) + '...')
+        
+        // Farklı tag isimlerini deneyelim
+        let itemName = 
+          extractXMLValue(lineXml, 'cbc:Name') || 
+          extractXMLValue(lineXml, 'cac:Item/cbc:Name') ||
+          extractXMLValue(lineXml, 'cac:Item/cac:SellersItemIdentification/cbc:ID') ||
+          extractXMLValue(lineXml, 'Description') ||
+          `Ürün ${index + 1}`
+        
+        let itemCode = 
+          extractXMLValue(lineXml, 'cbc:ID') ||
+          extractXMLValue(lineXml, 'cac:Item/cac:SellersItemIdentification/cbc:ID') ||
+          extractXMLValue(lineXml, 'cac:Item/cbc:ID') ||
+          ''
+        
+        let quantity = parseFloat(
+          extractXMLValue(lineXml, 'cbc:InvoicedQuantity') ||
+          extractXMLValue(lineXml, 'Quantity') ||
+          '1'
+        )
+        
+        let unitCode = 
+          extractXMLAttribute(lineXml, 'cbc:InvoicedQuantity', 'unitCode') ||
+          extractXMLAttribute(lineXml, 'Quantity', 'unitCode') ||
+          'Adet'
+        
+        let unitPrice = parseFloat(
+          extractXMLValue(lineXml, 'cbc:PriceAmount') ||
+          extractXMLValue(lineXml, 'cac:Price/cbc:PriceAmount') ||
+          extractXMLValue(lineXml, 'UnitPrice') ||
+          '0'
+        )
+        
+        let lineTotal = parseFloat(
+          extractXMLValue(lineXml, 'cbc:LineExtensionAmount') ||
+          extractXMLValue(lineXml, 'LineTotal') ||
+          (quantity * unitPrice).toString()
+        )
+        
+        // Vergi bilgilerini çıkar
+        let taxPercent = parseFloat(
+          extractXMLValue(lineXml, 'cbc:Percent') ||
+          extractXMLValue(lineXml, 'cac:TaxTotal/cac:TaxSubtotal/cac:TaxCategory/cbc:Percent') ||
+          extractXMLValue(lineXml, 'TaxRate') ||
+          '18'
+        )
+        
+        let taxAmount = parseFloat(
+          extractXMLValue(lineXml, 'cbc:TaxAmount') ||
+          extractXMLValue(lineXml, 'cac:TaxTotal/cbc:TaxAmount') ||
+          '0'
+        )
+        
+        console.log(`✅ Parsed: Name="${itemName}", Code="${itemCode}", Qty=${quantity}, Price=${unitPrice}`)
+        
+        products.push({
+          name: itemName,
+          sku: itemCode,
+          quantity: quantity,
+          unit: unitCode,
+          unit_price: unitPrice,
+          tax_rate: taxPercent,
+          tax_amount: taxAmount,
+          line_total: lineTotal,
+          discount_amount: 0,
+          original_xml: lineXml.substring(0, 500) // İlk 500 karakter
+        })
+      })
+    }
+    
+    // 2. Eğer UBL formatında bulamazsak, alternatif formatları deneyelim
+    if (products.length === 0) {
+      console.log('⚠️ No UBL InvoiceLines found, trying alternative formats...')
       
-      // Vergi bilgilerini çıkar
-      const taxPercent = parseFloat(extractXMLValue(lineXml, 'cbc:Percent') || '18')
-      const taxAmount = parseFloat(extractXMLValue(lineXml, 'cbc:TaxAmount') || '0')
+      // Basit tablo formatı (faturada görülen gibi)
+      const tableRowRegex = /<tr[^>]*>(.*?)<\/tr>/gs
+      const tableRows = xmlContent.match(tableRowRegex) || []
       
-      // İndirim bilgilerini çıkar
-      const allowanceAmount = parseFloat(extractXMLValue(lineXml, 'cbc:Amount') || '0')
+      console.log(`📋 Found ${tableRows.length} table rows`)
       
-      console.log(`Parsed product ${index + 1}: ${itemName}, Code: ${itemCode}, Qty: ${quantity}, Price: ${unitPrice}`)
-      
-      return {
-        name: itemName,
-        sku: itemCode,
-        quantity: quantity,
-        unit: unitCode,
-        unit_price: unitPrice,
-        tax_rate: taxPercent,
-        tax_amount: taxAmount,
-        line_total: lineTotal,
-        discount_amount: allowanceAmount,
-        original_xml: lineXml
-      }
+      tableRows.forEach((rowXml, index) => {
+        // Tablo hücrelerini bul
+        const cellRegex = /<td[^>]*>(.*?)<\/td>/gs
+        const cells = []
+        let match
+        while ((match = cellRegex.exec(rowXml)) !== null) {
+          cells.push(match[1].trim())
+        }
+        
+        if (cells.length >= 4) { // En az 4 sütun varsa ürün olarak kabul et
+          console.log(`📋 Table row ${index}: ${cells.join(' | ')}`)
+          
+          products.push({
+            name: cells[1] || `Ürün ${index + 1}`, // Mal Hizmet sütunu
+            sku: cells[0] || '', // Sıra No
+            quantity: parseFloat(cells[2]) || 1, // Miktar
+            unit: 'Adet',
+            unit_price: parseFloat(cells[3]) || 0, // Birim Fiyat
+            tax_rate: 18,
+            tax_amount: 0,
+            line_total: parseFloat(cells[6]) || 0, // Mal Hizmet Tutarı
+            discount_amount: 0,
+            original_xml: rowXml.substring(0, 200)
+          })
+        }
+      })
+    }
+    
+    // 3. Son çare: JSON formatında Details API'den gelen veriyi kullan
+    if (products.length === 0) {
+      console.log('⚠️ No products found in XML, will try Details API format in parent function')
+    }
+    
+    console.log(`✅ Successfully parsed ${products.length} products from XML`)
+    products.forEach((product, index) => {
+      console.log(`📦 Product ${index + 1}: ${product.name} - ${product.quantity} x ${product.unit_price} = ${product.line_total}`)
     })
     
-    console.log(`Successfully parsed ${products.length} products from XML`)
     return products
   } catch (error) {
-    console.error('Error parsing XML products:', error)
+    console.error('❌ Error parsing XML products:', error)
     return []
   }
 }
@@ -300,12 +396,43 @@ serve(async (req) => {
         console.log('XML content preview:', xmlContent.substring(0, 500))
         
         // 3. XML'den ürünleri parse et
-        const parsedProducts = parseXMLProducts(xmlContent)
+        let parsedProducts = parseXMLProducts(xmlContent)
+        
+        // 4. Eğer XML'den ürün bulamazsak, Details API'den gelen veriyi kullan
+        if (parsedProducts.length === 0 && invoiceDetails.InvoiceLines) {
+          console.log('🔄 Trying to parse products from Details API InvoiceLines...')
+          
+          parsedProducts = invoiceDetails.InvoiceLines.map((line: any, index: number) => {
+            const name = line.ItemName || line.Description || line.Name || `Ürün ${index + 1}`
+            const code = line.ItemCode || line.SellersItemIdentification || line.ID || ''
+            const quantity = parseFloat(line.InvoicedQuantity || line.Quantity || '1')
+            const unitPrice = parseFloat(line.PriceAmount || line.UnitPrice || '0')
+            const lineTotal = parseFloat(line.LineExtensionAmount || line.LineTotal || (quantity * unitPrice))
+            const taxRate = parseFloat(line.TaxPercent || line.VATRate || '18')
+            
+            console.log(`📦 From Details API - Product ${index + 1}: ${name}, Qty: ${quantity}, Price: ${unitPrice}`)
+            
+            return {
+              name: name,
+              sku: code,
+              quantity: quantity,
+              unit: line.UnitCode || 'Adet',
+              unit_price: unitPrice,
+              tax_rate: taxRate,
+              tax_amount: parseFloat(line.TaxAmount || '0'),
+              line_total: lineTotal,
+              discount_amount: parseFloat(line.AllowanceAmount || '0'),
+              original_xml: JSON.stringify(line)
+            }
+          })
+          
+          console.log(`✅ Parsed ${parsedProducts.length} products from Details API`)
+        }
         
         if (parsedProducts.length === 0) {
-          console.warn('⚠️ No products parsed from XML')
-          // XML içeriğini daha detaylı logla
-          console.log('📄 Full XML content for debugging:', xmlContent)
+          console.warn('⚠️ No products found in both XML and Details API')
+          console.log('📄 Available Details fields:', Object.keys(invoiceDetails))
+          console.log('📄 InvoiceLines:', invoiceDetails.InvoiceLines)
         }
         
         // 4. Ürünleri veritabanına kaydet
