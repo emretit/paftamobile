@@ -84,8 +84,11 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
         }
       }
 
-      const { data, error } = await query.order("created_at", { ascending: false });
+      const { data, error } = await query
+        .order("created_at", { ascending: false })
+        .limit(null); // Explicitly remove any limit
       if (error) throw error;
+      console.log('Total products fetched:', data?.length);
       return data;
     },
   });
