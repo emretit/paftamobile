@@ -1,6 +1,6 @@
 
 import { Input } from "@/components/ui/input";
-import { Search, SlidersHorizontal, FileDown, FileUp, MoreVertical } from "lucide-react";
+import { Search, SlidersHorizontal, FileDown, FileUp, MoreVertical, FileTemplate, Download, Upload } from "lucide-react";
 import { 
   Select,
   SelectContent,
@@ -34,6 +34,9 @@ interface ProductFiltersProps {
   categories: { id: string; name: string }[];
   totalProducts: number;
   onBulkAction?: (action: string) => void;
+  onDownloadTemplate?: () => void;
+  onExportExcel?: () => void;
+  onImportExcel?: () => void;
 }
 
 const ProductFilters = ({
@@ -44,7 +47,10 @@ const ProductFilters = ({
   setStockFilter,
   categories,
   totalProducts,
-  onBulkAction
+  onBulkAction,
+  onDownloadTemplate,
+  onExportExcel,
+  onImportExcel
 }: ProductFiltersProps) => {
   return (
     <div className="space-y-6">
@@ -62,15 +68,34 @@ const ProductFilters = ({
           </p>
         </div>
 
-        {/* Quick Actions */}
+        {/* Excel Actions */}
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" className="h-9">
-            <FileDown className="w-4 h-4 mr-2" />
-            Dışa Aktar
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-9"
+            onClick={onDownloadTemplate}
+          >
+            <FileTemplate className="w-4 h-4 mr-2" />
+            Şablon İndir
           </Button>
-          <Button variant="outline" size="sm" className="h-9">
-            <FileUp className="w-4 h-4 mr-2" />
-            İçe Aktar
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-9"
+            onClick={onExportExcel}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Excel İndir
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-9"
+            onClick={onImportExcel}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Excel Yükle
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

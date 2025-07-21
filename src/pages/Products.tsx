@@ -7,8 +7,8 @@ import { useNavigate } from "react-router-dom";
 import ProductFilters from "@/components/products/ProductFilters";
 import ProductGrid from "@/components/products/ProductGrid";
 import ProductTable from "@/components/products/ProductTable";
-import ProductExcelActions from "@/components/products/excel/ProductExcelActions";
 import ProductImportDialog from "@/components/products/excel/ProductImportDialog";
+import { exportProductsToExcel, exportProductTemplateToExcel } from "@/utils/excelUtils";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
@@ -148,6 +148,18 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
     queryClient.invalidateQueries({ queryKey: ["products"] });
   };
 
+  const handleDownloadTemplate = () => {
+    exportProductTemplateToExcel();
+  };
+
+  const handleExportExcel = () => {
+    exportProductsToExcel(allProducts);
+  };
+
+  const handleImportExcel = () => {
+    setIsImportDialogOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
@@ -165,6 +177,9 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
               categories={categories}
               totalProducts={totalProductsCount}
               onBulkAction={handleBulkAction}
+              onDownloadTemplate={handleDownloadTemplate}
+              onExportExcel={handleExportExcel}
+              onImportExcel={handleImportExcel}
             />
 
           <div className="flex items-center justify-between mt-6">
@@ -186,10 +201,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
                 </Button>
               </div>
               
-              <ProductExcelActions 
-                products={products || []} 
-                onImportClick={() => setIsImportDialogOpen(true)}
-              />
+
             </div>
 
             <Button onClick={() => navigate("/product-form")} className="gap-2">
