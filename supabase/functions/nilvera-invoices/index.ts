@@ -28,18 +28,25 @@ const parseXMLProducts = (xmlContent: string) => {
         console.log('📄 Line XML preview:', lineXml.substring(0, 300) + '...')
         
         // Farklı tag isimlerini deneyelim - UBL standart formatları
+        // Önce gerçek ürün adını bulmaya odaklanalım, vergi adı değil
         let itemName = 
-          extractXMLValue(lineXml, 'cbc:Name') || 
           extractXMLValue(lineXml, 'cac:Item/cbc:Name') ||
-          extractXMLValue(lineXml, 'cac:Item/cac:SellersItemIdentification/cbc:ID') ||
           extractXMLValue(lineXml, 'cac:Item/cbc:Description') ||
+          extractXMLValue(lineXml, 'cac:Item/cac:SellersItemIdentification/cbc:ID') ||
+          extractXMLValue(lineXml, 'cac:Item/cac:StandardItemIdentification/cbc:ID') ||
+          extractXMLValue(lineXml, 'Description') ||
+          extractProductNameFromText(lineXml) ||
           `Ürün ${index + 1}`
         
-        let itemCode = 
-          extractXMLValue(lineXml, 'cbc:ID') ||
-          extractXMLValue(lineXml, 'cac:Item/cac:SellersItemIdentification/cbc:ID') ||
-          extractXMLValue(lineXml, 'cac:Item/cbc:ID') ||
-          ''
+        // Vergi adını değil, gerçek ürün adını filtrele
+        if (itemName === 'KDV' || itemName === 'ÖTV' || itemName === 'STOPAJ') {
+          // Bu vergi adları, ürün adı değil - başka yerlerde ara
+          itemName = 
+            extractXMLValue(lineXml, 'cac:Item/cac:Item/cbc:Name') ||
+            extractXMLValue(lineXml, 'Item/Name') ||
+            extractProductNameFromComplexXML(lineXml) ||
+            `Ürün ${index + 1}`
+        }
         
         let quantity = parseFloat(
           extractXMLValue(lineXml, 'cbc:InvoicedQuantity') ||
@@ -320,6 +327,58 @@ const extractXMLAttribute = (xml: string, tagName: string, attributeName: string
   const regex = new RegExp(`<${tagName}[^>]*${attributeName}="([^"]*)"[^>]*>`, 'g')
   const match = regex.exec(xml)
   return match ? match[1] : null
+}
+
+// Ürün adını XML text içinde arama helper'ı
+const extractProductNameFromText = (xml: string): string | null => {
+  // "1 KILO DOMATES" gibi yaygın ürün adı formatlarını ara
+  const productPatterns = [
+    /(\d+(?:\.\d+)?\s+(?:KİLO|ADET|LİTRE|METRE|GRAM|TON|KUTU|PAKET)\s+[A-ZÇĞıÖŞÜİ\s]+)/gi,
+    /([A-ZÇĞıÖŞÜİ][A-ZÇĞıÖŞÜİ\s]+(?:DOMATES|PATATES|SOĞAN|EKMEK|SÜT|PEYNIR|ET|TAVUK|BALIK))/gi,
+    />([^<>]+(?:KİLO|ADET|LİTRE)\s+[A-ZÇĞıÖŞÜİ\s]+)</gi
+  ]
+  
+  for (const pattern of productPatterns) {
+    const matches = xml.match(pattern)
+    if (matches) {
+      for (const match of matches) {
+        const cleaned = match.replace(/^>/, '').trim()
+        // KDV, vergi, toplam gibi mali terimleri filtrele
+        if (cleaned && 
+            !cleaned.toUpperCase().includes('KDV') &&
+            !cleaned.toUpperCase().includes('VERGI') &&
+            !cleaned.toUpperCase().includes('TOPLAM') &&
+            !cleaned.toUpperCase().includes('TUTAR') &&
+            cleaned.length > 3) {
+          return cleaned
+        }
+      }
+    }
+  }
+  
+  return null
+}
+
+// Karmaşık XML yapısında ürün adı arama
+const extractProductNameFromComplexXML = (xml: string): string | null => {
+  // Text content'i çıkar ve temizle
+  const textContent = xml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  
+  // "1 KILO DOMATES" gibi patterns ara
+  const matches = textContent.match(/(\d+(?:\.\d+)?\s+(?:KİLO|ADET|LİTRE|METRE|GRAM|TON)\s+[A-ZÇĞIÖŞÜİ\s]+)/gi)
+  if (matches) {
+    for (const match of matches) {
+      const cleaned = match.trim()
+      if (cleaned && 
+          !cleaned.toUpperCase().includes('KDV') &&
+          !cleaned.toUpperCase().includes('VERGI') &&
+          cleaned.length > 5) {
+        return cleaned
+      }
+    }
+  }
+  
+  return null
 }
 
 // HTML'den metin çıkarma helper'ı
