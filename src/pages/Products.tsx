@@ -49,6 +49,43 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
     },
   });
 
+  // Toplam ürün sayısını ayrı olarak çek
+  const { data: totalProductsCount = 0 } = useQuery({
+    queryKey: ["products-count", searchQuery, categoryFilter, stockFilter],
+    queryFn: async () => {
+      let countQuery = supabase
+        .from("products")
+        .select("*", { count: 'exact', head: true });
+
+      if (searchQuery) {
+        countQuery = countQuery.ilike("name", `%${searchQuery}%`);
+      }
+
+      if (categoryFilter && categoryFilter !== "all") {
+        countQuery = countQuery.eq("category_id", categoryFilter);
+      }
+
+      if (stockFilter !== "all") {
+        switch (stockFilter) {
+          case "out_of_stock":
+            countQuery = countQuery.eq("stock_quantity", 0);
+            break;
+          case "low_stock":
+            countQuery = countQuery.gt("stock_quantity", 0).lte("stock_quantity", 5);
+            break;
+          case "in_stock":
+            countQuery = countQuery.gt("stock_quantity", 5);
+            break;
+        }
+      }
+
+      const { count, error } = await countQuery;
+      if (error) throw error;
+      console.log('Total products count:', count);
+      return count || 0;
+    },
+  });
+
   const { data: allProducts = [], isLoading } = useQuery({
     queryKey: ["products", searchQuery, categoryFilter, stockFilter],
     staleTime: 0, // Cache'i hemen stale yap
@@ -86,12 +123,29 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
         }
       }
 
-      const { data, error } = await query
-        .order("created_at", { ascending: false })
-        .range(0, 9999); // Supabase'de tüm kayıtları çekmek için yüksek bir range kullanıyoruz
-      if (error) throw error;
-      console.log('Total products fetched:', data?.length);
-      return data;
+      // Supabase'de büyük veri setleri için chunked approach
+      const chunkSize = 1000;
+      let allData = [];
+      let start = 0;
+      
+      while (true) {
+        const { data, error } = await query
+          .order("created_at", { ascending: false })
+          .range(start, start + chunkSize - 1);
+          
+        if (error) throw error;
+        
+        if (!data || data.length === 0) break;
+        
+        allData.push(...data);
+        
+        if (data.length < chunkSize) break;
+        
+        start += chunkSize;
+      }
+      
+      console.log('Total products fetched:', allData.length);
+      return allData;
     },
   });
 
@@ -118,16 +172,16 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
       }`}>
         <TopBar />
         <div className="container mx-auto p-8 max-w-7xl">
-          <ProductFilters
-            setSearchQuery={setSearchQuery}
-            categoryFilter={categoryFilter}
-            setCategoryFilter={setCategoryFilter}
-            stockFilter={stockFilter}
-            setStockFilter={setStockFilter}
-            categories={categories}
-            totalProducts={allProducts.length}
-            onBulkAction={handleBulkAction}
-          />
+                      <ProductFilters
+              setSearchQuery={setSearchQuery}
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+              stockFilter={stockFilter}
+              setStockFilter={setStockFilter}
+              categories={categories}
+              totalProducts={totalProductsCount}
+              onBulkAction={handleBulkAction}
+            />
 
           <div className="flex items-center justify-between mt-6">
             <div className="flex items-center space-x-4">
