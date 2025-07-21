@@ -5,21 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft,
-  ArrowRight,
-  Search,
-  Package,
-  CheckCircle,
   Loader2,
   Building,
   Calendar,
   DollarSign,
-  X,
-  Plus
+  Package,
+  FileText,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { Input } from '@/components/ui/input';
 import { 
   Select,
   SelectContent,
@@ -28,6 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { DefaultLayout } from '@/components/layouts/DefaultLayout';
 
 interface ParsedProduct {
   name: string;
@@ -37,6 +35,8 @@ interface ParsedProduct {
   unit: string;
   tax_rate: number;
   line_total: number;
+  tax_amount?: number;
+  discount_amount?: number;
 }
 
 interface ExistingProduct {
@@ -68,7 +68,12 @@ interface Invoice {
   status: string;
 }
 
-export default function ProductMapping() {
+interface ProductMappingProps {
+  isCollapsed?: boolean;
+  setIsCollapsed?: (collapsed: boolean) => void;
+}
+
+export default function ProductMapping({ isCollapsed = false, setIsCollapsed = () => {} }: ProductMappingProps) {
   const { invoiceId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -77,14 +82,13 @@ export default function ProductMapping() {
   const [parsedProducts, setParsedProducts] = useState<ParsedProduct[]>([]);
   const [existingProducts, setExistingProducts] = useState<ExistingProduct[]>([]);
   const [productMappings, setProductMappings] = useState<ProductMapping[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
 
   // Mevcut ürünleri yükle
   const loadExistingProducts = async () => {
     try {
+      console.log('🔄 Mevcut ürünler yükleniyor...');
       const { data, error } = await supabase
         .from('products')
         .select('id, name, sku, price, category_type, stock_quantity, unit, tax_rate')
@@ -92,30 +96,49 @@ export default function ProductMapping() {
         .order('name');
 
       if (error) throw error;
+      console.log('✅ Mevcut ürünler yüklendi:', data?.length || 0);
       setExistingProducts(data || []);
+      return data || [];
     } catch (error) {
-      console.error('Mevcut ürünler yüklenemedi:', error);
+      console.error('❌ Mevcut ürünler yüklenemedi:', error);
       toast({
         title: "❌ Hata",
         description: "Mevcut ürünler yüklenemedi",
         variant: "destructive",
       });
+      return [];
     }
   };
 
   // Fatura ve ürün verilerini yükle
   const loadInvoiceData = async () => {
-    if (!invoiceId) return;
+    if (!invoiceId) {
+      toast({
+        title: "❌ Hata",
+        description: "Fatura ID bulunamadı",
+        variant: "destructive",
+      });
+      navigate('/orders/purchase');
+      return;
+    }
     
     setIsLoading(true);
     try {
+      console.log('🔄 Fatura verileri yükleniyor...', invoiceId);
+      
       // Fatura verilerini session storage'dan al
       const invoiceData = sessionStorage.getItem(`invoice_${invoiceId}`);
       if (invoiceData) {
-        setInvoice(JSON.parse(invoiceData));
+        const parsedInvoice = JSON.parse(invoiceData);
+        setInvoice(parsedInvoice);
+        console.log('✅ Fatura bilgileri session storage\'dan alındı:', parsedInvoice.invoiceNumber);
       }
 
+      // Önce mevcut ürünleri yükle
+      const existingProductsData = await loadExistingProducts();
+
       // XML'den ürünleri parse et
+      console.log('🔄 XML\'den ürünler parse ediliyor...');
       const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
         body: { 
           action: 'process_xml_invoice',
@@ -123,14 +146,19 @@ export default function ProductMapping() {
         }
       });
 
-      if (error) throw error;
+      console.log('📥 XML Parse API Response:', data);
+
+      if (error) {
+        console.error('❌ Supabase function error:', error);
+        throw error;
+      }
 
       if (data && data.success) {
         const products = data.xmlParsed || [];
-        setParsedProducts(products);
+        console.log('✅ Parse edilen ürünler:', products.length);
+        console.log('🎯 İlk ürün örneği:', products[0]);
         
-        // Mevcut ürünleri yükle
-        await loadExistingProducts();
+        setParsedProducts(products);
         
         // Otomatik eşleştirme önerileri oluştur
         const mappings = products.map((product: ParsedProduct) => {
@@ -138,12 +166,12 @@ export default function ProductMapping() {
           
           // SKU ile eşleştirme
           if (product.sku) {
-            suggestedProduct = existingProducts.find(p => p.sku === product.sku);
+            suggestedProduct = existingProductsData.find(p => p.sku === product.sku);
           }
           
           // İsim ile eşleştirme
-          if (!suggestedProduct) {
-            suggestedProduct = existingProducts.find(p => 
+          if (!suggestedProduct && product.name) {
+            suggestedProduct = existingProductsData.find(p => 
               p.name.toLowerCase().includes(product.name.toLowerCase()) ||
               product.name.toLowerCase().includes(p.name.toLowerCase())
             );
@@ -152,12 +180,27 @@ export default function ProductMapping() {
           return {
             parsedProduct: product,
             selectedProductId: suggestedProduct?.id || null,
-            action: suggestedProduct ? 'update' : 'create'
+            action: 'create' // Varsayılan olarak yeni ürün oluştur
           } as ProductMapping;
         });
         
         setProductMappings(mappings);
+        console.log('✅ Eşleştirme önerileri oluşturuldu:', mappings.length);
+        
+        if (products.length === 0) {
+          toast({
+            title: "⚠️ Uyarı",
+            description: "Faturada ürün bilgisi bulunamadı",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "✅ Başarılı",
+            description: `${products.length} ürün başarıyla parse edildi`,
+          });
+        }
       } else {
+        console.error('❌ XML Parse başarısız:', data);
         throw new Error(data?.message || 'XML işlenemedi');
       }
     } catch (error: any) {
@@ -177,14 +220,38 @@ export default function ProductMapping() {
   }, [invoiceId]);
 
   // Eşleştirme değişikliği
-  const handleMappingChange = (index: number, productId: string | null, action: 'create' | 'update' | 'skip') => {
+  const handleMappingChange = (index: number, selectedValue: string) => {
     const newMappings = [...productMappings];
-    newMappings[index] = {
-      ...newMappings[index],
-      selectedProductId: productId,
-      action: action
-    };
+    
+    if (selectedValue === 'create') {
+      // Yeni ürün oluştur
+      newMappings[index] = {
+        ...newMappings[index],
+        selectedProductId: null,
+        action: 'create'
+      };
+    } else if (selectedValue === 'skip') {
+      // Atla
+      newMappings[index] = {
+        ...newMappings[index],
+        selectedProductId: null,
+        action: 'skip'
+      };
+    } else {
+      // Mevcut ürünle eşleştir
+      newMappings[index] = {
+        ...newMappings[index],
+        selectedProductId: selectedValue,
+        action: 'update'
+      };
+    }
+    
     setProductMappings(newMappings);
+  };
+
+  // Geri dön
+  const handleBack = () => {
+    navigate('/orders/purchase');
   };
 
   // Eşleştirmeleri kaydet
@@ -198,58 +265,72 @@ export default function ProductMapping() {
       const results = [];
       
       for (const mapping of processedMappings) {
-        if (mapping.action === 'create') {
-          const { data, error } = await supabase
-            .from('products')
-            .insert({
-              name: mapping.parsedProduct.name,
-              sku: mapping.parsedProduct.sku,
-              price: mapping.parsedProduct.unit_price,
-              tax_rate: mapping.parsedProduct.tax_rate,
-              unit: mapping.parsedProduct.unit,
-              currency: invoice.currency,
-              category_type: 'product',
-              product_type: 'physical',
-              status: 'active',
-              is_active: true,
-              stock_quantity: 0,
-              description: `Nilvera faturasından aktarılan ürün - Fatura No: ${invoice.invoiceNumber}`,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-          
-          if (error) throw error;
-          results.push({ action: 'created', product: data });
-          
-        } else if (mapping.action === 'update' && mapping.selectedProductId) {
-          const { data, error } = await supabase
-            .from('products')
-            .update({
-              price: mapping.parsedProduct.unit_price,
-              tax_rate: mapping.parsedProduct.tax_rate,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', mapping.selectedProductId)
-            .select()
-            .single();
-          
-          if (error) throw error;
-          results.push({ action: 'updated', product: data });
+        try {
+          if (mapping.action === 'create') {
+            // Yeni ürün oluştur
+            const { data: newProduct, error } = await supabase
+              .from('products')
+              .insert({
+                name: mapping.parsedProduct.name,
+                sku: mapping.parsedProduct.sku,
+                price: mapping.parsedProduct.unit_price,
+                tax_rate: mapping.parsedProduct.tax_rate || 18,
+                unit: mapping.parsedProduct.unit || 'Adet',
+                currency: invoice.currency || 'TRY',
+                category_type: 'product',
+                product_type: 'physical',
+                status: 'active',
+                is_active: true,
+                stock_quantity: 0,
+                min_stock_level: 0,
+                stock_threshold: 0,
+                description: `Nilvera faturasından aktarılan ürün - Fatura No: ${invoice.invoiceNumber}`,
+              })
+              .select()
+              .single();
+
+            if (error) throw error;
+            results.push({ type: 'created', product: newProduct });
+          } else if (mapping.action === 'update' && mapping.selectedProductId) {
+            // Mevcut ürünü güncelle
+            const { data: updatedProduct, error } = await supabase
+              .from('products')
+              .update({
+                price: mapping.parsedProduct.unit_price,
+                tax_rate: mapping.parsedProduct.tax_rate || 18,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', mapping.selectedProductId)
+              .select()
+              .single();
+
+            if (error) throw error;
+            results.push({ type: 'updated', product: updatedProduct });
+          }
+        } catch (error) {
+          console.error('Ürün işleme hatası:', error);
+          results.push({ type: 'error', error: error });
         }
       }
-      
+
+      const createdCount = results.filter(r => r.type === 'created').length;
+      const updatedCount = results.filter(r => r.type === 'updated').length;
+      const errorCount = results.filter(r => r.type === 'error').length;
+
       toast({
-        title: "✅ Başarılı",
-        description: `${results.length} ürün işlendi. ${results.filter(r => r.action === 'created').length} yeni, ${results.filter(r => r.action === 'updated').length} güncellendi.`
+        title: "✅ Eşleştirme Tamamlandı",
+        description: `${createdCount} ürün oluşturuldu, ${updatedCount} ürün güncellendi${errorCount > 0 ? `, ${errorCount} hata` : ''}`,
       });
-      
-      // Geri dön
-      navigate('/purchase-management');
-      
+
+      // Başarılı ise geri dön
+      if (errorCount === 0) {
+        setTimeout(() => {
+          handleBack();
+        }, 2000);
+      }
+
     } catch (error: any) {
-      console.error('❌ Eşleştirme kaydetme hatası:', error);
+      console.error('❌ Kaydetme hatası:', error);
       toast({
         title: "❌ Hata",
         description: error.message || "Eşleştirmeler kaydedilirken hata oluştu",
@@ -260,47 +341,26 @@ export default function ProductMapping() {
     }
   };
 
-  // Filtrelenmiş mevcut ürünler
-  const filteredExistingProducts = existingProducts.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Fatura verileri yükleniyor...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/purchase-management')}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Geri
-              </Button>
-              <div className="h-6 w-px bg-gray-300" />
-              <div>
-                <h1 className="text-xl font-semibold">Ürün Eşleştirme</h1>
-                <p className="text-sm text-gray-600">
-                  Fatura No: {invoice?.invoiceNumber} - {invoice?.supplierName}
-                </p>
-              </div>
-            </div>
+    <DefaultLayout
+      isCollapsed={isCollapsed}
+      setIsCollapsed={setIsCollapsed}
+      title="Ürün Eşleştirme"
+      subtitle={`Fatura No: ${invoice?.invoiceNumber || 'Yükleniyor...'} - ${invoice?.supplierName || ''}`}
+    >
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="outline"
+            onClick={handleBack}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Geri Dön
+          </Button>
+          
+          {!isLoading && productMappings.length > 0 && (
             <div className="flex items-center gap-4">
               <div className="text-sm text-gray-600">
                 {productMappings.length} ürün • {productMappings.filter(m => m.action === 'create').length} yeni • {productMappings.filter(m => m.action === 'update').length} güncelleme
@@ -308,7 +368,7 @@ export default function ProductMapping() {
               <Button
                 onClick={saveMappings}
                 disabled={isSaving}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -318,229 +378,275 @@ export default function ProductMapping() {
                 Kaydet
               </Button>
             </div>
-          </div>
+          )}
         </div>
-      </div>
 
-      {/* Fatura Bilgileri */}
-      {invoice && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Card className="mb-6">
-            <CardContent className="p-6">
-              <div className="grid grid-cols-4 gap-6">
-                <div className="flex items-center gap-2">
-                  <Building className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-600">Tedarikçi</p>
-                    <p className="font-medium">{invoice.supplierName}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-600">Fatura Tarihi</p>
-                    <p className="font-medium">
-                      {format(new Date(invoice.invoiceDate), 'dd.MM.yyyy', { locale: tr })}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-600">Toplam Tutar</p>
-                    <p className="font-medium">
-                      {invoice.totalAmount.toLocaleString('tr-TR')} {invoice.currency}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Package className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-600">Durum</p>
-                    <Badge variant="secondary">{invoice.status}</Badge>
-                  </div>
-                </div>
+        {/* Loading State */}
+        {isLoading ? (
+          <Card>
+            <CardContent className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Ürünler Yükleniyor</h3>
+                <p className="text-gray-500">
+                  Fatura XML'i parse ediliyor ve ürün bilgileri çıkarılıyor...
+                </p>
               </div>
             </CardContent>
           </Card>
-        </div>
-      )}
-
-      {/* Ana İçerik */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        {/* Arama */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 max-w-md">
-            <Search className="w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Mevcut ürünlerde ara..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1"
-            />
-          </div>
-        </div>
-
-        {/* Ürün Eşleştirme Listesi */}
-        <div className="space-y-4">
-          {productMappings.map((mapping, index) => (
-            <Card key={index} className="overflow-hidden">
-              <CardContent className="p-0">
-                <div className="grid grid-cols-12 min-h-[200px]">
-                  {/* Faturadaki Ürün */}
-                  <div className="col-span-5 bg-blue-50 p-6 border-r">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Package className="w-5 h-5 text-blue-600" />
-                      <h3 className="font-semibold text-blue-900">Faturadaki Ürün</h3>
+        ) : parsedProducts.length === 0 ? (
+          <Card>
+            <CardContent className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <AlertCircle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Ürün Bulunamadı</h3>
+                <p className="text-gray-500 mb-4">
+                  Bu faturada ürün bilgisi bulunamadı veya XML parse edilemedi.
+                </p>
+                <Button variant="outline" onClick={handleBack}>
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Geri Dön
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-12 gap-6">
+            {/* Sol Panel - Evrak Bilgileri */}
+            <div className="col-span-5">
+              <Card>
+                <CardHeader className="bg-blue-500 text-white">
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    EVRAK BİLGİLERİ
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Gönderen</label>
+                      <p className="font-semibold">{invoice?.supplierName}</p>
                     </div>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="font-medium text-lg text-blue-900">
-                          {mapping.parsedProduct.name}
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <p className="text-blue-700 font-medium">SKU</p>
-                          <p className="text-blue-800">{mapping.parsedProduct.sku || 'Yok'}</p>
-                        </div>
-                        <div>
-                          <p className="text-blue-700 font-medium">Birim Fiyat</p>
-                          <p className="text-blue-800 font-semibold">
-                            {mapping.parsedProduct.unit_price.toLocaleString('tr-TR')} {invoice?.currency}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-blue-700 font-medium">Miktar</p>
-                          <p className="text-blue-800">{mapping.parsedProduct.quantity} {mapping.parsedProduct.unit}</p>
-                        </div>
-                        <div>
-                          <p className="text-blue-700 font-medium">KDV</p>
-                          <p className="text-blue-800">%{mapping.parsedProduct.tax_rate}</p>
-                        </div>
-                      </div>
-                      <div className="pt-2 border-t border-blue-200">
-                        <p className="text-blue-700 font-medium">Toplam</p>
-                        <p className="text-blue-900 font-bold text-lg">
-                          {mapping.parsedProduct.line_total.toLocaleString('tr-TR')} {invoice?.currency}
-                        </p>
-                      </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Tedarikçi</label>
+                      <p className="font-semibold">{invoice?.supplierName}</p>
                     </div>
                   </div>
-
-                  {/* Ok */}
-                  <div className="col-span-2 flex items-center justify-center bg-gray-50">
-                    <div className="text-center">
-                      <ArrowRight className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <Badge 
-                        variant={
-                          mapping.action === 'create' ? 'default' : 
-                          mapping.action === 'update' ? 'secondary' : 'outline'
-                        }
-                        className="text-xs"
-                      >
-                        {mapping.action === 'create' ? 'Yeni Ürün' : 
-                         mapping.action === 'update' ? 'Güncelle' : 'Atla'}
-                      </Badge>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Adres</label>
+                      <p className="text-sm text-gray-700">-</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Vergi No</label>
+                      <p className="font-semibold">{invoice?.supplierTaxNumber}</p>
                     </div>
                   </div>
-
-                  {/* Sistemdeki Ürün */}
-                  <div className="col-span-5 bg-green-50 p-6">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Package className="w-5 h-5 text-green-600" />
-                      <h3 className="font-semibold text-green-900">Sistemdeki Ürün</h3>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Belge No</label>
+                      <p className="font-semibold">{invoice?.invoiceNumber}</p>
                     </div>
-                    
-                    <div className="space-y-4">
-                      <Select
-                        value={mapping.selectedProductId || ''}
-                        onValueChange={(value) => {
-                          const action = value === '' ? 'create' : 'update';
-                          handleMappingChange(index, value || null, action);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Ürün seçin veya yeni oluştur" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">
-                            <div className="flex items-center gap-2">
-                              <Plus className="w-4 h-4" />
-                              <span>Yeni Ürün Oluştur</span>
-                            </div>
-                          </SelectItem>
-                          {filteredExistingProducts.map((product) => (
-                            <SelectItem key={product.id} value={product.id}>
-                              <div className="flex flex-col items-start">
-                                <span className="font-medium">{product.name}</span>
-                                <span className="text-xs text-gray-500">
-                                  {product.sku ? `SKU: ${product.sku}` : 'SKU: Yok'} • 
-                                  {product.price.toLocaleString('tr-TR')} TL • 
-                                  Stok: {product.stock_quantity}
-                                </span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      
-                      {/* Seçilen ürün detayları */}
-                      {mapping.selectedProductId && (
-                        <div className="space-y-3">
-                          {(() => {
-                            const selectedProduct = existingProducts.find(p => p.id === mapping.selectedProductId);
-                            return selectedProduct ? (
-                              <div className="bg-white p-4 rounded-lg border border-green-200">
-                                <p className="font-medium text-lg text-green-900 mb-3">
-                                  {selectedProduct.name}
-                                </p>
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                  <div>
-                                    <p className="text-green-700 font-medium">SKU</p>
-                                    <p className="text-green-800">{selectedProduct.sku || 'Yok'}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-green-700 font-medium">Mevcut Fiyat</p>
-                                    <p className="text-green-800 font-semibold">
-                                      {selectedProduct.price.toLocaleString('tr-TR')} TL
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="text-green-700 font-medium">Stok</p>
-                                    <p className="text-green-800">{selectedProduct.stock_quantity} {selectedProduct.unit}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-green-700 font-medium">KDV</p>
-                                    <p className="text-green-800">%{selectedProduct.tax_rate}</p>
-                                  </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Tarihi</label>
+                      <p className="font-semibold">
+                        {invoice ? format(new Date(invoice.invoiceDate), 'dd.MM.yyyy', { locale: tr }) : '-'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Vadesi</label>
+                      <p className="font-semibold">
+                        {invoice ? format(new Date(invoice.invoiceDate), 'dd.MM.yyyy', { locale: tr }) : '-'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Proje</label>
+                      <select className="w-full p-2 border rounded text-sm">
+                        <option>(isteğe bağlı)</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Masraf Kalemi</label>
+                      <select className="w-full p-2 border rounded text-sm">
+                        <option>Masraf kalemi seçin</option>
+                      </select>
+                    </div>
+                    <div></div>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Açıklama</label>
+                    <textarea 
+                      className="w-full p-2 border rounded text-sm h-20"
+                      placeholder="Açıklama giriniz..."
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Sağ Panel - Ürün/Hizmetler */}
+            <div className="col-span-7">
+              <Card>
+                <CardHeader className="bg-green-500 text-white">
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="w-5 h-5" />
+                    ÜRÜN / HİZMETLER
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-green-100">
+                        <tr>
+                          <th className="text-left p-3 text-sm font-medium">#</th>
+                          <th className="text-left p-3 text-sm font-medium">Kod</th>
+                          <th className="text-left p-3 text-sm font-medium">Açıklama</th>
+                          <th className="text-center p-3 text-sm font-medium">Miktar</th>
+                          <th className="text-right p-3 text-sm font-medium">Fiyat</th>
+                          <th className="text-right p-3 text-sm font-medium">Tutar</th>
+                          <th className="text-right p-3 text-sm font-medium">İndirim</th>
+                          <th className="text-right p-3 text-sm font-medium">Net</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {productMappings.map((mapping, index) => (
+                          <tr key={index} className="border-b hover:bg-gray-50">
+                            <td className="p-3 text-sm">{String(index + 1).padStart(4, '0')}</td>
+                            <td className="p-3 text-sm font-mono">
+                              {mapping.parsedProduct.sku || '-'}
+                            </td>
+                            <td className="p-3">
+                              <div className="space-y-1">
+                                <div className="font-medium text-sm">
+                                  {mapping.parsedProduct.name}
+                                </div>
+                                <div className="relative">
+                                  <Select
+                                    value={
+                                      mapping.action === 'create' ? 'create' :
+                                      mapping.action === 'skip' ? 'skip' :
+                                      mapping.selectedProductId || 'create'
+                                    }
+                                    onValueChange={(value) => handleMappingChange(index, value)}
+                                  >
+                                    <SelectTrigger className="h-8 text-xs bg-blue-50 border-blue-200">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="create">
+                                        <span className="text-blue-600 font-medium">Yeni Ürün Kartı Aç</span>
+                                      </SelectItem>
+                                      <SelectItem value="skip">
+                                        <span className="text-gray-600">Atla</span>
+                                      </SelectItem>
+                                      {existingProducts.map((product) => (
+                                        <SelectItem key={product.id} value={product.id}>
+                                          <div className="flex flex-col">
+                                            <span className="font-medium">{product.name}</span>
+                                            {product.sku && (
+                                              <span className="text-xs text-gray-500">SKU: {product.sku}</span>
+                                            )}
+                                            <span className="text-xs text-gray-500">
+                                              {product.price.toLocaleString('tr-TR')} TL
+                                            </span>
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                               </div>
-                            ) : null;
-                          })()}
+                            </td>
+                            <td className="p-3 text-center text-sm">
+                              {mapping.parsedProduct.quantity}
+                            </td>
+                            <td className="p-3 text-right text-sm">
+                              {mapping.parsedProduct.unit_price.toLocaleString('tr-TR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                              })}
+                            </td>
+                            <td className="p-3 text-right text-sm">
+                              {mapping.parsedProduct.line_total.toLocaleString('tr-TR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                              })}
+                            </td>
+                            <td className="p-3 text-right text-sm">
+                              {mapping.parsedProduct.discount_amount?.toLocaleString('tr-TR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                              }) || '0,00'}
+                            </td>
+                            <td className="p-3 text-right text-sm font-semibold">
+                              {mapping.parsedProduct.line_total.toLocaleString('tr-TR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                              })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Toplam Alanı */}
+                  <div className="border-t bg-gray-50 p-4">
+                    <div className="flex justify-end">
+                      <div className="w-64 space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>Brüt Toplam:</span>
+                          <span className="font-semibold">
+                            {invoice?.totalAmount.toLocaleString('tr-TR', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })} TRY
+                          </span>
                         </div>
-                      )}
-                      
-                      {/* Yeni ürün oluşturulacak */}
-                      {!mapping.selectedProductId && (
-                        <div className="bg-white p-4 rounded-lg border border-green-200">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Plus className="w-4 h-4 text-green-600" />
-                            <p className="font-medium text-green-900">Yeni Ürün Oluşturulacak</p>
-                          </div>
-                          <p className="text-sm text-green-700">
-                            Bu ürün faturadaki bilgilerle sisteme yeni ürün olarak eklenecek.
-                          </p>
+                        <div className="flex justify-between">
+                          <span>İndirim:</span>
+                          <span>0,00 TRY</span>
                         </div>
-                      )}
+                        <div className="flex justify-between">
+                          <span>Net Toplam:</span>
+                          <span className="font-semibold">
+                            {invoice?.totalAmount.toLocaleString('tr-TR', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })} TRY
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>KDV (%0):</span>
+                          <span>0,00 TRY</span>
+                        </div>
+                        <div className="flex justify-between border-t pt-2 font-bold">
+                          <span>TOPLAM:</span>
+                          <span>
+                            {invoice?.totalAmount.toLocaleString('tr-TR', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })} TRY
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </DefaultLayout>
   );
 } 
