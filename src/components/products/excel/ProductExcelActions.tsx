@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Download, Upload, FileTemplate } from 'lucide-react';
+import { Download, Upload, FileSpreadsheet } from 'lucide-react';
 import { exportProductsToExcel, exportProductTemplateToExcel } from '@/utils/excelUtils';
 import type { Product } from '@/types/product';
 
@@ -25,7 +25,7 @@ const ProductExcelActions = ({ products, onImportClick }: ProductExcelActionsPro
         className="flex items-center gap-2" 
         onClick={handleDownloadTemplate}
       >
-        <FileTemplate className="h-4 w-4" />
+        <FileSpreadsheet className="h-4 w-4" />
         Şablon İndir
       </Button>
       
