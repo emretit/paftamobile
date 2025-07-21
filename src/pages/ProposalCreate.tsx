@@ -3,9 +3,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useProposalCreation } from "@/hooks/proposals/useProposalCreation";
 import ProposalForm from "@/components/proposals/form/ProposalForm";
@@ -52,47 +51,53 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
       title="Yeni Teklif"
       subtitle="Yeni bir teklif oluşturun"
     >
-      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Geri
-          </Button>
-          <h1 className="text-2xl font-bold">
-            Yeni Teklif Oluştur
-          </h1>
-        </div>
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={handleBack} className="hover:bg-muted">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Teklifler
+            </Button>
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-muted-foreground" />
+              <h1 className="text-xl font-semibold">Yeni Teklif Oluştur</h1>
+            </div>
+          </div>
 
-        <div className="flex gap-2">
-          <Button 
-            onClick={() => document.getElementById('proposal-form')?.dispatchEvent(
-              new Event('submit', { bubbles: true, cancelable: true })
-            )} 
-            disabled={saving}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? "Kaydediliyor..." : "Teklifi Kaydet"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={() => document.getElementById('proposal-form')?.dispatchEvent(
+                new Event('submit', { bubbles: true, cancelable: true })
+              )} 
+              disabled={saving}
+              size="sm"
+              className="bg-primary hover:bg-primary/90 min-w-[120px]"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
+          </div>
         </div>
       </div>
 
-      <Separator className="my-6" />
-
-      <Card className="p-6">
-        <div id="proposal-form">
-          <ProposalForm
-            proposal={null}
-            loading={false}
-            saving={saving}
-            isNew={true}
-            onSave={handleSave}
-            onBack={handleBack}
-            title="Yeni Teklif"
-            subtitle="Yeni bir teklif oluşturun"
-          />
-        </div>
-      </Card>
+      {/* Main Content */}
+      <div className="space-y-6">
+        <Card className="p-6 hover:shadow-sm transition-shadow">
+          <div id="proposal-form">
+            <ProposalForm
+              proposal={null}
+              loading={false}
+              saving={saving}
+              isNew={true}
+              onSave={handleSave}
+              onBack={handleBack}
+              title="Yeni Teklif"
+              subtitle="Yeni bir teklif oluşturun"
+            />
+          </div>
+        </Card>
+      </div>
     </DefaultLayout>
   );
 };
