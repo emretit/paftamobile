@@ -277,18 +277,38 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button 
-              onClick={() => document.getElementById('proposal-form')?.dispatchEvent(
-                new Event('submit', { bubbles: true, cancelable: true })
-              )} 
-              disabled={saving}
-              size="sm"
-              className="bg-primary hover:bg-primary/90 min-w-[120px]"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {saving ? "Kaydediliyor..." : "Kaydet"}
+            <Button variant="outline" size="sm" onClick={handlePrint}>
+              <Printer className="h-4 w-4 mr-2" />
+              Yazdır
             </Button>
-            {/* Add other actions like print, download, etc. */}
+            <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
+              <Download className="h-4 w-4 mr-2" />
+              PDF İndir
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleSendEmail}>
+              <Mail className="h-4 w-4 mr-2" />
+              E-posta Gönder
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" className="bg-red-600 hover:bg-red-700 text-white">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Sil
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Teklif Sil</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Bu teklifi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={handleBack}>İptal</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>Sil</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </div>
