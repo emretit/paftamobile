@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { DefaultLayout } from '@/components/layouts/DefaultLayout';
+import DefaultLayout from '@/components/layouts/DefaultLayout';
 
 interface ParsedProduct {
   name: string;
