@@ -18,7 +18,7 @@ import { proposalStatusColors, proposalStatusLabels, ProposalStatus } from "@/ty
 import { calculateProposalTotals, formatProposalAmount } from "@/services/workflow/proposalWorkflow";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { handleProposalStatusChange } from "@/services/workflow/proposalWorkflow";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface ProposalEditProps {
   isCollapsed: boolean;
@@ -27,9 +27,13 @@ interface ProposalEditProps {
 
 const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { proposal, loading, saving, handleBack, handleSave } = useProposalEdit();
   const { isLoading: isSaving } = useProposalForm();
-  const [isEditMode, setIsEditMode] = useState(false);
+  
+  // Determine if we should start in edit mode based on URL
+  const isEditURL = location.pathname.includes('/edit');
+  const [isEditMode, setIsEditMode] = useState(isEditURL);
 
   if (loading) {
     return (

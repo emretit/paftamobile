@@ -40,7 +40,7 @@ export const useProposalEdit = () => {
   }, [id]);
 
   const handleBack = () => {
-    navigate(`/proposal/${id}`);
+    navigate("/proposals");
   };
 
   const handleSave = async (formData: any) => {
@@ -70,7 +70,8 @@ export const useProposalEdit = () => {
       await crmService.updateProposal(id, updatedProposal);
       
       toast.success("Teklif başarıyla güncellendi");
-      navigate(`/proposal/${id}`);
+      // Stay on the same page, just update the proposal data
+      setProposal(updatedProposal);
     } catch (error) {
       console.error("Error saving proposal:", error);
       toast.error("Teklif güncellenirken bir hata oluştu");
