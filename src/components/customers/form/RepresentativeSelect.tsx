@@ -59,7 +59,7 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
   const handleChange = (value: string) => {
     setFormData({
       ...formData,
-      representative: value
+      representative: value === "none" ? null : value
     });
   };
 
@@ -68,7 +68,7 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
       <FormLabel>Temsilci</FormLabel>
       <Select
         disabled={isLoading}
-        value={formData.representative ?? ""}
+        value={formData.representative ?? "none"}
         onValueChange={handleChange}
       >
         <SelectTrigger>
@@ -77,7 +77,7 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
           />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Seçilmedi</SelectItem>
+          <SelectItem value="none">Seçilmedi</SelectItem>
           {representatives.map((rep) => (
             <SelectItem key={rep.id} value={rep.id}>
               {rep.name}

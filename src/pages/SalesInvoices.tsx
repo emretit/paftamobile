@@ -177,7 +177,7 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                         <SelectValue placeholder="Ödeme Durumu" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Tümü</SelectItem>
+                        <SelectItem value="all">Tümü</SelectItem>
                         <SelectItem value="odendi">Ödendi</SelectItem>
                         <SelectItem value="kismi_odendi">Kısmi Ödendi</SelectItem>
                         <SelectItem value="odenmedi">Ödenmedi</SelectItem>
