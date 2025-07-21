@@ -37,14 +37,18 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const isActive = (path: string) => location.pathname === path;
-  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+  const [expandedCategories, setExpandedCategories] = useState<string[]>(["CRM"]);
 
-  const toggleCategory = (category: string) => {
+  const toggleCategory = (category: string, path?: string) => {
     setExpandedCategories(prev => 
       prev.includes(category) 
         ? prev.filter(c => c !== category)
         : [...prev, category]
     );
+    
+    if (path) {
+      navigate(path);
+    }
   };
 
   return (
@@ -64,7 +68,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
               return (
                 <div key={item.category}>
                   <button
-                    onClick={() => toggleCategory(item.category)}
+                    onClick={() => toggleCategory(item.category, item.path)}
                     className={cn(
                       "flex items-center w-full h-11 px-3 rounded-md",
                       !isCollapsed && "justify-between",
