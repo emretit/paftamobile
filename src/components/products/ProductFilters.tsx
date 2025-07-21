@@ -1,6 +1,6 @@
 
 import { Input } from "@/components/ui/input";
-import { Search, SlidersHorizontal, FileDown, FileUp, MoreVertical, FileTemplate, Download, Upload } from "lucide-react";
+import { Search, SlidersHorizontal, FileDown, FileUp, MoreVertical, FileText, Download, Upload } from "lucide-react";
 import { 
   Select,
   SelectContent,
@@ -76,7 +76,7 @@ const ProductFilters = ({
             className="h-9"
             onClick={onDownloadTemplate}
           >
-            <FileTemplate className="w-4 h-4 mr-2" />
+            <FileText className="w-4 h-4 mr-2" />
             Şablon İndir
           </Button>
           <Button 
