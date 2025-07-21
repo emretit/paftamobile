@@ -165,9 +165,13 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-6 flex justify-center">
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-card rounded-lg border">
+              <div className="text-sm text-muted-foreground">
+                Toplam <span className="font-medium text-foreground">{allProducts.length}</span> ürün, 
+                <span className="font-medium text-foreground"> {startIndex + 1}-{Math.min(endIndex, allProducts.length)}</span> arası gösteriliyor
+              </div>
               <Pagination>
-                <PaginationContent>
+                <PaginationContent className="gap-1">
                   <PaginationItem>
                     <PaginationPrevious 
                       href="#"
@@ -175,24 +179,93 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
                         e.preventDefault();
                         if (currentPage > 1) setCurrentPage(currentPage - 1);
                       }}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "hover:bg-accent"}
                     />
                   </PaginationItem>
                   
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentPage(page);
-                        }}
-                        isActive={currentPage === page}
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
+                  {/* Show page numbers with smart truncation */}
+                  {(() => {
+                    const pages = [];
+                    const showPages = 5; // Maximum pages to show
+                    let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
+                    let endPage = Math.min(totalPages, startPage + showPages - 1);
+                    
+                    // Adjust start if we're near the end
+                    if (endPage - startPage < showPages - 1) {
+                      startPage = Math.max(1, endPage - showPages + 1);
+                    }
+                    
+                    // Always show first page
+                    if (startPage > 1) {
+                      pages.push(
+                        <PaginationItem key={1}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(1);
+                            }}
+                            className="hover:bg-accent"
+                          >
+                            1
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                      if (startPage > 2) {
+                        pages.push(
+                          <PaginationItem key="start-ellipsis">
+                            <span className="px-3 py-2 text-muted-foreground">...</span>
+                          </PaginationItem>
+                        );
+                      }
+                    }
+                    
+                    // Show range of pages
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(
+                        <PaginationItem key={i}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(i);
+                            }}
+                            isActive={currentPage === i}
+                            className={currentPage === i ? "bg-primary text-primary-foreground" : "hover:bg-accent"}
+                          >
+                            {i}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                    
+                    // Always show last page
+                    if (endPage < totalPages) {
+                      if (endPage < totalPages - 1) {
+                        pages.push(
+                          <PaginationItem key="end-ellipsis">
+                            <span className="px-3 py-2 text-muted-foreground">...</span>
+                          </PaginationItem>
+                        );
+                      }
+                      pages.push(
+                        <PaginationItem key={totalPages}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(totalPages);
+                            }}
+                            className="hover:bg-accent"
+                          >
+                            {totalPages}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                    
+                    return pages;
+                  })()}
                   
                   <PaginationItem>
                     <PaginationNext 
@@ -201,7 +274,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
                         e.preventDefault();
                         if (currentPage < totalPages) setCurrentPage(currentPage + 1);
                       }}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "hover:bg-accent"}
                     />
                   </PaginationItem>
                 </PaginationContent>

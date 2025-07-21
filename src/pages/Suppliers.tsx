@@ -112,9 +112,13 @@ const Suppliers = ({ isCollapsed, setIsCollapsed }: SuppliersProps) => {
           
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-6 flex justify-center">
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-card rounded-lg border">
+              <div className="text-sm text-muted-foreground">
+                Toplam <span className="font-medium text-foreground">{allSortedSuppliers?.length || 0}</span> tedarikçi, 
+                <span className="font-medium text-foreground"> {startIndex + 1}-{Math.min(endIndex, allSortedSuppliers?.length || 0)}</span> arası gösteriliyor
+              </div>
               <Pagination>
-                <PaginationContent>
+                <PaginationContent className="gap-1">
                   <PaginationItem>
                     <PaginationPrevious 
                       href="#"
@@ -122,24 +126,89 @@ const Suppliers = ({ isCollapsed, setIsCollapsed }: SuppliersProps) => {
                         e.preventDefault();
                         if (currentPage > 1) setCurrentPage(currentPage - 1);
                       }}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "hover:bg-accent"}
                     />
                   </PaginationItem>
                   
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentPage(page);
-                        }}
-                        isActive={currentPage === page}
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
+                  {/* Smart pagination with ellipsis */}
+                  {(() => {
+                    const pages = [];
+                    const showPages = 5;
+                    let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
+                    let endPage = Math.min(totalPages, startPage + showPages - 1);
+                    
+                    if (endPage - startPage < showPages - 1) {
+                      startPage = Math.max(1, endPage - showPages + 1);
+                    }
+                    
+                    if (startPage > 1) {
+                      pages.push(
+                        <PaginationItem key={1}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(1);
+                            }}
+                            className="hover:bg-accent"
+                          >
+                            1
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                      if (startPage > 2) {
+                        pages.push(
+                          <PaginationItem key="start-ellipsis">
+                            <span className="px-3 py-2 text-muted-foreground">...</span>
+                          </PaginationItem>
+                        );
+                      }
+                    }
+                    
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(
+                        <PaginationItem key={i}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(i);
+                            }}
+                            isActive={currentPage === i}
+                            className={currentPage === i ? "bg-primary text-primary-foreground" : "hover:bg-accent"}
+                          >
+                            {i}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                    
+                    if (endPage < totalPages) {
+                      if (endPage < totalPages - 1) {
+                        pages.push(
+                          <PaginationItem key="end-ellipsis">
+                            <span className="px-3 py-2 text-muted-foreground">...</span>
+                          </PaginationItem>
+                        );
+                      }
+                      pages.push(
+                        <PaginationItem key={totalPages}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(totalPages);
+                            }}
+                            className="hover:bg-accent"
+                          >
+                            {totalPages}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                    
+                    return pages;
+                  })()}
                   
                   <PaginationItem>
                     <PaginationNext 
@@ -148,7 +217,7 @@ const Suppliers = ({ isCollapsed, setIsCollapsed }: SuppliersProps) => {
                         e.preventDefault();
                         if (currentPage < totalPages) setCurrentPage(currentPage + 1);
                       }}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "hover:bg-accent"}
                     />
                   </PaginationItem>
                 </PaginationContent>
