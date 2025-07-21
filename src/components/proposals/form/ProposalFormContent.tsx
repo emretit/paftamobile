@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useEffect } from "react";
 import { ProposalFormData } from "@/types/proposal-form";
 import { Proposal } from "@/types/proposal";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import CustomerSelector from "./CustomerSelector";
 import EmployeeSelector from "./EmployeeSelector";
 import { Card, CardContent } from "@/components/ui/card";
+import { useSearchParams } from "react-router-dom";
 
 interface ProposalFormContentProps {
   formData: ProposalFormData;
@@ -34,6 +34,30 @@ const ProposalFormContent: React.FC<ProposalFormContentProps> = ({
   handleItemsChange,
   formatDate,
 }) => {
+  const [searchParams] = useSearchParams();
+  const focusSection = searchParams.get('focus');
+
+  // Auto scroll to items section if focus=items in URL
+  useEffect(() => {
+    if (focusSection === 'items') {
+      setTimeout(() => {
+        const itemsSection = document.getElementById('proposal-items-section');
+        if (itemsSection) {
+          itemsSection.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+          // Add a subtle highlight effect
+          itemsSection.style.border = '2px solid hsl(var(--primary))';
+          itemsSection.style.borderRadius = '0.5rem';
+          setTimeout(() => {
+            itemsSection.style.border = '';
+          }, 3000);
+        }
+      }, 500); // Small delay to ensure DOM is rendered
+    }
+  }, [focusSection]);
+
   // Convert string date to Date object for DatePicker
   const validUntilDate = formData.valid_until ? new Date(formData.valid_until) : undefined;
 
@@ -130,7 +154,7 @@ const ProposalFormContent: React.FC<ProposalFormContentProps> = ({
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden" id="proposal-items-section">
         <CardContent className="p-4">
           <h3 className="text-base font-medium mb-3">Teklif Kalemleri</h3>
           <ProposalItems 

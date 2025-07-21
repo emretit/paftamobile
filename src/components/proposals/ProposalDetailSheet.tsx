@@ -47,7 +47,7 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
 
   const handleEdit = () => {
     onOpenChange(false);
-    navigate(`/proposal/${proposal.id}/edit`);
+    navigate(`/proposal/${proposal.id}/edit?focus=items`);
   };
 
   return (
