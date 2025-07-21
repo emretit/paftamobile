@@ -12,7 +12,13 @@ import {
   Wrench,
   BarChart2,
   ListTodo,
-  PackageCheck
+  PackageCheck,
+  Target,
+  Quote,
+  Truck,
+  RotateCcw,
+  TrendingUp,
+  Package
 } from "lucide-react";
 
 export const navItems = [
@@ -22,36 +28,58 @@ export const navItems = [
     label: "Gösterge Paneli",
   },
   {
-    category: "CRM",
-    icon: Briefcase,
+    category: "CRM & Satış",
+    icon: TrendingUp,
     path: "/crm",
     items: [
+      {
+        path: "/opportunities",
+        icon: Target,
+        label: "Fırsatlar",
+      },
+      {
+        path: "/proposals",
+        icon: Quote,
+        label: "Teklifler",
+      },
+      {
+        path: "/orders/list",
+        icon: ShoppingCart,
+        label: "Siparişler",
+      },
+      {
+        path: "/deliveries",
+        icon: Truck,
+        label: "Teslimatlar",
+      },
+      {
+        path: "/returns",
+        icon: RotateCcw,
+        label: "İadeler",
+      },
       {
         path: "/tasks",
         icon: ListTodo,
         label: "Görevler",
       },
-      {
-        path: "/proposals",
-        icon: FileText,
-        label: "Teklifler",
-      },
-      {
-        path: "/opportunities",
-        icon: BarChart2,
-        label: "Fırsatlar",
-      },
     ],
   },
   {
-    path: "/orders/list",
-    icon: ShoppingCart,
-    label: "Siparişler",
-  },
-  {
-    path: "/orders/purchase",
+    category: "Satın Alma",
     icon: PackageCheck,
-    label: "Satın Alma",
+    path: "/purchase",
+    items: [
+      {
+        path: "/orders/purchase",
+        icon: PackageCheck,
+        label: "Satın Alma Siparişleri",
+      },
+      {
+        path: "/purchase-invoices",
+        icon: FileText,
+        label: "Alış Faturaları",
+      },
+    ],
   },
   {
     path: "/contacts",
@@ -65,7 +93,7 @@ export const navItems = [
   },
   {
     path: "/products",
-    icon: ShoppingCart,
+    icon: Package,
     label: "Ürünler",
   },
   {
@@ -89,20 +117,9 @@ export const navItems = [
     label: "E-Fatura Yönetimi",
   },
   {
-    category: "Faturalar",
+    path: "/sales-invoices",
     icon: FileText,
-    items: [
-      {
-        path: "/purchase-invoices",
-        icon: FileText,
-        label: "Alış Faturaları",
-      },
-      {
-        path: "/sales-invoices",
-        icon: FileText,
-        label: "Satış Faturaları",
-      },
-    ],
+    label: "Satış Faturaları",
   },
 ];
 
