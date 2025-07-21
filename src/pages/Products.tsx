@@ -89,7 +89,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   const { data: allProducts = [], isLoading } = useQuery({
     queryKey: ["products", searchQuery, categoryFilter, stockFilter],
     staleTime: 0, // Cache'i hemen stale yap
-    cacheTime: 0, // Cache'i hemen temizle
+    gcTime: 0, // Cache'i hemen temizle
     queryFn: async () => {
       let query = supabase
         .from("products")
@@ -123,29 +123,13 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
         }
       }
 
-      // Supabase'de büyük veri setleri için chunked approach
-      const chunkSize = 1000;
-      let allData = [];
-      let start = 0;
-      
-      while (true) {
-        const { data, error } = await query
-          .order("created_at", { ascending: false })
-          .range(start, start + chunkSize - 1);
-          
-        if (error) throw error;
+      // Tüm kayıtları çekmek için range kullanmadan direkt çek
+      const { data, error } = await query
+        .order("created_at", { ascending: false });
         
-        if (!data || data.length === 0) break;
-        
-        allData.push(...data);
-        
-        if (data.length < chunkSize) break;
-        
-        start += chunkSize;
-      }
-      
-      console.log('Total products fetched:', allData.length);
-      return allData;
+      if (error) throw error;
+      console.log('Total products fetched:', data?.length);
+      return data || [];
     },
   });
 
