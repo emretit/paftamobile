@@ -6,16 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft,
   Loader2,
-  Building,
-  Calendar,
-  DollarSign,
-  Package,
   FileText,
   AlertCircle,
   CheckCircle,
-  ShoppingCart,
-  Plus,
-  RotateCcw
+  Package
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -360,52 +354,45 @@ export default function ProductMapping({ isCollapsed = false, setIsCollapsed = (
             className="flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Satın Alma Listesine Dön
+            Geri Dön
           </Button>
           
           {!isLoading && productMappings.length > 0 && (
-            <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-600">
-                <span className="font-semibold">{productMappings.length}</span> ürün bulundu •{' '}
-                <span className="text-success font-semibold">{productMappings.filter(m => m.action === 'create').length}</span> yeni •{' '}
-                <span className="text-warning font-semibold">{productMappings.filter(m => m.action === 'update').length}</span> güncelleme
-              </div>
-              <Button
-                onClick={saveMappings}
-                disabled={isSaving}
-                className="flex items-center gap-2"
-              >
-                {isSaving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <CheckCircle className="w-4 h-4" />
-                )}
-                {isSaving ? 'Kaydediliyor...' : 'Eşleştirmeleri Kaydet'}
-              </Button>
-            </div>
+            <Button
+              onClick={saveMappings}
+              disabled={isSaving}
+              className="flex items-center gap-2"
+            >
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <CheckCircle className="w-4 h-4" />
+              )}
+              {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
+            </Button>
           )}
         </div>
 
         {/* Loading State */}
         {isLoading ? (
-          <Card className="border border-gray-200 shadow-sm">
-            <CardContent className="flex items-center justify-center py-16">
+          <Card>
+            <CardContent className="flex items-center justify-center py-12">
               <div className="text-center">
-                <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2 text-gray-900">Ürünler Yükleniyor</h3>
-                <p className="text-gray-600">
-                  Fatura XML'i işleniyor ve ürün bilgileri çıkarılıyor...
+                <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Ürünler Yükleniyor</h3>
+                <p className="text-gray-500">
+                  Fatura XML'i parse ediliyor ve ürün bilgileri çıkarılıyor...
                 </p>
               </div>
             </CardContent>
           </Card>
         ) : parsedProducts.length === 0 ? (
-          <Card className="border border-gray-200 shadow-sm">
-            <CardContent className="flex items-center justify-center py-16">
+          <Card>
+            <CardContent className="flex items-center justify-center py-12">
               <div className="text-center">
-                <AlertCircle className="w-12 h-12 text-warning mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2 text-gray-900">Ürün Bulunamadı</h3>
-                <p className="text-gray-600 mb-4">
+                <AlertCircle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Ürün Bulunamadı</h3>
+                <p className="text-gray-500 mb-4">
                   Bu faturada ürün bilgisi bulunamadı veya XML parse edilemedi.
                 </p>
                 <Button variant="outline" onClick={handleBack}>
@@ -416,221 +403,239 @@ export default function ProductMapping({ isCollapsed = false, setIsCollapsed = (
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
-            {/* Fatura Özet Bilgileri */}
-            <Card className="border border-gray-200 shadow-sm card-gradient">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <FileText className="w-5 h-5 text-primary" />
-                  Fatura Bilgileri
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <Building className="w-5 h-5 text-primary" />
+          <div className="grid grid-cols-12 gap-6">
+            {/* Sol Panel - Evrak Bilgileri */}
+            <div className="col-span-5">
+              <Card>
+                <CardHeader className="bg-blue-500 text-white">
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    EVRAK BİLGİLERİ
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Gönderen</label>
+                      <p className="font-semibold">{invoice?.supplierName}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Tedarikçi</p>
-                      <p className="font-semibold text-gray-900">{invoice?.supplierName}</p>
+                      <label className="text-sm font-medium text-gray-600">Tedarikçi</label>
+                      <p className="font-semibold">{invoice?.supplierName}</p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <Calendar className="w-5 h-5 text-primary" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Adres</label>
+                      <p className="text-sm text-gray-700">-</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Fatura Tarihi</p>
-                      <p className="font-semibold text-gray-900">
-                        {invoice ? format(new Date(invoice.invoiceDate), 'dd MMM yyyy', { locale: tr }) : '-'}
+                      <label className="text-sm font-medium text-gray-600">Vergi No</label>
+                      <p className="font-semibold">{invoice?.supplierTaxNumber}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Belge No</label>
+                      <p className="font-semibold">{invoice?.invoiceNumber}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Tarihi</label>
+                      <p className="font-semibold">
+                        {invoice ? format(new Date(invoice.invoiceDate), 'dd.MM.yyyy', { locale: tr }) : '-'}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
-                      <DollarSign className="w-5 h-5 text-success" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Vadesi</label>
+                      <p className="font-semibold">
+                        {invoice ? format(new Date(invoice.invoiceDate), 'dd.MM.yyyy', { locale: tr }) : '-'}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Toplam Tutar</p>
-                      <p className="font-semibold text-gray-900">
-                        {invoice?.totalAmount.toLocaleString('tr-TR', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2
-                        })} {invoice?.currency}
-                      </p>
+                      <label className="text-sm font-medium text-gray-600">Proje</label>
+                      <select className="w-full p-2 border rounded text-sm">
+                        <option>(isteğe bağlı)</option>
+                      </select>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center">
-                      <Package className="w-5 h-5 text-warning" />
-                    </div>
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Ürün Sayısı</p>
-                      <p className="font-semibold text-gray-900">{parsedProducts.length} ürün</p>
+                      <label className="text-sm font-medium text-gray-600">Masraf Kalemi</label>
+                      <select className="w-full p-2 border rounded text-sm">
+                        <option>Masraf kalemi seçin</option>
+                      </select>
                     </div>
+                    <div></div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Açıklama</label>
+                    <textarea 
+                      className="w-full p-2 border rounded text-sm h-20"
+                      placeholder="Açıklama giriniz..."
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-            {/* Ürün Eşleştirme Listesi */}
-            <Card className="border border-gray-200 shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-gray-900">
-                  <ShoppingCart className="w-5 h-5 text-primary" />
-                  Ürün Eşleştirmeleri
-                  <Badge variant="secondary" className="ml-2">
-                    {productMappings.length} ürün
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {productMappings.map((mapping, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-6 bg-white hover:shadow-sm transition-shadow">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Sol: Faturadaki Ürün */}
-                      <div>
-                        <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                          <div className="w-6 h-6 bg-primary/10 rounded flex items-center justify-center">
-                            <span className="text-xs font-bold text-primary">{index + 1}</span>
-                          </div>
-                          Faturadaki Ürün
-                        </h4>
-                        <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">Ürün Adı</label>
-                            <p className="font-semibold text-gray-900">{mapping.parsedProduct.name}</p>
-                          </div>
-                          
-                          {mapping.parsedProduct.sku && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">SKU Kodu</label>
-                              <p className="font-mono text-sm text-gray-700">{mapping.parsedProduct.sku}</p>
-                            </div>
-                          )}
-                          
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Miktar</label>
-                              <p className="font-semibold">{mapping.parsedProduct.quantity} {mapping.parsedProduct.unit}</p>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Birim Fiyat</label>
-                              <p className="font-semibold text-success">
-                                {mapping.parsedProduct.unit_price.toLocaleString('tr-TR', {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2
-                                })} ₺
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="pt-2 border-t border-gray-200">
-                            <label className="text-sm font-medium text-gray-600">Toplam Tutar</label>
-                            <p className="text-lg font-bold text-primary">
+            {/* Sağ Panel - Ürün/Hizmetler */}
+            <div className="col-span-7">
+              <Card>
+                <CardHeader className="bg-green-500 text-white">
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="w-5 h-5" />
+                    ÜRÜN / HİZMETLER
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-green-100">
+                        <tr>
+                          <th className="text-left p-3 text-sm font-medium">#</th>
+                          <th className="text-left p-3 text-sm font-medium">Kod</th>
+                          <th className="text-left p-3 text-sm font-medium">Açıklama</th>
+                          <th className="text-center p-3 text-sm font-medium">Miktar</th>
+                          <th className="text-right p-3 text-sm font-medium">Fiyat</th>
+                          <th className="text-right p-3 text-sm font-medium">Tutar</th>
+                          <th className="text-right p-3 text-sm font-medium">İndirim</th>
+                          <th className="text-right p-3 text-sm font-medium">Net</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {productMappings.map((mapping, index) => (
+                          <tr key={index} className="border-b hover:bg-gray-50">
+                            <td className="p-3 text-sm">{String(index + 1).padStart(4, '0')}</td>
+                            <td className="p-3 text-sm font-mono">
+                              {mapping.parsedProduct.sku || '-'}
+                            </td>
+                            <td className="p-3">
+                              <div className="space-y-1">
+                                <div className="font-medium text-sm">
+                                  {mapping.parsedProduct.name}
+                                </div>
+                                <div className="relative">
+                                  <Select
+                                    value={
+                                      mapping.action === 'create' ? 'create' :
+                                      mapping.action === 'skip' ? 'skip' :
+                                      mapping.selectedProductId || 'create'
+                                    }
+                                    onValueChange={(value) => handleMappingChange(index, value)}
+                                  >
+                                    <SelectTrigger className="h-8 text-xs bg-blue-50 border-blue-200">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="create">
+                                        <span className="text-blue-600 font-medium">Yeni Ürün Kartı Aç</span>
+                                      </SelectItem>
+                                      <SelectItem value="skip">
+                                        <span className="text-gray-600">Atla</span>
+                                      </SelectItem>
+                                      {existingProducts.map((product) => (
+                                        <SelectItem key={product.id} value={product.id}>
+                                          <div className="flex flex-col">
+                                            <span className="font-medium">{product.name}</span>
+                                            {product.sku && (
+                                              <span className="text-xs text-gray-500">SKU: {product.sku}</span>
+                                            )}
+                                            <span className="text-xs text-gray-500">
+                                              {product.price.toLocaleString('tr-TR')} TL
+                                            </span>
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-3 text-center text-sm">
+                              {mapping.parsedProduct.quantity}
+                            </td>
+                            <td className="p-3 text-right text-sm">
+                              {mapping.parsedProduct.unit_price.toLocaleString('tr-TR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                              })}
+                            </td>
+                            <td className="p-3 text-right text-sm">
                               {mapping.parsedProduct.line_total.toLocaleString('tr-TR', {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2
-                              })} ₺
-                            </p>
-                          </div>
+                              })}
+                            </td>
+                            <td className="p-3 text-right text-sm">
+                              {mapping.parsedProduct.discount_amount?.toLocaleString('tr-TR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                              }) || '0,00'}
+                            </td>
+                            <td className="p-3 text-right text-sm font-semibold">
+                              {mapping.parsedProduct.line_total.toLocaleString('tr-TR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                              })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Toplam Alanı */}
+                  <div className="border-t bg-gray-50 p-4">
+                    <div className="flex justify-end">
+                      <div className="w-64 space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>Brüt Toplam:</span>
+                          <span className="font-semibold">
+                            {invoice?.totalAmount.toLocaleString('tr-TR', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })} TRY
+                          </span>
                         </div>
-                      </div>
-
-                      {/* Sağ: Eşleştirme Seçenekleri */}
-                      <div>
-                        <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                          <RotateCcw className="w-4 h-4 text-primary" />
-                          Eşleştirme Seçimi
-                        </h4>
-                        <div className="space-y-4">
-                          <div>
-                            <label className="text-sm font-medium text-gray-700 mb-2 block">
-                              Bu ürünü nasıl işlemek istiyorsunuz?
-                            </label>
-                            <Select
-                              value={
-                                mapping.action === 'create' ? 'create' :
-                                mapping.action === 'skip' ? 'skip' :
-                                mapping.selectedProductId || 'create'
-                              }
-                              onValueChange={(value) => handleMappingChange(index, value)}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="create">
-                                  <div className="flex items-center gap-2">
-                                    <Plus className="w-4 h-4 text-success" />
-                                    <span className="font-medium">Yeni Ürün Oluştur</span>
-                                  </div>
-                                </SelectItem>
-                                
-                                {existingProducts.length > 0 && (
-                                  <>
-                                    <div className="px-2 py-1.5 text-xs font-medium text-gray-500 bg-gray-50">
-                                      Mevcut Ürünlerle Eşleştir
-                                    </div>
-                                    {existingProducts.map((product) => (
-                                      <SelectItem key={product.id} value={product.id}>
-                                        <div className="flex flex-col">
-                                          <span className="font-medium">{product.name}</span>
-                                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                                            {product.sku && <span>SKU: {product.sku}</span>}
-                                            <span>•</span>
-                                            <span>{product.price.toLocaleString('tr-TR')} ₺</span>
-                                            <span>•</span>
-                                            <span>Stok: {product.stock_quantity}</span>
-                                          </div>
-                                        </div>
-                                      </SelectItem>
-                                    ))}
-                                  </>
-                                )}
-                                
-                                <SelectItem value="skip">
-                                  <div className="flex items-center gap-2">
-                                    <AlertCircle className="w-4 h-4 text-gray-400" />
-                                    <span className="text-gray-600">Bu Ürünü Atla</span>
-                                  </div>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {/* Durum Göstergesi */}
-                          <div className="p-4 rounded-lg border-2 border-dashed">
-                            {mapping.action === 'create' && (
-                              <div className="flex items-center gap-2 text-success">
-                                <Plus className="w-4 h-4" />
-                                <span className="font-medium">Yeni ürün olarak sisteme eklenecek</span>
-                              </div>
-                            )}
-                            {mapping.action === 'update' && mapping.selectedProductId && (
-                              <div className="flex items-center gap-2 text-warning">
-                                <RotateCcw className="w-4 h-4" />
-                                <span className="font-medium">Mevcut ürün güncellenecek</span>
-                              </div>
-                            )}
-                            {mapping.action === 'skip' && (
-                              <div className="flex items-center gap-2 text-gray-500">
-                                <AlertCircle className="w-4 h-4" />
-                                <span className="font-medium">Bu ürün atlanacak</span>
-                              </div>
-                            )}
-                          </div>
+                        <div className="flex justify-between">
+                          <span>İndirim:</span>
+                          <span>0,00 TRY</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Net Toplam:</span>
+                          <span className="font-semibold">
+                            {invoice?.totalAmount.toLocaleString('tr-TR', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })} TRY
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>KDV (%0):</span>
+                          <span>0,00 TRY</span>
+                        </div>
+                        <div className="flex justify-between border-t pt-2 font-bold">
+                          <span>TOPLAM:</span>
+                          <span>
+                            {invoice?.totalAmount.toLocaleString('tr-TR', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })} TRY
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
       </div>
