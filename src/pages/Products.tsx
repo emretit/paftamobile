@@ -86,7 +86,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
 
       const { data, error } = await query
         .order("created_at", { ascending: false })
-        .limit(null); // Explicitly remove any limit
+        .range(0, 9999); // Supabase'de tüm kayıtları çekmek için yüksek bir range kullanıyoruz
       if (error) throw error;
       console.log('Total products fetched:', data?.length);
       return data;
