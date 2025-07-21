@@ -32,7 +32,7 @@ export const useProductExcelImport = (onSuccess?: () => void) => {
   const validateProductData = (row: any) => {
     const errors: string[] = [];
     
-    // Required fields
+    // Required fields only
     if (!row.name || typeof row.name !== 'string' || row.name.trim() === '') {
       errors.push('Ürün adı zorunludur');
     }
@@ -43,10 +43,6 @@ export const useProductExcelImport = (onSuccess?: () => void) => {
     
     if (row.stock_quantity === undefined || row.stock_quantity === null || isNaN(Number(row.stock_quantity)) || Number(row.stock_quantity) < 0) {
       errors.push('Geçerli bir stok miktarı giriniz');
-    }
-    
-    if (row.min_stock_level === undefined || row.min_stock_level === null || isNaN(Number(row.min_stock_level)) || Number(row.min_stock_level) < 0) {
-      errors.push('Geçerli bir minimum stok seviyesi giriniz');
     }
     
     if (row.tax_rate === undefined || row.tax_rate === null || isNaN(Number(row.tax_rate)) || Number(row.tax_rate) < 0 || Number(row.tax_rate) > 100) {
@@ -61,16 +57,8 @@ export const useProductExcelImport = (onSuccess?: () => void) => {
       errors.push('Geçerli bir para birimi giriniz (TRY, USD, EUR, GBP)');
     }
     
-    if (!row.category_type || typeof row.category_type !== 'string' || !['product', 'service', 'subscription'].includes(row.category_type)) {
-      errors.push('Geçerli bir kategori tipi giriniz (product, service, subscription)');
-    }
-    
     if (!row.product_type || typeof row.product_type !== 'string' || !['physical', 'service'].includes(row.product_type)) {
       errors.push('Geçerli bir ürün tipi giriniz (physical, service)');
-    }
-    
-    if (!row.status || typeof row.status !== 'string' || !['active', 'inactive'].includes(row.status)) {
-      errors.push('Geçerli bir durum giriniz (active, inactive)');
     }
     
     // Convert string boolean to actual boolean for is_active
@@ -179,26 +167,24 @@ export const useProductExcelImport = (onSuccess?: () => void) => {
           // Prepare product data for insertion
           const productData = {
             name: row.name.trim(),
-            description: row.description ? row.description.toString().trim() : null,
-            sku: row.sku ? row.sku.toString().trim() : null,
-            barcode: row.barcode ? row.barcode.toString().trim() : null,
+            description: row.description ? row.description.toString().trim() : "",
+            sku: row.sku ? row.sku.toString().trim() : "",
+            barcode: row.barcode ? row.barcode.toString().trim() : "",
             price: Number(row.price),
             discount_price: row.discount_price && row.discount_price !== '' ? Number(row.discount_price) : null,
             stock_quantity: Number(row.stock_quantity),
-            min_stock_level: Number(row.min_stock_level),
-            stock_threshold: row.stock_threshold && row.stock_threshold !== '' ? Number(row.stock_threshold) : Number(row.min_stock_level),
+            min_stock_level: row.min_stock_level ? Number(row.min_stock_level) : 0,
+            stock_threshold: row.stock_threshold && row.stock_threshold !== '' ? Number(row.stock_threshold) : 0,
             tax_rate: Number(row.tax_rate),
             unit: row.unit.toString().trim(),
             currency: row.currency.toString().trim(),
-            category_type: row.category_type.toString().trim(),
+            category_type: row.category_type ? row.category_type.toString().trim() : "product",
             product_type: row.product_type.toString().trim(),
-            status: row.status.toString().trim(),
+            status: row.status ? row.status.toString().trim() : "active",
             is_active: Boolean(row.is_active),
             image_url: null,
             category_id: null,
-            supplier_id: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            supplier_id: null
           };
           
           // Insert new product
