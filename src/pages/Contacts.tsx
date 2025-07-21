@@ -9,6 +9,14 @@ import CustomerListFilters from "@/components/customers/CustomerListFilters";
 import CustomerList from "@/components/customers/CustomerList";
 import CustomerSummaryCharts from "@/components/customers/CustomerSummaryCharts";
 import { Customer } from "@/types/customer";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface ContactsProps {
   isCollapsed: boolean;
@@ -21,6 +29,8 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [sortField, setSortField] = useState<"name" | "balance" | "company">("balance");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   const { data: customers, isLoading } = useQuery({
     queryKey: ['customers'],
@@ -50,7 +60,7 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  const sortedCustomers = filteredCustomers?.sort((a, b) => {
+  const allSortedCustomers = filteredCustomers?.sort((a, b) => {
     let valueA, valueB;
     
     // Determine values to compare based on sort field
@@ -73,6 +83,12 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
       return valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
     }
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil((allSortedCustomers?.length || 0) / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const sortedCustomers = allSortedCustomers?.slice(startIndex, endIndex);
 
   const handleSort = (field: "name" | "balance" | "company") => {
     if (field === sortField) {
@@ -116,6 +132,52 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
             sortDirection={sortDirection}
             onSortFieldChange={handleSort}
           />
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage > 1) setCurrentPage(currentPage - 1);
+                      }}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(page);
+                        }}
+                        isActive={currentPage === page}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                      }}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       </main>
     </div>

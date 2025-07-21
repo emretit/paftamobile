@@ -12,6 +12,14 @@ import ProductImportDialog from "@/components/products/excel/ProductImportDialog
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface ProductsProps {
   isCollapsed: boolean;
@@ -26,6 +34,8 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [stockFilter, setStockFilter] = useState("all");
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
@@ -39,7 +49,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
     },
   });
 
-  const { data: products = [], isLoading } = useQuery({
+  const { data: allProducts = [], isLoading } = useQuery({
     queryKey: ["products", searchQuery, categoryFilter, stockFilter],
     queryFn: async () => {
       let query = supabase
@@ -80,6 +90,12 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
     },
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(allProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const products = allProducts.slice(startIndex, endIndex);
+
   const handleBulkAction = async (action: string) => {
     console.log('Bulk action:', action);
   };
@@ -104,7 +120,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
             stockFilter={stockFilter}
             setStockFilter={setStockFilter}
             categories={categories}
-            totalProducts={products.length}
+            totalProducts={allProducts.length}
             onBulkAction={handleBulkAction}
           />
 
@@ -146,6 +162,52 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
               <ProductTable products={products || []} isLoading={isLoading} />
             )}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage > 1) setCurrentPage(currentPage - 1);
+                      }}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(page);
+                        }}
+                        isActive={currentPage === page}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                      }}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       </main>
       

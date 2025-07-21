@@ -11,6 +11,14 @@ import SupplierListHeader from "@/components/suppliers/SupplierListHeader";
 import SupplierListFilters from "@/components/suppliers/SupplierListFilters";
 import SupplierList from "@/components/suppliers/SupplierList";
 import { Supplier } from "@/types/supplier";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface SuppliersProps {
   isCollapsed: boolean;
@@ -22,6 +30,8 @@ const Suppliers = ({ isCollapsed, setIsCollapsed }: SuppliersProps) => {
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   const { data: suppliers, isLoading } = useQuery({
     queryKey: ['suppliers'],
@@ -52,13 +62,19 @@ const Suppliers = ({ isCollapsed, setIsCollapsed }: SuppliersProps) => {
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  const sortedSuppliers = filteredSuppliers?.sort((a, b) => {
+  const allSortedSuppliers = filteredSuppliers?.sort((a, b) => {
     if (sortDirection === "asc") {
       return a.balance - b.balance;
     } else {
       return b.balance - a.balance;
     }
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil((allSortedSuppliers?.length || 0) / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const sortedSuppliers = allSortedSuppliers?.slice(startIndex, endIndex);
 
   return (
     <div className="min-h-screen bg-white flex relative">
@@ -93,6 +109,52 @@ const Suppliers = ({ isCollapsed, setIsCollapsed }: SuppliersProps) => {
             sortDirection={sortDirection}
             onSortDirectionChange={setSortDirection}
           />
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage > 1) setCurrentPage(currentPage - 1);
+                      }}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(page);
+                        }}
+                        isActive={currentPage === page}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                      }}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       </main>
     </div>
