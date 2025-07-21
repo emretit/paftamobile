@@ -247,84 +247,129 @@ serve(async (req) => {
       const targetInvoiceId = invoiceId || (invoice && invoice.invoiceId)
       
       if (!targetInvoiceId) {
+        console.error('❌ Fatura ID eksik:', { invoiceId, invoice })
         throw new Error('Fatura ID gerekli')
       }
 
-      console.log('Processing XML invoice for products:', targetInvoiceId)
+      console.log('🔄 Processing XML invoice for products:', targetInvoiceId)
+      console.log('🔑 Using token:', authData.access_token.substring(0, 10) + '...')
       
-      // 1. Fatura detaylarını al
-      const detailsResponse = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${targetInvoiceId}/Details`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${authData.access_token}`,
-          'Content-Type': 'application/json'
+      try {
+        // 1. Fatura detaylarını al
+        console.log('📋 Fetching invoice details...')
+        const detailsResponse = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${targetInvoiceId}/Details`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${authData.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        console.log('📋 Details response status:', detailsResponse.status)
+        
+        if (!detailsResponse.ok) {
+          const errorText = await detailsResponse.text()
+          console.error('❌ Details API error:', detailsResponse.status, errorText)
+          throw new Error(`Fatura detayları alınamadı: ${detailsResponse.status} - ${errorText}`)
         }
-      })
-      
-      if (!detailsResponse.ok) {
-        const errorText = await detailsResponse.text()
-        throw new Error(`Fatura detayları alınamadı: ${detailsResponse.status} - ${errorText}`)
-      }
-      
-      const invoiceDetails = await detailsResponse.json()
-      
-      // 2. XML içeriğini al
-      const xmlResponse = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${targetInvoiceId}/ubl`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${authData.access_token}`,
-          'Accept': 'application/xml'
+        
+        const invoiceDetails = await detailsResponse.json()
+        console.log('✅ Invoice details received:', {
+          invoiceNumber: invoiceDetails.InvoiceNumber,
+          supplier: invoiceDetails.SenderName,
+          amount: invoiceDetails.PayableAmount
+        })
+        
+        // 2. XML içeriğini al
+        const xmlResponse = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${targetInvoiceId}/xml`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${authData.access_token}`,
+            'Accept': 'application/xml'
+          }
+        })
+        
+        if (!xmlResponse.ok) {
+          const errorText = await xmlResponse.text()
+          console.error(`XML API Error: ${xmlResponse.status} - ${errorText}`)
+          throw new Error(`XML içeriği alınamadı: ${xmlResponse.status} - ${errorText}`)
         }
-      })
-      
-      if (!xmlResponse.ok) {
-        const errorText = await xmlResponse.text()
-        throw new Error(`XML içeriği alınamadı: ${xmlResponse.status} - ${errorText}`)
-      }
-      
-      const xmlContent = await xmlResponse.text()
-      console.log('XML content length:', xmlContent.length)
-      
-      // 3. XML'den ürünleri parse et
-      const parsedProducts = parseXMLProducts(xmlContent)
-      
-      if (parsedProducts.length === 0) {
-        throw new Error('XML içeriğinde ürün bilgisi bulunamadı')
-      }
-      
-      // 4. Ürünleri veritabanına kaydet
-      const invoiceInfo = {
-        number: invoiceDetails.InvoiceNumber || '',
-        currency: invoiceDetails.CurrencyCode || 'TRY',
-        supplier: invoiceDetails.SenderName || '',
-        date: invoiceDetails.IssueDate || ''
-      }
-      
-      const { savedProducts, errors } = await saveProductsToDatabase(
-        supabaseClient, 
-        parsedProducts, 
-        invoiceInfo
-      )
-      
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: `${savedProducts.length} ürün başarıyla işlendi`,
-          invoice: invoiceInfo,
-          products: {
-            parsed: parsedProducts.length,
-            saved: savedProducts.length,
-            errors: errors.length
-          },
-          savedProducts: savedProducts,
-          errors: errors,
-          xmlParsed: parsedProducts
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
+        
+        const xmlContent = await xmlResponse.text()
+        console.log('XML content length:', xmlContent.length)
+        console.log('XML content preview:', xmlContent.substring(0, 500))
+        
+        // 3. XML'den ürünleri parse et
+        const parsedProducts = parseXMLProducts(xmlContent)
+        
+        if (parsedProducts.length === 0) {
+          console.warn('⚠️ No products parsed from XML')
+          // XML içeriğini daha detaylı logla
+          console.log('📄 Full XML content for debugging:', xmlContent)
         }
-      )
+        
+        // 4. Ürünleri veritabanına kaydet
+        const invoiceInfo = {
+          number: invoiceDetails.InvoiceNumber || '',
+          currency: invoiceDetails.CurrencyCode || 'TRY',
+          supplier: invoiceDetails.SenderName || '',
+          date: invoiceDetails.IssueDate || ''
+        }
+        
+        console.log('💾 Invoice info prepared:', invoiceInfo)
+        
+        const { savedProducts, errors } = await saveProductsToDatabase(
+          supabaseClient, 
+          parsedProducts, 
+          invoiceInfo
+        )
+        
+        console.log('✅ Processing completed:', {
+          parsed: parsedProducts.length,
+          saved: savedProducts.length,
+          errors: errors.length
+        })
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: `${savedProducts.length} ürün başarıyla işlendi`,
+            invoice: invoiceInfo,
+            products: {
+              parsed: parsedProducts.length,
+              saved: savedProducts.length,
+              errors: errors.length
+            },
+            savedProducts: savedProducts,
+            errors: errors,
+            xmlParsed: parsedProducts
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        )
+        
+      } catch (innerError: any) {
+        console.error('❌ Inner process_xml_invoice error:', innerError)
+        console.error('❌ Error stack:', innerError.stack)
+        
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: innerError.message || 'XML işleme hatası',
+            details: {
+              invoiceId: targetInvoiceId,
+              timestamp: new Date().toISOString(),
+              errorType: innerError.name || 'Unknown'
+            }
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        )
+      }
     }
 
     if (action === 'fetch_incoming') {
@@ -425,15 +470,15 @@ serve(async (req) => {
         }
       })
       
-      // Also try to get UBL XML content which contains more detailed product info
-      const ublResponse = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${invoiceId}/ubl`, {
+      // Also try to get XML content which contains more detailed product info
+      const xmlResponse = await fetch(`https://apitest.nilvera.com/einvoice/Purchase/${invoiceId}/xml`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authData.access_token}`,
           'Accept': 'application/xml'
         }
       }).catch(e => {
-        console.log('UBL endpoint not available:', e.message)
+        console.log('XML endpoint not available:', e.message)
         return null
       })
 
@@ -448,16 +493,16 @@ serve(async (req) => {
       const detailsData = await response.json()
       console.log('Invoice details response:', detailsData)
       
-      // Try to get UBL XML for better product details
-      let ublXmlContent = null
-      if (ublResponse && ublResponse.ok) {
-        try {
-          ublXmlContent = await ublResponse.text()
-          console.log('UBL XML content length:', ublXmlContent?.length || 0)
-        } catch (e) {
-          console.log('Could not parse UBL XML:', e)
+              // Try to get XML for better product details
+        let xmlContent = null
+        if (xmlResponse && xmlResponse.ok) {
+          try {
+            xmlContent = await xmlResponse.text()
+            console.log('XML content length:', xmlContent?.length || 0)
+          } catch (e) {
+            console.log('Could not parse XML:', e)
+          }
         }
-      }
       
       // Parse invoice lines from the response
       let invoiceLines = []
@@ -498,15 +543,15 @@ serve(async (req) => {
         console.log('No InvoiceLines found, trying alternative parsing methods')
         console.log('Available fields in detailsData:', Object.keys(detailsData || {}))
         
-                // Try to parse from UBL XML content if available
+                // Try to parse from XML content if available
          let xmlParsedLines = []
-         const xmlToParse = ublXmlContent || detailsData.Content || detailsData.XmlContent || detailsData.UblContent
+         const xmlToParse = xmlContent || detailsData.Content || detailsData.XmlContent || detailsData.UblContent
          
          if (xmlToParse && typeof xmlToParse === 'string') {
            try {
              console.log('Trying to parse XML content for product details')
              
-             // Simple regex parsing for UBL InvoiceLine elements
+             // Simple regex parsing for InvoiceLine elements
              // This is a basic approach - a proper XML parser would be better
              const invoiceLineRegex = /<cac:InvoiceLine>(.*?)<\/cac:InvoiceLine>/gs
              const itemNameRegex = /<cbc:Name[^>]*>(.*?)<\/cbc:Name>/g
