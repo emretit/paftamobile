@@ -46,19 +46,19 @@ const ProductImportDialog = ({ isOpen, setIsOpen, onImportSuccess }: ProductImpo
                   <div><span className="font-medium">name</span> (zorunlu)</div>
                   <div><span className="font-medium">price</span> (zorunlu)</div>
                   <div><span className="font-medium">stock_quantity</span> (zorunlu)</div>
-                  <div><span className="font-medium">min_stock_level</span> (zorunlu)</div>
-                  <div><span className="font-medium">tax_rate</span> (zorunlu)</div>
                   <div><span className="font-medium">unit</span> (zorunlu)</div>
+                  <div><span className="font-medium">tax_rate</span> (zorunlu)</div>
                   <div><span className="font-medium">currency</span> (zorunlu)</div>
-                  <div><span className="font-medium">category_type</span> (zorunlu)</div>
                   <div><span className="font-medium">product_type</span> (zorunlu)</div>
-                  <div><span className="font-medium">status</span> (zorunlu)</div>
                   <div><span className="font-medium">is_active</span> (zorunlu)</div>
                   <div>description (isteğe bağlı)</div>
                   <div>sku (isteğe bağlı)</div>
                   <div>barcode (isteğe bağlı)</div>
                   <div>discount_price (isteğe bağlı)</div>
+                  <div>min_stock_level (isteğe bağlı)</div>
                   <div>stock_threshold (isteğe bağlı)</div>
+                  <div>category_type (isteğe bağlı)</div>
+                  <div>status (isteğe bağlı)</div>
                 </div>
                 <p className="mt-2">
                   <span className="font-medium">Önce "Şablon İndir" butonuna tıklayarak örnek Excel dosyasını indirebilirsiniz.</span>
