@@ -9,7 +9,7 @@ import { Proposal, ProposalStatus } from "@/types/proposal";
 import { ProposalFilters } from "./types";
 import { Column } from "./types";
 import { ProposalTableHeader } from "./table/ProposalTableHeader";
-import ProposalTableRow from "./table/ProposalTableRow";
+import { ProposalTableRow } from "./table/ProposalTableRow";
 import { ProposalTableSkeleton } from "./table/ProposalTableSkeleton";
 
 interface ProposalTableProps {
@@ -141,10 +141,14 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
             onSort={handleSort}
           />
           <TableBody>
-            {filteredProposals.map((proposal) => (
+            {filteredProposals.map((proposal, index) => (
               <ProposalTableRow
                 key={proposal.id}
                 proposal={proposal}
+                index={index}
+                formatMoney={formatMoney}
+                onSelect={onProposalSelect}
+                onStatusChange={handleStatusUpdate}
               />
             ))}
           </TableBody>
