@@ -10,7 +10,6 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -304,129 +303,118 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
           </div>
         </Card>
       ) : (
-        <>
-          <Tabs defaultValue="details" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="details">Teklif Bilgileri</TabsTrigger>
-              <TabsTrigger value="items">Kalemler</TabsTrigger>
-              <TabsTrigger value="summary">Özet</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="details" className="mt-6">
-              <Card className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Teklif Bilgileri</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Teklif Başlığı</label>
-                      <p className="text-lg font-semibold">{proposal.title}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Açıklama</label>
-                      <p className="text-base">{proposal.description || "Açıklama eklenmemiş"}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Müşteri</label>
-                      <p className="text-lg font-semibold">{proposal.customer?.name || proposal.customer_name || "Belirtilmemiş"}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Durum</label>
-                      <div className="mt-1">
-                        <Badge className={proposalStatusColors[proposal.status]}>
-                          {proposalStatusLabels[proposal.status]}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Geçerlilik Tarihi</label>
-                      <p className="text-base">
-                        {proposal.valid_until 
-                          ? format(new Date(proposal.valid_until), "dd MMMM yyyy", { locale: tr })
-                          : "Belirtilmemiş"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Para Birimi</label>
-                      <p className="text-base">{proposal.currency}</p>
-                    </div>
+        <div className="space-y-6">
+          {/* Teklif Bilgileri */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Teklif Bilgileri</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Teklif Başlığı</label>
+                  <p className="text-lg font-semibold">{proposal.title}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Açıklama</label>
+                  <p className="text-base">{proposal.description || "Açıklama eklenmemiş"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Müşteri</label>
+                  <p className="text-lg font-semibold">{proposal.customer?.name || proposal.customer_name || "Belirtilmemiş"}</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Durum</label>
+                  <div className="mt-1">
+                    <Badge className={proposalStatusColors[proposal.status]}>
+                      {proposalStatusLabels[proposal.status]}
+                    </Badge>
                   </div>
                 </div>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="items" className="mt-6">
-              <Card className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Teklif Kalemleri</h2>
-                {proposal.items && proposal.items.length > 0 ? (
-                  <div className="space-y-4">
-                    {proposal.items.map((item, index) => (
-                      <div key={index} className="border rounded-lg p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                          <div className="md:col-span-2">
-                            <h3 className="font-semibold">{item.name}</h3>
-                            {item.description && (
-                              <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
-                            )}
-                          </div>
-                          <div className="text-center">
-                            <label className="text-sm font-medium text-muted-foreground">Miktar</label>
-                            <p className="text-lg font-semibold">{item.quantity}</p>
-                          </div>
-                          <div className="text-center">
-                            <label className="text-sm font-medium text-muted-foreground">Birim Fiyat</label>
-                            <p className="text-lg font-semibold">{formatProposalAmount(item.unit_price, proposal.currency)}</p>
-                          </div>
-                        </div>
-                        <div className="mt-3 pt-3 border-t flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">Toplam:</span>
-                          <span className="text-lg font-bold">{formatProposalAmount(item.quantity * item.unit_price, proposal.currency)}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">Henüz kalem eklenmemiş</p>
-                )}
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="summary" className="mt-6">
-              <Card className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Teklif Özeti</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-muted-foreground text-sm">Toplam Tutar</div>
-                    <div className="text-2xl font-bold text-red-900">
-                      {formatProposalAmount(totals.total, proposal.currency)}
-                    </div>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-muted-foreground text-sm">Geçerlilik Tarihi</div>
-                    <div className="text-lg font-semibold">
-                      {proposal.valid_until 
-                        ? format(new Date(proposal.valid_until), "dd MMMM yyyy", { locale: tr })
-                        : "Belirtilmemiş"}
-                    </div>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-muted-foreground text-sm">Müşteri</div>
-                    <div className="text-lg font-semibold">
-                      {proposal.customer?.name || proposal.customer_name || "Belirtilmemiş"}
-                    </div>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-muted-foreground text-sm">Oluşturma Tarihi</div>
-                    <div className="text-lg font-semibold">
-                      {format(new Date(proposal.created_at), "dd MMMM yyyy", { locale: tr })}
-                    </div>
-                  </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Geçerlilik Tarihi</label>
+                  <p className="text-base">
+                    {proposal.valid_until 
+                      ? format(new Date(proposal.valid_until), "dd MMMM yyyy", { locale: tr })
+                      : "Belirtilmemiş"}
+                  </p>
                 </div>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Para Birimi</label>
+                  <p className="text-base">{proposal.currency}</p>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Teklif Kalemleri */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Teklif Kalemleri</h2>
+            {proposal.items && proposal.items.length > 0 ? (
+              <div className="space-y-4">
+                {proposal.items.map((item, index) => (
+                  <div key={index} className="border rounded-lg p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="md:col-span-2">
+                        <h3 className="font-semibold">{item.name}</h3>
+                        {item.description && (
+                          <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                        )}
+                      </div>
+                      <div className="text-center">
+                        <label className="text-sm font-medium text-muted-foreground">Miktar</label>
+                        <p className="text-lg font-semibold">{item.quantity}</p>
+                      </div>
+                      <div className="text-center">
+                        <label className="text-sm font-medium text-muted-foreground">Birim Fiyat</label>
+                        <p className="text-lg font-semibold">{formatProposalAmount(item.unit_price, proposal.currency)}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Toplam:</span>
+                      <span className="text-lg font-bold">{formatProposalAmount(item.quantity * item.unit_price, proposal.currency)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">Henüz kalem eklenmemiş</p>
+            )}
+          </Card>
+
+          {/* Teklif Özeti */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Teklif Özeti</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="text-muted-foreground text-sm">Toplam Tutar</div>
+                <div className="text-2xl font-bold text-red-900">
+                  {formatProposalAmount(totals.total, proposal.currency)}
+                </div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="text-muted-foreground text-sm">Geçerlilik Tarihi</div>
+                <div className="text-lg font-semibold">
+                  {proposal.valid_until 
+                    ? format(new Date(proposal.valid_until), "dd MMMM yyyy", { locale: tr })
+                    : "Belirtilmemiş"}
+                </div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="text-muted-foreground text-sm">Müşteri</div>
+                <div className="text-lg font-semibold">
+                  {proposal.customer?.name || proposal.customer_name || "Belirtilmemiş"}
+                </div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="text-muted-foreground text-sm">Oluşturma Tarihi</div>
+                <div className="text-lg font-semibold">
+                  {format(new Date(proposal.created_at), "dd MMMM yyyy", { locale: tr })}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
       )}
     </DefaultLayout>
   );
