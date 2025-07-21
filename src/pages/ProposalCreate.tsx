@@ -76,7 +76,7 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
     <DefaultLayout
       isCollapsed={isCollapsed}
       setIsCollapsed={setIsCollapsed}
-      title="Yeni Teklif"
+      title="Yeni Teklif - Güncellenmiş"
       subtitle="Profesyonel teklif oluşturun"
     >
       {/* Enhanced Sticky Header */}
@@ -90,7 +90,7 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
             <div className="h-6 w-px bg-border" />
             <div className="flex items-center gap-3">
               <FileText className="h-5 w-5 text-muted-foreground" />
-              <h1 className="text-xl font-semibold">Yeni Teklif</h1>
+              <h1 className="text-xl font-semibold">Yeni Teklif - Güncellenmiş!</h1>
               <Badge variant="outline" className="gap-1 bg-amber-50 text-amber-700 border-amber-200">
                 <Clock className="h-3 w-3" />
                 Taslak
@@ -125,6 +125,9 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
       <div className="p-6">
         <Card className="shadow-sm hover:shadow-md transition-all duration-200 border-0 bg-white/50 backdrop-blur-sm">
           <div className="p-8">
+            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+              🎉 Sayfa başarıyla güncellenmiş! Build işlemi tamamlandı.
+            </div>
             <ProposalForm
               proposal={null}
               loading={false}
