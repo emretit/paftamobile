@@ -18,7 +18,8 @@ const parseXMLProducts = (xmlContent: string) => {
     
     const products = invoiceLines.map((lineXml, index) => {
       // Ürün bilgilerini çıkar
-      const itemName = extractXMLValue(lineXml, 'cbc:Name') || `Ürün ${index + 1}`
+      const itemNameMatch = lineXml.match(/<cac:Item>[\s\S]*?<cbc:Name>([\s\S]*?)<\/cbc:Name>/);
+      const itemName = itemNameMatch ? itemNameMatch[1].trim() : `Ürün ${index + 1}`;
       const itemCode = extractXMLValue(lineXml, 'cbc:ID') || ''
       const quantity = parseFloat(extractXMLValue(lineXml, 'cbc:InvoicedQuantity') || '1')
       const unitCode = extractXMLAttribute(lineXml, 'cbc:InvoicedQuantity', 'unitCode') || 'Adet'
@@ -58,7 +59,7 @@ const parseXMLProducts = (xmlContent: string) => {
 
 // XML değer çıkarma helper'ı
 const extractXMLValue = (xml: string, tagName: string): string | null => {
-  const regex = new RegExp(`<${tagName}[^>]*>(.*?)<\/${tagName}>`, 'g')
+  const regex = new RegExp(`<${tagName}[^>]*>(.*?)</${tagName}>`, 'g')
   const match = regex.exec(xml)
   return match ? match[1].trim() : null
 }
