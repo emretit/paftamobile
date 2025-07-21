@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Download, 
   Eye, 
@@ -70,6 +72,24 @@ interface InvoiceDetails {
   }>;
 }
 
+// XML'den parse edilen fatura kalemi interface'i
+interface InvoiceLineItem {
+  lineNumber: string;
+  itemName: string;
+  itemCode: string;
+  quantity: number;
+  unit: string;
+  unitCode: string;
+  lineExtensionAmount: number;
+}
+
+// Stok ürünü interface'i
+interface StockProduct {
+  id: string;
+  name: string;
+  stock_quantity: number;
+}
+
 export default function InvoiceManagementTab() {
   // Fatura listesi state'leri
   const [invoices, setInvoices] = useState<InvoiceSummary[]>([]);
@@ -87,11 +107,19 @@ export default function InvoiceManagementTab() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isDetailsLoading, setIsDetailsLoading] = useState(false);
   
+  // XML Detay modal state'leri
+  const [isXmlDetailsOpen, setIsXmlDetailsOpen] = useState(false);
+  const [xmlLineItems, setXmlLineItems] = useState<InvoiceLineItem[]>([]);
+  const [isXmlLoading, setIsXmlLoading] = useState(false);
+  const [stockProducts, setStockProducts] = useState<StockProduct[]>([]);
+  const [lineItemSelections, setLineItemSelections] = useState<Record<string, string>>({});
+  
   const { toast } = useToast();
 
   // Otomatik yenileme için useEffect
   useEffect(() => {
     loadInvoicesList();
+    loadStockProducts();
     
     // Her 30 saniyede bir otomatik yenile
     const interval = setInterval(() => {
@@ -229,6 +257,78 @@ export default function InvoiceManagementTab() {
       title: "Dikkat Alma",
       description: "Bu fatura dikkate alınmayanlara eklendi"
     });
+  };
+
+  // Stok ürünlerini yükle
+  const loadStockProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, stock_quantity')
+        .order('name');
+      
+      if (error) throw error;
+      setStockProducts(data || []);
+    } catch (error: any) {
+      console.error('Stok ürünleri yüklenirken hata:', error);
+      toast({
+        title: "Hata",
+        description: "Stok ürünleri yüklenirken hata oluştu",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // XML detaylarını yükle ve parse et
+  const loadXmlDetails = async (invoice: InvoiceSummary) => {
+    try {
+      setSelectedInvoice(invoice);
+      setIsXmlLoading(true);
+      setIsXmlDetailsOpen(true);
+      setXmlLineItems([]);
+      setLineItemSelections({});
+      
+      console.log('🔍 XML detayları yükleniyor:', invoice.id);
+      
+      const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
+        body: { 
+          action: 'get_xml_details',
+          invoiceId: invoice.id
+        }
+      });
+
+      console.log('📥 XML API Response:', data);
+
+      if (data && data.success && data.lineItems) {
+        setXmlLineItems(data.lineItems);
+        console.log('🎯 XML kalemler yüklendi:', data.lineItems.length);
+        toast({
+          title: "✅ XML Detayları Yüklendi",
+          description: `${data.lineItems.length} kalem bulundu`
+        });
+      } else {
+        console.error('❌ XML API Error:', data);
+        throw new Error(data?.message || 'XML detayları alınamadı');
+      }
+    } catch (error: any) {
+      console.error('❌ XML details error:', error);
+      toast({
+        title: "❌ XML Hatası",
+        description: error.message || "XML detayları yüklenirken hata oluştu",
+        variant: "destructive",
+      });
+      setIsXmlDetailsOpen(false);
+    } finally {
+      setIsXmlLoading(false);
+    }
+  };
+
+  // Satır için stok seçimi
+  const handleStockSelection = (lineNumber: string, stockId: string) => {
+    setLineItemSelections(prev => ({
+      ...prev,
+      [lineNumber]: stockId
+    }));
   };
 
   return (
@@ -422,6 +522,14 @@ export default function InvoiceManagementTab() {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => loadXmlDetails(invoice)}
+                      className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+                    >
+                      📋 Detayları Gör
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => processInvoiceForMapping(invoice)}
                       className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
                     >
@@ -569,6 +677,180 @@ export default function InvoiceManagementTab() {
             <div className="text-center py-12">
               <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
               <p className="text-gray-500">Fatura detayları yüklenemedi.</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* XML Fatura Detayları Modal - Kalem Bazında Eşleştirme */}
+      <Dialog open={isXmlDetailsOpen} onOpenChange={setIsXmlDetailsOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Fatura Kalemleri - {selectedInvoice?.invoiceNumber}
+              <Badge variant="secondary" className="ml-2 bg-purple-100 text-purple-700">XML Parse</Badge>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {isXmlLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+              <span className="ml-2">XML parse ediliyor ve kalemler yükleniyor...</span>
+            </div>
+          ) : xmlLineItems.length > 0 ? (
+            <div className="space-y-6">
+              {/* Fatura Bilgi Özeti */}
+              <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Fatura No</label>
+                      <p className="text-lg font-semibold text-purple-700">{selectedInvoice?.invoiceNumber}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Tedarikçi</label>
+                      <p className="text-lg font-semibold text-purple-700">{selectedInvoice?.supplierName}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Toplam Tutar</label>
+                      <p className="text-lg font-semibold text-purple-700">
+                        {selectedInvoice?.totalAmount.toLocaleString('tr-TR', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })} {selectedInvoice?.currency}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Kalem Listesi Tablosu */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg text-purple-700">
+                    Fatura Kalemleri ({xmlLineItems.length} adet)
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Her kalem için stok ürününüzü seçebilirsiniz. Seçimler sadece bu sayfada gösterilir, kayıt edilmez.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-purple-50">
+                        <TableHead className="font-semibold text-purple-700">Satır No</TableHead>
+                        <TableHead className="font-semibold text-purple-700">Mal/Hizmet Adı</TableHead>
+                        <TableHead className="font-semibold text-purple-700">Mal/Hizmet Kodu</TableHead>
+                        <TableHead className="font-semibold text-purple-700">Miktar</TableHead>
+                        <TableHead className="font-semibold text-purple-700">Birim</TableHead>
+                        <TableHead className="font-semibold text-purple-700">Tutar</TableHead>
+                        <TableHead className="font-semibold text-purple-700">Stoktan Eşleştir</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {xmlLineItems.map((item, index) => (
+                        <TableRow key={index} className="hover:bg-purple-50/50">
+                          <TableCell className="font-medium">{item.lineNumber}</TableCell>
+                          <TableCell>
+                            <div className="max-w-xs">
+                              <p className="font-medium text-gray-900">{item.itemName}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <code className="bg-gray-100 px-2 py-1 rounded text-sm">
+                              {item.itemCode || '-'}
+                            </code>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {item.quantity.toLocaleString('tr-TR', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-gray-50">
+                              {item.unit} ({item.unitCode})
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {item.lineExtensionAmount.toLocaleString('tr-TR', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })} TL
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              value={lineItemSelections[item.lineNumber] || ""}
+                              onValueChange={(value) => handleStockSelection(item.lineNumber, value)}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Stok Seçin" />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-60">
+                                <SelectItem value="">Seçim Yap</SelectItem>
+                                {stockProducts.map((product) => (
+                                  <SelectItem key={product.id} value={product.id}>
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{product.name}</span>
+                                      <span className="text-xs text-gray-500">
+                                        Stok: {product.stock_quantity}
+                                      </span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {lineItemSelections[item.lineNumber] && (
+                              <div className="mt-1">
+                                <Badge className="bg-green-100 text-green-700 text-xs">
+                                  ✅ Eşleştirildi
+                                </Badge>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              {/* Eşleştirme Özeti */}
+              <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-green-700 mb-1">Eşleştirme Durumu</h3>
+                      <p className="text-sm text-green-600">
+                        {Object.keys(lineItemSelections).length} / {xmlLineItems.length} kalem eşleştirildi
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-green-700">
+                        {Math.round((Object.keys(lineItemSelections).length / xmlLineItems.length) * 100)}%
+                      </div>
+                      <p className="text-xs text-green-600">Tamamlandı</p>
+                    </div>
+                  </div>
+                  
+                  {Object.keys(lineItemSelections).length === xmlLineItems.length && (
+                    <div className="mt-4 p-3 bg-green-100 rounded-lg">
+                      <p className="text-green-700 font-medium text-center">
+                        🎉 Tüm kalemler eşleştirildi! Bu seçimler sadece bu sayfada gösterilmektedir.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Kalem Bulunamadı</h3>
+              <p className="text-gray-500">
+                Bu faturada XML parse edilebilir kalem bulunamadı.
+              </p>
             </div>
           )}
         </DialogContent>
