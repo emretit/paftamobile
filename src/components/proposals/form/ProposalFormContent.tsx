@@ -62,140 +62,134 @@ const ProposalFormContent: React.FC<ProposalFormContentProps> = ({
   const validUntilDate = formData.valid_until ? new Date(formData.valid_until) : undefined;
 
   return (
-    <div className="space-y-4">
-      <Card className="overflow-hidden">
-        <CardContent className="p-4">
-          <div className="mb-4">
-            <h3 className="text-base font-medium mb-3">Temel Bilgiler</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="title">Teklif Başlığı</Label>
-                <Input
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  className={formErrors.title ? "border-red-500" : ""}
-                  placeholder="Teklif başlığını girin"
-                />
-                {formErrors.title && <p className="text-xs text-red-500">{formErrors.title}</p>}
-              </div>
-              
-              <div className="space-y-1">
-                <Label htmlFor="valid_until">Geçerlilik Tarihi</Label>
-                <DatePicker 
-                  selected={validUntilDate}
-                  onSelect={(date) => handleDateChange(date)}
-                  className={formErrors.valid_until ? "border-red-500" : ""}
-                />
-                {formErrors.valid_until && (
-                  <p className="text-xs text-red-500">{formErrors.valid_until}</p>
-                )}
-              </div>
-            </div>
+    <div className="space-y-6">
+      {/* Temel Bilgiler - Daha kompakt */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title" className="text-sm font-medium">Teklif Başlığı</Label>
+            <Input
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              className={formErrors.title ? "border-red-500" : ""}
+              placeholder="Teklif başlığını girin"
+            />
+            {formErrors.title && <p className="text-xs text-red-500">{formErrors.title}</p>}
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-            <CustomerSelector
-              value={formData.customer_id || ""}
-              onChange={(value) => handleSelectChange("customer_id", value)}
-              error={formErrors.customer_id}
-            />
-            
-            <EmployeeSelector
-              value={formData.employee_id || ""}
-              onChange={(value) => handleSelectChange("employee_id", value)}
-              error={formErrors.employee_id}
-            />
-          </div>
-          
-          <div className="mb-4">
-            <Label htmlFor="description">Açıklama</Label>
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-sm font-medium">Açıklama</Label>
             <Textarea
               id="description"
               name="description"
               value={formData.description || ""}
               onChange={handleInputChange}
               placeholder="Teklif açıklaması girin"
-              rows={2}
+              rows={3}
+              className="resize-none"
             />
           </div>
-        </CardContent>
-      </Card>
-
-      <Card className="overflow-hidden">
-        <CardContent className="p-4">
-          <h3 className="text-base font-medium mb-3">Teklif Detayları</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="payment_terms">Ödeme Koşulları</Label>
-              <Textarea
-                id="payment_terms"
-                name="payment_terms"
-                value={formData.payment_terms || ""}
-                onChange={handleInputChange}
-                placeholder="Ödeme koşullarını girin"
-                rows={2}
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <Label htmlFor="delivery_terms">Teslimat Koşulları</Label>
-              <Textarea
-                id="delivery_terms"
-                name="delivery_terms"
-                value={formData.delivery_terms || ""}
-                onChange={handleInputChange}
-                placeholder="Teslimat koşullarını girin"
-                rows={2}
-              />
-            </div>
+        </div>
+        
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="valid_until" className="text-sm font-medium">Geçerlilik Tarihi</Label>
+            <DatePicker 
+              selected={validUntilDate}
+              onSelect={(date) => handleDateChange(date)}
+              className={formErrors.valid_until ? "border-red-500" : ""}
+            />
+            {formErrors.valid_until && (
+              <p className="text-xs text-red-500">{formErrors.valid_until}</p>
+            )}
           </div>
-        </CardContent>
-      </Card>
+          
+          <CustomerSelector
+            value={formData.customer_id || ""}
+            onChange={(value) => handleSelectChange("customer_id", value)}
+            error={formErrors.customer_id}
+          />
+          
+          <EmployeeSelector
+            value={formData.employee_id || ""}
+            onChange={(value) => handleSelectChange("employee_id", value)}
+            error={formErrors.employee_id}
+          />
+        </div>
+      </div>
 
-      <Card className="overflow-hidden" id="proposal-items-section">
+      {/* Koşullar - Yan yana ve kompakt */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="payment_terms" className="text-sm font-medium">Ödeme Koşulları</Label>
+          <Textarea
+            id="payment_terms"
+            name="payment_terms"
+            value={formData.payment_terms || ""}
+            onChange={handleInputChange}
+            placeholder="Ödeme koşullarını girin"
+            rows={3}
+            className="resize-none"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="delivery_terms" className="text-sm font-medium">Teslimat Koşulları</Label>
+          <Textarea
+            id="delivery_terms"
+            name="delivery_terms"
+            value={formData.delivery_terms || ""}
+            onChange={handleInputChange}
+            placeholder="Teslimat koşullarını girin"
+            rows={3}
+            className="resize-none"
+          />
+        </div>
+      </div>
+
+      {/* Teklif Kalemleri - Tam genişlik */}
+      <Card className="border-l-4 border-l-primary" id="proposal-items-section">
         <CardContent className="p-4">
-          <h3 className="text-base font-medium mb-3">Teklif Kalemleri</h3>
+          <h3 className="text-lg font-semibold mb-4 text-primary">Teklif Kalemleri</h3>
           <ProposalItems 
             items={formData.items || []} 
             onItemsChange={handleItemsChange}
             globalCurrency={formData.currency || "TRY"} 
           />
-          {formErrors.items && <p className="text-xs text-red-500 mt-1">{formErrors.items}</p>}
+          {formErrors.items && <p className="text-xs text-red-500 mt-2">{formErrors.items}</p>}
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden">
-        <CardContent className="p-4">
-          <h3 className="text-base font-medium mb-3">Notlar ve Açıklamalar</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="notes">Müşteriye Notlar</Label>
-              <Textarea
-                id="notes"
-                name="notes"
-                value={formData.notes || ""}
-                onChange={handleInputChange}
-                placeholder="Müşteriye gösterilecek notlar"
-                rows={2}
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <Label htmlFor="internalNotes">İç Notlar</Label>
-              <Textarea
-                id="internalNotes"
-                name="internalNotes"
-                value={formData.internalNotes || ""}
-                onChange={handleInputChange}
-                placeholder="Sadece şirket içi görülebilecek notlar"
-                rows={2}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Notlar - Yan yana ve kompakt */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="notes" className="text-sm font-medium">Müşteriye Notlar</Label>
+          <Textarea
+            id="notes"
+            name="notes"
+            value={formData.notes || ""}
+            onChange={handleInputChange}
+            placeholder="Müşteriye gösterilecek notlar"
+            rows={3}
+            className="resize-none"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="internalNotes" className="text-sm font-medium">İç Notlar</Label>
+          <Textarea
+            id="internalNotes"
+            name="internalNotes"
+            value={formData.internalNotes || ""}
+            onChange={handleInputChange}
+            placeholder="Sadece şirket içi görülebilecek notlar"
+            rows={3}
+            className="resize-none"
+          />
+        </div>
+      </div>
     </div>
   );
 };
