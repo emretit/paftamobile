@@ -5,7 +5,7 @@ import { tr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { DotsHorizontalIcon, Eye, Edit, Copy, Trash2 } from "lucide-react";
+import { MoreHorizontal, Eye, Edit, Copy, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { calculateProposalTotals, formatProposalAmount } from "@/services/workflow/proposalWorkflow";
 import { useDebounceNavigation } from "@/hooks/useDebounceNavigation";
@@ -81,7 +81,7 @@ const ProposalTableRow: React.FC<ProposalTableRowProps> = ({ proposal }) => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Open menu</span>
-              <DotsHorizontalIcon className="h-4 w-4" />
+              <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
