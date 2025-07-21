@@ -10,16 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Proposal } from "@/types/proposal";
 import StatusBadge from "./detail/StatusBadge";
-import { format } from "date-fns";
-import { tr } from "date-fns/locale";
 import { 
-  CalendarDays, 
-  FileText, 
-  User, 
-  Building, 
-  CreditCard, 
   Edit3,
-  Clock
+  FileText,
+  Package,
+  CreditCard,
+  MessageSquare,
+  Target,
+  Paperclip
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -45,15 +43,6 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(amount);
-  };
-
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return "-";
-    try {
-      return format(new Date(dateString), "dd.MM.yyyy", { locale: tr });
-    } catch (error) {
-      return "-";
-    }
   };
 
   const handleEdit = () => {
@@ -85,122 +74,191 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
         </SheetHeader>
 
         <div className="space-y-6">
-          {/* Ana Bilgiler */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-              Ana Bilgiler
-            </h3>
-            
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Building className="mr-2 h-4 w-4" />
-                  Müşteri
-                </div>
-                <div className="text-sm font-medium text-right">
-                  {proposal.customer?.name || proposal.customer_name || "-"}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <User className="mr-2 h-4 w-4" />
-                  Satış Temsilcisi
-                </div>
-                <div className="text-sm font-medium text-right">
-                  {proposal.employee
-                    ? `${proposal.employee.first_name} ${proposal.employee.last_name}`
-                    : proposal.employee_name || "-"}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Toplam Tutar
-                </div>
-                <div className="text-sm font-medium text-right">
-                  {formatMoney(proposal.total_amount || proposal.total_value || 0)}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Tarihler */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-              Tarihler
-            </h3>
-            
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <CalendarDays className="mr-2 h-4 w-4" />
-                  Oluşturma Tarihi
-                </div>
-                <div className="text-sm font-medium">
-                  {formatDate(proposal.created_at)}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Clock className="mr-2 h-4 w-4" />
-                  Geçerlilik Tarihi
-                </div>
-                <div className="text-sm font-medium">
-                  {formatDate(proposal.valid_until)}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
           {/* Teklif Kalemleri */}
           <div className="space-y-4">
-            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-              Teklif Kalemleri ({proposal.items?.length || 0})
-            </h3>
+            <div className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-muted-foreground" />
+              <h3 className="font-medium">
+                Teklif Kalemleri ({proposal.items?.length || 0})
+              </h3>
+            </div>
             
-            <div className="space-y-2">
+            <div className="space-y-3">
               {proposal.items && proposal.items.length > 0 ? (
                 proposal.items.map((item, index) => (
-                  <div key={item.id || index} className="p-3 bg-muted/40 rounded-md">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{item.name}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {item.quantity} × {formatMoney(item.unit_price)}
+                  <div key={item.id || index} className="p-4 bg-muted/30 rounded-lg border">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-start">
+                        <h4 className="font-medium text-sm">{item.name}</h4>
+                        <span className="text-sm font-semibold text-primary">
+                          {formatMoney(item.total_price)}
+                        </span>
+                      </div>
+                      
+                      {item.description && (
+                        <p className="text-xs text-muted-foreground">
+                          {item.description}
                         </p>
+                      )}
+                      
+                      <div className="grid grid-cols-3 gap-4 text-xs text-muted-foreground">
+                        <div>
+                          <span className="block font-medium">Miktar</span>
+                          <span>{item.quantity}</span>
+                        </div>
+                        <div>
+                          <span className="block font-medium">Birim Fiyat</span>
+                          <span>{formatMoney(item.unit_price)}</span>
+                        </div>
+                        <div>
+                          <span className="block font-medium">KDV</span>
+                          <span>%{item.tax_rate || 18}</span>
+                        </div>
                       </div>
-                      <div className="text-sm font-medium ml-2">
-                        {formatMoney(item.total_price)}
-                      </div>
+                      
+                      {item.discount_rate && item.discount_rate > 0 && (
+                        <div className="text-xs text-green-600">
+                          İndirim: %{item.discount_rate}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-6 text-muted-foreground text-sm">
-                  Bu teklifte henüz kalem bulunmuyor
+                <div className="text-center py-8 text-muted-foreground">
+                  <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">Bu teklifte henüz kalem bulunmuyor</p>
+                </div>
+              )}
+            </div>
+
+            {proposal.items && proposal.items.length > 0 && (
+              <div className="pt-3 border-t">
+                <div className="flex justify-between items-center font-semibold">
+                  <span>Toplam Tutar:</span>
+                  <span className="text-lg text-primary">
+                    {formatMoney(proposal.total_amount || proposal.total_value || 0)}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* Ödeme ve Teslimat Şartları */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-muted-foreground" />
+              <h3 className="font-medium">Ödeme ve Teslimat</h3>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="p-3 bg-muted/30 rounded-lg">
+                <h4 className="font-medium text-sm mb-2">Ödeme Şartları</h4>
+                <p className="text-sm text-muted-foreground">
+                  {proposal.payment_terms || "Belirtilmemiş"}
+                </p>
+              </div>
+              
+              <div className="p-3 bg-muted/30 rounded-lg">
+                <h4 className="font-medium text-sm mb-2">Teslimat Şartları</h4>
+                <p className="text-sm text-muted-foreground">
+                  {proposal.delivery_terms || "Belirtilmemiş"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Notlar ve Açıklamalar */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-muted-foreground" />
+              <h3 className="font-medium">Notlar ve Açıklamalar</h3>
+            </div>
+            
+            <div className="space-y-4">
+              {(proposal.description || proposal.notes) && (
+                <div className="p-3 bg-muted/30 rounded-lg">
+                  <h4 className="font-medium text-sm mb-2">Teklif Açıklaması</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {proposal.description || proposal.notes}
+                  </p>
+                </div>
+              )}
+              
+              {proposal.internal_notes && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <h4 className="font-medium text-sm mb-2 text-yellow-800">Dahili Notlar</h4>
+                  <p className="text-sm text-yellow-700 leading-relaxed">
+                    {proposal.internal_notes}
+                  </p>
+                </div>
+              )}
+              
+              {proposal.terms && (
+                <div className="p-3 bg-muted/30 rounded-lg">
+                  <h4 className="font-medium text-sm mb-2">Şartlar ve Koşullar</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {proposal.terms}
+                  </p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Notlar */}
-          {(proposal.notes || proposal.description) && (
+          {/* Fırsat Bilgileri */}
+          {proposal.opportunity_id && (
             <>
               <Separator />
               <div className="space-y-4">
-                <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-                  Notlar
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {proposal.notes || proposal.description || "Not bulunmuyor"}
-                </p>
+                <div className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-muted-foreground" />
+                  <h3 className="font-medium">İlişkili Fırsat</h3>
+                </div>
+                
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-700">
+                    Bu teklif bir satış fırsatından oluşturulmuştur.
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Fırsat ID: {proposal.opportunity_id}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Ekler */}
+          {proposal.attachments && proposal.attachments.length > 0 && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Paperclip className="h-5 w-5 text-muted-foreground" />
+                  <h3 className="font-medium">Ekler ({proposal.attachments.length})</h3>
+                </div>
+                
+                <div className="space-y-2">
+                  {proposal.attachments.map((attachment, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{attachment.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {attachment.type} • {Math.round(attachment.size / 1024)} KB
+                        </p>
+                      </div>
+                      <Button variant="ghost" size="sm" asChild>
+                        <a href={attachment.url} target="_blank" rel="noopener noreferrer">
+                          Görüntüle
+                        </a>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </>
           )}
