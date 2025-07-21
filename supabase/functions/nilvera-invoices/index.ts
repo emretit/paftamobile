@@ -708,7 +708,7 @@ const handleProcessXMLInvoice = async (supabaseClient: any, invoiceId: string) =
     const invoiceDetails = await fetchInvoiceDetails(token, invoiceId)
     const xmlContent = await fetchInvoiceXML(token, invoiceId)
     
-    console.log('🎯 XMLden parse edilen ürün sayısı:', products.length)
+    console.log('🎯 XML'den parse edilen ürün sayısı:', products.length)
     
     const invoiceInfo = {
       number: invoiceDetails.InvoiceNumber,
@@ -785,127 +785,6 @@ const handleProcessXMLInvoice = async (supabaseClient: any, invoiceId: string) =
   }
 }
 
-// XML'den metin temizleme fonksiyonu
-const cleanXMLText = (text: string): string => {
-  return text
-    .replace(/<[^>]*>/g, '') // HTML/XML tagları kaldır
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-// ==========================================
-// 🔥 XML DETAILS HANDLER
-// ==========================================
-
-async function handleGetXMLDetails(invoiceId: string) {
-  try {
-    console.log('🔍 Getting XML details for invoice:', invoiceId)
-    
-    // Nilvera token al
-    const token = await fetchNilveraToken()
-    
-    // XML'i al
-    const xmlContent = await fetchInvoiceXML(token, invoiceId)
-    console.log('📄 XML alındı, uzunluk:', xmlContent.length)
-    
-    // XML'i parse et ve satır kalemlerini çıkar
-    const lineItems = parseXMLLineItems(xmlContent)
-    console.log('📋 Parse edilen kalem sayısı:', lineItems.length)
-    
-    return {
-      success: true,
-      lineItems,
-      message: `${lineItems.length} kalem bulundu`
-    }
-    
-  } catch (error) {
-    console.error('❌ XML details error:', error)
-    return {
-      success: false,
-      message: error.message,
-      lineItems: []
-    }
-  }
-}
-
-// XML'den satır kalemlerini parse et
-function parseXMLLineItems(xmlText: string) {
-  const lineItems = []
-  
-  try {
-    // InvoiceLine elementlerini bul
-    const invoiceLineRegex = /<cac:InvoiceLine[^>]*>(.*?)<\/cac:InvoiceLine>/gs
-    let match
-    let lineNumber = 1
-    
-    while ((match = invoiceLineRegex.exec(xmlText)) !== null) {
-      const lineXml = match[1]
-      
-      // Her satır için gerekli bilgileri çıkar
-      const itemName = 
-        extractXMLValue(lineXml, 'cac:Item/cbc:Name') ||
-        extractXMLValue(lineXml, 'cac:Item/cbc:Description') ||
-        extractXMLValue(lineXml, 'cbc:Name') ||
-        extractXMLValue(lineXml, 'cbc:Description') ||
-        'Belirtilmemiş'
-      
-      const itemCode = 
-        extractXMLValue(lineXml, 'cac:Item/cac:SellersItemIdentification/cbc:ID') ||
-        extractXMLValue(lineXml, 'cbc:ID') ||
-        ''
-      
-      const quantityText = 
-        extractXMLValue(lineXml, 'cbc:InvoicedQuantity') ||
-        extractXMLValue(lineXml, 'cbc:Quantity') ||
-        '1'
-      
-      const unitCode = 
-        extractXMLAttribute(lineXml, 'cbc:InvoicedQuantity', 'unitCode') ||
-        extractXMLAttribute(lineXml, 'cbc:Quantity', 'unitCode') ||
-        'Adet'
-      
-      const amountText = 
-        extractXMLValue(lineXml, 'cbc:LineExtensionAmount') ||
-        extractXMLValue(lineXml, 'cbc:Amount') ||
-        '0'
-      
-      // Sayısal değerleri parse et
-      const quantity = quantityText ? parseFloat(quantityText.replace(',', '.')) : 0
-      const lineExtensionAmount = amountText ? parseFloat(amountText.replace(',', '.')) : 0
-      
-      // KDV ve vergi kalemlerini filtrele
-      if (itemName.toUpperCase().includes('KDV') || 
-          itemName.toUpperCase().includes('ÖTV') || 
-          itemName.toUpperCase().includes('STOPAJ')) {
-        continue
-      }
-      
-      lineItems.push({
-        lineNumber: lineNumber.toString(),
-        itemName: cleanXMLText(itemName),
-        itemCode: cleanXMLText(itemCode),
-        quantity: quantity,
-        unit: unitCode,
-        unitCode: unitCode,
-        lineExtensionAmount: lineExtensionAmount
-      })
-      
-      lineNumber++
-    }
-    
-    console.log(`✅ ${lineItems.length} kalem parse edildi`)
-    return lineItems
-    
-  } catch (error) {
-    console.error('❌ XML parsing error:', error)
-    return []
-  }
-}
-
 // ===== MAIN SERVE FUNCTION =====
 serve(async (req) => {
   // Handle CORS
@@ -930,13 +809,6 @@ serve(async (req) => {
           throw new Error('invoiceId is required for process_xml_invoice action')
         }
         result = await handleProcessXMLInvoice(supabaseClient, invoiceId)
-        break
-        
-      case 'get_xml_details':
-        if (!invoiceId) {
-          throw new Error('invoiceId is required for get_xml_details action')
-        }
-        result = await handleGetXMLDetails(invoiceId)
         break
         
       default:
