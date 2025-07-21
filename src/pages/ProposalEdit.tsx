@@ -1,9 +1,8 @@
 
 import React from "react";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
-import { useProposalForm } from "@/hooks/useProposalForm";
-import ProposalForm from "@/components/proposals/form/ProposalForm";
 import { useProposalEdit } from "@/hooks/useProposalEdit";
+import UnifiedProposalForm from "@/components/proposals/form/UnifiedProposalForm";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -17,7 +16,6 @@ interface ProposalEditProps {
 
 const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
   const { proposal, loading, saving, handleBack, handleSave } = useProposalEdit();
-  const { isLoading: isSaving } = useProposalForm();
 
   if (loading) {
     return (
@@ -59,11 +57,11 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
             onClick={() => document.getElementById('proposal-form')?.dispatchEvent(
               new Event('submit', { bubbles: true, cancelable: true })
             )} 
-            disabled={saving || isSaving}
+            disabled={saving}
             className="bg-blue-600 hover:bg-blue-700"
           >
             <Save className="h-4 w-4 mr-2" />
-            {(saving || isSaving) ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
+            {saving ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
           </Button>
         </div>
       </div>
@@ -72,10 +70,10 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
 
       <Card className="p-6">
         <div id="proposal-form">
-          <ProposalForm
+          <UnifiedProposalForm
             proposal={proposal}
             loading={loading}
-            saving={saving || isSaving}
+            saving={saving}
             isNew={false}
             onSave={handleSave}
             onBack={handleBack}

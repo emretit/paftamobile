@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useProposalCreation } from "@/hooks/proposals/useProposalCreation";
-import ProposalForm from "@/components/proposals/form/ProposalForm";
+import UnifiedProposalForm from "@/components/proposals/form/UnifiedProposalForm";
 
 interface ProposalCreateProps {
   isCollapsed: boolean;
@@ -27,7 +27,7 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
   const handleSave = async (formData: any) => {
     try {
       setSaving(true);
-      console.log("Saving proposal with data:", formData);
+      console.log("Saving new proposal with data:", formData);
       
       const result = await createProposal(formData);
       
@@ -81,7 +81,7 @@ const ProposalCreate = ({ isCollapsed, setIsCollapsed }: ProposalCreateProps) =>
 
       <Card className="p-6">
         <div id="proposal-form">
-          <ProposalForm
+          <UnifiedProposalForm
             proposal={null}
             loading={false}
             saving={saving}
