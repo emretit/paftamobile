@@ -4,8 +4,8 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ProposalColumn from "./kanban/ProposalColumn";
-import { FileText, Calendar, Check, X, Clock, AlertTriangle } from "lucide-react";
 import type { Proposal, ProposalStatus } from "@/types/proposal";
+import { proposalStatusLabels, proposalStatusIcons } from "@/types/proposal";
 import { changeProposalStatus } from "@/services/crmService";
 
 interface ProposalKanbanProps {
@@ -14,12 +14,12 @@ interface ProposalKanbanProps {
 }
 
 const columns = [
-  { id: "draft", title: "Taslak", icon: FileText, color: "bg-gray-600" },
-  { id: "pending_approval", title: "Onay Bekliyor", icon: Clock, color: "bg-amber-600" },
-  { id: "sent", title: "Gönderildi", icon: Calendar, color: "bg-blue-600" },
-  { id: "accepted", title: "Kabul Edildi", icon: Check, color: "bg-green-600" },
-  { id: "rejected", title: "Reddedildi", icon: X, color: "bg-red-600" },
-  { id: "expired", title: "Süresi Dolmuş", icon: AlertTriangle, color: "bg-orange-600" }
+  { id: "draft", title: proposalStatusLabels.draft, icon: proposalStatusIcons.draft },
+  { id: "pending_approval", title: proposalStatusLabels.pending_approval, icon: proposalStatusIcons.pending_approval },
+  { id: "sent", title: proposalStatusLabels.sent, icon: proposalStatusIcons.sent },
+  { id: "accepted", title: proposalStatusLabels.accepted, icon: proposalStatusIcons.accepted },
+  { id: "rejected", title: proposalStatusLabels.rejected, icon: proposalStatusIcons.rejected },
+  { id: "expired", title: proposalStatusLabels.expired, icon: proposalStatusIcons.expired }
 ];
 
 export const ProposalKanban = ({ proposals, onProposalSelect }: ProposalKanbanProps) => {
@@ -79,23 +79,26 @@ export const ProposalKanban = ({ proposals, onProposalSelect }: ProposalKanbanPr
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="flex overflow-x-auto gap-6 pb-4">
-        {columns.map(column => (
-          <div key={column.id} className="flex-none min-w-[320px]">
-            <div className="flex items-center gap-2 mb-4">
-              <div className={`h-3 w-3 rounded-full ${column.color}`}></div>
-              <h2 className="font-semibold text-gray-900">
-                {column.title} ({filterProposalsByStatus(column.id).length})
-              </h2>
+        {columns.map(column => {
+          const Icon = column.icon;
+          return (
+            <div key={column.id} className="flex-none min-w-[320px]">
+              <div className="flex items-center gap-2 mb-4">
+                <Icon className="h-4 w-4 text-muted-foreground" />
+                <h2 className="font-semibold text-gray-900">
+                  {column.title} ({filterProposalsByStatus(column.id).length})
+                </h2>
+              </div>
+              <ProposalColumn
+                id={column.id}
+                title={column.title}
+                icon={column.icon}
+                proposals={filterProposalsByStatus(column.id)}
+                onSelect={onProposalSelect}
+              />
             </div>
-            <ProposalColumn
-              id={column.id}
-              title={column.title}
-              icon={column.icon}
-              proposals={filterProposalsByStatus(column.id)}
-              onSelect={onProposalSelect}
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
     </DragDropContext>
   );

@@ -90,12 +90,12 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tüm Durumlar</SelectItem>
-              <SelectItem value="draft">Taslak</SelectItem>
-              <SelectItem value="pending_approval">Onay Bekliyor</SelectItem>
-              <SelectItem value="sent">Gönderildi</SelectItem>
-              <SelectItem value="accepted">Kabul Edildi</SelectItem>
-              <SelectItem value="rejected">Reddedildi</SelectItem>
-              <SelectItem value="expired">Süresi Dolmuş</SelectItem>
+              <SelectItem value="draft">📄 Taslak</SelectItem>
+              <SelectItem value="pending_approval">⏳ Onay Bekliyor</SelectItem>
+              <SelectItem value="sent">📤 Gönderildi</SelectItem>
+              <SelectItem value="accepted">✅ Kabul Edildi</SelectItem>
+              <SelectItem value="rejected">❌ Reddedildi</SelectItem>
+              <SelectItem value="expired">⚠️ Süresi Dolmuş</SelectItem>
             </SelectContent>
           </Select>
         </div>

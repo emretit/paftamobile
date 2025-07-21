@@ -1,28 +1,36 @@
 
-export type ProposalStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'cancelled' | 'revised' | 'pending_approval';
+import { FileText, Clock, Send, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+
+export type ProposalStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'pending_approval';
 
 // Status label mapping for UI display
 export const proposalStatusLabels: Record<ProposalStatus, string> = {
   draft: 'Taslak',
+  pending_approval: 'Onay Bekliyor',
   sent: 'Gönderildi',
   accepted: 'Kabul Edildi',
   rejected: 'Reddedildi',
-  expired: 'Süresi Dolmuş',
-  cancelled: 'İptal Edildi',
-  revised: 'Revize Edildi',
-  pending_approval: 'Onay Bekliyor'
+  expired: 'Süresi Dolmuş'
 };
 
-// Status color mapping for UI display
+// Status icon mapping for UI display
+export const proposalStatusIcons: Record<ProposalStatus, any> = {
+  draft: FileText,
+  pending_approval: Clock,
+  sent: Send,
+  accepted: CheckCircle,
+  rejected: XCircle,
+  expired: AlertTriangle
+};
+
+// Simplified status color mapping - using semantic colors
 export const proposalStatusColors: Record<ProposalStatus, string> = {
-  draft: 'bg-gray-500 hover:bg-gray-600',
-  sent: 'bg-blue-500 hover:bg-blue-600',
-  accepted: 'bg-green-500 hover:bg-green-600',
-  rejected: 'bg-red-500 hover:bg-red-600',
-  expired: 'bg-orange-500 hover:bg-orange-600',
-  cancelled: 'bg-rose-500 hover:bg-rose-600',
-  revised: 'bg-amber-500 hover:bg-amber-600',
-  pending_approval: 'bg-purple-500 hover:bg-purple-600'
+  draft: 'bg-muted text-muted-foreground',
+  pending_approval: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
+  sent: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
+  accepted: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+  rejected: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+  expired: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400'
 };
 
 export interface ProposalItem {

@@ -4,7 +4,8 @@ import { Draggable } from '@hello-pangea/dnd';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, User2Icon, CreditCardIcon } from "lucide-react";
-import { Proposal, proposalStatusColors, proposalStatusLabels } from "@/types/proposal";
+import { Proposal } from "@/types/proposal";
+import StatusBadge from "../detail/StatusBadge";
 import { format } from "date-fns";
 
 interface ProposalCardProps {
@@ -43,9 +44,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, index, onClick })
                 <span className="truncate">
                   {proposal.title || `Teklif #${proposal.number || proposal.proposal_number}`}
                 </span>
-                <Badge className={proposalStatusColors[proposal.status]}>
-                  {proposalStatusLabels[proposal.status]}
-                </Badge>
+                <StatusBadge status={proposal.status} size="sm" />
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0 text-xs space-y-2">
