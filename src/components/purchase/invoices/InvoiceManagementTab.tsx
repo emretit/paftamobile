@@ -234,20 +234,65 @@ export default function InvoiceManagementTab() {
   // Kaydet fonksiyonu
   const handleSaveInvoice = async (invoice: InvoiceSummary) => {
     try {
+      // Map the status to the correct enum value
+      const mapStatus = (status: string): "cancelled" | "pending" | "paid" | "partially_paid" | "overdue" => {
+        const statusLower = status.toLowerCase();
+        if (statusLower.includes('paid') || statusLower.includes('ödendi')) return 'paid';
+        if (statusLower.includes('partial') || statusLower.includes('kısmi')) return 'partially_paid';
+        if (statusLower.includes('cancel') || statusLower.includes('iptal')) return 'cancelled';
+        if (statusLower.includes('overdue') || statusLower.includes('gecikmiş')) return 'overdue';
+        return 'pending';
+      };
+
+      // First, try to find the supplier by tax number
+      let supplierId: string | null = null;
+      if (invoice.supplierTaxNumber) {
+        const { data: supplierData } = await supabase
+          .from('suppliers')
+          .select('id')
+          .eq('tax_number', invoice.supplierTaxNumber)
+          .maybeSingle();
+        
+        if (supplierData) {
+          supplierId = supplierData.id;
+        } else {
+          // Create a new supplier if not found
+          const { data: newSupplier, error: supplierError } = await supabase
+            .from('suppliers')
+            .insert([{
+              name: invoice.supplierName,
+              tax_number: invoice.supplierTaxNumber,
+              type: 'kurumsal' as any,
+              status: 'aktif' as any
+            }])
+            .select('id')
+            .single();
+          
+          if (newSupplier && !supplierError) {
+            supplierId = newSupplier.id;
+          }
+        }
+      }
+
+      if (!supplierId) {
+        throw new Error('Tedarikçi bulunamadı veya oluşturulamadı');
+      }
+
       const { data, error } = await supabase
         .from('purchase_invoices')
         .insert([
           {
             invoice_number: invoice.invoiceNumber,
-            supplier_id: invoice.supplierTaxNumber, // veya tedarikçi ID mapping'i yap
+            supplier_id: supplierId,
             invoice_date: invoice.invoiceDate,
-            due_date: invoice.dueDate,
+            due_date: invoice.dueDate || invoice.invoiceDate,
             total_amount: invoice.totalAmount,
-            paid_amount: invoice.paidAmount,
-            currency: invoice.currency,
-            tax_amount: invoice.taxAmount,
-            status: invoice.status,
-            pdf_url: invoice.pdfUrl
+            paid_amount: invoice.paidAmount || 0,
+            currency: invoice.currency || 'TRY',
+            tax_amount: invoice.taxAmount || 0,
+            status: mapStatus(invoice.status),
+            subtotal: invoice.totalAmount - (invoice.taxAmount || 0),
+            notes: `Nilvera'dan aktarılan fatura`
           }
         ])
         .select();
