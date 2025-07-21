@@ -37,7 +37,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const isActive = (path: string) => location.pathname === path;
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(["CRM"]);
+  const [expandedCategories, setExpandedCategories] = useState<string[]>(["CRM & Satış"]);
 
   const toggleCategory = (category: string, path?: string) => {
     setExpandedCategories(prev => 
