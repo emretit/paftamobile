@@ -118,7 +118,7 @@ const ProposalDetail = ({ isCollapsed, setIsCollapsed }: ProposalDetailProps) =>
 
   const handleNavigateToEdit = () => {
     if (proposal) {
-      navigate(`/proposal/edit/${proposal.id}`);
+      navigate(`/proposal/${proposal.id}/edit`);
       toast.info("Teklif düzenleme sayfasına yönlendiriliyorsunuz");
     }
   };

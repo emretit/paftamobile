@@ -14,7 +14,7 @@ export const crmRoutes: RouteConfig[] = [
   { path: "/proposals", component: Proposals, protected: true },
   { path: "/proposal/create", component: ProposalCreate, protected: true },
   { path: "/proposal/:id", component: ProposalDetail, protected: true },
-  { path: "/proposal/edit/:id", component: ProposalEdit, protected: true },
+  { path: "/proposal/:id/edit", component: ProposalEdit, protected: true },
   { path: "/tasks", component: Tasks, protected: true },
   { path: "/opportunities", component: Opportunities, protected: true },
   { path: "/crm", component: CrmDashboard, protected: true },

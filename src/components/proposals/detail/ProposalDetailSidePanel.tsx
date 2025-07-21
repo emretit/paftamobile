@@ -52,7 +52,7 @@ const ProposalDetailSidePanel = ({ proposal, onShowFullView }: ProposalDetailSid
     : { subtotal: 0, taxAmount: 0, total: proposal.total_amount || 0 };
     
   const handleEditProposal = () => {
-    navigate(`/proposal/edit/${proposal.id}`);
+    navigate(`/proposal/${proposal.id}/edit`);
   };
 
   return (
