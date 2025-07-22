@@ -12,12 +12,18 @@ import { toast } from "sonner";
 import { formatCurrency } from "@/utils/formatters";
 import { useProposalCreation } from "@/hooks/proposals/useProposalCreation";
 import { ProposalItem } from "@/types/proposal";
+import DefaultLayout from "@/components/layouts/DefaultLayout";
 
 interface LineItem extends ProposalItem {
   row_number: number;
 }
 
-const NewProposalCreate = () => {
+interface NewProposalCreateProps {
+  isCollapsed: boolean;
+  setIsCollapsed: (value: boolean) => void;
+}
+
+const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreateProps) => {
   const navigate = useNavigate();
   const { createProposal } = useProposalCreation();
   const [saving, setSaving] = useState(false);
@@ -203,58 +209,55 @@ const NewProposalCreate = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate("/proposals")}
-                className="gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Geri
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Yeni Teklif</h1>
-                <p className="text-sm text-gray-600">Hızlı ve kolay teklif oluşturma</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={handlePreview} className="gap-2">
-                <Eye className="h-4 w-4" />
-                Önizleme
-              </Button>
-              <Button variant="outline" onClick={handleExportPDF} className="gap-2">
-                <FileDown className="h-4 w-4" />
-                PDF İndir
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleSave('draft')}
-                disabled={saving}
-              >
-                Taslak Kaydet
-              </Button>
-              <Button 
-                onClick={() => handleSave('sent')}
-                disabled={saving}
-                className="gap-2"
-              >
-                <Calculator className="h-4 w-4" />
-                {saving ? "Kaydediliyor..." : "Teklifi Kaydet"}
-              </Button>
-            </div>
-          </div>
+    <DefaultLayout 
+      isCollapsed={isCollapsed} 
+      setIsCollapsed={setIsCollapsed}
+      title="Yeni Teklif"
+      subtitle="Hızlı ve kolay teklif oluşturma"
+    >
+      {/* Header Actions */}
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate("/proposals")}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Geri
+          </Button>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={handlePreview} className="gap-2">
+            <Eye className="h-4 w-4" />
+            Önizleme
+          </Button>
+          <Button variant="outline" onClick={handleExportPDF} className="gap-2">
+            <FileDown className="h-4 w-4" />
+            PDF İndir
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => handleSave('draft')}
+            disabled={saving}
+          >
+            Taslak Kaydet
+          </Button>
+          <Button 
+            onClick={() => handleSave('sent')}
+            disabled={saving}
+            className="gap-2"
+          >
+            <Calculator className="h-4 w-4" />
+            {saving ? "Kaydediliyor..." : "Teklifi Kaydet"}
+          </Button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Form */}
           <div className="lg:col-span-2 space-y-6">
@@ -563,7 +566,7 @@ const NewProposalCreate = () => {
           </div>
         </div>
       </div>
-    </div>
+    </DefaultLayout>
   );
 };
 
