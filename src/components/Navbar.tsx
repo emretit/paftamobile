@@ -37,7 +37,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const isActive = (path: string) => location.pathname === path;
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(["CRM & Satış"]);
+  const [expandedCategories, setExpandedCategories] = useState<string[]>(["CRM & Satış", "İletişim", "Finans"]);
 
   const toggleCategory = (category: string, path?: string) => {
     setExpandedCategories(prev => 
@@ -60,35 +60,37 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
       <nav className="flex h-full w-full flex-col">
         <NavHeader isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
         
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto px-2 py-2">
           {navItems.map((item, index) => {
             if (isCategory(item)) {
               const isExpanded = expandedCategories.includes(item.category);
               const Icon = item.icon;
               return (
-                <div key={item.category}>
+                <div key={item.category} className="mb-1">
                   <button
                     onClick={() => toggleCategory(item.category, item.path)}
                     className={cn(
-                      "flex items-center w-full h-11 px-3 rounded-md",
+                      "flex items-center w-full h-10 px-3 rounded-lg transition-all duration-200",
                       !isCollapsed && "justify-between",
                       isActive(item.path) 
-                        ? "bg-primary/10 text-primary font-medium" 
-                        : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                        ? "bg-primary/15 text-primary font-semibold shadow-sm" 
+                        : "text-gray-300 hover:bg-gray-800/70 hover:text-white"
                     )}
                   >
                     <div className="flex items-center">
-                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <Icon className="h-4 w-4 flex-shrink-0" />
                       {!isCollapsed && (
                         <span className="ml-3 text-sm font-medium">{item.category}</span>
                       )}
                     </div>
                     {!isCollapsed && (
-                      isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
+                      <div className="transition-transform duration-200">
+                        {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                      </div>
                     )}
                   </button>
                   {isExpanded && !isCollapsed && (
-                    <div className="ml-4 mt-1 space-y-1">
+                    <div className="ml-2 mt-1 space-y-0.5 border-l border-gray-700/50 pl-2">
                       {item.items.map((subItem) => (
                         <NavLink
                           key={subItem.path}
@@ -98,6 +100,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
                           isActive={isActive(subItem.path)}
                           isCollapsed={isCollapsed}
                           isCrmButton={false}
+                          isSubItem={true}
                         />
                       ))}
                     </div>
@@ -106,15 +109,16 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
               );
             }
             return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                icon={item.icon}
-                label={item.label}
-                isActive={isActive(item.path)}
-                isCollapsed={isCollapsed}
-                isCrmButton={false}
-              />
+              <div key={item.path} className="mb-1">
+                <NavLink
+                  to={item.path}
+                  icon={item.icon}
+                  label={item.label}
+                  isActive={isActive(item.path)}
+                  isCollapsed={isCollapsed}
+                  isCrmButton={false}
+                />
+              </div>
             );
           })}
         </div>

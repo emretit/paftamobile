@@ -10,6 +10,7 @@ interface NavLinkProps {
   isActive: boolean;
   isCollapsed: boolean;
   isCrmButton?: boolean;
+  isSubItem?: boolean;
 }
 
 const NavLink = ({ 
@@ -18,21 +19,36 @@ const NavLink = ({
   label, 
   isActive, 
   isCollapsed,
-  isCrmButton = false 
+  isCrmButton = false,
+  isSubItem = false 
 }: NavLinkProps) => {
   return (
     <Link
       to={to}
       className={cn(
-        "flex items-center h-11 transition-colors rounded-md",
-        isCollapsed ? "justify-center px-3" : "px-3 space-x-3",
+        "flex items-center transition-all duration-200 rounded-lg group",
+        isCollapsed ? "justify-center px-3 h-10" : "px-3 space-x-3",
+        isSubItem ? "h-8 text-xs" : "h-10",
         isActive 
-          ? "bg-primary/10 text-primary font-medium" 
-          : "text-gray-300 hover:bg-gray-800 hover:text-white"
+          ? isSubItem 
+            ? "bg-primary/20 text-primary font-medium border-l-2 border-primary" 
+            : "bg-primary/15 text-primary font-semibold shadow-sm"
+          : isSubItem
+            ? "text-gray-400 hover:text-white hover:bg-gray-800/50"
+            : "text-gray-300 hover:bg-gray-800/70 hover:text-white"
       )}
     >
-      <Icon className="h-5 w-5 flex-shrink-0" />
-      {!isCollapsed && <span className="text-sm">{label}</span>}
+      <Icon className={cn(
+        "flex-shrink-0",
+        isSubItem ? "h-3 w-3" : "h-4 w-4"
+      )} />
+      {!isCollapsed && (
+        <span className={cn(
+          isSubItem ? "text-xs font-medium" : "text-sm font-medium"
+        )}>
+          {label}
+        </span>
+      )}
     </Link>
   );
 };
