@@ -257,26 +257,26 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Form */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Customer Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Müşteri Bilgileri</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+      <div className="space-y-6">
+        {/* Top Row - Customer & Proposal Details Combined */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* Customer Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold">Müşteri Bilgileri</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <Label htmlFor="customer_company">Firma Adı *</Label>
+                  <Input
+                    id="customer_company"
+                    value={formData.customer_company}
+                    onChange={(e) => handleFieldChange('customer_company', e.target.value)}
+                    placeholder="Müşteri firma adı"
+                  />
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="customer_company">Firma Adı *</Label>
-                    <Input
-                      id="customer_company"
-                      value={formData.customer_company}
-                      onChange={(e) => handleFieldChange('customer_company', e.target.value)}
-                      placeholder="Müşteri firma adı"
-                    />
-                  </div>
                   <div>
                     <Label htmlFor="contact_name">İletişim Kişisi *</Label>
                     <Input
@@ -295,67 +295,71 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                       placeholder="Pozisyon/Ünvan"
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="prepared_by">Teklifi Hazırlayan</Label>
-                    <Input
-                      id="prepared_by"
-                      value={formData.prepared_by}
-                      onChange={(e) => handleFieldChange('prepared_by', e.target.value)}
-                      placeholder="Satış temsilcisi"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Offer Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Teklif Detayları</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="offer_date">Teklif Tarihi</Label>
-                    <Input
-                      id="offer_date"
-                      type="date"
-                      value={formData.offer_date}
-                      onChange={(e) => handleFieldChange('offer_date', e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="offer_number">Teklif No</Label>
-                    <Input
-                      id="offer_number"
-                      value={formData.offer_number}
-                      onChange={(e) => handleFieldChange('offer_number', e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="validity_date">Geçerlilik Tarihi *</Label>
-                    <Input
-                      id="validity_date"
-                      type="date"
-                      value={formData.validity_date}
-                      onChange={(e) => handleFieldChange('validity_date', e.target.value)}
-                    />
-                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="notes">Notlar</Label>
-                  <Textarea
-                    id="notes"
-                    value={formData.notes}
-                    onChange={(e) => handleFieldChange('notes', e.target.value)}
-                    placeholder="Teklif hakkında özel notlar..."
-                    rows={3}
+                  <Label htmlFor="prepared_by">Teklifi Hazırlayan</Label>
+                  <Input
+                    id="prepared_by"
+                    value={formData.prepared_by}
+                    onChange={(e) => handleFieldChange('prepared_by', e.target.value)}
+                    placeholder="Satış temsilcisi"
                   />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Products/Services Table */}
+          {/* Offer Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold">Teklif Detayları</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="offer_date">Teklif Tarihi</Label>
+                  <Input
+                    id="offer_date"
+                    type="date"
+                    value={formData.offer_date}
+                    onChange={(e) => handleFieldChange('offer_date', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="offer_number">Teklif No</Label>
+                  <Input
+                    id="offer_number"
+                    value={formData.offer_number}
+                    onChange={(e) => handleFieldChange('offer_number', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="validity_date">Geçerlilik Tarihi *</Label>
+                  <Input
+                    id="validity_date"
+                    type="date"
+                    value={formData.validity_date}
+                    onChange={(e) => handleFieldChange('validity_date', e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="notes">Notlar</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => handleFieldChange('notes', e.target.value)}
+                  placeholder="Teklif hakkında özel notlar..."
+                  rows={3}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Products/Services Table - Full Width */}
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          <div className="xl:col-span-3">
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -450,46 +454,10 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                 </div>
               </CardContent>
             </Card>
-
-            {/* Terms & Conditions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Şartlar ve Koşullar</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="payment_terms">Ödeme Şartları</Label>
-                  <Textarea
-                    id="payment_terms"
-                    value={formData.payment_terms}
-                    onChange={(e) => handleFieldChange('payment_terms', e.target.value)}
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="delivery_terms">Teslimat Şartları</Label>
-                  <Textarea
-                    id="delivery_terms"
-                    value={formData.delivery_terms}
-                    onChange={(e) => handleFieldChange('delivery_terms', e.target.value)}
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="warranty_terms">Garanti Şartları</Label>
-                  <Textarea
-                    id="warranty_terms"
-                    value={formData.warranty_terms}
-                    onChange={(e) => handleFieldChange('warranty_terms', e.target.value)}
-                    rows={2}
-                  />
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
-          {/* Right Column - Summary */}
-          <div className="space-y-6">
+          {/* Financial Summary - Right Side */}
+          <div className="xl:col-span-1">
             <Card className="sticky top-6">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -565,6 +533,44 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
             </Card>
           </div>
         </div>
+
+        {/* Terms & Conditions - Full Width */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">Şartlar ve Koşullar</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="payment_terms">Ödeme Şartları</Label>
+                <Textarea
+                  id="payment_terms"
+                  value={formData.payment_terms}
+                  onChange={(e) => handleFieldChange('payment_terms', e.target.value)}
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label htmlFor="delivery_terms">Teslimat Şartları</Label>
+                <Textarea
+                  id="delivery_terms"
+                  value={formData.delivery_terms}
+                  onChange={(e) => handleFieldChange('delivery_terms', e.target.value)}
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label htmlFor="warranty_terms">Garanti Şartları</Label>
+                <Textarea
+                  id="warranty_terms"
+                  value={formData.warranty_terms}
+                  onChange={(e) => handleFieldChange('warranty_terms', e.target.value)}
+                  rows={3}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </DefaultLayout>
   );
