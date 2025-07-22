@@ -22,4 +22,5 @@ export const financeRoutes: RouteConfig[] = [
   { path: "/financial-overview", component: FinancialOverview, protected: true },
   { path: "/purchase-invoices", component: PurchaseInvoices, protected: true },
   { path: "/sales-invoices", component: SalesInvoices, protected: true },
+  { path: "/e-invoice", component: PurchaseInvoices, protected: true },
 ];
