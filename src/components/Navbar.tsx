@@ -37,15 +37,23 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const isActive = (path: string) => location.pathname === path;
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(["CRM & Satış", "İletişim", "Finans"]);
+  
+  // Default olarak önemli kategorileri açık tutuyoruz
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([
+    "CRM & Satış", 
+    "İletişim", 
+    "Finans"
+  ]);
 
   const toggleCategory = (category: string, path?: string) => {
+    // Kategori durumunu değiştir
     setExpandedCategories(prev => 
       prev.includes(category) 
         ? prev.filter(c => c !== category)
         : [...prev, category]
     );
     
+    // Eğer path varsa navigate et
     if (path) {
       navigate(path);
     }
@@ -53,15 +61,17 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-screen z-20 transition-all duration-300 ${
+      className={cn(
+        "fixed left-0 top-0 h-screen z-20 transition-all duration-300 border-r border-white/10 bg-gray-900 shadow-lg",
         isCollapsed ? "w-[60px]" : "w-64"
-      } border-r border-white/10 bg-gray-900 shadow-lg`}
+      )}
     >
       <nav className="flex h-full w-full flex-col">
         <NavHeader isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
         
+        {/* Ana navigasyon alanı */}
         <div className="flex-1 overflow-auto px-2 py-2">
-          {navItems.map((item, index) => {
+          {navItems.map((item) => {
             if (isCategory(item)) {
               const isExpanded = expandedCategories.includes(item.category);
               const Icon = item.icon;
@@ -125,6 +135,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
 
         <Separator className="bg-white/5" />
         
+        {/* Ayarlar bölümü */}
         <div className="p-3">
           <NavLink
             to={settingsItem.path}
@@ -137,9 +148,12 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
         </div>
       </nav>
 
+      {/* Kullanıcı menüsü */}
       <div className="p-4 border-t border-white/5">
         <div className="flex items-center justify-between">
-          {!isCollapsed && <span className="text-sm font-medium text-gray-300">Hesap</span>}
+          {!isCollapsed && (
+            <span className="text-sm font-medium text-gray-300">Hesap</span>
+          )}
           <UserMenu />
         </div>
       </div>
