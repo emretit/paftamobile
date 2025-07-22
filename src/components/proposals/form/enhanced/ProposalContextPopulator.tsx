@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Users, Target, FileTemplate } from "lucide-react";
+import { Loader2, Users, Target, FileText } from "lucide-react";
 
 interface ProposalContextPopulatorProps {
   customerId?: string | null;
@@ -59,21 +59,13 @@ const ProposalContextPopulator: React.FC<ProposalContextPopulatorProps> = ({
     enabled: !!opportunityId
   });
 
-  // Fetch template data
+  // Fetch template data (disabled for now as table doesn't exist)
   const { data: template } = useQuery({
     queryKey: ["template", templateId],
     queryFn: async () => {
-      if (!templateId) return null;
-      const { data, error } = await supabase
-        .from("proposal_templates")
-        .select("*")
-        .eq("id", templateId)
-        .single();
-      
-      if (error) throw error;
-      return data;
+      return null; // Disabled until proposal_templates table is created
     },
-    enabled: !!templateId
+    enabled: false // Disabled until table exists
   });
 
   // Auto-populate form when data is loaded
@@ -143,35 +135,8 @@ const ProposalContextPopulator: React.FC<ProposalContextPopulatorProps> = ({
       });
     }
 
-    // Populate template data
-    if (template && !loadedData.template) {
-      if (template.prefilled_fields) {
-        const prefilledFields = typeof template.prefilled_fields === 'string' 
-          ? JSON.parse(template.prefilled_fields) 
-          : template.prefilled_fields;
-          
-        Object.assign(context, prefilledFields);
-      }
-      
-      if (template.items) {
-        context.items = template.items;
-      }
-      
-      if (template.payment_terms) {
-        context.payment_terms = template.payment_terms;
-      }
-      
-      if (template.delivery_terms) {
-        context.delivery_terms = template.delivery_terms;
-      }
-      
-      setLoadedData(prev => ({ ...prev, template: true }));
-      hasUpdates = true;
-      
-      toast.success(`Şablon yüklendi: ${template.name}`, {
-        duration: 3000,
-      });
-    }
+    // Populate template data (disabled until table exists)
+    // Template functionality will be implemented when proposal_templates table is created
 
     // Set default values if no context provided
     if (!customerId && !opportunityId && !templateId && !loadedData.customer && !loadedData.opportunity) {
@@ -234,7 +199,7 @@ const ProposalContextPopulator: React.FC<ProposalContextPopulatorProps> = ({
               variant={loadedData.template ? "default" : "secondary"} 
               className="gap-1"
             >
-              <FileTemplate className="h-3 w-3" />
+              <FileText className="h-3 w-3" />
               {loadedData.template ? "Şablon Yüklendi" : "Şablon Yükleniyor..."}
               {!loadedData.template && <Loader2 className="h-3 w-3 animate-spin ml-1" />}
             </Badge>

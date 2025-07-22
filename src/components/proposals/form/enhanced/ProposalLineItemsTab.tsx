@@ -196,8 +196,7 @@ const ProposalLineItemsTab: React.FC<ProposalLineItemsTabProps> = ({
           <ProposalItems
             items={formData.items || []}
             onItemsChange={handleItemsChange}
-            selectedCurrency={formData.currency || "TRY"}
-            onCurrencyChange={(currency) => onFieldChange("currency", currency)}
+            globalCurrency={formData.currency || "TRY"}
           />
         </CardContent>
       </Card>

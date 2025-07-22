@@ -174,8 +174,8 @@ const ProposalBasicInfoTab: React.FC<ProposalBasicInfoTabProps> = ({
                 </Label>
                 <CustomerSelector
                   value={formData.customer_id}
-                  onValueChange={(value) => onFieldChange("customer_id", value)}
-                  error={!!validationErrors.customer_id}
+                  onChange={(value) => onFieldChange("customer_id", value)}
+                  error={validationErrors.customer_id?.[0]}
                 />
                 {validationErrors.customer_id && (
                   <p className="text-destructive text-sm">{validationErrors.customer_id[0]}</p>
@@ -187,7 +187,7 @@ const ProposalBasicInfoTab: React.FC<ProposalBasicInfoTabProps> = ({
                 <Label>Sorumlu Çalışan</Label>
                 <EmployeeSelector
                   value={formData.employee_id}
-                  onValueChange={(value) => onFieldChange("employee_id", value)}
+                  onChange={(value) => onFieldChange("employee_id", value)}
                 />
               </div>
 
