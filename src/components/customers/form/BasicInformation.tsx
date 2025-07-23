@@ -1,8 +1,10 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { CustomerFormData } from "@/types/customer";
 import { User, Mail, Phone, Building, FileText, MapPin, Users } from "lucide-react";
+import { getDigitsOnly, formatPhoneNumber } from "@/utils/phoneFormatter";
 
 interface BasicInformationProps {
   formData: CustomerFormData;
@@ -71,11 +73,10 @@ const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
                 <Phone className="w-3 h-3 text-green-500" />
                 <span>Cep Telefonu</span>
               </Label>
-              <Input
+              <PhoneInput
                 id="mobile_phone"
-                value={formData.mobile_phone}
-                onChange={(e) => setFormData({ ...formData, mobile_phone: e.target.value })}
-                placeholder="+90 5XX XXX XX XX"
+                value={formData.mobile_phone ? formatPhoneNumber(formData.mobile_phone) : ""}
+                onChange={(value) => setFormData({ ...formData, mobile_phone: getDigitsOnly(value) })}
               />
             </div>
 
@@ -84,11 +85,10 @@ const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
                 <Phone className="w-3 h-3 text-orange-500" />
                 <span>İş Telefonu</span>
               </Label>
-              <Input
+              <PhoneInput
                 id="office_phone"
-                value={formData.office_phone}
-                onChange={(e) => setFormData({ ...formData, office_phone: e.target.value })}
-                placeholder="+90 2XX XXX XX XX"
+                value={formData.office_phone ? formatPhoneNumber(formData.office_phone) : ""}
+                onChange={(value) => setFormData({ ...formData, office_phone: getDigitsOnly(value) })}
               />
             </div>
 

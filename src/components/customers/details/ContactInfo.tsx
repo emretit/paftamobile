@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Mail, Phone, Building, MapPin, FileText, User, Users, Edit3, Save, X, Check, TrendingUp, TrendingDown, DollarSign, Plus } from "lucide-react";
 import { Customer } from "@/types/customer";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import { formatPhoneNumber, getDigitsOnly } from "@/utils/phoneFormatter";
 
 interface ContactInfoProps {
   customer: Customer;
@@ -42,9 +44,13 @@ const EditableField = ({
   const [editValue, setEditValue] = useState(value);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  
+  const isPhoneField = type === "tel";
 
   const handleSave = async () => {
-    if (required && !editValue.trim()) {
+    const finalValue = isPhoneField ? getDigitsOnly(editValue) : editValue.trim();
+    
+    if (required && !finalValue) {
       toast({
         title: "Hata",
         description: "Bu alan zorunludur",
@@ -55,7 +61,7 @@ const EditableField = ({
 
     setIsLoading(true);
     try {
-      await onSave(editValue);
+      await onSave(finalValue);
       setIsEditing(false);
       toast({
         title: "Başarılı",
@@ -73,7 +79,8 @@ const EditableField = ({
   };
 
   const handleCancel = () => {
-    setEditValue(value);
+    const displayValue = isPhoneField && value ? formatPhoneNumber(value) : value;
+    setEditValue(displayValue);
     setIsEditing(false);
   };
 
@@ -111,6 +118,13 @@ const EditableField = ({
               onChange={(e) => setEditValue(e.target.value)}
               placeholder={placeholder}
               rows={3}
+              className="w-full"
+            />
+          ) : isPhoneField ? (
+            <PhoneInput
+              value={editValue}
+              onChange={setEditValue}
+              placeholder={placeholder}
               className="w-full"
             />
           ) : (
@@ -152,12 +166,16 @@ const EditableField = ({
         <div className="flex items-center justify-between group hover:bg-muted/30 p-1 rounded transition-colors">
           <div className="flex items-center space-x-1">
             {icon}
-            <span className="font-medium">{value}</span>
+            <span className="font-medium">{isPhoneField && value ? formatPhoneNumber(value) : value}</span>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsEditing(true)}
+            onClick={() => {
+              const displayValue = isPhoneField && value ? formatPhoneNumber(value) : value;
+              setEditValue(displayValue);
+              setIsEditing(true);
+            }}
             className="opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <Edit3 className="h-3.5 w-3.5" />
