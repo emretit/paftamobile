@@ -14,6 +14,7 @@ import { purchaseRoutes } from "./purchaseRoutes";
 import { proposalRoutes } from "./proposalRoutes";
 import Deliveries from "@/pages/Deliveries";
 import Returns from "@/pages/Returns";
+import InvoiceManagement from "@/pages/InvoiceManagement";
 
 
 export const appRoutes: RouteConfig[] = [
@@ -33,4 +34,5 @@ export const appRoutes: RouteConfig[] = [
   ...proposalRoutes,
   { path: "/deliveries", component: Deliveries, protected: true },
   { path: "/returns", component: Returns, protected: true },
+  { path: "/invoices", component: InvoiceManagement, protected: true },
 ];
