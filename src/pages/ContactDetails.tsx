@@ -8,7 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { ContactHeader } from "@/components/customers/details/ContactHeader";
 import { ContactTabs } from "@/components/customers/details/ContactTabs";
 import { EditableCustomerDetails } from "@/components/customers/details/EditableCustomerDetails";
-import { EditableContactInfo } from "@/components/customers/details/EditableContactInfo";
+import { ContactInfo } from "@/components/customers/details/ContactInfo";
+import { FinancialInfo } from "@/components/customers/details/FinancialInfo";
+import { Customer } from "@/types/customer";
 
 interface ContactDetailsProps {
   isCollapsed: boolean;
@@ -18,17 +20,17 @@ interface ContactDetailsProps {
 const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) => {
   const { id } = useParams();
   const [isEditing, setIsEditing] = useState(false);
+  const [customer, setCustomer] = useState<Customer | null>(null);
 
-  const { data: customer, isLoading, refetch } = useQuery({
+  const { data: fetchedCustomer, isLoading, refetch } = useQuery({
     queryKey: ['customer', id],
     queryFn: async () => {
       if (!id) return null;
       
-      // Using proper Supabase filter with the UUID
       const { data, error } = await supabase
         .from('customers')
-        .select()
-        .match({ id })
+        .select('*')
+        .eq('id', id)
         .maybeSingle();
       
       if (error) {
@@ -39,6 +41,11 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
       return data;
     },
     enabled: !!id,
+    onSuccess: (data) => {
+      if (data) {
+        setCustomer(data);
+      }
+    }
   });
 
   const handleEdit = () => {
@@ -54,32 +61,47 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
     await refetch();
   };
 
-  const handleContactUpdate = (updatedCustomer: any) => {
-    refetch();
+  const handleCustomerUpdate = (updatedCustomer: Customer) => {
+    setCustomer(updatedCustomer);
   };
+
+  const currentCustomer = customer || fetchedCustomer;
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-gray-50">
         <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
         <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
           <TopBar />
           <div className="p-8">
-            <div className="text-center py-8">Yükleniyor...</div>
+            <div className="flex items-center justify-center h-64">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 border-4 border-t-blue-600 border-blue-200 rounded-full animate-spin"></div>
+                <span className="text-gray-600">Müşteri bilgileri yükleniyor...</span>
+              </div>
+            </div>
           </div>
         </main>
       </div>
     );
   }
 
-  if (!customer) {
+  if (!currentCustomer) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-gray-50">
         <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
         <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
           <TopBar />
           <div className="p-8">
-            <div className="text-center py-8">Müşteri bulunamadı</div>
+            <div className="text-center py-12">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Müşteri bulunamadı</h2>
+              <p className="text-gray-600">Bu müşteri mevcut değil veya silinmiş olabilir.</p>
+            </div>
           </div>
         </main>
       </div>
@@ -87,27 +109,48 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
         <TopBar />
-        <div className="p-8">
-          {isEditing ? (
+        
+        {isEditing ? (
+          <div className="p-8">
             <EditableCustomerDetails 
-              customer={customer} 
+              customer={currentCustomer} 
               onCancel={handleCancel} 
               onSuccess={handleSuccess}
             />
-          ) : (
-            <>
-              <ContactHeader customer={customer} id={id || ''} onEdit={handleEdit} />
-              <div className="mt-6">
-                <EditableContactInfo customer={customer} onUpdate={handleContactUpdate} />
+          </div>
+        ) : (
+          <>
+            <ContactHeader 
+              customer={currentCustomer} 
+              id={id || ''} 
+              onEdit={handleEdit}
+              onUpdate={handleCustomerUpdate}
+            />
+            <div className="p-8">
+              <div className="max-w-7xl mx-auto">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Main content */}
+                  <div className="lg:col-span-2 space-y-6">
+                    <ContactInfo 
+                      customer={currentCustomer} 
+                      onUpdate={handleCustomerUpdate} 
+                    />
+                    <FinancialInfo customer={currentCustomer} />
+                  </div>
+                  
+                  {/* Sidebar */}
+                  <div className="space-y-6">
+                    <ContactTabs customer={currentCustomer} />
+                  </div>
+                </div>
               </div>
-              <ContactTabs customer={customer} />
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        )}
       </main>
     </div>
   );
