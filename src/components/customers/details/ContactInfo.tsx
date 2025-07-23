@@ -1,12 +1,12 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Phone, Building, MapPin, FileText, User, Users, Edit3, Save, X, Check, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { Mail, Phone, Building, MapPin, FileText, User, Users, Edit3, Save, X, Check, TrendingUp, TrendingDown, DollarSign, Plus } from "lucide-react";
 import { Customer } from "@/types/customer";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -169,6 +169,7 @@ const EditableField = ({
 };
 
 export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
+  const [showSecondaryContact, setShowSecondaryContact] = useState(false);
   const { toast } = useToast();
 
   // Fetch employees for representative dropdown
@@ -332,124 +333,132 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
       
       <div className="space-y-1.5">
         {/* Primary Contact Section */}
-        <div className="p-4 bg-gradient-to-r from-card to-card/80 rounded-lg border border-border/50 shadow-sm">
-          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <div className="w-1 h-4 bg-primary rounded-full"></div>
-            İletişim Bilgileri
-          </h3>
+        <div className="p-3 bg-card rounded-lg border border-border/50">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+              <div className="w-0.5 h-3 bg-primary rounded-full"></div>
+              İletişim Bilgileri
+            </h3>
+            {!showSecondaryContact && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSecondaryContact(true)}
+                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                İkinci Yetkili
+              </Button>
+            )}
+          </div>
           
-          {/* Company Information */}
-          <div className="mb-4 p-3 bg-muted/30 rounded-lg">
-            <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-              <Building className="w-3 h-3 text-purple-500" />
-              Şirket Bilgileri
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Compact Primary Contact */}
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <EditableField
-                label="Şirket Adı"
+                label="Şirket"
                 value={customer.company || ""}
-                icon={<Building className="w-2.5 h-2.5 text-purple-500" />}
+                icon={<Building className="w-2 h-2 text-purple-500" />}
                 onSave={(value) => updateCustomerField("company", value)}
                 placeholder="Şirket adı"
               />
-              <div></div>
-            </div>
-          </div>
-
-          {/* Primary Contact */}
-          <div className="mb-4 p-3 bg-muted/30 rounded-lg">
-            <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-              <User className="w-3 h-3 text-primary" />
-              Birinci Yetkili
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <EditableField
-                label="Ad Soyad"
+                label="Yetkili"
                 value={customer.name || ""}
-                icon={<User className="w-2.5 h-2.5 text-primary" />}
+                icon={<User className="w-2 h-2 text-primary" />}
                 onSave={(value) => updateCustomerField("name", value)}
-                placeholder="Yetkili kişi"
+                placeholder="Ad Soyad"
                 required
               />
               <EditableField
                 label="E-posta"
                 value={customer.email || ""}
-                icon={<Mail className="w-2.5 h-2.5 text-blue-500" />}
+                icon={<Mail className="w-2 h-2 text-blue-500" />}
                 onSave={(value) => updateCustomerField("email", value)}
                 placeholder="email@example.com"
                 type="email"
               />
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-1">
                 <EditableField
-                  label="Cep Tel."
+                  label="Cep"
                   value={customer.mobile_phone || ""}
-                  icon={<Phone className="w-2.5 h-2.5 text-green-500" />}
+                  icon={<Phone className="w-2 h-2 text-green-500" />}
                   onSave={(value) => updateCustomerField("mobile_phone", value)}
                   placeholder="5XX XXX XX XX"
                   type="tel"
                 />
                 <EditableField
-                  label="İş Tel."
+                  label="İş Tel"
                   value={customer.office_phone || ""}
-                  icon={<Phone className="w-2.5 h-2.5 text-orange-500" />}
+                  icon={<Phone className="w-2 h-2 text-orange-500" />}
                   onSave={(value) => updateCustomerField("office_phone", value)}
                   placeholder="2XX XXX XX XX"
                   type="tel"
                 />
               </div>
             </div>
-          </div>
 
-          {/* Secondary Contact */}
-          <div className="p-3 bg-muted/20 rounded-lg border border-dashed border-muted-foreground/30">
-            <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-              <User className="w-3 h-3 text-secondary" />
-              İkinci Yetkili (Opsiyonel)
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <EditableField
-                label="Ad Soyad"
-                value={customer.representative || ""}
-                icon={<User className="w-2.5 h-2.5 text-secondary" />}
-                onSave={(value) => updateCustomerField("representative", value)}
-                placeholder="İkinci yetkili kişi"
-              />
-              <EditableField
-                label="E-posta"
-                value=""
-                icon={<Mail className="w-2.5 h-2.5 text-blue-400" />}
-                onSave={async (value) => {
-                  // TODO: İkinci yetkili e-posta alanı için veritabanı güncelleme
-                  console.log("İkinci yetkili e-posta:", value);
-                }}
-                placeholder="email@example.com"
-                type="email"
-              />
-              <div className="grid grid-cols-2 gap-2">
-                <EditableField
-                  label="Cep Tel."
-                  value=""
-                  icon={<Phone className="w-2.5 h-2.5 text-green-400" />}
-                  onSave={async (value) => {
-                    // TODO: İkinci yetkili cep telefonu için veritabanı güncelleme
-                    console.log("İkinci yetkili cep:", value);
-                  }}
-                  placeholder="5XX XXX XX XX"
-                  type="tel"
-                />
-                <EditableField
-                  label="İş Tel."
-                  value=""
-                  icon={<Phone className="w-2.5 h-2.5 text-orange-400" />}
-                  onSave={async (value) => {
-                    // TODO: İkinci yetkili iş telefonu için veritabanı güncelleme
-                    console.log("İkinci yetkili iş tel:", value);
-                  }}
-                  placeholder="2XX XXX XX XX"
-                  type="tel"
-                />
+            {/* Secondary Contact - Show only when requested */}
+            {showSecondaryContact && (
+              <div className="pt-2 border-t border-dashed border-muted-foreground/30">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                    <User className="w-3 h-3 text-secondary" />
+                    İkinci Yetkili
+                  </h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowSecondaryContact(false)}
+                    className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <EditableField
+                    label="Ad Soyad"
+                    value={customer.representative || ""}
+                    icon={<User className="w-2 h-2 text-secondary" />}
+                    onSave={(value) => updateCustomerField("representative", value)}
+                    placeholder="İkinci yetkili"
+                  />
+                  <EditableField
+                    label="E-posta"
+                    value=""
+                    icon={<Mail className="w-2 h-2 text-blue-400" />}
+                    onSave={async (value) => {
+                      console.log("İkinci yetkili e-posta:", value);
+                    }}
+                    placeholder="email@example.com"
+                    type="email"
+                  />
+                  <div className="grid grid-cols-2 gap-1">
+                    <EditableField
+                      label="Cep"
+                      value=""
+                      icon={<Phone className="w-2 h-2 text-green-400" />}
+                      onSave={async (value) => {
+                        console.log("İkinci yetkili cep:", value);
+                      }}
+                      placeholder="5XX XXX XX XX"
+                      type="tel"
+                    />
+                    <EditableField
+                      label="İş Tel"
+                      value=""
+                      icon={<Phone className="w-2 h-2 text-orange-400" />}
+                      onSave={async (value) => {
+                        console.log("İkinci yetkili iş tel:", value);
+                      }}
+                      placeholder="2XX XXX XX XX"
+                      type="tel"
+                    />
+                  </div>
+                  <div></div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
