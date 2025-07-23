@@ -155,7 +155,7 @@ export const ContactHeader = ({ customer, id, onEdit, onUpdate }: ContactHeaderP
           <div className="flex items-center gap-2">
             {isEditingStatus ? (
               <div className="flex items-center gap-2">
-                <Select value={statusValue} onValueChange={setStatusValue}>
+                <Select value={statusValue} onValueChange={(value) => setStatusValue(value as typeof customer.status)}>
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
@@ -204,7 +204,7 @@ export const ContactHeader = ({ customer, id, onEdit, onUpdate }: ContactHeaderP
           <div className="flex items-center gap-2">
             {isEditingType ? (
               <div className="flex items-center gap-2">
-                <Select value={typeValue} onValueChange={setTypeValue}>
+                <Select value={typeValue} onValueChange={(value) => setTypeValue(value as typeof customer.type)}>
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>

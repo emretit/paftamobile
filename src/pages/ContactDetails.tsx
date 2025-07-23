@@ -41,11 +41,6 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
       return data;
     },
     enabled: !!id,
-    onSuccess: (data) => {
-      if (data) {
-        setCustomer(data);
-      }
-    }
   });
 
   const handleEdit = () => {
