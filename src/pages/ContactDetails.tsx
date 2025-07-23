@@ -125,15 +125,15 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
               onEdit={handleEdit}
               onUpdate={handleCustomerUpdate}
             />
-            <div className="p-2">
-              <div className="max-w-7xl mx-auto space-y-2">
-                {/* Compact general information */}
+            <div className="p-1">
+              <div className="max-w-7xl mx-auto space-y-1">
+                {/* Ultra compact general information */}
                 <ContactInfo 
                   customer={currentCustomer} 
                   onUpdate={handleCustomerUpdate} 
                 />
                 
-                {/* Tabs Section - Now more visible */}
+                {/* Tabs Section - More prominent */}
                 <ContactTabs customer={currentCustomer} />
               </div>
             </div>

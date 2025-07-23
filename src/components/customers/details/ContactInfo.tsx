@@ -79,10 +79,10 @@ const EditableField = ({
 
   if (!isEditing && !value) {
     return (
-      <div className="flex items-center justify-between py-2 px-3 rounded-lg border-2 border-dashed border-muted hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 cursor-pointer group">
-        <div className="flex items-center space-x-2 text-muted-foreground group-hover:text-primary">
+      <div className="flex items-center justify-between py-1 px-2 rounded border-2 border-dashed border-muted hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 cursor-pointer group">
+        <div className="flex items-center space-x-1 text-muted-foreground group-hover:text-primary">
           {icon}
-          <span className="text-sm">{placeholder || `${label} ekle`}</span>
+          <span className="text-xs">{placeholder || `${label} ekle`}</span>
         </div>
         <Button
           variant="ghost"
@@ -97,14 +97,14 @@ const EditableField = ({
   }
 
   return (
-    <div className="space-y-2">
-      <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+    <div className="space-y-1">
+      <Label className="text-xs font-medium text-muted-foreground flex items-center gap-0.5">
         {icon}
         <span>{label}</span>
         {required && <span className="text-red-500">*</span>}
       </Label>
       {isEditing ? (
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           {multiline ? (
             <Textarea
               value={editValue}
@@ -149,8 +149,8 @@ const EditableField = ({
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-between group hover:bg-muted/30 p-2 rounded-lg transition-colors">
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between group hover:bg-muted/30 p-1 rounded transition-colors">
+          <div className="flex items-center space-x-1">
             {icon}
             <span className="font-medium">{value}</span>
           </div>
@@ -320,69 +320,69 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
   };
 
   return (
-    <Card className="p-3 bg-gradient-to-br from-background to-muted/20 border shadow-sm">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="p-1.5 bg-primary/10 rounded-lg">
-          <User className="w-3.5 h-3.5 text-primary" />
+    <Card className="p-2 bg-gradient-to-br from-background to-muted/20 border shadow-sm">
+      <div className="flex items-center gap-1.5 mb-2">
+        <div className="p-1 bg-primary/10 rounded">
+          <User className="w-3 h-3 text-primary" />
         </div>
-        <h2 className="text-base font-semibold text-foreground">Genel Bilgiler</h2>
+        <h2 className="text-sm font-semibold text-foreground">Genel Bilgiler</h2>
       </div>
       
-      <div className="space-y-2.5">
+      <div className="space-y-1.5">
         {/* Primary Contact Section */}
-        <div className="p-2.5 bg-card rounded-lg border border-border/50">
-          <h3 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-            <div className="w-1 h-3 bg-primary rounded-full"></div>
-            İletişim Bilgileri
+        <div className="p-1.5 bg-card rounded border border-border/50">
+          <h3 className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
+            <div className="w-0.5 h-2 bg-primary rounded-full"></div>
+            İletişim
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
             <EditableField
-              label="Yetkili Kişi"
+              label="Yetkili"
               value={customer.name || ""}
-              icon={<User className="w-3 h-3 text-primary" />}
+              icon={<User className="w-2.5 h-2.5 text-primary" />}
               onSave={(value) => updateCustomerField("name", value)}
-              placeholder="Yetkili kişi adı"
+              placeholder="Yetkili kişi"
               required
             />
             <EditableField
               label="E-posta"
               value={customer.email || ""}
-              icon={<Mail className="w-3 h-3 text-blue-500" />}
+              icon={<Mail className="w-2.5 h-2.5 text-blue-500" />}
               onSave={(value) => updateCustomerField("email", value)}
-              placeholder="ornek@email.com"
+              placeholder="email"
               type="email"
             />
             <EditableField
-              label="Cep Tel."
+              label="Cep"
               value={customer.mobile_phone || ""}
-              icon={<Phone className="w-3 h-3 text-green-500" />}
+              icon={<Phone className="w-2.5 h-2.5 text-green-500" />}
               onSave={(value) => updateCustomerField("mobile_phone", value)}
-              placeholder="+90 5XX XXX XX XX"
+              placeholder="5XX XXX XX XX"
               type="tel"
             />
             <EditableField
               label="İş Tel."
               value={customer.office_phone || ""}
-              icon={<Phone className="w-3 h-3 text-orange-500" />}
+              icon={<Phone className="w-2.5 h-2.5 text-orange-500" />}
               onSave={(value) => updateCustomerField("office_phone", value)}
-              placeholder="+90 2XX XXX XX XX"
+              placeholder="2XX XXX XX XX"
               type="tel"
             />
           </div>
         </div>
 
         {/* Business Information */}
-        <div className="p-2.5 bg-card rounded-lg border border-border/50">
-          <h3 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-            <div className="w-1 h-3 bg-blue-500 rounded-full"></div>
-            İşletme Bilgileri
+        <div className="p-1.5 bg-card rounded border border-border/50">
+          <h3 className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
+            <div className="w-0.5 h-2 bg-blue-500 rounded-full"></div>
+            İşletme
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
             {customer.type === 'kurumsal' && (
               <EditableField
-                label="Şirket Adı"
+                label="Şirket"
                 value={customer.company || ""}
-                icon={<Building className="w-3 h-3 text-purple-500" />}
+                icon={<Building className="w-2.5 h-2.5 text-purple-500" />}
                 onSave={(value) => updateCustomerField("company", value)}
                 placeholder="Şirket adı"
               />
@@ -393,80 +393,66 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
           </div>
         </div>
 
-        {/* Tax Information + Address - Combined for Corporate customers */}
-        {customer.type === 'kurumsal' && (
-          <div className="p-2.5 bg-card rounded-lg border border-border/50">
-            <h3 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-              <div className="w-1 h-3 bg-amber-500 rounded-full"></div>
-              Vergi ve Adres
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-              <EditableField
-                label="Vergi No"
-                value={customer.tax_number || ""}
-                icon={<FileText className="w-3 h-3 text-amber-500" />}
-                onSave={(value) => updateCustomerField("tax_number", value)}
-                placeholder="1234567890"
-              />
-              <EditableField
-                label="Vergi Dairesi"
-                value={customer.tax_office || ""}
-                icon={<Building className="w-3 h-3 text-amber-600" />}
-                onSave={(value) => updateCustomerField("tax_office", value)}
-                placeholder="Vergi dairesi"
-              />
+        {/* Tax + Address Combined */}
+        <div className="p-1.5 bg-card rounded border border-border/50">
+          <h3 className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
+            <div className="w-0.5 h-2 bg-amber-500 rounded-full"></div>
+            {customer.type === 'kurumsal' ? 'Vergi & Adres' : 'Adres'}
+          </h3>
+          <div className={`grid gap-1.5 ${customer.type === 'kurumsal' ? 'grid-cols-1 md:grid-cols-4' : 'grid-cols-1'}`}>
+            {customer.type === 'kurumsal' && (
+              <>
+                <EditableField
+                  label="Vergi No"
+                  value={customer.tax_number || ""}
+                  icon={<FileText className="w-2.5 h-2.5 text-amber-500" />}
+                  onSave={(value) => updateCustomerField("tax_number", value)}
+                  placeholder="1234567890"
+                />
+                <EditableField
+                  label="Vergi Dairesi"
+                  value={customer.tax_office || ""}
+                  icon={<Building className="w-2.5 h-2.5 text-amber-600" />}
+                  onSave={(value) => updateCustomerField("tax_office", value)}
+                  placeholder="Vergi dairesi"
+                />
+              </>
+            )}
+            <div className={customer.type === 'kurumsal' ? 'md:col-span-2' : ''}>
               <EditableField
                 label="Adres"
                 value={customer.address || ""}
-                icon={<MapPin className="w-3 h-3 text-rose-500" />}
+                icon={<MapPin className="w-2.5 h-2.5 text-rose-500" />}
                 onSave={(value) => updateCustomerField("address", value)}
-                placeholder="Tam adres"
+                placeholder="Adres"
                 multiline
               />
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Address for Individual customers */}
-        {customer.type !== 'kurumsal' && (
-          <div className="p-2.5 bg-card rounded-lg border border-border/50">
-            <h3 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-              <div className="w-1 h-3 bg-rose-500 rounded-full"></div>
-              Adres
-            </h3>
-            <EditableField
-              label="Tam Adres"
-              value={customer.address || ""}
-              icon={<MapPin className="w-3 h-3 text-rose-500" />}
-              onSave={(value) => updateCustomerField("address", value)}
-              placeholder="Tam adres bilgisi"
-              multiline
-            />
-          </div>
-        )}
-
-        {/* Financial Information - More Compact */}
-        <div className="p-2.5 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-200">
-          <h3 className="text-xs font-medium text-emerald-700 mb-2 flex items-center gap-1.5">
-            <div className="w-1 h-3 bg-emerald-500 rounded-full"></div>
-            Finansal Durum
+        {/* Financial Information - Ultra Compact */}
+        <div className="p-1.5 bg-gradient-to-r from-emerald-50 to-teal-50 rounded border border-emerald-200">
+          <h3 className="text-xs font-medium text-emerald-700 mb-1.5 flex items-center gap-1">
+            <div className="w-0.5 h-2 bg-emerald-500 rounded-full"></div>
+            Finansal
           </h3>
           
-          <div className="space-y-2">
-            <div className="flex items-center justify-between p-2 bg-white/70 rounded border border-emerald-200 backdrop-blur-sm">
-              <div className="flex items-center gap-1.5">
-                <div className="p-1 bg-emerald-100 rounded-full">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between p-1.5 bg-white/70 rounded border border-emerald-200">
+              <div className="flex items-center gap-1">
+                <div className="p-0.5 bg-emerald-100 rounded-full">
                   {customer.balance > 0 ? (
-                    <TrendingUp className="w-2.5 h-2.5 text-emerald-600" />
+                    <TrendingUp className="w-2 h-2 text-emerald-600" />
                   ) : customer.balance < 0 ? (
-                    <TrendingDown className="w-2.5 h-2.5 text-red-600" />
+                    <TrendingDown className="w-2 h-2 text-red-600" />
                   ) : (
-                    <DollarSign className="w-2.5 h-2.5 text-gray-600" />
+                    <DollarSign className="w-2 h-2 text-gray-600" />
                   )}
                 </div>
-                <span className="font-medium text-xs text-gray-700">Cari Bakiye</span>
+                <span className="font-medium text-xs text-gray-700">Bakiye</span>
               </div>
-              <span className={`font-bold text-xs px-1.5 py-0.5 rounded-full ${
+              <span className={`font-bold text-xs px-1 py-0.5 rounded ${
                 customer.balance > 0 
                   ? 'text-emerald-700 bg-emerald-100' 
                   : customer.balance < 0 
@@ -475,33 +461,36 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
               }`}>
                 {new Intl.NumberFormat('tr-TR', {
                   style: 'currency',
-                  currency: 'TRY'
+                  currency: 'TRY',
+                  maximumFractionDigits: 0
                 }).format(customer.balance)}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div className="text-center p-2 bg-white/70 rounded border border-emerald-200 backdrop-blur-sm">
+            <div className="grid grid-cols-2 gap-1.5">
+              <div className="text-center p-1.5 bg-white/70 rounded border border-emerald-200">
                 <div className="flex items-center justify-center gap-0.5 mb-0.5">
-                  <TrendingUp className="w-2.5 h-2.5 text-emerald-600" />
+                  <TrendingUp className="w-2 h-2 text-emerald-600" />
                   <div className="text-emerald-700 font-medium text-xs">Alacak</div>
                 </div>
                 <div className="font-bold text-xs text-emerald-800">
                   {new Intl.NumberFormat('tr-TR', {
                     style: 'currency',
-                    currency: 'TRY'
+                    currency: 'TRY',
+                    maximumFractionDigits: 0
                   }).format(Math.max(0, customer.balance))}
                 </div>
               </div>
-              <div className="text-center p-2 bg-white/70 rounded border border-red-200 backdrop-blur-sm">
+              <div className="text-center p-1.5 bg-white/70 rounded border border-red-200">
                 <div className="flex items-center justify-center gap-0.5 mb-0.5">
-                  <TrendingDown className="w-2.5 h-2.5 text-red-600" />
+                  <TrendingDown className="w-2 h-2 text-red-600" />
                   <div className="text-red-700 font-medium text-xs">Borç</div>
                 </div>
                 <div className="font-bold text-xs text-red-800">
                   {new Intl.NumberFormat('tr-TR', {
                     style: 'currency',
-                    currency: 'TRY'
+                    currency: 'TRY',
+                    maximumFractionDigits: 0
                   }).format(Math.abs(Math.min(0, customer.balance)))}
                 </div>
               </div>
