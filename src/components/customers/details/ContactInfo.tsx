@@ -337,6 +337,13 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
             <EditableField
+              label="Şirket"
+              value={customer.company || ""}
+              icon={<Building className="w-2.5 h-2.5 text-purple-500" />}
+              onSave={(value) => updateCustomerField("company", value)}
+              placeholder="Şirket adı"
+            />
+            <EditableField
               label="Yetkili"
               value={customer.name || ""}
               icon={<User className="w-2.5 h-2.5 text-primary" />}
@@ -360,6 +367,8 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
               placeholder="5XX XXX XX XX"
               type="tel"
             />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 mt-1.5">
             <EditableField
               label="İş Tel."
               value={customer.office_phone || ""}
@@ -378,18 +387,7 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
             İşletme
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-            {customer.type === 'kurumsal' && (
-              <EditableField
-                label="Şirket"
-                value={customer.company || ""}
-                icon={<Building className="w-2.5 h-2.5 text-purple-500" />}
-                onSave={(value) => updateCustomerField("company", value)}
-                placeholder="Şirket adı"
-              />
-            )}
-            <div className={customer.type === 'kurumsal' ? '' : 'md:col-span-2'}>
-              <RepresentativeField />
-            </div>
+            <RepresentativeField />
           </div>
         </div>
 
