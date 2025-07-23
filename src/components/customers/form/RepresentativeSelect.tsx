@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import type { CustomerFormData } from "@/types/customer";
+import { Users } from "lucide-react";
 
 interface RepresentativeOption {
   id: string;
@@ -63,7 +64,10 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
 
   return (
     <div className="space-y-2">
-      <Label>Temsilci</Label>
+      <Label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+        <Users className="w-3 h-3 text-indigo-500" />
+        <span>Temsilci</span>
+      </Label>
       <Select
         disabled={isLoading}
         value={formData.representative || "none"}
@@ -75,10 +79,10 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
           />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="none">Seçilmedi</SelectItem>
+          <SelectItem value="none">❌ Temsilci Yok</SelectItem>
           {representatives.map((rep) => (
             <SelectItem key={rep.id} value={rep.id}>
-              {rep.name}
+              👤 {rep.name}
             </SelectItem>
           ))}
         </SelectContent>

@@ -16,9 +16,9 @@ interface CustomerTypeAndStatusProps {
 
 const CustomerTypeAndStatus = ({ formData, setFormData }: CustomerTypeAndStatusProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       <div className="space-y-2">
-        <Label htmlFor="type">Tip</Label>
+        <Label htmlFor="type" className="text-sm font-medium text-muted-foreground">Müşteri Tipi *</Label>
         <Select
           value={formData.type}
           onValueChange={(value: "bireysel" | "kurumsal") =>
@@ -26,17 +26,17 @@ const CustomerTypeAndStatus = ({ formData, setFormData }: CustomerTypeAndStatusP
           }
         >
           <SelectTrigger id="type">
-            <SelectValue />
+            <SelectValue placeholder="Müşteri tipini seçiniz" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="bireysel">Bireysel</SelectItem>
-            <SelectItem value="kurumsal">Kurumsal</SelectItem>
+            <SelectItem value="bireysel">👤 Bireysel</SelectItem>
+            <SelectItem value="kurumsal">🏢 Kurumsal</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="status">Durum</Label>
+        <Label htmlFor="status" className="text-sm font-medium text-muted-foreground">Müşteri Durumu *</Label>
         <Select
           value={formData.status}
           onValueChange={(value: "aktif" | "pasif" | "potansiyel") =>
@@ -44,12 +44,12 @@ const CustomerTypeAndStatus = ({ formData, setFormData }: CustomerTypeAndStatusP
           }
         >
           <SelectTrigger id="status">
-            <SelectValue />
+            <SelectValue placeholder="Durum seçiniz" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="aktif">Aktif</SelectItem>
-            <SelectItem value="pasif">Pasif</SelectItem>
-            <SelectItem value="potansiyel">Potansiyel</SelectItem>
+            <SelectItem value="aktif">✅ Aktif</SelectItem>
+            <SelectItem value="pasif">⏸️ Pasif</SelectItem>
+            <SelectItem value="potansiyel">🎯 Potansiyel</SelectItem>
           </SelectContent>
         </Select>
       </div>

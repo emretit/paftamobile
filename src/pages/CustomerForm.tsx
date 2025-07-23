@@ -26,10 +26,10 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-white flex relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex relative">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main
-        className={`flex-1 p-4 sm:p-8 transition-all duration-300 ${
+        className={`flex-1 p-3 sm:p-6 transition-all duration-300 ${
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}
       >
