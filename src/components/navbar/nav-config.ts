@@ -34,7 +34,7 @@ export const navItems = [
     label: "Gösterge Paneli",
   },
   {
-    category: "CRM & Satış",
+    category: "Satış Yönetimi",
     icon: TrendingUp,
     path: "/crm",
     items: [
@@ -63,11 +63,6 @@ export const navItems = [
         icon: RotateCcw,
         label: "İadeler",
       },
-      {
-        path: "/tasks",
-        icon: ListTodo,
-        label: "Görevler",
-      },
     ],
   },
   {
@@ -78,99 +73,76 @@ export const navItems = [
       {
         path: "/purchase/requests",
         icon: FileText,
-        label: "Satın Alma Talepleri",
+        label: "Talep Oluştur",
       },
       {
         path: "/orders/purchase",
         icon: PackageCheck,
-        label: "Satın Alma Siparişleri",
+        label: "Siparişler",
+      },
+    ],
+  },
+  {
+    category: "Fatura Yönetimi",
+    icon: Receipt,
+    path: "/invoices",
+    items: [
+      {
+        path: "/sales-invoices",
+        icon: Receipt,
+        label: "Satış Faturaları",
       },
       {
         path: "/purchase-invoices",
         icon: Receipt,
         label: "Alış Faturaları",
       },
+      {
+        path: "/purchase/e-invoice",
+        icon: FileText,
+        label: "E-Fatura",
+      },
     ],
   },
   {
-    category: "İletişim",
-    icon: Users,
     path: "/contacts",
-    items: [
-      {
-        path: "/contacts",
-        icon: User,
-        label: "Müşteriler",
-      },
-      {
-        path: "/suppliers",
-        icon: Building2,
-        label: "Tedarikçiler",
-      },
-    ],
+    icon: User,
+    label: "Müşteriler",
   },
   {
-    category: "Ürün & Stok",
-    icon: Package,
+    path: "/suppliers",
+    icon: Building2,
+    label: "Tedarikçiler",
+  },
+  {
     path: "/products",
-    items: [
-      {
-        path: "/products",
-        icon: Package,
-        label: "Ürünler",
-      },
-    ],
+    icon: Package,
+    label: "Ürünler",
   },
   {
-    category: "İnsan Kaynakları",
-    icon: UserCheck,
     path: "/employees",
-    items: [
-      {
-        path: "/employees",
-        icon: Users,
-        label: "Çalışanlar",
-      },
-    ],
+    icon: Users,
+    label: "Çalışanlar",
   },
   {
-    category: "Finans",
-    icon: Calculator,
-    path: "/finance",
-    items: [
-      {
-        path: "/cashflow",
-        icon: CreditCard,
-        label: "Nakit Akış",
-      },
-      {
-        path: "/sales-invoices",
-        icon: Receipt,
-        label: "Satış Faturaları",
-      },
-    ],
+    path: "/cashflow",
+    icon: CreditCard,
+    label: "Nakit Akış",
   },
   {
-    category: "Servis",
+    category: "Görevler & Servis",
     icon: Wrench,
-    path: "/service",
+    path: "/tasks",
     items: [
+      {
+        path: "/tasks",
+        icon: ListTodo,
+        label: "Görevler",
+      },
       {
         path: "/service",
         icon: Wrench,
         label: "Servis Talepleri",
-      },
-    ],
-  },
-  {
-    category: "Entegrasyonlar",
-    icon: Zap,
-    path: "/integrations",
-    items: [
-      {
-        path: "/e-invoice",
-        icon: FileText,
-        label: "E-Fatura Yönetimi",
       },
     ],
   },
