@@ -266,11 +266,13 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Seçilmedi</SelectItem>
-                {employees.map((employee) => (
-                  <SelectItem key={employee.id} value={employee.id}>
-                    {employee.first_name} {employee.last_name}
-                  </SelectItem>
-                ))}
+                {employees
+                  .filter((employee) => employee.id && employee.id.trim() !== "")
+                  .map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.first_name} {employee.last_name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
             <div className="flex gap-2">
