@@ -125,18 +125,22 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
               onEdit={handleEdit}
               onUpdate={handleCustomerUpdate}
             />
-            <div className="p-6">
-              <div className="max-w-7xl mx-auto space-y-6">
-                {/* Contact Information Section - More compact layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <ContactInfo 
-                    customer={currentCustomer} 
-                    onUpdate={handleCustomerUpdate} 
-                  />
-                  <FinancialInfo customer={currentCustomer} />
+            <div className="p-4">
+              <div className="max-w-7xl mx-auto space-y-4">
+                {/* All Information in one row for better space utilization */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                  <div className="xl:col-span-2">
+                    <ContactInfo 
+                      customer={currentCustomer} 
+                      onUpdate={handleCustomerUpdate} 
+                    />
+                  </div>
+                  <div>
+                    <FinancialInfo customer={currentCustomer} />
+                  </div>
                 </div>
                 
-                {/* Tabs Section - More compact */}
+                {/* Tabs Section */}
                 <ContactTabs customer={currentCustomer} />
               </div>
             </div>
