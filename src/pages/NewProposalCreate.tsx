@@ -312,7 +312,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                                   handleFieldChange('contact_name', customer.name);
                                   setCustomerSearchOpen(false);
                                 }}
-                                className="flex items-center gap-2 p-3 cursor-pointer"
+                                className="flex items-center gap-2 p-3 cursor-pointer hover:bg-muted/50 data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent-foreground rounded-sm transition-colors"
                               >
                                 <Check
                                   className={cn(
