@@ -1,7 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { useFormContext } from "react-hook-form";
-import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
@@ -10,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import type { CustomerFormData } from "@/types/customer";
 
 interface RepresentativeOption {
@@ -23,7 +22,6 @@ interface RepresentativeSelectProps {
 }
 
 const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectProps) => {
-  const { control } = useFormContext();
   const [representatives, setRepresentatives] = useState<RepresentativeOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -65,7 +63,7 @@ const RepresentativeSelect = ({ formData, setFormData }: RepresentativeSelectPro
 
   return (
     <div className="space-y-2">
-      <FormLabel>Temsilci</FormLabel>
+      <Label>Temsilci</Label>
       <Select
         disabled={isLoading}
         value={formData.representative ?? ""}
