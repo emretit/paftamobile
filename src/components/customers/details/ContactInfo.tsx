@@ -354,33 +354,38 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
           
           {/* Compact Primary Contact */}
           <div className="space-y-2">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-              <EditableField
-                label="Şirket"
-                value={customer.company || ""}
-                icon={<Building className="w-2 h-2 text-purple-500" />}
-                onSave={(value) => updateCustomerField("company", value)}
-                placeholder="Şirket adı"
-              />
-              <EditableField
-                label="Yetkili"
-                value={customer.name || ""}
-                icon={<User className="w-2 h-2 text-primary" />}
-                onSave={(value) => updateCustomerField("name", value)}
-                placeholder="Ad Soyad"
-                required
-              />
-              <EditableField
-                label="E-posta"
-                value={customer.email || ""}
-                icon={<Mail className="w-2 h-2 text-blue-500" />}
-                onSave={(value) => updateCustomerField("email", value)}
-                placeholder="email@example.com"
-                type="email"
-              />
-              <div className="grid grid-cols-2 gap-1">
+            <div className="space-y-3">
+              {/* First Row: Company, Contact Person, Email */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <EditableField
-                  label="Cep"
+                  label="Şirket"
+                  value={customer.company || ""}
+                  icon={<Building className="w-2 h-2 text-purple-500" />}
+                  onSave={(value) => updateCustomerField("company", value)}
+                  placeholder="Şirket adı"
+                />
+                <EditableField
+                  label="Yetkili Kişi"
+                  value={customer.name || ""}
+                  icon={<User className="w-2 h-2 text-primary" />}
+                  onSave={(value) => updateCustomerField("name", value)}
+                  placeholder="Ad Soyad"
+                  required
+                />
+                <EditableField
+                  label="E-posta"
+                  value={customer.email || ""}
+                  icon={<Mail className="w-2 h-2 text-blue-500" />}
+                  onSave={(value) => updateCustomerField("email", value)}
+                  placeholder="email@example.com"
+                  type="email"
+                />
+              </div>
+              
+              {/* Second Row: Phone Numbers & Representative */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <EditableField
+                  label="Cep Telefonu"
                   value={customer.mobile_phone || ""}
                   icon={<Phone className="w-2 h-2 text-green-500" />}
                   onSave={(value) => updateCustomerField("mobile_phone", value)}
@@ -388,16 +393,16 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
                   type="tel"
                 />
                 <EditableField
-                  label="İş Tel"
+                  label="İş Telefonu"
                   value={customer.office_phone || ""}
                   icon={<Phone className="w-2 h-2 text-orange-500" />}
                   onSave={(value) => updateCustomerField("office_phone", value)}
                   placeholder="2XX XXX XX XX"
                   type="tel"
                 />
-              </div>
-              <div>
-                <RepresentativeField />
+                <div>
+                  <RepresentativeField />
+                </div>
               </div>
             </div>
 
