@@ -4,6 +4,33 @@ import { supabase } from "@/integrations/supabase/client";
 import { Customer } from "@/types/customer";
 import { Supplier } from "@/types/supplier";
 
+// Turkish character normalization function
+const normalizeTurkish = (text: string): string => {
+  return text
+    .toLowerCase()
+    .replace(/ş/g, 's')
+    .replace(/ç/g, 'c')
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ö/g, 'o')
+    .replace(/ı/g, 'i');
+};
+
+// Create searchable text for each customer
+const createSearchableText = (customer: any): string => {
+  const fields = [
+    customer.name,
+    customer.company,
+    customer.email,
+    customer.mobile_phone,
+    customer.office_phone,
+    customer.address,
+    customer.representative
+  ].filter(Boolean).join(' ');
+  
+  return normalizeTurkish(fields);
+};
+
 export const useCustomerSelect = () => {
   const { data: customers, ...customerQuery } = useQuery({
     queryKey: ["customers-select"],
@@ -20,7 +47,13 @@ export const useCustomerSelect = () => {
       }
       
       console.log("Customers data:", data);
-      return data as Customer[];
+      // Add searchable text to each customer
+      const customersWithSearch = data?.map(customer => ({
+        ...customer,
+        searchableText: createSearchableText(customer)
+      }));
+      
+      return customersWithSearch as (Customer & { searchableText: string })[];
     },
   });
 

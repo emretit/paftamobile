@@ -302,10 +302,10 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                             Aramanızla eşleşen müşteri bulunamadı.
                           </CommandEmpty>
                           <CommandGroup>
-                            {customers?.map((customer) => (
-                              <CommandItem
-                                key={customer.id}
-                                value={`${customer.name || ''} ${customer.company || ''} ${customer.email || ''} ${customer.mobile_phone || ''} ${customer.office_phone || ''} ${customer.address || ''} ${customer.representative || ''}`.toLowerCase()}
+                             {customers?.map((customer) => (
+                               <CommandItem
+                                 key={customer.id}
+                                 value={customer.searchableText}
                                 onSelect={() => {
                                   const selectedName = customer.company || customer.name;
                                   handleFieldChange('customer_company', selectedName);
