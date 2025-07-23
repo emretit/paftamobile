@@ -38,20 +38,20 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
   const navigate = useNavigate();
   const isActive = (path: string) => location.pathname === path;
   
-  // Default olarak önemli kategorileri açık tutuyoruz
-  const [expandedCategories, setExpandedCategories] = useState<string[]>([
-    "CRM & Satış", 
-    "İletişim", 
-    "Finans"
-  ]);
+  // Default olarak önemli kategorileri açık tutuyoruz ve localStorage'da saklıyoruz
+  const [expandedCategories, setExpandedCategories] = useState<string[]>(() => {
+    const saved = localStorage.getItem('expandedCategories');
+    return saved ? JSON.parse(saved) : ["CRM & Satış", "İletişim", "Finans"];
+  });
 
   const toggleCategory = (category: string, path?: string) => {
     // Kategori durumunu değiştir
-    setExpandedCategories(prev => 
-      prev.includes(category) 
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
-    );
+    const newExpandedCategories = expandedCategories.includes(category) 
+      ? expandedCategories.filter(c => c !== category)
+      : [...expandedCategories, category];
+    
+    setExpandedCategories(newExpandedCategories);
+    localStorage.setItem('expandedCategories', JSON.stringify(newExpandedCategories));
     
     // Eğer path varsa navigate et
     if (path) {
