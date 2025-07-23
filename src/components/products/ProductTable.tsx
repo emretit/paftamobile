@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { showSuccess, showError } from "@/utils/toastUtils";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Product {
   id: string;
@@ -37,6 +38,7 @@ interface ProductTableProps {
 
 const ProductTable = ({ products, isLoading }: ProductTableProps) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleEdit = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -45,6 +47,11 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    if (!confirm("Bu ürünü silmek istediğinizden emin misiniz?")) {
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('products')
@@ -53,11 +60,13 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
 
       if (error) throw error;
 
-      showSuccess("Ürün başarıyla silindi");
-      // You might want to refresh the products list here
+      // Ürün listesini yenile
+      await queryClient.invalidateQueries({ queryKey: ['products'] });
+      
+      showSuccess("Ürün başarıyla silindi", { useBuiltIn: true });
     } catch (error) {
       console.error('Error deleting product:', error);
-      showError("Ürün silinirken bir hata oluştu");
+      showError("Ürün silinirken bir hata oluştu", { useBuiltIn: true });
     }
   };
 

@@ -1,6 +1,6 @@
 
 import { toast as reactToastify } from "react-toastify";
-import { toast as useToastHook } from "@/hooks/use-toast";
+import { toast as shadcnToast } from "@/hooks/use-toast";
 
 type ToastOptions = {
   /** Duration in milliseconds */
@@ -16,7 +16,7 @@ type ToastOptions = {
  */
 export const showSuccess = (message: string, options?: ToastOptions) => {
   if (options?.useBuiltIn) {
-    return useToastHook({
+    return shadcnToast({
       title: "Başarılı",
       description: message,
       duration: options.duration || 5000,
@@ -40,7 +40,7 @@ export const showSuccess = (message: string, options?: ToastOptions) => {
  */
 export const showError = (message: string, options?: ToastOptions) => {
   if (options?.useBuiltIn) {
-    return useToastHook({
+    return shadcnToast({
       title: "Hata",
       description: message,
       variant: "destructive",
@@ -65,7 +65,7 @@ export const showError = (message: string, options?: ToastOptions) => {
  */
 export const showWarning = (message: string, options?: ToastOptions) => {
   if (options?.useBuiltIn) {
-    return useToastHook({
+    return shadcnToast({
       title: "Uyarı",
       description: message,
       duration: options?.duration || 5000,
@@ -89,7 +89,7 @@ export const showWarning = (message: string, options?: ToastOptions) => {
  */
 export const showInfo = (message: string, options?: ToastOptions) => {
   if (options?.useBuiltIn) {
-    return useToastHook({
+    return shadcnToast({
       title: "Bilgi",
       description: message,
       duration: options?.duration || 5000,
@@ -107,4 +107,4 @@ export const showInfo = (message: string, options?: ToastOptions) => {
 };
 
 // Re-export the toast objects in case direct access is needed
-export { reactToastify, useToastHook };
+export { reactToastify, shadcnToast };
