@@ -291,36 +291,69 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Müşteri ara..." />
-                        <CommandList>
-                          <CommandEmpty>Müşteri bulunamadı.</CommandEmpty>
+                    <PopoverContent className="w-[400px] p-0" align="start">
+                      <Command className="rounded-lg border shadow-md">
+                        <CommandInput 
+                          placeholder="Müşteri veya firma adı ile ara..." 
+                          className="h-9"
+                        />
+                        <CommandList className="max-h-[300px]">
+                          <CommandEmpty className="py-6 text-center text-sm">
+                            Aramanızla eşleşen müşteri bulunamadı.
+                          </CommandEmpty>
                           <CommandGroup>
                             {customers?.map((customer) => (
                               <CommandItem
                                 key={customer.id}
-                                value={`${customer.name} ${customer.company || ''}`}
+                                value={`${customer.name} ${customer.company || ''} ${customer.email || ''}`}
                                 onSelect={() => {
                                   const selectedName = customer.company || customer.name;
                                   handleFieldChange('customer_company', selectedName);
                                   handleFieldChange('contact_name', customer.name);
                                   setCustomerSearchOpen(false);
                                 }}
+                                className="flex items-center gap-2 p-3 cursor-pointer"
                               >
                                 <Check
                                   className={cn(
-                                    "mr-2 h-4 w-4",
+                                    "h-4 w-4 shrink-0",
                                     formData.customer_company === (customer.company || customer.name) ? "opacity-100" : "opacity-0"
                                   )}
                                 />
-                                <div className="flex flex-col">
-                                  <span className="font-medium">{customer.name}</span>
-                                  {customer.company && (
-                                    <span className="text-sm text-muted-foreground">{customer.company}</span>
-                                  )}
+                                <div className="flex flex-col gap-1 min-w-0 flex-1">
+                                  <div className="flex items-center gap-2">
+                                    {customer.company ? (
+                                      <>
+                                        <span className="font-medium text-foreground truncate">
+                                          {customer.company}
+                                        </span>
+                                        <span className="px-2 py-1 text-xs bg-muted rounded-md text-muted-foreground">
+                                          {customer.name}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <span className="font-medium text-foreground truncate">
+                                        {customer.name}
+                                      </span>
+                                    )}
+                                  </div>
                                   {customer.email && (
-                                    <span className="text-xs text-muted-foreground">{customer.email}</span>
+                                    <span className="text-xs text-muted-foreground truncate">
+                                      {customer.email}
+                                    </span>
+                                  )}
+                                  {(customer.mobile_phone || customer.address) && (
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                      {customer.mobile_phone && (
+                                        <span>{customer.mobile_phone}</span>
+                                      )}
+                                      {customer.mobile_phone && customer.address && (
+                                        <span>•</span>
+                                      )}
+                                      {customer.address && (
+                                        <span className="truncate">{customer.address}</span>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               </CommandItem>
