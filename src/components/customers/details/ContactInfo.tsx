@@ -79,10 +79,10 @@ const EditableField = ({
 
   if (!isEditing && !value) {
     return (
-      <div className="flex items-center justify-between py-2 px-3 rounded-lg border border-dashed border-gray-300 hover:border-gray-400 transition-colors">
-        <div className="flex items-center space-x-3 text-gray-500">
+      <div className="flex items-center justify-between py-1.5 px-2 rounded border border-dashed border-gray-300 hover:border-gray-400 transition-colors">
+        <div className="flex items-center space-x-2 text-gray-500">
           {icon}
-          <span className="text-sm">{placeholder || `${label} ekle`}</span>
+          <span className="text-xs">{placeholder || `${label} ekle`}</span>
         </div>
         <Button
           variant="ghost"
@@ -97,15 +97,14 @@ const EditableField = ({
   }
 
   return (
-    <div className="space-y-2">
-      <Label className="text-sm font-medium text-muted-foreground flex items-center">
+    <div className="space-y-1.5">
+      <Label className="text-xs font-medium text-muted-foreground flex items-center">
         {icon}
         <span className="ml-1">{label}</span>
         {required && <span className="text-red-500 ml-1">*</span>}
       </Label>
-      
       {isEditing ? (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {multiline ? (
             <Textarea
               value={editValue}
@@ -236,10 +235,10 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
 
     if (!isEditing && !currentRepName) {
       return (
-        <div className="flex items-center justify-between py-2 px-3 rounded-lg border border-dashed border-gray-300 hover:border-gray-400 transition-colors">
-          <div className="flex items-center space-x-3 text-gray-500">
-            <Users className="w-4 h-4" />
-            <span className="text-sm">Temsilci atayın</span>
+        <div className="flex items-center justify-between py-1.5 px-2 rounded border border-dashed border-gray-300 hover:border-gray-400 transition-colors">
+          <div className="flex items-center space-x-2 text-gray-500">
+            <Users className="w-3 h-3" />
+            <span className="text-xs">Temsilci atayın</span>
           </div>
           <Button
             variant="ghost"
@@ -254,14 +253,13 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
     }
 
     return (
-      <div className="space-y-2">
-        <Label className="text-sm font-medium text-muted-foreground flex items-center">
-          <Users className="w-4 h-4 mr-1" />
+      <div className="space-y-1.5">
+        <Label className="text-xs font-medium text-muted-foreground flex items-center">
+          <Users className="w-3 h-3 mr-1" />
           Temsilci
         </Label>
-        
         {isEditing ? (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Select value={selectedRep} onValueChange={setSelectedRep}>
               <SelectTrigger>
                 <SelectValue placeholder="Temsilci seçiniz" />
@@ -303,8 +301,8 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
           </div>
         ) : (
           <div className="flex items-center justify-between group">
-            <div className="flex items-center space-x-3">
-              <Users className="w-4 h-4 text-muted-foreground" />
+            <div className="flex items-center space-x-2">
+              <Users className="w-3 h-3 text-muted-foreground" />
               <span className="font-medium">{currentRepName}</span>
             </div>
             <Button
@@ -322,19 +320,19 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
   };
 
   return (
-    <Card className="p-4 h-fit">
-      <h2 className="text-lg font-semibold mb-4 flex items-center">
+    <Card className="p-3">
+      <h2 className="text-md font-semibold mb-3 flex items-center">
         <User className="w-4 h-4 mr-2 text-muted-foreground" />
         Genel Bilgiler
       </h2>
       
-      <div className="space-y-3">
-        {/* Basic Contact Info */}
-        <div className="grid grid-cols-1 gap-3">
+      <div className="space-y-2.5">
+        {/* Basic Contact Info - Compact Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
           <EditableField
             label="Yetkili Kişi"
             value={customer.name || ""}
-            icon={<User className="w-3.5 h-3.5 text-muted-foreground" />}
+            icon={<User className="w-3 h-3 text-muted-foreground" />}
             onSave={(value) => updateCustomerField("name", value)}
             placeholder="Yetkili kişi adı"
             required
@@ -343,19 +341,19 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
           <EditableField
             label="E-posta"
             value={customer.email || ""}
-            icon={<Mail className="w-3.5 h-3.5 text-muted-foreground" />}
+            icon={<Mail className="w-3 h-3 text-muted-foreground" />}
             onSave={(value) => updateCustomerField("email", value)}
             placeholder="ornek@email.com"
             type="email"
           />
         </div>
 
-        {/* Phone Numbers */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {/* Phone Numbers - Compact */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
           <EditableField
             label="Cep Tel."
             value={customer.mobile_phone || ""}
-            icon={<Phone className="w-3.5 h-3.5 text-muted-foreground" />}
+            icon={<Phone className="w-3 h-3 text-muted-foreground" />}
             onSave={(value) => updateCustomerField("mobile_phone", value)}
             placeholder="+90 5XX XXX XX XX"
             type="tel"
@@ -364,38 +362,41 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
           <EditableField
             label="İş Tel."
             value={customer.office_phone || ""}
-            icon={<Phone className="w-3.5 h-3.5 text-muted-foreground" />}
+            icon={<Phone className="w-3 h-3 text-muted-foreground" />}
             onSave={(value) => updateCustomerField("office_phone", value)}
             placeholder="+90 2XX XXX XX XX"
             type="tel"
           />
         </div>
 
-        {/* Company Info */}
-        {customer.type === 'kurumsal' && (
-          <EditableField
-            label="Şirket"
-            value={customer.company || ""}
-            icon={<Building className="w-3.5 h-3.5 text-muted-foreground" />}
-            onSave={(value) => updateCustomerField("company", value)}
-            placeholder="Şirket adı"
-          />
-        )}
+        {/* Company and Representative - Compact */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          {customer.type === 'kurumsal' && (
+            <EditableField
+              label="Şirket"
+              value={customer.company || ""}
+              icon={<Building className="w-3 h-3 text-muted-foreground" />}
+              onSave={(value) => updateCustomerField("company", value)}
+              placeholder="Şirket adı"
+            />
+          )}
+          <div className={customer.type === 'kurumsal' ? '' : 'md:col-span-2'}>
+            <RepresentativeField />
+          </div>
+        </div>
 
-        <RepresentativeField />
-
-        {/* Tax Information for Corporate customers - integrated */}
+        {/* Tax Information for Corporate customers - Compact */}
         {customer.type === 'kurumsal' && (
-          <div className="space-y-3 pt-3 border-t border-gray-100">
-            <h3 className="text-sm font-medium text-gray-700 flex items-center">
-              <FileText className="w-3.5 h-3.5 mr-1" />
+          <div className="space-y-2.5 pt-2 border-t border-gray-100">
+            <h3 className="text-xs font-medium text-gray-700 flex items-center">
+              <FileText className="w-3 h-3 mr-1" />
               Vergi Bilgileri
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
               <EditableField
                 label="Vergi No"
                 value={customer.tax_number || ""}
-                icon={<FileText className="w-3.5 h-3.5 text-muted-foreground" />}
+                icon={<FileText className="w-3 h-3 text-muted-foreground" />}
                 onSave={(value) => updateCustomerField("tax_number", value)}
                 placeholder="1234567890"
               />
@@ -403,7 +404,7 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
               <EditableField
                 label="Vergi Dairesi"
                 value={customer.tax_office || ""}
-                icon={<Building className="w-3.5 h-3.5 text-muted-foreground" />}
+                icon={<Building className="w-3 h-3 text-muted-foreground" />}
                 onSave={(value) => updateCustomerField("tax_office", value)}
                 placeholder="Vergi dairesi"
               />
@@ -411,38 +412,38 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
           </div>
         )}
 
-        {/* Address */}
-        <div className="pt-3 border-t border-gray-100">
+        {/* Address - Compact */}
+        <div className="pt-2 border-t border-gray-100">
           <EditableField
             label="Adres"
             value={customer.address || ""}
-            icon={<MapPin className="w-3.5 h-3.5 text-muted-foreground" />}
+            icon={<MapPin className="w-3 h-3 text-muted-foreground" />}
             onSave={(value) => updateCustomerField("address", value)}
             placeholder="Tam adres bilgisi"
             multiline
           />
         </div>
 
-        {/* Financial Information */}
-        <div className="pt-3 border-t border-gray-100">
-          <h3 className="text-sm font-medium text-gray-700 flex items-center mb-3">
-            <DollarSign className="w-3.5 h-3.5 mr-1" />
+        {/* Financial Information - Compact */}
+        <div className="pt-2 border-t border-gray-100">
+          <h3 className="text-xs font-medium text-gray-700 flex items-center mb-2">
+            <DollarSign className="w-3 h-3 mr-1" />
             Finansal Durum
           </h3>
           
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-2">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs">
+              <div className="flex items-center gap-1.5">
                 {customer.balance > 0 ? (
-                  <TrendingUp className="w-4 h-4 text-green-600" />
+                  <TrendingUp className="w-3 h-3 text-green-600" />
                 ) : customer.balance < 0 ? (
-                  <TrendingDown className="w-4 h-4 text-red-600" />
+                  <TrendingDown className="w-3 h-3 text-red-600" />
                 ) : (
-                  <DollarSign className="w-4 h-4 text-gray-600" />
+                  <DollarSign className="w-3 h-3 text-gray-600" />
                 )}
-                <span className="font-medium text-sm">Cari Bakiye</span>
+                <span className="font-medium">Cari Bakiye</span>
               </div>
-              <span className={`font-bold ${
+              <span className={`font-bold text-xs ${
                 customer.balance > 0 ? 'text-green-600' : 
                 customer.balance < 0 ? 'text-red-600' : 'text-gray-600'
               }`}>
@@ -453,19 +454,19 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="text-center p-2 bg-green-50 rounded">
-                <div className="text-green-600 font-medium">Alacak</div>
-                <div className="font-semibold">
+            <div className="grid grid-cols-2 gap-1.5 text-xs">
+              <div className="text-center p-1.5 bg-green-50 rounded">
+                <div className="text-green-600 font-medium text-xs">Alacak</div>
+                <div className="font-semibold text-xs">
                   {new Intl.NumberFormat('tr-TR', {
                     style: 'currency',
                     currency: 'TRY'
                   }).format(Math.max(0, customer.balance))}
                 </div>
               </div>
-              <div className="text-center p-2 bg-red-50 rounded">
-                <div className="text-red-600 font-medium">Borç</div>
-                <div className="font-semibold">
+              <div className="text-center p-1.5 bg-red-50 rounded">
+                <div className="text-red-600 font-medium text-xs">Borç</div>
+                <div className="font-semibold text-xs">
                   {new Intl.NumberFormat('tr-TR', {
                     style: 'currency',
                     currency: 'TRY'

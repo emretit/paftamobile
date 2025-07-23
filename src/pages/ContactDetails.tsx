@@ -125,8 +125,8 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
               onEdit={handleEdit}
               onUpdate={handleCustomerUpdate}
             />
-            <div className="p-4">
-              <div className="max-w-7xl mx-auto space-y-4">
+            <div className="p-3">
+              <div className="max-w-7xl mx-auto space-y-3">
                 {/* All Information in one card */}
                 <ContactInfo 
                   customer={currentCustomer} 
