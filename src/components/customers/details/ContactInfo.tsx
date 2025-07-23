@@ -322,18 +322,18 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
   };
 
   return (
-    <>
-      <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-6 flex items-center">
-          <User className="w-5 h-5 mr-2 text-muted-foreground" />
+    <div className="space-y-4">
+      <Card className="p-4">
+        <h2 className="text-lg font-semibold mb-4 flex items-center">
+          <User className="w-4 h-4 mr-2 text-muted-foreground" />
           İletişim Bilgileri
         </h2>
         
-        <div className="space-y-6">
+        <div className="space-y-4">
           <EditableField
             label="Yetkili Kişi"
             value={customer.name || ""}
-            icon={<User className="w-4 h-4 text-muted-foreground" />}
+            icon={<User className="w-3.5 h-3.5 text-muted-foreground" />}
             onSave={(value) => updateCustomerField("name", value)}
             placeholder="Yetkili kişi adı"
             required
@@ -342,35 +342,37 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
           <EditableField
             label="E-posta"
             value={customer.email || ""}
-            icon={<Mail className="w-4 h-4 text-muted-foreground" />}
+            icon={<Mail className="w-3.5 h-3.5 text-muted-foreground" />}
             onSave={(value) => updateCustomerField("email", value)}
             placeholder="ornek@email.com"
             type="email"
           />
 
-          <EditableField
-            label="Cep Telefonu"
-            value={customer.mobile_phone || ""}
-            icon={<Phone className="w-4 h-4 text-muted-foreground" />}
-            onSave={(value) => updateCustomerField("mobile_phone", value)}
-            placeholder="+90 5XX XXX XX XX"
-            type="tel"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <EditableField
+              label="Cep Telefonu"
+              value={customer.mobile_phone || ""}
+              icon={<Phone className="w-3.5 h-3.5 text-muted-foreground" />}
+              onSave={(value) => updateCustomerField("mobile_phone", value)}
+              placeholder="+90 5XX XXX XX XX"
+              type="tel"
+            />
 
-          <EditableField
-            label="İş Telefonu"
-            value={customer.office_phone || ""}
-            icon={<Phone className="w-4 h-4 text-muted-foreground" />}
-            onSave={(value) => updateCustomerField("office_phone", value)}
-            placeholder="+90 2XX XXX XX XX"
-            type="tel"
-          />
+            <EditableField
+              label="İş Telefonu"
+              value={customer.office_phone || ""}
+              icon={<Phone className="w-3.5 h-3.5 text-muted-foreground" />}
+              onSave={(value) => updateCustomerField("office_phone", value)}
+              placeholder="+90 2XX XXX XX XX"
+              type="tel"
+            />
+          </div>
 
           {customer.type === 'kurumsal' && (
             <EditableField
               label="Şirket"
               value={customer.company || ""}
-              icon={<Building className="w-4 h-4 text-muted-foreground" />}
+              icon={<Building className="w-3.5 h-3.5 text-muted-foreground" />}
               onSave={(value) => updateCustomerField("company", value)}
               placeholder="Şirket adı"
             />
@@ -381,7 +383,7 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
           <EditableField
             label="Adres"
             value={customer.address || ""}
-            icon={<MapPin className="w-4 h-4 text-muted-foreground" />}
+            icon={<MapPin className="w-3.5 h-3.5 text-muted-foreground" />}
             onSave={(value) => updateCustomerField("address", value)}
             placeholder="Tam adres bilgisi"
             multiline
@@ -390,17 +392,17 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
       </Card>
 
       {customer.type === 'kurumsal' && (customer.tax_number || customer.tax_office) && (
-        <Card className="p-6 mt-6">
-          <h2 className="text-xl font-semibold mb-6 flex items-center">
-            <FileText className="w-5 h-5 mr-2 text-muted-foreground" />
+        <Card className="p-4">
+          <h2 className="text-lg font-semibold mb-4 flex items-center">
+            <FileText className="w-4 h-4 mr-2 text-muted-foreground" />
             Vergi Bilgileri
           </h2>
           
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <EditableField
               label="Vergi Numarası"
               value={customer.tax_number || ""}
-              icon={<FileText className="w-4 h-4 text-muted-foreground" />}
+              icon={<FileText className="w-3.5 h-3.5 text-muted-foreground" />}
               onSave={(value) => updateCustomerField("tax_number", value)}
               placeholder="1234567890"
             />
@@ -408,13 +410,13 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
             <EditableField
               label="Vergi Dairesi"
               value={customer.tax_office || ""}
-              icon={<Building className="w-4 h-4 text-muted-foreground" />}
+              icon={<Building className="w-3.5 h-3.5 text-muted-foreground" />}
               onSave={(value) => updateCustomerField("tax_office", value)}
               placeholder="Vergi dairesi adı"
             />
           </div>
         </Card>
       )}
-    </>
+    </div>
   );
 };
