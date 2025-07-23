@@ -4,16 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Customer } from "@/types/customer";
 import { Supplier } from "@/types/supplier";
 
-// Turkish character normalization function
+// Turkish character normalization function - both ways
 const normalizeTurkish = (text: string): string => {
   return text
     .toLowerCase()
-    .replace(/ş/g, 's')
-    .replace(/ç/g, 'c')
-    .replace(/ğ/g, 'g')
-    .replace(/ü/g, 'u')
-    .replace(/ö/g, 'o')
-    .replace(/ı/g, 'i');
+    .replace(/ş/g, 's').replace(/Ş/g, 's')
+    .replace(/ç/g, 'c').replace(/Ç/g, 'c')
+    .replace(/ğ/g, 'g').replace(/Ğ/g, 'g')
+    .replace(/ü/g, 'u').replace(/Ü/g, 'u')
+    .replace(/ö/g, 'o').replace(/Ö/g, 'o')
+    .replace(/ı/g, 'i').replace(/I/g, 'i').replace(/İ/g, 'i');
 };
 
 // Create searchable text for each customer

@@ -33,6 +33,27 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
   const { customers, isLoading: isLoadingCustomers } = useCustomerSelect();
   const [saving, setSaving] = useState(false);
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("");
+
+  // Turkish character normalization function
+  const normalizeTurkish = (text: string): string => {
+    return text
+      .toLowerCase()
+      .replace(/ş/g, 's').replace(/Ş/g, 's')
+      .replace(/ç/g, 'c').replace(/Ç/g, 'c')
+      .replace(/ğ/g, 'g').replace(/Ğ/g, 'g')
+      .replace(/ü/g, 'u').replace(/Ü/g, 'u')
+      .replace(/ö/g, 'o').replace(/Ö/g, 'o')
+      .replace(/ı/g, 'i').replace(/I/g, 'i').replace(/İ/g, 'i');
+  };
+
+  // Filter customers based on search query
+  const filteredCustomers = customers?.filter(customer => {
+    if (!customerSearchQuery.trim()) return true;
+    
+    const normalizedQuery = normalizeTurkish(customerSearchQuery);
+    return customer.searchableText.includes(normalizedQuery);
+  });
 
   // Form state matching the sample format
   const [formData, setFormData] = useState({
@@ -292,17 +313,19 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[400px] p-0" align="start">
-                      <Command className="rounded-lg border shadow-md">
-                        <CommandInput 
-                          placeholder="Müşteri veya firma adı ile ara..." 
-                          className="h-9"
-                        />
+                       <Command shouldFilter={false} className="rounded-lg border shadow-md">
+                         <CommandInput 
+                           placeholder="Müşteri veya firma adı ile ara..." 
+                           className="h-9"
+                           value={customerSearchQuery}
+                           onValueChange={setCustomerSearchQuery}
+                         />
                         <CommandList className="max-h-[300px]">
                           <CommandEmpty className="py-6 text-center text-sm">
                             Aramanızla eşleşen müşteri bulunamadı.
                           </CommandEmpty>
                           <CommandGroup>
-                             {customers?.map((customer) => (
+                             {filteredCustomers?.map((customer) => (
                                <CommandItem
                                  key={customer.id}
                                  value={customer.searchableText}
