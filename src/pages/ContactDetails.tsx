@@ -9,7 +9,7 @@ import { ContactHeader } from "@/components/customers/details/ContactHeader";
 import { ContactTabs } from "@/components/customers/details/ContactTabs";
 import { EditableCustomerDetails } from "@/components/customers/details/EditableCustomerDetails";
 import { ContactInfo } from "@/components/customers/details/ContactInfo";
-import { FinancialInfo } from "@/components/customers/details/FinancialInfo";
+
 import { Customer } from "@/types/customer";
 
 interface ContactDetailsProps {
@@ -127,18 +127,11 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
             />
             <div className="p-4">
               <div className="max-w-7xl mx-auto space-y-4">
-                {/* All Information in one row for better space utilization */}
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-                  <div className="xl:col-span-2">
-                    <ContactInfo 
-                      customer={currentCustomer} 
-                      onUpdate={handleCustomerUpdate} 
-                    />
-                  </div>
-                  <div>
-                    <FinancialInfo customer={currentCustomer} />
-                  </div>
-                </div>
+                {/* All Information in one card */}
+                <ContactInfo 
+                  customer={currentCustomer} 
+                  onUpdate={handleCustomerUpdate} 
+                />
                 
                 {/* Tabs Section */}
                 <ContactTabs customer={currentCustomer} />

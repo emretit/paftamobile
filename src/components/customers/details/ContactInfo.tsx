@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Phone, Building, MapPin, FileText, User, Users, Edit3, Save, X, Check } from "lucide-react";
+import { Mail, Phone, Building, MapPin, FileText, User, Users, Edit3, Save, X, Check, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { Customer } from "@/types/customer";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -421,6 +421,59 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
             placeholder="Tam adres bilgisi"
             multiline
           />
+        </div>
+
+        {/* Financial Information */}
+        <div className="pt-3 border-t border-gray-100">
+          <h3 className="text-sm font-medium text-gray-700 flex items-center mb-3">
+            <DollarSign className="w-3.5 h-3.5 mr-1" />
+            Finansal Durum
+          </h3>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2">
+                {customer.balance > 0 ? (
+                  <TrendingUp className="w-4 h-4 text-green-600" />
+                ) : customer.balance < 0 ? (
+                  <TrendingDown className="w-4 h-4 text-red-600" />
+                ) : (
+                  <DollarSign className="w-4 h-4 text-gray-600" />
+                )}
+                <span className="font-medium text-sm">Cari Bakiye</span>
+              </div>
+              <span className={`font-bold ${
+                customer.balance > 0 ? 'text-green-600' : 
+                customer.balance < 0 ? 'text-red-600' : 'text-gray-600'
+              }`}>
+                {new Intl.NumberFormat('tr-TR', {
+                  style: 'currency',
+                  currency: 'TRY'
+                }).format(customer.balance)}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="text-center p-2 bg-green-50 rounded">
+                <div className="text-green-600 font-medium">Alacak</div>
+                <div className="font-semibold">
+                  {new Intl.NumberFormat('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY'
+                  }).format(Math.max(0, customer.balance))}
+                </div>
+              </div>
+              <div className="text-center p-2 bg-red-50 rounded">
+                <div className="text-red-600 font-medium">Borç</div>
+                <div className="font-semibold">
+                  {new Intl.NumberFormat('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY'
+                  }).format(Math.abs(Math.min(0, customer.balance)))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </Card>
