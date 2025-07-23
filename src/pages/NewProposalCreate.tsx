@@ -305,7 +305,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                             {customers?.map((customer) => (
                               <CommandItem
                                 key={customer.id}
-                                value={`${customer.company || customer.name} ${customer.name} ${customer.email || ''} ${customer.mobile_phone || ''} ${customer.address || ''}`}
+                                value={`${customer.name || ''} ${customer.company || ''} ${customer.email || ''} ${customer.mobile_phone || ''} ${customer.office_phone || ''} ${customer.address || ''} ${customer.representative || ''}`.toLowerCase()}
                                 onSelect={() => {
                                   const selectedName = customer.company || customer.name;
                                   handleFieldChange('customer_company', selectedName);
