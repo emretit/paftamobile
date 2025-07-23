@@ -7,12 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { CalendarDays, Plus, Trash2, Eye, FileDown, ArrowLeft, Calculator } from "lucide-react";
+import { CalendarDays, Plus, Trash2, Eye, FileDown, ArrowLeft, Calculator, Check, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/utils/formatters";
 import { useProposalCreation } from "@/hooks/proposals/useProposalCreation";
+import { useCustomerSelect } from "@/hooks/useCustomerSelect";
 import { ProposalItem } from "@/types/proposal";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface LineItem extends ProposalItem {
   row_number: number;
@@ -26,7 +30,9 @@ interface NewProposalCreateProps {
 const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreateProps) => {
   const navigate = useNavigate();
   const { createProposal } = useProposalCreation();
+  const { customers, isLoading: isLoadingCustomers } = useCustomerSelect();
   const [saving, setSaving] = useState(false);
+  const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
 
   // Form state matching the sample format
   const [formData, setFormData] = useState({
@@ -269,12 +275,61 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
               <div className="grid grid-cols-1 gap-4">
                 <div>
                   <Label htmlFor="customer_company">Firma Adı *</Label>
-                  <Input
-                    id="customer_company"
-                    value={formData.customer_company}
-                    onChange={(e) => handleFieldChange('customer_company', e.target.value)}
-                    placeholder="Müşteri firma adı"
-                  />
+                  <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={customerSearchOpen}
+                        className={cn(
+                          "w-full justify-between",
+                          !formData.customer_company && "text-muted-foreground"
+                        )}
+                        disabled={isLoadingCustomers}
+                      >
+                        {formData.customer_company || "Müşteri ara..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Müşteri ara..." />
+                        <CommandList>
+                          <CommandEmpty>Müşteri bulunamadı.</CommandEmpty>
+                          <CommandGroup>
+                            {customers?.map((customer) => (
+                              <CommandItem
+                                key={customer.id}
+                                value={`${customer.name} ${customer.company || ''}`}
+                                onSelect={() => {
+                                  const selectedName = customer.company || customer.name;
+                                  handleFieldChange('customer_company', selectedName);
+                                  handleFieldChange('contact_name', customer.name);
+                                  setCustomerSearchOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    formData.customer_company === (customer.company || customer.name) ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{customer.name}</span>
+                                  {customer.company && (
+                                    <span className="text-sm text-muted-foreground">{customer.company}</span>
+                                  )}
+                                  {customer.email && (
+                                    <span className="text-xs text-muted-foreground">{customer.email}</span>
+                                  )}
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
