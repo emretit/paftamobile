@@ -354,7 +354,7 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
           
           {/* Compact Primary Contact */}
           <div className="space-y-2">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
               <EditableField
                 label="Şirket"
                 value={customer.company || ""}
@@ -395,6 +395,9 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
                   placeholder="2XX XXX XX XX"
                   type="tel"
                 />
+              </div>
+              <div>
+                <RepresentativeField />
               </div>
             </div>
 
@@ -462,26 +465,22 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
           </div>
         </div>
 
-        {/* Business Information */}
-        <div className="p-1.5 bg-card rounded border border-border/50">
-          <h3 className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
-            <div className="w-0.5 h-2 bg-blue-500 rounded-full"></div>
-            İşletme
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-            <RepresentativeField />
-          </div>
-        </div>
 
         {/* Tax + Address Combined */}
-        <div className="p-1.5 bg-card rounded border border-border/50">
-          <h3 className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
-            <div className="w-0.5 h-2 bg-amber-500 rounded-full"></div>
-            {customer.type === 'kurumsal' ? 'Vergi & Adres' : 'Adres'}
+        <div className="p-3 bg-card rounded-lg border border-border/50">
+          <h3 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+            <div className="w-0.5 h-3 bg-amber-500 rounded-full"></div>
+            {customer.type === 'kurumsal' ? 'Vergi & Adres Bilgileri' : 'Adres Bilgileri'}
           </h3>
-          <div className={`grid gap-1.5 ${customer.type === 'kurumsal' ? 'grid-cols-1 md:grid-cols-4' : 'grid-cols-1'}`}>
-            {customer.type === 'kurumsal' && (
-              <>
+          
+          {/* Tax Information for Corporate */}
+          {customer.type === 'kurumsal' && (
+            <div className="mb-4 p-3 bg-muted/30 rounded-lg">
+              <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                <FileText className="w-3 h-3 text-amber-500" />
+                Vergi Bilgileri
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <EditableField
                   label="Vergi No"
                   value={customer.tax_number || ""}
@@ -496,15 +495,55 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
                   onSave={(value) => updateCustomerField("tax_office", value)}
                   placeholder="Vergi dairesi"
                 />
-              </>
-            )}
-            <div className={customer.type === 'kurumsal' ? 'md:col-span-2' : ''}>
+              </div>
+            </div>
+          )}
+          
+          {/* Address Information */}
+          <div className="p-3 bg-muted/30 rounded-lg">
+            <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+              <MapPin className="w-3 h-3 text-rose-500" />
+              Adres Bilgileri
+            </h4>
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <EditableField
+                  label="Ülke"
+                  value="Türkiye"
+                  icon={<MapPin className="w-2.5 h-2.5 text-rose-500" />}
+                  onSave={async (value) => {
+                    // TODO: Ülke seçimi için veritabanı güncellemesi
+                    console.log("Ülke:", value);
+                  }}
+                  placeholder="Ülke seçiniz"
+                />
+                <EditableField
+                  label="İl"
+                  value=""
+                  icon={<MapPin className="w-2.5 h-2.5 text-rose-600" />}
+                  onSave={async (value) => {
+                    // TODO: İl seçimi için veritabanı güncellemesi
+                    console.log("İl:", value);
+                  }}
+                  placeholder="İl seçiniz"
+                />
+                <EditableField
+                  label="İlçe"
+                  value=""
+                  icon={<MapPin className="w-2.5 h-2.5 text-rose-700" />}
+                  onSave={async (value) => {
+                    // TODO: İlçe seçimi için veritabanı güncellemesi
+                    console.log("İlçe:", value);
+                  }}
+                  placeholder="İlçe seçiniz"
+                />
+              </div>
               <EditableField
-                label="Adres"
+                label="Detaylı Adres"
                 value={customer.address || ""}
                 icon={<MapPin className="w-2.5 h-2.5 text-rose-500" />}
                 onSave={(value) => updateCustomerField("address", value)}
-                placeholder="Adres"
+                placeholder="Mahalle, sokak, bina no, daire no vb."
                 multiline
               />
             </div>
