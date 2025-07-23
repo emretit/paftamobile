@@ -320,22 +320,22 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
   };
 
   return (
-    <Card className="p-4 bg-gradient-to-br from-background to-muted/20 border shadow-sm">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="p-2 bg-primary/10 rounded-lg">
-          <User className="w-4 h-4 text-primary" />
+    <Card className="p-3 bg-gradient-to-br from-background to-muted/20 border shadow-sm">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="p-1.5 bg-primary/10 rounded-lg">
+          <User className="w-3.5 h-3.5 text-primary" />
         </div>
-        <h2 className="text-lg font-semibold text-foreground">Genel Bilgiler</h2>
+        <h2 className="text-base font-semibold text-foreground">Genel Bilgiler</h2>
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-2.5">
         {/* Primary Contact Section */}
-        <div className="p-3 bg-card rounded-lg border border-border/50">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-            <div className="w-1 h-4 bg-primary rounded-full"></div>
+        <div className="p-2.5 bg-card rounded-lg border border-border/50">
+          <h3 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+            <div className="w-1 h-3 bg-primary rounded-full"></div>
             İletişim Bilgileri
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <EditableField
               label="Yetkili Kişi"
               value={customer.name || ""}
@@ -353,7 +353,7 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
               type="email"
             />
             <EditableField
-              label="Cep Telefonu"
+              label="Cep Tel."
               value={customer.mobile_phone || ""}
               icon={<Phone className="w-3 h-3 text-green-500" />}
               onSave={(value) => updateCustomerField("mobile_phone", value)}
@@ -361,7 +361,7 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
               type="tel"
             />
             <EditableField
-              label="İş Telefonu"
+              label="İş Tel."
               value={customer.office_phone || ""}
               icon={<Phone className="w-3 h-3 text-orange-500" />}
               onSave={(value) => updateCustomerField("office_phone", value)}
@@ -372,12 +372,12 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
         </div>
 
         {/* Business Information */}
-        <div className="p-3 bg-card rounded-lg border border-border/50">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-            <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
+        <div className="p-2.5 bg-card rounded-lg border border-border/50">
+          <h3 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+            <div className="w-1 h-3 bg-blue-500 rounded-full"></div>
             İşletme Bilgileri
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {customer.type === 'kurumsal' && (
               <EditableField
                 label="Şirket Adı"
@@ -393,16 +393,16 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
           </div>
         </div>
 
-        {/* Tax Information for Corporate customers */}
+        {/* Tax Information + Address - Combined for Corporate customers */}
         {customer.type === 'kurumsal' && (
-          <div className="p-3 bg-card rounded-lg border border-border/50">
-            <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-              <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
-              Vergi Bilgileri
+          <div className="p-2.5 bg-card rounded-lg border border-border/50">
+            <h3 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+              <div className="w-1 h-3 bg-amber-500 rounded-full"></div>
+              Vergi ve Adres
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               <EditableField
-                label="Vergi Numarası"
+                label="Vergi No"
                 value={customer.tax_number || ""}
                 icon={<FileText className="w-3 h-3 text-amber-500" />}
                 onSave={(value) => updateCustomerField("tax_number", value)}
@@ -415,48 +415,58 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
                 onSave={(value) => updateCustomerField("tax_office", value)}
                 placeholder="Vergi dairesi"
               />
+              <EditableField
+                label="Adres"
+                value={customer.address || ""}
+                icon={<MapPin className="w-3 h-3 text-rose-500" />}
+                onSave={(value) => updateCustomerField("address", value)}
+                placeholder="Tam adres"
+                multiline
+              />
             </div>
           </div>
         )}
 
-        {/* Address Information */}
-        <div className="p-3 bg-card rounded-lg border border-border/50">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-            <div className="w-1 h-4 bg-rose-500 rounded-full"></div>
-            Adres Bilgileri
-          </h3>
-          <EditableField
-            label="Tam Adres"
-            value={customer.address || ""}
-            icon={<MapPin className="w-3 h-3 text-rose-500" />}
-            onSave={(value) => updateCustomerField("address", value)}
-            placeholder="Tam adres bilgisi"
-            multiline
-          />
-        </div>
+        {/* Address for Individual customers */}
+        {customer.type !== 'kurumsal' && (
+          <div className="p-2.5 bg-card rounded-lg border border-border/50">
+            <h3 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+              <div className="w-1 h-3 bg-rose-500 rounded-full"></div>
+              Adres
+            </h3>
+            <EditableField
+              label="Tam Adres"
+              value={customer.address || ""}
+              icon={<MapPin className="w-3 h-3 text-rose-500" />}
+              onSave={(value) => updateCustomerField("address", value)}
+              placeholder="Tam adres bilgisi"
+              multiline
+            />
+          </div>
+        )}
 
-        {/* Financial Information */}
-        <div className="p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-200">
-          <h3 className="text-sm font-medium text-emerald-700 mb-3 flex items-center gap-2">
-            <div className="w-1 h-4 bg-emerald-500 rounded-full"></div>
+        {/* Financial Information - More Compact */}
+        <div className="p-2.5 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-200">
+          <h3 className="text-xs font-medium text-emerald-700 mb-2 flex items-center gap-1.5">
+            <div className="w-1 h-3 bg-emerald-500 rounded-full"></div>
             Finansal Durum
           </h3>
           
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-white/70 rounded-lg border border-emerald-200 backdrop-blur-sm">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-emerald-100 rounded-full">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-2 bg-white/70 rounded border border-emerald-200 backdrop-blur-sm">
+              <div className="flex items-center gap-1.5">
+                <div className="p-1 bg-emerald-100 rounded-full">
                   {customer.balance > 0 ? (
-                    <TrendingUp className="w-3 h-3 text-emerald-600" />
+                    <TrendingUp className="w-2.5 h-2.5 text-emerald-600" />
                   ) : customer.balance < 0 ? (
-                    <TrendingDown className="w-3 h-3 text-red-600" />
+                    <TrendingDown className="w-2.5 h-2.5 text-red-600" />
                   ) : (
-                    <DollarSign className="w-3 h-3 text-gray-600" />
+                    <DollarSign className="w-2.5 h-2.5 text-gray-600" />
                   )}
                 </div>
-                <span className="font-medium text-sm text-gray-700">Cari Bakiye</span>
+                <span className="font-medium text-xs text-gray-700">Cari Bakiye</span>
               </div>
-              <span className={`font-bold text-sm px-2 py-1 rounded-full ${
+              <span className={`font-bold text-xs px-1.5 py-0.5 rounded-full ${
                 customer.balance > 0 
                   ? 'text-emerald-700 bg-emerald-100' 
                   : customer.balance < 0 
@@ -470,25 +480,25 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="text-center p-3 bg-white/70 rounded-lg border border-emerald-200 backdrop-blur-sm">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <TrendingUp className="w-3 h-3 text-emerald-600" />
+            <div className="grid grid-cols-2 gap-2">
+              <div className="text-center p-2 bg-white/70 rounded border border-emerald-200 backdrop-blur-sm">
+                <div className="flex items-center justify-center gap-0.5 mb-0.5">
+                  <TrendingUp className="w-2.5 h-2.5 text-emerald-600" />
                   <div className="text-emerald-700 font-medium text-xs">Alacak</div>
                 </div>
-                <div className="font-bold text-sm text-emerald-800">
+                <div className="font-bold text-xs text-emerald-800">
                   {new Intl.NumberFormat('tr-TR', {
                     style: 'currency',
                     currency: 'TRY'
                   }).format(Math.max(0, customer.balance))}
                 </div>
               </div>
-              <div className="text-center p-3 bg-white/70 rounded-lg border border-red-200 backdrop-blur-sm">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <TrendingDown className="w-3 h-3 text-red-600" />
+              <div className="text-center p-2 bg-white/70 rounded border border-red-200 backdrop-blur-sm">
+                <div className="flex items-center justify-center gap-0.5 mb-0.5">
+                  <TrendingDown className="w-2.5 h-2.5 text-red-600" />
                   <div className="text-red-700 font-medium text-xs">Borç</div>
                 </div>
-                <div className="font-bold text-sm text-red-800">
+                <div className="font-bold text-xs text-red-800">
                   {new Intl.NumberFormat('tr-TR', {
                     style: 'currency',
                     currency: 'TRY'
