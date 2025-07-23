@@ -602,7 +602,15 @@ export type Database = {
           type?: Database["public"]["Enums"]["customer_type"]
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_customers_representative"
+            columns: ["representative"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       departments: {
         Row: {
@@ -627,6 +635,99 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      e_fatura_stok_eslestirme: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_id: string
+          invoice_line_id: string
+          invoice_product_code: string | null
+          invoice_product_gtip: string | null
+          invoice_product_name: string
+          invoice_quantity: number
+          invoice_tax_rate: number | null
+          invoice_total_amount: number
+          invoice_unit: string | null
+          invoice_unit_price: number
+          is_confirmed: boolean | null
+          is_stock_updated: boolean | null
+          match_confidence: number | null
+          match_notes: string | null
+          match_type: string
+          matched_stock_code: string | null
+          matched_stock_id: string | null
+          matched_stock_name: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id: string
+          invoice_line_id: string
+          invoice_product_code?: string | null
+          invoice_product_gtip?: string | null
+          invoice_product_name: string
+          invoice_quantity?: number
+          invoice_tax_rate?: number | null
+          invoice_total_amount?: number
+          invoice_unit?: string | null
+          invoice_unit_price?: number
+          is_confirmed?: boolean | null
+          is_stock_updated?: boolean | null
+          match_confidence?: number | null
+          match_notes?: string | null
+          match_type?: string
+          matched_stock_code?: string | null
+          matched_stock_id?: string | null
+          matched_stock_name?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id?: string
+          invoice_line_id?: string
+          invoice_product_code?: string | null
+          invoice_product_gtip?: string | null
+          invoice_product_name?: string
+          invoice_quantity?: number
+          invoice_tax_rate?: number | null
+          invoice_total_amount?: number
+          invoice_unit?: string | null
+          invoice_unit_price?: number
+          is_confirmed?: boolean | null
+          is_stock_updated?: boolean | null
+          match_confidence?: number | null
+          match_notes?: string | null
+          match_type?: string
+          matched_stock_code?: string | null
+          matched_stock_id?: string | null
+          matched_stock_name?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "e_fatura_stok_eslestirme_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "einvoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "e_fatura_stok_eslestirme_matched_stock_id_fkey"
+            columns: ["matched_stock_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       einvoices: {
         Row: {

@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ContactHeader } from "@/components/customers/details/ContactHeader";
 import { ContactTabs } from "@/components/customers/details/ContactTabs";
 import { EditableCustomerDetails } from "@/components/customers/details/EditableCustomerDetails";
+import { EditableContactInfo } from "@/components/customers/details/EditableContactInfo";
 
 interface ContactDetailsProps {
   isCollapsed: boolean;
@@ -53,6 +54,10 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
     await refetch();
   };
 
+  const handleContactUpdate = (updatedCustomer: any) => {
+    refetch();
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white">
@@ -96,6 +101,9 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
           ) : (
             <>
               <ContactHeader customer={customer} id={id || ''} onEdit={handleEdit} />
+              <div className="mt-6">
+                <EditableContactInfo customer={customer} onUpdate={handleContactUpdate} />
+              </div>
               <ContactTabs customer={customer} />
             </>
           )}
