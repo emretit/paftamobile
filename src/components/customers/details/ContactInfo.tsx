@@ -332,53 +332,124 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
       
       <div className="space-y-1.5">
         {/* Primary Contact Section */}
-        <div className="p-1.5 bg-card rounded border border-border/50">
-          <h3 className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
-            <div className="w-0.5 h-2 bg-primary rounded-full"></div>
-            İletişim
+        <div className="p-4 bg-gradient-to-r from-card to-card/80 rounded-lg border border-border/50 shadow-sm">
+          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+            <div className="w-1 h-4 bg-primary rounded-full"></div>
+            İletişim Bilgileri
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
-            <EditableField
-              label="Şirket"
-              value={customer.company || ""}
-              icon={<Building className="w-2.5 h-2.5 text-purple-500" />}
-              onSave={(value) => updateCustomerField("company", value)}
-              placeholder="Şirket adı"
-            />
-            <EditableField
-              label="Yetkili"
-              value={customer.name || ""}
-              icon={<User className="w-2.5 h-2.5 text-primary" />}
-              onSave={(value) => updateCustomerField("name", value)}
-              placeholder="Yetkili kişi"
-              required
-            />
-            <EditableField
-              label="E-posta"
-              value={customer.email || ""}
-              icon={<Mail className="w-2.5 h-2.5 text-blue-500" />}
-              onSave={(value) => updateCustomerField("email", value)}
-              placeholder="email"
-              type="email"
-            />
-            <EditableField
-              label="Cep"
-              value={customer.mobile_phone || ""}
-              icon={<Phone className="w-2.5 h-2.5 text-green-500" />}
-              onSave={(value) => updateCustomerField("mobile_phone", value)}
-              placeholder="5XX XXX XX XX"
-              type="tel"
-            />
+          
+          {/* Company Information */}
+          <div className="mb-4 p-3 bg-muted/30 rounded-lg">
+            <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+              <Building className="w-3 h-3 text-purple-500" />
+              Şirket Bilgileri
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <EditableField
+                label="Şirket Adı"
+                value={customer.company || ""}
+                icon={<Building className="w-2.5 h-2.5 text-purple-500" />}
+                onSave={(value) => updateCustomerField("company", value)}
+                placeholder="Şirket adı"
+              />
+              <div></div>
+            </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 mt-1.5">
-            <EditableField
-              label="İş Tel."
-              value={customer.office_phone || ""}
-              icon={<Phone className="w-2.5 h-2.5 text-orange-500" />}
-              onSave={(value) => updateCustomerField("office_phone", value)}
-              placeholder="2XX XXX XX XX"
-              type="tel"
-            />
+
+          {/* Primary Contact */}
+          <div className="mb-4 p-3 bg-muted/30 rounded-lg">
+            <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+              <User className="w-3 h-3 text-primary" />
+              Birinci Yetkili
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <EditableField
+                label="Ad Soyad"
+                value={customer.name || ""}
+                icon={<User className="w-2.5 h-2.5 text-primary" />}
+                onSave={(value) => updateCustomerField("name", value)}
+                placeholder="Yetkili kişi"
+                required
+              />
+              <EditableField
+                label="E-posta"
+                value={customer.email || ""}
+                icon={<Mail className="w-2.5 h-2.5 text-blue-500" />}
+                onSave={(value) => updateCustomerField("email", value)}
+                placeholder="email@example.com"
+                type="email"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <EditableField
+                  label="Cep Tel."
+                  value={customer.mobile_phone || ""}
+                  icon={<Phone className="w-2.5 h-2.5 text-green-500" />}
+                  onSave={(value) => updateCustomerField("mobile_phone", value)}
+                  placeholder="5XX XXX XX XX"
+                  type="tel"
+                />
+                <EditableField
+                  label="İş Tel."
+                  value={customer.office_phone || ""}
+                  icon={<Phone className="w-2.5 h-2.5 text-orange-500" />}
+                  onSave={(value) => updateCustomerField("office_phone", value)}
+                  placeholder="2XX XXX XX XX"
+                  type="tel"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Secondary Contact */}
+          <div className="p-3 bg-muted/20 rounded-lg border border-dashed border-muted-foreground/30">
+            <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+              <User className="w-3 h-3 text-secondary" />
+              İkinci Yetkili (Opsiyonel)
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <EditableField
+                label="Ad Soyad"
+                value={customer.representative || ""}
+                icon={<User className="w-2.5 h-2.5 text-secondary" />}
+                onSave={(value) => updateCustomerField("representative", value)}
+                placeholder="İkinci yetkili kişi"
+              />
+              <EditableField
+                label="E-posta"
+                value=""
+                icon={<Mail className="w-2.5 h-2.5 text-blue-400" />}
+                onSave={async (value) => {
+                  // TODO: İkinci yetkili e-posta alanı için veritabanı güncelleme
+                  console.log("İkinci yetkili e-posta:", value);
+                }}
+                placeholder="email@example.com"
+                type="email"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <EditableField
+                  label="Cep Tel."
+                  value=""
+                  icon={<Phone className="w-2.5 h-2.5 text-green-400" />}
+                  onSave={async (value) => {
+                    // TODO: İkinci yetkili cep telefonu için veritabanı güncelleme
+                    console.log("İkinci yetkili cep:", value);
+                  }}
+                  placeholder="5XX XXX XX XX"
+                  type="tel"
+                />
+                <EditableField
+                  label="İş Tel."
+                  value=""
+                  icon={<Phone className="w-2.5 h-2.5 text-orange-400" />}
+                  onSave={async (value) => {
+                    // TODO: İkinci yetkili iş telefonu için veritabanı güncelleme
+                    console.log("İkinci yetkili iş tel:", value);
+                  }}
+                  placeholder="2XX XXX XX XX"
+                  type="tel"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
