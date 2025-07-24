@@ -454,7 +454,7 @@ serve(async (req) => {
     }
 
     if (action === 'fetch_outgoing') {
-      console.log('Using token:', authData.access_token.substring(0, 10) + '...')
+      console.log('Using token for outgoing invoices:', authData.access_token.substring(0, 10) + '...')
       
       const now = new Date()
       const startDate = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000)) // Son 30 gün
@@ -470,7 +470,8 @@ serve(async (req) => {
         'SortType': 'DESC'
       })
       
-      const response = await fetch(`https://apitest.nilvera.com/einvoice/Sales?${queryParams}`, {
+      // Doğru endpoint: /einvoice/Sale (giden faturaları listeler)
+      const response = await fetch(`https://apitest.nilvera.com/einvoice/Sale?${queryParams}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authData.access_token}`,
@@ -478,23 +479,23 @@ serve(async (req) => {
         }
       })
 
-      console.log('Nilvera API response status:', response.status)
+      console.log('Nilvera Outgoing API response status:', response.status)
       
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('Nilvera API error:', errorText)
-        throw new Error(`Faturalar getirilemedi: ${response.status} - ${errorText}`)
+        console.error('Nilvera Outgoing API error:', errorText)
+        throw new Error(`Giden faturalar getirilemedi: ${response.status} - ${errorText}`)
       }
       
       const response_data = await response.json()
-      console.log('Nilvera API response:', response_data)
+      console.log('Nilvera Outgoing API response:', response_data)
       
       let invoices = []
       if (response_data && response_data.Content && Array.isArray(response_data.Content)) {
         invoices = response_data.Content
-        console.log(`Found ${invoices.length} invoices in response`)
+        console.log(`Found ${invoices.length} outgoing invoices in response`)
       } else {
-        console.log('No Content array found in response:', response_data)
+        console.log('No Content array found in outgoing response:', response_data)
         invoices = []
       }
 
@@ -504,15 +505,19 @@ serve(async (req) => {
           invoices: invoices.map((inv: any) => ({
             id: inv.UUID,
             invoiceNumber: inv.InvoiceNumber,
-            customerName: inv.ReceiverName,
-            customerTaxNumber: inv.ReceiverTaxNumber,
+            customerName: inv.ReceiverName || inv.ReceiverTitle,
+            customerTaxNumber: inv.ReceiverTaxNumber || inv.ReceiverVKN,
             invoiceDate: inv.IssueDate,
             dueDate: inv.PaymentDate || null,
             totalAmount: parseFloat(inv.PayableAmount || 0),
-            paidAmount: 0,
+            paidAmount: parseFloat(inv.PaidAmount || 0), // Giden faturalarda ödenen tutar olabilir
             currency: inv.CurrencyCode || 'TRY',
             taxAmount: parseFloat(inv.TaxTotalAmount || 0),
             status: inv.StatusDetail,
+            answerCode: inv.AnswerCode, // Giden faturalarda müşteri yanıt durumu
+            isRead: inv.IsRead,
+            isPrint: inv.IsPrint,
+            isArchive: inv.IsArchive,
             pdfUrl: null,
             xmlData: inv
           })),
