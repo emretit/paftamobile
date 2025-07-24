@@ -165,7 +165,7 @@ const PurchaseInvoices = ({ isCollapsed, setIsCollapsed }: PurchaseInvoicesProps
                         <SelectValue placeholder="Durum Filtrele" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Tüm Durumlar</SelectItem>
+                        <SelectItem value="all">Tüm Durumlar</SelectItem>
                         <SelectItem value="pending">Bekliyor</SelectItem>
                         <SelectItem value="paid">Ödendi</SelectItem>
                         <SelectItem value="partially_paid">Kısmi Ödendi</SelectItem>
@@ -198,7 +198,7 @@ const PurchaseInvoices = ({ isCollapsed, setIsCollapsed }: PurchaseInvoicesProps
                     </Popover>
                     <Button variant="outline" onClick={() => setFilters({
                       search: "",
-                      status: "",
+                      status: "all",
                       dateRange: { from: null, to: null }
                     })}>
                       <Filter className="h-4 w-4 mr-2" />

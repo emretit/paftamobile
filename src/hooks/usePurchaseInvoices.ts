@@ -8,7 +8,7 @@ import { toast } from "sonner";
 export const usePurchaseInvoices = () => {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({
-    status: "",
+    status: "all",
     search: "",
     dateRange: { from: null, to: null } as { from: Date | null, to: Date | null }
   });
@@ -19,7 +19,7 @@ export const usePurchaseInvoices = () => {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (filters.status) {
+    if (filters.status && filters.status !== "all") {
       query = query.eq("status", filters.status as InvoiceStatus);
     }
 
