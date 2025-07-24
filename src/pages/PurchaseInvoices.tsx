@@ -21,7 +21,7 @@ import { tr } from 'date-fns/locale';
 import { usePurchaseInvoices } from '@/hooks/usePurchaseInvoices';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
-import InvoiceManagementTab from "@/components/purchase/invoices/InvoiceManagementTab";
+
 
 interface PurchaseInvoicesProps {
   isCollapsed: boolean;
@@ -29,7 +29,6 @@ interface PurchaseInvoicesProps {
 }
 
 const PurchaseInvoices = ({ isCollapsed, setIsCollapsed }: PurchaseInvoicesProps) => {
-  const [activeTab, setActiveTab] = useState('processed');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
@@ -100,151 +99,109 @@ const PurchaseInvoices = ({ isCollapsed, setIsCollapsed }: PurchaseInvoicesProps
             </Button>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="bg-white rounded-lg border mb-6">
-            <div className="flex border-b">
-              <button
-                onClick={() => setActiveTab('processed')}
-                className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'processed'
-                    ? 'border-primary text-primary bg-primary/5'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  İşlenmiş Faturalar
-                  <Badge variant="secondary">{invoices?.length || 0}</Badge>
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('incoming')}
-                className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'incoming'
-                    ? 'border-orange-500 text-orange-700 bg-orange-50'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Gelen E-Faturalar
-                </div>
-              </button>
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Fatura no, tedarikçi ara..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="pl-10"
+              />
             </div>
+            <Select value={statusFilter} onValueChange={handleStatusFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Durum Filtrele" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm Durumlar</SelectItem>
+                <SelectItem value="pending">Bekliyor</SelectItem>
+                <SelectItem value="paid">Ödendi</SelectItem>
+                <SelectItem value="partially_paid">Kısmi Ödendi</SelectItem>
+                <SelectItem value="overdue">Gecikmiş</SelectItem>
+                <SelectItem value="cancelled">İptal</SelectItem>
+              </SelectContent>
+            </Select>
+            <DatePickerWithRange
+              value={dateRange}
+              onChange={handleDateRangeChange}
+            />
+          </div>
 
-            {/* Tab Content */}
-            <div className="p-6">
-              {activeTab === 'processed' ? (
-                <>
-                  {/* Filters */}
-                  <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                      <Input
-                        placeholder="Fatura no, tedarikçi ara..."
-                        value={searchTerm}
-                        onChange={(e) => handleSearch(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                    <Select value={statusFilter} onValueChange={handleStatusFilter}>
-                      <SelectTrigger className="w-48">
-                        <SelectValue placeholder="Durum Filtrele" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Tüm Durumlar</SelectItem>
-                        <SelectItem value="pending">Bekliyor</SelectItem>
-                        <SelectItem value="paid">Ödendi</SelectItem>
-                        <SelectItem value="partially_paid">Kısmi Ödendi</SelectItem>
-                        <SelectItem value="overdue">Gecikmiş</SelectItem>
-                        <SelectItem value="cancelled">İptal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <DatePickerWithRange
-                      value={dateRange}
-                      onChange={handleDateRangeChange}
-                    />
-                  </div>
-
-                  {/* Purchase Invoices Table */}
-                  <div className="bg-white rounded-lg border overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Fatura No</TableHead>
-                          <TableHead>Tedarikçi</TableHead>
-                          <TableHead>Tarih</TableHead>
-                          <TableHead>Vade</TableHead>
-                          <TableHead>Toplam</TableHead>
-                          <TableHead>Ödenen</TableHead>
-                          <TableHead>Durum</TableHead>
-                          <TableHead>İşlemler</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {isLoading ? (
-                          <TableRow>
-                            <TableCell colSpan={8} className="text-center py-8">
-                              Yükleniyor...
-                            </TableCell>
-                          </TableRow>
-                        ) : invoices?.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                              Henüz fatura bulunmuyor
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          invoices?.map((invoice) => (
-                            <TableRow key={invoice.id}>
-                              <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
-                              <TableCell>{invoice.supplier_id}</TableCell>
-                              <TableCell>
-                                {format(new Date(invoice.invoice_date), 'dd.MM.yyyy', { locale: tr })}
-                              </TableCell>
-                              <TableCell>
-                                {format(new Date(invoice.due_date), 'dd.MM.yyyy', { locale: tr })}
-                              </TableCell>
-                              <TableCell>
-                                {invoice.total_amount.toLocaleString('tr-TR', {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2
-                                })} {invoice.currency}
-                              </TableCell>
-                              <TableCell>
-                                {invoice.paid_amount.toLocaleString('tr-TR', {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2
-                                })} {invoice.currency}
-                              </TableCell>
-                              <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <Button variant="ghost" size="sm">
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm">
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm">
-                                    <CreditCard className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </>
-              ) : (
-                <InvoiceManagementTab />
-              )}
-            </div>
+          {/* Purchase Invoices Table */}
+          <div className="bg-white rounded-lg border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fatura No</TableHead>
+                  <TableHead>Tedarikçi</TableHead>
+                  <TableHead>Tarih</TableHead>
+                  <TableHead>Vade</TableHead>
+                  <TableHead>Toplam</TableHead>
+                  <TableHead>Ödenen</TableHead>
+                  <TableHead>Durum</TableHead>
+                  <TableHead>İşlemler</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      Yükleniyor...
+                    </TableCell>
+                  </TableRow>
+                ) : invoices?.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                      Henüz fatura bulunmuyor
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  invoices?.map((invoice) => (
+                    <TableRow key={invoice.id}>
+                      <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+                      <TableCell>{invoice.supplier_id}</TableCell>
+                      <TableCell>
+                        {format(new Date(invoice.invoice_date), 'dd.MM.yyyy', { locale: tr })}
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(invoice.due_date), 'dd.MM.yyyy', { locale: tr })}
+                      </TableCell>
+                      <TableCell>
+                        {invoice.total_amount.toLocaleString('tr-TR', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })} {invoice.currency}
+                      </TableCell>
+                      <TableCell>
+                        {invoice.paid_amount.toLocaleString('tr-TR', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })} {invoice.currency}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <CreditCard className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
         </div>
       </main>
