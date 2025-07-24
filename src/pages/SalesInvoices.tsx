@@ -398,13 +398,7 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
             </Button>
           </div>
 
-          <Tabs defaultValue="local" className="w-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="local">Satış Faturaları</TabsTrigger>
-              <TabsTrigger value="einvoices">Gelen E-Faturalar</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="local">
+          <div className="w-full">
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                   <Card className="p-4 bg-white shadow-sm">
@@ -572,12 +566,7 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                   </CardContent>
                 </Card>
               </div>
-            </TabsContent>
-
-            <TabsContent value="einvoices">
-              <IncomingInvoicesTab />
-            </TabsContent>
-          </Tabs>
+          </div>
         </div>
       </main>
     </div>
