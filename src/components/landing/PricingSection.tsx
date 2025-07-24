@@ -14,43 +14,43 @@ const PricingSection = () => {
   };
 
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-background to-muted/30">
       <div className="mx-auto max-w-7xl">
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl font-sans">
             İşletmenize Uygun Fiyatlandırma
           </h2>
-          <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
+          <p className="mt-4 text-lg text-muted-foreground max-w-3xl mx-auto">
             Her ölçekteki işletme için uygun fiyatlandırma seçenekleri sunuyoruz.
           </p>
         </div>
 
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
           {pricingPlans.map((plan, index) => (
-            <Card key={index} className={`border ${plan.featured ? 'border-blue-200 shadow-lg ring-1 ring-blue-200' : 'border-gray-200'}`}>
+            <Card key={index} className={`rounded-xl transition-all duration-300 hover:shadow-xl ${plan.featured ? 'border-primary/20 shadow-lg ring-1 ring-primary/20 bg-primary/5' : 'border shadow-sm bg-card'}`}>
               <CardHeader>
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
+                  <CardTitle className="text-2xl font-bold text-card-foreground">{plan.name}</CardTitle>
                   {plan.featured && (
-                    <Badge variant="secondary" className="px-3 py-1">
+                    <Badge className="px-3 py-1 bg-primary text-primary-foreground">
                       Popüler
                     </Badge>
                   )}
                 </div>
                 <div className="mt-4">
-                  <span className="text-3xl font-bold">{plan.price}</span>
-                  <span className="text-gray-500 ml-2">/ ay</span>
+                  <span className="text-3xl font-bold text-foreground">{plan.price}</span>
+                  <span className="text-muted-foreground ml-2">/ ay</span>
                 </div>
-                <CardDescription className="mt-4">{plan.description}</CardDescription>
+                <CardDescription className="mt-4 text-muted-foreground">{plan.description}</CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start">
                       <div className="flex-shrink-0">
-                        <Check className="h-5 w-5 text-green-500" />
+                        <Check className="h-5 w-5 text-primary" />
                       </div>
-                      <span className="ml-3 text-gray-600">{feature}</span>
+                      <span className="ml-3 text-muted-foreground">{feature}</span>
                     </li>
                   ))}
                 </ul>

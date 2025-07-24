@@ -12,12 +12,14 @@ import LoginButton from "@/components/navbar/LoginButton";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-white">
-      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-10">
+    <div className="min-h-screen bg-background">
+      <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-md shadow-sm z-10 border-b border-border">
         <div className="container mx-auto p-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <img src="/logo.png" alt="NGS Logo" className="h-8 w-8" />
-            <span className="text-xl font-bold text-gray-900">NGS</span>
+            <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
+              <span className="text-white font-bold text-sm">NGS</span>
+            </div>
+            <span className="text-xl font-bold text-foreground font-sans">NGS</span>
           </div>
           <LoginButton />
         </div>

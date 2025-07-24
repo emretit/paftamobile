@@ -1,44 +1,55 @@
 
 const FooterSection = () => {
   return (
-    <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
+    <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-white py-12 px-4 sm:px-6 lg:px-8 border-t border-primary/10">
       <div className="mx-auto max-w-7xl">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+          <div className="col-span-2 md:col-span-1">
+            <div className="flex items-center space-x-2 mb-4">
+              <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
+                <span className="text-white font-bold text-sm">NGS</span>
+              </div>
+              <span className="text-xl font-bold">NGS Platform</span>
+            </div>
+            <p className="text-gray-400 text-sm">
+              İş süreçlerinizi modernize eden güvenilir çözüm ortağınız.
+            </p>
+          </div>
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider">Ürün</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">Ürün</h3>
             <ul className="mt-4 space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white">Özellikler</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Fiyatlandırma</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Entegrasyonlar</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Özellikler</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Fiyatlandırma</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Entegrasyonlar</a></li>
             </ul>
           </div>
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider">Şirket</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">Şirket</h3>
             <ul className="mt-4 space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white">Hakkımızda</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Kariyer</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">İletişim</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Hakkımızda</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Kariyer</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">İletişim</a></li>
             </ul>
           </div>
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider">Kaynaklar</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">Kaynaklar</h3>
             <ul className="mt-4 space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white">Blog</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Dokümantasyon</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Destek</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Blog</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Dokümantasyon</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Destek</a></li>
             </ul>
           </div>
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider">Bizi Takip Edin</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">Bizi Takip Edin</h3>
             <ul className="mt-4 space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white">Twitter</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">LinkedIn</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Facebook</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Twitter</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">LinkedIn</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Facebook</a></li>
             </ul>
           </div>
         </div>
         <div className="mt-12 border-t border-gray-800 pt-8">
-          <p className="text-sm text-gray-400 text-center">&copy; 2023 NGS Platform. Tüm hakları saklıdır.</p>
+          <p className="text-sm text-gray-400 text-center">&copy; 2024 NGS Platform. Tüm hakları saklıdır.</p>
         </div>
       </div>
     </footer>
