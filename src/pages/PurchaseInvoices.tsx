@@ -12,9 +12,12 @@ import {
   Eye,
   Edit,
   CreditCard,
-  Trash2
+  Trash2,
+  RefreshCw
 } from "lucide-react";
 import { usePurchaseInvoices } from '@/hooks/usePurchaseInvoices';
+import { useIncomingInvoices } from '@/hooks/useIncomingInvoices';
+import { useEarchiveInvoices } from '@/hooks/useEarchiveInvoices';
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
@@ -37,6 +40,9 @@ const PurchaseInvoices = ({ isCollapsed, setIsCollapsed }: PurchaseInvoicesProps
     filters, 
     setFilters,
   } = usePurchaseInvoices();
+  
+  const { incomingInvoices, isLoading: isLoadingIncoming, refetch: refetchIncoming } = useIncomingInvoices();
+  const { earchiveInvoices, isLoading: isLoadingEarchive, refetch: refetchEarchive } = useEarchiveInvoices();
   
   const [dateOpen, setDateOpen] = useState(false);
 
@@ -204,6 +210,17 @@ const PurchaseInvoices = ({ isCollapsed, setIsCollapsed }: PurchaseInvoicesProps
                       <Filter className="h-4 w-4 mr-2" />
                       Temizle
                     </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        refetchIncoming();
+                        refetchEarchive();
+                      }}
+                      disabled={isLoadingIncoming || isLoadingEarchive}
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${(isLoadingIncoming || isLoadingEarchive) ? 'animate-spin' : ''}`} />
+                      E-Fatura Yenile
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -211,81 +228,125 @@ const PurchaseInvoices = ({ isCollapsed, setIsCollapsed }: PurchaseInvoicesProps
               {/* Purchase Invoices Table */}
               <Card>
                 <CardContent className="p-0">
-                  {isLoading ? (
-                    <div className="p-8 space-y-4">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-4 w-1/2" />
+              {isLoading || isLoadingIncoming || isLoadingEarchive ? (
+                <div className="space-y-4">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
+                      <Skeleton className="h-12 w-12 rounded" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-[250px]" />
+                        <Skeleton className="h-4 w-[200px]" />
+                      </div>
+                      <Skeleton className="h-4 w-[100px]" />
+                      <Skeleton className="h-8 w-[80px]" />
                     </div>
-                  ) : !invoices || invoices.length === 0 ? (
-                    <div className="p-8 text-center text-gray-500">
-                      Fatura bulunamadı
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50 border-b">
-                          <tr>
-                            <th className="text-left p-4 font-medium text-gray-700">Fatura No</th>
-                            <th className="text-left p-4 font-medium text-gray-700">Tedarikçi</th>
-                            <th className="text-left p-4 font-medium text-gray-700">Tarih</th>
-                            <th className="text-left p-4 font-medium text-gray-700">Vade</th>
-                            <th className="text-left p-4 font-medium text-gray-700">Toplam</th>
-                            <th className="text-left p-4 font-medium text-gray-700">Ödenen</th>
-                            <th className="text-left p-4 font-medium text-gray-700">Durum</th>
-                            <th className="text-left p-4 font-medium text-gray-700">İşlemler</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {invoices.map((invoice) => (
-                            <tr key={invoice.id} className="border-b hover:bg-gray-50 transition-colors">
-                              <td className="p-4">
-                                <div className="font-medium text-blue-600">{invoice.invoice_number}</div>
-                              </td>
-                              <td className="p-4">
-                                <div className="font-medium">{invoice.supplier_id}</div>
-                              </td>
-                              <td className="p-4">
-                                <div>{format(new Date(invoice.invoice_date), "dd.MM.yyyy", { locale: tr })}</div>
-                              </td>
-                              <td className="p-4">
-                                <div>{format(new Date(invoice.due_date), "dd.MM.yyyy", { locale: tr })}</div>
-                              </td>
-                              <td className="p-4">
-                                <div className="font-medium">
-                                  {formatCurrency(Number(invoice.total_amount))}
-                                </div>
-                              </td>
-                              <td className="p-4">
-                                <div className="font-medium">
-                                  {formatCurrency(Number(invoice.paid_amount))}
-                                </div>
-                              </td>
-                              <td className="p-4">
-                                {getStatusBadge(invoice.status)}
-                              </td>
-                              <td className="p-4">
-                                <div className="flex gap-2">
-                                  <Button variant="ghost" size="sm">
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm">
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm">
-                                    <CreditCard className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                  ))}
+                </div>
+              ) : (invoices && invoices.length > 0) || (incomingInvoices && incomingInvoices.length > 0) || (earchiveInvoices && earchiveInvoices.length > 0) ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th className="text-left p-4 font-medium text-gray-700">Fatura No</th>
+                        <th className="text-left p-4 font-medium text-gray-700">Tedarikçi</th>
+                        <th className="text-left p-4 font-medium text-gray-700">Tarih</th>
+                        <th className="text-left p-4 font-medium text-gray-700">Toplam</th>
+                        <th className="text-left p-4 font-medium text-gray-700">Durum</th>
+                        <th className="text-left p-4 font-medium text-gray-700">Tip</th>
+                        <th className="text-center p-4 font-medium text-gray-700">İşlemler</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                       {/* Combine all invoices and sort by date */}
+                       {[
+                         ...(invoices || []).map(invoice => ({
+                           ...invoice,
+                           sourceType: 'purchase',
+                           invoiceDate: invoice.invoice_date,
+                           sortDate: new Date(invoice.invoice_date).getTime(),
+                           displayNumber: invoice.invoice_number,
+                           displaySupplier: 'Tedarikçi', // TODO: supplier lookup
+                           displayAmount: invoice.total_amount,
+                           displayStatus: invoice.status
+                         })),
+                         ...(incomingInvoices || []).filter(invoice => 
+                           invoice.status?.toLowerCase().includes('alındı') || 
+                           invoice.responseStatus?.toLowerCase().includes('received')
+                         ).map(invoice => ({
+                           ...invoice,
+                           sourceType: 'incoming',
+                           invoiceDate: invoice.invoiceDate,
+                           sortDate: new Date(invoice.invoiceDate).getTime(),
+                           displayNumber: invoice.invoiceNumber,
+                           displaySupplier: invoice.supplierName,
+                           displayAmount: invoice.totalAmount,
+                           displayStatus: 'received'
+                         })),
+                         ...(earchiveInvoices || []).filter(invoice => 
+                           invoice.status?.toLowerCase().includes('succeed') ||
+                           invoice.statusCode?.toLowerCase().includes('succeed')
+                         ).map(invoice => ({
+                           ...invoice,
+                           sourceType: 'earchive_received',
+                           invoiceDate: invoice.invoiceDate,
+                           sortDate: new Date(invoice.invoiceDate).getTime(),
+                           displayNumber: invoice.invoiceNumber,
+                           displaySupplier: invoice.customerName,
+                           displayAmount: invoice.totalAmount,
+                           displayStatus: 'received'
+                         }))
+                       ]
+                       .sort((a, b) => b.sortDate - a.sortDate)
+                       .map((invoice, index) => (
+                         <tr key={`${invoice.sourceType}-${invoice.id}-${index}`} className="border-b hover:bg-gray-50 transition-colors">
+                           <td className="p-4">
+                             <span className="font-medium text-blue-600">{invoice.displayNumber}</span>
+                           </td>
+                           <td className="p-4">
+                              <div>
+                                <div className="font-medium">{invoice.displaySupplier}</div>
+                                {(invoice.sourceType === 'incoming' || invoice.sourceType === 'earchive_received') && (
+                                  <div className="text-sm text-gray-500">VKN: {(invoice as any).supplierTaxNumber || (invoice as any).customerTaxNumber}</div>
+                                )}
+                              </div>
+                           </td>
+                           <td className="p-4">
+                             {format(new Date(invoice.invoiceDate), "dd.MM.yyyy", { locale: tr })}
+                           </td>
+                           <td className="p-4">
+                             <div className="font-medium">{formatCurrency(invoice.displayAmount)}</div>
+                           </td>
+                           <td className="p-4">
+                             {invoice.sourceType === 'purchase' ? 
+                               getStatusBadge(invoice.displayStatus) : 
+                               <Badge className="bg-green-500">Alındı</Badge>
+                             }
+                           </td>
+                           <td className="p-4">
+                             {invoice.sourceType === 'purchase' && <Badge variant="outline" className="border-gray-500 text-gray-700">Normal Fatura</Badge>}
+                             {invoice.sourceType === 'incoming' && (
+                               <Badge variant="outline" className="border-blue-500 text-blue-700">Gelen E-Fatura</Badge>
+                             )}
+                             {invoice.sourceType === 'earchive_received' && (
+                               <Badge variant="outline" className="border-purple-500 text-purple-700">Gelen E-Arşiv</Badge>
+                             )}
+                           </td>
+                           <td className="p-4 text-center">
+                             <Button variant="outline" size="sm">
+                               <Eye className="h-4 w-4" />
+                             </Button>
+                           </td>
+                         </tr>
+                       ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <FileUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Henüz fatura bulunmuyor</p>
+                </div>
+              )}
                 </CardContent>
               </Card>
             </div>
