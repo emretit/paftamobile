@@ -20,7 +20,7 @@ import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
-import InvoiceManagementTab from "@/components/purchase/invoices/InvoiceManagementTab";
+import EInvoiceList from "@/components/purchase/e-invoices/EInvoiceList";
 
 interface EInvoicesProps {
   isCollapsed: boolean;
@@ -71,7 +71,7 @@ const EInvoices = ({ isCollapsed, setIsCollapsed }: EInvoicesProps) => {
 
           <div className="bg-white rounded-lg border">
             <div className="p-6">
-              <InvoiceManagementTab />
+              <EInvoiceList />
             </div>
           </div>
         </div>
