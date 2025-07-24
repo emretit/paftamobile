@@ -1,27 +1,29 @@
 
-import React, { useState } from 'react';
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from "@/components/ui/card";
 import { 
-  Search, 
   Plus, 
-  FileText, 
-  Calendar, 
+  FileUp, 
+  Search, 
+  Filter, 
+  Download,
   Eye,
   Edit,
   CreditCard,
   Trash2
 } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
 import { usePurchaseInvoices } from '@/hooks/usePurchaseInvoices';
-import { DatePickerWithRange } from '@/components/ui/date-range-picker';
-import { DateRange } from 'react-day-picker';
-
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import React from "react";
 
 interface PurchaseInvoicesProps {
   isCollapsed: boolean;
@@ -29,51 +31,49 @@ interface PurchaseInvoicesProps {
 }
 
 const PurchaseInvoices = ({ isCollapsed, setIsCollapsed }: PurchaseInvoicesProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
-
   const { 
     invoices, 
     isLoading, 
     filters, 
-    setFilters, 
-    updateInvoiceMutation,
-    recordPaymentMutation,
-    deleteInvoiceMutation 
+    setFilters,
   } = usePurchaseInvoices();
+  
+  const [dateOpen, setDateOpen] = useState(false);
 
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
-    setFilters({ ...filters, search: value });
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('tr-TR', {
+      style: 'currency',
+      currency: 'TRY',
+      minimumFractionDigits: 2
+    }).format(amount);
   };
 
-  const handleStatusFilter = (value: string) => {
-    setStatusFilter(value);
-    setFilters({ ...filters, status: value });
+  const getStatusBadge = (status: any) => {
+    switch (status) {
+      case 'paid':
+        return <Badge className="bg-green-500">Ödendi</Badge>;
+      case 'partially_paid':
+        return <Badge className="bg-blue-500">Kısmi Ödeme</Badge>;
+      case 'pending':
+        return <Badge className="bg-amber-500">Bekliyor</Badge>;
+      case 'overdue':
+        return <Badge className="bg-red-500">Gecikti</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-gray-500">İptal</Badge>;
+      default:
+        return <Badge className="bg-gray-500">{status}</Badge>;
+    }
   };
 
-  const handleDateRangeChange = (range: DateRange | undefined) => {
-    const safeRange = range || { from: undefined, to: undefined };
-    setDateRange(safeRange);
-    const convertedRange = {
-      from: safeRange.from || null,
-      to: safeRange.to || null
-    };
-    setFilters({ ...filters, dateRange: convertedRange });
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusMap = {
-      pending: { label: 'Bekliyor', variant: 'secondary' as const },
-      paid: { label: 'Ödendi', variant: 'default' as const },
-      partially_paid: { label: 'Kısmi Ödendi', variant: 'outline' as const },
-      overdue: { label: 'Gecikmiş', variant: 'destructive' as const },
-      cancelled: { label: 'İptal', variant: 'destructive' as const }
-    };
-    const config = statusMap[status as keyof typeof statusMap] || { label: status, variant: 'secondary' as const };
-    return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
+  // Analytics calculation
+  const totalInvoices = invoices?.length || 0;
+  const totalPaid = invoices?.filter(i => i.status === 'paid').length || 0;
+  const totalPending = invoices?.filter(i => i.status === 'pending').length || 0;
+  const totalOverdue = invoices?.filter(i => i.status === 'overdue').length || 0;
+  
+  const totalAmountSum = invoices?.reduce((sum, invoice) => sum + Number(invoice.total_amount), 0) || 0;
+  const paidAmountSum = invoices?.reduce((sum, invoice) => sum + Number(invoice.paid_amount), 0) || 0;
+  const pendingAmountSum = totalAmountSum - paidAmountSum;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex relative">
@@ -99,109 +99,196 @@ const PurchaseInvoices = ({ isCollapsed, setIsCollapsed }: PurchaseInvoicesProps
             </Button>
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Fatura no, tedarikçi ara..."
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={handleStatusFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Durum Filtrele" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tüm Durumlar</SelectItem>
-                <SelectItem value="pending">Bekliyor</SelectItem>
-                <SelectItem value="paid">Ödendi</SelectItem>
-                <SelectItem value="partially_paid">Kısmi Ödendi</SelectItem>
-                <SelectItem value="overdue">Gecikmiş</SelectItem>
-                <SelectItem value="cancelled">İptal</SelectItem>
-              </SelectContent>
-            </Select>
-            <DatePickerWithRange
-              value={dateRange}
-              onChange={handleDateRangeChange}
-            />
-          </div>
+          <div className="w-full">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <Card className="p-4 bg-white shadow-sm">
+                  <CardContent className="p-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Toplam Fatura</span>
+                      <FileUp className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <p className="text-2xl font-bold text-blue-600">{totalInvoices}</p>
+                    <span className="text-sm text-gray-500">Bu dönem</span>
+                  </CardContent>
+                </Card>
+                
+                <Card className="p-4 bg-white shadow-sm">
+                  <CardContent className="p-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Ödenen</span>
+                      <FileUp className="h-5 w-5 text-green-500" />
+                    </div>
+                    <p className="text-2xl font-bold text-green-600">{formatCurrency(paidAmountSum)}</p>
+                    <span className="text-sm text-gray-500">{totalPaid} fatura</span>
+                  </CardContent>
+                </Card>
+                
+                <Card className="p-4 bg-white shadow-sm">
+                  <CardContent className="p-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Bekleyen</span>
+                      <FileUp className="h-5 w-5 text-orange-500" />
+                    </div>
+                    <p className="text-2xl font-bold text-orange-600">{formatCurrency(pendingAmountSum)}</p>
+                    <span className="text-sm text-gray-500">{totalPending} fatura</span>
+                  </CardContent>
+                </Card>
+                
+                <Card className="p-4 bg-white shadow-sm">
+                  <CardContent className="p-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Geciken</span>
+                      <FileUp className="h-5 w-5 text-red-500" />
+                    </div>
+                    <p className="text-2xl font-bold text-red-600">{totalOverdue}</p>
+                    <span className="text-sm text-gray-500">fatura</span>
+                  </CardContent>
+                </Card>
+              </div>
 
-          {/* Purchase Invoices Table */}
-          <div className="bg-white rounded-lg border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fatura No</TableHead>
-                  <TableHead>Tedarikçi</TableHead>
-                  <TableHead>Tarih</TableHead>
-                  <TableHead>Vade</TableHead>
-                  <TableHead>Toplam</TableHead>
-                  <TableHead>Ödenen</TableHead>
-                  <TableHead>Durum</TableHead>
-                  <TableHead>İşlemler</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
-                      Yükleniyor...
-                    </TableCell>
-                  </TableRow>
-                ) : invoices?.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                      Henüz fatura bulunmuyor
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  invoices?.map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
-                      <TableCell>{invoice.supplier_id}</TableCell>
-                      <TableCell>
-                        {format(new Date(invoice.invoice_date), 'dd.MM.yyyy', { locale: tr })}
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(invoice.due_date), 'dd.MM.yyyy', { locale: tr })}
-                      </TableCell>
-                      <TableCell>
-                        {invoice.total_amount.toLocaleString('tr-TR', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2
-                        })} {invoice.currency}
-                      </TableCell>
-                      <TableCell>
-                        {invoice.paid_amount.toLocaleString('tr-TR', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2
-                        })} {invoice.currency}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <CreditCard className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+              {/* Filters */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Fatura no, tedarikçi ara..."
+                        className="pl-9"
+                        value={filters.search}
+                        onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                      />
+                    </div>
+                    <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
+                      <SelectTrigger className="w-full lg:w-48">
+                        <SelectValue placeholder="Durum Filtrele" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Tüm Durumlar</SelectItem>
+                        <SelectItem value="pending">Bekliyor</SelectItem>
+                        <SelectItem value="paid">Ödendi</SelectItem>
+                        <SelectItem value="partially_paid">Kısmi Ödendi</SelectItem>
+                        <SelectItem value="overdue">Gecikmiş</SelectItem>
+                        <SelectItem value="cancelled">İptal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Popover open={dateOpen} onOpenChange={setDateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full lg:w-auto justify-start text-left font-normal">
+                          <FileUp className="mr-2 h-4 w-4" />
+                          Tarih Aralığı
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <DatePickerWithRange
+                          value={{
+                            from: filters.dateRange.from ? new Date(filters.dateRange.from) : undefined,
+                            to: filters.dateRange.to ? new Date(filters.dateRange.to) : undefined
+                          }}
+                          onChange={(range) => setFilters({ 
+                            ...filters, 
+                            dateRange: { 
+                              from: range?.from || null, 
+                              to: range?.to || null 
+                            }
+                          })}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <Button variant="outline" onClick={() => setFilters({
+                      search: "",
+                      status: "",
+                      dateRange: { from: null, to: null }
+                    })}>
+                      <Filter className="h-4 w-4 mr-2" />
+                      Temizle
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Purchase Invoices Table */}
+              <Card>
+                <CardContent className="p-0">
+                  {isLoading ? (
+                    <div className="p-8 space-y-4">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+                  ) : !invoices || invoices.length === 0 ? (
+                    <div className="p-8 text-center text-gray-500">
+                      Fatura bulunamadı
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50 border-b">
+                          <tr>
+                            <th className="text-left p-4 font-medium text-gray-700">Fatura No</th>
+                            <th className="text-left p-4 font-medium text-gray-700">Tedarikçi</th>
+                            <th className="text-left p-4 font-medium text-gray-700">Tarih</th>
+                            <th className="text-left p-4 font-medium text-gray-700">Vade</th>
+                            <th className="text-left p-4 font-medium text-gray-700">Toplam</th>
+                            <th className="text-left p-4 font-medium text-gray-700">Ödenen</th>
+                            <th className="text-left p-4 font-medium text-gray-700">Durum</th>
+                            <th className="text-left p-4 font-medium text-gray-700">İşlemler</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {invoices.map((invoice) => (
+                            <tr key={invoice.id} className="border-b hover:bg-gray-50 transition-colors">
+                              <td className="p-4">
+                                <div className="font-medium text-blue-600">{invoice.invoice_number}</div>
+                              </td>
+                              <td className="p-4">
+                                <div className="font-medium">{invoice.supplier_id}</div>
+                              </td>
+                              <td className="p-4">
+                                <div>{format(new Date(invoice.invoice_date), "dd.MM.yyyy", { locale: tr })}</div>
+                              </td>
+                              <td className="p-4">
+                                <div>{format(new Date(invoice.due_date), "dd.MM.yyyy", { locale: tr })}</div>
+                              </td>
+                              <td className="p-4">
+                                <div className="font-medium">
+                                  {formatCurrency(Number(invoice.total_amount))}
+                                </div>
+                              </td>
+                              <td className="p-4">
+                                <div className="font-medium">
+                                  {formatCurrency(Number(invoice.paid_amount))}
+                                </div>
+                              </td>
+                              <td className="p-4">
+                                {getStatusBadge(invoice.status)}
+                              </td>
+                              <td className="p-4">
+                                <div className="flex gap-2">
+                                  <Button variant="ghost" size="sm">
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm">
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm">
+                                    <CreditCard className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </main>
