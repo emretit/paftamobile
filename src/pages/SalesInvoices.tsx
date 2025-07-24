@@ -402,188 +402,220 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
             </Button>
           </div>
 
-          <Tabs defaultValue="sales" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="sales">Satış Faturaları</TabsTrigger>
-              <TabsTrigger value="outgoing">Giden E-Faturalar</TabsTrigger>
-            </TabsList>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <Card className="p-4 bg-white shadow-sm">
+              <CardContent className="p-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Toplam Fatura</span>
+                  <FileUp className="h-5 w-5 text-blue-500" />
+                </div>
+                <p className="text-2xl font-bold text-blue-600">{totalInvoices}</p>
+                <span className="text-sm text-gray-500">Bu dönem</span>
+              </CardContent>
+            </Card>
             
-            <TabsContent value="sales" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <Card className="p-4 bg-white shadow-sm">
-                  <CardContent className="p-2 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Toplam Fatura</span>
-                      <FileUp className="h-5 w-5 text-blue-500" />
-                    </div>
-                    <p className="text-2xl font-bold text-blue-600">{totalInvoices}</p>
-                    <span className="text-sm text-gray-500">Bu dönem</span>
-                  </CardContent>
-                </Card>
-                
-                <Card className="p-4 bg-white shadow-sm">
-                  <CardContent className="p-2 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Ödenen</span>
-                      <FileUp className="h-5 w-5 text-green-500" />
-                    </div>
-                    <p className="text-2xl font-bold text-green-600">{formatCurrency(paidAmountSum)}</p>
-                    <span className="text-sm text-gray-500">{totalPaid} fatura</span>
-                  </CardContent>
-                </Card>
-                
-                <Card className="p-4 bg-white shadow-sm">
-                  <CardContent className="p-2 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Bekleyen</span>
-                      <FileUp className="h-5 w-5 text-orange-500" />
-                    </div>
-                    <p className="text-2xl font-bold text-orange-600">{formatCurrency(unpaidAmountSum)}</p>
-                    <span className="text-sm text-gray-500">{totalUnpaid} fatura</span>
-                  </CardContent>
-                </Card>
-                
-                <Card className="p-4 bg-white shadow-sm">
-                  <CardContent className="p-2 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Vadesi Geçmiş</span>
-                      <FileUp className="h-5 w-5 text-red-500" />
-                    </div>
-                    <p className="text-2xl font-bold text-red-600">{totalOverdue}</p>
-                    <span className="text-sm text-gray-500">fatura</span>
-                  </CardContent>
-                </Card>
+            <Card className="p-4 bg-white shadow-sm">
+              <CardContent className="p-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Ödenen</span>
+                  <FileUp className="h-5 w-5 text-green-500" />
+                </div>
+                <p className="text-2xl font-bold text-green-600">{formatCurrency(paidAmountSum)}</p>
+                <span className="text-sm text-gray-500">{totalPaid} fatura</span>
+              </CardContent>
+            </Card>
+            
+            <Card className="p-4 bg-white shadow-sm">
+              <CardContent className="p-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Bekleyen</span>
+                  <FileUp className="h-5 w-5 text-orange-500" />
+                </div>
+                <p className="text-2xl font-bold text-orange-600">{formatCurrency(unpaidAmountSum)}</p>
+                <span className="text-sm text-gray-500">{totalUnpaid} fatura</span>
+              </CardContent>
+            </Card>
+            
+            <Card className="p-4 bg-white shadow-sm">
+              <CardContent className="p-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Vadesi Geçmiş</span>
+                  <FileUp className="h-5 w-5 text-red-500" />
+                </div>
+                <p className="text-2xl font-bold text-red-600">{totalOverdue}</p>
+                <span className="text-sm text-gray-500">fatura</span>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-lg font-semibold">Satış Faturaları</h2>
+                  <Button variant="outline" size="sm">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Dışa Aktar
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  <Select
+                    value={filters.status}
+                    onValueChange={(value) => setFilters({ ...filters, status: value })}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Ödeme Durumu" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tümü</SelectItem>
+                      <SelectItem value="odendi">Ödendi</SelectItem>
+                      <SelectItem value="kismi_odendi">Kısmi Ödendi</SelectItem>
+                      <SelectItem value="odenmedi">Ödenmedi</SelectItem>
+                      <SelectItem value="gecikti">Gecikti</SelectItem>
+                      <SelectItem value="iptal">İptal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={() => refetchOutgoing()} size="sm" disabled={isLoadingOutgoing}>
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingOutgoing ? 'animate-spin' : ''}`} />
+                    E-Faturalar
+                  </Button>
+                </div>
               </div>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                      <h2 className="text-lg font-semibold">Satış Faturaları</h2>
-                      <Button variant="outline" size="sm">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Dışa Aktar
-                      </Button>
-                    </div>
-                    <div className="flex gap-2">
-                      <Select
-                        value={filters.status}
-                        onValueChange={(value) => setFilters({ ...filters, status: value })}
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Ödeme Durumu" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Tümü</SelectItem>
-                          <SelectItem value="odendi">Ödendi</SelectItem>
-                          <SelectItem value="kismi_odendi">Kısmi Ödendi</SelectItem>
-                          <SelectItem value="odenmedi">Ödenmedi</SelectItem>
-                          <SelectItem value="gecikti">Gecikti</SelectItem>
-                          <SelectItem value="iptal">İptal</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+              <div className="space-y-2 mb-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Fatura no, müşteri adı veya açıklama ile ara..."
+                    className="pl-9"
+                    value={filters.search}
+                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                  />
+                </div>
+              </div>
 
-                  <div className="space-y-2 mb-4">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Fatura no, müşteri adı veya açıklama ile ara..."
-                        className="pl-9"
-                        value={filters.search}
-                        onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                      />
+              {isLoading || isLoadingOutgoing ? (
+                <div className="space-y-4">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
+                      <Skeleton className="h-12 w-12 rounded" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-[250px]" />
+                        <Skeleton className="h-4 w-[200px]" />
+                      </div>
+                      <Skeleton className="h-4 w-[100px]" />
+                      <Skeleton className="h-8 w-[80px]" />
                     </div>
-                  </div>
-
-                  {isLoading ? (
-                    <div className="space-y-4">
-                      {[...Array(5)].map((_, i) => (
-                        <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
-                          <Skeleton className="h-12 w-12 rounded" />
-                          <div className="flex-1 space-y-2">
-                            <Skeleton className="h-4 w-[250px]" />
-                            <Skeleton className="h-4 w-[200px]" />
-                          </div>
-                          <Skeleton className="h-4 w-[100px]" />
-                          <Skeleton className="h-8 w-[80px]" />
-                        </div>
+                  ))}
+                </div>
+              ) : (invoices && invoices.length > 0) || (outgoingInvoices && outgoingInvoices.length > 0) ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th className="text-left p-4 font-medium text-gray-700">Fatura No</th>
+                        <th className="text-left p-4 font-medium text-gray-700">Müşteri</th>
+                        <th className="text-left p-4 font-medium text-gray-700">Tarih</th>
+                        <th className="text-left p-4 font-medium text-gray-700">Tutar</th>
+                        <th className="text-left p-4 font-medium text-gray-700">Ödeme Durumu</th>
+                        <th className="text-left p-4 font-medium text-gray-700">Tip</th>
+                        <th className="text-center p-4 font-medium text-gray-700">İşlemler</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Regular sales invoices */}
+                      {invoices?.map((invoice) => (
+                        <tr key={`sales-${invoice.id}`} className="border-b hover:bg-gray-50 transition-colors">
+                          <td className="p-4">
+                            <span className="font-medium text-blue-600">{invoice.fatura_no}</span>
+                          </td>
+                          <td className="p-4">
+                            <div>
+                              <div className="font-medium">{invoice.customer?.name}</div>
+                              {invoice.customer?.company && (
+                                <div className="text-sm text-gray-500">{invoice.customer.company}</div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            {format(new Date(invoice.fatura_tarihi), "dd.MM.yyyy", { locale: tr })}
+                          </td>
+                          <td className="p-4">
+                            <div className="space-y-1">
+                              <div className="font-medium">{formatCurrency(invoice.toplam_tutar)}</div>
+                              {invoice.odenen_tutar > 0 && (
+                                <div className="text-sm text-green-600">Ödenen: {formatCurrency(invoice.odenen_tutar)}</div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            {getStatusBadge(invoice.odeme_durumu)}
+                          </td>
+                          <td className="p-4">
+                            {getDocumentTypeBadge(invoice.document_type)}
+                          </td>
+                          <td className="p-4 text-center">
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
                       ))}
-                    </div>
-                  ) : invoices && invoices.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50 border-b">
-                          <tr>
-                            <th className="text-left p-4 font-medium text-gray-700">Fatura No</th>
-                            <th className="text-left p-4 font-medium text-gray-700">Müşteri</th>
-                            <th className="text-left p-4 font-medium text-gray-700">Tarih</th>
-                            <th className="text-left p-4 font-medium text-gray-700">Tutar</th>
-                            <th className="text-left p-4 font-medium text-gray-700">Ödeme Durumu</th>
-                            <th className="text-left p-4 font-medium text-gray-700">Tip</th>
-                            <th className="text-center p-4 font-medium text-gray-700">İşlemler</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {invoices.map((invoice) => (
-                            <tr key={invoice.id} className="border-b hover:bg-gray-50 transition-colors">
-                              <td className="p-4">
-                                <span className="font-medium text-blue-600">{invoice.fatura_no}</span>
-                              </td>
-                              <td className="p-4">
-                                <div>
-                                  <div className="font-medium">{invoice.customer?.name}</div>
-                                  {invoice.customer?.company && (
-                                    <div className="text-sm text-gray-500">{invoice.customer.company}</div>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="p-4">
-                                {format(new Date(invoice.fatura_tarihi), "dd.MM.yyyy", { locale: tr })}
-                              </td>
-                              <td className="p-4">
-                                <div className="space-y-1">
-                                  <div className="font-medium">{formatCurrency(invoice.toplam_tutar)}</div>
-                                  {invoice.odenen_tutar > 0 && (
-                                    <div className="text-sm text-green-600">Ödenen: {formatCurrency(invoice.odenen_tutar)}</div>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="p-4">
-                                {getStatusBadge(invoice.odeme_durumu)}
-                              </td>
-                              <td className="p-4">
-                                {getDocumentTypeBadge(invoice.document_type)}
-                              </td>
-                              <td className="p-4 text-center">
-                                <Button variant="outline" size="sm">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <FileUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Henüz fatura bulunmuyor</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="outgoing" className="space-y-6">
-              <OutgoingInvoicesTable 
-                invoices={outgoingInvoices}
-                isLoading={isLoadingOutgoing}
-                onRefresh={refetchOutgoing}
-              />
-            </TabsContent>
-          </Tabs>
+                      
+                      {/* Outgoing e-invoices */}
+                      {outgoingInvoices?.map((invoice) => (
+                        <tr key={`outgoing-${invoice.id}`} className="border-b hover:bg-gray-50 transition-colors">
+                          <td className="p-4">
+                            <span className="font-medium text-blue-600">{invoice.invoiceNumber}</span>
+                          </td>
+                          <td className="p-4">
+                            <div>
+                              <div className="font-medium">{invoice.customerName}</div>
+                              <div className="text-sm text-gray-500">VKN: {invoice.customerTaxNumber}</div>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            {format(new Date(invoice.invoiceDate), "dd.MM.yyyy", { locale: tr })}
+                          </td>
+                          <td className="p-4">
+                            <div className="space-y-1">
+                              <div className="font-medium">{formatCurrency(invoice.totalAmount)}</div>
+                              {invoice.paidAmount > 0 && (
+                                <div className="text-sm text-green-600">Ödenen: {formatCurrency(invoice.paidAmount)}</div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="space-y-1">
+                              {getStatusBadge(invoice.status)}
+                              {invoice.answerCode && (
+                                <div className="text-xs text-gray-500">{invoice.answerCode}</div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <Badge variant="outline" className="border-green-500 text-green-700">
+                              Giden E-Fatura
+                            </Badge>
+                          </td>
+                          <td className="p-4 text-center">
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <FileUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Henüz fatura bulunmuyor</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
