@@ -3,7 +3,22 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, FileUp, ExternalLink, Search, Filter, Calendar } from "lucide-react";
+import { 
+  Plus, 
+  FileUp, 
+  ExternalLink, 
+  Search, 
+  Filter, 
+  Calendar,
+  Download,
+  Eye,
+  FileText,
+  Mail,
+  MessageSquare,
+  Phone,
+  MoreHorizontal,
+  RefreshCw
+} from "lucide-react";
 import { useSalesInvoices, SalesInvoice } from "@/hooks/useSalesInvoices";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,95 +30,275 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import React from "react"; // Added missing import for React
-import { supabase } from "@/integrations/supabase/client"; // Fixed import path
+import React from "react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { useNilveraOutgoingInvoices, NilveraOutgoingInvoice } from "@/hooks/useNilveraOutgoingInvoices";
 
 interface SalesInvoicesProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
 }
 
-// Nilvera Giden Faturalar için basit interface
-interface OutgoingInvoiceSummary {
-  id: string;
-  invoiceNumber: string;
-  customerName: string;
-  customerTaxNumber: string;
-  invoiceDate: string;
-  dueDate: string | null;
-  totalAmount: number;
-  paidAmount: number;
-  currency: string;
-  taxAmount: number;
-  status: string;
-  pdfUrl: string | null;
-  xmlData: any;
-}
-
-// Nilvera Giden Faturalar Tab Komponenti
+// Nilvera Giden Faturalar Tab Komponenti  
 const SalesInvoiceManagementTab = () => {
-  const [invoices, setInvoices] = useState<OutgoingInvoiceSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Nilvera'dan giden faturaları yükle
-  const loadOutgoingInvoices = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
-        body: { action: 'fetch_outgoing' }
-      });
+  const {
+    invoices,
+    isLoading,
+    pagination,
+    fetchInvoices,
+    downloadPDF,
+    downloadXML,
+    getInvoiceDetails,
+    sendByEmail,
+  } = useNilveraOutgoingInvoices();
 
-      if (data && data.success) {
-        setInvoices(data.invoices || []);
-      } else {
-        throw new Error(data?.message || 'Giden faturalar yüklenemedi');
-      }
-    } catch (error: any) {
-      console.error('Giden faturalar yükleme hatası:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [filters, setFilters] = useState({
+    search: "",
+    dateRange: { from: null as Date | null, to: null as Date | null },
+    pageSize: 100,
+    page: 1
+  });
 
   // Component mount edildiğinde faturaları yükle
   React.useEffect(() => {
-    loadOutgoingInvoices();
-  }, []);
+    fetchInvoices({
+      page: filters.page,
+      pageSize: filters.pageSize,
+    });
+  }, [filters.page, filters.pageSize, fetchInvoices]);
 
-  if (isLoading) {
-    return <div className="p-6">Giden faturalar yükleniyor...</div>;
-  }
+  // Arama filtresi değiştiğinde debounce ile yükle
+  React.useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (filters.search !== "" || filters.dateRange.from || filters.dateRange.to) {
+        fetchInvoices({
+          search: filters.search,
+          startDate: filters.dateRange.from || undefined,
+          endDate: filters.dateRange.to || undefined,
+          page: 1,
+          pageSize: filters.pageSize,
+        });
+      }
+    }, 500);
+
+    return () => clearTimeout(debounceTimer);
+  }, [filters.search, filters.dateRange, filters.pageSize, fetchInvoices]);
+
+  const refreshInvoices = () => {
+    fetchInvoices({
+      search: filters.search,
+      startDate: filters.dateRange.from || undefined,
+      endDate: filters.dateRange.to || undefined,
+      page: filters.page,
+      pageSize: filters.pageSize,
+    });
+  };
+
+  // Status badge fonksiyonu
+  const getStatusBadge = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'approved':
+      case 'onaylandı':
+        return <Badge className="bg-green-100 text-green-800 border-green-300">Onaylandı</Badge>;
+      case 'sent':
+      case 'gönderildi':
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-300">Gönderildi</Badge>;
+      case 'draft':
+      case 'taslak':
+        return <Badge className="bg-gray-100 text-gray-800 border-gray-300">Taslak</Badge>;
+      case 'rejected':
+      case 'reddedildi':
+        return <Badge className="bg-red-100 text-red-800 border-red-300">Reddedildi</Badge>;
+      case 'pending':
+      case 'bekliyor':
+        return <Badge className="bg-amber-100 text-amber-800 border-amber-300">Bekliyor</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const formatCurrency = (amount: number, currencyCode: string = 'TRY') => {
+    return new Intl.NumberFormat('tr-TR', {
+      style: 'currency',
+      currency: currencyCode,
+      minimumFractionDigits: 2
+    }).format(amount);
+  };
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return format(new Date(dateStr), "dd.MM.yyyy", { locale: tr });
+    } catch {
+      return dateStr;
+    }
+  };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Nilvera Giden E-Faturalar</h3>
-        <Button onClick={loadOutgoingInvoices} size="sm">Yenile</Button>
+    <div className="space-y-6">
+      {/* Header ve Filtreler */}
+      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Nilvera Giden E-Faturalar</h3>
+          <p className="text-sm text-gray-600">Nilvera sistemindeki giden faturalarınız</p>
+        </div>
+        <Button onClick={refreshInvoices} size="sm" disabled={isLoading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          Yenile
+        </Button>
       </div>
-      
-      {invoices.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          Henüz giden fatura bulunamadı
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {invoices.map((invoice) => (
-            <div key={invoice.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="font-semibold">{invoice.invoiceNumber}</h4>
-                  <p className="text-sm text-gray-600">{invoice.customerName}</p>
-                  <p className="text-sm text-gray-500">{invoice.invoiceDate}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold">{invoice.totalAmount.toLocaleString('tr-TR')} {invoice.currency}</p>
-                  <Badge variant="outline">{invoice.status}</Badge>
-                </div>
-              </div>
+
+      {/* Filtreler */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Fatura no, müşteri adı veya vergi no ile ara..."
+                className="pl-9"
+                value={filters.search}
+                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              />
             </div>
-          ))}
-        </div>
-      )}
+            
+            <DatePickerWithRange
+              value={{
+                from: filters.dateRange.from,
+                to: filters.dateRange.to,
+              }}
+              onChange={(range) => {
+                setFilters({
+                  ...filters,
+                  dateRange: {
+                    from: range.from,
+                    to: range.to,
+                  }
+                });
+              }}
+            />
+            
+            <Button variant="outline" onClick={() => setFilters({
+              search: "",
+              dateRange: { from: null, to: null },
+              pageSize: 100,
+              page: 1
+            })}>
+              <Filter className="h-4 w-4 mr-2" />
+              Temizle
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Fatura Listesi */}
+      <Card>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p>Giden faturalar yükleniyor...</p>
+            </div>
+          ) : invoices.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              Arama kriterlerinize uygun fatura bulunamadı
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="text-left p-4 font-medium text-gray-700">Fatura No</th>
+                    <th className="text-left p-4 font-medium text-gray-700">Müşteri</th>
+                    <th className="text-left p-4 font-medium text-gray-700">Tarih</th>
+                    <th className="text-left p-4 font-medium text-gray-700">Tutar</th>
+                    <th className="text-left p-4 font-medium text-gray-700">Durum</th>
+                    <th className="text-left p-4 font-medium text-gray-700">Profil</th>
+                    <th className="text-left p-4 font-medium text-gray-700">İşlemler</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoices.map((invoice) => (
+                    <tr key={invoice.id} className="border-b hover:bg-gray-50 transition-colors">
+                      <td className="p-4">
+                        <div className="font-medium text-blue-600">{invoice.invoiceNumber}</div>
+                        <div className="text-xs text-gray-500">{invoice.invoiceType}</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="font-medium">{invoice.customerName}</div>
+                        <div className="text-xs text-gray-500">VKN: {invoice.customerTaxNumber}</div>
+                      </td>
+                      <td className="p-4">
+                        <div>{formatDate(invoice.invoiceDate)}</div>
+                        <div className="text-xs text-gray-500">
+                          Oluşturulma: {formatDate(invoice.createdDate)}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="font-medium">
+                          {formatCurrency(invoice.totalAmount, invoice.currency)}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          KDV: {formatCurrency(invoice.taxAmount, invoice.currency)}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        {getStatusBadge(invoice.status)}
+                        {invoice.answerCode !== 'unknown' && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            {invoice.answerCode}
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <Badge variant="outline">{invoice.invoiceProfile}</Badge>
+                      </td>
+                      <td className="p-4">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => downloadPDF(invoice.id, invoice.invoiceNumber)}>
+                              <Download className="h-4 w-4 mr-2" />
+                              PDF İndir
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => downloadXML(invoice.id, invoice.invoiceNumber)}>
+                              <FileText className="h-4 w-4 mr-2" />
+                              XML İndir
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>
+                              <Eye className="h-4 w-4 mr-2" />
+                              Detayları Gör
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Mail className="h-4 w-4 mr-2" />
+                              E-posta Gönder
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
