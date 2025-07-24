@@ -530,7 +530,7 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                     <tbody>
                        {/* Combine all invoices and sort by date */}
                        {[
-                         ...invoices.map(invoice => ({
+                         ...(invoices || []).map(invoice => ({
                            ...invoice,
                            sourceType: 'sales',
                            invoiceDate: invoice.fatura_tarihi,
@@ -540,7 +540,7 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                            displayAmount: invoice.toplam_tutar,
                            displayPaidAmount: invoice.odenen_tutar
                          })),
-                         ...outgoingInvoices.map(invoice => ({
+                         ...(outgoingInvoices || []).map(invoice => ({
                            ...invoice,
                            sourceType: 'outgoing',
                            invoiceDate: invoice.invoiceDate,
@@ -550,7 +550,7 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                            displayAmount: invoice.totalAmount,
                            displayPaidAmount: invoice.paidAmount
                          })),
-                         ...earchiveInvoices.map(invoice => ({
+                         ...(earchiveInvoices || []).map(invoice => ({
                            ...invoice,
                            sourceType: 'earchive',
                            invoiceDate: invoice.invoiceDate,
