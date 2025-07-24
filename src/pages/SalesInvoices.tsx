@@ -528,132 +528,97 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {/* Regular sales invoices */}
-                      {invoices?.map((invoice) => (
-                        <tr key={`sales-${invoice.id}`} className="border-b hover:bg-gray-50 transition-colors">
-                          <td className="p-4">
-                            <span className="font-medium text-blue-600">{invoice.fatura_no}</span>
-                          </td>
-                          <td className="p-4">
-                            <div>
-                              <div className="font-medium">{invoice.customer?.name}</div>
-                              {invoice.customer?.company && (
-                                <div className="text-sm text-gray-500">{invoice.customer.company}</div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            {format(new Date(invoice.fatura_tarihi), "dd.MM.yyyy", { locale: tr })}
-                          </td>
-                          <td className="p-4">
-                            <div className="space-y-1">
-                              <div className="font-medium">{formatCurrency(invoice.toplam_tutar)}</div>
-                              {invoice.odenen_tutar > 0 && (
-                                <div className="text-sm text-green-600">Ödenen: {formatCurrency(invoice.odenen_tutar)}</div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            {getStatusBadge(invoice.odeme_durumu)}
-                          </td>
-                          <td className="p-4">
-                            {getDocumentTypeBadge(invoice.document_type)}
-                          </td>
-                          <td className="p-4 text-center">
-                            <Button variant="outline" size="sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                      
-                      {/* Outgoing e-invoices */}
-                      {outgoingInvoices?.map((invoice) => (
-                        <tr key={`outgoing-${invoice.id}`} className="border-b hover:bg-gray-50 transition-colors">
-                          <td className="p-4">
-                            <span className="font-medium text-blue-600">{invoice.invoiceNumber}</span>
-                          </td>
-                          <td className="p-4">
-                            <div>
-                              <div className="font-medium">{invoice.customerName}</div>
-                              <div className="text-sm text-gray-500">VKN: {invoice.customerTaxNumber}</div>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            {format(new Date(invoice.invoiceDate), "dd.MM.yyyy", { locale: tr })}
-                          </td>
-                          <td className="p-4">
-                            <div className="space-y-1">
-                              <div className="font-medium">{formatCurrency(invoice.totalAmount)}</div>
-                              {invoice.paidAmount > 0 && (
-                                <div className="text-sm text-green-600">Ödenen: {formatCurrency(invoice.paidAmount)}</div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="space-y-1">
-                              {getStatusBadge(invoice.status)}
-                              {invoice.answerCode && (
-                                <div className="text-xs text-gray-500">{invoice.answerCode}</div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <Badge variant="outline" className="border-green-500 text-green-700">
-                              Giden E-Fatura
-                            </Badge>
-                          </td>
-                          <td className="p-4 text-center">
-                            <Button variant="outline" size="sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                      
-                      {/* E-Archive invoices */}
-                      {earchiveInvoices?.map((invoice) => (
-                        <tr key={`earchive-${invoice.id}`} className="border-b hover:bg-gray-50 transition-colors">
-                          <td className="p-4">
-                            <span className="font-medium text-blue-600">{invoice.invoiceNumber}</span>
-                          </td>
-                          <td className="p-4">
-                            <div>
-                              <div className="font-medium">{invoice.customerName}</div>
-                              <div className="text-sm text-gray-500">VKN: {invoice.customerTaxNumber}</div>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            {format(new Date(invoice.invoiceDate), "dd.MM.yyyy", { locale: tr })}
-                          </td>
-                          <td className="p-4">
-                            <div className="space-y-1">
-                              <div className="font-medium">{formatCurrency(invoice.totalAmount)}</div>
-                              {invoice.paidAmount > 0 && (
-                                <div className="text-sm text-green-600">Ödenen: {formatCurrency(invoice.paidAmount)}</div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="space-y-1">
-                              {getStatusBadge(invoice.status)}
-                              {invoice.statusCode && (
-                                <div className="text-xs text-gray-500">{invoice.statusCode}</div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <Badge variant="outline" className="border-purple-500 text-purple-700">
-                              E-Arşiv ({invoice.sendType})
-                            </Badge>
-                          </td>
-                          <td className="p-4 text-center">
-                            <Button variant="outline" size="sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
+                       {/* Combine all invoices and sort by date */}
+                       {[
+                         ...invoices.map(invoice => ({
+                           ...invoice,
+                           sourceType: 'sales',
+                           invoiceDate: invoice.fatura_tarihi,
+                           sortDate: new Date(invoice.fatura_tarihi).getTime(),
+                           displayNumber: invoice.fatura_no,
+                           displayCustomer: invoice.customer?.name,
+                           displayAmount: invoice.toplam_tutar,
+                           displayPaidAmount: invoice.odenen_tutar
+                         })),
+                         ...outgoingInvoices.map(invoice => ({
+                           ...invoice,
+                           sourceType: 'outgoing',
+                           invoiceDate: invoice.invoiceDate,
+                           sortDate: new Date(invoice.invoiceDate).getTime(),
+                           displayNumber: invoice.invoiceNumber,
+                           displayCustomer: invoice.customerName,
+                           displayAmount: invoice.totalAmount,
+                           displayPaidAmount: invoice.paidAmount
+                         })),
+                         ...earchiveInvoices.map(invoice => ({
+                           ...invoice,
+                           sourceType: 'earchive',
+                           invoiceDate: invoice.invoiceDate,
+                           sortDate: new Date(invoice.invoiceDate).getTime(),
+                           displayNumber: invoice.invoiceNumber,
+                           displayCustomer: invoice.customerName,
+                           displayAmount: invoice.totalAmount,
+                           displayPaidAmount: invoice.paidAmount
+                         }))
+                       ]
+                       .sort((a, b) => b.sortDate - a.sortDate)
+                       .map((invoice, index) => (
+                         <tr key={`${invoice.sourceType}-${invoice.id}-${index}`} className="border-b hover:bg-gray-50 transition-colors">
+                           <td className="p-4">
+                             <span className="font-medium text-blue-600">{invoice.displayNumber}</span>
+                           </td>
+                           <td className="p-4">
+                              <div>
+                                <div className="font-medium">{invoice.displayCustomer}</div>
+                                {invoice.sourceType === 'sales' && (invoice as any).customer?.company && (
+                                  <div className="text-sm text-gray-500">{(invoice as any).customer.company}</div>
+                                )}
+                                {(invoice.sourceType === 'outgoing' || invoice.sourceType === 'earchive') && (
+                                  <div className="text-sm text-gray-500">VKN: {(invoice as any).customerTaxNumber}</div>
+                                )}
+                              </div>
+                           </td>
+                           <td className="p-4">
+                             {format(new Date(invoice.invoiceDate), "dd.MM.yyyy", { locale: tr })}
+                           </td>
+                           <td className="p-4">
+                             <div className="space-y-1">
+                               <div className="font-medium">{formatCurrency(invoice.displayAmount)}</div>
+                               {invoice.displayPaidAmount > 0 && (
+                                 <div className="text-sm text-green-600">Ödenen: {formatCurrency(invoice.displayPaidAmount)}</div>
+                               )}
+                             </div>
+                           </td>
+                           <td className="p-4">
+                              <div className="space-y-1">
+                                {invoice.sourceType === 'sales' ? 
+                                  getStatusBadge((invoice as any).odeme_durumu) : 
+                                  getStatusBadge((invoice as any).status)
+                                }
+                                {invoice.sourceType === 'outgoing' && (invoice as any).answerCode && (
+                                  <div className="text-xs text-gray-500">{(invoice as any).answerCode}</div>
+                                )}
+                                {invoice.sourceType === 'earchive' && (invoice as any).statusCode && (
+                                  <div className="text-xs text-gray-500">{(invoice as any).statusCode}</div>
+                                )}
+                              </div>
+                           </td>
+                           <td className="p-4">
+                             {invoice.sourceType === 'sales' && getDocumentTypeBadge((invoice as any).document_type)}
+                             {invoice.sourceType === 'outgoing' && (
+                               <Badge variant="outline" className="border-green-500 text-green-700">Giden E-Fatura</Badge>
+                             )}
+                             {invoice.sourceType === 'earchive' && (
+                               <Badge variant="outline" className="border-purple-500 text-purple-700">E-Arşiv</Badge>
+                             )}
+                           </td>
+                           <td className="p-4 text-center">
+                             <Button variant="outline" size="sm">
+                               <Eye className="h-4 w-4" />
+                             </Button>
+                           </td>
+                         </tr>
+                       ))}
                     </tbody>
                   </table>
                 </div>
