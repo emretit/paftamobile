@@ -38,6 +38,7 @@ import {
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOutgoingInvoices } from "@/hooks/useOutgoingInvoices";
+import { useEarchiveInvoices } from "@/hooks/useEarchiveInvoices";
 import OutgoingInvoicesTable from "@/components/sales/OutgoingInvoicesTable";
 
 interface SalesInvoicesProps {
@@ -321,6 +322,7 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
   } = useSalesInvoices();
   
   const { outgoingInvoices, isLoading: isLoadingOutgoing, refetch: refetchOutgoing } = useOutgoingInvoices();
+  const { earchiveInvoices, isLoading: isLoadingEarchive, refetch: refetchEarchive } = useEarchiveInvoices();
   
   const [dateOpen, setDateOpen] = useState(false);
 
@@ -475,10 +477,13 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                       <SelectItem value="iptal">İptal</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button onClick={() => refetchOutgoing()} size="sm" disabled={isLoadingOutgoing}>
-                    <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingOutgoing ? 'animate-spin' : ''}`} />
-                    E-Faturalar
-                  </Button>
+                   <Button onClick={() => {
+                     refetchOutgoing();
+                     refetchEarchive();
+                   }} size="sm" disabled={isLoadingOutgoing || isLoadingEarchive}>
+                     <RefreshCw className={`h-4 w-4 mr-2 ${(isLoadingOutgoing || isLoadingEarchive) ? 'animate-spin' : ''}`} />
+                     E-Faturalar
+                   </Button>
                 </div>
               </div>
 
@@ -494,7 +499,7 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                 </div>
               </div>
 
-              {isLoading || isLoadingOutgoing ? (
+              {isLoading || isLoadingOutgoing || isLoadingEarchive ? (
                 <div className="space-y-4">
                   {[...Array(5)].map((_, i) => (
                     <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
@@ -508,7 +513,7 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                     </div>
                   ))}
                 </div>
-              ) : (invoices && invoices.length > 0) || (outgoingInvoices && outgoingInvoices.length > 0) ? (
+              ) : (invoices && invoices.length > 0) || (outgoingInvoices && outgoingInvoices.length > 0) || (earchiveInvoices && earchiveInvoices.length > 0) ? (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-gray-50 border-b">
@@ -596,6 +601,50 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                           <td className="p-4">
                             <Badge variant="outline" className="border-green-500 text-green-700">
                               Giden E-Fatura
+                            </Badge>
+                          </td>
+                          <td className="p-4 text-center">
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                      
+                      {/* E-Archive invoices */}
+                      {earchiveInvoices?.map((invoice) => (
+                        <tr key={`earchive-${invoice.id}`} className="border-b hover:bg-gray-50 transition-colors">
+                          <td className="p-4">
+                            <span className="font-medium text-blue-600">{invoice.invoiceNumber}</span>
+                          </td>
+                          <td className="p-4">
+                            <div>
+                              <div className="font-medium">{invoice.customerName}</div>
+                              <div className="text-sm text-gray-500">VKN: {invoice.customerTaxNumber}</div>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            {format(new Date(invoice.invoiceDate), "dd.MM.yyyy", { locale: tr })}
+                          </td>
+                          <td className="p-4">
+                            <div className="space-y-1">
+                              <div className="font-medium">{formatCurrency(invoice.totalAmount)}</div>
+                              {invoice.paidAmount > 0 && (
+                                <div className="text-sm text-green-600">Ödenen: {formatCurrency(invoice.paidAmount)}</div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="space-y-1">
+                              {getStatusBadge(invoice.status)}
+                              {invoice.statusCode && (
+                                <div className="text-xs text-gray-500">{invoice.statusCode}</div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <Badge variant="outline" className="border-purple-500 text-purple-700">
+                              E-Arşiv ({invoice.sendType})
                             </Badge>
                           </td>
                           <td className="p-4 text-center">
