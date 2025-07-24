@@ -61,7 +61,7 @@ const TaskAssigneeSelect = ({ form, defaultValue }: TaskAssigneeSelectProps) => 
               />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Atanmamış</SelectItem>
+              <SelectItem value="unassigned">Atanmamış</SelectItem>
               {employees.map((employee) => (
                 <SelectItem key={employee.id} value={employee.id}>
                   <div className="flex items-center">
