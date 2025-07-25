@@ -11,8 +11,8 @@ import {
   VeribanConfig
 } from '../services/veriban/types';
 
-export const useVeribanEInvoice = (config?: Partial<VeribanConfig>) => {
-  const [service] = useState(() => new VeribanEInvoiceService(config));
+export const useVeribanEInvoice = () => {
+  const [service] = useState(() => new VeribanEInvoiceService());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

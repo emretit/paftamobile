@@ -3,6 +3,8 @@
 export interface VeribanConfig {
   testUserName: string;
   testPassword: string;
+  liveUserName: string;
+  livePassword: string;
   testServiceUrl: string;
   liveServiceUrl: string;
   isTestMode: boolean;

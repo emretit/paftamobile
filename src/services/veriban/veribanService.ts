@@ -265,7 +265,8 @@ export class VeribanEInvoiceService {
   async logout(): Promise<void> {
     try {
       if (this.sessionCode) {
-        await fetch(this.config.isTestMode ? this.config.testServiceUrl : this.config.liveServiceUrl, {
+        const config = this.getConfig();
+        await fetch(config.isTestMode ? config.testServiceUrl : config.liveServiceUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/soap+xml; charset=utf-8',
@@ -281,12 +282,13 @@ export class VeribanEInvoiceService {
 
   // Yardımcı metodlar
   private createLoginSoapRequest(): string {
+    const config = this.getConfig();
     return `<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
     <Login xmlns="http://tempuri.org/">
-      <userName>${this.config.testUserName}</userName>
-      <password>${this.config.testPassword}</password>
+      <userName>${config.isTestMode ? config.testUserName : config.liveUserName}</userName>
+      <password>${config.isTestMode ? config.testPassword : config.livePassword}</password>
     </Login>
   </soap:Body>
 </soap:Envelope>`;
