@@ -165,18 +165,24 @@ const VeribanInvoices: React.FC = () => {
   const untransferredCount = invoices.filter(invoice => !invoice.is_transferred).length;
 
   return (
-    <DefaultLayout>
+    <DefaultLayout isCollapsed={false} setIsCollapsed={() => {}} title="Veriban E-Fatura">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Veriban Gelen Faturalar</h1>
-            <p className="text-gray-600">Supabase'de saklanan gelen e-faturalar</p>
+            <h1 className="text-3xl font-bold">Veriban Gelen E-Faturalar</h1>
+            <p className="text-muted-foreground">Veriban'dan çekilen gelen e-faturaları görüntüleyin ve yönetin</p>
           </div>
-          <Button onClick={loadInvoices} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Yenile
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={loadInvoices} disabled={loading} variant="outline">
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Yenile
+            </Button>
+            <Button onClick={() => window.open('/veriban', '_blank')} variant="secondary">
+              <FileText className="h-4 w-4 mr-2" />
+              Veriban Panel
+            </Button>
+          </div>
         </div>
 
         {/* İstatistikler */}
