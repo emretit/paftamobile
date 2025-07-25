@@ -11,6 +11,7 @@ import { UserManagement } from "@/components/settings/UserManagement";
 import { RoleManagement } from "@/components/settings/RoleManagement";
 import { SystemSettings } from "@/components/settings/SystemSettings";
 import { NilveraSettings } from "@/components/settings/NilveraSettings";
+import { VeribanSettings } from "@/components/settings/VeribanSettings";
 
 interface SettingsProps {
   isCollapsed: boolean;
@@ -28,10 +29,11 @@ const Settings = ({ isCollapsed, setIsCollapsed }: SettingsProps) => {
           <h1 className="text-2xl font-bold mb-6">Ayarlar & Yönetim</h1>
           
           <CustomTabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <CustomTabsList className="w-full grid grid-cols-4">
+            <CustomTabsList className="w-full grid grid-cols-5">
               <CustomTabsTrigger value="users">Kullanıcılar</CustomTabsTrigger>
               <CustomTabsTrigger value="roles">Roller & İzinler</CustomTabsTrigger>
               <CustomTabsTrigger value="nilvera">Nilvera E-Fatura</CustomTabsTrigger>
+              <CustomTabsTrigger value="veriban">Veriban E-Fatura</CustomTabsTrigger>
               <CustomTabsTrigger value="system">Sistem Ayarları</CustomTabsTrigger>
             </CustomTabsList>
 
@@ -45,6 +47,10 @@ const Settings = ({ isCollapsed, setIsCollapsed }: SettingsProps) => {
 
             <CustomTabsContent value="nilvera">
               <NilveraSettings />
+            </CustomTabsContent>
+
+            <CustomTabsContent value="veriban">
+              <VeribanSettings />
             </CustomTabsContent>
 
             <CustomTabsContent value="system">

@@ -18,17 +18,30 @@ import {
 } from './types';
 
 export class VeribanEInvoiceService {
-  private config: VeribanConfig;
   private sessionCode: string | null = null;
 
-  constructor(config?: Partial<VeribanConfig>) {
-    this.config = {
+  constructor() {
+    // Constructor artık config almıyor, ayarlardan yükleyecek
+  }
+
+  /**
+   * Ayarlardan Veriban konfigürasyonunu yükler
+   */
+  private getConfig(): VeribanConfig {
+    const savedConfig = localStorage.getItem('veribanConfig');
+    if (savedConfig) {
+      return JSON.parse(savedConfig);
+    }
+    
+    // Varsayılan ayarlar
+    return {
       testUserName: 'TESTER@VRBN',
       testPassword: 'Vtest*2020*',
+      liveUserName: '',
+      livePassword: '',
       testServiceUrl: 'https://efaturatransfertest.veriban.com.tr/IntegrationService.svc',
       liveServiceUrl: 'http://efaturatransfer.veriban.com.tr/IntegrationService.svc',
-      isTestMode: true,
-      ...config
+      isTestMode: true
     };
   }
 
@@ -37,7 +50,8 @@ export class VeribanEInvoiceService {
    */
   async login(): Promise<boolean> {
     try {
-      const response = await fetch(this.config.isTestMode ? this.config.testServiceUrl : this.config.liveServiceUrl, {
+      const config = this.getConfig();
+      const response = await fetch(config.isTestMode ? config.testServiceUrl : config.liveServiceUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/soap+xml; charset=utf-8',
@@ -87,7 +101,8 @@ export class VeribanEInvoiceService {
         isDirectSend
       };
 
-      const response = await fetch(this.config.isTestMode ? this.config.testServiceUrl : this.config.liveServiceUrl, {
+      const config = this.getConfig();
+      const response = await fetch(config.isTestMode ? config.testServiceUrl : config.liveServiceUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/soap+xml; charset=utf-8',
@@ -112,7 +127,8 @@ export class VeribanEInvoiceService {
    */
   async getTransferStatus(transferFileUniqueId: string): Promise<TransferQueryResult> {
     try {
-      const response = await fetch(this.config.isTestMode ? this.config.testServiceUrl : this.config.liveServiceUrl, {
+      const config = this.getConfig();
+      const response = await fetch(config.isTestMode ? config.testServiceUrl : config.liveServiceUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/soap+xml; charset=utf-8',
@@ -137,7 +153,8 @@ export class VeribanEInvoiceService {
    */
   async getInvoiceStatus(invoiceUUID: string): Promise<InvoiceQueryResult> {
     try {
-      const response = await fetch(this.config.isTestMode ? this.config.testServiceUrl : this.config.liveServiceUrl, {
+      const config = this.getConfig();
+      const response = await fetch(config.isTestMode ? config.testServiceUrl : config.liveServiceUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/soap+xml; charset=utf-8',
@@ -162,7 +179,8 @@ export class VeribanEInvoiceService {
    */
   async getIncomingInvoices(): Promise<PurchaseInvoiceInfo[]> {
     try {
-      const response = await fetch(this.config.isTestMode ? this.config.testServiceUrl : this.config.liveServiceUrl, {
+      const config = this.getConfig();
+      const response = await fetch(config.isTestMode ? config.testServiceUrl : config.liveServiceUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/soap+xml; charset=utf-8',
@@ -191,7 +209,8 @@ export class VeribanEInvoiceService {
     note: string = ''
   ): Promise<OperationResult> {
     try {
-      const response = await fetch(this.config.isTestMode ? this.config.testServiceUrl : this.config.liveServiceUrl, {
+      const config = this.getConfig();
+      const response = await fetch(config.isTestMode ? config.testServiceUrl : config.liveServiceUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/soap+xml; charset=utf-8',
@@ -219,7 +238,8 @@ export class VeribanEInvoiceService {
     downloadType: DownloadDocumentDataTypes = DownloadDocumentDataTypes.XML_INZIP
   ): Promise<DownloadResult> {
     try {
-      const response = await fetch(this.config.isTestMode ? this.config.testServiceUrl : this.config.liveServiceUrl, {
+      const config = this.getConfig();
+      const response = await fetch(config.isTestMode ? config.testServiceUrl : config.liveServiceUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/soap+xml; charset=utf-8',
