@@ -39,7 +39,7 @@ export const VeribanSettings: React.FC = () => {
     livePassword: '',
     isTestMode: false, // Canlı ortam varsayılan olarak seçili
     testServiceUrl: 'https://efaturatransfertest.veriban.com.tr/IntegrationService.svc',
-    liveServiceUrl: 'http://efaturatransfer.veriban.com.tr/IntegrationService.svc'
+    liveServiceUrl: 'https://efaturatransfer.veriban.com.tr/IntegrationService.svc'
   });
 
   const [showTestPassword, setShowTestPassword] = useState(false);
@@ -306,7 +306,7 @@ export const VeribanSettings: React.FC = () => {
                 id="live-service-url"
                 value={config.liveServiceUrl}
                 onChange={(e) => setConfig({ ...config, liveServiceUrl: e.target.value })}
-                placeholder="http://efaturatransfer.veriban.com.tr/IntegrationService.svc"
+                placeholder="https://efaturatransfer.veriban.com.tr/IntegrationService.svc"
               />
             </div>
           </div>

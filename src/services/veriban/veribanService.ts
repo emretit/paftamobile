@@ -40,7 +40,7 @@ export class VeribanEInvoiceService {
       liveUserName: '',
       livePassword: '',
       testServiceUrl: 'https://efaturatransfertest.veriban.com.tr/IntegrationService.svc',
-      liveServiceUrl: 'http://efaturatransfer.veriban.com.tr/IntegrationService.svc',
+      liveServiceUrl: 'https://efaturatransfer.veriban.com.tr/IntegrationService.svc',
       isTestMode: true
     };
   }
