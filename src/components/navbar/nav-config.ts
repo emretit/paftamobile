@@ -24,7 +24,8 @@ import {
   Building,
   UserCheck,
   Calculator,
-  Zap
+  Zap,
+  Zap as ZapIcon
 } from "lucide-react";
 
 export const navItems = [
@@ -101,6 +102,11 @@ export const navItems = [
         path: "/purchase/e-invoice",
         icon: FileText,
         label: "E-Fatura",
+      },
+      {
+        path: "/veriban",
+        icon: ZapIcon,
+        label: "Veriban E-Fatura",
       },
     ],
   },
