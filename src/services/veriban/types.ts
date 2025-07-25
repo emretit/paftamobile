@@ -10,6 +10,28 @@ export interface VeribanConfig {
   isTestMode: boolean;
 }
 
+// SOAP API için genişletilmiş transfer dosyası
+export interface EInvoiceTransferFile {
+  fileNameWithExtension: string;
+  fileDataType: TransferDocumentDataTypes;
+  binaryData: Uint8Array;
+  binaryDataHash: string;
+  customerAlias?: string;
+  isDirectSend: boolean;
+}
+
+// Yeni SendDocumentFile için
+export interface EInvoiceDocumentSendFile {
+  fileNameWithExtension: string;
+  fileDataType: TransferDocumentDataTypes;
+  binaryData: Uint8Array;
+  binaryDataHash: string;
+  customerAlias?: string;
+  isDirectSend: boolean;
+  useSerieCode?: boolean;
+  serieCode?: string;
+}
+
 export interface TransferFile {
   fileNameWithExtension: string;
   fileDataType: string;
@@ -23,6 +45,14 @@ export interface TransferResult {
   operationCompleted: boolean;
   transferFileUniqueId: string;
   description?: string;
+}
+
+// SendDocumentFile için sonuç
+export interface DocumentSendResult {
+  operationCompleted: boolean;
+  description: string;
+  documentUUID: string;
+  documentNumber: string;
 }
 
 export interface TransferQueryResult {
@@ -99,6 +129,43 @@ export interface CustomerAlias {
   documentType: string;
 }
 
+// SOAP Fault için
+export interface VeribanServiceFault {
+  faultCode: string;
+  faultDescription: string;
+}
+
+// E-Fatura XML şablonu için
+export interface InvoiceData {
+  invoiceNumber: string;
+  invoiceDate: string;
+  customerVkn: string;
+  customerName: string;
+  customerAddress: string;
+  customerTaxOffice: string;
+  supplierVkn: string;
+  supplierName: string;
+  supplierAddress: string;
+  supplierTaxOffice: string;
+  items: InvoiceItem[];
+  totalAmount: number;
+  taxAmount: number;
+  payableAmount: number;
+  currencyCode: string;
+  invoiceProfile: 'TICARIFATURA' | 'TEMELFATURA' | 'IHRACATFATURA';
+  invoiceType: 'SATIS' | 'IADE' | 'ISTISNA';
+}
+
+export interface InvoiceItem {
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  taxRate: number;
+  taxAmount: number;
+  unit: string;
+}
+
 // Durum kodları
 export enum TransferStateCode {
   UNKNOWN = 1,
@@ -148,3 +215,53 @@ export enum MarketType {
   HEPSIBURADA = 'Hepsiburada',
   N11 = 'N11'
 } 
+
+// Durum mesajları için yardımcı fonksiyonlar
+export const getTransferStateMessage = (stateCode: number): string => {
+  switch (stateCode) {
+    case TransferStateCode.UNKNOWN:
+      return 'Bilinmiyor';
+    case TransferStateCode.WAITING:
+      return 'İşlenmeyi Bekliyor';
+    case TransferStateCode.PROCESSING:
+      return 'İşleniyor';
+    case TransferStateCode.ERROR:
+      return 'Hatalı (Tekrar gönderilebilir)';
+    case TransferStateCode.SUCCESS:
+      return 'Başarıyla İşlendi';
+    default:
+      return 'Bilinmeyen durum';
+  }
+};
+
+export const getInvoiceStateMessage = (stateCode: number): string => {
+  switch (stateCode) {
+    case InvoiceStateCode.DRAFT:
+      return 'Taslak Veri';
+    case InvoiceStateCode.WAITING_SEND:
+      return 'Gönderilmeyi Bekliyor / İmza Bekliyor';
+    case InvoiceStateCode.IN_PROCESS:
+      return 'Gönderim Listesinde / İşlem Yapılıyor';
+    case InvoiceStateCode.ERROR:
+      return 'Hatalı';
+    case InvoiceStateCode.DELIVERED:
+      return 'Başarıyla Alıcıya İletildi';
+    default:
+      return 'Bilinmeyen durum';
+  }
+};
+
+export const getAnswerTypeMessage = (answerTypeCode: number): string => {
+  switch (answerTypeCode) {
+    case AnswerTypeCode.UNKNOWN:
+      return 'Bilinmiyor';
+    case AnswerTypeCode.RETURNED:
+      return 'İade Edildi';
+    case AnswerTypeCode.REJECTED:
+      return 'Reddedildi';
+    case AnswerTypeCode.ACCEPTED:
+      return 'Kabul Edildi';
+    default:
+      return 'Bilinmeyen cevap tipi';
+  }
+}; 

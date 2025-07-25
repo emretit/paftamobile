@@ -2,11 +2,13 @@ import { useState, useCallback } from 'react';
 import { VeribanEInvoiceService } from '../services/veriban/veribanService';
 import { 
   TransferResult, 
+  DocumentSendResult,
   TransferQueryResult, 
   InvoiceQueryResult,
   PurchaseInvoiceInfo,
   OperationResult,
   DownloadResult,
+  CustomerAlias,
   DownloadDocumentDataTypes,
   VeribanConfig
 } from '../services/veriban/types';
@@ -52,6 +54,35 @@ export const useVeribanEInvoice = () => {
     
     try {
       const result = await service.sendInvoice(xmlContent, fileName, customerAlias, isDirectSend);
+      return result;
+    } catch (error) {
+      handleError(error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [service, handleError]);
+
+  const sendDocumentFile = useCallback(async (
+    xmlContent: string,
+    fileName: string,
+    customerAlias?: string,
+    isDirectSend: boolean = true,
+    useSerieCode: boolean = false,
+    serieCode?: string
+  ): Promise<DocumentSendResult | null> => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const result = await service.sendDocumentFile(
+        xmlContent, 
+        fileName, 
+        customerAlias, 
+        isDirectSend, 
+        useSerieCode, 
+        serieCode
+      );
       return result;
     } catch (error) {
       handleError(error);
@@ -143,6 +174,21 @@ export const useVeribanEInvoice = () => {
     }
   }, [service, handleError]);
 
+  const getCustomerAliasInfo = useCallback(async (registerNumber: string): Promise<CustomerAlias[]> => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const result = await service.getCustomerAliasInfo(registerNumber);
+      return result;
+    } catch (error) {
+      handleError(error);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, [service, handleError]);
+
   const logout = useCallback(async (): Promise<void> => {
     setLoading(true);
     setError(null);
@@ -164,11 +210,13 @@ export const useVeribanEInvoice = () => {
     // Actions
     login,
     sendInvoice,
+    sendDocumentFile,
     getTransferStatus,
     getInvoiceStatus,
     getIncomingInvoices,
     answerInvoice,
     downloadInvoice,
+    getCustomerAliasInfo,
     logout,
     clearError
   };
