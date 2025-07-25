@@ -712,7 +712,7 @@ serve(async (req) => {
         console.log('No InvoiceLines found, trying alternative parsing methods')
         console.log('Available fields in detailsData:', Object.keys(detailsData || {}))
         
-                // Try to parse from XML content if available
+         // Try to parse from XML content if available
          let xmlParsedLines = []
          const xmlToParse = xmlContent || detailsData.Content || detailsData.XmlContent || detailsData.UblContent
          
@@ -720,48 +720,28 @@ serve(async (req) => {
            try {
              console.log('Trying to parse XML content for product details')
              
-             // Simple regex parsing for InvoiceLine elements
-             // This is a basic approach - a proper XML parser would be better
-             const invoiceLineRegex = /<cac:InvoiceLine>(.*?)<\/cac:InvoiceLine>/gs
-             const itemNameRegex = /<cbc:Name[^>]*>(.*?)<\/cbc:Name>/g
-             const quantityRegex = /<cbc:InvoicedQuantity[^>]*>(.*?)<\/cbc:InvoicedQuantity>/g
-             const priceRegex = /<cbc:PriceAmount[^>]*>(.*?)<\/cbc:PriceAmount>/g
-             const lineExtensionRegex = /<cbc:LineExtensionAmount[^>]*>(.*?)<\/cbc:LineExtensionAmount>/g
+             // Use the parseXMLProducts function which is already implemented above
+             const parsedProducts = parseXMLProducts(xmlToParse)
              
-             const invoiceLines = xmlToParse.match(invoiceLineRegex)
-             
-             if (invoiceLines && invoiceLines.length > 0) {
-               console.log(`Found ${invoiceLines.length} invoice lines in XML`)
+             if (parsedProducts && parsedProducts.length > 0) {
+               console.log(`Successfully parsed ${parsedProducts.length} products from XML`)
+               xmlParsedLines = parsedProducts.map((product, index) => ({
+                 description: product.name || `Ürün ${index + 1}`,
+                 productCode: product.sku || '',
+                 quantity: product.quantity || 1,
+                 unit: product.unit || 'Adet',
+                 unitPrice: product.unit_price || 0,
+                 vatRate: product.tax_rate || 18,
+                 vatAmount: product.tax_amount || 0,
+                 totalAmount: product.line_total || 0,
+                 discountRate: 0,
+                 discountAmount: product.discount_amount || 0
+               }))
                
-                xmlParsedLines = invoiceLines.map((lineXml, index) => {
-                  // Use the existing extractXMLValue helper function for better parsing
-                  const itemName = extractXMLValue(lineXml, 'cbc:Name') || 
-                                  extractXMLValue(lineXml, 'cbc:Description') ||
-                                  `Ürün ${index + 1}`
-                  const quantity = extractXMLValue(lineXml, 'cbc:InvoicedQuantity') || '1'
-                  const price = extractXMLValue(lineXml, 'cbc:PriceAmount') || '0'
-                  const lineTotal = extractXMLValue(lineXml, 'cbc:LineExtensionAmount') || '0'
-                 
-                 console.log(`XML Line ${index + 1}: ${itemName}, Qty: ${quantity}, Price: ${price}`)
-                 
-                 return {
-                   description: itemName,
-                   productCode: '',
-                   quantity: parseFloat(quantity) || 1,
-                   unit: 'Adet',
-                   unitPrice: parseFloat(price) || 0,
-                   vatRate: 20, // Default, would need to parse from XML
-                   vatAmount: 0,
-                   totalAmount: parseFloat(lineTotal) || 0,
-                   discountRate: 0,
-                   discountAmount: 0
-                 }
-               })
-               
-               if (xmlParsedLines.length > 0) {
-                 invoiceLines = xmlParsedLines
-                 console.log('Successfully parsed', xmlParsedLines.length, 'lines from XML')
-               }
+               invoiceLines = xmlParsedLines
+               console.log('XML parsing successful, using parsed product names')
+             } else {
+               console.log('No products parsed from XML, will try fallback')
              }
            } catch (e) {
              console.log('Could not parse XML content:', e)
