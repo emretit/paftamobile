@@ -27,7 +27,7 @@ import {
 
 import { getTransferStateMessage, getInvoiceStateMessage, getAnswerTypeMessage, PurchaseInvoiceInfo, DownloadDocumentDataTypes } from '../../services/veriban/types';
 import DefaultLayout from '../layouts/DefaultLayout';
-import { getVeribanConfig } from '../../config/veribanConfig';
+// import { getVeribanConfig } from '../../config/veribanConfig';
 
 interface VeribanEInvoicePanelProps {
   isCollapsed: boolean;
@@ -88,7 +88,8 @@ export const VeribanEInvoicePanel: React.FC<VeribanEInvoicePanelProps> = ({ isCo
   // Otomatik login ve UUID yükleme
   useEffect(() => {
     const attemptAutoLogin = async () => {
-      const config = getVeribanConfig();
+      // const config = getVeribanConfig();
+      const config = null; // Temporarily disabled
       if (config && config.liveUserName && config.livePassword) {
         console.log('🔄 Otomatik giriş deneniyor...');
         // setLoading(true); // This state is not defined in the original file, so it's removed.
