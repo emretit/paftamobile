@@ -733,16 +733,14 @@ serve(async (req) => {
              if (invoiceLines && invoiceLines.length > 0) {
                console.log(`Found ${invoiceLines.length} invoice lines in XML`)
                
-               xmlParsedLines = invoiceLines.map((lineXml, index) => {
-                 const nameMatch = lineXml.match(itemNameRegex)
-                 const quantityMatch = lineXml.match(quantityRegex)
-                 const priceMatch = lineXml.match(priceRegex)
-                 const extensionMatch = lineXml.match(lineExtensionRegex)
-                 
-                 const itemName = nameMatch?.[0]?.replace(/<[^>]*>/g, '').trim() || `Ürün ${index + 1}`
-                 const quantity = quantityMatch?.[0]?.replace(/<[^>]*>/g, '').trim() || '1'
-                 const price = priceMatch?.[0]?.replace(/<[^>]*>/g, '').trim() || '0'
-                 const lineTotal = extensionMatch?.[0]?.replace(/<[^>]*>/g, '').trim() || '0'
+                xmlParsedLines = invoiceLines.map((lineXml, index) => {
+                  // Use the existing extractXMLValue helper function for better parsing
+                  const itemName = extractXMLValue(lineXml, 'cbc:Name') || 
+                                  extractXMLValue(lineXml, 'cbc:Description') ||
+                                  `Ürün ${index + 1}`
+                  const quantity = extractXMLValue(lineXml, 'cbc:InvoicedQuantity') || '1'
+                  const price = extractXMLValue(lineXml, 'cbc:PriceAmount') || '0'
+                  const lineTotal = extractXMLValue(lineXml, 'cbc:LineExtensionAmount') || '0'
                  
                  console.log(`XML Line ${index + 1}: ${itemName}, Qty: ${quantity}, Price: ${price}`)
                  
