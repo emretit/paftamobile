@@ -43,7 +43,7 @@ export const fetchPurchaseRequests = async (filters: {
     }
     
     console.log(`Successfully fetched ${data?.length || 0} purchase requests`);
-    return data || [];
+    return (data as unknown as PurchaseRequest[]) || [];
   } catch (error) {
     console.error("Exception in fetchPurchaseRequests:", error);
     toast.error("Satın alma talepleri yüklenirken beklenmeyen bir hata oluştu");
@@ -69,7 +69,7 @@ export const fetchPurchaseRequestById = async (id: string): Promise<PurchaseRequ
     }
 
     console.log(`Successfully fetched purchase request ID ${id}`);
-    return data;
+    return data as unknown as PurchaseRequest;
   } catch (error) {
     console.error(`Exception in fetchPurchaseRequestById for ID ${id}:`, error);
     toast.error("Satın alma talebi yüklenirken beklenmeyen bir hata oluştu");
@@ -133,9 +133,9 @@ export const createPurchaseRequest = async (requestData: PurchaseRequestFormData
 
     // Import and use the function to add items
     const { addPurchaseRequestItems } = await import('./requestItems');
-    await addPurchaseRequestItems(request.id, items);
+    await addPurchaseRequestItems((request as any).id, items);
 
-    console.log(`Successfully created purchase request ID ${request.id}`);
+    console.log(`Successfully created purchase request ID ${(request as any).id}`);
     toast.success("Satın alma talebi başarıyla oluşturuldu");
     return request;
   } catch (error) {

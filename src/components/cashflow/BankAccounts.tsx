@@ -46,7 +46,7 @@ const BankAccounts = () => {
         .order('bank_name', { ascending: true });
 
       if (error) throw error;
-      setBankAccounts(data || []);
+      setBankAccounts((data as unknown as BankAccount[]) || []);
     } catch (error) {
       console.error('Error fetching bank accounts:', error);
       toast.error('Banka hesapları yüklenirken hata oluştu');
@@ -62,7 +62,7 @@ const BankAccounts = () => {
         .order('card_name', { ascending: true });
 
       if (error) throw error;
-      setCreditCards(data || []);
+      setCreditCards((data as unknown as CreditCard[]) || []);
     } catch (error) {
       console.error('Error fetching credit cards:', error);
       toast.error('Kredi kartları yüklenirken hata oluştu');

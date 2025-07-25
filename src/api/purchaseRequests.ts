@@ -41,7 +41,7 @@ export const fetchPurchaseRequests = async (filters: {
     throw error;
   }
   
-  return data;
+  return (data as unknown as PurchaseRequest[]) || [];
 };
 
 export const fetchPurchaseRequestById = async (id: string): Promise<PurchaseRequest> => {
@@ -56,7 +56,7 @@ export const fetchPurchaseRequestById = async (id: string): Promise<PurchaseRequ
     throw error;
   }
 
-  return data;
+  return data as unknown as PurchaseRequest;
 };
 
 export const fetchPurchaseRequestItems = async (requestId: string): Promise<PurchaseRequestItem[]> => {
@@ -70,7 +70,7 @@ export const fetchPurchaseRequestItems = async (requestId: string): Promise<Purc
     throw error;
   }
 
-  return data;
+  return (data as unknown as PurchaseRequestItem[]) || [];
 };
 
 export const fetchRequestWithItems = async (id: string) => {
@@ -106,7 +106,7 @@ export const createPurchaseRequest = async (requestData: PurchaseRequestFormData
   // Then create all items
   const itemsWithRequestId = items.map(item => ({
     ...item,
-    request_id: request.id,
+    request_id: (request as any).id,
     estimated_total: (item.quantity || 0) * (item.estimated_unit_price || 0)
   }));
 

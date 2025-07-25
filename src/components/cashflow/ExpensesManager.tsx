@@ -99,7 +99,7 @@ const ExpensesManager = () => {
 
       // For each transaction, get subcategory from opex_matrix
       const enrichedExpenses = await Promise.all(
-        (transactionData || []).map(async (expense) => {
+        ((transactionData as any) || []).map(async (expense: any) => {
           const { data: opexData } = await supabase
             .from('opex_matrix')
             .select('subcategory')
@@ -112,7 +112,7 @@ const ExpensesManager = () => {
 
           return {
             ...expense,
-            subcategory: opexData?.subcategory || null
+            subcategory: (opexData as any)?.subcategory || null
           };
         })
       );
@@ -188,8 +188,8 @@ const ExpensesManager = () => {
         .eq('type', 'expense')
         .single();
 
-      if (existingCategory) {
-        categoryId = existingCategory.id;
+        if (existingCategory) {
+        categoryId = (existingCategory as any).id;
       } else {
         const { data: newCategory, error: categoryError } = await supabase
           .from('cashflow_categories')
@@ -202,7 +202,7 @@ const ExpensesManager = () => {
           .single();
 
         if (categoryError) throw categoryError;
-        categoryId = newCategory.id;
+        categoryId = (newCategory as any).id;
       }
 
       // Add to cashflow_transactions

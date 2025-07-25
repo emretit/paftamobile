@@ -20,7 +20,7 @@ export const fetchPurchaseRequestItems = async (requestId: string): Promise<Purc
     }
 
     console.log(`Successfully fetched ${data?.length || 0} items for request ID ${requestId}`);
-    return data || [];
+    return (data as unknown as PurchaseRequestItem[]) || [];
   } catch (error) {
     console.error(`Exception in fetchPurchaseRequestItems for request ID ${requestId}:`, error);
     toast.error("Talep öğeleri yüklenirken beklenmeyen bir hata oluştu");

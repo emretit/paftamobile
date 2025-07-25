@@ -116,7 +116,7 @@ const EmployeeCosts = () => {
 
       if (error) throw error;
 
-      const processedData = data?.map(employee => {
+      const processedData = (data as any)?.map((employee: any) => {
         console.log('Processing employee:', employee);
         const salariesArray = Array.isArray(employee.employee_salaries) ? employee.employee_salaries : [employee.employee_salaries];
         const latestSalary = salariesArray[0]; // Get the latest salary record

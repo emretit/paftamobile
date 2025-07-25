@@ -68,7 +68,7 @@ export function LoansAndChecks() {
         .order("created_at", { ascending: false });
       
       if (error) throw error;
-      return data as Loan[];
+      return (data as unknown as Loan[]) || [];
     },
   });
 
@@ -82,7 +82,7 @@ export function LoansAndChecks() {
         .order("created_at", { ascending: false });
       
       if (error) throw error;
-      return data as Check[];
+      return (data as unknown as Check[]) || [];
     },
   });
 
