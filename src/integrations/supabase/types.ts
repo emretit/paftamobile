@@ -547,6 +547,36 @@ export type Database = {
           },
         ]
       }
+      customer_aliases: {
+        Row: {
+          alias_name: string
+          company_name: string | null
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string | null
+          vkn: string
+        }
+        Insert: {
+          alias_name: string
+          company_name?: string | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+          vkn: string
+        }
+        Update: {
+          alias_name?: string
+          company_name?: string | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+          vkn?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
@@ -729,6 +759,108 @@ export type Database = {
           },
         ]
       }
+      einvoice_items: {
+        Row: {
+          created_at: string | null
+          discount_rate: number | null
+          id: string
+          line_number: number
+          line_total: number
+          product_code: string | null
+          product_name: string
+          quantity: number
+          received_invoice_id: string | null
+          sent_invoice_id: string | null
+          tax_rate: number | null
+          unit: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string | null
+          discount_rate?: number | null
+          id?: string
+          line_number: number
+          line_total: number
+          product_code?: string | null
+          product_name: string
+          quantity: number
+          received_invoice_id?: string | null
+          sent_invoice_id?: string | null
+          tax_rate?: number | null
+          unit: string
+          unit_price: number
+        }
+        Update: {
+          created_at?: string | null
+          discount_rate?: number | null
+          id?: string
+          line_number?: number
+          line_total?: number
+          product_code?: string | null
+          product_name?: string
+          quantity?: number
+          received_invoice_id?: string | null
+          sent_invoice_id?: string | null
+          tax_rate?: number | null
+          unit?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "einvoice_items_received_invoice_id_fkey"
+            columns: ["received_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "einvoices_received"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "einvoice_items_sent_invoice_id_fkey"
+            columns: ["sent_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "einvoices_sent"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      einvoice_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          operation: string
+          operation_type: string
+          request_data: Json | null
+          response_data: Json | null
+          response_time_ms: number | null
+          success: boolean
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          operation: string
+          operation_type: string
+          request_data?: Json | null
+          response_data?: Json | null
+          response_time_ms?: number | null
+          success: boolean
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          operation?: string
+          operation_type?: string
+          request_data?: Json | null
+          response_data?: Json | null
+          response_time_ms?: number | null
+          success?: boolean
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       einvoices: {
         Row: {
           created_at: string
@@ -789,6 +921,144 @@ export type Database = {
           total_amount?: number
           updated_at?: string
           xml_data?: Json | null
+        }
+        Relationships: []
+      }
+      einvoices_received: {
+        Row: {
+          answer_type: number | null
+          created_at: string | null
+          currency: string | null
+          id: string
+          invoice_date: string
+          invoice_id: string | null
+          invoice_state: number | null
+          invoice_uuid: string
+          notes: string | null
+          response_sent: boolean | null
+          response_xml: string | null
+          subtotal: number | null
+          supplier_name: string
+          supplier_vkn: string
+          tax_amount: number | null
+          total_amount: number | null
+          updated_at: string | null
+          user_id: string | null
+          xml_content: string | null
+        }
+        Insert: {
+          answer_type?: number | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          invoice_date: string
+          invoice_id?: string | null
+          invoice_state?: number | null
+          invoice_uuid: string
+          notes?: string | null
+          response_sent?: boolean | null
+          response_xml?: string | null
+          subtotal?: number | null
+          supplier_name: string
+          supplier_vkn: string
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          xml_content?: string | null
+        }
+        Update: {
+          answer_type?: number | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_id?: string | null
+          invoice_state?: number | null
+          invoice_uuid?: string
+          notes?: string | null
+          response_sent?: boolean | null
+          response_xml?: string | null
+          subtotal?: number | null
+          supplier_name?: string
+          supplier_vkn?: string
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          xml_content?: string | null
+        }
+        Relationships: []
+      }
+      einvoices_sent: {
+        Row: {
+          answer_type: number | null
+          created_at: string | null
+          currency: string | null
+          customer_name: string
+          customer_vkn: string
+          id: string
+          invoice_date: string
+          invoice_id: string | null
+          invoice_state: number | null
+          invoice_uuid: string
+          notes: string | null
+          response_xml: string | null
+          subtotal: number | null
+          tax_amount: number | null
+          total_amount: number | null
+          transfer_id: string | null
+          transfer_state: number | null
+          updated_at: string | null
+          user_id: string | null
+          xml_content: string | null
+          zip_content: string | null
+        }
+        Insert: {
+          answer_type?: number | null
+          created_at?: string | null
+          currency?: string | null
+          customer_name: string
+          customer_vkn: string
+          id?: string
+          invoice_date: string
+          invoice_id?: string | null
+          invoice_state?: number | null
+          invoice_uuid: string
+          notes?: string | null
+          response_xml?: string | null
+          subtotal?: number | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          transfer_id?: string | null
+          transfer_state?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          xml_content?: string | null
+          zip_content?: string | null
+        }
+        Update: {
+          answer_type?: number | null
+          created_at?: string | null
+          currency?: string | null
+          customer_name?: string
+          customer_vkn?: string
+          id?: string
+          invoice_date?: string
+          invoice_id?: string | null
+          invoice_state?: number | null
+          invoice_uuid?: string
+          notes?: string | null
+          response_xml?: string | null
+          subtotal?: number | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          transfer_id?: string | null
+          transfer_state?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          xml_content?: string | null
+          zip_content?: string | null
         }
         Relationships: []
       }
@@ -2679,6 +2949,42 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      veriban_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          mode: string
+          password: string
+          updated_at: string | null
+          user_id: string | null
+          username: string
+          vkn: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          mode?: string
+          password: string
+          updated_at?: string | null
+          user_id?: string | null
+          username: string
+          vkn: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          mode?: string
+          password?: string
+          updated_at?: string | null
+          user_id?: string | null
+          username?: string
+          vkn?: string
         }
         Relationships: []
       }
