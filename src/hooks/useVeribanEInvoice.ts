@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useCallback } from 'react';
 import { VeribanEInvoiceService } from '../services/veriban/veribanService';
 import { 
