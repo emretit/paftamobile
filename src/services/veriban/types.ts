@@ -1,13 +1,11 @@
 // Veriban E-Fatura API Tipleri
 
 export interface VeribanConfig {
-  testUserName: string;
-  testPassword: string;
   liveUserName: string;
   livePassword: string;
-  testServiceUrl: string;
   liveServiceUrl: string;
-  isTestMode: boolean;
+  isTestMode?: boolean;
+  testServiceUrl?: string;
 }
 
 // SOAP API için genişletilmiş transfer dosyası

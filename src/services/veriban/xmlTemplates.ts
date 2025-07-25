@@ -204,46 +204,4 @@ const escapeXml = (unsafe: string): string => {
   });
 };
 
-/**
- * Örnek fatura verisi
- */
-export const createSampleInvoiceData = (): InvoiceData => {
-  return {
-    invoiceNumber: `VRB${new Date().getFullYear()}${String(Date.now()).slice(-6)}`,
-    invoiceDate: new Date().toISOString().split('T')[0],
-    customerVkn: '1234567890',
-    customerName: 'Örnek Müşteri A.Ş.',
-    customerAddress: 'Örnek Mahallesi, Örnek Sokak No:1',
-    customerTaxOffice: 'Kadıköy Vergi Dairesi',
-    supplierVkn: '9876543210',
-    supplierName: 'Bizim Şirket Ltd. Şti.',
-    supplierAddress: 'Merkez Mahallesi, Ana Cadde No:100',
-    supplierTaxOffice: 'Beşiktaş Vergi Dairesi',
-    items: [
-      {
-        name: 'Yazılım Geliştirme Hizmeti',
-        quantity: 1,
-        unitPrice: 1000.00,
-        totalPrice: 1000.00,
-        taxRate: 18,
-        taxAmount: 180.00,
-        unit: 'ADET'
-      },
-      {
-        name: 'Danışmanlık Hizmeti',
-        quantity: 2,
-        unitPrice: 500.00,
-        totalPrice: 1000.00,
-        taxRate: 18,
-        taxAmount: 180.00,
-        unit: 'SAAT'
-      }
-    ],
-    totalAmount: 2000.00,
-    taxAmount: 360.00,
-    payableAmount: 2360.00,
-    currencyCode: 'TRY',
-    invoiceProfile: 'TICARIFATURA',
-    invoiceType: 'SATIS'
-  };
-}; 
+ 

@@ -20,6 +20,7 @@ import {
   Save,
   TestTube
 } from 'lucide-react';
+import { useVeribanEInvoice } from '../../hooks/useVeribanEInvoice';
 
 interface VeribanConfig {
   testUserName: string;
@@ -32,11 +33,13 @@ interface VeribanConfig {
 }
 
 export const VeribanSettings: React.FC = () => {
+  const { testLogin, loading } = useVeribanEInvoice();
+  
   const [config, setConfig] = useState<VeribanConfig>({
     testUserName: 'TESTER@VRBN',
     testPassword: 'Vtest*2020*',
-    liveUserName: '',
-    livePassword: '',
+    liveUserName: 'NGS@NGS',
+    livePassword: 'Ngs!0527878',
     isTestMode: false, // Canlı ortam varsayılan olarak seçili
     testServiceUrl: 'https://efaturatransfertest.veriban.com.tr/IntegrationService.svc',
     liveServiceUrl: 'https://efaturatransfer.veriban.com.tr/IntegrationService.svc'
@@ -69,39 +72,31 @@ export const VeribanSettings: React.FC = () => {
     setTestResult(null);
 
     try {
-      const userName = config.isTestMode ? config.testUserName : config.liveUserName;
-      const password = config.isTestMode ? config.testPassword : config.livePassword;
-      const serviceUrl = config.isTestMode ? config.testServiceUrl : config.liveServiceUrl;
-
-      // Basit validasyon kontrolü
-      if (!userName || !password) {
-        throw new Error('Kullanıcı adı ve şifre gerekli');
-      }
-
-      if (!serviceUrl || !serviceUrl.startsWith('https://')) {
-        throw new Error('Geçerli bir HTTPS servis URL\'i gerekli');
-      }
-
-      // URL format kontrolü
-      if (!serviceUrl.includes('veriban.com.tr')) {
-        throw new Error('Geçersiz Veriban servis URL\'i');
-      }
-
-      // Simülasyon - gerçek CORS sorunu nedeniyle doğrudan test yapılamıyor
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Önce ayarları kaydet
+      saveConfig();
       
-      // Demo amaçlı - gerçek ortamda backend proxy kullanılmalı
-      setIsConnected(true);
-      setTestResult({ 
-        success: true, 
-        message: `Ayarlar doğrulandı! Not: Gerçek bağlantı testi backend üzerinden yapılacak.` 
-      });
+      // Gerçek Veriban login testi yap
+      const result = await testLogin();
+      
+      if (result.success) {
+        setIsConnected(true);
+        setTestResult({ 
+          success: true, 
+          message: `✅ ${result.message}${result.sessionCode ? ` Session: ${result.sessionCode.substring(0, 20)}...` : ''}` 
+        });
+      } else {
+        setIsConnected(false);
+        setTestResult({ 
+          success: false, 
+          message: `❌ ${result.message}` 
+        });
+      }
       
     } catch (error) {
       setIsConnected(false);
       setTestResult({ 
         success: false, 
-        message: `Doğrulama hatası: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}` 
+        message: `❌ Test hatası: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}` 
       });
     } finally {
       setIsTesting(false);
@@ -121,6 +116,17 @@ export const VeribanSettings: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Önemli Bilgilendirme */}
+          {(!config.liveUserName || !config.livePassword) && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Dikkat:</strong> Veriban E-Fatura entegrasyonunun çalışması için kullanıcı adı ve şifrenizi girmeniz gerekiyor. 
+                Bu bilgileri Veriban hesabınızdan alabilirsiniz.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Bağlantı Durumu */}
           <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
             <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
@@ -303,16 +309,16 @@ export const VeribanSettings: React.FC = () => {
             
             <Button 
               onClick={testConnection} 
-              disabled={isTesting}
+              disabled={isTesting || loading}
               variant="outline"
               className="flex items-center gap-2"
             >
-              {isTesting ? (
+              {(isTesting || loading) ? (
                 <RefreshCw className="h-4 w-4 animate-spin" />
               ) : (
                 <TestTube className="h-4 w-4" />
               )}
-              Bağlantıyı Test Et
+              {(isTesting || loading) ? 'Test Ediliyor...' : 'Veriban Login Test Et'}
             </Button>
           </div>
 
@@ -322,19 +328,18 @@ export const VeribanSettings: React.FC = () => {
             <ul className="text-sm text-blue-800 space-y-1">
               <li>• Veriban hesabınızdan aldığınız kullanıcı adı ve şifreyi girin</li>
               <li>• Şifreler güvenli şekilde saklanır ve şifrelenir</li>
-              <li>• Bağlantı testi yapmadan önce ayarları kaydetmeyi unutmayın</li>
               <li>• Test ortamı devre dışı bırakıldı, sadece canlı ortam kullanılabilir</li>
-              <li>• Tarayıcı CORS kısıtlamaları nedeniyle gerçek bağlantı testi backend üzerinden yapılır</li>
+              <li>• "Veriban Login Test Et" butonu ile gerçek bağlantı testi yapabilirsiniz</li>
+              <li>• Test başarılı olursa gelen faturaları görüntüleyebilirsiniz</li>
             </ul>
           </div>
 
-          {/* CORS Uyarısı */}
+          {/* Test Bilgisi */}
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Bağlantı Testi Hakkında:</strong> Tarayıcı güvenlik kısıtlamaları (CORS) nedeniyle 
-              doğrudan Veriban servisine test bağlantısı yapılamıyor. Gerçek bağlantı testi e-fatura 
-              gönderimi sırasında backend üzerinden gerçekleştirilir.
+              <strong>Veriban Login Testi:</strong> "Veriban Login Test Et" butonu ile hesap bilgilerinizi 
+              doğrudan test edebilirsiniz. Bu test gerçek Veriban servisine bağlanır ve giriş yapabildiğinizi kontrol eder.
             </AlertDescription>
           </Alert>
         </CardContent>
