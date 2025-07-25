@@ -27,7 +27,7 @@ import {
 
 import { getTransferStateMessage, getInvoiceStateMessage, getAnswerTypeMessage, PurchaseInvoiceInfo, DownloadDocumentDataTypes } from '../../services/veriban/types';
 import DefaultLayout from '../layouts/DefaultLayout';
-// import { getVeribanConfig } from '../../config/veribanConfig';
+import VeribanIncomingInvoices from './VeribanIncomingInvoices';
 
 interface VeribanEInvoicePanelProps {
   isCollapsed: boolean;
@@ -369,28 +369,24 @@ export const VeribanEInvoicePanel: React.FC<VeribanEInvoicePanelProps> = ({ isCo
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                          <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="send">
-                <Send className="h-4 w-4 mr-2" />
-                Gönder
-              </TabsTrigger>
-              <TabsTrigger value="status">
-                <Eye className="h-4 w-4 mr-2" />
-                Durum
-              </TabsTrigger>
-              <TabsTrigger value="incoming">
-                <Download className="h-4 w-4 mr-2" />
-                Gelen
-              </TabsTrigger>
-              <TabsTrigger value="customer">
-                <Users className="h-4 w-4 mr-2" />
-                Müşteri
-              </TabsTrigger>
-              <TabsTrigger value="settings">
-                <Settings className="h-4 w-4 mr-2" />
-                Ayarlar
-              </TabsTrigger>
-            </TabsList>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="incoming">
+                  <Inbox className="h-4 w-4 mr-2" />
+                  Gelen Faturalar
+                </TabsTrigger>
+                <TabsTrigger value="send">
+                  <Send className="h-4 w-4 mr-2" />
+                  Fatura Gönder
+                </TabsTrigger>
+                <TabsTrigger value="status">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Durum Sorgula
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="incoming" className="space-y-4">
+                <VeribanIncomingInvoices />
+              </TabsContent>
 
               <TabsContent value="send" className="space-y-4">
                 <Card>
