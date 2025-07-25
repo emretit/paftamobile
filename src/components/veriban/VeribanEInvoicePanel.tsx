@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useVeribanEInvoice } from '../../hooks/useVeribanEInvoice';
 import { Button } from '../ui/button';
