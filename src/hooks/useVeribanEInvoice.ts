@@ -7,6 +7,7 @@ import {
   PurchaseInvoiceInfo,
   OperationResult,
   DownloadResult,
+  DownloadDocumentDataTypes,
   VeribanConfig
 } from '../services/veriban/types';
 
@@ -126,7 +127,7 @@ export const useVeribanEInvoice = (config?: Partial<VeribanConfig>) => {
 
   const downloadInvoice = useCallback(async (
     invoiceUUID: string,
-    downloadType: 'XML_INZIP' | 'HTML_INZIP' | 'PDF_INZIP' = 'XML_INZIP'
+    downloadType: DownloadDocumentDataTypes = DownloadDocumentDataTypes.XML_INZIP
   ): Promise<DownloadResult | null> => {
     setLoading(true);
     setError(null);
