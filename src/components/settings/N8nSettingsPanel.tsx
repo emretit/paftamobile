@@ -12,6 +12,8 @@ import { toast } from 'sonner';
 import { supabase } from '../../integrations/supabase/client';
 import { useN8nTrigger } from '../../hooks/useN8nTrigger';
 import WorkflowMonitor from '../n8n/WorkflowMonitor';
+import N8nSetupWizard from '../n8n/N8nSetupWizard';
+import N8nSecretsManager from '../n8n/N8nSecretsManager';
 import { 
   Settings, 
   Zap, 
@@ -166,12 +168,22 @@ const N8nSettingsPanel: React.FC = () => {
   }, []);
 
   return (
-    <Tabs defaultValue="settings" className="space-y-6">
+    <Tabs defaultValue="setup" className="space-y-6">
       <TabsList>
+        <TabsTrigger value="setup">Kurulum</TabsTrigger>
+        <TabsTrigger value="secrets">Secrets</TabsTrigger>
         <TabsTrigger value="settings">Ayarlar</TabsTrigger>
         <TabsTrigger value="monitor">İzleme</TabsTrigger>
         <TabsTrigger value="help">Yardım</TabsTrigger>
       </TabsList>
+
+      <TabsContent value="setup">
+        <N8nSetupWizard />
+      </TabsContent>
+
+      <TabsContent value="secrets">
+        <N8nSecretsManager />
+      </TabsContent>
 
       <TabsContent value="settings">
         <div className="space-y-6">
