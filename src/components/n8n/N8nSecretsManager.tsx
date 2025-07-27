@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '../ui/alert';
 import { Progress } from '../ui/progress';
 import { toast } from 'sonner';
 import { supabase } from '../../integrations/supabase/client';
+import { useN8nTrigger } from '../../hooks/useN8nTrigger';
 import { 
   Shield, 
   Key, 
@@ -15,7 +16,9 @@ import {
   Eye,
   EyeOff,
   Copy,
-  Trash2
+  Trash2,
+  TestTube,
+  Wifi
 } from 'lucide-react';
 
 interface Secret {
@@ -28,6 +31,34 @@ interface Secret {
 
 const N8nSecretsManager: React.FC = () => {
   const [secrets, setSecrets] = useState<Secret[]>([
+    {
+      name: 'N8N_INSTANCE_URL',
+      value: '',
+      masked: false,
+      description: 'n8n instance URL\'si (örn: https://your-n8n.com)',
+      required: true
+    },
+    {
+      name: 'N8N_USERNAME',
+      value: '',
+      masked: false,
+      description: 'n8n kullanıcı adı/email',
+      required: true
+    },
+    {
+      name: 'N8N_PASSWORD',
+      value: '',
+      masked: true,
+      description: 'n8n şifresi',
+      required: true
+    },
+    {
+      name: 'N8N_API_KEY',
+      value: '',
+      masked: true,
+      description: 'n8n API anahtarı (isteğe bağlı, API kullanımı için)',
+      required: false
+    },
     {
       name: 'N8N_WEBHOOK_SECRET',
       value: '',
@@ -66,7 +97,11 @@ const N8nSecretsManager: React.FC = () => {
   ]);
   
   const [loading, setLoading] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'unknown' | 'connected' | 'error'>('unknown');
   const [showValues, setShowValues] = useState<{ [key: string]: boolean }>({});
+
+  const { testN8nConnection } = useN8nTrigger();
 
   // Load secrets from environment or local storage
   const loadSecrets = async () => {
@@ -182,6 +217,43 @@ const N8nSecretsManager: React.FC = () => {
     }
   };
 
+  // Test n8n connection using current secrets
+  const testConnection = async () => {
+    try {
+      setTesting(true);
+      setConnectionStatus('unknown');
+
+      // Get credentials from current secrets
+      const instanceUrl = secrets.find(s => s.name === 'N8N_INSTANCE_URL')?.value;
+      const username = secrets.find(s => s.name === 'N8N_USERNAME')?.value;
+      const password = secrets.find(s => s.name === 'N8N_PASSWORD')?.value;
+      const apiKey = secrets.find(s => s.name === 'N8N_API_KEY')?.value;
+
+      if (!instanceUrl || !username || !password) {
+        throw new Error('n8n bilgileri eksik: URL, kullanıcı adı ve şifre gerekli');
+      }
+
+      const result = await testN8nConnection({
+        instanceUrl,
+        username,
+        password,
+        apiKey
+      });
+
+      if (result.success) {
+        setConnectionStatus('connected');
+      } else {
+        setConnectionStatus('error');
+      }
+
+    } catch (error: any) {
+      console.error('Connection test failed:', error);
+      setConnectionStatus('error');
+    } finally {
+      setTesting(false);
+    }
+  };
+
   useEffect(() => {
     loadSecrets();
   }, []);
@@ -195,18 +267,45 @@ const N8nSecretsManager: React.FC = () => {
             <Shield className="h-5 w-5" />
             n8n Secrets Yönetimi
           </h3>
-          <p className="text-muted-foreground">Webhook URL'leri ve güvenlik anahtarlarını yönetin</p>
+          <p className="text-muted-foreground">n8n kimlik bilgileri, webhook URL'leri ve güvenlik anahtarlarını yönetin</p>
         </div>
-        <Button onClick={saveSecrets} disabled={loading}>
-          {loading ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <Key className="h-4 w-4 mr-2" />}
-          Kaydet
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={testConnection} 
+            disabled={testing || loading}
+          >
+            {testing ? (
+              <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <TestTube className="h-4 w-4 mr-2" />
+            )}
+            Bağlantı Test Et
+          </Button>
+          <Button onClick={saveSecrets} disabled={loading}>
+            {loading ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <Key className="h-4 w-4 mr-2" />}
+            Kaydet
+          </Button>
+        </div>
       </div>
 
-      {/* Progress */}
+      {/* Connection Status */}
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              {connectionStatus === 'connected' ? (
+                <CheckCircle className="h-5 w-5 text-green-500" />
+              ) : connectionStatus === 'error' ? (
+                <AlertCircle className="h-5 w-5 text-red-500" />
+              ) : (
+                <Wifi className="h-5 w-5 text-gray-400" />
+              )}
+              <span className="font-medium">
+                {connectionStatus === 'connected' ? 'Bağlı' : 
+                 connectionStatus === 'error' ? 'Bağlantı Hatası' : 'Bilinmiyor'}
+              </span>
+            </div>
             <div className="flex-1">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">Yapılandırma İlerlemesi</span>
@@ -225,9 +324,10 @@ const N8nSecretsManager: React.FC = () => {
         {secrets.map((secret) => {
           const { status, message } = getSecretStatus(secret);
           const isVisible = showValues[secret.name];
+          const isAuthField = ['N8N_INSTANCE_URL', 'N8N_USERNAME', 'N8N_PASSWORD', 'N8N_API_KEY'].includes(secret.name);
           
           return (
-            <Card key={secret.name}>
+            <Card key={secret.name} className={isAuthField ? 'border-primary/20 bg-primary/5' : ''}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -245,6 +345,9 @@ const N8nSecretsManager: React.FC = () => {
                       </Badge>
                       {secret.required && (
                         <Badge variant="outline">Gerekli</Badge>
+                      )}
+                      {isAuthField && (
+                        <Badge variant="secondary">Authentication</Badge>
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
@@ -326,21 +429,27 @@ const N8nSecretsManager: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <h4 className="font-medium mb-2">1. n8n Webhook URL'lerini Alın</h4>
+            <h4 className="font-medium mb-2">1. n8n Instance Bilgilerini Girin</h4>
             <p className="text-sm text-muted-foreground">
-              n8n'de workflow'larınızı oluşturduktan sonra webhook URL'lerini buraya girin.
+              n8n instance URL'si, kullanıcı adı ve şifrenizi yukarıdaki authentication alanlarına girin.
             </p>
           </div>
           <div>
-            <h4 className="font-medium mb-2">2. Webhook Secret Oluşturun</h4>
+            <h4 className="font-medium mb-2">2. Webhook URL'lerini Alın</h4>
+            <p className="text-sm text-muted-foreground">
+              n8n'de workflow'larınızı oluşturduktan sonra webhook URL'lerini ilgili alanlara girin.
+            </p>
+          </div>
+          <div>
+            <h4 className="font-medium mb-2">3. Webhook Secret Oluşturun</h4>
             <p className="text-sm text-muted-foreground">
               Güvenlik için secret key oluşturun ve hem n8n'de hem de burada aynı değeri kullanın.
             </p>
           </div>
           <div>
-            <h4 className="font-medium mb-2">3. Test Edin</h4>
+            <h4 className="font-medium mb-2">4. Bağlantıyı Test Edin</h4>
             <p className="text-sm text-muted-foreground">
-              Ayarları kaydettikten sonra workflow'larınızı test edin ve bağlantıyı doğrulayın.
+              Tüm bilgileri girdikten sonra "Bağlantı Test Et" butonuna tıklayarak n8n ile bağlantınızı doğrulayın.
             </p>
           </div>
         </CardContent>
