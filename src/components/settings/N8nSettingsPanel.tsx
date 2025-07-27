@@ -14,6 +14,8 @@ import { useN8nTrigger } from '../../hooks/useN8nTrigger';
 import WorkflowMonitor from '../n8n/WorkflowMonitor';
 import N8nSetupWizard from '../n8n/N8nSetupWizard';
 import N8nSecretsManager from '../n8n/N8nSecretsManager';
+import N8nStatusIndicator from '../n8n/N8nStatusIndicator';
+import N8nLogViewer from '../n8n/N8nLogViewer';
 import { 
   Settings, 
   Zap, 
@@ -25,7 +27,11 @@ import {
   Workflow,
   Clock,
   Database,
-  TestTube
+  TestTube,
+  Activity,
+  BarChart3,
+  FileText,
+  Shield
 } from 'lucide-react';
 
 interface N8nSettings {
@@ -168,14 +174,37 @@ const N8nSettingsPanel: React.FC = () => {
   }, []);
 
   return (
-    <Tabs defaultValue="setup" className="space-y-6">
-      <TabsList>
-        <TabsTrigger value="setup">Kurulum</TabsTrigger>
-        <TabsTrigger value="secrets">Secrets</TabsTrigger>
-        <TabsTrigger value="settings">Ayarlar</TabsTrigger>
-        <TabsTrigger value="monitor">İzleme</TabsTrigger>
-        <TabsTrigger value="help">Yardım</TabsTrigger>
+    <Tabs defaultValue="status" className="space-y-6">
+      <TabsList className="grid w-full grid-cols-6">
+        <TabsTrigger value="status">
+          <Activity className="h-4 w-4 mr-2" />
+          Durum
+        </TabsTrigger>
+        <TabsTrigger value="setup">
+          <Zap className="h-4 w-4 mr-2" />
+          Kurulum
+        </TabsTrigger>
+        <TabsTrigger value="secrets">
+          <Shield className="h-4 w-4 mr-2" />
+          Secrets
+        </TabsTrigger>
+        <TabsTrigger value="settings">
+          <Settings className="h-4 w-4 mr-2" />
+          Ayarlar
+        </TabsTrigger>
+        <TabsTrigger value="monitor">
+          <BarChart3 className="h-4 w-4 mr-2" />
+          İzleme
+        </TabsTrigger>
+        <TabsTrigger value="logs">
+          <FileText className="h-4 w-4 mr-2" />
+          Logs
+        </TabsTrigger>
       </TabsList>
+
+      <TabsContent value="status">
+        <N8nStatusIndicator />
+      </TabsContent>
 
       <TabsContent value="setup">
         <N8nSetupWizard />
@@ -441,6 +470,10 @@ const N8nSettingsPanel: React.FC = () => {
 
       <TabsContent value="monitor">
         <WorkflowMonitor />
+      </TabsContent>
+
+      <TabsContent value="logs">
+        <N8nLogViewer />
       </TabsContent>
 
       <TabsContent value="help">
