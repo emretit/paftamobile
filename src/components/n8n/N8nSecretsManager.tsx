@@ -35,7 +35,7 @@ const N8nSecretsManager: React.FC = () => {
       name: 'N8N_INSTANCE_URL',
       value: '',
       masked: false,
-      description: 'n8n instance URL\'si (örn: https://your-n8n.com)',
+      description: 'n8n instance URL (örn: https://your-n8n.com)',
       required: true
     },
     {
@@ -53,46 +53,11 @@ const N8nSecretsManager: React.FC = () => {
       required: true
     },
     {
-      name: 'N8N_API_KEY',
+      name: 'N8N_TEST_WEBHOOK',
       value: '',
-      masked: true,
-      description: 'n8n API anahtarı (isteğe bağlı, API kullanımı için)',
-      required: false
-    },
-    {
-      name: 'N8N_WEBHOOK_SECRET',
-      value: '',
-      masked: true,
-      description: 'n8n webhook\'ları için güvenlik anahtarı',
+      masked: false,
+      description: 'Test için basit webhook URL (n8n\'de webhook trigger oluşturun)',
       required: true
-    },
-    {
-      name: 'N8N_FETCH_INVOICES_WEBHOOK',
-      value: '',
-      masked: false,
-      description: 'Günlük fatura çekme workflow webhook URL\'si',
-      required: true
-    },
-    {
-      name: 'N8N_SYNC_STATUS_WEBHOOK',
-      value: '',
-      masked: false,
-      description: 'Fatura durumu senkronizasyonu webhook URL\'si',
-      required: true
-    },
-    {
-      name: 'N8N_DOWNLOAD_PDF_WEBHOOK',
-      value: '',
-      masked: false,
-      description: 'PDF indirme workflow webhook URL\'si',
-      required: false
-    },
-    {
-      name: 'N8N_NOTIFICATION_WEBHOOK',
-      value: '',
-      masked: false,
-      description: 'Bildirim gönderme workflow webhook URL\'si',
-      required: false
     }
   ]);
   
@@ -425,31 +390,25 @@ const N8nSecretsManager: React.FC = () => {
       {/* Quick Setup */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Hızlı Kurulum</CardTitle>
+          <CardTitle className="text-lg">Basit Kurulum (3 Adım)</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <h4 className="font-medium mb-2">1. n8n Instance Bilgilerini Girin</h4>
-            <p className="text-sm text-muted-foreground">
-              n8n instance URL'si, kullanıcı adı ve şifrenizi yukarıdaki authentication alanlarına girin.
+        <CardContent className="space-y-4">
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h4 className="font-medium mb-2 text-blue-900">1. n8n'e Giriş Yapın</h4>
+            <p className="text-sm text-blue-700">
+              Yukarıda n8n URL, kullanıcı adı ve şifrenizi girin.
             </p>
           </div>
-          <div>
-            <h4 className="font-medium mb-2">2. Webhook URL'lerini Alın</h4>
-            <p className="text-sm text-muted-foreground">
-              n8n'de workflow'larınızı oluşturduktan sonra webhook URL'lerini ilgili alanlara girin.
+          <div className="bg-green-50 p-4 rounded-lg">
+            <h4 className="font-medium mb-2 text-green-900">2. Basit Webhook Oluşturun</h4>
+            <p className="text-sm text-green-700">
+              n8n'de yeni workflow → Webhook trigger ekleyin → URL'yi kopyalayın → Yukarıdaki "Test Webhook" alanına yapıştırın.
             </p>
           </div>
-          <div>
-            <h4 className="font-medium mb-2">3. Webhook Secret Oluşturun</h4>
-            <p className="text-sm text-muted-foreground">
-              Güvenlik için secret key oluşturun ve hem n8n'de hem de burada aynı değeri kullanın.
-            </p>
-          </div>
-          <div>
-            <h4 className="font-medium mb-2">4. Bağlantıyı Test Edin</h4>
-            <p className="text-sm text-muted-foreground">
-              Tüm bilgileri girdikten sonra "Bağlantı Test Et" butonuna tıklayarak n8n ile bağlantınızı doğrulayın.
+          <div className="bg-orange-50 p-4 rounded-lg">
+            <h4 className="font-medium mb-2 text-orange-900">3. Test Edin</h4>
+            <p className="text-sm text-orange-700">
+              "Bağlantı Test Et" butonuna tıklayın. Başarılı olursa n8n hazır!
             </p>
           </div>
         </CardContent>
