@@ -1,0 +1,450 @@
+{
+  "name": "Smart Task Management",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */1 * * *"
+            }
+          ]
+        }
+      },
+      "id": "hourly-check",
+      "name": "Hourly Task Check",
+      "type": "n8n-nodes-base.schedule",
+      "typeVersion": 1.1,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "task-management",
+        "options": {}
+      },
+      "id": "webhook-task",
+      "name": "Webhook - Manual Task Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [220, 400],
+      "webhookId": "task-management-trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://vwhwufnckpqirxptwncw.supabase.co/rest/v1/tasks?status=not.in.(completed,cancelled)&due_date=not.is.null&select=*,assignee:employees!assignee_id(id,first_name,last_name,email)",
+        "authentication": "generic",
+        "genericAuthType": "httpHeaderAuth",
+        "httpHeaderAuth": {
+          "name": "Authorization",
+          "value": "Bearer {{ $vars.SUPABASE_SERVICE_KEY }}"
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $vars.SUPABASE_ANON_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "get-active-tasks",
+      "name": "Get Active Tasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [440, 350]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process tasks and categorize by urgency\nconst tasks = $json || [];\nconst now = new Date();\n\nconst processedTasks = tasks.map(task => {\n  const dueDate = new Date(task.due_date);\n  const hoursUntilDue = Math.round((dueDate - now) / (1000 * 60 * 60));\n  \n  let urgency = 'normal';\n  let action = 'none';\n  \n  if (hoursUntilDue <= 1 && hoursUntilDue > 0) {\n    urgency = 'critical';\n    action = 'escalate';\n  } else if (hoursUntilDue <= 24 && hoursUntilDue > 1) {\n    urgency = 'high';\n    action = 'remind';\n  } else if (hoursUntilDue <= 0) {\n    urgency = 'overdue';\n    action = 'escalate';\n  }\n  \n  return {\n    ...task,\n    hoursUntilDue,\n    urgency,\n    action,\n    assigneeName: task.assignee ? `${task.assignee.first_name} ${task.assignee.last_name}` : 'Unassigned',\n    assigneeEmail: task.assignee?.email\n  };\n});\n\n// Group by action\nconst tasksByAction = {\n  remind: processedTasks.filter(t => t.action === 'remind'),\n  escalate: processedTasks.filter(t => t.action === 'escalate'),\n  overdue: processedTasks.filter(t => t.urgency === 'overdue')\n};\n\nreturn {\n  totalTasks: tasks.length,\n  processedTasks,\n  tasksByAction,\n  timestamp: now.toISOString()\n};"
+      },
+      "id": "process-tasks",
+      "name": "Process Tasks by Urgency",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 350]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-reminders",
+              "leftValue": "={{ $json.tasksByAction.remind.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-has-reminders",
+      "name": "If Has Reminder Tasks",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [880, 250]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-escalations",
+              "leftValue": "={{ $json.tasksByAction.escalate.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-has-escalations",
+      "name": "If Has Escalation Tasks",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [880, 450]
+    },
+    {
+      "parameters": {
+        "operation": "split",
+        "destinationFieldName": "task",
+        "fieldsToSplitOut": [
+          "tasksByAction.remind"
+        ],
+        "options": {}
+      },
+      "id": "split-reminders",
+      "name": "Split Reminder Tasks",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [1100, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://hooks.slack.com/services/{{ $vars.SLACK_WEBHOOK_PATH }}",
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "text": "⏰ Task Reminder",
+          "blocks": [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "*Task Due Soon!*\\n*Task:* {{ $json.task.title }}\\n*Due:* {{ $json.task.due_date }}\\n*Hours Left:* {{ $json.task.hoursUntilDue }}\\n*Assigned to:* {{ $json.task.assigneeName }}"
+              }
+            },
+            {
+              "type": "actions",
+              "elements": [
+                {
+                  "type": "button",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Mark Complete"
+                  },
+                  "url": "https://{{ $vars.APP_DOMAIN }}/tasks/{{ $json.task.id }}"
+                },
+                {
+                  "type": "button",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Reschedule"
+                  },
+                  "url": "https://{{ $vars.APP_DOMAIN }}/tasks/{{ $json.task.id }}/edit"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "id": "slack-reminder",
+      "name": "Send Slack Reminder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1320, 150]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $vars.FROM_EMAIL }}",
+        "toEmail": "={{ $json.task.assigneeEmail }}",
+        "subject": "⏰ Task Due Soon: {{ $json.task.title }}",
+        "message": "Hello {{ $json.task.assigneeName }},\\n\\nThis is a reminder that your task is due soon:\\n\\n**Task:** {{ $json.task.title }}\\n**Description:** {{ $json.task.description }}\\n**Due Date:** {{ $json.task.due_date }}\\n**Hours Remaining:** {{ $json.task.hoursUntilDue }}\\n\\nPlease complete this task or update its status as soon as possible.\\n\\nView Task: https://{{ $vars.APP_DOMAIN }}/tasks/{{ $json.task.id }}\\n\\nBest regards,\\nTask Management System",
+        "options": {}
+      },
+      "id": "email-reminder",
+      "name": "Send Email Reminder",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1320, 250]
+    },
+    {
+      "parameters": {
+        "operation": "split",
+        "destinationFieldName": "task",
+        "fieldsToSplitOut": [
+          "tasksByAction.escalate"
+        ],
+        "options": {}
+      },
+      "id": "split-escalations",
+      "name": "Split Escalation Tasks",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [1100, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://vwhwufnckpqirxptwncw.supabase.co/rest/v1/employees?position=like.*manager*",
+        "authentication": "generic",
+        "genericAuthType": "httpHeaderAuth",
+        "httpHeaderAuth": {
+          "name": "Authorization",
+          "value": "Bearer {{ $vars.SUPABASE_SERVICE_KEY }}"
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $vars.SUPABASE_ANON_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "get-managers",
+      "name": "Get Managers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1320, 350]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $vars.FROM_EMAIL }}",
+        "toEmail": "={{ $json.email }}",
+        "subject": "🚨 Task Escalation Required: {{ $('split-escalations').item.json.task.title }}",
+        "message": "Dear Manager,\\n\\nA task requires your immediate attention:\\n\\n**Task:** {{ $('split-escalations').item.json.task.title }}\\n**Assigned to:** {{ $('split-escalations').item.json.task.assigneeName }}\\n**Due Date:** {{ $('split-escalations').item.json.task.due_date }}\\n**Status:** {{ $('split-escalations').item.json.task.urgency }}\\n**Hours Overdue/Critical:** {{ $('split-escalations').item.json.task.hoursUntilDue }}\\n\\n**Recommended Actions:**\\n- Contact the assignee directly\\n- Reassign the task if necessary\\n- Extend the deadline if appropriate\\n- Mark as completed if already done\\n\\nView Task: https://{{ $vars.APP_DOMAIN }}/tasks/{{ $('split-escalations').item.json.task.id }}\\n\\nBest regards,\\nTask Management System",
+        "options": {}
+      },
+      "id": "escalate-to-manager",
+      "name": "Escalate to Manager",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1540, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Auto-reschedule logic for overdue tasks\nconst task = $json.task;\nconst now = new Date();\n\n// Suggest new due date (add 2 days)\nconst newDueDate = new Date(now);\nnewDueDate.setDate(newDueDate.getDate() + 2);\n\nreturn {\n  taskId: task.id,\n  originalDueDate: task.due_date,\n  suggestedDueDate: newDueDate.toISOString(),\n  reason: 'Auto-rescheduled due to overdue status',\n  task\n};"
+      },
+      "id": "auto-reschedule",
+      "name": "Auto-Reschedule Logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 500]
+    },
+    {
+      "parameters": {
+        "url": "https://vwhwufnckpqirxptwncw.supabase.co/rest/v1/tasks?id=eq.{{ $json.taskId }}",
+        "authentication": "generic",
+        "genericAuthType": "httpHeaderAuth",
+        "httpHeaderAuth": {
+          "name": "Authorization",
+          "value": "Bearer {{ $vars.SUPABASE_SERVICE_KEY }}"
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $vars.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "due_date": "={{ $json.suggestedDueDate }}",
+          "description": "={{ $json.task.description }} [Auto-rescheduled: {{ $json.reason }}]"
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "autodetect"
+            }
+          }
+        }
+      },
+      "id": "update-task",
+      "name": "Update Task Due Date",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1540, 500]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "hourly-check": {
+      "main": [
+        [
+          {
+            "node": "get-active-tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "webhook-task": {
+      "main": [
+        [
+          {
+            "node": "get-active-tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-active-tasks": {
+      "main": [
+        [
+          {
+            "node": "process-tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process-tasks": {
+      "main": [
+        [
+          {
+            "node": "if-has-reminders",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "if-has-escalations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if-has-reminders": {
+      "main": [
+        [
+          {
+            "node": "split-reminders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if-has-escalations": {
+      "main": [
+        [
+          {
+            "node": "split-escalations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split-reminders": {
+      "main": [
+        [
+          {
+            "node": "slack-reminder",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "email-reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split-escalations": {
+      "main": [
+        [
+          {
+            "node": "get-managers",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "auto-reschedule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-managers": {
+      "main": [
+        [
+          {
+            "node": "escalate-to-manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "auto-reschedule": {
+      "main": [
+        [
+          {
+            "node": "update-task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4",
+  "id": "4",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

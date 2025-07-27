@@ -1,0 +1,667 @@
+{
+  "name": "External Data Sync Hub",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "data-sync",
+        "options": {}
+      },
+      "id": "webhook-sync",
+      "name": "Webhook - Data Sync Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [220, 300],
+      "webhookId": "data-sync-trigger"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "daily-sync",
+      "name": "Daily 6AM Sync",
+      "type": "n8n-nodes-base.schedule",
+      "typeVersion": 1.1,
+      "position": [220, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "sync-customers",
+              "leftValue": "={{ $json.parameters?.sync_type || 'all' }}",
+              "rightValue": "customers",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "sync-all",
+              "leftValue": "={{ $json.parameters?.sync_type || 'all' }}",
+              "rightValue": "all",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "if-sync-customers",
+      "name": "If Sync Customers",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "sync-financial",
+              "leftValue": "={{ $json.parameters?.sync_type || 'all' }}",
+              "rightValue": "financial",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "sync-all",
+              "leftValue": "={{ $json.parameters?.sync_type || 'all' }}",
+              "rightValue": "all",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "if-sync-financial",
+      "name": "If Sync Financial",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "sync-products",
+              "leftValue": "={{ $json.parameters?.sync_type || 'all' }}",
+              "rightValue": "products",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "sync-all",
+              "leftValue": "={{ $json.parameters?.sync_type || 'all' }}",
+              "rightValue": "all",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "if-sync-products",
+      "name": "If Sync Products",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 600]
+    },
+    {
+      "parameters": {
+        "url": "https://vwhwufnckpqirxptwncw.supabase.co/rest/v1/customers?select=*&order=updated_at.desc&limit=100",
+        "authentication": "generic",
+        "genericAuthType": "httpHeaderAuth",
+        "httpHeaderAuth": {
+          "name": "Authorization",
+          "value": "Bearer {{ $vars.SUPABASE_SERVICE_KEY }}"
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $vars.SUPABASE_ANON_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "get-customers",
+      "name": "Get Customers from Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [660, 150]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "appendOrUpdate",
+        "documentId": "{{ $vars.GOOGLE_SHEETS_CUSTOMERS_ID }}",
+        "sheetName": "Customers",
+        "columnToMatchOn": "ID",
+        "options": {}
+      },
+      "id": "sync-to-sheets",
+      "name": "Sync to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [880, 100]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transform customer data for accounting software (Logo/Paraşüt)\nconst customers = $json || [];\n\nconst transformedData = customers.map(customer => ({\n  cari_kodu: customer.id,\n  unvan: customer.name,\n  vkn_tckn: customer.tax_number,\n  vergi_dairesi: customer.tax_office,\n  adres: customer.address,\n  telefon: customer.mobile_phone || customer.office_phone,\n  email: customer.email,\n  bakiye: customer.balance || 0,\n  cari_tip: customer.type === 'corporate' ? 'KURUMSAL' : 'BIREYSEL'\n}));\n\nreturn {\n  customers: transformedData,\n  count: transformedData.length\n};"
+      },
+      "id": "transform-for-accounting",
+      "name": "Transform for Accounting",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 200]
+    },
+    {
+      "parameters": {
+        "url": "{{ $vars.ACCOUNTING_API_BASE_URL }}/cariler",
+        "authentication": "generic",
+        "genericAuthType": "httpHeaderAuth",
+        "httpHeaderAuth": {
+          "name": "Authorization",
+          "value": "Bearer {{ $vars.ACCOUNTING_API_TOKEN }}"
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ $json }}"
+      },
+      "id": "sync-to-accounting",
+      "name": "Sync to Accounting Software",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1100, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare WhatsApp Business messages for new customers\nconst customers = $('get-customers').item.json || [];\nconst recentCustomers = customers.filter(c => {\n  const createdDate = new Date(c.created_at);\n  const oneDayAgo = new Date();\n  oneDayAgo.setDate(oneDayAgo.getDate() - 1);\n  return createdDate > oneDayAgo;\n});\n\nconst whatsappMessages = recentCustomers\n  .filter(c => c.mobile_phone)\n  .map(customer => ({\n    to: customer.mobile_phone.replace(/[^\\d]/g, ''), // Clean phone number\n    message: `Merhaba ${customer.name}! ${process.env.COMPANY_NAME}'e hoş geldiniz! Size nasıl yardımcı olabiliriz?`,\n    customer_id: customer.id\n  }));\n\nreturn {\n  messages: whatsappMessages,\n  count: whatsappMessages.length\n};"
+      },
+      "id": "prepare-whatsapp",
+      "name": "Prepare WhatsApp Messages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 300]
+    },
+    {
+      "parameters": {
+        "operation": "split",
+        "destinationFieldName": "message",
+        "fieldsToSplitOut": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "id": "split-messages",
+      "name": "Split WhatsApp Messages",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "url": "{{ $vars.WHATSAPP_API_URL }}/messages",
+        "authentication": "generic",
+        "genericAuthType": "httpHeaderAuth",
+        "httpHeaderAuth": {
+          "name": "Authorization",
+          "value": "Bearer {{ $vars.WHATSAPP_API_TOKEN }}"
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "messaging_product": "whatsapp",
+          "to": "={{ $json.message.to }}",
+          "type": "text",
+          "text": {
+            "body": "={{ $json.message.message }}"
+          }
+        }
+      },
+      "id": "send-whatsapp",
+      "name": "Send WhatsApp Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1320, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://vwhwufnckpqirxptwncw.supabase.co/rest/v1/cashflow_transactions?select=*&order=created_at.desc&limit=100",
+        "authentication": "generic",
+        "genericAuthType": "httpHeaderAuth",
+        "httpHeaderAuth": {
+          "name": "Authorization",
+          "value": "Bearer {{ $vars.SUPABASE_SERVICE_KEY }}"
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $vars.SUPABASE_ANON_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "get-financial-data",
+      "name": "Get Financial Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [660, 400]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "appendOrUpdate",
+        "documentId": "{{ $vars.GOOGLE_SHEETS_FINANCIAL_ID }}",
+        "sheetName": "Transactions",
+        "columnToMatchOn": "ID",
+        "options": {}
+      },
+      "id": "sync-financial-sheets",
+      "name": "Sync Financial to Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [880, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Create financial summary for Power BI\nconst transactions = $json || [];\n\nconst summary = {\n  date: new Date().toISOString().split('T')[0],\n  totalIncome: transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0),\n  totalExpense: transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + parseFloat(t.amount || 0), 0),\n  transactionCount: transactions.length,\n  categories: {}\n};\n\n// Group by category\ntransactions.forEach(t => {\n  const categoryName = t.category_name || 'Other';\n  if (!summary.categories[categoryName]) {\n    summary.categories[categoryName] = { income: 0, expense: 0, count: 0 };\n  }\n  \n  if (t.type === 'income') {\n    summary.categories[categoryName].income += parseFloat(t.amount || 0);\n  } else {\n    summary.categories[categoryName].expense += parseFloat(t.amount || 0);\n  }\n  summary.categories[categoryName].count++;\n});\n\nsummary.netCashflow = summary.totalIncome - summary.totalExpense;\n\nreturn summary;"
+      },
+      "id": "create-powerbi-data",
+      "name": "Create Power BI Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 400]
+    },
+    {
+      "parameters": {
+        "url": "{{ $vars.POWERBI_API_URL }}/datasets/{{ $vars.POWERBI_DATASET_ID }}/rows?$top=1000",
+        "authentication": "generic",
+        "genericAuthType": "httpHeaderAuth",
+        "httpHeaderAuth": {
+          "name": "Authorization",
+          "value": "Bearer {{ $vars.POWERBI_ACCESS_TOKEN }}"
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "rows": [
+            "={{ $json }}"
+          ]
+        }
+      },
+      "id": "update-powerbi",
+      "name": "Update Power BI Dataset",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1320, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://vwhwufnckpqirxptwncw.supabase.co/rest/v1/products?select=*&order=updated_at.desc&limit=100",
+        "authentication": "generic",
+        "genericAuthType": "httpHeaderAuth",
+        "httpHeaderAuth": {
+          "name": "Authorization",
+          "value": "Bearer {{ $vars.SUPABASE_SERVICE_KEY }}"
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $vars.SUPABASE_ANON_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "get-products",
+      "name": "Get Products",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [660, 600]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "appendOrUpdate",
+        "documentId": "{{ $vars.GOOGLE_SHEETS_PRODUCTS_ID }}",
+        "sheetName": "Products",
+        "columnToMatchOn": "ID",
+        "options": {}
+      },
+      "id": "sync-products-sheets",
+      "name": "Sync Products to Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [880, 600]
+    },
+    {
+      "parameters": {
+        "url": "https://vwhwufnckpqirxptwncw.supabase.co/rest/v1/n8n_workflow_logs",
+        "authentication": "generic",
+        "genericAuthType": "httpHeaderAuth",
+        "httpHeaderAuth": {
+          "name": "Authorization",
+          "value": "Bearer {{ $vars.SUPABASE_SERVICE_KEY }}"
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "{{ $vars.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "workflow_name": "external_data_sync_hub",
+          "status": "success",
+          "result_data": {
+            "sync_type": "={{ $('webhook-sync').item.json.parameters?.sync_type || 'all' }}",
+            "timestamp": "={{ $now.toISOString() }}",
+            "synced_entities": {
+              "customers": "={{ $('get-customers').item.json?.length || 0 }}",
+              "financial": "={{ $('get-financial-data').item.json?.length || 0 }}",
+              "products": "={{ $('get-products').item.json?.length || 0 }}"
+            }
+          },
+          "execution_time_ms": "={{ $workflow.duration }}"
+        }
+      },
+      "id": "log-sync-result",
+      "name": "Log Sync Results",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1540, 300]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "webhook-sync": {
+      "main": [
+        [
+          {
+            "node": "if-sync-customers",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "if-sync-financial",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "if-sync-products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "daily-sync": {
+      "main": [
+        [
+          {
+            "node": "if-sync-customers",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "if-sync-financial",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "if-sync-products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if-sync-customers": {
+      "main": [
+        [
+          {
+            "node": "get-customers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if-sync-financial": {
+      "main": [
+        [
+          {
+            "node": "get-financial-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if-sync-products": {
+      "main": [
+        [
+          {
+            "node": "get-products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-customers": {
+      "main": [
+        [
+          {
+            "node": "sync-to-sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "transform-for-accounting",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "prepare-whatsapp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "transform-for-accounting": {
+      "main": [
+        [
+          {
+            "node": "sync-to-accounting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepare-whatsapp": {
+      "main": [
+        [
+          {
+            "node": "split-messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split-messages": {
+      "main": [
+        [
+          {
+            "node": "send-whatsapp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-financial-data": {
+      "main": [
+        [
+          {
+            "node": "sync-financial-sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "create-powerbi-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-powerbi-data": {
+      "main": [
+        [
+          {
+            "node": "update-powerbi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-products": {
+      "main": [
+        [
+          {
+            "node": "sync-products-sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sync-to-sheets": {
+      "main": [
+        [
+          {
+            "node": "log-sync-result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sync-financial-sheets": {
+      "main": [
+        [
+          {
+            "node": "log-sync-result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sync-products-sheets": {
+      "main": [
+        [
+          {
+            "node": "log-sync-result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5",
+  "id": "5",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}
