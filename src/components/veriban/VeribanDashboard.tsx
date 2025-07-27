@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '../ui/alert';
 import { Checkbox } from '../ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useVeribanEInvoice } from '../../hooks/useVeribanEInvoice';
+import { useN8nTrigger } from '../../hooks/useN8nTrigger';
 import { supabase } from '../../integrations/supabase/client';
 import { 
   FileText, 
@@ -60,6 +61,15 @@ const VeribanDashboard: React.FC = () => {
     downloadPurchaseInvoice,
     markPurchaseInvoiceAsTransferred
   } = useVeribanEInvoice();
+
+  const {
+    loading: n8nLoading,
+    error: n8nError,
+    fetchDailyInvoices,
+    syncInvoiceStatus,
+    downloadInvoicePdf,
+    sendNotification
+  } = useN8nTrigger();
 
   // State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -200,19 +210,17 @@ const VeribanDashboard: React.FC = () => {
   };
 
   const handleTodayInvoices = async () => {
-    const today = new Date();
-    const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-    
     try {
-      const uuids = await getAllPurchaseInvoiceUUIDs(startDate, endDate);
-      if (uuids && uuids.length > 0) {
-        const details = await getPurchaseInvoiceDetailsFromUUIDs(uuids);
-        if (details) {
-          await loadStats();
-          await loadInvoices();
-        }
-      }
+      console.log('📅 Fetching today\'s invoices via n8n...');
+      
+      await fetchDailyInvoices();
+      
+      // Reload invoices after n8n processes them
+      setTimeout(() => {
+        loadStats();
+        loadInvoices();
+      }, 2000);
+      
     } catch (error) {
       console.error('Error fetching today invoices:', error);
     }
@@ -220,11 +228,17 @@ const VeribanDashboard: React.FC = () => {
 
   const handleUntransferred = async () => {
     try {
-      const result = await getUnTransferredPurchaseInvoices();
-      if (result) {
-        await loadStats();
-        await loadInvoices();
-      }
+      console.log('📋 Fetching untransferred invoices via n8n...');
+      
+      // Trigger n8n workflow to sync and get untransferred invoices
+      await syncInvoiceStatus([]);
+      
+      // Reload invoices after n8n processes them
+      setTimeout(() => {
+        loadStats();
+        loadInvoices();
+      }, 2000);
+      
     } catch (error) {
       console.error('Error fetching untransferred invoices:', error);
     }
@@ -390,13 +404,13 @@ const VeribanDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            <Button onClick={handleTodayInvoices} disabled={loading} className="gap-2">
+            <Button onClick={handleTodayInvoices} disabled={loading || n8nLoading} className="gap-2">
               <Calendar className="h-4 w-4" />
-              Bugün Gelen Faturaları Çek
+              {(loading || n8nLoading) ? "n8n ile Getiriliyor..." : "Bugün Gelen Faturaları Çek (n8n)"}
             </Button>
-            <Button onClick={handleUntransferred} disabled={loading} variant="outline" className="gap-2">
+            <Button onClick={handleUntransferred} disabled={loading || n8nLoading} variant="outline" className="gap-2">
               <Download className="h-4 w-4" />
-              Transfer Edilmemişleri Getir
+              {(loading || n8nLoading) ? "n8n ile Getiriliyor..." : "Transfer Edilmemişleri Getir (n8n)"}
             </Button>
             <Button onClick={() => window.open('/veriban-invoices', '_blank')} variant="secondary" className="gap-2">
               <Eye className="h-4 w-4" />
