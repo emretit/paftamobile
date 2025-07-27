@@ -30,10 +30,25 @@ serve(async (req) => {
 
     // Get n8n webhook URLs from environment
     const webhookUrls = {
+      // Existing workflows
       'fetch_daily_invoices': Deno.env.get('N8N_FETCH_INVOICES_WEBHOOK'),
       'sync_invoice_status': Deno.env.get('N8N_SYNC_STATUS_WEBHOOK'),
       'download_invoice_pdf': Deno.env.get('N8N_DOWNLOAD_PDF_WEBHOOK'),
-      'send_notification': Deno.env.get('N8N_NOTIFICATION_WEBHOOK')
+      'send_notification': Deno.env.get('N8N_NOTIFICATION_WEBHOOK'),
+      
+      // Advanced automation workflows
+      'crm_automation_pipeline': Deno.env.get('N8N_CRM_AUTOMATION_WEBHOOK'),
+      'einvoice_full_automation': Deno.env.get('N8N_EINVOICE_AUTOMATION_WEBHOOK'),
+      'financial_reporting_automation': Deno.env.get('N8N_FINANCIAL_REPORTING_WEBHOOK'),
+      'smart_task_management': Deno.env.get('N8N_TASK_MANAGEMENT_WEBHOOK'),
+      'external_data_sync_hub': Deno.env.get('N8N_DATA_SYNC_WEBHOOK'),
+      
+      // Specific event triggers
+      'opportunity_status_changed': Deno.env.get('N8N_OPPORTUNITY_STATUS_WEBHOOK'),
+      'proposal_accepted': Deno.env.get('N8N_PROPOSAL_ACCEPTED_WEBHOOK'),
+      'task_due_reminder': Deno.env.get('N8N_TASK_REMINDER_WEBHOOK'),
+      'customer_data_sync': Deno.env.get('N8N_CUSTOMER_SYNC_WEBHOOK'),
+      'daily_report_generation': Deno.env.get('N8N_DAILY_REPORT_WEBHOOK')
     }
 
     const webhookUrl = webhookUrls[workflow as keyof typeof webhookUrls]
