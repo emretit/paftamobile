@@ -231,7 +231,7 @@ const VeribanDashboard: React.FC = () => {
       console.log('📋 Fetching untransferred invoices via n8n...');
       
       // Trigger n8n workflow to sync and get untransferred invoices
-      await syncInvoiceStatus([]);
+      await fetchDailyInvoices();
       
       // Reload invoices after n8n processes them
       setTimeout(() => {
