@@ -21,6 +21,8 @@ interface SettingsProps {
 
 const Settings = ({ isCollapsed, setIsCollapsed }: SettingsProps) => {
   const [activeTab, setActiveTab] = useState("users");
+  
+  console.log("Settings page loaded successfully");
 
   return (
     <div className="min-h-screen bg-white">
