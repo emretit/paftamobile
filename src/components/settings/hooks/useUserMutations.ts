@@ -57,13 +57,9 @@ export const useUserMutations = () => {
 
   const deactivateUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const updateData: Database['public']['Tables']['profiles']['Update'] = {
-        is_active: false
-      };
-
       const { error: updateError } = await supabase
         .from('profiles')
-        .update(updateData)
+        .update({ is_active: false })
         .eq('id', userId);
       
       if (updateError) throw updateError;
