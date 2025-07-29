@@ -345,8 +345,28 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
     toast.success("Yazdırma işlemi başlatıldı");
   };
 
-  const handleDownloadPdf = () => {
-    toast.success("PDF indiriliyor");
+  const handleDownloadPdf = async () => {
+    if (!proposal) return;
+    
+    try {
+      const { ProposalPdfGenerator } = await import('@/utils/proposalPdfGenerator');
+      const generator = new ProposalPdfGenerator();
+      
+      // Şirket bilgileri (örnek - gerçek uygulamada settings'ten gelecek)
+      const companyInfo = {
+        name: 'Şirket Adı',
+        address: 'Şirket Adresi',
+        phone: '+90 XXX XXX XX XX',
+        email: 'info@sirket.com',
+        taxNumber: 'XXXXXXXXX'
+      };
+      
+      generator.generateProposalPdf(proposal, companyInfo);
+      toast.success("PDF başarıyla indirildi");
+    } catch (error) {
+      console.error('PDF oluşturma hatası:', error);
+      toast.error("PDF oluşturulurken bir hata oluştu");
+    }
   };
 
   const handleSendEmail = () => {
