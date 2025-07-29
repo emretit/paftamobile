@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { CalendarDays, Plus, Trash2, Eye, FileDown, ArrowLeft, Calculator, Check, ChevronsUpDown, Printer, Download, Mail, Clock, Send, ShoppingCart, FileText } from "lucide-react";
+import { Plus, Trash2, Eye, FileDown, ArrowLeft, Calculator, Check, ChevronsUpDown, Printer, Download, Mail, Clock, Send, ShoppingCart, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/utils/formatters";
 import { useProposalEdit } from "@/hooks/useProposalEdit";
@@ -423,10 +423,6 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
     ) : null;
   };
 
-  const handleFormSave = async (formData: any) => {
-    await handleSave(formData);
-    toast.success("Teklif başarıyla güncellendi");
-  };
 
   return (
     <DefaultLayout 
