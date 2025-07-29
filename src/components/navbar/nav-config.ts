@@ -103,11 +103,7 @@ export const navItems = [
         icon: FileText,
         label: "E-Fatura",
       },
-      {
-        path: "/veriban",
-        icon: ZapIcon,
-        label: "Veriban E-Fatura",
-      },
+
     ],
   },
   {

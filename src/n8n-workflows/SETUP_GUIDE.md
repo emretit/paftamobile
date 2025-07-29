@@ -21,9 +21,6 @@ N8N_DATA_SYNC_WEBHOOK=https://your-n8n.app/webhook/data-sync
 ### External API Integration
 ```
 SLACK_WEBHOOK_PATH=T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
-VERIBAN_USERNAME=your_veriban_username
-VERIBAN_PASSWORD=your_veriban_password
-VERIBAN_SOAP_ENDPOINT=https://efaturatest.veriban.com.tr/EInvoiceService/EInvoice.svc
 GOOGLE_DRIVE_INVOICE_FOLDER_ID=your_folder_id
 WHATSAPP_API_TOKEN=your_whatsapp_business_token
 ACCOUNTING_API_TOKEN=your_accounting_software_token

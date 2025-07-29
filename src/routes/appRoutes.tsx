@@ -12,7 +12,7 @@ import { crmRoutes } from "./crmRoutes";
 import { settingsRoutes } from "./settingsRoutes";
 import { purchaseRoutes } from "./purchaseRoutes";
 import { proposalRoutes } from "./proposalRoutes";
-import { veribanRoutes } from "./veribanRoutes";
+
 import Deliveries from "@/pages/Deliveries";
 import Returns from "@/pages/Returns";
 import InvoiceManagement from "@/pages/InvoiceManagement";
@@ -33,7 +33,7 @@ export const appRoutes: RouteConfig[] = [
   ...settingsRoutes,
   ...purchaseRoutes,
   ...proposalRoutes,
-  ...veribanRoutes,
+
   { path: "/deliveries", component: Deliveries, protected: true },
   { path: "/returns", component: Returns, protected: true },
   { path: "/invoices", component: InvoiceManagement, protected: true },
