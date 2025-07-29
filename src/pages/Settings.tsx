@@ -11,7 +11,7 @@ import { UserManagement } from "@/components/settings/UserManagement";
 import { RoleManagement } from "@/components/settings/RoleManagement";
 import { SystemSettings } from "@/components/settings/SystemSettings";
 import { NilveraSettings } from "@/components/settings/NilveraSettings";
-
+import { TemplateManagement } from "@/components/settings/TemplateManagement";
 import N8nSettingsPanel from "@/components/settings/N8nSettingsPanel";
 
 interface SettingsProps {
@@ -30,11 +30,11 @@ const Settings = ({ isCollapsed, setIsCollapsed }: SettingsProps) => {
           <h1 className="text-2xl font-bold mb-6">Ayarlar & Yönetim</h1>
           
           <CustomTabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <CustomTabsList className="w-full grid grid-cols-5">
+            <CustomTabsList className="w-full grid grid-cols-6">
               <CustomTabsTrigger value="users">Kullanıcılar</CustomTabsTrigger>
               <CustomTabsTrigger value="roles">Roller & İzinler</CustomTabsTrigger>
               <CustomTabsTrigger value="nilvera">Nilvera E-Fatura</CustomTabsTrigger>
-
+              <CustomTabsTrigger value="templates" data-tab="templates">Şablonlar</CustomTabsTrigger>
               <CustomTabsTrigger value="n8n">n8n Otomasyonu</CustomTabsTrigger>
               <CustomTabsTrigger value="system">Sistem Ayarları</CustomTabsTrigger>
             </CustomTabsList>
@@ -51,7 +51,9 @@ const Settings = ({ isCollapsed, setIsCollapsed }: SettingsProps) => {
               <NilveraSettings />
             </CustomTabsContent>
 
-
+            <CustomTabsContent value="templates">
+              <TemplateManagement />
+            </CustomTabsContent>
 
             <CustomTabsContent value="n8n">
               <N8nSettingsPanel />

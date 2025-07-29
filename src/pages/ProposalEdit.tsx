@@ -14,6 +14,7 @@ import { formatCurrency } from "@/utils/formatters";
 import { useProposalEdit } from "@/hooks/useProposalEdit";
 import { useCustomerSelect } from "@/hooks/useCustomerSelect";
 import { ProposalItem } from "@/types/proposal";
+import { PdfDownloadDropdown } from "@/components/proposals/PdfDownloadDropdown";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -345,7 +346,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
     toast.success("Yazdırma işlemi başlatıldı");
   };
 
-  const handleDownloadPdf = async () => {
+  const handleDownloadPdf = async (templateId?: string) => {
     if (!proposal) return;
     
     try {
@@ -362,7 +363,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
       };
       
       generator.generateProposalPdf(proposal, companyInfo);
-      toast.success("PDF başarıyla indirildi");
+      toast.success(`PDF ${templateId ? 'seçilen şablonla' : ''} başarıyla indirildi`);
     } catch (error) {
       console.error('PDF oluşturma hatası:', error);
       toast.error("PDF oluşturulurken bir hata oluştu");
@@ -477,10 +478,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
             <Eye className="h-4 w-4" />
             Önizleme
           </Button>
-          <Button variant="outline" onClick={handleDownloadPdf} className="gap-2">
-            <FileDown className="h-4 w-4" />
-            PDF İndir
-          </Button>
+          <PdfDownloadDropdown onDownloadWithTemplate={handleDownloadPdf} />
           <Button 
             variant="outline" 
             onClick={() => handleSaveChanges(proposal.status)}
