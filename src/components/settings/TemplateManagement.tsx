@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ProposalTemplate } from "@/types/proposal-template";
-import { Plus, Edit, Trash2, Save, X } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X, Palette } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { TemplateDesigner } from "./template-designer/TemplateDesigner";
 
 const defaultTemplates: ProposalTemplate[] = [
   {
@@ -42,6 +43,7 @@ export const TemplateManagement = () => {
   const [templates, setTemplates] = useState<ProposalTemplate[]>(defaultTemplates);
   const [editingTemplate, setEditingTemplate] = useState<ProposalTemplate | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [designingTemplate, setDesigningTemplate] = useState<ProposalTemplate | null>(null);
   const [newTemplate, setNewTemplate] = useState<Partial<ProposalTemplate>>({
     name: "",
     description: "",
@@ -106,6 +108,28 @@ export const TemplateManagement = () => {
     setTemplates(templates.filter(t => t.id !== id));
     toast.success("Şablon silindi");
   };
+
+  const handleDesignTemplate = (template: ProposalTemplate) => {
+    setDesigningTemplate(template);
+  };
+
+  const handleSaveDesign = (updatedTemplate: ProposalTemplate) => {
+    setTemplates(templates.map(t => 
+      t.id === updatedTemplate.id ? updatedTemplate : t
+    ));
+    setDesigningTemplate(null);
+    toast.success("Şablon tasarımı kaydedildi");
+  };
+
+  if (designingTemplate) {
+    return (
+      <TemplateDesigner
+        template={designingTemplate}
+        onSave={handleSaveDesign}
+        onCancel={() => setDesigningTemplate(null)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -238,6 +262,15 @@ export const TemplateManagement = () => {
                     </>
                   ) : (
                     <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDesignTemplate(template)}
+                        className="gap-1"
+                      >
+                        <Palette className="h-3 w-3" />
+                        Tasarla
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
