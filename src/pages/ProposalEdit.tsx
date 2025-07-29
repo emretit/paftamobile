@@ -477,7 +477,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
             <Eye className="h-4 w-4" />
             Önizleme
           </Button>
-          <Button variant="outline" onClick={handleExportPDF} className="gap-2">
+          <Button variant="outline" onClick={handleDownloadPdf} className="gap-2">
             <FileDown className="h-4 w-4" />
             PDF İndir
           </Button>
