@@ -10,7 +10,7 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
   template,
   designSettings,
 }) => {
-  const { colors, fonts, header, layout } = designSettings;
+  const { colors, fonts, header, layout, sections, branding } = designSettings;
 
   // Sample data for preview
   const sampleData = {
@@ -38,153 +38,213 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
 
       {/* Document Preview */}
       <div 
-        className="p-8 space-y-6"
+        className={`p-8 ${layout.spacing === 'compact' ? 'space-y-4' : layout.spacing === 'spacious' ? 'space-y-8' : 'space-y-6'}`}
         style={{
           fontFamily: fonts.primary,
           color: colors.text,
           backgroundColor: colors.background,
         }}
       >
-        {/* Header Section */}
-        {header.enabled && (
-          <div 
-            className="flex items-center justify-between pb-4 border-b"
-            style={{
-              backgroundColor: header.backgroundColor,
-              color: header.textColor,
-              borderColor: colors.border,
-            }}
-          >
-            <div className={`flex items-center ${header.logoPosition === 'center' ? 'justify-center' : header.logoPosition === 'right' ? 'justify-end' : 'justify-start'}`}>
-              <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center text-white font-bold">
-                LOGO
-              </div>
-              {header.showCompanyInfo && (
-                <div className="ml-4">
-                  <h2 className="font-semibold" style={{ fontSize: fonts.sizes.heading }}>
-                    Şirket Adı
-                  </h2>
-                  <p className="text-sm opacity-75">Adres Bilgisi</p>
-                </div>
-              )}
-            </div>
-            <div className="text-right">
-              <h1 
-                className="font-bold" 
-                style={{ 
-                  fontSize: fonts.sizes.title,
-                  color: colors.primary 
-                }}
-              >
-                TEKLİF
-              </h1>
-            </div>
-          </div>
-        )}
+        {/* Dynamic Sections Based on Design Settings */}
+        {sections
+          .filter(section => section.enabled)
+          .sort((a, b) => a.order - b.order)
+          .map((section) => {
+            switch (section.type) {
+              case 'header':
+                return header.enabled && (
+                  <div 
+                    key={section.id}
+                    className="flex items-center justify-between pb-4 border-b"
+                    style={{
+                      backgroundColor: header.backgroundColor,
+                      color: header.textColor,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <div className={`flex items-center ${header.logoPosition === 'center' ? 'justify-center' : header.logoPosition === 'right' ? 'justify-end' : 'justify-start'}`}>
+                      <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center text-white font-bold">
+                        LOGO
+                      </div>
+                      {header.showCompanyInfo && (
+                        <div className="ml-4">
+                          <h2 className="font-semibold" style={{ fontSize: fonts.sizes.heading }}>
+                            {branding.companyName}
+                          </h2>
+                          {branding.tagline && <p className="text-sm opacity-75">{branding.tagline}</p>}
+                          {branding.website && <p className="text-xs opacity-60">{branding.website}</p>}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <h1 
+                        className="font-bold" 
+                        style={{ 
+                          fontSize: fonts.sizes.title,
+                          color: colors.primary 
+                        }}
+                      >
+                        TEKLİF
+                      </h1>
+                    </div>
+                  </div>
+                );
 
-        {/* Proposal Info */}
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <h3 className="font-semibold mb-2" style={{ fontSize: fonts.sizes.heading }}>
-              Teklif Bilgileri
-            </h3>
-            <div className="space-y-1" style={{ fontSize: fonts.sizes.body }}>
-              <p><span className="font-medium">Teklif No:</span> {sampleData.proposalNumber}</p>
-              <p><span className="font-medium">Tarih:</span> {sampleData.date}</p>
-              <p><span className="font-medium">Geçerlilik:</span> 30 gün</p>
-            </div>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2" style={{ fontSize: fonts.sizes.heading }}>
-              Müşteri Bilgileri
-            </h3>
-            <div className="space-y-1" style={{ fontSize: fonts.sizes.body }}>
-              <p><span className="font-medium">Firma:</span> {sampleData.customer}</p>
-              <p><span className="font-medium">Telefon:</span> +90 555 123 4567</p>
-              <p><span className="font-medium">E-posta:</span> info@ornek.com</p>
-            </div>
-          </div>
-        </div>
+              case 'proposal-info':
+                return (
+                  <div key={section.id}>
+                    <h3 className="font-semibold mb-2" style={{ fontSize: fonts.sizes.heading }}>
+                      {section.title}
+                    </h3>
+                    <div className="space-y-1" style={{ fontSize: fonts.sizes.body }}>
+                      <p><span className="font-medium">Teklif No:</span> {sampleData.proposalNumber}</p>
+                      <p><span className="font-medium">Tarih:</span> {sampleData.date}</p>
+                      <p><span className="font-medium">Geçerlilik:</span> 30 gün</p>
+                    </div>
+                  </div>
+                );
 
-        {/* Items Table */}
-        <div>
-          <h3 className="font-semibold mb-3" style={{ fontSize: fonts.sizes.heading }}>
-            Teklif Kalemleri
-          </h3>
-          <div 
-            className={`overflow-hidden ${layout.roundedCorners ? 'rounded-lg' : ''}`}
-            style={{
-              border: layout.showBorders ? `1px solid ${colors.border}` : 'none',
-            }}
-          >
-            {/* Table Header */}
-            <div 
-              className="grid grid-cols-12 gap-4 p-3 font-medium"
-              style={{
-                backgroundColor: designSettings.table.headerBackground,
-                color: designSettings.table.headerText,
-                fontSize: fonts.sizes.body,
-              }}
-            >
-              <div className="col-span-6">Açıklama</div>
-              <div className="col-span-2 text-center">Miktar</div>
-              <div className="col-span-2 text-right">Birim Fiyat</div>
-              <div className="col-span-2 text-right">Toplam</div>
-            </div>
+              case 'customer-info':
+                return (
+                  <div key={section.id}>
+                    <h3 className="font-semibold mb-2" style={{ fontSize: fonts.sizes.heading }}>
+                      {section.title}
+                    </h3>
+                    <div className="space-y-1" style={{ fontSize: fonts.sizes.body }}>
+                      <p><span className="font-medium">Firma:</span> {sampleData.customer}</p>
+                      <p><span className="font-medium">Telefon:</span> +90 555 123 4567</p>
+                      <p><span className="font-medium">E-posta:</span> info@ornek.com</p>
+                    </div>
+                  </div>
+                );
 
-            {/* Table Rows */}
-            {sampleData.items.map((item, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-12 gap-4 p-3"
-                style={{
-                  backgroundColor: designSettings.table.rowAlternating && index % 2 === 1 
-                    ? `${colors.primary}10` : 'transparent',
-                  borderTop: layout.showBorders ? `1px solid ${colors.border}` : 'none',
-                  fontSize: fonts.sizes.body,
-                }}
-              >
-                <div className="col-span-6">{item.description}</div>
-                <div className="col-span-2 text-center">{item.quantity}</div>
-                <div className="col-span-2 text-right">{item.price.toLocaleString('tr-TR')} ₺</div>
-                <div className="col-span-2 text-right font-medium">{item.total.toLocaleString('tr-TR')} ₺</div>
-              </div>
-            ))}
-          </div>
-        </div>
+              case 'items-table':
+                return (
+                  <div key={section.id}>
+                    <h3 className="font-semibold mb-3" style={{ fontSize: fonts.sizes.heading }}>
+                      {section.title}
+                    </h3>
+                    <div 
+                      className={`overflow-hidden ${layout.roundedCorners ? 'rounded-lg' : ''}`}
+                      style={{
+                        border: layout.showBorders ? `1px solid ${colors.border}` : 'none',
+                      }}
+                    >
+                      {/* Table Header */}
+                      <div 
+                        className="grid grid-cols-12 gap-4 p-3 font-medium"
+                        style={{
+                          backgroundColor: designSettings.table.headerBackground,
+                          color: designSettings.table.headerText,
+                          fontSize: fonts.sizes.body,
+                        }}
+                      >
+                        <div className="col-span-6">Açıklama</div>
+                        <div className="col-span-2 text-center">Miktar</div>
+                        <div className="col-span-2 text-right">Birim Fiyat</div>
+                        <div className="col-span-2 text-right">Toplam</div>
+                      </div>
 
-        {/* Totals */}
-        <div className="flex justify-end">
-          <div className="w-80 space-y-2">
-            <div className="flex justify-between">
-              <span>Ara Toplam:</span>
-              <span>{sampleData.subtotal.toLocaleString('tr-TR')} ₺</span>
-            </div>
-            <div className="flex justify-between">
-              <span>KDV (%18):</span>
-              <span>{sampleData.tax.toLocaleString('tr-TR')} ₺</span>
-            </div>
-            <div 
-              className="flex justify-between font-bold text-lg pt-2 border-t"
-              style={{ 
-                borderColor: colors.border,
-                color: colors.primary 
-              }}
-            >
-              <span>Genel Toplam:</span>
-              <span>{sampleData.total.toLocaleString('tr-TR')} ₺</span>
-            </div>
-          </div>
-        </div>
+                      {/* Table Rows */}
+                      {sampleData.items.map((item, index) => (
+                        <div
+                          key={index}
+                          className="grid grid-cols-12 gap-4 p-3"
+                          style={{
+                            backgroundColor: designSettings.table.rowAlternating && index % 2 === 1 
+                              ? `${colors.primary}10` : 'transparent',
+                            borderTop: layout.showBorders ? `1px solid ${colors.border}` : 'none',
+                            fontSize: fonts.sizes.body,
+                          }}
+                        >
+                          <div className="col-span-6">{item.description}</div>
+                          <div className="col-span-2 text-center">{item.quantity}</div>
+                          <div className="col-span-2 text-right">{item.price.toLocaleString('tr-TR')} ₺</div>
+                          <div className="col-span-2 text-right font-medium">{item.total.toLocaleString('tr-TR')} ₺</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
 
-        {/* Footer */}
-        <div className="pt-6 border-t" style={{ borderColor: colors.border }}>
-          <div className="text-sm space-y-2" style={{ fontSize: fonts.sizes.small }}>
-            <p><strong>Ödeme Şartları:</strong> Peşin ödeme</p>
-            <p><strong>Teslimat Şartları:</strong> 30 iş günü</p>
-            <p><strong>Notlar:</strong> Bu teklif 30 gün süreyle geçerlidir.</p>
-          </div>
-        </div>
+              case 'totals':
+                return (
+                  <div key={section.id} className="flex justify-end">
+                    <div className="w-80 space-y-2">
+                      <div className="flex justify-between">
+                        <span>Ara Toplam:</span>
+                        <span>{sampleData.subtotal.toLocaleString('tr-TR')} ₺</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>KDV (%18):</span>
+                        <span>{sampleData.tax.toLocaleString('tr-TR')} ₺</span>
+                      </div>
+                      <div 
+                        className="flex justify-between font-bold text-lg pt-2 border-t"
+                        style={{ 
+                          borderColor: colors.border,
+                          color: colors.primary 
+                        }}
+                      >
+                        <span>Genel Toplam:</span>
+                        <span>{sampleData.total.toLocaleString('tr-TR')} ₺</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+
+              case 'terms':
+                return (
+                  <div key={section.id} className="pt-6 border-t" style={{ borderColor: colors.border }}>
+                    <h3 className="font-semibold mb-2" style={{ fontSize: fonts.sizes.heading }}>
+                      {section.title}
+                    </h3>
+                    <div className="text-sm space-y-2" style={{ fontSize: fonts.sizes.small }}>
+                      <p><strong>Ödeme Şartları:</strong> Peşin ödeme</p>
+                      <p><strong>Teslimat Şartları:</strong> 30 iş günü</p>
+                      <p><strong>Notlar:</strong> Bu teklif 30 gün süreyle geçerlidir.</p>
+                    </div>
+                  </div>
+                );
+
+              case 'footer':
+                return (
+                  <div key={section.id} className="text-center text-sm" style={{ 
+                    fontSize: fonts.sizes.small,
+                    color: colors.secondary 
+                  }}>
+                    <p>© 2024 {branding.companyName} - Tüm hakları saklıdır</p>
+                    {branding.website && <p>{branding.website}</p>}
+                  </div>
+                );
+
+              case 'custom':
+                return (
+                  <div key={section.id} className="p-4 border rounded-lg" style={{ borderColor: colors.border }}>
+                    <h3 className="font-semibold mb-2" style={{ fontSize: fonts.sizes.heading }}>
+                      {section.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Özel bölüm içeriği buraya gelecek...
+                    </p>
+                    {section.fields && section.fields.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        {section.fields.map((field) => (
+                          <div key={field.id} className="flex items-center gap-2">
+                            <span className="text-sm font-medium">{field.label}:</span>
+                            <span className="text-sm">Örnek değer</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+
+              default:
+                return null;
+            }
+          })}
+
       </div>
     </div>
   );

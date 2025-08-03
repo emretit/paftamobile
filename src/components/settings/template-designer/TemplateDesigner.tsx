@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { ProposalTemplate, TemplateDesignSettings } from "@/types/proposal-template";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Eye } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Eye, Palette, Settings } from "lucide-react";
 import { DesignSidebar } from "./DesignSidebar";
 import { TemplatePreview } from "./TemplatePreview";
+import { VisualEditor } from "./VisualEditor";
 
 interface TemplateDesignerProps {
   template: ProposalTemplate;
@@ -64,12 +66,34 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
 
         {/* Main Content */}
         <div className="flex-1 flex pt-20">
-          {/* Design Sidebar */}
-          <div className="w-80 border-r bg-card overflow-y-auto">
-            <DesignSidebar
-              designSettings={designSettings}
-              onSettingsChange={setDesignSettings}
-            />
+          {/* Left Panel - Tabs for Visual Editor and Design Settings */}
+          <div className="w-96 border-r bg-card overflow-y-auto">
+            <Tabs defaultValue="visual" className="h-full">
+              <TabsList className="grid w-full grid-cols-2 m-4">
+                <TabsTrigger value="visual" className="gap-2">
+                  <Palette className="w-4 h-4" />
+                  Görsel Düzenleyici
+                </TabsTrigger>
+                <TabsTrigger value="design" className="gap-2">
+                  <Settings className="w-4 h-4" />
+                  Tasarım Ayarları
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="visual" className="m-0 p-4 pt-0">
+                <VisualEditor
+                  designSettings={designSettings}
+                  onSettingsChange={setDesignSettings}
+                />
+              </TabsContent>
+              
+              <TabsContent value="design" className="m-0 p-4 pt-0">
+                <DesignSidebar
+                  designSettings={designSettings}
+                  onSettingsChange={setDesignSettings}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Preview Area */}
@@ -80,7 +104,7 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Eye className="w-5 h-5" />
-                      Önizleme
+                      Canlı Önizleme
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -147,5 +171,68 @@ function getDefaultDesignSettings(): TemplateDesignSettings {
       roundedCorners: false,
       shadowEnabled: false,
     },
+    branding: {
+      companyName: 'Şirket Adı',
+      tagline: 'Şirket slogan',
+      website: 'www.sirket.com',
+    },
+    sections: [
+      {
+        id: 'header',
+        type: 'header',
+        title: 'Başlık',
+        enabled: true,
+        order: 0,
+        settings: {},
+      },
+      {
+        id: 'proposal-info',
+        type: 'proposal-info',
+        title: 'Teklif Bilgileri',
+        enabled: true,
+        order: 1,
+        settings: {},
+      },
+      {
+        id: 'customer-info',
+        type: 'customer-info',
+        title: 'Müşteri Bilgileri',
+        enabled: true,
+        order: 2,
+        settings: {},
+      },
+      {
+        id: 'items-table',
+        type: 'items-table',
+        title: 'Teklif Kalemleri',
+        enabled: true,
+        order: 3,
+        settings: {},
+      },
+      {
+        id: 'totals',
+        type: 'totals',
+        title: 'Toplam',
+        enabled: true,
+        order: 4,
+        settings: {},
+      },
+      {
+        id: 'terms',
+        type: 'terms',
+        title: 'Şartlar',
+        enabled: true,
+        order: 5,
+        settings: {},
+      },
+      {
+        id: 'footer',
+        type: 'footer',
+        title: 'Alt Bilgi',
+        enabled: true,
+        order: 6,
+        settings: {},
+      },
+    ],
   };
 }

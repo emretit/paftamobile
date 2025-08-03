@@ -1,6 +1,38 @@
 
 import { ProposalItem } from "./proposal";
 
+export interface TemplateSection {
+  id: string;
+  type: 'header' | 'customer-info' | 'proposal-info' | 'items-table' | 'totals' | 'terms' | 'footer' | 'custom';
+  title: string;
+  enabled: boolean;
+  order: number;
+  settings: Record<string, any>;
+  fields?: TemplateField[];
+}
+
+export interface TemplateField {
+  id: string;
+  type: 'text' | 'number' | 'date' | 'select' | 'textarea' | 'checkbox' | 'image' | 'table';
+  label: string;
+  key: string;
+  required: boolean;
+  defaultValue?: any;
+  options?: string[];
+  validation?: {
+    min?: number;
+    max?: number;
+    pattern?: string;
+  };
+  style?: {
+    width?: string;
+    alignment?: 'left' | 'center' | 'right';
+    fontSize?: number;
+    fontWeight?: 'normal' | 'bold';
+    color?: string;
+  };
+}
+
 export interface TemplateDesignSettings {
   // Page Settings
   pageSize: 'A4' | 'A3' | 'Letter';
@@ -70,6 +102,17 @@ export interface TemplateDesignSettings {
     roundedCorners: boolean;
     shadowEnabled: boolean;
   };
+
+  // Visual Editor Settings
+  branding: {
+    logo?: string;
+    companyName: string;
+    tagline?: string;
+    website?: string;
+  };
+
+  // Section Layout
+  sections: TemplateSection[];
 }
 
 export interface ProposalTemplate {
