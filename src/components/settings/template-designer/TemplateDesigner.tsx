@@ -3,10 +3,11 @@ import { ProposalTemplate, TemplateDesignSettings } from "@/types/proposal-templ
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Eye, Palette, Settings } from "lucide-react";
+import { ArrowLeft, Eye, Palette, Settings, MousePointer } from "lucide-react";
 import { DesignSidebar } from "./DesignSidebar";
 import { TemplatePreview } from "./TemplatePreview";
 import { VisualEditor } from "./VisualEditor";
+import PdfDragDropEditor from "./PdfDragDropEditor";
 
 interface TemplateDesignerProps {
   template: ProposalTemplate;
@@ -66,10 +67,13 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
 
         {/* Main Content */}
         <div className="flex-1 flex pt-20">
-          {/* Left Panel - Tabs for Visual Editor and Design Settings */}
-          <div className="w-96 border-r bg-card overflow-y-auto">
-            <Tabs defaultValue="visual" className="h-full">
-              <TabsList className="grid w-full grid-cols-2 m-4">
+          <Tabs defaultValue="dragdrop" className="h-full w-full">
+            <div className="border-b bg-card">
+              <TabsList className="grid w-full grid-cols-3 m-4">
+                <TabsTrigger value="dragdrop" className="gap-2">
+                  <MousePointer className="w-4 h-4" />
+                  Sürükle-Bırak
+                </TabsTrigger>
                 <TabsTrigger value="visual" className="gap-2">
                   <Palette className="w-4 h-4" />
                   Görsel Düzenleyici
@@ -79,44 +83,75 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
                   Tasarım Ayarları
                 </TabsTrigger>
               </TabsList>
-              
-              <TabsContent value="visual" className="m-0 p-4 pt-0">
+            </div>
+            
+            <TabsContent value="dragdrop" className="m-0 h-[calc(100%-80px)]">
+              <PdfDragDropEditor 
+                onSave={(fields) => {
+                  console.log('PDF fields saved:', fields);
+                  // Bu alanları designSettings'e ekleyebiliriz
+                }}
+              />
+            </TabsContent>
+            
+            <TabsContent value="visual" className="m-0 flex h-[calc(100%-80px)]">
+              <div className="w-96 border-r bg-card overflow-y-auto p-4">
                 <VisualEditor
                   designSettings={designSettings}
                   onSettingsChange={setDesignSettings}
                 />
-              </TabsContent>
-              
-              <TabsContent value="design" className="m-0 p-4 pt-0">
+              </div>
+              {showPreview && (
+                <div className="flex-1 bg-muted/30 overflow-y-auto">
+                  <div className="p-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Eye className="w-5 h-5" />
+                          Canlı Önizleme
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <TemplatePreview
+                          template={template}
+                          designSettings={designSettings}
+                        />
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="design" className="m-0 flex h-[calc(100%-80px)]">
+              <div className="w-96 border-r bg-card overflow-y-auto p-4">
                 <DesignSidebar
                   designSettings={designSettings}
                   onSettingsChange={setDesignSettings}
                 />
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          {/* Preview Area */}
-          {showPreview && (
-            <div className="flex-1 bg-muted/30 overflow-y-auto">
-              <div className="p-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Eye className="w-5 h-5" />
-                      Canlı Önizleme
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <TemplatePreview
-                      template={template}
-                      designSettings={designSettings}
-                    />
-                  </CardContent>
-                </Card>
               </div>
-            </div>
-          )}
+              {showPreview && (
+                <div className="flex-1 bg-muted/30 overflow-y-auto">
+                  <div className="p-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Eye className="w-5 h-5" />
+                          Canlı Önizleme
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <TemplatePreview
+                          template={template}
+                          designSettings={designSettings}
+                        />
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
