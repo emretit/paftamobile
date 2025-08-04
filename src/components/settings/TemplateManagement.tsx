@@ -174,6 +174,17 @@ export const TemplateManagement: React.FC = () => {
     }
   };
 
+  const handleDeleteTemplateWithError = (id: string) => {
+    if (confirm('Bu şablonu silmek istediğinizden emin misiniz?')) {
+      deleteMutation.mutate(id, {
+        onError: (error) => {
+          console.error('Delete error:', error);
+          toast.error('Silme işlemi başarısız. Lütfen tekrar deneyin.');
+        }
+      });
+    }
+  };
+
   const handleDesignSettings = (template: ProposalTemplate) => {
     setCurrentTemplate(template);
     setIsDesigning(true);
@@ -286,74 +297,60 @@ export const TemplateManagement: React.FC = () => {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="space-y-2">
         {templates?.map((template) => (
-          <Card key={template.id} className="overflow-hidden">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="text-lg">{template.name}</CardTitle>
-                  <CardDescription className="line-clamp-2">
-                    {template.description}
-                  </CardDescription>
+          <div key={template.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-medium">{template.name}</h3>
+                  {template.isRecommended && (
+                    <Badge variant="secondary" className="text-xs">Önerilen</Badge>
+                  )}
                 </div>
-                {template.isRecommended && (
-                  <Badge variant="secondary" className="ml-2">
-                    Önerilen
-                  </Badge>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span>Tip:</span>
-                  <Badge variant="outline">{template.templateType}</Badge>
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
+                  {template.description}
+                </p>
+                <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                  <span>Tip: {template.templateType}</span>
+                  {template.popularity && (
+                    <span>Popülerlik: {template.popularity}/5</span>
+                  )}
+                  {template.usageCount && (
+                    <span>Kullanım: {template.usageCount}</span>
+                  )}
                 </div>
-                {template.popularity && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span>Popülerlik:</span>
-                    <span>{template.popularity}/5</span>
-                  </div>
-                )}
-                {template.usageCount && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span>Kullanım:</span>
-                    <span>{template.usageCount}</span>
-                  </div>
-                )}
               </div>
-            </CardContent>
-            <CardContent className="pt-0">
-                <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                  onClick={() => handleDesignSettings(template)}
-                >
-                  <Palette className="h-4 w-4 mr-2" />
-                  Tasarım
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                  onClick={() => setEditingTemplate(template)}
-                      >
-                  <Edit className="h-4 w-4 mr-2" />
-                        Düzenle
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteTemplate(template.id)}
-                  disabled={deleteMutation.isPending}
-                      >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                        Sil
-                      </Button>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+            
+            <div className="flex items-center gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleDesignSettings(template)}
+                className="h-8 w-8 p-0"
+              >
+                <Palette className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setEditingTemplate(template)}
+                className="h-8 w-8 p-0"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleDeleteTemplateWithError(template.id)}
+                disabled={deleteMutation.isPending}
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         ))}
       </div>
 
