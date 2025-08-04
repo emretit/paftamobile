@@ -63,8 +63,18 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
                 Geri Dön
               </Button>
               <div className="border-l pl-4">
-                <h1 className="text-lg font-semibold">{templateName}</h1>
-                <p className="text-xs text-muted-foreground">Şablon Tasarlayıcısı</p>
+                <Input
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  placeholder="Şablon adı"
+                  className="text-lg font-semibold bg-transparent border-none p-0 h-auto focus-visible:ring-0"
+                />
+                <Input
+                  value={templateDescription}
+                  onChange={(e) => setTemplateDescription(e.target.value)}
+                  placeholder="Açıklama"
+                  className="text-xs text-muted-foreground bg-transparent border-none p-0 h-auto focus-visible:ring-0 mt-1"
+                />
               </div>
             </div>
 
