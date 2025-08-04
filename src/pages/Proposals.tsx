@@ -84,16 +84,9 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
               activeView={activeView} 
               setActiveView={setActiveView} 
             />
-            <Button 
-              variant="outline" 
-              onClick={() => navigate("/proposals/templates")}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Şablonla Oluştur
-            </Button>
             <Button onClick={() => navigate("/proposal/create")}>
               <Plus className="mr-2 h-4 w-4" />
-              Hızlı Teklif
+              Yeni Teklif
             </Button>
           </div>
         </div>
