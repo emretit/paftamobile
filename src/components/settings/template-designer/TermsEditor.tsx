@@ -6,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus,
   Edit3,
@@ -50,7 +49,7 @@ export const TermsEditor: React.FC<TermsEditorProps> = ({
   const [terms, setTerms] = useState<ProposalTerm[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTerm, setEditingTerm] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("payment");
+  const [activeCategory, setActiveCategory] = useState<string>("payment");
   const [newTerm, setNewTerm] = useState({ 
     label: "", 
     text: "", 
@@ -249,60 +248,76 @@ export const TermsEditor: React.FC<TermsEditorProps> = ({
 
   return (
     <div className="space-y-2">
-      {/* Tab Sistemi */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          {Object.entries(CATEGORIES).map(([key, category]) => {
-            const Icon = category.icon;
-            return (
-              <TabsTrigger key={key} value={key} className="flex items-center gap-2">
-                <Icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{category.title}</span>
-                <span className="sm:hidden">{category.title.split(' ')[0]}</span>
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
+      {/* Kategori Navigasyonu */}
+      <div className="flex flex-wrap gap-1">
+        {Object.entries(CATEGORIES).map(([key, category]) => {
+          const Icon = category.icon;
+          return (
+            <Button
+              key={key}
+              variant={activeCategory === key ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveCategory(key)}
+              className="h-6 text-xs px-2"
+            >
+              <Icon className="h-3 w-3 mr-1" />
+              {category.title.split(' ')[0]}
+            </Button>
+          );
+        })}
+        <Button
+          variant={activeCategory === "other" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setActiveCategory("other")}
+          className="h-6 text-xs px-2"
+        >
+          Diğer
+        </Button>
+      </div>
 
-        {/* Tab İçerikleri */}
-        {Object.entries(CATEGORIES).map(([key, category]) => (
-          <TabsContent key={key} value={key} className="space-y-2 mt-1">
-            {/* Kategori İçeriği */}
-            {renderCategoryContent(key)}
+      {/* Aktif Kategori İçeriği */}
+      <div className="space-y-2">
+        {activeCategory !== "other" ? (
+          <>
+            {renderCategoryContent(activeCategory)}
             
             {/* Minimal Ekleme Formu */}
             <div className="mt-2 p-2 border-2 border-dashed border-muted rounded space-y-1">
               <Input
-                value={newTerm.category === key ? newTerm.label : ""}
-                onChange={(e) => setNewTerm({ ...newTerm, label: e.target.value, category: key as any })}
+                value={newTerm.category === activeCategory ? newTerm.label : ""}
+                onChange={(e) => setNewTerm({ ...newTerm, label: e.target.value, category: activeCategory as any })}
                 placeholder="Yeni şart başlığı..."
                 className="text-xs h-6 border-0 shadow-none focus-visible:ring-1"
               />
               <Textarea
-                value={newTerm.category === key ? newTerm.text : ""}
-                onChange={(e) => setNewTerm({ ...newTerm, text: e.target.value, category: key as any })}
+                value={newTerm.category === activeCategory ? newTerm.text : ""}
+                onChange={(e) => setNewTerm({ ...newTerm, text: e.target.value, category: activeCategory as any })}
                 placeholder="Şart açıklaması..."
                 className="text-xs min-h-[35px] resize-none border-0 shadow-none focus-visible:ring-1"
               />
               <Button 
                 onClick={() => {
-                  if (newTerm.category !== key) {
-                    setNewTerm({ label: "", text: "", category: key as any });
+                  if (newTerm.category !== activeCategory) {
+                    setNewTerm({ label: "", text: "", category: activeCategory as any });
                   } else {
                     addNewTerm();
                   }
                 }} 
                 className="w-full h-6 text-xs"
-                disabled={newTerm.category === key && (!newTerm.label.trim() || !newTerm.text.trim())}
+                disabled={newTerm.category === activeCategory && (!newTerm.label.trim() || !newTerm.text.trim())}
                 size="sm"
               >
                 <Plus className="h-3 w-3 mr-1" />
                 Ekle
               </Button>
             </div>
-          </TabsContent>
-        ))}
-      </Tabs>
+          </>
+        ) : (
+          <div className="text-center py-4 text-muted-foreground">
+            <p className="text-xs">Diğer şartlar bölümü yakında eklenecek...</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
