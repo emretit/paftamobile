@@ -12,6 +12,7 @@ export interface ProposalFormData {
   delivery_terms?: string;
   notes?: string;
   internalNotes?: string;
+  terms?: string;
   paymentTerm?: string;
   discounts?: number;
   additionalCharges?: number;

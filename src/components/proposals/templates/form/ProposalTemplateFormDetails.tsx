@@ -24,46 +24,79 @@ const ProposalTemplateFormDetails: React.FC<ProposalTemplateFormDetailsProps> = 
   validUntil,
   setValidUntil,
 }) => {
+  const generateProposalNumber = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `TKL${year}${month}${day}${random}`;
+  };
+
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div>
-        <Label htmlFor="title">Teklif Başlığı</Label>
-        <Input 
-          id="title" 
-          {...register("title", { required: "Teklif başlığı gereklidir" })} 
-          placeholder="Teklif başlığını girin"
-          className={errors.title ? "border-red-500" : ""}
-        />
-        {errors.title && <span className="text-red-500 text-xs">{errors.title.message}</span>}
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="proposal_number">Teklif Numarası</Label>
+          <Input 
+            id="proposal_number"
+            defaultValue={generateProposalNumber()}
+            readOnly
+            className="bg-muted"
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="title">Teklif Başlığı</Label>
+          <Input 
+            id="title" 
+            {...register("title", { required: "Teklif başlığı gereklidir" })} 
+            placeholder="Teklif başlığını girin"
+            className={errors.title ? "border-red-500" : ""}
+          />
+          {errors.title && <span className="text-red-500 text-xs">{errors.title.message}</span>}
+        </div>
       </div>
       
-      <div>
-        <Label htmlFor="valid_until">Geçerlilik Tarihi</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full justify-between text-left font-normal"
-            >
-              {validUntil ? (
-                format(validUntil, "PPP", { locale: tr })
-              ) : (
-                <span className="text-gray-500">Tarih seçin</span>
-              )}
-              <CalendarIcon className="h-4 w-4 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={validUntil}
-              onSelect={(date) => setValidUntil(date)}
-              disabled={(date) => date < new Date()}
-              initialFocus
-              locale={tr}
-            />
-          </PopoverContent>
-        </Popover>
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="proposal_date">Teklif Tarihi</Label>
+          <Input 
+            id="proposal_date"
+            value={format(new Date(), "dd.MM.yyyy", { locale: tr })}
+            readOnly
+            className="bg-muted"
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="valid_until">Geçerlilik Tarihi</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-between text-left font-normal"
+              >
+                {validUntil ? (
+                  format(validUntil, "dd.MM.yyyy", { locale: tr })
+                ) : (
+                  <span className="text-gray-500">Tarih seçin</span>
+                )}
+                <CalendarIcon className="h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={validUntil}
+                onSelect={(date) => setValidUntil(date)}
+                disabled={(date) => date < new Date()}
+                initialFocus
+                locale={tr}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
     </div>
   );

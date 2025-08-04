@@ -11,6 +11,7 @@ import ProposalTemplateCustomerSelect from "./ProposalTemplateCustomerSelect";
 import ProposalTemplatePaymentTerms from "./ProposalTemplatePaymentTerms";
 import ProposalTemplateItems from "./ProposalTemplateItems";
 import ProposalTemplateNotes from "./ProposalTemplateNotes";
+import ProposalTemplateTerms from "./ProposalTemplateTerms";
 
 interface ProposalTemplateFormProps {
   template: ProposalTemplate;
@@ -85,6 +86,10 @@ const ProposalTemplateForm: React.FC<ProposalTemplateFormProps> = ({ template, o
       <ProposalTemplateItems 
         items={items}
         onItemsChange={handleItemsChange}
+      />
+      
+      <ProposalTemplateTerms 
+        register={register}
       />
       
       <ProposalTemplateNotes 

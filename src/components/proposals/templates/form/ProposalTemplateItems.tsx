@@ -62,7 +62,25 @@ const ProposalTemplateItems: React.FC<ProposalTemplateItemsProps> = ({ items, on
   };
 
   const calculateSubtotal = () => {
-    return items.reduce((sum, item) => sum + Number(item.total_price), 0);
+    return items.reduce((sum, item) => {
+      const quantity = Number(item.quantity) || 0;
+      const unitPrice = Number(item.unit_price) || 0;
+      return sum + (quantity * unitPrice);
+    }, 0);
+  };
+
+  const calculateTax = () => {
+    return items.reduce((sum, item) => {
+      const quantity = Number(item.quantity) || 0;
+      const unitPrice = Number(item.unit_price) || 0;
+      const taxRate = Number(item.tax_rate) || 0;
+      const subtotal = quantity * unitPrice;
+      return sum + (subtotal * taxRate / 100);
+    }, 0);
+  };
+
+  const calculateTotal = () => {
+    return calculateSubtotal() + calculateTax();
   };
 
   return (
@@ -158,14 +176,21 @@ const ProposalTemplateItems: React.FC<ProposalTemplateItemsProps> = ({ items, on
       </div>
 
       <div className="flex justify-end">
-        <div className="space-y-1 min-w-[200px]">
-          <div className="flex justify-between text-sm">
-            <span>Ara Toplam:</span>
-            <span>{formatMoney(calculateSubtotal())}</span>
-          </div>
-          <div className="flex justify-between font-medium">
-            <span>Toplam:</span>
-            <span>{formatMoney(calculateSubtotal())}</span>
+        <div className="border border-border rounded-lg p-4 bg-muted/50 min-w-[300px]">
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Ara Toplam:</span>
+              <span>{formatMoney(calculateSubtotal())}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span>KDV:</span>
+              <span>{formatMoney(calculateTax())}</span>
+            </div>
+            <hr className="border-t border-border" />
+            <div className="flex justify-between font-semibold text-lg">
+              <span>Net Toplam:</span>
+              <span>{formatMoney(calculateTotal())}</span>
+            </div>
           </div>
         </div>
       </div>
