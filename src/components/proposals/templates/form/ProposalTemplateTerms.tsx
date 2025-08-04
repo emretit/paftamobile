@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UseFormRegister, UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -120,6 +120,23 @@ const ProposalTemplateTerms: React.FC<ProposalTemplateTermsProps> = ({
       return updated;
     });
   };
+
+  // Seçilen şartları form verilerine kaydet
+  const saveTermsToForm = (selected: {[key: string]: string[]}, custom: {[key: string]: string}) => {
+    const allTerms = {
+      selectedTerms: selected,
+      customTerms: custom
+    };
+    
+    if (setValue) {
+      setValue('terms', JSON.stringify(allTerms));
+    }
+  };
+
+  // Şart seçimi değiştiğinde form verilerine kaydet
+  useEffect(() => {
+    saveTermsToForm(selectedTerms, customTerms);
+  }, [selectedTerms, customTerms, setValue]);
 
   const renderCategory = (categoryKey: string, category: any) => {
     const Icon = category.icon;
