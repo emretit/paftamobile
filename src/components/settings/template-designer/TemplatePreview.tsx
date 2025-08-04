@@ -90,33 +90,80 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                   </div>
                 );
 
-              case 'proposal-info':
-                return (
-                  <div key={section.id}>
-                    <h3 className="font-semibold mb-2" style={{ fontSize: fonts.sizes.heading }}>
-                      {section.title}
-                    </h3>
-                    <div className="space-y-1" style={{ fontSize: fonts.sizes.body }}>
-                      <p><span className="font-medium">Teklif No:</span> {sampleData.proposalNumber}</p>
-                      <p><span className="font-medium">Tarih:</span> {sampleData.date}</p>
-                      <p><span className="font-medium">Geçerlilik:</span> 30 gün</p>
-                    </div>
-                  </div>
-                );
-
-              case 'customer-info':
-                return (
-                  <div key={section.id}>
-                    <h3 className="font-semibold mb-2" style={{ fontSize: fonts.sizes.heading }}>
-                      {section.title}
-                    </h3>
-                    <div className="space-y-1" style={{ fontSize: fonts.sizes.body }}>
-                      <p><span className="font-medium">Firma:</span> {sampleData.customer}</p>
-                      <p><span className="font-medium">Telefon:</span> +90 555 123 4567</p>
-                      <p><span className="font-medium">E-posta:</span> info@ornek.com</p>
-                    </div>
-                  </div>
-                );
+               case 'proposal-info':
+               case 'customer-info':
+                 // Handle customer and proposal info side by side
+                 const proposalInfoSection = sections.find(s => s.type === 'proposal-info' && s.enabled);
+                 const customerInfoSection = sections.find(s => s.type === 'customer-info' && s.enabled);
+                 
+                 // Only render once when we encounter either section
+                 if (section.type === 'customer-info' && proposalInfoSection) {
+                   return null; // Skip if proposal-info will handle the rendering
+                 }
+                 
+                 if (section.type === 'proposal-info' && customerInfoSection) {
+                   // Render both sections side by side
+                   return (
+                     <div key="customer-proposal-info" className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                       {/* Customer Info - Left Side */}
+                       <div>
+                         <h3 className="font-semibold mb-2" style={{ fontSize: fonts.sizes.heading }}>
+                           {customerInfoSection.title}
+                         </h3>
+                         <div className="space-y-1" style={{ fontSize: fonts.sizes.body }}>
+                           <p><span className="font-medium">Firma:</span> {sampleData.customer}</p>
+                           <p><span className="font-medium">Telefon:</span> +90 555 123 4567</p>
+                           <p><span className="font-medium">E-posta:</span> info@ornek.com</p>
+                         </div>
+                       </div>
+                       
+                       {/* Proposal Info - Right Side */}
+                       <div>
+                         <h3 className="font-semibold mb-2" style={{ fontSize: fonts.sizes.heading }}>
+                           {proposalInfoSection.title}
+                         </h3>
+                         <div className="space-y-1" style={{ fontSize: fonts.sizes.body }}>
+                           <p><span className="font-medium">Teklif No:</span> {sampleData.proposalNumber}</p>
+                           <p><span className="font-medium">Tarih:</span> {sampleData.date}</p>
+                           <p><span className="font-medium">Geçerlilik:</span> 30 gün</p>
+                         </div>
+                       </div>
+                     </div>
+                   );
+                 }
+                 
+                 // Handle individual sections if only one is enabled
+                 if (section.type === 'customer-info' && !proposalInfoSection) {
+                   return (
+                     <div key={section.id}>
+                       <h3 className="font-semibold mb-2" style={{ fontSize: fonts.sizes.heading }}>
+                         {section.title}
+                       </h3>
+                       <div className="space-y-1" style={{ fontSize: fonts.sizes.body }}>
+                         <p><span className="font-medium">Firma:</span> {sampleData.customer}</p>
+                         <p><span className="font-medium">Telefon:</span> +90 555 123 4567</p>
+                         <p><span className="font-medium">E-posta:</span> info@ornek.com</p>
+                       </div>
+                     </div>
+                   );
+                 }
+                 
+                 if (section.type === 'proposal-info' && !customerInfoSection) {
+                   return (
+                     <div key={section.id}>
+                       <h3 className="font-semibold mb-2" style={{ fontSize: fonts.sizes.heading }}>
+                         {section.title}
+                       </h3>
+                       <div className="space-y-1" style={{ fontSize: fonts.sizes.body }}>
+                         <p><span className="font-medium">Teklif No:</span> {sampleData.proposalNumber}</p>
+                         <p><span className="font-medium">Tarih:</span> {sampleData.date}</p>
+                         <p><span className="font-medium">Geçerlilik:</span> 30 gün</p>
+                       </div>
+                     </div>
+                   );
+                 }
+                 
+                 return null;
 
               case 'items-table':
                 return (
