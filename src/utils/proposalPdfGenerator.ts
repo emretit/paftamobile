@@ -46,6 +46,9 @@ export class ProposalPdfGenerator {
     // Load template if specified
     if (templateId && templateId !== 'default') {
       await this.loadTemplate(templateId);
+    } else {
+      // Default template kullanılıyorsa explicit olarak default ayarları set et
+      this.designSettings = this.getDefaultDesignSettings();
     }
     
     // Set primary font
@@ -127,11 +130,19 @@ export class ProposalPdfGenerator {
         .eq('id', templateId)
         .single();
       
-      if (!error && data?.design_settings) {
-        this.designSettings = data.design_settings as TemplateDesignSettings;
+      if (!error && data) {
+        if (data.design_settings) {
+          this.designSettings = data.design_settings as TemplateDesignSettings;
+        } else {
+          // Şablon var ama design_settings null ise default ayarları kullan
+          console.warn(`Template ${templateId} has no design_settings, using defaults`);
+          this.designSettings = this.getDefaultDesignSettings();
+        }
       }
     } catch (error) {
       console.warn('Could not load template:', error);
+      // Template yüklenemezse default ayarları kullan
+      this.designSettings = this.getDefaultDesignSettings();
     }
   }
 
