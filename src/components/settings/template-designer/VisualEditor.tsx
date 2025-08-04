@@ -100,7 +100,7 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({
       ...designSettings,
       sections: updatedSections,
     });
-    setEditingSection(null);
+    // setEditingSection(null); // Bu satırı kaldırdık - toggle değişikliklerinde sayfadan çıkmaması için
   };
 
   const getSectionIcon = (type: TemplateSection['type']) => {
@@ -121,9 +121,12 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({
     return (
       <SectionEditor
         section={editingSection}
-        onSave={updateSection}
+        onSave={(updatedSection) => {
+          updateSection(updatedSection);
+          setEditingSection(null); // Sadece "Tamamla" butonuna basıldığında sayfadan çık
+        }}
         onCancel={() => setEditingSection(null)}
-        onAutoSave={updateSection} // Toggle değişiklikleri otomatik kaydet
+        onAutoSave={updateSection} // Toggle değişiklikleri otomatik kaydet ama sayfadan çıkma
       />
     );
   }
