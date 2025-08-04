@@ -17,24 +17,16 @@ const NavHeader = ({ isCollapsed, setIsCollapsed }: NavHeaderProps) => {
       <div className="flex items-center space-x-3">
         {!isCollapsed && (
           <>
-            <div className="relative group">
-              <div className="absolute -inset-1 rounded-full bg-primary/20 blur-sm group-hover:blur-md transition-all duration-300 opacity-75"></div>
-              <img 
-                src="/lovable-uploads/041398c6-f1b0-407a-8a75-436cefa9fb60.png" 
-                alt="NGS-One Logo" 
-                className="relative h-10 w-auto transition-transform duration-300 group-hover:scale-105"
-              />
+            <div className="flex flex-col items-start">
+              <span className="text-lg font-bold text-white tracking-tight">NGS-One</span>
+              <span className="text-[10px] text-gray-300 -mt-1 tracking-widest">All-In One</span>
             </div>
           </>
         )}
         {isCollapsed && (
-          <div className="relative group">
-            <div className="absolute -inset-1 rounded-full bg-primary/20 blur-sm group-hover:blur-md transition-all duration-300 opacity-75"></div>
-            <img 
-              src="/lovable-uploads/041398c6-f1b0-407a-8a75-436cefa9fb60.png" 
-              alt="NGS-One Logo" 
-              className="relative h-9 w-auto transition-transform duration-300 group-hover:scale-105"
-            />
+          <div className="flex flex-col items-center">
+            <span className="text-sm font-bold text-white tracking-tight">NGS</span>
+            <span className="text-[8px] text-gray-300 -mt-1 tracking-wider">One</span>
           </div>
         )}
       </div>
