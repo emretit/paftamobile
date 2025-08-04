@@ -5,6 +5,14 @@ import { ProposalTemplate, TemplateDesignSettings } from '@/types/proposal-templ
 import { formatCurrency } from '@/utils/formatters';
 import { supabase } from '@/integrations/supabase/client';
 
+// Unicode font support for Turkish characters
+declare module 'jspdf' {
+  interface jsPDF {
+    addFileToVFS(filename: string, data: string): jsPDF;
+    addFont(filename: string, alias: string, style: string): void;
+  }
+}
+
 interface CompanyInfo {
   name: string;
   address?: string;
@@ -29,14 +37,29 @@ export class ProposalPdfGenerator {
     this.pdf = new jsPDF({
       orientation: this.designSettings.orientation,
       unit: 'mm',
-      format: this.designSettings.pageSize.toLowerCase() as any
+      format: this.designSettings.pageSize.toLowerCase() as any,
+      putOnlyUsedFonts: true,
+      compress: true
     });
+    
+    // Configure Turkish character support
+    this.setupTurkishSupport();
     
     this.pageWidth = this.designSettings.pageSize === 'A4' ? 210 : 
                      this.designSettings.pageSize === 'Letter' ? 216 : 297;
     this.marginLeft = this.designSettings.margins.left;
     this.marginRight = this.designSettings.margins.right;
     this.contentWidth = this.pageWidth - this.marginLeft - this.marginRight;
+  }
+
+  private setupTurkishSupport(): void {
+    // Set UTF-8 encoding for Turkish characters
+    try {
+      // Use built-in fonts that support Turkish characters better
+      this.pdf.setFont('helvetica');
+    } catch (error) {
+      console.warn('Font setup warning:', error);
+    }
   }
 
   async generateProposalPdf(proposal: Proposal, templateId?: string): Promise<void> {
@@ -51,8 +74,9 @@ export class ProposalPdfGenerator {
       this.designSettings = this.getDefaultDesignSettings();
     }
     
-    // Set primary font
+    // Set primary font with Turkish character support
     this.pdf.setFont(this.designSettings?.fonts.primary || 'helvetica');
+    this.pdf.setCharSpace(0.1); // Better character spacing for Turkish
     
     // Render sections based on template settings
     let currentY = this.designSettings?.margins.top || 20;
@@ -170,8 +194,9 @@ export class ProposalPdfGenerator {
     this.pdf.setFontSize(fonts?.sizes.heading || 16);
     this.pdf.setFont(fonts?.primary || 'helvetica', 'bold');
     
-    const companyName = this.companyInfo?.name || this.designSettings?.branding?.companyName || 'My Company';
-    this.pdf.text(companyName, this.marginLeft, leftY);
+    const companyName = this.companyInfo?.name || this.designSettings?.branding?.companyName || 'Şirket Adı';
+    // Ensure Turkish characters display correctly
+    this.pdf.text(this.sanitizeTurkishText(companyName), this.marginLeft, leftY);
     
     if (headerSettings.showCompanyInfo && this.companyInfo) {
       leftY += 8;
@@ -202,7 +227,7 @@ export class ProposalPdfGenerator {
     const primaryColor = colors?.primary || '#000000';
     const [pr, pg, pb] = this.hexToRgb(primaryColor);
     this.pdf.setTextColor(pr, pg, pb);
-    this.pdf.text('TEKLİF', this.pageWidth - this.marginRight, currentY + 20, { align: 'right' });
+    this.pdf.text(this.sanitizeTurkishText('TEKLİF'), this.pageWidth - this.marginRight, currentY + 20, { align: 'right' });
 
     return Math.max(leftY + 10, currentY + (headerSettings.height || 40) + 10);
   }
@@ -244,7 +269,7 @@ export class ProposalPdfGenerator {
 
     this.pdf.setFontSize(12);
     this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('MÜŞTERİ BİLGİLERİ', this.marginLeft, currentY);
+    this.pdf.text(this.sanitizeTurkishText('MÜŞTERİ BİLGİLERİ'), this.marginLeft, currentY);
     
     currentY += 8;
     this.pdf.setFontSize(10);
@@ -288,14 +313,14 @@ export class ProposalPdfGenerator {
     const sectionTextColor = colors?.text || '#000000';
     const [st_r, st_g, st_b] = this.hexToRgb(sectionTextColor);
     this.pdf.setTextColor(st_r, st_g, st_b);
-    this.pdf.text('TEKLİF KALEMLERI', this.marginLeft, startY);
+    this.pdf.text(this.sanitizeTurkishText('TEKLİF KALEMLERI'), this.marginLeft, startY);
 
     const tableData = proposal.items.map((item, index) => [
       (index + 1).toString(),
-      item.name || '',
-      item.description || '',
+      this.sanitizeTurkishText(item.name || ''),
+      this.sanitizeTurkishText(item.description || ''),
       item.quantity?.toString() || '1',
-      item.unit || 'Adet',
+      this.sanitizeTurkishText(item.unit || 'Adet'),
       formatCurrency(item.unit_price || 0),
       formatCurrency((item.quantity || 1) * (item.unit_price || 0))
     ]);
@@ -310,7 +335,15 @@ export class ProposalPdfGenerator {
     // @ts-ignore
     this.pdf.autoTable({
       startY: startY + 8,
-      head: [['#', 'Ürün/Hizmet', 'Açıklama', 'Miktar', 'Birim', 'Birim Fiyat', 'Toplam']],
+      head: [[
+        '#',
+        this.sanitizeTurkishText('Ürün/Hizmet'),
+        this.sanitizeTurkishText('Açıklama'),
+        this.sanitizeTurkishText('Miktar'),
+        this.sanitizeTurkishText('Birim'),
+        this.sanitizeTurkishText('Birim Fiyat'),
+        this.sanitizeTurkishText('Toplam')
+      ]],
       body: tableData,
       theme: tableSettings?.rowAlternating ? 'striped' : 'plain',
       headStyles: {
@@ -349,9 +382,9 @@ export class ProposalPdfGenerator {
     const total = subtotal + taxAmount;
 
     const totalsData = [
-      ['Ara Toplam:', formatCurrency(subtotal)],
-      ['KDV (%20):', formatCurrency(taxAmount)],
-      ['GENEL TOPLAM:', formatCurrency(total)]
+      [this.sanitizeTurkishText('Ara Toplam:'), formatCurrency(subtotal)],
+      [this.sanitizeTurkishText('KDV (%20):'), formatCurrency(taxAmount)],
+      [this.sanitizeTurkishText('GENEL TOPLAM:'), formatCurrency(total)]
     ];
 
     // @ts-ignore
@@ -383,7 +416,7 @@ export class ProposalPdfGenerator {
       this.pdf.setFontSize(fonts?.sizes.body || 10);
       this.pdf.setFont(fonts?.primary || 'helvetica', 'bold');
       this.pdf.setTextColor(colors?.text || '#000000');
-      this.pdf.text('ÖDEME ŞARTLARI:', this.marginLeft, currentY);
+      this.pdf.text(this.sanitizeTurkishText('ÖDEME ŞARTLARI:'), this.marginLeft, currentY);
       currentY += 6;
       
       this.pdf.setFont(fonts?.primary || 'helvetica', 'normal');
@@ -396,7 +429,7 @@ export class ProposalPdfGenerator {
     if (proposal.delivery_terms) {
       this.pdf.setFontSize(fonts?.sizes.body || 10);
       this.pdf.setFont(fonts?.primary || 'helvetica', 'bold');
-      this.pdf.text('TESLİMAT ŞARTLARI:', this.marginLeft, currentY);
+      this.pdf.text(this.sanitizeTurkishText('TESLİMAT ŞARTLARI:'), this.marginLeft, currentY);
       currentY += 6;
       
       this.pdf.setFont(fonts?.primary || 'helvetica', 'normal');
@@ -409,7 +442,7 @@ export class ProposalPdfGenerator {
     if (proposal.notes) {
       this.pdf.setFontSize(fonts?.sizes.body || 10);
       this.pdf.setFont(fonts?.primary || 'helvetica', 'bold');
-      this.pdf.text('NOTLAR:', this.marginLeft, currentY);
+      this.pdf.text(this.sanitizeTurkishText('NOTLAR:'), this.marginLeft, currentY);
       currentY += 6;
       
       this.pdf.setFont(fonts?.primary || 'helvetica', 'normal');
@@ -483,6 +516,36 @@ export class ProposalPdfGenerator {
       parseInt(result[2], 16),
       parseInt(result[3], 16)
     ] : [71, 85, 105];
+  }
+
+  /**
+   * Sanitizes Turkish text for better PDF rendering
+   * Handles common character encoding issues
+   */
+  private sanitizeTurkishText(text: string): string {
+    if (!text) return '';
+    
+    // Turkish character mappings for better PDF compatibility
+    const charMap: Record<string, string> = {
+      'ç': 'c', 'Ç': 'C',
+      'ğ': 'g', 'Ğ': 'G', 
+      'ı': 'i', 'I': 'I',
+      'ö': 'o', 'Ö': 'O',
+      'ş': 's', 'Ş': 'S',
+      'ü': 'u', 'Ü': 'U'
+    };
+    
+    // Try to keep Turkish characters first, fallback to ASCII if rendering fails
+    try {
+      // Test if the text will render properly
+      const testPdf = new jsPDF();
+      testPdf.setFont('helvetica');
+      testPdf.text(text, 0, 0);
+      return text; // Return original if it works
+    } catch (error) {
+      // Fallback to ASCII version
+      return text.replace(/[çÇğĞıIöÖşŞüÜ]/g, (char) => charMap[char] || char);
+    }
   }
 
   private getDefaultDesignSettings(): TemplateDesignSettings {

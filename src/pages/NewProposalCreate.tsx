@@ -18,6 +18,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PdfDownloadDropdown } from "@/components/proposals/PdfDownloadDropdown";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LineItem extends ProposalItem {
   row_number: number;
@@ -256,9 +257,24 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         notes: formData.notes
       };
 
-      // Import and use PDF generator
+      // Import and use PDF generator with template support
       const { ProposalPdfGenerator } = await import('@/utils/proposalPdfGenerator');
-      const generator = new ProposalPdfGenerator();
+      
+      // Load template design settings if template is specified
+      let designSettings = undefined;
+      if (templateId && templateId !== 'default') {
+        const { data: template } = await supabase
+          .from('proposal_templates')
+          .select('design_settings')
+          .eq('id', templateId)
+          .single();
+        
+        if (template?.design_settings) {
+          designSettings = template.design_settings;
+        }
+      }
+      
+      const generator = new ProposalPdfGenerator(designSettings);
       await generator.generateProposalPdf(proposalData as any, templateId);
       toast.success(`PDF ${templateId ? 'şablon ile' : ''} oluşturuldu`);
     } catch (error) {

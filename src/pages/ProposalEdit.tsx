@@ -24,6 +24,7 @@ import { proposalStatusColors, proposalStatusLabels, ProposalStatus } from "@/ty
 import { calculateProposalTotals, formatProposalAmount } from "@/services/workflow/proposalWorkflow";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { handleProposalStatusChange } from "@/services/workflow/proposalWorkflow";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LineItem extends ProposalItem {
   row_number: number;
@@ -353,8 +354,22 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
     
     try {
       const { ProposalPdfGenerator } = await import('@/utils/proposalPdfGenerator');
-      const generator = new ProposalPdfGenerator();
       
+      // Load template design settings if template is specified
+      let designSettings = undefined;
+      if (templateId && templateId !== 'default') {
+        const { data: template } = await supabase
+          .from('proposal_templates')
+          .select('design_settings')
+          .eq('id', templateId)
+          .single();
+        
+        if (template?.design_settings) {
+          designSettings = template.design_settings;
+        }
+      }
+      
+      const generator = new ProposalPdfGenerator(designSettings);
       await generator.generateProposalPdf(proposal, templateId);
       toast.success(`PDF ${templateId ? 'seçilen şablonla' : ''} yazdırma için hazırlandı`);
     } catch (error) {
