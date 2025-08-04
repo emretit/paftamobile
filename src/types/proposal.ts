@@ -39,6 +39,7 @@ export interface ProposalItem {
   name: string;
   description?: string;
   quantity: number;
+  unit: string; // Unit of measurement (adet, saat, gün, etc.)
   unit_price: number;
   tax_rate?: number;
   discount_rate?: number;

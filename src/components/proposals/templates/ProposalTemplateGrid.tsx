@@ -394,7 +394,4 @@ const enhancedDefaultTemplates: ProposalTemplate[] = [
   }
 ];
 
-// Keep original templates for backward compatibility
-const defaultTemplates: ProposalTemplate[] = enhancedDefaultTemplates;
-
 export default ProposalTemplateGrid;
