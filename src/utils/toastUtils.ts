@@ -1,12 +1,10 @@
 
-import { toast as reactToastify } from "react-toastify";
-import { toast as shadcnToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
+import { CheckCircle, AlertCircle, AlertTriangle, Info } from "lucide-react";
 
 type ToastOptions = {
   /** Duration in milliseconds */
   duration?: number;
-  /** Whether to use the shadcn/ui toast or react-toastify */
-  useBuiltIn?: boolean;
 };
 
 /**
@@ -15,21 +13,11 @@ type ToastOptions = {
  * @param options Optional configuration options
  */
 export const showSuccess = (message: string, options?: ToastOptions) => {
-  if (options?.useBuiltIn) {
-    return shadcnToast({
-      title: "Başarılı",
-      description: message,
-      duration: options.duration || 5000,
-    });
-  }
-  
-  return reactToastify.success(message, {
-    autoClose: options?.duration || 5000,
-    position: "bottom-right",
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
+  return toast({
+    title: "Başarılı",
+    description: message,
+    duration: options?.duration || 5000,
+    className: "border-l-4 border-l-green-500",
   });
 };
 
@@ -39,22 +27,12 @@ export const showSuccess = (message: string, options?: ToastOptions) => {
  * @param options Optional configuration options
  */
 export const showError = (message: string, options?: ToastOptions) => {
-  if (options?.useBuiltIn) {
-    return shadcnToast({
-      title: "Hata",
-      description: message,
-      variant: "destructive",
-      duration: options?.duration || 5000,
-    });
-  }
-  
-  return reactToastify.error(message, {
-    autoClose: options?.duration || 5000,
-    position: "bottom-right",
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
+  return toast({
+    title: "Hata",
+    description: message,
+    variant: "destructive",
+    duration: options?.duration || 5000,
+    className: "border-l-4 border-l-red-500",
   });
 };
 
@@ -64,21 +42,11 @@ export const showError = (message: string, options?: ToastOptions) => {
  * @param options Optional configuration options
  */
 export const showWarning = (message: string, options?: ToastOptions) => {
-  if (options?.useBuiltIn) {
-    return shadcnToast({
-      title: "Uyarı",
-      description: message,
-      duration: options?.duration || 5000,
-    });
-  }
-  
-  return reactToastify.warning(message, {
-    autoClose: options?.duration || 5000,
-    position: "bottom-right",
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
+  return toast({
+    title: "Uyarı",
+    description: message,
+    duration: options?.duration || 5000,
+    className: "border-l-4 border-l-yellow-500",
   });
 };
 
@@ -88,23 +56,13 @@ export const showWarning = (message: string, options?: ToastOptions) => {
  * @param options Optional configuration options
  */
 export const showInfo = (message: string, options?: ToastOptions) => {
-  if (options?.useBuiltIn) {
-    return shadcnToast({
-      title: "Bilgi",
-      description: message,
-      duration: options?.duration || 5000,
-    });
-  }
-  
-  return reactToastify.info(message, {
-    autoClose: options?.duration || 5000,
-    position: "bottom-right",
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
+  return toast({
+    title: "Bilgi",
+    description: message,
+    duration: options?.duration || 5000,
+    className: "border-l-4 border-l-blue-500",
   });
 };
 
-// Re-export the toast objects in case direct access is needed
-export { reactToastify, shadcnToast };
+// Re-export the toast function
+export { toast };

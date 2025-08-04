@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { showError } from "@/utils/toastUtils";
 
 export interface IncomingInvoice {
   id: string;
@@ -46,7 +46,7 @@ export const useIncomingInvoices = () => {
       
     } catch (error: any) {
       console.error('Error fetching incoming invoices:', error);
-      toast.error(error.message || 'Gelen faturalar yüklenirken hata oluştu');
+      showError(error.message || 'Gelen faturalar yüklenirken hata oluştu');
       throw error;
     } finally {
       setIsLoading(false);

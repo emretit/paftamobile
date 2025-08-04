@@ -63,10 +63,10 @@ const ProductTable = ({ products, isLoading }: ProductTableProps) => {
       // Ürün listesini yenile
       await queryClient.invalidateQueries({ queryKey: ['products'] });
       
-      showSuccess("Ürün başarıyla silindi", { useBuiltIn: true });
+      showSuccess("Ürün başarıyla silindi");
     } catch (error) {
       console.error('Error deleting product:', error);
-      showError("Ürün silinirken bir hata oluştu", { useBuiltIn: true });
+      showError("Ürün silinirken bir hata oluştu");
     }
   };
 
