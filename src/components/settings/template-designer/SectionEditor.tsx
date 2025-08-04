@@ -9,7 +9,6 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
-import { TermsEditor } from "./TermsEditor";
 
 interface SectionEditorProps {
   section: TemplateSection;
@@ -167,15 +166,91 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
 
             {section.type === 'terms' && (
               <div className="space-y-4 p-3 border rounded-lg">
-                <Label className="text-sm font-medium">Şartlar ve Koşullar Yönetimi</Label>
-                <p className="text-xs text-muted-foreground">
-                  Teklifte görünecek şartları yönetin ve özelleştirin
-                </p>
-                
-                <TermsEditor
-                  settings={editedSection.settings}
-                  onSettingsChange={updateSectionSettings}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Ödeme Şartları */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-blue-600">Ödeme Şartları</Label>
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2 text-xs">
+                        <Switch 
+                          checked={editedSection.settings?.showPaymentTerms ?? true}
+                          onCheckedChange={(checked) => updateSectionSettings({ showPaymentTerms: checked })}
+                          size="sm"
+                        />
+                        <span>Ödeme şartlarını göster</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Fiyat Bilgileri */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-green-600">Fiyat Bilgileri</Label>
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2 text-xs">
+                        <Switch 
+                          checked={editedSection.settings?.showPricingTerms ?? true}
+                          onCheckedChange={(checked) => updateSectionSettings({ showPricingTerms: checked })}
+                          size="sm"
+                        />
+                        <span>Fiyat bilgilerini göster</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Garanti */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-purple-600">Garanti</Label>
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2 text-xs">
+                        <Switch 
+                          checked={editedSection.settings?.showWarrantyTerms ?? true}
+                          onCheckedChange={(checked) => updateSectionSettings({ showWarrantyTerms: checked })}
+                          size="sm"
+                        />
+                        <span>Garanti şartlarını göster</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Teslimat */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-orange-600">Stok ve Teslimat</Label>
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2 text-xs">
+                        <Switch 
+                          checked={editedSection.settings?.showDeliveryTerms ?? true}
+                          onCheckedChange={(checked) => updateSectionSettings({ showDeliveryTerms: checked })}
+                          size="sm"
+                        />
+                        <span>Teslimat şartlarını göster</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Şart Formatı</Label>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 text-xs">
+                      <Switch 
+                        checked={editedSection.settings?.categorizeTerms ?? true}
+                        onCheckedChange={(checked) => updateSectionSettings({ categorizeTerms: checked })}
+                        size="sm"
+                      />
+                      <span>Şartları kategorilere ayır</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-xs">
+                      <Switch 
+                        checked={editedSection.settings?.showTermsIcons ?? false}
+                        onCheckedChange={(checked) => updateSectionSettings({ showTermsIcons: checked })}
+                        size="sm"
+                      />
+                      <span>Kategori ikonlarını göster</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
