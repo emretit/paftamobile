@@ -16,6 +16,7 @@ import { ProposalItem } from "@/types/proposal";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { PdfDownloadDropdown } from "@/components/proposals/PdfDownloadDropdown";
 import { cn } from "@/lib/utils";
 
 interface LineItem extends ProposalItem {
@@ -229,12 +230,20 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
     }
   };
 
-  const handlePreview = () => {
-    toast.info("Önizleme özelliği yakında eklenecek");
-  };
-
-  const handleExportPDF = () => {
-    toast.info("PDF dışa aktarma özelliği yakında eklenecek");
+  const handleExportPDF = (templateId?: string) => {
+    // Generate PDF in new tab
+    const pdfData = {
+      formData,
+      items,
+      calculations,
+      templateId
+    };
+    
+    // Create a blob URL and open in new tab
+    const pdfUrl = `/proposal-pdf?data=${encodeURIComponent(JSON.stringify(pdfData))}`;
+    window.open(pdfUrl, '_blank');
+    
+    toast.success(`PDF ${templateId ? 'şablonla' : ''} oluşturuluyor...`);
   };
 
   return (
@@ -259,14 +268,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         </div>
         
         <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={handlePreview} className="gap-2">
-            <Eye className="h-4 w-4" />
-            Önizleme
-          </Button>
-          <Button variant="outline" onClick={handleExportPDF} className="gap-2">
-            <FileDown className="h-4 w-4" />
-            PDF İndir
-          </Button>
+          <PdfDownloadDropdown onDownloadWithTemplate={handleExportPDF} />
           <Button 
             variant="outline" 
             onClick={() => handleSave('draft')}
