@@ -26,7 +26,7 @@ const ProposalTemplateForm: React.FC<ProposalTemplateFormProps> = ({ template, o
       : undefined
   );
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<ProposalFormData>({
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<ProposalFormData>({
     defaultValues: {
       title: template.prefilledFields?.title || "",
       customer_id: undefined,
@@ -90,6 +90,8 @@ const ProposalTemplateForm: React.FC<ProposalTemplateFormProps> = ({ template, o
       
       <ProposalTemplateTerms 
         register={register}
+        watch={watch}
+        setValue={setValue}
       />
       
       <ProposalTemplateNotes 

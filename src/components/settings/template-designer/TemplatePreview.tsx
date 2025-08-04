@@ -282,16 +282,83 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                 );
 
               case 'terms':
+                const showPayment = section.settings?.showPaymentTerms ?? true;
+                const showPricing = section.settings?.showPricingTerms ?? true;
+                const showWarranty = section.settings?.showWarrantyTerms ?? true;
+                const showDelivery = section.settings?.showDeliveryTerms ?? true;
+                const categorize = section.settings?.categorizeTerms ?? true;
+                const showIcons = section.settings?.showTermsIcons ?? false;
+
                 return (
                   <div key={section.id} className="pt-6 border-t" style={{ borderColor: colors.border }}>
-                    <h3 className="font-semibold mb-2" style={{ fontSize: fonts.sizes.heading }}>
+                    <h3 className="font-semibold mb-4" style={{ fontSize: fonts.sizes.heading }}>
                       {section.title}
                     </h3>
-                    <div className="text-sm space-y-2" style={{ fontSize: fonts.sizes.small }}>
-                      <p><strong>Ödeme Şartları:</strong> Peşin ödeme</p>
-                      <p><strong>Teslimat Şartları:</strong> 30 iş günü</p>
-                      <p><strong>Notlar:</strong> Bu teklif 30 gün süreyle geçerlidir.</p>
-                    </div>
+                    
+                    {categorize ? (
+                      <div className="space-y-4" style={{ fontSize: fonts.sizes.small }}>
+                        {/* Ödeme Şartları */}
+                        {showPayment && (
+                          <div>
+                            <h4 className="font-medium mb-2 flex items-center gap-2" style={{ color: colors.primary }}>
+                              {showIcons && <span>💳</span>}
+                              ÖDEME ŞARTLARI:
+                            </h4>
+                            <ul className="list-disc list-inside space-y-1 ml-4">
+                              <li>%100 peşin ödeme yapılacaktır.</li>
+                              <li>Belirtilen fiyatlar KDV hariçtir.</li>
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Fiyat Bilgileri */}
+                        {showPricing && (
+                          <div>
+                            <h4 className="font-medium mb-2 flex items-center gap-2" style={{ color: colors.primary }}>
+                              {showIcons && <span>💰</span>}
+                              FİYATLAR:
+                            </h4>
+                            <ul className="list-disc list-inside space-y-1 ml-4">
+                              <li>Tüm fiyatlar Türk Lirası (TL) cinsindendir.</li>
+                              <li>Bu teklif 30 gün süreyle geçerlidir.</li>
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Garanti */}
+                        {showWarranty && (
+                          <div>
+                            <h4 className="font-medium mb-2 flex items-center gap-2" style={{ color: colors.primary }}>
+                              {showIcons && <span>🛡️</span>}
+                              GARANTİ:
+                            </h4>
+                            <ul className="list-disc list-inside space-y-1 ml-4">
+                              <li>Ürünlerimiz fatura tarihinden itibaren 2(iki) yıl garantilidir.</li>
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Teslimat */}
+                        {showDelivery && (
+                          <div>
+                            <h4 className="font-medium mb-2 flex items-center gap-2" style={{ color: colors.primary }}>
+                              {showIcons && <span>🚚</span>}
+                              STOK VE TESLİMAT:
+                            </h4>
+                            <ul className="list-disc list-inside space-y-1 ml-4">
+                              <li>Ürünler siparişten sonra 15 gün içinde teslim edilecektir.</li>
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-sm space-y-2" style={{ fontSize: fonts.sizes.small }}>
+                        {showPayment && <p><strong>Ödeme:</strong> %100 peşin ödeme yapılacaktır.</p>}
+                        {showPricing && <p><strong>Fiyatlar:</strong> KDV hariç TL cinsindendir.</p>}
+                        {showWarranty && <p><strong>Garanti:</strong> 2 yıl garantilidir.</p>}
+                        {showDelivery && <p><strong>Teslimat:</strong> 15 gün içinde teslim edilecektir.</p>}
+                      </div>
+                    )}
                   </div>
                 );
 

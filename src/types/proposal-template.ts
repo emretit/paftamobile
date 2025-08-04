@@ -1,6 +1,14 @@
 
 import { ProposalItem } from "./proposal";
 
+export interface TermOption {
+  id: string;
+  label: string;
+  text: string;
+  isDefault?: boolean;
+  isCustom?: boolean;
+}
+
 export interface TemplateSection {
   id: string;
   type: 'header' | 'customer-info' | 'proposal-info' | 'items-table' | 'totals' | 'terms' | 'footer' | 'custom';
@@ -128,6 +136,13 @@ export interface ProposalTemplate {
     validityDays?: number;
     paymentTerm?: string;
     internalNotes?: string;
+  };
+  // Şablon şart seçenekleri
+  availableTerms?: {
+    payment?: TermOption[];
+    pricing?: TermOption[];
+    warranty?: TermOption[];
+    delivery?: TermOption[];
   };
   // Enhanced fields for better UX
   popularity?: number;
