@@ -19,7 +19,6 @@ import type { Database } from "@/integrations/supabase/types";
 
 export const TemplateManagement: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<ProposalTemplate | null>(null);
   const [isDesigning, setIsDesigning] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState<ProposalTemplate | null>(null);
   
@@ -98,7 +97,6 @@ export const TemplateManagement: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proposal-templates'] });
       toast.success('Şablon başarıyla güncellendi');
-      setEditingTemplate(null);
     },
     onError: (error) => {
       console.error('Error updating template:', error);
@@ -158,7 +156,7 @@ export const TemplateManagement: React.FC = () => {
   };
 
   const handleUpdateTemplate = async (templateData: Partial<ProposalTemplate>) => {
-    if (!editingTemplate) return;
+    if (!currentTemplate) return;
 
     const updateData: any = {
       name: templateData.name,
@@ -176,7 +174,7 @@ export const TemplateManagement: React.FC = () => {
       preview_image: templateData.previewImage
     };
 
-    updateMutation.mutate({ id: editingTemplate.id, ...updateData });
+    updateMutation.mutate({ id: currentTemplate.id, ...updateData });
   };
 
   const handleDeleteTemplate = (id: string) => {
@@ -197,14 +195,8 @@ export const TemplateManagement: React.FC = () => {
     setIsDesigning(true);
   };
 
-  const handleDesignSave = async (designSettings: any) => {
-    if (!currentTemplate) return;
-
-    const updateData: any = {
-      design_settings: designSettings
-    };
-
-    updateMutation.mutate({ id: currentTemplate.id, ...updateData });
+  const handleDesignSave = async (template: ProposalTemplate) => {
+    handleUpdateTemplate(template);
     setIsDesigning(false);
     setCurrentTemplate(null);
   };
@@ -336,14 +328,7 @@ export const TemplateManagement: React.FC = () => {
                 variant="ghost"
                 onClick={() => handleDesignSettings(template)}
                 className="h-8 w-8 p-0"
-              >
-                <Palette className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setEditingTemplate(template)}
-                className="h-8 w-8 p-0"
+                title="Şablonu düzenle"
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -353,6 +338,7 @@ export const TemplateManagement: React.FC = () => {
                 onClick={() => handleDeleteTemplateWithError(template.id)}
                 disabled={deleteMutation.isPending}
                 className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                title="Şablonu sil"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -361,67 +347,6 @@ export const TemplateManagement: React.FC = () => {
         ))}
       </div>
 
-      {editingTemplate && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Şablon Düzenle</CardTitle>
-            <CardDescription>
-              {editingTemplate.name} şablonunu düzenleyin
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="edit-name">Şablon Adı</Label>
-                <Input
-                  id="edit-name"
-                  defaultValue={editingTemplate.name}
-                  onChange={(e) => {
-                    setEditingTemplate({
-                      ...editingTemplate,
-                      name: e.target.value
-                    });
-                  }}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-description">Açıklama</Label>
-                <Textarea
-                  id="edit-description"
-                  defaultValue={editingTemplate.description}
-                  rows={3}
-                  onChange={(e) => {
-                    setEditingTemplate({
-                      ...editingTemplate,
-                      description: e.target.value
-                    });
-                  }}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => handleUpdateTemplate(editingTemplate)}
-                  disabled={updateMutation.isPending}
-                >
-                  {updateMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4 mr-2" />
-                  )}
-                  Kaydet
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setEditingTemplate(null)}
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  İptal
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

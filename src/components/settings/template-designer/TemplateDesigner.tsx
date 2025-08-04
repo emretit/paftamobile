@@ -3,6 +3,9 @@ import { ProposalTemplate, TemplateDesignSettings } from "@/types/proposal-templ
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { TemplatePreview } from "./TemplatePreview";
 import { VisualEditor } from "./VisualEditor";
 
@@ -20,11 +23,15 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
   const [designSettings, setDesignSettings] = useState<TemplateDesignSettings>(
     template.designSettings || getDefaultDesignSettings()
   );
+  const [templateName, setTemplateName] = useState(template.name);
+  const [templateDescription, setTemplateDescription] = useState(template.description || "");
   const [showPreview, setShowPreview] = useState(true);
 
   const handleSave = () => {
     const updatedTemplate = {
       ...template,
+      name: templateName,
+      description: templateDescription,
       designSettings,
     };
     onSave(updatedTemplate);
@@ -36,6 +43,8 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
     // Otomatik kaydetme - her değişiklikte Supabase'e kaydet
     const updatedTemplate = {
       ...template,
+      name: templateName,
+      description: templateDescription,
       designSettings: newSettings,
     };
     onSave(updatedTemplate);
@@ -53,7 +62,7 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
                 Geri Dön
               </Button>
               <div>
-                <h1 className="text-xl font-semibold">{template.name} - Şablon Tasarlayıcısı</h1>
+                <h1 className="text-xl font-semibold">{templateName} - Şablon Tasarlayıcısı</h1>
                 <p className="text-sm text-muted-foreground">PDF şablonunuzu özelleştirin</p>
               </div>
             </div>
@@ -75,8 +84,37 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
 
         {/* Main Content */}
         <div className="flex-1 flex pt-20">
-          <div className="flex h-[calc(100%-80px)] w-full">
-            <div className="w-96 border-r bg-card overflow-y-auto p-4">
+        <div className="flex h-[calc(100%-80px)] w-full">
+            <div className="w-96 border-r bg-card overflow-y-auto p-4 space-y-6">
+              {/* Template Basic Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Şablon Bilgileri</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="template-name">Şablon Adı</Label>
+                    <Input
+                      id="template-name"
+                      value={templateName}
+                      onChange={(e) => setTemplateName(e.target.value)}
+                      placeholder="Şablon adı girin"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="template-description">Açıklama</Label>
+                    <Textarea
+                      id="template-description"
+                      value={templateDescription}
+                      onChange={(e) => setTemplateDescription(e.target.value)}
+                      placeholder="Şablon açıklaması girin"
+                      rows={3}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Design Settings */}
               <VisualEditor
                 designSettings={designSettings}
                 onSettingsChange={handleSettingsChange}
