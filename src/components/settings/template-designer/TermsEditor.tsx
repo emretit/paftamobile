@@ -143,7 +143,7 @@ export const TermsEditor: React.FC<TermsEditorProps> = ({
       </div>
 
       {/* Terms by Category */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="space-y-4">
         {Object.entries(CATEGORIES).map(([categoryKey, category]) => {
           const categoryTerms = getTermsByCategory(categoryKey);
           const Icon = category.icon;
