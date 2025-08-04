@@ -7,47 +7,60 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { FileDown, ChevronDown, Settings } from "lucide-react";
+import { FileDown, ChevronDown, Settings, Loader2 } from "lucide-react";
 import { ProposalTemplate } from "@/types/proposal-template";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PdfDownloadDropdownProps {
   onDownloadWithTemplate: (templateId?: string) => void;
-  templates?: ProposalTemplate[];
 }
 
-const defaultTemplates: ProposalTemplate[] = [
-  {
+export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
+  onDownloadWithTemplate
+}) => {
+  const navigate = useNavigate();
+
+  // Fetch templates from Supabase
+  const { data: templates, isLoading } = useQuery({
+    queryKey: ['proposal-templates'],
+    queryFn: async (): Promise<ProposalTemplate[]> => {
+      const { data, error } = await supabase
+        .from('proposal_templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching templates:', error);
+        return [];
+      }
+
+      return data?.map(template => ({
+        id: template.id,
+        name: template.name || '',
+        description: template.description || '',
+        templateType: template.template_type || 'standard',
+        templateFeatures: [],
+        items: [],
+        designSettings: template.design_settings as any
+      })) || [];
+    }
+  });
+
+  // Default template if no templates are found
+  const defaultTemplate: ProposalTemplate = {
     id: "default",
     name: "Varsayılan Şablon",
     description: "Standart PDF şablonu",
     templateType: "standard",
     templateFeatures: [],
     items: []
-  },
-  {
-    id: "modern",
-    name: "Modern Şablon",
-    description: "Modern tasarım şablonu",
-    templateType: "modern",
-    templateFeatures: [],
-    items: []
-  },
-  {
-    id: "minimal",
-    name: "Minimal Şablon", 
-    description: "Sade ve temiz şablon",
-    templateType: "minimal",
-    templateFeatures: [],
-    items: []
-  }
-];
+  };
 
-export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
-  onDownloadWithTemplate,
-  templates = defaultTemplates
-}) => {
-  const navigate = useNavigate();
+  const templatesWithDefault = templates && templates.length > 0 
+    ? [defaultTemplate, ...templates]
+    : [defaultTemplate];
 
   const handleTemplateSelect = (templateId: string) => {
     onDownloadWithTemplate(templateId);
@@ -67,8 +80,12 @@ export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          <FileDown className="h-4 w-4" />
+        <Button variant="outline" className="gap-2" disabled={isLoading}>
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <FileDown className="h-4 w-4" />
+          )}
           PDF İndir
           <ChevronDown className="h-3 w-3" />
         </Button>
@@ -79,7 +96,7 @@ export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
         </div>
         <DropdownMenuSeparator />
         
-        {templates.map((template) => (
+        {templatesWithDefault.map((template) => (
           <DropdownMenuItem
             key={template.id}
             onClick={() => handleTemplateSelect(template.id)}

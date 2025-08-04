@@ -231,19 +231,49 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
   };
 
   const handleExportPDF = (templateId?: string) => {
-    // Generate PDF in new tab
-    const pdfData = {
-      formData,
-      items,
-      calculations,
-      templateId
-    };
-    
-    // Create a blob URL and open in new tab
-    const pdfUrl = `/proposal-pdf?data=${encodeURIComponent(JSON.stringify(pdfData))}`;
-    window.open(pdfUrl, '_blank');
-    
-    toast.success(`PDF ${templateId ? 'şablonla' : ''} oluşturuluyor...`);
+    try {
+      // Create proposal data for PDF generation
+      const proposalData = {
+        number: formData.offer_number,
+        created_at: formData.offer_date,
+        valid_until: formData.validity_date,
+        status: 'sent',
+        customer: {
+          name: formData.customer_company,
+          contact: formData.contact_name,
+          title: formData.contact_title,
+        },
+        items: items.map(item => ({
+          name: item.name,
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.quantity * item.unit_price
+        })),
+        payment_terms: formData.payment_terms,
+        delivery_terms: formData.delivery_terms,
+        notes: formData.notes
+      };
+
+      // Company info - can be fetched from settings later
+      const companyInfo = {
+        name: "Şirket Adı",
+        address: "Şirket Adresi",
+        phone: "Telefon",
+        email: "email@domain.com",
+        taxNumber: "Vergi No"
+      };
+
+      // Import and use PDF generator
+      import('@/utils/proposalPdfGenerator').then(({ ProposalPdfGenerator }) => {
+        const generator = new ProposalPdfGenerator();
+        generator.generateProposalPdf(proposalData as any, companyInfo);
+        toast.success(`PDF ${templateId ? 'şablon ile' : ''} oluşturuldu`);
+      });
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error('PDF oluşturulurken hata oluştu');
+    }
   };
 
   return (
