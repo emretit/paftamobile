@@ -160,15 +160,17 @@ export class ProposalPdfGenerator {
       this.pdf.rect(0, currentY - 5, this.pageWidth, headerSettings.height || 40, 'F');
     }
 
-    // Set text color
-    this.pdf.setTextColor(headerSettings.textColor || colors?.text || '#000000');
+    // Set text color - convert hex to RGB for jsPDF
+    const textColor = headerSettings.textColor || colors?.text || '#000000';
+    const [r, g, b] = this.hexToRgb(textColor);
+    this.pdf.setTextColor(r, g, b);
 
     // Company logo and info (left side)
     let leftY = currentY + 10;
-    this.pdf.setFontSize(fonts?.sizes.title || 16);
+    this.pdf.setFontSize(fonts?.sizes.heading || 16);
     this.pdf.setFont(fonts?.primary || 'helvetica', 'bold');
     
-    const companyName = this.companyInfo?.name || this.designSettings?.branding?.companyName || 'Şirket Adı';
+    const companyName = this.companyInfo?.name || this.designSettings?.branding?.companyName || 'My Company';
     this.pdf.text(companyName, this.marginLeft, leftY);
     
     if (headerSettings.showCompanyInfo && this.companyInfo) {
@@ -197,7 +199,9 @@ export class ProposalPdfGenerator {
     // Proposal title (right side)
     this.pdf.setFontSize(fonts?.sizes.title || 24);
     this.pdf.setFont(fonts?.primary || 'helvetica', 'bold');
-    this.pdf.setTextColor(colors?.primary || '#000000');
+    const primaryColor = colors?.primary || '#000000';
+    const [pr, pg, pb] = this.hexToRgb(primaryColor);
+    this.pdf.setTextColor(pr, pg, pb);
     this.pdf.text('TEKLİF', this.pageWidth - this.marginRight, currentY + 20, { align: 'right' });
 
     return Math.max(leftY + 10, currentY + (headerSettings.height || 40) + 10);
@@ -281,7 +285,9 @@ export class ProposalPdfGenerator {
 
     this.pdf.setFontSize(fonts?.sizes.heading || 12);
     this.pdf.setFont(fonts?.primary || 'helvetica', 'bold');
-    this.pdf.setTextColor(colors?.text || '#000000');
+    const sectionTextColor = colors?.text || '#000000';
+    const [st_r, st_g, st_b] = this.hexToRgb(sectionTextColor);
+    this.pdf.setTextColor(st_r, st_g, st_b);
     this.pdf.text('TEKLİF KALEMLERI', this.marginLeft, startY);
 
     const tableData = proposal.items.map((item, index) => [
@@ -294,20 +300,12 @@ export class ProposalPdfGenerator {
       formatCurrency((item.quantity || 1) * (item.unit_price || 0))
     ]);
 
-    // Convert hex colors to RGB for jsPDF
-    const hexToRgb = (hex: string) => {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result ? [
-        parseInt(result[1], 16),
-        parseInt(result[2], 16),
-        parseInt(result[3], 16)
-      ] : [71, 85, 105];
-    };
+    // Use class method for hex to RGB conversion
 
     const headerBgColor = tableSettings?.headerBackground ? 
-      hexToRgb(tableSettings.headerBackground) : [71, 85, 105];
+      this.hexToRgb(tableSettings.headerBackground) : [71, 85, 105];
     const headerTextColor = tableSettings?.headerText ? 
-      hexToRgb(tableSettings.headerText) : [255, 255, 255];
+      this.hexToRgb(tableSettings.headerText) : [255, 255, 255];
 
     // @ts-ignore
     this.pdf.autoTable({
@@ -324,7 +322,7 @@ export class ProposalPdfGenerator {
       styles: {
         fontSize: fonts?.sizes.small || 8,
         cellPadding: 3,
-        lineColor: tableSettings?.borderColor ? hexToRgb(tableSettings.borderColor) : [200, 200, 200],
+        lineColor: tableSettings?.borderColor ? this.hexToRgb(tableSettings.borderColor) : [200, 200, 200],
         lineWidth: tableSettings?.borderWidth || 0.1
       },
       columnStyles: {
@@ -476,6 +474,15 @@ export class ProposalPdfGenerator {
       pending_approval: 'Onay Bekliyor'
     };
     return statusLabels[status] || status;
+  }
+
+  private hexToRgb(hex: string): [number, number, number] {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? [
+      parseInt(result[1], 16),
+      parseInt(result[2], 16),
+      parseInt(result[3], 16)
+    ] : [71, 85, 105];
   }
 
   private getDefaultDesignSettings(): TemplateDesignSettings {
