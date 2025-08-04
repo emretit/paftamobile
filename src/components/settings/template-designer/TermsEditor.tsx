@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus,
   Edit3,
@@ -49,6 +50,7 @@ export const TermsEditor: React.FC<TermsEditorProps> = ({
   const [terms, setTerms] = useState<ProposalTerm[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTerm, setEditingTerm] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("payment");
   const [newTerm, setNewTerm] = useState({ 
     label: "", 
     text: "", 
@@ -148,106 +150,96 @@ export const TermsEditor: React.FC<TermsEditorProps> = ({
     return terms.filter(t => t.category === category);
   };
 
-  const renderCategory = (categoryKey: string, category: any) => {
-    const Icon = category.icon;
+  const renderCategoryContent = (categoryKey: string) => {
     const categoryTerms = getTermsByCategory(categoryKey);
     
     return (
-      <Card key={categoryKey}>
-        <CardHeader className={`pb-3 bg-${category.color}-50`}>
-          <CardTitle className={`flex items-center gap-2 text-${category.color}-600 text-base`}>
-            <Icon className="h-5 w-5" />
-            {category.title}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {categoryTerms.map(term => (
-            <div key={term.id} className="space-y-2">
-              {editingTerm === term.id ? (
-                <div className="space-y-2 p-2 border rounded">
-                  <Input
-                    defaultValue={term.label}
-                    placeholder="Şart başlığı"
-                    className="text-sm"
-                    id={`edit-label-${term.id}`}
-                  />
-                  <Textarea
-                    defaultValue={term.text}
-                    placeholder="Şart metni"
-                    className="text-sm min-h-[60px]"
-                    id={`edit-text-${term.id}`}
-                  />
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        const labelEl = document.getElementById(`edit-label-${term.id}`) as HTMLInputElement;
-                        const textEl = document.getElementById(`edit-text-${term.id}`) as HTMLTextAreaElement;
-                        if (labelEl && textEl) {
-                          updateTerm(term.id, { label: labelEl.value, text: textEl.value });
-                        }
-                      }}
-                    >
-                      <Check className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setEditingTerm(null)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-3 border rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium text-sm">{term.label}</h4>
-                    <div className="flex gap-1">
-                      {term.is_default && (
-                        <Badge variant="secondary" className="text-xs">Varsayılan</Badge>
-                      )}
+      <div className="space-y-3">
+        {categoryTerms.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p className="text-sm">Bu kategoride henüz şart bulunmuyor.</p>
+            <p className="text-xs mt-1">Aşağıdaki formu kullanarak yeni şart ekleyebilirsiniz.</p>
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {categoryTerms.map(term => (
+              <div key={term.id} className="border rounded-lg p-3 hover:shadow-sm transition-shadow">
+                {editingTerm === term.id ? (
+                  <div className="space-y-3">
+                    <Input
+                      defaultValue={term.label}
+                      placeholder="Şart başlığı"
+                      className="text-sm"
+                      id={`edit-label-${term.id}`}
+                    />
+                    <Textarea
+                      defaultValue={term.text}
+                      placeholder="Şart metni"
+                      className="text-sm min-h-[60px]"
+                      id={`edit-text-${term.id}`}
+                    />
+                    <div className="flex gap-2">
                       <Button
                         size="sm"
-                        variant="ghost"
-                        onClick={() => setEditingTerm(term.id)}
+                        onClick={() => {
+                          const labelEl = document.getElementById(`edit-label-${term.id}`) as HTMLInputElement;
+                          const textEl = document.getElementById(`edit-text-${term.id}`) as HTMLTextAreaElement;
+                          if (labelEl && textEl) {
+                            updateTerm(term.id, { label: labelEl.value, text: textEl.value });
+                          }
+                        }}
+                        className="flex-1"
                       >
-                        <Edit3 className="h-3 w-3" />
+                        <Check className="h-3 w-3 mr-1" />
+                        Kaydet
                       </Button>
-                      {!term.is_default && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingTerm(null)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-sm mb-1">{term.label}</h4>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{term.text}</p>
+                      </div>
+                      <div className="flex items-center gap-1 ml-3">
+                        {term.is_default && (
+                          <Badge variant="secondary" className="text-xs">Varsayılan</Badge>
+                        )}
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => deleteTerm(term.id)}
+                          onClick={() => setEditingTerm(term.id)}
+                          className="h-7 w-7 p-0"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Edit3 className="h-3 w-3" />
                         </Button>
-                      )}
+                        {!term.is_default && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => deleteTerm(term.id)}
+                            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">{term.text}</p>
-                </div>
-              )}
-            </div>
-          ))}
-
-          <Separator />
-
-          {/* Add New Term to Category */}
-          <div className="p-3 border-2 border-dashed rounded-lg">
-            <p className="text-xs text-muted-foreground mb-2">Bu kategoriye yeni şart ekle</p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setNewTerm({ ...newTerm, category: categoryKey as any })}
-              className="w-full"
-            >
-              <Plus className="h-3 w-3 mr-1" />
-              Yeni {category.title} Şartı
-            </Button>
+                )}
+              </div>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
     );
   };
 
@@ -256,67 +248,90 @@ export const TermsEditor: React.FC<TermsEditorProps> = ({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="text-center pb-4">
+    <div className="space-y-4">
+      {/* Header - Sabit */}
+      <div className="text-center pb-2">
         <h3 className="text-lg font-semibold">Teklif Şartları Yönetimi</h3>
-        <p className="text-sm text-gray-600 mt-1">
-          Tekliflerde kullanılacak şartları tanımlayın ve yönetin
+        <p className="text-sm text-muted-foreground">
+          Tekliflerde kullanılacak şartları kategori bazında yönetin
         </p>
       </div>
       
-      <div className="space-y-4">
-        {Object.entries(CATEGORIES).map(([key, category]) =>
-          renderCategory(key, category)
-        )}
-      </div>
+      {/* Tab Sistemi */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          {Object.entries(CATEGORIES).map(([key, category]) => {
+            const Icon = category.icon;
+            return (
+              <TabsTrigger key={key} value={key} className="flex items-center gap-2">
+                <Icon className="h-4 w-4" />
+                <span className="hidden sm:inline">{category.title}</span>
+                <span className="sm:hidden">{category.title.split(' ')[0]}</span>
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
 
-      <Separator />
-
-      {/* Global Add New Term */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <Plus className="h-4 w-4" />
-            Yeni Şart Ekle
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label className="text-sm">Kategori</Label>
-            <select
-              value={newTerm.category}
-              onChange={(e) => setNewTerm({ ...newTerm, category: e.target.value as any })}
-              className="w-full mt-1 px-3 py-2 border border-input rounded-md text-sm"
-            >
-              {Object.entries(CATEGORIES).map(([key, category]) => (
-                <option key={key} value={key}>{category.title}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <Label className="text-sm">Şart Başlığı</Label>
-            <Input
-              value={newTerm.label}
-              onChange={(e) => setNewTerm({ ...newTerm, label: e.target.value })}
-              placeholder="Ör: 60 Gün Vadeli"
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <Label className="text-sm">Şart Metni</Label>
-            <Textarea
-              value={newTerm.text}
-              onChange={(e) => setNewTerm({ ...newTerm, text: e.target.value })}
-              placeholder="Ör: Fatura tarihinden itibaren 60 gün vadeli ödenecektir."
-              className="mt-1 min-h-[80px]"
-            />
-          </div>
-          <Button onClick={addNewTerm} className="w-full">
-            <Plus className="h-4 w-4 mr-2" />
-            Şart Ekle
-          </Button>
-        </CardContent>
-      </Card>
+        {/* Tab İçerikleri */}
+        {Object.entries(CATEGORIES).map(([key, category]) => (
+          <TabsContent key={key} value={key} className="space-y-4 mt-4">
+            <div className="flex items-center gap-2 mb-4">
+              <category.icon className="h-5 w-5 text-primary" />
+              <h4 className="font-medium">{category.title}</h4>
+              <Badge variant="outline" className="ml-auto">
+                {getTermsByCategory(key).length} şart
+              </Badge>
+            </div>
+            
+            {/* Kategori İçeriği */}
+            {renderCategoryContent(key)}
+            
+            {/* Hızlı Ekleme Formu */}
+            <Card className="mt-4">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Yeni {category.title} Şartı Ekle
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <Label className="text-sm">Şart Başlığı</Label>
+                  <Input
+                    value={newTerm.category === key ? newTerm.label : ""}
+                    onChange={(e) => setNewTerm({ ...newTerm, label: e.target.value, category: key as any })}
+                    placeholder="Ör: 60 Gün Vadeli"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">Şart Metni</Label>
+                  <Textarea
+                    value={newTerm.category === key ? newTerm.text : ""}
+                    onChange={(e) => setNewTerm({ ...newTerm, text: e.target.value, category: key as any })}
+                    placeholder="Ör: Fatura tarihinden itibaren 60 gün vadeli ödenecektir."
+                    className="mt-1 min-h-[60px]"
+                  />
+                </div>
+                <Button 
+                  onClick={() => {
+                    if (newTerm.category !== key) {
+                      setNewTerm({ label: "", text: "", category: key as any });
+                    } else {
+                      addNewTerm();
+                    }
+                  }} 
+                  className="w-full"
+                  disabled={newTerm.category === key && (!newTerm.label.trim() || !newTerm.text.trim())}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Şart Ekle
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 };
