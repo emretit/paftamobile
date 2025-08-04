@@ -16,10 +16,11 @@ const Index = () => {
       <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-md shadow-sm z-10 border-b border-border">
         <div className="container mx-auto p-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-              <span className="text-white font-bold text-sm">NGS</span>
-            </div>
-            <span className="text-xl font-bold text-foreground font-sans">NGS</span>
+            <img 
+              src="/lovable-uploads/041398c6-f1b0-407a-8a75-436cefa9fb60.png" 
+              alt="NGS-One Logo" 
+              className="h-8 w-auto"
+            />
           </div>
           <LoginButton />
         </div>

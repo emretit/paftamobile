@@ -20,21 +20,20 @@ const NavHeader = ({ isCollapsed, setIsCollapsed }: NavHeaderProps) => {
             <div className="relative group">
               <div className="absolute -inset-1 rounded-full bg-primary/20 blur-sm group-hover:blur-md transition-all duration-300 opacity-75"></div>
               <img 
-                src="/logo.png" 
-                alt="NGS Logo" 
-                className="relative h-10 w-10 transition-transform duration-300 group-hover:scale-105"
+                src="/lovable-uploads/041398c6-f1b0-407a-8a75-436cefa9fb60.png" 
+                alt="NGS-One Logo" 
+                className="relative h-10 w-auto transition-transform duration-300 group-hover:scale-105"
               />
             </div>
-            <span className="text-lg font-semibold tracking-tight text-white">NGS</span>
           </>
         )}
         {isCollapsed && (
           <div className="relative group">
             <div className="absolute -inset-1 rounded-full bg-primary/20 blur-sm group-hover:blur-md transition-all duration-300 opacity-75"></div>
             <img 
-              src="/logo.png" 
-              alt="NGS Logo" 
-              className="relative h-9 w-9 transition-transform duration-300 group-hover:scale-105"
+              src="/lovable-uploads/041398c6-f1b0-407a-8a75-436cefa9fb60.png" 
+              alt="NGS-One Logo" 
+              className="relative h-9 w-auto transition-transform duration-300 group-hover:scale-105"
             />
           </div>
         )}
