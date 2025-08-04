@@ -56,53 +56,51 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
         {/* Header */}
         <div className="absolute top-0 left-0 right-0 z-10 bg-background border-b p-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            {/* Sol taraf - Navigasyon ve başlık */}
+            <div className="flex items-center gap-4">
               <Button variant="ghost" size="sm" onClick={onCancel}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Geri Dön
               </Button>
-              <div className="flex items-center gap-6">
-                <div>
-                  <h1 className="text-xl font-semibold">{templateName} - Şablon Tasarlayıcısı</h1>
-                  <p className="text-sm text-muted-foreground">PDF şablonunuzu özelleştirin</p>
-                </div>
-                
-                {/* Şablon Bilgileri - Header'da */}
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="template-name" className="text-xs font-medium">Ad:</Label>
-                    <Input
-                      id="template-name"
-                      value={templateName}
-                      onChange={(e) => setTemplateName(e.target.value)}
-                      placeholder="Şablon adı"
-                      className="w-32 h-7 text-xs"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="template-description" className="text-xs font-medium">Açıklama:</Label>
-                    <Input
-                      id="template-description"
-                      value={templateDescription}
-                      onChange={(e) => setTemplateDescription(e.target.value)}
-                      placeholder="Açıklama"
-                      className="w-48 h-7 text-xs"
-                    />
-                  </div>
-                </div>
+              <div className="border-l pl-4">
+                <h1 className="text-lg font-semibold">{templateName}</h1>
+                <p className="text-xs text-muted-foreground">Şablon Tasarlayıcısı</p>
               </div>
             </div>
+
+            {/* Orta - Şablon bilgileri */}
             <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Input
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  placeholder="Şablon adı"
+                  className="w-40 h-8 text-sm border-muted"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={templateDescription}
+                  onChange={(e) => setTemplateDescription(e.target.value)}
+                  placeholder="Açıklama"
+                  className="w-56 h-8 text-sm border-muted"
+                />
+              </div>
+            </div>
+
+            {/* Sağ taraf - Aksiyonlar */}
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowPreview(!showPreview)}
+                className="h-8"
               >
-                <Eye className="w-4 h-4 mr-2" />
-                {showPreview ? "Önizlemeyi Gizle" : "Önizleme Göster"}
+                <Eye className="w-4 h-4 mr-1" />
+                {showPreview ? "Gizle" : "Göster"}
               </Button>
-              <Button onClick={handleSave}>
-                Değişiklikleri Kaydet
+              <Button onClick={handleSave} size="sm" className="h-8">
+                Kaydet
               </Button>
             </div>
           </div>
