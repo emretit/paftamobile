@@ -2270,6 +2270,105 @@ export type Database = {
         }
         Relationships: []
       }
+      proposal_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          design_settings: Json | null
+          estimated_time: string | null
+          id: string
+          is_recommended: boolean | null
+          items: Json | null
+          name: string
+          popularity: number | null
+          prefilled_fields: Json | null
+          preview_image: string | null
+          tags: string[] | null
+          template_features: string[] | null
+          template_type: string
+          updated_at: string | null
+          usage_count: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          design_settings?: Json | null
+          estimated_time?: string | null
+          id?: string
+          is_recommended?: boolean | null
+          items?: Json | null
+          name: string
+          popularity?: number | null
+          prefilled_fields?: Json | null
+          preview_image?: string | null
+          tags?: string[] | null
+          template_features?: string[] | null
+          template_type?: string
+          updated_at?: string | null
+          usage_count?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          design_settings?: Json | null
+          estimated_time?: string | null
+          id?: string
+          is_recommended?: boolean | null
+          items?: Json | null
+          name?: string
+          popularity?: number | null
+          prefilled_fields?: Json | null
+          preview_image?: string | null
+          tags?: string[] | null
+          template_features?: string[] | null
+          template_type?: string
+          updated_at?: string | null
+          usage_count?: string | null
+        }
+        Relationships: []
+      }
+      proposal_terms: {
+        Row: {
+          category: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          label: string
+          sort_order: number | null
+          text: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          label: string
+          sort_order?: number | null
+          text: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          label?: string
+          sort_order?: number | null
+          text?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       proposals: {
         Row: {
           attachments: Json | null

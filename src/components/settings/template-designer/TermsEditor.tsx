@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Plus,
   Edit3,
@@ -18,12 +17,17 @@ import {
   Shield,
   Truck
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-interface TermOption {
+interface ProposalTerm {
   id: string;
+  category: 'payment' | 'pricing' | 'warranty' | 'delivery';
   label: string;
   text: string;
-  category: string;
+  is_default: boolean;
+  is_active: boolean;
+  sort_order: number;
 }
 
 interface TermsEditorProps {
@@ -38,209 +42,237 @@ const CATEGORIES = {
   delivery: { title: "Teslimat", icon: Truck, color: "orange" }
 };
 
-const DEFAULT_TERMS: TermOption[] = [
-  { id: "payment_prepaid", label: "Peşin Ödeme", text: "%100 peşin ödeme yapılacaktır.", category: "payment" },
-  { id: "payment_30_70", label: "30-70 Avans", text: "%30 avans, %70 işin tamamlanmasının ardından ödenecektir.", category: "payment" },
-  { id: "pricing_vat_excluded", label: "KDV Hariç", text: "Belirtilen fiyatlar KDV hariçtir.", category: "pricing" },
-  { id: "pricing_currency_tl", label: "TL Cinsinden", text: "Tüm fiyatlar Türk Lirası (TL) cinsindendir.", category: "pricing" },
-  { id: "warranty_1year", label: "1 Yıl Garanti", text: "Ürünlerimiz fatura tarihinden itibaren 1 yıl garantilidir.", category: "warranty" },
-  { id: "delivery_standard", label: "Standart Teslimat", text: "Ürünler siparişten sonra 15 gün içinde teslim edilecektir.", category: "delivery" }
-];
-
 export const TermsEditor: React.FC<TermsEditorProps> = ({
   settings,
   onSettingsChange
 }) => {
-  const [terms, setTerms] = useState<TermOption[]>(
-    settings.availableTerms || DEFAULT_TERMS
-  );
-  const [selectedTerms, setSelectedTerms] = useState<string[]>(
-    settings.selectedTerms || []
-  );
+  const [terms, setTerms] = useState<ProposalTerm[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editingTerm, setEditingTerm] = useState<string | null>(null);
   const [newTerm, setNewTerm] = useState({ 
     label: "", 
     text: "", 
-    category: "payment" 
+    category: "payment" as const
   });
 
-  const updateSettings = (newTerms: TermOption[], newSelectedTerms: string[]) => {
-    setTerms(newTerms);
-    setSelectedTerms(newSelectedTerms);
-    onSettingsChange({
-      ...settings,
-      availableTerms: newTerms,
-      selectedTerms: newSelectedTerms
-    });
+  useEffect(() => {
+    fetchTerms();
+  }, []);
+
+  const fetchTerms = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('proposal_terms')
+        .select('*')
+        .eq('is_active', true)
+        .order('category', { ascending: true })
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      setTerms(data || []);
+    } catch (error) {
+      console.error('Error fetching terms:', error);
+      toast.error('Şartlar yüklenirken hata oluştu');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const addNewTerm = () => {
-    if (!newTerm.label.trim() || !newTerm.text.trim()) return;
+  const addNewTerm = async () => {
+    if (!newTerm.label.trim() || !newTerm.text.trim()) {
+      toast.error('Şart başlığı ve metni zorunludur');
+      return;
+    }
     
-    const termOption: TermOption = {
-      id: `custom_${Date.now()}`,
-      label: newTerm.label,
-      text: newTerm.text,
-      category: newTerm.category
-    };
-    
-    const updatedTerms = [...terms, termOption];
-    updateSettings(updatedTerms, selectedTerms);
-    setNewTerm({ label: "", text: "", category: "payment" });
+    try {
+      const { data, error } = await supabase
+        .from('proposal_terms')
+        .insert({
+          category: newTerm.category,
+          label: newTerm.label,
+          text: newTerm.text,
+          is_default: false,
+          is_active: true,
+          sort_order: terms.filter(t => t.category === newTerm.category).length + 1
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setTerms([...terms, data]);
+      setNewTerm({ label: "", text: "", category: "payment" });
+      toast.success('Şart başarıyla eklendi');
+    } catch (error) {
+      console.error('Error adding term:', error);
+      toast.error('Şart eklenirken hata oluştu');
+    }
   };
 
-  const deleteTerm = (termId: string) => {
-    const updatedTerms = terms.filter(t => t.id !== termId);
-    const updatedSelected = selectedTerms.filter(id => id !== termId);
-    updateSettings(updatedTerms, updatedSelected);
+  const updateTerm = async (termId: string, updates: Partial<ProposalTerm>) => {
+    try {
+      const { error } = await supabase
+        .from('proposal_terms')
+        .update(updates)
+        .eq('id', termId);
+
+      if (error) throw error;
+      
+      setTerms(terms.map(t => t.id === termId ? { ...t, ...updates } : t));
+      setEditingTerm(null);
+      toast.success('Şart başarıyla güncellendi');
+    } catch (error) {
+      console.error('Error updating term:', error);
+      toast.error('Şart güncellenirken hata oluştu');
+    }
   };
 
-  const toggleTermSelection = (termId: string, checked: boolean) => {
-    const updatedSelected = checked 
-      ? [...selectedTerms, termId]
-      : selectedTerms.filter(id => id !== termId);
-    updateSettings(terms, updatedSelected);
-  };
+  const deleteTerm = async (termId: string) => {
+    try {
+      const { error } = await supabase
+        .from('proposal_terms')
+        .update({ is_active: false })
+        .eq('id', termId);
 
-  const editTerm = (termId: string, newLabel: string, newText: string) => {
-    const updatedTerms = terms.map(t => 
-      t.id === termId 
-        ? { ...t, label: newLabel, text: newText }
-        : t
-    );
-    updateSettings(updatedTerms, selectedTerms);
-    setEditingTerm(null);
+      if (error) throw error;
+      
+      setTerms(terms.filter(t => t.id !== termId));
+      toast.success('Şart başarıyla silindi');
+    } catch (error) {
+      console.error('Error deleting term:', error);
+      toast.error('Şart silinirken hata oluştu');
+    }
   };
 
   const getTermsByCategory = (category: string) => {
     return terms.filter(t => t.category === category);
   };
 
+  const renderCategory = (categoryKey: string, category: any) => {
+    const Icon = category.icon;
+    const categoryTerms = getTermsByCategory(categoryKey);
+    
+    return (
+      <Card key={categoryKey}>
+        <CardHeader className={`pb-3 bg-${category.color}-50`}>
+          <CardTitle className={`flex items-center gap-2 text-${category.color}-600 text-base`}>
+            <Icon className="h-5 w-5" />
+            {category.title}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {categoryTerms.map(term => (
+            <div key={term.id} className="space-y-2">
+              {editingTerm === term.id ? (
+                <div className="space-y-2 p-2 border rounded">
+                  <Input
+                    defaultValue={term.label}
+                    placeholder="Şart başlığı"
+                    className="text-sm"
+                    id={`edit-label-${term.id}`}
+                  />
+                  <Textarea
+                    defaultValue={term.text}
+                    placeholder="Şart metni"
+                    className="text-sm min-h-[60px]"
+                    id={`edit-text-${term.id}`}
+                  />
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        const labelEl = document.getElementById(`edit-label-${term.id}`) as HTMLInputElement;
+                        const textEl = document.getElementById(`edit-text-${term.id}`) as HTMLTextAreaElement;
+                        if (labelEl && textEl) {
+                          updateTerm(term.id, { label: labelEl.value, text: textEl.value });
+                        }
+                      }}
+                    >
+                      <Check className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditingTerm(null)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium text-sm">{term.label}</h4>
+                    <div className="flex gap-1">
+                      {term.is_default && (
+                        <Badge variant="secondary" className="text-xs">Varsayılan</Badge>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setEditingTerm(term.id)}
+                      >
+                        <Edit3 className="h-3 w-3" />
+                      </Button>
+                      {!term.is_default && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => deleteTerm(term.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{term.text}</p>
+                </div>
+              )}
+            </div>
+          ))}
+
+          <Separator />
+
+          {/* Add New Term to Category */}
+          <div className="p-3 border-2 border-dashed rounded-lg">
+            <p className="text-xs text-muted-foreground mb-2">Bu kategoriye yeni şart ekle</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setNewTerm({ ...newTerm, category: categoryKey as any })}
+              className="w-full"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Yeni {category.title} Şartı
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  if (loading) {
+    return <div className="text-center py-8">Şartlar yükleniyor...</div>;
+  }
+
   return (
     <div className="space-y-6">
-      {/* Selected Terms Summary */}
-      <div className="p-3 bg-muted/30 rounded-lg">
-        <Label className="text-sm font-medium">Seçili Şartlar ({selectedTerms.length})</Label>
-        <div className="flex flex-wrap gap-1 mt-2">
-          {selectedTerms.map(termId => {
-            const term = terms.find(t => t.id === termId);
-            if (!term) return null;
-            const category = CATEGORIES[term.category as keyof typeof CATEGORIES];
-            return (
-              <Badge 
-                key={termId} 
-                variant="secondary" 
-                className={`text-xs text-${category.color}-700 bg-${category.color}-50`}
-              >
-                {term.label}
-              </Badge>
-            );
-          })}
-          {selectedTerms.length === 0 && (
-            <span className="text-xs text-muted-foreground">Henüz şart seçilmedi</span>
-          )}
-        </div>
+      <div className="text-center pb-4">
+        <h3 className="text-lg font-semibold">Teklif Şartları Yönetimi</h3>
+        <p className="text-sm text-gray-600 mt-1">
+          Tekliflerde kullanılacak şartları tanımlayın ve yönetin
+        </p>
       </div>
-
-      {/* Terms by Category */}
+      
       <div className="space-y-4">
-        {Object.entries(CATEGORIES).map(([categoryKey, category]) => {
-          const categoryTerms = getTermsByCategory(categoryKey);
-          const Icon = category.icon;
-          
-          return (
-            <Card key={categoryKey}>
-              <CardHeader className="pb-3">
-                <CardTitle className={`flex items-center gap-2 text-sm text-${category.color}-600`}>
-                  <Icon className="h-4 w-4" />
-                  {category.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {categoryTerms.map(term => (
-                  <div key={term.id} className="space-y-2">
-                    {editingTerm === term.id ? (
-                      <div className="space-y-2 p-2 border rounded">
-                        <Input
-                          defaultValue={term.label}
-                          placeholder="Şart başlığı"
-                          className="text-sm"
-                          id={`edit-label-${term.id}`}
-                        />
-                        <Textarea
-                          defaultValue={term.text}
-                          placeholder="Şart metni"
-                          className="text-sm min-h-[60px]"
-                          id={`edit-text-${term.id}`}
-                        />
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              const labelEl = document.getElementById(`edit-label-${term.id}`) as HTMLInputElement;
-                              const textEl = document.getElementById(`edit-text-${term.id}`) as HTMLTextAreaElement;
-                              if (labelEl && textEl) {
-                                editTerm(term.id, labelEl.value, textEl.value);
-                              }
-                            }}
-                          >
-                            <Check className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setEditingTerm(null)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-start gap-2">
-                        <Checkbox
-                          checked={selectedTerms.includes(term.id)}
-                          onCheckedChange={(checked) => toggleTermSelection(term.id, checked as boolean)}
-                          className="mt-1"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <Label className="text-sm font-medium cursor-pointer">
-                              {term.label}
-                            </Label>
-                            <div className="flex gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => setEditingTerm(term.id)}
-                              >
-                                <Edit3 className="h-3 w-3" />
-                              </Button>
-                              {term.id.startsWith('custom_') && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => deleteTerm(term.id)}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">{term.text}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          );
-        })}
+        {Object.entries(CATEGORIES).map(([key, category]) =>
+          renderCategory(key, category)
+        )}
       </div>
 
       <Separator />
 
-      {/* Add New Term */}
+      {/* Global Add New Term */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-sm">
@@ -253,7 +285,7 @@ export const TermsEditor: React.FC<TermsEditorProps> = ({
             <Label className="text-sm">Kategori</Label>
             <select
               value={newTerm.category}
-              onChange={(e) => setNewTerm({ ...newTerm, category: e.target.value })}
+              onChange={(e) => setNewTerm({ ...newTerm, category: e.target.value as any })}
               className="w-full mt-1 px-3 py-2 border border-input rounded-md text-sm"
             >
               {Object.entries(CATEGORIES).map(([key, category]) => (
