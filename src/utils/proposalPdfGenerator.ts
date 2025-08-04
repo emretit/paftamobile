@@ -55,23 +55,31 @@ export class ProposalPdfGenerator {
   private setupTurkishSupport(): void {
     // Set UTF-8 encoding for Turkish characters
     try {
-      // Use built-in fonts that support Turkish characters better
+      // Use built-in fonts that support Unicode better
       this.pdf.setFont('helvetica');
+      // Set character space for better Turkish text rendering
+      this.pdf.setCharSpace(0.05);
+      console.log('Turkish font support enabled');
     } catch (error) {
       console.warn('Font setup warning:', error);
     }
   }
 
   async generateProposalPdf(proposal: Proposal, templateId?: string): Promise<void> {
+    console.log('PDF Generation started', { proposalId: proposal.id, templateId });
+    
     // Fetch company settings
     await this.loadCompanySettings();
+    console.log('Company settings loaded:', this.companyInfo);
     
     // Load template if specified
     if (templateId && templateId !== 'default') {
       await this.loadTemplate(templateId);
+      console.log('Template loaded:', { templateId, designSettings: this.designSettings });
     } else {
       // Default template kullanılıyorsa explicit olarak default ayarları set et
       this.designSettings = this.getDefaultDesignSettings();
+      console.log('Using default template settings');
     }
     
     // Set primary font with Turkish character support
@@ -275,24 +283,30 @@ export class ProposalPdfGenerator {
     this.pdf.setFontSize(10);
     this.pdf.setFont('helvetica', 'normal');
 
-    if (proposal.customer.name) {
-      this.pdf.text(`Firma: ${proposal.customer.name}`, this.marginLeft, currentY);
+    // Müşteri adı - company varsa onu, yoksa name'i kullan
+    const customerDisplayName = proposal.customer.company || proposal.customer.name;
+    if (customerDisplayName) {
+      this.pdf.text(`Firma: ${this.sanitizeTurkishText(customerDisplayName)}`, this.marginLeft, currentY);
       currentY += 5;
     }
-    if (proposal.customer.company) {
-      this.pdf.text(`Şirket: ${proposal.customer.company}`, this.marginLeft, currentY);
+    
+    // Eğer hem company hem name varsa, name'i de göster
+    if (proposal.customer.company && proposal.customer.name && proposal.customer.name !== proposal.customer.company) {
+      this.pdf.text(`Yetkili: ${this.sanitizeTurkishText(proposal.customer.name)}`, this.marginLeft, currentY);
       currentY += 5;
     }
+    
     if (proposal.customer.email) {
       this.pdf.text(`E-posta: ${proposal.customer.email}`, this.marginLeft, currentY);
       currentY += 5;
     }
-    if (proposal.customer.phone) {
-      this.pdf.text(`Telefon: ${proposal.customer.phone}`, this.marginLeft, currentY);
+    if (proposal.customer.mobile_phone || proposal.customer.office_phone) {
+      const phone = proposal.customer.mobile_phone || proposal.customer.office_phone;
+      this.pdf.text(`Telefon: ${phone}`, this.marginLeft, currentY);
       currentY += 5;
     }
     if (proposal.customer.address) {
-      this.pdf.text(`Adres: ${proposal.customer.address}`, this.marginLeft, currentY);
+      this.pdf.text(`Adres: ${this.sanitizeTurkishText(proposal.customer.address)}`, this.marginLeft, currentY);
       currentY += 5;
     }
 
@@ -519,32 +533,27 @@ export class ProposalPdfGenerator {
   }
 
   /**
-   * Sanitizes Turkish text for better PDF rendering
-   * Handles common character encoding issues
+   * Properly handles Turkish characters for PDF rendering
+   * Uses Unicode normalization for better compatibility
    */
   private sanitizeTurkishText(text: string): string {
     if (!text) return '';
     
-    // Turkish character mappings for better PDF compatibility
-    const charMap: Record<string, string> = {
-      'ç': 'c', 'Ç': 'C',
-      'ğ': 'g', 'Ğ': 'G', 
-      'ı': 'i', 'I': 'I',
-      'ö': 'o', 'Ö': 'O',
-      'ş': 's', 'Ş': 'S',
-      'ü': 'u', 'Ü': 'U'
-    };
-    
-    // Try to keep Turkish characters first, fallback to ASCII if rendering fails
     try {
-      // Test if the text will render properly
-      const testPdf = new jsPDF();
-      testPdf.setFont('helvetica');
-      testPdf.text(text, 0, 0);
-      return text; // Return original if it works
+      // Normalize Unicode to ensure consistent character representation
+      const normalized = text.normalize('NFC');
+      
+      // For jsPDF, we need to encode Turkish characters properly
+      // Use Unicode escape sequences that jsPDF can handle
+      return normalized
+        .replace(/İ/g, 'I')  // Capital I with dot -> regular I
+        .replace(/ı/g, 'i')  // Dotless i -> regular i  
+        // Keep other Turkish characters as they are more compatible in modern jsPDF
+        ;
     } catch (error) {
-      // Fallback to ASCII version
-      return text.replace(/[çÇğĞıIöÖşŞüÜ]/g, (char) => charMap[char] || char);
+      console.warn('Text sanitization error:', error);
+      // Fallback to original text
+      return text;
     }
   }
 
