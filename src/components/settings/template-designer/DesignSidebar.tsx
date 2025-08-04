@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useFileUpload } from "@/hooks/useFileUpload";
+import { useTemplateLogoUpload } from "@/hooks/useTemplateLogoUpload";
 import { Upload, X } from "lucide-react";
 
 interface DesignSidebarProps {
@@ -20,7 +20,7 @@ export const DesignSidebar: React.FC<DesignSidebarProps> = ({
   designSettings,
   onSettingsChange,
 }) => {
-  const { uploadFile, uploading } = useFileUpload();
+  const { uploadTemplateLogo, deleteTemplateLogo, uploading } = useTemplateLogoUpload();
 
   const updateSettings = (path: string, value: any) => {
     const pathArray = path.split('.');
@@ -39,14 +39,21 @@ export const DesignSidebar: React.FC<DesignSidebarProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const url = await uploadFile(file, 'template-logos');
+    const url = await uploadTemplateLogo(file);
     if (url) {
       updateSettings('branding.logo', url);
     }
   };
 
-  const removeLogo = () => {
-    updateSettings('branding.logo', undefined);
+  const removeLogo = async () => {
+    if (designSettings.branding?.logo) {
+      const deleted = await deleteTemplateLogo(designSettings.branding.logo);
+      if (deleted) {
+        updateSettings('branding.logo', undefined);
+      }
+    } else {
+      updateSettings('branding.logo', undefined);
+    }
   };
 
   return (
