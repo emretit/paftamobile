@@ -22,22 +22,18 @@ import {
 } from "lucide-react";
 import { SectionEditor } from "./SectionEditor";
 import { FieldEditor } from "./FieldEditor";
-import PdfDragDropEditor from "./PdfDragDropEditor";
 
 interface VisualEditorProps {
   designSettings: TemplateDesignSettings;
   onSettingsChange: (settings: TemplateDesignSettings) => void;
-  onSavePdfFields?: (fields: TemplateField[]) => void;
 }
 
 export const VisualEditor: React.FC<VisualEditorProps> = ({
   designSettings,
   onSettingsChange,
-  onSavePdfFields,
 }) => {
   const [editingSection, setEditingSection] = useState<TemplateSection | null>(null);
   const [editingField, setEditingField] = useState<TemplateField | null>(null);
-  const [showPdfEditor, setShowPdfEditor] = useState(false);
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -135,25 +131,6 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({
     );
   }
 
-  if (showPdfEditor) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold">PDF Alan Düzenleyicisi</h3>
-            <p className="text-sm text-muted-foreground">
-              Alanları PDF üzerinde konumlandırın
-            </p>
-          </div>
-          <Button onClick={() => setShowPdfEditor(false)} variant="outline" size="sm">
-            Geri Dön
-          </Button>
-        </div>
-        <PdfDragDropEditor onSave={onSavePdfFields || (() => {})} />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -163,16 +140,10 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({
             Bölümleri sürükleyerek yeniden düzenleyin
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setShowPdfEditor(true)} variant="outline" size="sm" className="gap-2">
-            <Type className="w-4 h-4" />
-            PDF Alan Düzenleme
-          </Button>
-          <Button onClick={addNewSection} size="sm" className="gap-2">
-            <Plus className="w-4 h-4" />
-            Bölüm Ekle
-          </Button>
-        </div>
+        <Button onClick={addNewSection} size="sm" className="gap-2">
+          <Plus className="w-4 h-4" />
+          Bölüm Ekle
+        </Button>
       </div>
 
       <DragDropContext onDragEnd={handleDragEnd}>

@@ -85,10 +85,6 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
                 <VisualEditor
                   designSettings={designSettings}
                   onSettingsChange={setDesignSettings}
-                  onSavePdfFields={(fields) => {
-                    console.log('PDF fields saved:', fields);
-                    // Bu alanları designSettings'e ekleyebiliriz
-                  }}
                 />
               </div>
               {showPreview && (
