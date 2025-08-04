@@ -188,7 +188,10 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                           fontSize: fonts.sizes.body,
                         }}
                       >
-                        <div className="col-span-6">Açıklama</div>
+                        <div className={`${section.settings?.showProductImages === true ? 'col-span-5' : 'col-span-6'}`}>
+                          {section.settings?.showProductImages === true ? 'Ürün / Açıklama' : 'Açıklama'}
+                        </div>
+                        {section.settings?.showProductImages === true && <div className="col-span-1"></div>}
                         <div className="col-span-2 text-center">Miktar</div>
                         <div className="col-span-2 text-right">Birim Fiyat</div>
                         <div className="col-span-2 text-right">Toplam</div>
@@ -206,7 +209,15 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                             fontSize: fonts.sizes.body,
                           }}
                         >
-                          <div className="col-span-6">{item.description}</div>
+                          <div className={`${section.settings?.showProductImages === true ? 'col-span-5' : 'col-span-6'} flex items-center gap-2`}>
+                            {section.settings?.showProductImages === true && (
+                              <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center text-xs">
+                                📦
+                              </div>
+                            )}
+                            <span>{item.description}</span>
+                          </div>
+                          {section.settings?.showProductImages === true && <div className="col-span-1"></div>}
                           <div className="col-span-2 text-center">{item.quantity}</div>
                           <div className="col-span-2 text-right">{item.price.toLocaleString('tr-TR')} ₺</div>
                           <div className="col-span-2 text-right font-medium">{item.total.toLocaleString('tr-TR')} ₺</div>

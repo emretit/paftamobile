@@ -14,12 +14,14 @@ interface SectionEditorProps {
   section: TemplateSection;
   onSave: (section: TemplateSection) => void;
   onCancel: () => void;
+  onAutoSave?: (section: TemplateSection) => void; // Otomatik kaydetme için
 }
 
 export const SectionEditor: React.FC<SectionEditorProps> = ({
   section,
   onSave,
   onCancel,
+  onAutoSave,
 }) => {
   const [editedSection, setEditedSection] = useState<TemplateSection>({
     ...section,
@@ -27,17 +29,17 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
   });
 
   const updateSectionSettings = (newSettings: Record<string, any>) => {
-    console.log('Toggle değişikliği:', newSettings);
-    console.log('Mevcut settings:', editedSection.settings);
+    const updatedSection = {
+      ...editedSection,
+      settings: { ...editedSection.settings, ...newSettings }
+    };
     
-    setEditedSection(prev => {
-      const updated = {
-        ...prev,
-        settings: { ...prev.settings, ...newSettings }
-      };
-      console.log('Güncellenmiş settings:', updated.settings);
-      return updated;
-    });
+    setEditedSection(updatedSection);
+    
+    // Otomatik kaydetme - toggle değişiklikleri anında uygulanır
+    if (onAutoSave) {
+      onAutoSave(updatedSection);
+    }
   };
 
   return (
@@ -177,12 +179,18 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
 
       <div className="flex justify-end gap-3 pt-4 border-t">
         <Button variant="outline" onClick={onCancel}>
-          İptal
+          Geri Dön
         </Button>
         <Button onClick={() => onSave(editedSection)}>
-          Değişiklikleri Kaydet
+          Tamamla
         </Button>
       </div>
+      
+      {onAutoSave && (
+        <div className="text-xs text-muted-foreground text-center">
+          💡 Toggle değişiklikleri otomatik olarak kaydedilir
+        </div>
+      )}
     </div>
   );
 };

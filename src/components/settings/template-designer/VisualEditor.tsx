@@ -123,6 +123,7 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({
         section={editingSection}
         onSave={updateSection}
         onCancel={() => setEditingSection(null)}
+        onAutoSave={updateSection} // Toggle değişiklikleri otomatik kaydet
       />
     );
   }
