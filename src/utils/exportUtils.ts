@@ -51,7 +51,16 @@ export const exportToPDF = (data: any[], filename: string, columns: { header: st
       }
     });
     
-    doc.save(`${filename}.pdf`);
+    // PDF'yi yeni sekmede aç ve yazdır
+    const pdfBlob = doc.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const printWindow = window.open(pdfUrl, '_blank');
+    
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
   } catch (error) {
     console.error('PDF export error:', error);
     throw new Error('PDF dosyası oluşturulamadı');

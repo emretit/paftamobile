@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { FileDown, ChevronDown, Settings, Loader2 } from "lucide-react";
+import { Printer, ChevronDown, Settings, Loader2 } from "lucide-react";
 import { ProposalTemplate } from "@/types/proposal-template";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -84,9 +84,9 @@ export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <FileDown className="h-4 w-4" />
+            <Printer className="h-4 w-4" />
           )}
-          PDF İndir
+          PDF Yazdır
           <ChevronDown className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>

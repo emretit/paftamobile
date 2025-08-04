@@ -356,7 +356,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
       const generator = new ProposalPdfGenerator();
       
       await generator.generateProposalPdf(proposal, templateId);
-      toast.success(`PDF ${templateId ? 'seçilen şablonla' : ''} başarıyla indirildi`);
+      toast.success(`PDF ${templateId ? 'seçilen şablonla' : ''} yazdırma için hazırlandı`);
     } catch (error) {
       console.error('PDF oluşturma hatası:', error);
       toast.error("PDF oluşturulurken bir hata oluştu");

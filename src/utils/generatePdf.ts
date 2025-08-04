@@ -145,6 +145,14 @@ export const generatePdf = (
     });
   }
   
-  // Save the PDF
-  pdf.save(`${header.title.replace(/\s+/g, '_')}_${header.number}.pdf`);
+  // PDF'yi yeni sekmede aç ve yazdır
+  const pdfBlob = pdf.output('blob');
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  const printWindow = window.open(pdfUrl, '_blank');
+  
+  if (printWindow) {
+    printWindow.onload = () => {
+      printWindow.print();
+    };
+  }
 };

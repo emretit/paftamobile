@@ -85,9 +85,16 @@ export class ProposalPdfGenerator {
       currentY += 10; // Add spacing between sections
     }
 
-    // Dosya adı oluştur
-    const fileName = `Teklif_${proposal.number}_${proposal.customer?.name?.replace(/\s+/g, '_') || 'Musteri'}.pdf`;
-    this.pdf.save(fileName);
+    // PDF'yi yeni sekmede aç ve yazdır
+    const pdfBlob = this.pdf.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const printWindow = window.open(pdfUrl, '_blank');
+    
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
   }
 
   private async loadCompanySettings(): Promise<void> {
