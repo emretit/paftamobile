@@ -3,11 +3,10 @@ import { ProposalTemplate, TemplateDesignSettings } from "@/types/proposal-templ
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Eye, Palette, Settings, MousePointer } from "lucide-react";
+import { ArrowLeft, Eye, Palette, Settings } from "lucide-react";
 import { DesignSidebar } from "./DesignSidebar";
 import { TemplatePreview } from "./TemplatePreview";
 import { VisualEditor } from "./VisualEditor";
-import PdfDragDropEditor from "./PdfDragDropEditor";
 
 interface TemplateDesignerProps {
   template: ProposalTemplate;
@@ -67,13 +66,9 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
 
         {/* Main Content */}
         <div className="flex-1 flex pt-20">
-          <Tabs defaultValue="dragdrop" className="h-full w-full">
+          <Tabs defaultValue="visual" className="h-full w-full">
             <div className="border-b bg-card">
-              <TabsList className="grid w-full grid-cols-3 m-4">
-                <TabsTrigger value="dragdrop" className="gap-2">
-                  <MousePointer className="w-4 h-4" />
-                  Sürükle-Bırak
-                </TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 m-4">
                 <TabsTrigger value="visual" className="gap-2">
                   <Palette className="w-4 h-4" />
                   Görsel Düzenleyici
@@ -85,20 +80,15 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
               </TabsList>
             </div>
             
-            <TabsContent value="dragdrop" className="m-0 h-[calc(100%-80px)]">
-              <PdfDragDropEditor 
-                onSave={(fields) => {
-                  console.log('PDF fields saved:', fields);
-                  // Bu alanları designSettings'e ekleyebiliriz
-                }}
-              />
-            </TabsContent>
-            
             <TabsContent value="visual" className="m-0 flex h-[calc(100%-80px)]">
               <div className="w-96 border-r bg-card overflow-y-auto p-4">
                 <VisualEditor
                   designSettings={designSettings}
                   onSettingsChange={setDesignSettings}
+                  onSavePdfFields={(fields) => {
+                    console.log('PDF fields saved:', fields);
+                    // Bu alanları designSettings'e ekleyebiliriz
+                  }}
                 />
               </div>
               {showPreview && (
