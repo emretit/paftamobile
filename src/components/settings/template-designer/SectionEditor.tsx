@@ -103,11 +103,23 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
               <div className="space-y-3 p-3 border rounded-lg">
                 <div className="flex items-center justify-between">
                   <Label>Logo Göster</Label>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={editedSection.settings?.showLogo !== false}
+                    onCheckedChange={(checked) => setEditedSection({
+                      ...editedSection,
+                      settings: { ...editedSection.settings, showLogo: checked }
+                    })}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>Şirket Bilgileri Göster</Label>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={editedSection.settings?.showCompanyInfo !== false}
+                    onCheckedChange={(checked) => setEditedSection({
+                      ...editedSection,
+                      settings: { ...editedSection.settings, showCompanyInfo: checked }
+                    })}
+                  />
                 </div>
               </div>
             )}
@@ -116,11 +128,23 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
               <div className="space-y-3 p-3 border rounded-lg">
                 <div className="flex items-center justify-between">
                   <Label>Satır Renkli Arka Plan</Label>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={editedSection.settings?.alternatingRows !== false}
+                    onCheckedChange={(checked) => setEditedSection({
+                      ...editedSection,
+                      settings: { ...editedSection.settings, alternatingRows: checked }
+                    })}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>Ürün Resimleri Göster</Label>
-                  <Switch />
+                  <Switch 
+                    checked={editedSection.settings?.showProductImages === true}
+                    onCheckedChange={(checked) => setEditedSection({
+                      ...editedSection,
+                      settings: { ...editedSection.settings, showProductImages: checked }
+                    })}
+                  />
                 </div>
               </div>
             )}
@@ -129,11 +153,23 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
               <div className="space-y-3 p-3 border rounded-lg">
                 <div className="flex items-center justify-between">
                   <Label>KDV Detayını Göster</Label>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={editedSection.settings?.showTaxDetails !== false}
+                    onCheckedChange={(checked) => setEditedSection({
+                      ...editedSection,
+                      settings: { ...editedSection.settings, showTaxDetails: checked }
+                    })}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>İndirim Satırını Göster</Label>
-                  <Switch />
+                  <Switch 
+                    checked={editedSection.settings?.showDiscounts === true}
+                    onCheckedChange={(checked) => setEditedSection({
+                      ...editedSection,
+                      settings: { ...editedSection.settings, showDiscounts: checked }
+                    })}
+                  />
                 </div>
               </div>
             )}
@@ -143,6 +179,11 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                 <div>
                   <Label>Özel İçerik</Label>
                   <Textarea
+                    value={editedSection.settings?.customContent || ''}
+                    onChange={(e) => setEditedSection({
+                      ...editedSection,
+                      settings: { ...editedSection.settings, customContent: e.target.value }
+                    })}
                     placeholder="Bu bölümde gösterilecek özel içeriği girin..."
                     className="mt-1"
                   />

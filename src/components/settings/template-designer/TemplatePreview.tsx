@@ -63,11 +63,13 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                     }}
                   >
                     <div className={`flex items-center ${header.logoPosition === 'center' ? 'justify-center' : header.logoPosition === 'right' ? 'justify-end' : 'justify-start'}`}>
-                      <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center text-white font-bold">
-                        LOGO
-                      </div>
-                      {header.showCompanyInfo && (
-                        <div className="ml-4">
+                      {section.settings?.showLogo !== false && (
+                        <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center text-white font-bold">
+                          LOGO
+                        </div>
+                      )}
+                      {section.settings?.showCompanyInfo !== false && (
+                        <div className={section.settings?.showLogo !== false ? "ml-4" : ""}>
                           <h2 className="font-semibold" style={{ fontSize: fonts.sizes.heading }}>
                             {branding.companyName}
                           </h2>
@@ -198,7 +200,7 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                           key={index}
                           className="grid grid-cols-12 gap-4 p-3"
                           style={{
-                            backgroundColor: designSettings.table.rowAlternating && index % 2 === 1 
+                            backgroundColor: section.settings?.alternatingRows !== false && designSettings.table.rowAlternating && index % 2 === 1 
                               ? `${colors.primary}10` : 'transparent',
                             borderTop: layout.showBorders ? `1px solid ${colors.border}` : 'none',
                             fontSize: fonts.sizes.body,
@@ -222,10 +224,18 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                         <span>Ara Toplam:</span>
                         <span>{sampleData.subtotal.toLocaleString('tr-TR')} ₺</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>KDV (%18):</span>
-                        <span>{sampleData.tax.toLocaleString('tr-TR')} ₺</span>
-                      </div>
+                      {section.settings?.showTaxDetails !== false && (
+                        <div className="flex justify-between">
+                          <span>KDV (%18):</span>
+                          <span>{sampleData.tax.toLocaleString('tr-TR')} ₺</span>
+                        </div>
+                      )}
+                      {section.settings?.showDiscounts === true && (
+                        <div className="flex justify-between text-green-600">
+                          <span>İndirim:</span>
+                          <span>-500 ₺</span>
+                        </div>
+                      )}
                       <div 
                         className="flex justify-between font-bold text-lg pt-2 border-t"
                         style={{ 
@@ -271,18 +281,14 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                     <h3 className="font-semibold mb-2" style={{ fontSize: fonts.sizes.heading }}>
                       {section.title}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Özel bölüm içeriği buraya gelecek...
-                    </p>
-                    {section.fields && section.fields.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        {section.fields.map((field) => (
-                          <div key={field.id} className="flex items-center gap-2">
-                            <span className="text-sm font-medium">{field.label}:</span>
-                            <span className="text-sm">Örnek değer</span>
-                          </div>
-                        ))}
+                    {section.settings?.customContent ? (
+                      <div className="whitespace-pre-wrap text-sm" style={{ fontSize: fonts.sizes.body }}>
+                        {section.settings.customContent}
                       </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Özel bölüm içeriği buraya gelecek...
+                      </p>
                     )}
                   </div>
                 );
