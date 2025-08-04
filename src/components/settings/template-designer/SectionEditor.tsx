@@ -27,10 +27,17 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
   });
 
   const updateSectionSettings = (newSettings: Record<string, any>) => {
-    setEditedSection(prev => ({
-      ...prev,
-      settings: { ...prev.settings, ...newSettings }
-    }));
+    console.log('Toggle değişikliği:', newSettings);
+    console.log('Mevcut settings:', editedSection.settings);
+    
+    setEditedSection(prev => {
+      const updated = {
+        ...prev,
+        settings: { ...prev.settings, ...newSettings }
+      };
+      console.log('Güncellenmiş settings:', updated.settings);
+      return updated;
+    });
   };
 
   return (
@@ -99,14 +106,14 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                 <div className="flex items-center justify-between">
                   <Label>Logo Göster</Label>
                   <Switch 
-                    checked={editedSection.settings?.showLogo !== false}
+                    checked={editedSection.settings?.showLogo ?? true}
                     onCheckedChange={(checked) => updateSectionSettings({ showLogo: checked })}
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>Şirket Bilgileri Göster</Label>
                   <Switch 
-                    checked={editedSection.settings?.showCompanyInfo !== false}
+                    checked={editedSection.settings?.showCompanyInfo ?? true}
                     onCheckedChange={(checked) => updateSectionSettings({ showCompanyInfo: checked })}
                   />
                 </div>
@@ -118,14 +125,14 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                 <div className="flex items-center justify-between">
                   <Label>Satır Renkli Arka Plan</Label>
                   <Switch 
-                    checked={editedSection.settings?.alternatingRows !== false}
+                    checked={editedSection.settings?.alternatingRows ?? true}
                     onCheckedChange={(checked) => updateSectionSettings({ alternatingRows: checked })}
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>Ürün Resimleri Göster</Label>
                   <Switch 
-                    checked={editedSection.settings?.showProductImages === true}
+                    checked={editedSection.settings?.showProductImages ?? false}
                     onCheckedChange={(checked) => updateSectionSettings({ showProductImages: checked })}
                   />
                 </div>
@@ -137,14 +144,14 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                 <div className="flex items-center justify-between">
                   <Label>KDV Detayını Göster</Label>
                   <Switch 
-                    checked={editedSection.settings?.showTaxDetails !== false}
+                    checked={editedSection.settings?.showTaxDetails ?? true}
                     onCheckedChange={(checked) => updateSectionSettings({ showTaxDetails: checked })}
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>İndirim Satırını Göster</Label>
                   <Switch 
-                    checked={editedSection.settings?.showDiscounts === true}
+                    checked={editedSection.settings?.showDiscounts ?? false}
                     onCheckedChange={(checked) => updateSectionSettings({ showDiscounts: checked })}
                   />
                 </div>
