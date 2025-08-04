@@ -1,29 +1,14 @@
 import React, { useState } from "react";
-import { TemplateSection, TemplateField } from "@/types/proposal-template";
+import { TemplateSection } from "@/types/proposal-template";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { 
-  ArrowLeft, 
-  Plus, 
-  Trash2, 
-  Settings, 
-  Type, 
-  Hash, 
-  Calendar, 
-  Image,
-  CheckSquare,
-  FileText,
-  List,
-  ToggleLeft
-} from "lucide-react";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { ArrowLeft } from "lucide-react";
 
 interface SectionEditorProps {
   section: TemplateSection;
@@ -36,7 +21,17 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
   onSave,
   onCancel,
 }) => {
-  const [editedSection, setEditedSection] = useState<TemplateSection>(section);
+  const [editedSection, setEditedSection] = useState<TemplateSection>({
+    ...section,
+    settings: section.settings || {}
+  });
+
+  const updateSectionSettings = (newSettings: Record<string, any>) => {
+    setEditedSection(prev => ({
+      ...prev,
+      settings: { ...prev.settings, ...newSettings }
+    }));
+  };
 
   return (
     <div className="space-y-6">
@@ -105,20 +100,14 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                   <Label>Logo Göster</Label>
                   <Switch 
                     checked={editedSection.settings?.showLogo !== false}
-                    onCheckedChange={(checked) => setEditedSection({
-                      ...editedSection,
-                      settings: { ...editedSection.settings, showLogo: checked }
-                    })}
+                    onCheckedChange={(checked) => updateSectionSettings({ showLogo: checked })}
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>Şirket Bilgileri Göster</Label>
                   <Switch 
                     checked={editedSection.settings?.showCompanyInfo !== false}
-                    onCheckedChange={(checked) => setEditedSection({
-                      ...editedSection,
-                      settings: { ...editedSection.settings, showCompanyInfo: checked }
-                    })}
+                    onCheckedChange={(checked) => updateSectionSettings({ showCompanyInfo: checked })}
                   />
                 </div>
               </div>
@@ -130,20 +119,14 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                   <Label>Satır Renkli Arka Plan</Label>
                   <Switch 
                     checked={editedSection.settings?.alternatingRows !== false}
-                    onCheckedChange={(checked) => setEditedSection({
-                      ...editedSection,
-                      settings: { ...editedSection.settings, alternatingRows: checked }
-                    })}
+                    onCheckedChange={(checked) => updateSectionSettings({ alternatingRows: checked })}
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>Ürün Resimleri Göster</Label>
                   <Switch 
                     checked={editedSection.settings?.showProductImages === true}
-                    onCheckedChange={(checked) => setEditedSection({
-                      ...editedSection,
-                      settings: { ...editedSection.settings, showProductImages: checked }
-                    })}
+                    onCheckedChange={(checked) => updateSectionSettings({ showProductImages: checked })}
                   />
                 </div>
               </div>
@@ -155,20 +138,14 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                   <Label>KDV Detayını Göster</Label>
                   <Switch 
                     checked={editedSection.settings?.showTaxDetails !== false}
-                    onCheckedChange={(checked) => setEditedSection({
-                      ...editedSection,
-                      settings: { ...editedSection.settings, showTaxDetails: checked }
-                    })}
+                    onCheckedChange={(checked) => updateSectionSettings({ showTaxDetails: checked })}
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>İndirim Satırını Göster</Label>
                   <Switch 
                     checked={editedSection.settings?.showDiscounts === true}
-                    onCheckedChange={(checked) => setEditedSection({
-                      ...editedSection,
-                      settings: { ...editedSection.settings, showDiscounts: checked }
-                    })}
+                    onCheckedChange={(checked) => updateSectionSettings({ showDiscounts: checked })}
                   />
                 </div>
               </div>
@@ -180,10 +157,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                   <Label>Özel İçerik</Label>
                   <Textarea
                     value={editedSection.settings?.customContent || ''}
-                    onChange={(e) => setEditedSection({
-                      ...editedSection,
-                      settings: { ...editedSection.settings, customContent: e.target.value }
-                    })}
+                    onChange={(e) => updateSectionSettings({ customContent: e.target.value })}
                     placeholder="Bu bölümde gösterilecek özel içeriği girin..."
                     className="mt-1"
                   />
