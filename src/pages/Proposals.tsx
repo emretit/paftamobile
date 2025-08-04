@@ -3,7 +3,7 @@ import { useState } from "react";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search, Filter, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProposalTable from "@/components/proposals/ProposalTable";
 import { ProposalKanban } from "@/components/proposals/ProposalKanban";
@@ -13,6 +13,8 @@ import { Proposal } from "@/types/proposal";
 import { useProposals } from "@/hooks/useProposals";
 import { toast } from "sonner";
 import ProposalsViewToggle from "@/components/proposals/header/ProposalsViewToggle";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 interface ProposalsPageProps {
   isCollapsed: boolean;
@@ -23,13 +25,30 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedEmployee, setSelectedEmployee] = useState<string>('all');
   const [activeView, setActiveView] = useState<"list" | "kanban">("list");
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
+
+  // Fetch employees data
+  const { data: employees = [] } = useQuery({
+    queryKey: ['employees'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('id, first_name, last_name')
+        .eq('status', 'aktif')
+        .order('first_name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
   // Fetch proposals data
   const { data: proposals = [], isLoading, error } = useProposals({
     status: selectedStatus,
     search: searchQuery,
+    employeeId: selectedEmployee,
     dateRange: { from: null, to: null }
   });
 
@@ -98,6 +117,20 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
               <SelectItem value="expired">⚠️ Süresi Dolmuş</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+            <SelectTrigger className="w-[200px]">
+              <User className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Satış Temsilcisi" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Temsilciler</SelectItem>
+              {employees.map((employee) => (
+                <SelectItem key={employee.id} value={employee.id}>
+                  {employee.first_name} {employee.last_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Content */}
@@ -113,6 +146,7 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
             filters={{ 
               status: selectedStatus, 
               search: searchQuery,
+              employeeId: selectedEmployee,
               dateRange: { from: null, to: null }
             }}
             onProposalSelect={handleProposalSelect}

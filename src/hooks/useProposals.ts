@@ -27,6 +27,11 @@ export const useProposals = (filters?: ProposalFilters) => {
         query = query.or(`title.ilike.%${filters.search}%,number.ilike.%${filters.search}%`);
       }
       
+      // Apply employee filter if specified
+      if (filters?.employeeId && filters.employeeId !== 'all') {
+        query = query.eq('employee_id', filters.employeeId);
+      }
+      
       // Apply date range filter if specified
       if (filters?.dateRange?.from) {
         query = query.gte('created_at', filters.dateRange.from);
