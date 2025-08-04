@@ -1,151 +1,227 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ProposalTemplate } from "@/types/proposal-template";
-import { Plus, Edit, Trash2, Save, X, Palette } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X, Palette, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { TemplateDesigner } from "./template-designer/TemplateDesigner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Database } from "@/integrations/supabase/types";
 
-const defaultTemplates: ProposalTemplate[] = [
-  {
-    id: "1",
-    name: "Standart Teklif",
-    description: "Genel kullanım için standart teklif şablonu",
-    templateType: "standard",
-    templateFeatures: ["Temel bilgiler", "Ürün listesi", "Ödeme koşulları"],
-    items: [],
-    prefilledFields: {
-      title: "Teklif",
-      validityDays: 30,
-      paymentTerm: "net30"
-    }
-  },
-  {
-    id: "2", 
-    name: "Hızlı Teklif",
-    description: "Hızlı satış için basitleştirilmiş şablon",
-    templateType: "quick",
-    templateFeatures: ["Hızlı düzenleme", "Minimal bilgi"],
-    items: [],
-    prefilledFields: {
-      title: "Hızlı Teklif",
-      validityDays: 15,
-      paymentTerm: "prepaid"
-    }
-  }
-];
+type ProposalTemplateDB = Database['public']['Tables']['proposal_templates']['Row'];
+type ProposalTemplateInsert = Database['public']['Tables']['proposal_templates']['Insert'];
+type ProposalTemplateUpdate = Database['public']['Tables']['proposal_templates']['Update'];
 
-export const TemplateManagement = () => {
-  const [templates, setTemplates] = useState<ProposalTemplate[]>(defaultTemplates);
-  const [editingTemplate, setEditingTemplate] = useState<ProposalTemplate | null>(null);
+export const TemplateManagement: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
-  const [designingTemplate, setDesigningTemplate] = useState<ProposalTemplate | null>(null);
-  const [newTemplate, setNewTemplate] = useState<Partial<ProposalTemplate>>({
-    name: "",
-    description: "",
-    templateType: "standard",
-    templateFeatures: [],
-    items: [],
-    prefilledFields: {
-      title: "",
-      validityDays: 30,
-      paymentTerm: "net30"
+  const [editingTemplate, setEditingTemplate] = useState<ProposalTemplate | null>(null);
+  const [isDesigning, setIsDesigning] = useState(false);
+  const [currentTemplate, setCurrentTemplate] = useState<ProposalTemplate | null>(null);
+  
+  const queryClient = useQueryClient();
+
+  // Fetch templates from Supabase
+  const { data: templates, isLoading } = useQuery({
+    queryKey: ['proposal-templates'],
+    queryFn: async (): Promise<ProposalTemplate[]> => {
+      const { data, error } = await supabase
+        .from('proposal_templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching templates:', error);
+        toast.error('Şablonlar yüklenirken hata oluştu');
+        return [];
+      }
+
+      return data?.map(dbTemplate => ({
+        id: dbTemplate.id,
+        name: dbTemplate.name,
+        description: dbTemplate.description || '',
+        templateType: dbTemplate.template_type,
+        templateFeatures: dbTemplate.template_features || [],
+        items: dbTemplate.items || [],
+        designSettings: dbTemplate.design_settings,
+        prefilledFields: dbTemplate.prefilled_fields || {},
+        popularity: dbTemplate.popularity,
+        estimatedTime: dbTemplate.estimated_time,
+        usageCount: dbTemplate.usage_count,
+        isRecommended: dbTemplate.is_recommended,
+        tags: dbTemplate.tags || [],
+        previewImage: dbTemplate.preview_image
+      })) || [];
     }
   });
 
-  const handleSaveTemplate = () => {
-    if (!newTemplate.name || !newTemplate.description) {
-      toast.error("Şablon adı ve açıklama gereklidir");
-      return;
-    }
+  // Create template mutation
+  const createMutation = useMutation({
+    mutationFn: async (template: Omit<ProposalTemplateInsert, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data, error } = await supabase
+        .from('proposal_templates')
+        .insert(template)
+        .select()
+        .single();
 
-    const template: ProposalTemplate = {
-      id: crypto.randomUUID(),
-      name: newTemplate.name,
-      description: newTemplate.description,
-      templateType: newTemplate.templateType || "standard",
-      templateFeatures: newTemplate.templateFeatures || [],
-      items: newTemplate.items || [],
-      prefilledFields: newTemplate.prefilledFields
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['proposal-templates'] });
+      toast.success('Şablon başarıyla oluşturuldu');
+      setIsCreating(false);
+    },
+    onError: (error) => {
+      console.error('Error creating template:', error);
+      toast.error('Şablon oluşturulurken hata oluştu');
+    }
+  });
+
+  // Update template mutation
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, ...template }: ProposalTemplateUpdate & { id: string }) => {
+      const { data, error } = await supabase
+        .from('proposal_templates')
+        .update(template)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['proposal-templates'] });
+      toast.success('Şablon başarıyla güncellendi');
+      setEditingTemplate(null);
+    },
+    onError: (error) => {
+      console.error('Error updating template:', error);
+      toast.error('Şablon güncellenirken hata oluştu');
+    }
+  });
+
+  // Delete template mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('proposal_templates')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['proposal-templates'] });
+      toast.success('Şablon başarıyla silindi');
+    },
+    onError: (error) => {
+      console.error('Error deleting template:', error);
+      toast.error('Şablon silinirken hata oluştu');
+    }
+  });
+
+  const handleCreateTemplate = async (templateData: Partial<ProposalTemplate>) => {
+    const newTemplate: Omit<ProposalTemplateInsert, 'id' | 'created_at' | 'updated_at'> = {
+      name: templateData.name || 'Yeni Şablon',
+      description: templateData.description || '',
+      template_type: templateData.templateType || 'standard',
+      template_features: templateData.templateFeatures || [],
+      items: templateData.items || [],
+      design_settings: templateData.designSettings || null,
+      prefilled_fields: templateData.prefilledFields || {},
+      popularity: templateData.popularity || 4.8,
+      estimated_time: templateData.estimatedTime || '5 dk',
+      usage_count: templateData.usageCount || '0',
+      is_recommended: templateData.isRecommended || false,
+      tags: templateData.tags || [],
+      preview_image: templateData.previewImage || null
     };
 
-    setTemplates([...templates, template]);
-    setNewTemplate({
-      name: "",
-      description: "",
-      templateType: "standard",
-      templateFeatures: [],
-      items: [],
-      prefilledFields: {
-        title: "",
-        validityDays: 30,
-        paymentTerm: "net30"
-      }
-    });
-    setIsCreating(false);
-    toast.success("Şablon başarıyla oluşturuldu");
+    createMutation.mutate(newTemplate);
   };
 
-  const handleEditTemplate = (template: ProposalTemplate) => {
-    setEditingTemplate(template);
-  };
-
-  const handleUpdateTemplate = () => {
+  const handleUpdateTemplate = async (templateData: Partial<ProposalTemplate>) => {
     if (!editingTemplate) return;
 
-    setTemplates(templates.map(t => 
-      t.id === editingTemplate.id ? editingTemplate : t
-    ));
-    setEditingTemplate(null);
-    toast.success("Şablon başarıyla güncellendi");
+    const updateData: ProposalTemplateUpdate = {
+      name: templateData.name,
+      description: templateData.description,
+      template_type: templateData.templateType,
+      template_features: templateData.templateFeatures,
+      items: templateData.items,
+      design_settings: templateData.designSettings,
+      prefilled_fields: templateData.prefilledFields,
+      popularity: templateData.popularity,
+      estimated_time: templateData.estimatedTime,
+      usage_count: templateData.usageCount,
+      is_recommended: templateData.isRecommended,
+      tags: templateData.tags,
+      preview_image: templateData.previewImage
+    };
+
+    updateMutation.mutate({ id: editingTemplate.id, ...updateData });
   };
 
   const handleDeleteTemplate = (id: string) => {
-    setTemplates(templates.filter(t => t.id !== id));
-    toast.success("Şablon silindi");
+    if (confirm('Bu şablonu silmek istediğinizden emin misiniz?')) {
+      deleteMutation.mutate(id);
+    }
   };
 
-  const handleDesignTemplate = (template: ProposalTemplate) => {
-    setDesigningTemplate(template);
+  const handleDesignSettings = (template: ProposalTemplate) => {
+    setCurrentTemplate(template);
+    setIsDesigning(true);
   };
 
-  const handleSaveDesign = (updatedTemplate: ProposalTemplate) => {
-    setTemplates(templates.map(t => 
-      t.id === updatedTemplate.id ? updatedTemplate : t
-    ));
-    setDesigningTemplate(null);
-    toast.success("Şablon tasarımı kaydedildi");
+  const handleDesignSave = async (designSettings: any) => {
+    if (!currentTemplate) return;
+
+    const updateData: ProposalTemplateUpdate = {
+      design_settings: designSettings
+    };
+
+    updateMutation.mutate({ id: currentTemplate.id, ...updateData });
+    setIsDesigning(false);
+    setCurrentTemplate(null);
   };
 
-  if (designingTemplate) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Şablonlar yükleniyor...</span>
+      </div>
+    );
+  }
+
+  if (isDesigning && currentTemplate) {
     return (
       <TemplateDesigner
-        template={designingTemplate}
-        onSave={handleSaveDesign}
-        onCancel={() => setDesigningTemplate(null)}
+        template={currentTemplate}
+        onSave={handleDesignSave}
+        onCancel={() => {
+          setIsDesigning(false);
+          setCurrentTemplate(null);
+        }}
       />
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Şablon Yönetimi</h2>
-          <p className="text-muted-foreground">
-            Teklif şablonlarınızı oluşturun ve düzenleyin
-          </p>
+          <h2 className="text-2xl font-bold">Teklif Şablonları</h2>
+          <p className="text-gray-600">Şablonlarınızı yönetin ve düzenleyin</p>
         </div>
-        <Button 
-          onClick={() => setIsCreating(true)} 
-          className="gap-2"
-          disabled={isCreating}
-        >
-          <Plus className="h-4 w-4" />
+        <Button onClick={() => setIsCreating(true)}>
+          <Plus className="h-4 w-4 mr-2" />
           Yeni Şablon
         </Button>
       </div>
@@ -154,158 +230,194 @@ export const TemplateManagement = () => {
         <Card>
           <CardHeader>
             <CardTitle>Yeni Şablon Oluştur</CardTitle>
+            <CardDescription>
+              Yeni bir teklif şablonu oluşturun
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <CardContent>
+            <div className="space-y-4">
               <div>
-                <Label htmlFor="template-name">Şablon Adı</Label>
+                <Label htmlFor="name">Şablon Adı</Label>
                 <Input
-                  id="template-name"
-                  value={newTemplate.name}
-                  onChange={(e) => setNewTemplate({...newTemplate, name: e.target.value})}
-                  placeholder="Şablon adı girin"
+                  id="name"
+                  placeholder="Standart Teklif"
+                  onChange={(e) => {
+                    // Handle name change
+                  }}
                 />
               </div>
               <div>
-                <Label htmlFor="template-type">Şablon Tipi</Label>
-                <Input
-                  id="template-type"
-                  value={newTemplate.templateType}
-                  onChange={(e) => setNewTemplate({...newTemplate, templateType: e.target.value})}
-                  placeholder="standard, quick, detailed..."
+                <Label htmlFor="description">Açıklama</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Şablon açıklaması..."
+                  rows={3}
                 />
               </div>
-            </div>
-            <div>
-              <Label htmlFor="template-description">Açıklama</Label>
-              <Textarea
-                id="template-description"
-                value={newTemplate.description}
-                onChange={(e) => setNewTemplate({...newTemplate, description: e.target.value})}
-                placeholder="Şablon açıklaması"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsCreating(false)}
-                className="gap-2"
-              >
-                <X className="h-4 w-4" />
-                İptal
-              </Button>
-              <Button onClick={handleSaveTemplate} className="gap-2">
-                <Save className="h-4 w-4" />
-                Kaydet
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    handleCreateTemplate({
+                      name: 'Yeni Şablon',
+                      description: 'Yeni oluşturulan şablon',
+                      templateType: 'standard',
+                      templateFeatures: ['Temel özellikler']
+                    });
+                  }}
+                  disabled={createMutation.isPending}
+                >
+                  {createMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Oluştur
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCreating(false)}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  İptal
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <div className="grid gap-4">
-        {templates.map((template) => (
-          <Card key={template.id}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {templates?.map((template) => (
+          <Card key={template.id} className="overflow-hidden">
             <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    {editingTemplate?.id === template.id ? (
-                      <Input
-                        value={editingTemplate.name}
-                        onChange={(e) => setEditingTemplate({
-                          ...editingTemplate,
-                          name: e.target.value
-                        })}
-                        className="text-lg font-semibold"
-                      />
-                    ) : (
-                      template.name
-                    )}
-                    <Badge variant="secondary">{template.templateType}</Badge>
-                  </CardTitle>
-                  <CardDescription>
-                    {editingTemplate?.id === template.id ? (
-                      <Textarea
-                        value={editingTemplate.description}
-                        onChange={(e) => setEditingTemplate({
-                          ...editingTemplate,
-                          description: e.target.value
-                        })}
-                        className="mt-2"
-                      />
-                    ) : (
-                      template.description
-                    )}
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <CardTitle className="text-lg">{template.name}</CardTitle>
+                  <CardDescription className="line-clamp-2">
+                    {template.description}
                   </CardDescription>
                 </div>
-                <div className="flex gap-2">
-                  {editingTemplate?.id === template.id ? (
-                    <>
-                      <Button
-                        size="sm"
-                        onClick={handleUpdateTemplate}
-                        className="gap-1"
-                      >
-                        <Save className="h-3 w-3" />
-                        Kaydet
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEditingTemplate(null)}
-                        className="gap-1"
-                      >
-                        <X className="h-3 w-3" />
-                        İptal
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDesignTemplate(template)}
-                        className="gap-1"
-                      >
-                        <Palette className="h-3 w-3" />
-                        Tasarla
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditTemplate(template)}
-                        className="gap-1"
-                      >
-                        <Edit className="h-3 w-3" />
-                        Düzenle
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteTemplate(template.id)}
-                        className="gap-1 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                        Sil
-                      </Button>
-                    </>
-                  )}
-                </div>
+                {template.isRecommended && (
+                  <Badge variant="secondary" className="ml-2">
+                    Önerilen
+                  </Badge>
+                )}
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {template.templateFeatures.map((feature, index) => (
-                  <Badge key={index} variant="outline">
-                    {feature}
-                  </Badge>
-                ))}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <span>Tip:</span>
+                  <Badge variant="outline">{template.templateType}</Badge>
+                </div>
+                {template.popularity && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <span>Popülerlik:</span>
+                    <span>{template.popularity}/5</span>
+                  </div>
+                )}
+                {template.usageCount && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <span>Kullanım:</span>
+                    <span>{template.usageCount}</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+            <CardContent className="pt-0">
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleDesignSettings(template)}
+                >
+                  <Palette className="h-4 w-4 mr-2" />
+                  Tasarım
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setEditingTemplate(template)}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Düzenle
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleDeleteTemplate(template.id)}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Sil
+                </Button>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {editingTemplate && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Şablon Düzenle</CardTitle>
+            <CardDescription>
+              {editingTemplate.name} şablonunu düzenleyin
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-name">Şablon Adı</Label>
+                <Input
+                  id="edit-name"
+                  defaultValue={editingTemplate.name}
+                  onChange={(e) => {
+                    setEditingTemplate({
+                      ...editingTemplate,
+                      name: e.target.value
+                    });
+                  }}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-description">Açıklama</Label>
+                <Textarea
+                  id="edit-description"
+                  defaultValue={editingTemplate.description}
+                  rows={3}
+                  onChange={(e) => {
+                    setEditingTemplate({
+                      ...editingTemplate,
+                      description: e.target.value
+                    });
+                  }}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleUpdateTemplate(editingTemplate)}
+                  disabled={updateMutation.isPending}
+                >
+                  {updateMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Kaydet
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingTemplate(null)}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  İptal
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

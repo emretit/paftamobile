@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import { ProposalTemplate, TemplateDesignSettings } from "@/types/proposal-template";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Eye, Palette, Settings } from "lucide-react";
-import { DesignSidebar } from "./DesignSidebar";
+import { ArrowLeft, Eye } from "lucide-react";
 import { TemplatePreview } from "./TemplatePreview";
 import { VisualEditor } from "./VisualEditor";
 
@@ -28,6 +26,17 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
     const updatedTemplate = {
       ...template,
       designSettings,
+    };
+    onSave(updatedTemplate);
+  };
+
+  // Otomatik kaydetme için designSettings değiştiğinde çağrılır
+  const handleSettingsChange = (newSettings: TemplateDesignSettings) => {
+    setDesignSettings(newSettings);
+    // Otomatik kaydetme - her değişiklikte Supabase'e kaydet
+    const updatedTemplate = {
+      ...template,
+      designSettings: newSettings,
     };
     onSave(updatedTemplate);
   };
@@ -66,78 +75,34 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
 
         {/* Main Content */}
         <div className="flex-1 flex pt-20">
-          <Tabs defaultValue="visual" className="h-full w-full">
-            <div className="border-b bg-card">
-              <TabsList className="grid w-full grid-cols-2 m-4">
-                <TabsTrigger value="visual" className="gap-2">
-                  <Palette className="w-4 h-4" />
-                  Görsel Düzenleyici
-                </TabsTrigger>
-                <TabsTrigger value="design" className="gap-2">
-                  <Settings className="w-4 h-4" />
-                  Tasarım Ayarları
-                </TabsTrigger>
-              </TabsList>
+          <div className="flex h-[calc(100%-80px)] w-full">
+            <div className="w-96 border-r bg-card overflow-y-auto p-4">
+              <VisualEditor
+                designSettings={designSettings}
+                onSettingsChange={handleSettingsChange}
+              />
             </div>
-            
-            <TabsContent value="visual" className="m-0 flex h-[calc(100%-80px)]">
-              <div className="w-96 border-r bg-card overflow-y-auto p-4">
-                <VisualEditor
-                  designSettings={designSettings}
-                  onSettingsChange={setDesignSettings}
-                />
-              </div>
-              {showPreview && (
-                <div className="flex-1 bg-muted/30 overflow-y-auto">
-                  <div className="p-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Eye className="w-5 h-5" />
-                          Canlı Önizleme
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <TemplatePreview
-                          template={template}
-                          designSettings={designSettings}
-                        />
-                      </CardContent>
-                    </Card>
-                  </div>
+            {showPreview && (
+              <div className="flex-1 bg-muted/30 overflow-y-auto">
+                <div className="p-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Eye className="w-5 h-5" />
+                        Canlı Önizleme
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <TemplatePreview
+                        template={template}
+                        designSettings={designSettings}
+                      />
+                    </CardContent>
+                  </Card>
                 </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="design" className="m-0 flex h-[calc(100%-80px)]">
-              <div className="w-96 border-r bg-card overflow-y-auto p-4">
-                <DesignSidebar
-                  designSettings={designSettings}
-                  onSettingsChange={setDesignSettings}
-                />
               </div>
-              {showPreview && (
-                <div className="flex-1 bg-muted/30 overflow-y-auto">
-                  <div className="p-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Eye className="w-5 h-5" />
-                          Canlı Önizleme
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <TemplatePreview
-                          template={template}
-                          designSettings={designSettings}
-                        />
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+            )}
+          </div>
         </div>
       </div>
     </div>
