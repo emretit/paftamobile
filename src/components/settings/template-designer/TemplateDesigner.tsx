@@ -61,9 +61,35 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Geri Dön
               </Button>
-              <div>
-                <h1 className="text-xl font-semibold">{templateName} - Şablon Tasarlayıcısı</h1>
-                <p className="text-sm text-muted-foreground">PDF şablonunuzu özelleştirin</p>
+              <div className="flex items-center gap-6">
+                <div>
+                  <h1 className="text-xl font-semibold">{templateName} - Şablon Tasarlayıcısı</h1>
+                  <p className="text-sm text-muted-foreground">PDF şablonunuzu özelleştirin</p>
+                </div>
+                
+                {/* Şablon Bilgileri - Header'da */}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="template-name" className="text-xs font-medium">Ad:</Label>
+                    <Input
+                      id="template-name"
+                      value={templateName}
+                      onChange={(e) => setTemplateName(e.target.value)}
+                      placeholder="Şablon adı"
+                      className="w-32 h-7 text-xs"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="template-description" className="text-xs font-medium">Açıklama:</Label>
+                    <Input
+                      id="template-description"
+                      value={templateDescription}
+                      onChange={(e) => setTemplateDescription(e.target.value)}
+                      placeholder="Açıklama"
+                      className="w-48 h-7 text-xs"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -85,35 +111,7 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
         {/* Main Content */}
         <div className="flex-1 flex pt-20">
         <div className="flex h-[calc(100%-80px)] w-full">
-            <div className="w-96 border-r bg-card overflow-y-auto p-4 space-y-6">
-              {/* Template Basic Info */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">Şablon Bilgileri</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="template-name">Şablon Adı</Label>
-                    <Input
-                      id="template-name"
-                      value={templateName}
-                      onChange={(e) => setTemplateName(e.target.value)}
-                      placeholder="Şablon adı girin"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="template-description">Açıklama</Label>
-                    <Textarea
-                      id="template-description"
-                      value={templateDescription}
-                      onChange={(e) => setTemplateDescription(e.target.value)}
-                      placeholder="Şablon açıklaması girin"
-                      rows={3}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
+            <div className="w-96 border-r bg-card overflow-y-auto p-4">
               {/* Design Settings */}
               <VisualEditor
                 designSettings={designSettings}
