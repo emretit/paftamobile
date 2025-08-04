@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import { Upload, X } from "lucide-react";
 
 interface DesignSidebarProps {
   designSettings: TemplateDesignSettings;
@@ -17,6 +20,8 @@ export const DesignSidebar: React.FC<DesignSidebarProps> = ({
   designSettings,
   onSettingsChange,
 }) => {
+  const { uploadFile, uploading } = useFileUpload();
+
   const updateSettings = (path: string, value: any) => {
     const pathArray = path.split('.');
     const newSettings = { ...designSettings };
@@ -30,6 +35,20 @@ export const DesignSidebar: React.FC<DesignSidebarProps> = ({
     onSettingsChange(newSettings);
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const url = await uploadFile(file, 'template-logos');
+    if (url) {
+      updateSettings('branding.logo', url);
+    }
+  };
+
+  const removeLogo = () => {
+    updateSettings('branding.logo', undefined);
+  };
+
   return (
     <div className="p-4 space-y-4">
       <Card>
@@ -37,7 +56,87 @@ export const DesignSidebar: React.FC<DesignSidebarProps> = ({
           <CardTitle className="text-lg">Tasarım Ayarları</CardTitle>
         </CardHeader>
         <CardContent>
-          <Accordion type="multiple" defaultValue={["page", "colors", "layout"]}>
+          <Accordion type="multiple" defaultValue={["branding", "page", "colors", "layout"]}>
+            {/* Logo/Branding Settings */}
+            <AccordionItem value="branding">
+              <AccordionTrigger>Logo ve Marka</AccordionTrigger>
+              <AccordionContent className="space-y-4">
+                <div className="space-y-3">
+                  <Label>Şablon Logosu</Label>
+                  
+                  {designSettings.branding?.logo ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <img 
+                          src={designSettings.branding.logo} 
+                          alt="Logo" 
+                          className="h-12 w-auto object-contain"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={removeLogo}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-center p-6 border-2 border-dashed rounded-lg">
+                        <div className="text-center">
+                          <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Logo yüklemek için tıklayın
+                          </p>
+                          <label className="cursor-pointer">
+                            <Button variant="outline" size="sm" disabled={uploading} asChild>
+                              <span>
+                                {uploading ? "Yükleniyor..." : "Logo Seç"}
+                              </span>
+                            </Button>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleLogoUpload}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label>Şirket Adı</Label>
+                    <Input
+                      value={designSettings.branding?.companyName || ''}
+                      onChange={(e) => updateSettings('branding.companyName', e.target.value)}
+                      placeholder="Şirket adını girin"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Slogan (İsteğe bağlı)</Label>
+                    <Input
+                      value={designSettings.branding?.tagline || ''}
+                      onChange={(e) => updateSettings('branding.tagline', e.target.value)}
+                      placeholder="Slogan girin"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Website (İsteğe bağlı)</Label>
+                    <Input
+                      value={designSettings.branding?.website || ''}
+                      onChange={(e) => updateSettings('branding.website', e.target.value)}
+                      placeholder="www.sirketiniz.com"
+                    />
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
             {/* Page Settings */}
             <AccordionItem value="page">
               <AccordionTrigger>Sayfa Ayarları</AccordionTrigger>
