@@ -139,6 +139,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
           name: "",
           description: "",
           quantity: 1,
+          unit: "adet",
           unit_price: 0,
           total_price: 0,
           currency: proposal.currency || "TRY"
@@ -204,6 +205,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
       name: "",
       description: "",
       quantity: 1,
+      unit: "adet",
       unit_price: 0,
       total_price: 0,
       currency: formData.currency

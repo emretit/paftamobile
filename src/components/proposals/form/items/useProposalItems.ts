@@ -68,6 +68,7 @@ export const useProposalItems = () => {
       id: uuidv4(),
       name: "",
       quantity: 1,
+      unit: "adet",
       unit_price: 0,
       total_price: 0,
       currency: selectedCurrency,
@@ -99,6 +100,7 @@ export const useProposalItems = () => {
       name: product.name,
       description: product.description,
       quantity: 1,
+      unit: product.unit || "adet",
       unit_price: originalPrice, // Ürünün kendi fiyatı
       tax_rate: product.tax_rate || 18,
       discount_rate: 0, // Default discount rate

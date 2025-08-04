@@ -95,6 +95,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
       name: "",
       description: "",
       quantity: 1,
+      unit: "adet",
       unit_price: 0,
       total_price: 0,
       currency: "TRY"
@@ -155,6 +156,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
       name: "",
       description: "",
       quantity: 1,
+      unit: "adet",
       unit_price: 0,
       total_price: 0,
       currency: formData.currency

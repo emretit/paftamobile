@@ -16,6 +16,7 @@ export const useProposalItemsManagement = (
       id: uuidv4(),
       name: "",
       quantity: 1,
+      unit: "adet",
       unit_price: 0,
       total_price: 0,
       currency: selectedCurrency,
@@ -49,6 +50,7 @@ export const useProposalItemsManagement = (
         name: product.name,
         description: product.description,
         quantity: 1,
+        unit: product.unit || "adet",
         unit_price: unitPrice,
         tax_rate: product.tax_rate || 18,
         // Use 0 as default discount rate since the product doesn't have this field
@@ -57,7 +59,7 @@ export const useProposalItemsManagement = (
         currency: selectedCurrency,
         original_currency: productCurrency,
         original_price: product.price || 0,
-        stock_status: product.stock_quantity && product.stock_quantity > 0 
+        stock_status: product.stock_quantity && product.stock_quantity > 0
           ? (product.stock_quantity > product.stock_threshold ? 'in_stock' : 'low_stock')
           : 'out_of_stock',
       };

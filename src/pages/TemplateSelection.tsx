@@ -49,6 +49,7 @@ const TemplateSelection: React.FC<TemplateSelectionProps> = ({
 
   return (
     <DefaultLayout 
+      title="Şablon Seçimi"
       isCollapsed={isCollapsed}
       setIsCollapsed={setIsCollapsed}
     >

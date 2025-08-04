@@ -13,9 +13,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Database } from "@/integrations/supabase/types";
 
-type ProposalTemplateDB = Database['public']['Tables']['proposal_templates']['Row'];
-type ProposalTemplateInsert = Database['public']['Tables']['proposal_templates']['Insert'];
-type ProposalTemplateUpdate = Database['public']['Tables']['proposal_templates']['Update'];
+// type ProposalTemplateDB = Database['public']['Tables']['proposal_templates']['Row'];
+// type ProposalTemplateInsert = Database['public']['Tables']['proposal_templates']['Insert'];
+// type ProposalTemplateUpdate = Database['public']['Tables']['proposal_templates']['Update'];
 
 export const TemplateManagement: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
@@ -61,7 +61,7 @@ export const TemplateManagement: React.FC = () => {
 
   // Create template mutation
   const createMutation = useMutation({
-    mutationFn: async (template: Omit<ProposalTemplateInsert, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (template: any) => {
       const { data, error } = await supabase
         .from('proposal_templates')
         .insert(template)
@@ -84,7 +84,7 @@ export const TemplateManagement: React.FC = () => {
 
   // Update template mutation
   const updateMutation = useMutation({
-    mutationFn: async ({ id, ...template }: ProposalTemplateUpdate & { id: string }) => {
+    mutationFn: async ({ id, ...template }: any) => {
       const { data, error } = await supabase
         .from('proposal_templates')
         .update(template)
@@ -127,7 +127,7 @@ export const TemplateManagement: React.FC = () => {
   });
 
   const handleCreateTemplate = async (templateData: Partial<ProposalTemplate>) => {
-    const newTemplate: Omit<ProposalTemplateInsert, 'id' | 'created_at' | 'updated_at'> = {
+    const newTemplate: any = {
       name: templateData.name || 'Yeni Şablon',
       description: templateData.description || '',
       template_type: templateData.templateType || 'standard',
@@ -149,7 +149,7 @@ export const TemplateManagement: React.FC = () => {
   const handleUpdateTemplate = async (templateData: Partial<ProposalTemplate>) => {
     if (!editingTemplate) return;
 
-    const updateData: ProposalTemplateUpdate = {
+    const updateData: any = {
       name: templateData.name,
       description: templateData.description,
       template_type: templateData.templateType,
@@ -182,7 +182,7 @@ export const TemplateManagement: React.FC = () => {
   const handleDesignSave = async (designSettings: any) => {
     if (!currentTemplate) return;
 
-    const updateData: ProposalTemplateUpdate = {
+    const updateData: any = {
       design_settings: designSettings
     };
 

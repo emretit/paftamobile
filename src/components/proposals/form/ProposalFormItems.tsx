@@ -18,6 +18,7 @@ const ProposalFormItems: React.FC<ProposalFormItemsProps> = ({ items, onItemsCha
       id: uuidv4(),
       name: "",
       quantity: 1,
+      unit: "adet",
       unit_price: 0,
       tax_rate: 18,
       total_price: 0,

@@ -353,14 +353,7 @@ const StandardProposalForm: React.FC<StandardProposalFormProps> = ({
                   </Select>
                 </div>
 
-                <div>
-                  <Label htmlFor="contact_person">İletişim Kişisi</Label>
-                  <Input 
-                    id="contact_person"
-                    {...register("contact_person")}
-                    placeholder="İletişim kişisi adı"
-                  />
-                </div>
+                {/* Contact person field removed as it's not in ProposalFormData schema */}
               </CardContent>
             </Card>
           </TabsContent>

@@ -18,6 +18,7 @@ const ProposalTemplateItems: React.FC<ProposalTemplateItemsProps> = ({ items, on
       id: uuidv4(),
       name: "",
       quantity: 1,
+      unit: "adet",
       unit_price: 0,
       tax_rate: 18,
       total_price: 0,

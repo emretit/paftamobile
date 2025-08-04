@@ -63,6 +63,7 @@ const StandardProposalCreate: React.FC<StandardProposalCreateProps> = ({
 
   return (
     <DefaultLayout 
+      title="Standart Teklif Oluştur"
       isCollapsed={isCollapsed}
       setIsCollapsed={setIsCollapsed}
     >

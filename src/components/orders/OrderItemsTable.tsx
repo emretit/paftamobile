@@ -36,6 +36,7 @@ const OrderItemsTable: React.FC<OrderItemsTableProps> = ({ items, setItems, curr
       name: "Yeni ürün",
       description: "",
       quantity: 1,
+      unit: "adet",
       unit_price: 0,
       tax_rate: 18,
       discount_rate: 0,
