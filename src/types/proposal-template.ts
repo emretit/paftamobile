@@ -129,4 +129,11 @@ export interface ProposalTemplate {
     paymentTerm?: string;
     internalNotes?: string;
   };
+  // Enhanced fields for better UX
+  popularity?: number;
+  estimatedTime?: string;
+  usageCount?: string;
+  isRecommended?: boolean;
+  tags?: string[];
+  previewImage?: string;
 }
