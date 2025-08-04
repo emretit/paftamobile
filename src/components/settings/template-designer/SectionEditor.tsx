@@ -74,17 +74,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="section-enabled">Bölümü Göster</Label>
-            <Switch
-              id="section-enabled"
-              checked={editedSection.enabled}
-              onCheckedChange={(enabled) => setEditedSection({
-                ...editedSection,
-                enabled,
-              })}
-            />
-          </div>
+
 
           {section.type !== 'custom' && (
             <div className="p-3 bg-muted/50 rounded-lg">
