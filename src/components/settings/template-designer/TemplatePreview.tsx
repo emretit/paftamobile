@@ -289,13 +289,6 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                 const categorize = section.settings?.categorizeTerms ?? true;
                 const showIcons = section.settings?.showTermsIcons ?? false;
 
-                // Şart verilerini template'den al
-                const termsData = template.availableTerms || {};
-                const selectedTerms = termsData.payment || [];
-                const selectedPricing = termsData.pricing || [];
-                const selectedWarranty = termsData.warranty || [];
-                const selectedDelivery = termsData.delivery || [];
-
                 return (
                   <div key={section.id} className="pt-6 border-t" style={{ borderColor: colors.border }}>
                     <h3 className="font-semibold mb-4" style={{ fontSize: fonts.sizes.heading }}>
@@ -305,61 +298,55 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                     {categorize ? (
                       <div className="space-y-4" style={{ fontSize: fonts.sizes.small }}>
                         {/* Ödeme Şartları */}
-                        {showPayment && selectedTerms.length > 0 && (
+                        {showPayment && (
                           <div>
                             <h4 className="font-medium mb-2 flex items-center gap-2" style={{ color: colors.primary }}>
                               {showIcons && <span>💳</span>}
                               ÖDEME ŞARTLARI:
                             </h4>
                             <ul className="list-disc list-inside space-y-1 ml-4">
-                              {selectedTerms.map((term: any) => (
-                                <li key={term.id}>{term.text}</li>
-                              ))}
+                              <li>%100 peşin ödeme yapılacaktır.</li>
+                              <li>Belirtilen fiyatlar KDV hariçtir.</li>
                             </ul>
                           </div>
                         )}
 
                         {/* Fiyat Bilgileri */}
-                        {showPricing && selectedPricing.length > 0 && (
+                        {showPricing && (
                           <div>
                             <h4 className="font-medium mb-2 flex items-center gap-2" style={{ color: colors.primary }}>
                               {showIcons && <span>💰</span>}
                               FİYATLAR:
                             </h4>
                             <ul className="list-disc list-inside space-y-1 ml-4">
-                              {selectedPricing.map((term: any) => (
-                                <li key={term.id}>{term.text}</li>
-                              ))}
+                              <li>Tüm fiyatlar Türk Lirası (TL) cinsindendir.</li>
+                              <li>Bu teklif 30 gün süreyle geçerlidir.</li>
                             </ul>
                           </div>
                         )}
 
                         {/* Garanti */}
-                        {showWarranty && selectedWarranty.length > 0 && (
+                        {showWarranty && (
                           <div>
                             <h4 className="font-medium mb-2 flex items-center gap-2" style={{ color: colors.primary }}>
                               {showIcons && <span>🛡️</span>}
                               GARANTİ:
                             </h4>
                             <ul className="list-disc list-inside space-y-1 ml-4">
-                              {selectedWarranty.map((term: any) => (
-                                <li key={term.id}>{term.text}</li>
-                              ))}
+                              <li>Ürünlerimiz fatura tarihinden itibaren 2(iki) yıl garantilidir.</li>
                             </ul>
                           </div>
                         )}
 
                         {/* Teslimat */}
-                        {showDelivery && selectedDelivery.length > 0 && (
+                        {showDelivery && (
                           <div>
                             <h4 className="font-medium mb-2 flex items-center gap-2" style={{ color: colors.primary }}>
                               {showIcons && <span>🚚</span>}
                               STOK VE TESLİMAT:
                             </h4>
                             <ul className="list-disc list-inside space-y-1 ml-4">
-                              {selectedDelivery.map((term: any) => (
-                                <li key={term.id}>{term.text}</li>
-                              ))}
+                              <li>Ürünler siparişten sonra 15 gün içinde teslim edilecektir.</li>
                             </ul>
                           </div>
                         )}
