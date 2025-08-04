@@ -14,14 +14,12 @@ import {
   Eye, 
   EyeOff, 
   Trash2,
-  Image,
   Type,
   Calendar,
   Hash,
   ToggleLeft
 } from "lucide-react";
 import { SectionEditor } from "./SectionEditor";
-import { FieldEditor } from "./FieldEditor";
 
 interface VisualEditorProps {
   designSettings: TemplateDesignSettings;
@@ -33,7 +31,6 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({
   onSettingsChange,
 }) => {
   const [editingSection, setEditingSection] = useState<TemplateSection | null>(null);
-  const [editingField, setEditingField] = useState<TemplateField | null>(null);
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -75,7 +72,6 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({
       enabled: true,
       order: designSettings.sections.length,
       settings: {},
-      fields: [],
     };
 
     onSettingsChange({
@@ -222,31 +218,6 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({
                             </div>
                           </div>
                         </CardHeader>
-
-                        {section.fields && section.fields.length > 0 && (
-                          <CardContent className="pt-0">
-                            <Separator className="mb-3" />
-                            <div className="space-y-2">
-                              <p className="text-sm font-medium text-muted-foreground">
-                                Alanlar ({section.fields.length})
-                              </p>
-                              <div className="grid grid-cols-2 gap-2">
-                                {section.fields.map((field) => (
-                                  <div
-                                    key={field.id}
-                                    className="flex items-center gap-2 p-2 bg-muted/50 rounded text-sm"
-                                  >
-                                    {field.type === 'image' && <Image className="w-3 h-3" />}
-                                    {field.type === 'text' && <Type className="w-3 h-3" />}
-                                    {field.type === 'number' && <Hash className="w-3 h-3" />}
-                                    {field.type === 'date' && <Calendar className="w-3 h-3" />}
-                                    <span className="truncate">{field.label}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </CardContent>
-                        )}
                       </Card>
                     )}
                   </Draggable>
