@@ -109,20 +109,31 @@ export const TemplateManagement: React.FC = () => {
   // Delete template mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      console.log('Attempting to delete template:', id);
+      
+      const { data, error } = await supabase
         .from('proposal_templates')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select();
 
-      if (error) throw error;
+      console.log('Delete response:', { data, error });
+      
+      if (error) {
+        console.error('Supabase delete error:', error);
+        throw error;
+      }
+      
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Delete success:', data);
       queryClient.invalidateQueries({ queryKey: ['proposal-templates'] });
       toast.success('Şablon başarıyla silindi');
     },
     onError: (error) => {
       console.error('Error deleting template:', error);
-      toast.error('Şablon silinirken hata oluştu');
+      toast.error(`Şablon silinirken hata oluştu: ${error.message}`);
     }
   });
 
@@ -176,12 +187,8 @@ export const TemplateManagement: React.FC = () => {
 
   const handleDeleteTemplateWithError = (id: string) => {
     if (confirm('Bu şablonu silmek istediğinizden emin misiniz?')) {
-      deleteMutation.mutate(id, {
-        onError: (error) => {
-          console.error('Delete error:', error);
-          toast.error('Silme işlemi başarısız. Lütfen tekrar deneyin.');
-        }
-      });
+      console.log('Starting delete process for template:', id);
+      deleteMutation.mutate(id);
     }
   };
 
