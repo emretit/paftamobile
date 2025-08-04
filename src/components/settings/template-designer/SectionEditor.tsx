@@ -44,25 +44,19 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" onClick={onCancel}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Geri Dön
+          Geri
         </Button>
         <div>
-          <h3 className="text-lg font-semibold">Bölüm Düzenle: {section.title}</h3>
-          <p className="text-sm text-muted-foreground">
-            Bölüm ayarlarını özelleştirin
-          </p>
+          <h3 className="text-base font-medium">{section.title} Ayarları</h3>
         </div>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Bölüm Ayarları</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-4">
           <div>
             <Label htmlFor="section-title">Bölüm Başlığı</Label>
             <Input
@@ -92,7 +86,6 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
           <Separator />
 
           <div className="space-y-3">
-            <Label>Bölüm Tipi Ayarları</Label>
             
             {section.type === 'header' && (
               <div className="space-y-3 p-3 border rounded-lg">
@@ -166,12 +159,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             )}
 
             {section.type === 'terms' && (
-              <div className="space-y-4 p-3 border rounded-lg">
-                <Label className="text-sm font-medium">Şartlar ve Koşullar Yönetimi</Label>
-                <p className="text-xs text-muted-foreground">
-                  Teklifte görünecek şartları yönetin ve özelleştirin
-                </p>
-                
+              <div className="border rounded-lg p-2">
                 <TermsEditor
                   settings={editedSection.settings}
                   onSettingsChange={updateSectionSettings}

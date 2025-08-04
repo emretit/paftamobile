@@ -273,13 +273,13 @@ export const TemplateManagement: React.FC = () => {
                   )}
                   Oluştur
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsCreating(false)}
-                >
+              <Button 
+                variant="outline" 
+                onClick={() => setIsCreating(false)}
+              >
                   <X className="h-4 w-4 mr-2" />
-                  İptal
-                </Button>
+                İptal
+              </Button>
               </div>
             </div>
           </CardContent>
@@ -325,32 +325,32 @@ export const TemplateManagement: React.FC = () => {
               </div>
             </CardContent>
             <CardContent className="pt-0">
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
+                <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
                   onClick={() => handleDesignSettings(template)}
                 >
                   <Palette className="h-4 w-4 mr-2" />
                   Tasarım
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
                   onClick={() => setEditingTemplate(template)}
-                >
+                      >
                   <Edit className="h-4 w-4 mr-2" />
-                  Düzenle
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleDeleteTemplate(template.id)}
+                        Düzenle
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteTemplate(template.id)}
                   disabled={deleteMutation.isPending}
-                >
+                      >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Sil
-                </Button>
+                        Sil
+                      </Button>
               </div>
             </CardContent>
           </Card>
