@@ -63,52 +63,13 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
                 Geri Dön
               </Button>
               <div className="border-l pl-4">
-                <Input
-                  value={templateName}
-                  onChange={(e) => setTemplateName(e.target.value)}
-                  placeholder="Şablon adı"
-                  className="text-lg font-semibold bg-transparent border-none p-0 h-auto focus-visible:ring-0"
-                />
-                <Input
-                  value={templateDescription}
-                  onChange={(e) => setTemplateDescription(e.target.value)}
-                  placeholder="Açıklama"
-                  className="text-xs text-muted-foreground bg-transparent border-none p-0 h-auto focus-visible:ring-0 mt-1"
-                />
+                <h1 className="text-lg font-semibold">{templateName}</h1>
+                <p className="text-xs text-muted-foreground">Şablon Tasarlayıcısı</p>
               </div>
             </div>
 
-            {/* Orta - Şablon bilgileri */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <Input
-                  value={templateName}
-                  onChange={(e) => setTemplateName(e.target.value)}
-                  placeholder="Şablon adı"
-                  className="w-40 h-8 text-sm border-muted"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Input
-                  value={templateDescription}
-                  onChange={(e) => setTemplateDescription(e.target.value)}
-                  placeholder="Açıklama"
-                  className="w-56 h-8 text-sm border-muted"
-                />
-              </div>
-            </div>
-
-            {/* Sağ taraf - Aksiyonlar */}
+            {/* Sağ taraf - Sadece kaydet butonu */}
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowPreview(!showPreview)}
-                className="h-8"
-              >
-                <Eye className="w-4 h-4 mr-1" />
-                {showPreview ? "Gizle" : "Göster"}
-              </Button>
               <Button onClick={handleSave} size="sm" className="h-8">
                 Kaydet
               </Button>
@@ -119,7 +80,37 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
         {/* Main Content */}
         <div className="flex-1 flex pt-20">
         <div className="flex h-[calc(100%-80px)] w-full">
-            <div className="w-96 border-r bg-card overflow-y-auto p-4">
+            <div className="w-96 border-r bg-card overflow-y-auto p-4 space-y-4">
+              {/* Şablon Bilgileri */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Şablon Bilgileri</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <Label htmlFor="template-name" className="text-xs">Şablon Adı</Label>
+                    <Input
+                      id="template-name"
+                      value={templateName}
+                      onChange={(e) => setTemplateName(e.target.value)}
+                      placeholder="Şablon adı girin"
+                      className="text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="template-description" className="text-xs">Açıklama</Label>
+                    <Textarea
+                      id="template-description"
+                      value={templateDescription}
+                      onChange={(e) => setTemplateDescription(e.target.value)}
+                      placeholder="Şablon açıklaması girin"
+                      className="text-sm"
+                      rows={2}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Design Settings */}
               <VisualEditor
                 designSettings={designSettings}
