@@ -134,10 +134,10 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
             {section.type === 'totals' && (
               <div className="space-y-3 p-3 border rounded-lg">
                 <div className="flex items-center justify-between">
-                  <Label>KDV Detayını Göster</Label>
+                  <Label>Brüt Satırını Göster</Label>
                   <Switch 
-                    checked={editedSection.settings?.showTaxDetails ?? true}
-                    onCheckedChange={(checked) => updateSectionSettings({ showTaxDetails: checked })}
+                    checked={editedSection.settings?.showGross ?? true}
+                    onCheckedChange={(checked) => updateSectionSettings({ showGross: checked })}
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -145,6 +145,20 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
                   <Switch 
                     checked={editedSection.settings?.showDiscounts ?? false}
                     onCheckedChange={(checked) => updateSectionSettings({ showDiscounts: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Net Satırını Göster</Label>
+                  <Switch 
+                    checked={editedSection.settings?.showNet ?? true}
+                    onCheckedChange={(checked) => updateSectionSettings({ showNet: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>KDV Detayını Göster</Label>
+                  <Switch 
+                    checked={editedSection.settings?.showTaxDetails ?? true}
+                    onCheckedChange={(checked) => updateSectionSettings({ showTaxDetails: checked })}
                   />
                 </div>
               </div>

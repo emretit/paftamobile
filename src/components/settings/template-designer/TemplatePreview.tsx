@@ -22,9 +22,12 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
       { description: "SEO Optimizasyonu", quantity: 1, price: 2000, total: 2000 },
       { description: "Hosting (1 Yıl)", quantity: 1, price: 1200, total: 1200 },
     ],
-    subtotal: 8200,
-    tax: 1476,
-    total: 9676,
+    // Hesaplama mantığı: Brüt -> İndirim -> Net -> KDV -> Toplam
+    gross: 8200, // Brüt toplam
+    discount: 500, // İndirim
+    net: 7700, // Net (Brüt - İndirim)
+    tax: 1386, // KDV (Net * 0.18)
+    total: 9086, // Toplam (Net + KDV)
   };
 
   return (
@@ -231,22 +234,39 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                 return (
                   <div key={section.id} className="flex justify-end">
                     <div className="w-80 space-y-2">
-                      <div className="flex justify-between">
-                        <span>Ara Toplam:</span>
-                        <span>{sampleData.subtotal.toLocaleString('tr-TR')} ₺</span>
-                      </div>
+                      {/* 1. Brüt (toggle ile kontrol) */}
+                      {section.settings?.showGross !== false && (
+                        <div className="flex justify-between">
+                          <span>Brüt:</span>
+                          <span>{sampleData.gross.toLocaleString('tr-TR')} ₺</span>
+                        </div>
+                      )}
+                      
+                      {/* 2. İndirim (toggle ile kontrol) */}
+                      {section.settings?.showDiscounts === true && (
+                        <div className="flex justify-between text-green-600">
+                          <span>İndirim:</span>
+                          <span>-{sampleData.discount.toLocaleString('tr-TR')} ₺</span>
+                        </div>
+                      )}
+                      
+                      {/* 3. Net (toggle ile kontrol) */}
+                      {section.settings?.showNet !== false && (
+                        <div className="flex justify-between font-medium">
+                          <span>Net:</span>
+                          <span>{sampleData.net.toLocaleString('tr-TR')} ₺</span>
+                        </div>
+                      )}
+                      
+                      {/* 4. KDV (toggle ile kontrol) */}
                       {section.settings?.showTaxDetails !== false && (
                         <div className="flex justify-between">
                           <span>KDV (%18):</span>
                           <span>{sampleData.tax.toLocaleString('tr-TR')} ₺</span>
                         </div>
                       )}
-                      {section.settings?.showDiscounts === true && (
-                        <div className="flex justify-between text-green-600">
-                          <span>İndirim:</span>
-                          <span>-500 ₺</span>
-                        </div>
-                      )}
+                      
+                      {/* 5. Toplam */}
                       <div 
                         className="flex justify-between font-bold text-lg pt-2 border-t"
                         style={{ 
@@ -254,7 +274,7 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                           color: colors.primary 
                         }}
                       >
-                        <span>Genel Toplam:</span>
+                        <span>Toplam:</span>
                         <span>{sampleData.total.toLocaleString('tr-TR')} ₺</span>
                       </div>
                     </div>
