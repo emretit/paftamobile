@@ -248,76 +248,76 @@ export const TermsEditor: React.FC<TermsEditorProps> = ({
 
   return (
     <div className="space-y-2">
-      <Tabs defaultValue="payment" className="w-full">
-        {/* Horizontal scrollable tabs - sayfaya uyumlu */}
-        <div className="overflow-x-auto">
-          <TabsList className="inline-flex h-8 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground w-auto min-w-full">
-            {Object.entries(CATEGORIES).map(([key, category]) => {
-              const Icon = category.icon;
-              return (
-                <TabsTrigger 
-                  key={key} 
-                  value={key} 
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-2 py-1 text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-                >
-                  <Icon className="h-3 w-3 mr-1" />
-                  {category.title}
-                </TabsTrigger>
-              );
-            })}
-            <TabsTrigger 
-              value="other" 
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-2 py-1 text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-            >
-              Diğer Şartlar
-            </TabsTrigger>
-          </TabsList>
-        </div>
-
-        {/* Tab Contents */}
-        {Object.entries(CATEGORIES).map(([key, category]) => (
-          <TabsContent key={key} value={key} className="space-y-2 mt-2">
-            {renderCategoryContent(key)}
-            
-            {/* Minimal Ekleme Formu */}
-            <div className="mt-2 p-2 border-2 border-dashed border-muted rounded space-y-1">
-              <Input
-                value={newTerm.category === key ? newTerm.label : ""}
-                onChange={(e) => setNewTerm({ ...newTerm, label: e.target.value, category: key as any })}
-                placeholder="Yeni şart başlığı..."
-                className="text-xs h-6 border-0 shadow-none focus-visible:ring-1"
-              />
-              <Textarea
-                value={newTerm.category === key ? newTerm.text : ""}
-                onChange={(e) => setNewTerm({ ...newTerm, text: e.target.value, category: key as any })}
-                placeholder="Şart açıklaması..."
-                className="text-xs min-h-[35px] resize-none border-0 shadow-none focus-visible:ring-1"
-              />
-              <Button 
-                onClick={() => {
-                  if (newTerm.category !== key) {
-                    setNewTerm({ label: "", text: "", category: key as any });
-                  } else {
-                    addNewTerm();
-                  }
-                }} 
-                className="w-full h-6 text-xs"
-                disabled={newTerm.category === key && (!newTerm.label.trim() || !newTerm.text.trim())}
-                size="sm"
+      <Tabs defaultValue="payment" orientation="vertical" className="flex gap-3">
+        {/* Vertical tabs - sol tarafta */}
+        <TabsList className="flex flex-col h-auto w-32 bg-muted p-1">
+          {Object.entries(CATEGORIES).map(([key, category]) => {
+            const Icon = category.icon;
+            return (
+              <TabsTrigger 
+                key={key} 
+                value={key} 
+                className="w-full justify-start text-xs px-2 py-1.5 h-auto"
               >
-                <Plus className="h-3 w-3 mr-1" />
-                Ekle
-              </Button>
+                <Icon className="h-3 w-3 mr-1" />
+                <span className="truncate">{category.title.split(' ')[0]}</span>
+              </TabsTrigger>
+            );
+          })}
+          <TabsTrigger 
+            value="other" 
+            className="w-full justify-start text-xs px-2 py-1.5 h-auto"
+          >
+            Diğer
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Tab içerikleri - sağ tarafta */}
+        <div className="flex-1">
+          {Object.entries(CATEGORIES).map(([key, category]) => (
+            <TabsContent key={key} value={key} className="space-y-2 mt-0">
+              {renderCategoryContent(key)}
+              
+              {/* Minimal Ekleme Formu */}
+              <div className="mt-2 p-2 border-2 border-dashed border-muted rounded space-y-1">
+                <Input
+                  value={newTerm.category === key ? newTerm.label : ""}
+                  onChange={(e) => setNewTerm({ ...newTerm, label: e.target.value, category: key as any })}
+                  placeholder="Yeni şart başlığı..."
+                  className="text-xs h-6 border-0 shadow-none focus-visible:ring-1"
+                />
+                <Textarea
+                  value={newTerm.category === key ? newTerm.text : ""}
+                  onChange={(e) => setNewTerm({ ...newTerm, text: e.target.value, category: key as any })}
+                  placeholder="Şart açıklaması..."
+                  className="text-xs min-h-[35px] resize-none border-0 shadow-none focus-visible:ring-1"
+                />
+                <Button 
+                  onClick={() => {
+                    if (newTerm.category !== key) {
+                      setNewTerm({ label: "", text: "", category: key as any });
+                    } else {
+                      addNewTerm();
+                    }
+                  }} 
+                  className="w-full h-6 text-xs"
+                  disabled={newTerm.category === key && (!newTerm.label.trim() || !newTerm.text.trim())}
+                  size="sm"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Ekle
+                </Button>
+              </div>
+            </TabsContent>
+          ))}
+
+          <TabsContent value="other" className="space-y-2 mt-0">
+            <div className="text-center py-4 text-muted-foreground border rounded-lg bg-muted/30">
+              <p className="text-xs">Diğer şartlar bölümü yakında eklenecek...</p>
+              <p className="text-xs mt-1 opacity-70">Bu bölümde özel şartlar yönetilebilecek</p>
             </div>
           </TabsContent>
-        ))}
-
-        <TabsContent value="other" className="space-y-2 mt-2">
-          <div className="text-center py-4 text-muted-foreground border rounded-lg bg-muted/30">
-            <p className="text-xs">Diğer şartlar bölümü yakında eklenecek...</p>
-            <p className="text-xs mt-1 opacity-70">Bu bölümde özel şartlar yönetilebilecek</p>
-          </div>
-        </TabsContent>
+        </div>
       </Tabs>
     </div>
   );
