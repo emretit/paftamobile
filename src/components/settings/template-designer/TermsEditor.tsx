@@ -154,31 +154,30 @@ export const TermsEditor: React.FC<TermsEditorProps> = ({
     const categoryTerms = getTermsByCategory(categoryKey);
     
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         {categoryTerms.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <p className="text-sm">Bu kategoride henüz şart bulunmuyor.</p>
-            <p className="text-xs mt-1">Aşağıdaki formu kullanarak yeni şart ekleyebilirsiniz.</p>
+          <div className="text-center py-4 text-muted-foreground">
+            <p className="text-xs">Bu kategoride henüz şart bulunmuyor.</p>
           </div>
         ) : (
-          <div className="grid gap-3">
+          <div className="space-y-1">
             {categoryTerms.map(term => (
-              <div key={term.id} className="border rounded-lg p-3 hover:shadow-sm transition-shadow">
+              <div key={term.id} className="group">
                 {editingTerm === term.id ? (
-                  <div className="space-y-3">
+                  <div className="border rounded p-2 space-y-2 bg-muted/50">
                     <Input
                       defaultValue={term.label}
                       placeholder="Şart başlığı"
-                      className="text-sm"
+                      className="text-xs h-7"
                       id={`edit-label-${term.id}`}
                     />
                     <Textarea
                       defaultValue={term.text}
                       placeholder="Şart metni"
-                      className="text-sm min-h-[60px]"
+                      className="text-xs min-h-[50px] resize-none"
                       id={`edit-text-${term.id}`}
                     />
-                    <div className="flex gap-2">
+                    <div className="flex gap-1">
                       <Button
                         size="sm"
                         onClick={() => {
@@ -188,7 +187,7 @@ export const TermsEditor: React.FC<TermsEditorProps> = ({
                             updateTerm(term.id, { label: labelEl.value, text: textEl.value });
                           }
                         }}
-                        className="flex-1"
+                        className="h-6 text-xs flex-1"
                       >
                         <Check className="h-3 w-3 mr-1" />
                         Kaydet
@@ -197,41 +196,42 @@ export const TermsEditor: React.FC<TermsEditorProps> = ({
                         size="sm"
                         variant="outline"
                         onClick={() => setEditingTerm(null)}
+                        className="h-6 text-xs"
                       >
                         <X className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <div>
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <h4 className="font-medium text-sm mb-1">{term.label}</h4>
-                        <p className="text-xs text-muted-foreground line-clamp-2">{term.text}</p>
-                      </div>
-                      <div className="flex items-center gap-1 ml-3">
+                  <div className="flex items-center justify-between p-2 rounded hover:bg-muted/50 transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-xs truncate">{term.label}</h4>
                         {term.is_default && (
-                          <Badge variant="secondary" className="text-xs">Varsayılan</Badge>
+                          <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4">Varsayılan</Badge>
                         )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{term.text}</p>
+                    </div>
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setEditingTerm(term.id)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Edit3 className="h-3 w-3" />
+                      </Button>
+                      {!term.is_default && (
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => setEditingTerm(term.id)}
-                          className="h-7 w-7 p-0"
+                          onClick={() => deleteTerm(term.id)}
+                          className="h-6 w-6 p-0 text-destructive hover:text-destructive"
                         >
-                          <Edit3 className="h-3 w-3" />
+                          <Trash2 className="h-3 w-3" />
                         </Button>
-                        {!term.is_default && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => deleteTerm(term.id)}
-                            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -248,12 +248,12 @@ export const TermsEditor: React.FC<TermsEditorProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header - Sabit */}
-      <div className="text-center pb-2">
-        <h3 className="text-lg font-semibold">Teklif Şartları Yönetimi</h3>
-        <p className="text-sm text-muted-foreground">
-          Tekliflerde kullanılacak şartları kategori bazında yönetin
+    <div className="space-y-3">
+      {/* Kompakt Header */}
+      <div className="text-center pb-1">
+        <h3 className="text-sm font-semibold">Teklif Şartları Yönetimi</h3>
+        <p className="text-xs text-muted-foreground">
+          Şartları kategori bazında yönetin
         </p>
       </div>
       
@@ -274,45 +274,39 @@ export const TermsEditor: React.FC<TermsEditorProps> = ({
 
         {/* Tab İçerikleri */}
         {Object.entries(CATEGORIES).map(([key, category]) => (
-          <TabsContent key={key} value={key} className="space-y-4 mt-4">
-            <div className="flex items-center gap-2 mb-4">
-              <category.icon className="h-5 w-5 text-primary" />
-              <h4 className="font-medium">{category.title}</h4>
-              <Badge variant="outline" className="ml-auto">
-                {getTermsByCategory(key).length} şart
+          <TabsContent key={key} value={key} className="space-y-2 mt-2">
+            <div className="flex items-center gap-2 mb-2">
+              <category.icon className="h-4 w-4 text-primary" />
+              <h4 className="font-medium text-sm">{category.title}</h4>
+              <Badge variant="outline" className="ml-auto text-xs px-1 py-0 h-4">
+                {getTermsByCategory(key).length}
               </Badge>
             </div>
             
             {/* Kategori İçeriği */}
             {renderCategoryContent(key)}
             
-            {/* Hızlı Ekleme Formu */}
-            <Card className="mt-4">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Yeni {category.title} Şartı Ekle
+            {/* Kompakt Ekleme Formu */}
+            <Card className="mt-3">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs flex items-center gap-1">
+                  <Plus className="h-3 w-3" />
+                  Yeni {category.title} Şartı
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <Label className="text-sm">Şart Başlığı</Label>
-                  <Input
-                    value={newTerm.category === key ? newTerm.label : ""}
-                    onChange={(e) => setNewTerm({ ...newTerm, label: e.target.value, category: key as any })}
-                    placeholder="Ör: 60 Gün Vadeli"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm">Şart Metni</Label>
-                  <Textarea
-                    value={newTerm.category === key ? newTerm.text : ""}
-                    onChange={(e) => setNewTerm({ ...newTerm, text: e.target.value, category: key as any })}
-                    placeholder="Ör: Fatura tarihinden itibaren 60 gün vadeli ödenecektir."
-                    className="mt-1 min-h-[60px]"
-                  />
-                </div>
+              <CardContent className="space-y-2">
+                <Input
+                  value={newTerm.category === key ? newTerm.label : ""}
+                  onChange={(e) => setNewTerm({ ...newTerm, label: e.target.value, category: key as any })}
+                  placeholder="Şart başlığı (Ör: 60 Gün Vadeli)"
+                  className="text-xs h-7"
+                />
+                <Textarea
+                  value={newTerm.category === key ? newTerm.text : ""}
+                  onChange={(e) => setNewTerm({ ...newTerm, text: e.target.value, category: key as any })}
+                  placeholder="Şart metni (Ör: Fatura tarihinden itibaren 60 gün vadeli ödenecektir.)"
+                  className="text-xs min-h-[45px] resize-none"
+                />
                 <Button 
                   onClick={() => {
                     if (newTerm.category !== key) {
@@ -321,11 +315,11 @@ export const TermsEditor: React.FC<TermsEditorProps> = ({
                       addNewTerm();
                     }
                   }} 
-                  className="w-full"
+                  className="w-full h-7 text-xs"
                   disabled={newTerm.category === key && (!newTerm.label.trim() || !newTerm.text.trim())}
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Şart Ekle
+                  <Plus className="h-3 w-3 mr-1" />
+                  Ekle
                 </Button>
               </CardContent>
             </Card>
