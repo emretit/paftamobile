@@ -230,7 +230,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
     }
   };
 
-  const handleExportPDF = (templateId?: string) => {
+  const handleExportPDF = async (templateId?: string) => {
     try {
       // Create proposal data for PDF generation
       const proposalData = {
@@ -247,6 +247,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
           name: item.name,
           description: item.description,
           quantity: item.quantity,
+          unit: item.unit,
           unit_price: item.unit_price,
           total_price: item.quantity * item.unit_price
         })),
@@ -255,21 +256,11 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         notes: formData.notes
       };
 
-      // Company info - can be fetched from settings later
-      const companyInfo = {
-        name: "Şirket Adı",
-        address: "Şirket Adresi",
-        phone: "Telefon",
-        email: "email@domain.com",
-        taxNumber: "Vergi No"
-      };
-
       // Import and use PDF generator
-      import('@/utils/proposalPdfGenerator').then(({ ProposalPdfGenerator }) => {
-        const generator = new ProposalPdfGenerator();
-        generator.generateProposalPdf(proposalData as any, companyInfo);
-        toast.success(`PDF ${templateId ? 'şablon ile' : ''} oluşturuldu`);
-      });
+      const { ProposalPdfGenerator } = await import('@/utils/proposalPdfGenerator');
+      const generator = new ProposalPdfGenerator();
+      await generator.generateProposalPdf(proposalData as any, templateId);
+      toast.success(`PDF ${templateId ? 'şablon ile' : ''} oluşturuldu`);
     } catch (error) {
       console.error('PDF generation error:', error);
       toast.error('PDF oluşturulurken hata oluştu');

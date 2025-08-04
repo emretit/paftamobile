@@ -1,7 +1,9 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { Proposal } from '@/types/proposal';
+import { ProposalTemplate, TemplateDesignSettings } from '@/types/proposal-template';
 import { formatCurrency } from '@/utils/formatters';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CompanyInfo {
   name: string;
@@ -18,67 +20,169 @@ export class ProposalPdfGenerator {
   private marginLeft = 20;
   private marginRight = 20;
   private contentWidth: number;
+  private designSettings?: TemplateDesignSettings;
+  private companyInfo?: CompanyInfo;
 
-  constructor() {
+  constructor(designSettings?: TemplateDesignSettings) {
+    this.designSettings = designSettings || this.getDefaultDesignSettings();
+    
     this.pdf = new jsPDF({
-      orientation: 'portrait',
+      orientation: this.designSettings.orientation,
       unit: 'mm',
-      format: 'a4'
+      format: this.designSettings.pageSize.toLowerCase() as any
     });
-    this.pageWidth = 210;
+    
+    this.pageWidth = this.designSettings.pageSize === 'A4' ? 210 : 
+                     this.designSettings.pageSize === 'Letter' ? 216 : 297;
+    this.marginLeft = this.designSettings.margins.left;
+    this.marginRight = this.designSettings.margins.right;
     this.contentWidth = this.pageWidth - this.marginLeft - this.marginRight;
   }
 
-  generateProposalPdf(proposal: Proposal, companyInfo?: CompanyInfo): void {
-    this.pdf.setFont('helvetica');
+  async generateProposalPdf(proposal: Proposal, templateId?: string): Promise<void> {
+    // Fetch company settings
+    await this.loadCompanySettings();
     
-    let currentY = this.addHeader(proposal, companyInfo);
-    currentY = this.addProposalInfo(proposal, currentY);
-    currentY = this.addCustomerInfo(proposal, currentY);
-    currentY = this.addItemsTable(proposal, currentY);
-    currentY = this.addTotals(proposal, currentY);
-    this.addFooter(proposal, currentY);
+    // Load template if specified
+    if (templateId && templateId !== 'default') {
+      await this.loadTemplate(templateId);
+    }
+    
+    // Set primary font
+    this.pdf.setFont(this.designSettings?.fonts.primary || 'helvetica');
+    
+    // Render sections based on template settings
+    let currentY = this.designSettings?.margins.top || 20;
+    
+    const enabledSections = this.designSettings?.sections
+      .filter(section => section.enabled)
+      .sort((a, b) => a.order - b.order) || [];
+    
+    for (const section of enabledSections) {
+      switch (section.type) {
+        case 'header':
+          currentY = this.addTemplateHeader(proposal, currentY);
+          break;
+        case 'proposal-info':
+          currentY = this.addProposalInfo(proposal, currentY);
+          break;
+        case 'customer-info':
+          currentY = this.addCustomerInfo(proposal, currentY);
+          break;
+        case 'items-table':
+          currentY = this.addItemsTable(proposal, currentY);
+          break;
+        case 'totals':
+          currentY = this.addTotals(proposal, currentY);
+          break;
+        case 'terms':
+          currentY = this.addTerms(proposal, currentY);
+          break;
+        case 'footer':
+          this.addTemplateFooter(proposal, currentY);
+          break;
+      }
+      currentY += 10; // Add spacing between sections
+    }
 
     // Dosya adı oluştur
     const fileName = `Teklif_${proposal.number}_${proposal.customer?.name?.replace(/\s+/g, '_') || 'Musteri'}.pdf`;
     this.pdf.save(fileName);
   }
 
-  private addHeader(proposal: Proposal, companyInfo?: CompanyInfo): number {
-    let currentY = 20;
+  private async loadCompanySettings(): Promise<void> {
+    try {
+      const { data, error } = await supabase
+        .from('company_settings')
+        .select('*')
+        .maybeSingle();
+      
+      if (!error && data) {
+        this.companyInfo = {
+          name: data.company_name || 'Şirket Adı',
+          address: data.address || '',
+          phone: data.phone || '',
+          email: data.email || '',
+          taxNumber: data.tax_number || '',
+          logo: data.logo_url || ''
+        };
+      }
+    } catch (error) {
+      console.warn('Could not load company settings:', error);
+    }
+  }
 
-    // Şirket bilgileri (sol)
-    this.pdf.setFontSize(16);
-    this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text(companyInfo?.name || 'Şirket Adı', this.marginLeft, currentY);
+  private async loadTemplate(templateId: string): Promise<void> {
+    try {
+      const { data, error } = await supabase
+        .from('proposal_templates')
+        .select('*')
+        .eq('id', templateId)
+        .single();
+      
+      if (!error && data?.design_settings) {
+        this.designSettings = data.design_settings as TemplateDesignSettings;
+      }
+    } catch (error) {
+      console.warn('Could not load template:', error);
+    }
+  }
+
+  private addTemplateHeader(proposal: Proposal, startY: number): number {
+    const headerSettings = this.designSettings?.header;
+    const colors = this.designSettings?.colors;
+    const fonts = this.designSettings?.fonts;
+    let currentY = startY;
+
+    if (!headerSettings?.enabled) return currentY;
+
+    // Set background color if specified
+    if (headerSettings.backgroundColor && headerSettings.backgroundColor !== 'transparent') {
+      this.pdf.setFillColor(headerSettings.backgroundColor);
+      this.pdf.rect(0, currentY - 5, this.pageWidth, headerSettings.height || 40, 'F');
+    }
+
+    // Set text color
+    this.pdf.setTextColor(headerSettings.textColor || colors?.text || '#000000');
+
+    // Company logo and info (left side)
+    let leftY = currentY + 10;
+    this.pdf.setFontSize(fonts?.sizes.title || 16);
+    this.pdf.setFont(fonts?.primary || 'helvetica', 'bold');
     
-    currentY += 8;
-    this.pdf.setFontSize(10);
-    this.pdf.setFont('helvetica', 'normal');
+    const companyName = this.companyInfo?.name || this.designSettings?.branding?.companyName || 'Şirket Adı';
+    this.pdf.text(companyName, this.marginLeft, leftY);
     
-    if (companyInfo?.address) {
-      this.pdf.text(companyInfo.address, this.marginLeft, currentY);
-      currentY += 5;
-    }
-    if (companyInfo?.phone) {
-      this.pdf.text(`Tel: ${companyInfo.phone}`, this.marginLeft, currentY);
-      currentY += 5;
-    }
-    if (companyInfo?.email) {
-      this.pdf.text(`E-posta: ${companyInfo.email}`, this.marginLeft, currentY);
-      currentY += 5;
-    }
-    if (companyInfo?.taxNumber) {
-      this.pdf.text(`Vergi No: ${companyInfo.taxNumber}`, this.marginLeft, currentY);
-      currentY += 5;
+    if (headerSettings.showCompanyInfo && this.companyInfo) {
+      leftY += 8;
+      this.pdf.setFontSize(fonts?.sizes.small || 10);
+      this.pdf.setFont(fonts?.primary || 'helvetica', 'normal');
+      
+      if (this.companyInfo.address) {
+        this.pdf.text(this.companyInfo.address, this.marginLeft, leftY);
+        leftY += 5;
+      }
+      if (this.companyInfo.phone) {
+        this.pdf.text(`Tel: ${this.companyInfo.phone}`, this.marginLeft, leftY);
+        leftY += 5;
+      }
+      if (this.companyInfo.email) {
+        this.pdf.text(`E-posta: ${this.companyInfo.email}`, this.marginLeft, leftY);
+        leftY += 5;
+      }
+      if (this.companyInfo.taxNumber) {
+        this.pdf.text(`Vergi No: ${this.companyInfo.taxNumber}`, this.marginLeft, leftY);
+        leftY += 5;
+      }
     }
 
-    // Teklif başlığı (sağ)
-    this.pdf.setFontSize(24);
-    this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('TEKLİF', this.pageWidth - this.marginRight, 30, { align: 'right' });
+    // Proposal title (right side)
+    this.pdf.setFontSize(fonts?.sizes.title || 24);
+    this.pdf.setFont(fonts?.primary || 'helvetica', 'bold');
+    this.pdf.setTextColor(colors?.primary || '#000000');
+    this.pdf.text('TEKLİF', this.pageWidth - this.marginRight, currentY + 20, { align: 'right' });
 
-    return Math.max(currentY + 10, 50);
+    return Math.max(leftY + 10, currentY + (headerSettings.height || 40) + 10);
   }
 
   private addProposalInfo(proposal: Proposal, startY: number): number {
@@ -153,8 +257,13 @@ export class ProposalPdfGenerator {
       return startY;
     }
 
-    this.pdf.setFontSize(12);
-    this.pdf.setFont('helvetica', 'bold');
+    const colors = this.designSettings?.colors;
+    const fonts = this.designSettings?.fonts;
+    const tableSettings = this.designSettings?.table;
+
+    this.pdf.setFontSize(fonts?.sizes.heading || 12);
+    this.pdf.setFont(fonts?.primary || 'helvetica', 'bold');
+    this.pdf.setTextColor(colors?.text || '#000000');
     this.pdf.text('TEKLİF KALEMLERI', this.marginLeft, startY);
 
     const tableData = proposal.items.map((item, index) => [
@@ -162,26 +271,43 @@ export class ProposalPdfGenerator {
       item.name || '',
       item.description || '',
       item.quantity?.toString() || '1',
-      'Adet',
+      item.unit || 'Adet',
       formatCurrency(item.unit_price || 0),
       formatCurrency((item.quantity || 1) * (item.unit_price || 0))
     ]);
+
+    // Convert hex colors to RGB for jsPDF
+    const hexToRgb = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? [
+        parseInt(result[1], 16),
+        parseInt(result[2], 16),
+        parseInt(result[3], 16)
+      ] : [71, 85, 105];
+    };
+
+    const headerBgColor = tableSettings?.headerBackground ? 
+      hexToRgb(tableSettings.headerBackground) : [71, 85, 105];
+    const headerTextColor = tableSettings?.headerText ? 
+      hexToRgb(tableSettings.headerText) : [255, 255, 255];
 
     // @ts-ignore
     this.pdf.autoTable({
       startY: startY + 8,
       head: [['#', 'Ürün/Hizmet', 'Açıklama', 'Miktar', 'Birim', 'Birim Fiyat', 'Toplam']],
       body: tableData,
-      theme: 'striped',
+      theme: tableSettings?.rowAlternating ? 'striped' : 'plain',
       headStyles: {
-        fillColor: [71, 85, 105], // slate-600
-        textColor: 255,
-        fontSize: 9,
+        fillColor: headerBgColor,
+        textColor: headerTextColor,
+        fontSize: fonts?.sizes.small || 9,
         fontStyle: 'bold'
       },
       styles: {
-        fontSize: 8,
-        cellPadding: 3
+        fontSize: fonts?.sizes.small || 8,
+        cellPadding: 3,
+        lineColor: tableSettings?.borderColor ? hexToRgb(tableSettings.borderColor) : [200, 200, 200],
+        lineWidth: tableSettings?.borderWidth || 0.1
       },
       columnStyles: {
         0: { cellWidth: 10, halign: 'center' },
@@ -231,17 +357,20 @@ export class ProposalPdfGenerator {
     return (this.pdf as any).lastAutoTable.finalY + 15;
   }
 
-  private addFooter(proposal: Proposal, startY: number): void {
+  private addTerms(proposal: Proposal, startY: number): number {
     let currentY = startY;
+    const fonts = this.designSettings?.fonts;
+    const colors = this.designSettings?.colors;
 
     // Ödeme şartları
     if (proposal.payment_terms) {
-      this.pdf.setFontSize(10);
-      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.setFontSize(fonts?.sizes.body || 10);
+      this.pdf.setFont(fonts?.primary || 'helvetica', 'bold');
+      this.pdf.setTextColor(colors?.text || '#000000');
       this.pdf.text('ÖDEME ŞARTLARI:', this.marginLeft, currentY);
       currentY += 6;
       
-      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.setFont(fonts?.primary || 'helvetica', 'normal');
       const paymentTermsLines = this.pdf.splitTextToSize(proposal.payment_terms, this.contentWidth);
       this.pdf.text(paymentTermsLines, this.marginLeft, currentY);
       currentY += paymentTermsLines.length * 5 + 5;
@@ -249,12 +378,12 @@ export class ProposalPdfGenerator {
 
     // Teslimat şartları
     if (proposal.delivery_terms) {
-      this.pdf.setFontSize(10);
-      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.setFontSize(fonts?.sizes.body || 10);
+      this.pdf.setFont(fonts?.primary || 'helvetica', 'bold');
       this.pdf.text('TESLİMAT ŞARTLARI:', this.marginLeft, currentY);
       currentY += 6;
       
-      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.setFont(fonts?.primary || 'helvetica', 'normal');
       const deliveryTermsLines = this.pdf.splitTextToSize(proposal.delivery_terms, this.contentWidth);
       this.pdf.text(deliveryTermsLines, this.marginLeft, currentY);
       currentY += deliveryTermsLines.length * 5 + 5;
@@ -262,27 +391,61 @@ export class ProposalPdfGenerator {
 
     // Notlar
     if (proposal.notes) {
-      this.pdf.setFontSize(10);
-      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.setFontSize(fonts?.sizes.body || 10);
+      this.pdf.setFont(fonts?.primary || 'helvetica', 'bold');
       this.pdf.text('NOTLAR:', this.marginLeft, currentY);
       currentY += 6;
       
-      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.setFont(fonts?.primary || 'helvetica', 'normal');
       const notesLines = this.pdf.splitTextToSize(proposal.notes, this.contentWidth);
       this.pdf.text(notesLines, this.marginLeft, currentY);
       currentY += notesLines.length * 5 + 10;
     }
 
-    // Footer
-    const footerY = this.pdf.internal.pageSize.height - 20;
-    this.pdf.setFontSize(8);
-    this.pdf.setTextColor(128, 128, 128);
-    this.pdf.text(
-      'Bu teklif elektronik ortamda oluşturulmuş olup imza gerektirmez.',
-      this.pageWidth / 2,
-      footerY,
-      { align: 'center' }
-    );
+    return currentY;
+  }
+
+  private addTemplateFooter(proposal: Proposal, startY: number): void {
+    const footerSettings = this.designSettings?.footer;
+    const colors = this.designSettings?.colors;
+    const fonts = this.designSettings?.fonts;
+
+    if (!footerSettings?.enabled) return;
+
+    const footerY = this.pdf.internal.pageSize.height - (this.designSettings?.margins.bottom || 20);
+    
+    // Set background color if specified
+    if (footerSettings.backgroundColor && footerSettings.backgroundColor !== 'transparent') {
+      this.pdf.setFillColor(footerSettings.backgroundColor);
+      this.pdf.rect(0, footerY - 5, this.pageWidth, footerSettings.height || 20, 'F');
+    }
+
+    this.pdf.setFontSize(fonts?.sizes.small || 8);
+    this.pdf.setTextColor(footerSettings.textColor || colors?.text || '#888888');
+    
+    let footerText = 'Bu teklif elektronik ortamda oluşturulmuş olup imza gerektirmez.';
+    
+    if (footerSettings.showContactInfo && this.companyInfo) {
+      footerText += ` • ${this.companyInfo.name}`;
+      if (this.companyInfo.phone) {
+        footerText += ` • Tel: ${this.companyInfo.phone}`;
+      }
+      if (this.companyInfo.email) {
+        footerText += ` • ${this.companyInfo.email}`;
+      }
+    }
+
+    this.pdf.text(footerText, this.pageWidth / 2, footerY, { align: 'center' });
+
+    // Page numbers if enabled
+    if (footerSettings.showPageNumbers) {
+      this.pdf.text(
+        `Sayfa 1`,
+        this.pageWidth - this.marginRight,
+        footerY,
+        { align: 'right' }
+      );
+    }
   }
 
   private getStatusLabel(status: string): string {
@@ -295,5 +458,70 @@ export class ProposalPdfGenerator {
       pending_approval: 'Onay Bekliyor'
     };
     return statusLabels[status] || status;
+  }
+
+  private getDefaultDesignSettings(): TemplateDesignSettings {
+    return {
+      pageSize: 'A4',
+      orientation: 'portrait',
+      margins: { top: 20, bottom: 20, left: 20, right: 20 },
+      header: {
+        enabled: true,
+        height: 60,
+        logoPosition: 'left',
+        logoSize: 'medium',
+        showCompanyInfo: true,
+        backgroundColor: 'transparent',
+        textColor: '#000000'
+      },
+      footer: {
+        enabled: true,
+        height: 20,
+        showPageNumbers: false,
+        showContactInfo: false,
+        backgroundColor: 'transparent',
+        textColor: '#888888'
+      },
+      colors: {
+        primary: '#0f172a',
+        secondary: '#64748b',
+        accent: '#3b82f6',
+        text: '#000000',
+        background: '#ffffff',
+        border: '#e2e8f0'
+      },
+      fonts: {
+        primary: 'helvetica',
+        secondary: 'helvetica',
+        sizes: { title: 24, heading: 12, body: 10, small: 8 }
+      },
+      table: {
+        headerBackground: '#475569',
+        headerText: '#ffffff',
+        rowAlternating: true,
+        borderColor: '#e2e8f0',
+        borderWidth: 0.1
+      },
+      layout: {
+        spacing: 'normal',
+        showBorders: false,
+        roundedCorners: false,
+        shadowEnabled: false
+      },
+      branding: {
+        companyName: 'Şirket Adı',
+        tagline: '',
+        website: ''
+      },
+      sections: [
+        { id: '1', type: 'header', title: 'Başlık', enabled: true, order: 1, settings: {} },
+        { id: '2', type: 'proposal-info', title: 'Teklif Bilgileri', enabled: true, order: 2, settings: {} },
+        { id: '3', type: 'customer-info', title: 'Müşteri Bilgileri', enabled: true, order: 3, settings: {} },
+        { id: '4', type: 'items-table', title: 'Ürün/Hizmet Tablosu', enabled: true, order: 4, settings: {} },
+        { id: '5', type: 'totals', title: 'Toplam', enabled: true, order: 5, settings: {} },
+        { id: '6', type: 'terms', title: 'Şartlar', enabled: true, order: 6, settings: {} },
+        { id: '7', type: 'footer', title: 'Alt Bilgi', enabled: true, order: 7, settings: {} }
+      ]
+    };
   }
 }

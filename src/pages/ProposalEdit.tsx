@@ -355,16 +355,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
       const { ProposalPdfGenerator } = await import('@/utils/proposalPdfGenerator');
       const generator = new ProposalPdfGenerator();
       
-      // Şirket bilgileri (örnek - gerçek uygulamada settings'ten gelecek)
-      const companyInfo = {
-        name: 'Şirket Adı',
-        address: 'Şirket Adresi',
-        phone: '+90 XXX XXX XX XX',
-        email: 'info@sirket.com',
-        taxNumber: 'XXXXXXXXX'
-      };
-      
-      generator.generateProposalPdf(proposal, companyInfo);
+      await generator.generateProposalPdf(proposal, templateId);
       toast.success(`PDF ${templateId ? 'seçilen şablonla' : ''} başarıyla indirildi`);
     } catch (error) {
       console.error('PDF oluşturma hatası:', error);
