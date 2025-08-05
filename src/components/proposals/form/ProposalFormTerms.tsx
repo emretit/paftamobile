@@ -95,6 +95,8 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
     const customLabel = customTermInputs[category].label.trim();
     const customText = customTermInputs[category].text.trim();
     
+    console.log('Adding custom term:', { category, customLabel, customText });
+    
     if (!customLabel || !customText) {
       toast.error("Lütfen hem başlık hem de açıklama giriniz.");
       return;
@@ -115,7 +117,12 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
           sort_order: 999 // Put custom terms at the end
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+
+      console.log('Custom term saved to database successfully');
 
       // Get the current field value based on category
       let currentValue = '';
@@ -133,7 +140,11 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
         fieldName = 'notes';
       }
 
+      console.log('Current field values:', { category, fieldName, currentValue });
+
       const newValue = currentValue ? `${currentValue}\n\n${customText}` : customText;
+      
+      console.log('New value to set:', newValue);
 
       // Create a synthetic event to update the appropriate field
       const syntheticEvent = {
@@ -143,6 +154,8 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
         }
       } as React.ChangeEvent<HTMLTextAreaElement>;
 
+      console.log('Calling onInputChange with:', syntheticEvent);
+      
       onInputChange(syntheticEvent);
 
       // Reset the custom input
@@ -155,7 +168,7 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
 
     } catch (error) {
       console.error('Error saving custom term:', error);
-      toast.error("Şart eklenirken bir hata oluştu.");
+      toast.error("Şart eklenirken bir hata oluştu: " + (error as Error).message);
     } finally {
       setIsLoading(false);
     }
