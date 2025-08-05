@@ -1824,48 +1824,7 @@ export type Database = {
         }
         Relationships: []
       }
-      n8n_workflow_logs: {
-        Row: {
-          created_at: string | null
-          error_message: string | null
-          execution_id: string | null
-          execution_time_ms: number | null
-          id: string
-          result_data: Json | null
-          status: string
-          trigger_data: Json | null
-          updated_at: string | null
-          user_id: string | null
-          workflow_name: string
-        }
-        Insert: {
-          created_at?: string | null
-          error_message?: string | null
-          execution_id?: string | null
-          execution_time_ms?: number | null
-          id?: string
-          result_data?: Json | null
-          status: string
-          trigger_data?: Json | null
-          updated_at?: string | null
-          user_id?: string | null
-          workflow_name: string
-        }
-        Update: {
-          created_at?: string | null
-          error_message?: string | null
-          execution_id?: string | null
-          execution_time_ms?: number | null
-          id?: string
-          result_data?: Json | null
-          status?: string
-          trigger_data?: Json | null
-          updated_at?: string | null
-          user_id?: string | null
-          workflow_name?: string
-        }
-        Relationships: []
-      }
+
       nilvera_auth: {
         Row: {
           access_token: string
@@ -3422,10 +3381,7 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
-      trigger_n8n_task_reminders: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+
     }
     Enums: {
       account_type: "vadesiz" | "vadeli" | "kredi" | "pos"

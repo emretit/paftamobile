@@ -71,8 +71,3 @@ port = 54327
 vector_port = 54328
 backend = "postgres"
 
-[functions.n8n-webhook]
-verify_jwt = false
-
-[functions.trigger-n8n]
-verify_jwt = true
