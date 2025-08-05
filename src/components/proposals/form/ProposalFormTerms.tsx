@@ -164,90 +164,111 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
   const renderDropdown = (category: 'payment' | 'delivery' | 'warranty' | 'price', title: string, placeholder: string) => (
     <div className="space-y-2">
       <Label>{title}</Label>
-      <Select onValueChange={(value) => handleTermSelect(category, value)}>
-        <SelectTrigger className="w-full">
+      
+      {/* Dropdown for predefined terms */}
+      <Select onValueChange={(value) => {
+        if (value === 'add_custom') {
+          setCustomTermInputs(prev => ({ 
+            ...prev, 
+            [category]: { ...prev[category], show: true } 
+          }));
+        } else {
+          handleTermSelect(category, value);
+        }
+      }}>
+        <SelectTrigger className="w-full bg-background border-border hover:border-primary transition-colors">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent className="bg-background border shadow-lg z-50 max-h-[200px] overflow-y-auto">
+        <SelectContent className="bg-background border border-border shadow-xl z-[100] max-h-[300px] overflow-y-auto">
           {PREDEFINED_TERMS[category].map((term) => (
             <SelectItem 
               key={term.id} 
               value={term.id} 
-              className="cursor-pointer hover:bg-accent/50 focus:bg-accent/50 data-[highlighted]:bg-accent/50 p-3 transition-colors"
+              className="cursor-pointer hover:bg-accent focus:bg-accent data-[highlighted]:bg-accent p-3 transition-colors"
             >
               <div className="flex flex-col gap-1 w-full">
                 <span className="font-medium text-sm text-foreground">{term.label}</span>
-                <span className="text-xs text-muted-foreground leading-relaxed">{term.text}</span>
+                <span className="text-xs text-muted-foreground leading-relaxed whitespace-normal max-w-[250px]">{term.text}</span>
               </div>
             </SelectItem>
           ))}
           
-          {/* Custom term input section */}
-          <div className="border-t border-border mt-2 pt-2">
-            {!customTermInputs[category].show ? (
-              <div 
-                className="flex items-center gap-2 p-2 cursor-pointer hover:bg-accent/50 transition-colors rounded-sm"
-                onClick={() => setCustomTermInputs(prev => ({ ...prev, [category]: { ...prev[category], show: true } }))}
-              >
-                <Plus size={16} className="text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Yeni şart ekle</span>
-              </div>
-            ) : (
-              <div className="p-2 space-y-2">
-                <Input
-                  placeholder="Şart başlığı..."
-                  value={customTermInputs[category].label}
-                  onChange={(e) => setCustomTermInputs(prev => ({ 
-                    ...prev, 
-                    [category]: { ...prev[category], label: e.target.value } 
-                  }))}
-                  className="text-sm"
-                />
-                <Textarea
-                  placeholder="Şart açıklaması..."
-                  value={customTermInputs[category].text}
-                  onChange={(e) => setCustomTermInputs(prev => ({ 
-                    ...prev, 
-                    [category]: { ...prev[category], text: e.target.value } 
-                  }))}
-                  className="text-sm min-h-[60px]"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && e.ctrlKey) {
-                      handleAddCustomTerm(category);
-                    } else if (e.key === 'Escape') {
-                      setCustomTermInputs(prev => ({ 
-                        ...prev, 
-                        [category]: { show: false, label: '', text: '' } 
-                      }));
-                    }
-                  }}
-                />
-                <div className="flex gap-1">
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleAddCustomTerm(category)}
-                    disabled={isLoading}
-                    className="h-7 px-2 text-xs"
-                  >
-                    {isLoading ? "Ekleniyor..." : "Ekle"}
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => setCustomTermInputs(prev => ({ 
-                      ...prev, 
-                      [category]: { show: false, label: '', text: '' } 
-                    }))}
-                    className="h-7 px-2 text-xs"
-                  >
-                    İptal
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Add custom option */}
+          <SelectItem value="add_custom" className="cursor-pointer hover:bg-accent focus:bg-accent data-[highlighted]:bg-accent p-3 border-t border-border mt-1">
+            <div className="flex items-center gap-2">
+              <Plus size={16} className="text-primary" />
+              <span className="text-sm font-medium text-primary">Yeni şart ekle</span>
+            </div>
+          </SelectItem>
         </SelectContent>
       </Select>
+
+      {/* Custom term input card - rendered outside dropdown */}
+      {customTermInputs[category].show && (
+        <Card className="p-4 border-2 border-dashed border-primary/50 bg-primary/5">
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium text-foreground">Yeni {title} Şartı</h4>
+            <div className="space-y-2">
+              <Input
+                placeholder="Şart başlığı giriniz..."
+                value={customTermInputs[category].label}
+                onChange={(e) => setCustomTermInputs(prev => ({ 
+                  ...prev, 
+                  [category]: { ...prev[category], label: e.target.value } 
+                }))}
+                className="text-sm"
+                autoFocus
+              />
+              <Textarea
+                placeholder="Şart açıklamasını yazınız..."
+                value={customTermInputs[category].text}
+                onChange={(e) => setCustomTermInputs(prev => ({ 
+                  ...prev, 
+                  [category]: { ...prev[category], text: e.target.value } 
+                }))}
+                className="text-sm min-h-[80px] resize-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.ctrlKey) {
+                    e.preventDefault();
+                    handleAddCustomTerm(category);
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setCustomTermInputs(prev => ({ 
+                      ...prev, 
+                      [category]: { show: false, label: '', text: '' } 
+                    }));
+                  }
+                }}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => setCustomTermInputs(prev => ({ 
+                  ...prev, 
+                  [category]: { show: false, label: '', text: '' } 
+                }))}
+                className="h-8 px-3 text-xs"
+              >
+                İptal
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={() => handleAddCustomTerm(category)}
+                disabled={isLoading || !customTermInputs[category].label.trim() || !customTermInputs[category].text.trim()}
+                className="h-8 px-3 text-xs"
+              >
+                <Plus size={14} className="mr-1" />
+                {isLoading ? "Ekleniyor..." : "Ekle"}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Ctrl + Enter</kbd> ile hızlı ekle
+            </p>
+          </div>
+        </Card>
+      )}
     </div>
   );
 
