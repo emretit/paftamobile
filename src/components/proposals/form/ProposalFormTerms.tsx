@@ -394,9 +394,9 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
       <CardContent className="p-0 space-y-6">
         {/* Predefined Terms Selection */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {renderDropdown('payment', 'Peşin Ödeme', 'Ödeme koşulu seçin')}
+          {renderDropdown('payment', 'Ödeme Şartları', 'Ödeme koşulu seçin')}
           {renderDropdown('delivery', 'Teslimat', 'Teslimat koşulu seçin')}
-          {renderDropdown('warranty', 'Garanti', 'Garanti koşulu seçin')}
+          {renderDropdown('warranty', 'Garanti Şartları', 'Garanti koşulu seçin')}
           {renderDropdown('price', 'Fiyat', 'Fiyat koşulu seçin')}
         </div>
 
