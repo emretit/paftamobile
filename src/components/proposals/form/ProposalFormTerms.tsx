@@ -207,7 +207,12 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
     }
   };
 
-  const handleDeleteCustomTerm = async (category: 'payment' | 'delivery' | 'warranty' | 'price', termId: string) => {
+  const handleDeleteCustomTerm = async (category: 'payment' | 'delivery' | 'warranty' | 'price', termId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     try {
       const { error } = await supabase
         .from('proposal_terms')
@@ -267,9 +272,7 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
                   size="sm"
                   className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-destructive/20 hover:text-destructive"
                   onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleDeleteCustomTerm(category, term.id);
+                    handleDeleteCustomTerm(category, term.id, e);
                   }}
                 >
                   <Trash2 size={12} />
