@@ -25,6 +25,7 @@ import { calculateProposalTotals, formatProposalAmount } from "@/services/workfl
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { handleProposalStatusChange } from "@/services/workflow/proposalWorkflow";
 import { supabase } from "@/integrations/supabase/client";
+import ProposalFormTerms from "@/components/proposals/form/ProposalFormTerms";
 
 interface LineItem extends ProposalItem {
   row_number: number;
@@ -866,39 +867,13 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
 
         {/* Terms & Conditions - Full Width */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">Şartlar ve Koşullar</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="payment_terms">Ödeme Şartları</Label>
-                <Textarea
-                  id="payment_terms"
-                  value={formData.payment_terms}
-                  onChange={(e) => handleFieldChange('payment_terms', e.target.value)}
-                  rows={3}
-                />
-              </div>
-              <div>
-                <Label htmlFor="delivery_terms">Teslimat Şartları</Label>
-                <Textarea
-                  id="delivery_terms"
-                  value={formData.delivery_terms}
-                  onChange={(e) => handleFieldChange('delivery_terms', e.target.value)}
-                  rows={3}
-                />
-              </div>
-              <div>
-                <Label htmlFor="warranty_terms">Garanti Şartları</Label>
-                <Textarea
-                  id="warranty_terms"
-                  value={formData.warranty_terms}
-                  onChange={(e) => handleFieldChange('warranty_terms', e.target.value)}
-                  rows={3}
-                />
-              </div>
-            </div>
+          <CardContent className="p-6">
+            <ProposalFormTerms
+              paymentTerms={formData.payment_terms}
+              deliveryTerms={formData.delivery_terms}
+              notes={formData.notes}
+              onInputChange={(e) => handleFieldChange(e.target.name, e.target.value)}
+            />
           </CardContent>
         </Card>
       </div>
