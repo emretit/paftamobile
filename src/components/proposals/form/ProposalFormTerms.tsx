@@ -261,55 +261,58 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
               value={term.id} 
               className="group cursor-pointer hover:bg-muted/50 focus:bg-muted/50 data-[highlighted]:bg-muted/50 p-0 transition-colors"
             >
-              <div className="relative w-full p-3" onClick={(e) => {
-                // Allow normal selection when clicking on the main area
-                if ((e.target as HTMLElement).closest('button')) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }
-              }}>
+              <div className="relative w-full p-3">
                 <div className="flex flex-col gap-1 pr-8">
                   <span className="font-medium text-sm text-foreground">{term.label}</span>
                   <span className="text-xs text-muted-foreground leading-relaxed whitespace-normal break-words">{term.text}</span>
                 </div>
                 
                 {/* Delete button for all terms */}
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-destructive/20 hover:text-destructive"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                    >
-                      <Trash2 size={12} />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Şartı Sil</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        "{term.label}" şartını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>İptal</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => handleDeleteCustomTerm(category, term.id)}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                <div 
+                  className="absolute top-2 right-2"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-destructive/20 hover:text-destructive"
+                        type="button"
                       >
-                        Sil
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                        <Trash2 size={12} />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Şartı Sil</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          "{term.label}" şartını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>İptal</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteCustomTerm(category, term.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Sil
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </div>
             </SelectItem>
           ))}
