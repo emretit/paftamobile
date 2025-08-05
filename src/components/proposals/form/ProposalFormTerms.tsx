@@ -255,8 +255,8 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
               value={term.id} 
               className="group cursor-pointer hover:bg-muted/50 focus:bg-muted/50 data-[highlighted]:bg-muted/50 p-0 transition-colors"
             >
-              <div className="flex items-start justify-between w-full p-3">
-                <div className="flex flex-col gap-1 flex-1 min-w-0">
+              <div className="relative w-full p-3">
+                <div className="flex flex-col gap-1 pr-8">
                   <span className="font-medium text-sm text-foreground">{term.label}</span>
                   <span className="text-xs text-muted-foreground leading-relaxed whitespace-normal break-words">{term.text}</span>
                 </div>
@@ -265,7 +265,7 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 h-6 w-6 p-0 shrink-0 hover:bg-destructive/20 hover:text-destructive"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-destructive/20 hover:text-destructive"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
