@@ -20,6 +20,20 @@ export interface ProposalFormData {
   description?: string;
   status: ProposalStatus; // Changed from optional to required
   currency?: string; // Proposal currency
+  
+  // Seçilebilir şartlar sistemi için yeni alanlar
+  selectedTerms?: {
+    payment?: string[];
+    pricing?: string[];
+    warranty?: string[];
+    delivery?: string[];
+  };
+  customTerms?: {
+    payment?: string;
+    pricing?: string;
+    warranty?: string;
+    delivery?: string;
+  };
 }
 
 // Export the ProposalItem type (using export type for isolatedModules)
