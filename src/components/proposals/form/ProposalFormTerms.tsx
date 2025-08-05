@@ -256,65 +256,58 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
         </SelectTrigger>
         <SelectContent className="bg-background border border-border shadow-xl z-[100] max-h-[300px] overflow-y-auto">
           {availableTerms[category].map((term) => (
-            <SelectItem 
-              key={term.id} 
-              value={term.id} 
-              className="group cursor-pointer hover:bg-muted/50 focus:bg-muted/50 data-[highlighted]:bg-muted/50 p-0 transition-colors"
-            >
-              <div className="relative w-full p-3">
-                <div className="flex flex-col gap-1 pr-8">
+            <div key={term.id} className="group relative">
+              <SelectItem 
+                value={term.id} 
+                className="cursor-pointer hover:bg-muted/50 focus:bg-muted/50 data-[highlighted]:bg-muted/50 pr-10 transition-colors"
+              >
+                <div className="flex flex-col gap-1 w-full">
                   <span className="font-medium text-sm text-foreground">{term.label}</span>
                   <span className="text-xs text-muted-foreground leading-relaxed whitespace-normal break-words">{term.text}</span>
                 </div>
-                
-                {/* Delete button for all terms */}
-                <div 
-                  className="absolute top-2 right-2"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                >
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-destructive/20 hover:text-destructive"
-                        type="button"
+              </SelectItem>
+              
+              {/* Delete button positioned outside SelectItem */}
+              <div className="absolute top-2 right-2 z-10">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-destructive/20 hover:text-destructive"
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
+                      <Trash2 size={12} />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Şartı Sil</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        "{term.label}" şartını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>İptal</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDeleteCustomTerm(category, term.id)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
-                        <Trash2 size={12} />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Şartı Sil</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          "{term.label}" şartını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>İptal</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDeleteCustomTerm(category, term.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Sil
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
+                        Sil
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
-            </SelectItem>
+            </div>
           ))}
           
           {/* Add custom option */}
