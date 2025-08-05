@@ -3,7 +3,6 @@ import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/render
 import { Proposal } from '@/types/proposal';
 import { CompanySettings } from '@/hooks/useCompanySettings';
 import { TemplateDesignSettings } from '@/types/proposal-template';
-import { formatSelectedTermsForPDF } from '@/utils/termsHelpers';
 
 const styles = StyleSheet.create({
   page: {
@@ -300,34 +299,18 @@ export const StandardTemplate: React.FC<StandardTemplateProps> = ({ proposal, co
 
         {/* Terms and Conditions */}
         <View style={styles.termsSection}>
-          {/* Yeni seçilebilir şartlar sistemi */}
-          {proposal.selectedTerms && (() => {
-            const formattedTerms = formatSelectedTermsForPDF(proposal.selectedTerms, proposal.customTerms);
-            return Object.entries(formattedTerms).map(([categoryKey, { title, terms }]) => (
-              <View key={categoryKey} style={{ marginBottom: 10 }}>
-                <Text style={styles.termsTitle}>{title.toUpperCase()}</Text>
-                {terms.map((term, index) => (
-                  <Text key={index} style={styles.termsText}>• {term}</Text>
-                ))}
-              </View>
-            ));
-          })()}
-          
-          {/* Geriye uyumluluk - eski sistem */}
-          {!proposal.selectedTerms && proposal.payment_terms && (
+          {proposal.payment_terms && (
             <>
               <Text style={styles.termsTitle}>ÖDEME KOŞULLARI</Text>
               <Text style={styles.termsText}>{proposal.payment_terms}</Text>
             </>
           )}
-          {!proposal.selectedTerms && proposal.delivery_terms && (
+          {proposal.delivery_terms && (
             <>
               <Text style={styles.termsTitle}>TESLİMAT KOŞULLARI</Text>
               <Text style={styles.termsText}>{proposal.delivery_terms}</Text>
             </>
           )}
-          
-          {/* Notlar her zaman göster */}
           {proposal.notes && (
             <>
               <Text style={styles.termsTitle}>NOTLAR</Text>

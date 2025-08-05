@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { ProposalTemplate } from "@/types/proposal-template";
 import { ProposalFormData } from "@/types/proposal-form";
 import { ProposalItem } from "@/types/proposal";
-import { ProposalTemplateTerms } from "../ProposalTemplateTerms";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -86,17 +85,11 @@ const StandardProposalForm: React.FC<StandardProposalFormProps> = ({
 
   // Calculate completion progress
   useEffect(() => {
-    // Şartlar validasyonu - en az bir kategori seçilmiş olmalı
-    const hasSelectedTerms = watchedValues.selectedTerms && 
-      Object.values(watchedValues.selectedTerms).some((categoryTerms: any) => 
-        Array.isArray(categoryTerms) && categoryTerms.length > 0
-      );
-    
     const newStatus = {
       basic: !!(watchedValues.title && validUntil),
       customer: !!(watchedValues.customer_id),
       items: items.length > 0 && items.every(item => item.name && item.quantity && item.unit_price),
-      terms: hasSelectedTerms || !!(watchedValues.paymentTerm) // Eski paymentTerm ile geriye uyumluluk
+      terms: !!(watchedValues.paymentTerm)
     };
     
     setCompletionStatus(newStatus);
@@ -528,28 +521,37 @@ const StandardProposalForm: React.FC<StandardProposalFormProps> = ({
 
           {/* Terms Tab */}
           <TabsContent value="terms" className="space-y-6">
-            <ProposalTemplateTerms 
-              register={register}
-              watch={watch}
-              setValue={setValue}
-            />
-            
-            {/* Notlar Bölümü */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Teklif Notları
+                    <FileCheck className="h-5 w-5" />
+                    Ödeme Şartları
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="notes">Müşteriye Gösterilecek Notlar</Label>
+                    <Label htmlFor="payment_terms">Ödeme Koşulu *</Label>
+                    <Select onValueChange={(value) => setValue("paymentTerm", value)} defaultValue={template.prefilledFields?.paymentTerm || "net30"}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="prepaid">Peşin</SelectItem>
+                        <SelectItem value="net30">30 Gün Vadeli</SelectItem>
+                        <SelectItem value="net60">60 Gün Vadeli</SelectItem>
+                        <SelectItem value="net90">90 Gün Vadeli</SelectItem>
+                        <SelectItem value="installment">Taksitli</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="delivery_terms">Teslimat Şartları</Label>
                     <Textarea
-                      id="notes"
-                      {...register("notes")}
-                      placeholder="Müşteriye gösterilecek notlar..."
+                      id="delivery_terms"
+                      {...register("delivery_terms")}
+                      placeholder="Teslimat süreleri ve koşulları..."
                       rows={3}
                     />
                   </div>
@@ -559,13 +561,23 @@ const StandardProposalForm: React.FC<StandardProposalFormProps> = ({
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    İç Notlar
+                    <User className="h-5 w-5" />
+                    Notlar
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="internal_notes">Sadece Internal Kullanım</Label>
+                    <Label htmlFor="notes">Teklif Notları</Label>
+                    <Textarea
+                      id="notes"
+                      {...register("notes")}
+                      placeholder="Müşteriye gösterilecek notlar..."
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="internal_notes">İç Notlar</Label>
                     <Textarea
                       id="internal_notes"
                       {...register("internalNotes")}

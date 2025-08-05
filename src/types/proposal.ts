@@ -117,20 +117,6 @@ export interface Proposal {
   discounts?: number;
   additional_charges?: number;
   
-  // Seçilebilir şartlar sistemi için yeni alanlar
-  selectedTerms?: {
-    payment?: string[];
-    pricing?: string[];
-    warranty?: string[];
-    delivery?: string[];
-  };
-  customTerms?: {
-    payment?: string;
-    pricing?: string;
-    warranty?: string;
-    delivery?: string;
-  };
-  
   // Relations
   customer?: Customer;
   employee?: Employee;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { UseFormRegister, UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -91,29 +91,14 @@ const ProposalTemplateTerms: React.FC<ProposalTemplateTermsProps> = ({
   const [customTerms, setCustomTerms] = useState<{[key: string]: string}>({});
   const [editingCustom, setEditingCustom] = useState<string | null>(null);
 
-  // İlk yüklemede varsayılan değerleri form state'ine kaydet
-  useEffect(() => {
-    if (setValue) {
-      setValue("selectedTerms", selectedTerms);
-      setValue("customTerms", customTerms);
-    }
-  }, [setValue]);
-
   const handleTermSelection = (category: string, termId: string, checked: boolean) => {
     setSelectedTerms(prev => {
       const categoryTerms = prev[category] || [];
-      const newCategoryTerms = checked 
-        ? [...categoryTerms, termId]
-        : categoryTerms.filter(id => id !== termId);
-      
-      const newSelectedTerms = { ...prev, [category]: newCategoryTerms };
-      
-      // Form state'ini güncelle
-      if (setValue) {
-        setValue("selectedTerms", newSelectedTerms);
+      if (checked) {
+        return { ...prev, [category]: [...categoryTerms, termId] };
+      } else {
+        return { ...prev, [category]: categoryTerms.filter(id => id !== termId) };
       }
-      
-      return newSelectedTerms;
     });
   };
 
@@ -123,13 +108,7 @@ const ProposalTemplateTerms: React.FC<ProposalTemplateTermsProps> = ({
 
   const saveCustomTerm = (category: string, text: string) => {
     if (text.trim()) {
-      const newCustomTerms = { ...customTerms, [category]: text.trim() };
-      setCustomTerms(newCustomTerms);
-      
-      // Form state'ini güncelle
-      if (setValue) {
-        setValue("customTerms", newCustomTerms);
-      }
+      setCustomTerms(prev => ({ ...prev, [category]: text.trim() }));
     }
     setEditingCustom(null);
   };
@@ -138,12 +117,6 @@ const ProposalTemplateTerms: React.FC<ProposalTemplateTermsProps> = ({
     setCustomTerms(prev => {
       const updated = { ...prev };
       delete updated[category];
-      
-      // Form state'ini güncelle
-      if (setValue) {
-        setValue("customTerms", updated);
-      }
-      
       return updated;
     });
   };
