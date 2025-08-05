@@ -6,6 +6,7 @@ import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Check, Plus } from "lucide-react";
 
 interface ProposalTermsProps {
@@ -46,6 +47,12 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
   notes,
   onInputChange
 }) => {
+  const [customTermInputs, setCustomTermInputs] = useState<{[key: string]: { show: boolean, value: string }}>({
+    payment: { show: false, value: '' },
+    delivery: { show: false, value: '' },
+    warranty: { show: false, value: '' },
+    price: { show: false, value: '' }
+  });
   const handleTermSelect = (category: 'payment' | 'delivery' | 'warranty' | 'price', termId: string) => {
     // Find the selected term text
     const selectedTerm = PREDEFINED_TERMS[category].find(t => t.id === termId);
@@ -80,6 +87,45 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
     onInputChange(syntheticEvent);
   };
 
+  const handleAddCustomTerm = (category: 'payment' | 'delivery' | 'warranty' | 'price') => {
+    const customText = customTermInputs[category].value.trim();
+    if (!customText) return;
+
+    // Get the current field value based on category
+    let currentValue = '';
+    let fieldName = '';
+    
+    if (category === 'payment') {
+      currentValue = paymentTerms || '';
+      fieldName = 'payment_terms';
+    } else if (category === 'delivery') {
+      currentValue = deliveryTerms || '';
+      fieldName = 'delivery_terms';
+    } else {
+      // For warranty and price, we'll add to notes
+      currentValue = notes || '';
+      fieldName = 'notes';
+    }
+
+    const newValue = currentValue ? `${currentValue}\n\n${customText}` : customText;
+
+    // Create a synthetic event to update the appropriate field
+    const syntheticEvent = {
+      target: {
+        name: fieldName,
+        value: newValue
+      }
+    } as React.ChangeEvent<HTMLTextAreaElement>;
+
+    onInputChange(syntheticEvent);
+
+    // Reset the custom input
+    setCustomTermInputs(prev => ({
+      ...prev,
+      [category]: { show: false, value: '' }
+    }));
+  };
+
   const renderDropdown = (category: 'payment' | 'delivery' | 'warranty' | 'price', title: string, placeholder: string) => (
     <div className="space-y-2">
       <Label>{title}</Label>
@@ -100,6 +146,61 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
               </div>
             </SelectItem>
           ))}
+          
+          {/* Custom term input section */}
+          <div className="border-t border-border mt-2 pt-2">
+            {!customTermInputs[category].show ? (
+              <div 
+                className="flex items-center gap-2 p-2 cursor-pointer hover:bg-accent/50 transition-colors rounded-sm"
+                onClick={() => setCustomTermInputs(prev => ({ ...prev, [category]: { ...prev[category], show: true } }))}
+              >
+                <Plus size={16} className="text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Yeni şart ekle</span>
+              </div>
+            ) : (
+              <div className="p-2 space-y-2">
+                <Input
+                  placeholder="Yeni şart yazın..."
+                  value={customTermInputs[category].value}
+                  onChange={(e) => setCustomTermInputs(prev => ({ 
+                    ...prev, 
+                    [category]: { ...prev[category], value: e.target.value } 
+                  }))}
+                  className="text-sm"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleAddCustomTerm(category);
+                    } else if (e.key === 'Escape') {
+                      setCustomTermInputs(prev => ({ 
+                        ...prev, 
+                        [category]: { show: false, value: '' } 
+                      }));
+                    }
+                  }}
+                />
+                <div className="flex gap-1">
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleAddCustomTerm(category)}
+                    className="h-7 px-2 text-xs"
+                  >
+                    Ekle
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setCustomTermInputs(prev => ({ 
+                      ...prev, 
+                      [category]: { show: false, value: '' } 
+                    }))}
+                    className="h-7 px-2 text-xs"
+                  >
+                    İptal
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </SelectContent>
       </Select>
     </div>
