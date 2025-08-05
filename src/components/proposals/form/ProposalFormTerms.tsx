@@ -51,14 +51,28 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
     const selectedTerm = PREDEFINED_TERMS[category].find(t => t.id === termId);
     if (!selectedTerm) return;
 
-    // Get current field value for "notes" field (we'll use notes for all selected terms)
-    const currentValue = notes || '';
+    // Get the current field value based on category
+    let currentValue = '';
+    let fieldName = '';
+    
+    if (category === 'payment') {
+      currentValue = paymentTerms || '';
+      fieldName = 'payment_terms';
+    } else if (category === 'delivery') {
+      currentValue = deliveryTerms || '';
+      fieldName = 'delivery_terms';
+    } else {
+      // For warranty and price, we'll add to notes
+      currentValue = notes || '';
+      fieldName = 'notes';
+    }
+
     const newValue = currentValue ? `${currentValue}\n\n${selectedTerm.text}` : selectedTerm.text;
 
-    // Create a synthetic event to update the notes field
+    // Create a synthetic event to update the appropriate field
     const syntheticEvent = {
       target: {
-        name: 'notes',
+        name: fieldName,
         value: newValue
       }
     } as React.ChangeEvent<HTMLTextAreaElement>;
@@ -78,10 +92,10 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
             <SelectItem 
               key={term.id} 
               value={term.id} 
-              className="cursor-pointer hover:bg-accent p-3"
+              className="cursor-pointer hover:bg-accent/50 focus:bg-accent/50 data-[highlighted]:bg-accent/50 p-3 transition-colors"
             >
               <div className="flex flex-col gap-1 w-full">
-                <span className="font-medium text-sm">{term.label}</span>
+                <span className="font-medium text-sm text-foreground">{term.label}</span>
                 <span className="text-xs text-muted-foreground leading-relaxed">{term.text}</span>
               </div>
             </SelectItem>
@@ -106,6 +120,33 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
           {renderDropdown('price', 'Fiyat', 'Fiyat koşulu seçin')}
         </div>
 
+        {/* Custom Terms Input */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="payment_terms">Ödeme Koşulları</Label>
+            <Textarea
+              id="payment_terms"
+              name="payment_terms"
+              value={paymentTerms || ""}
+              onChange={onInputChange}
+              placeholder="Seçilen ödeme koşulları burada görünecek"
+              className="min-h-[80px]"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="delivery_terms">Teslimat Koşulları</Label>
+            <Textarea
+              id="delivery_terms"
+              name="delivery_terms"
+              value={deliveryTerms || ""}
+              onChange={onInputChange}
+              placeholder="Seçilen teslimat koşulları burada görünecek"
+              className="min-h-[80px]"
+            />
+          </div>
+        </div>
+
         {/* Other Terms Input */}
         <div className="space-y-2">
           <Label htmlFor="notes">Diğer Şartlar</Label>
@@ -114,7 +155,7 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
             name="notes"
             value={notes || ""}
             onChange={onInputChange}
-            placeholder="Seçilen şartlar ve özel şartlar burada görünecek"
+            placeholder="Ekstra şartlar ve notlar buraya yazılabilir"
             className="min-h-[120px]"
           />
         </div>
