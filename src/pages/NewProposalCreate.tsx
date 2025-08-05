@@ -257,25 +257,9 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         notes: formData.notes
       };
 
-      // Import and use PDF generator with template support
-      const { ProposalPdfGenerator } = await import('@/utils/proposalPdfGenerator');
-      
-      // Load template design settings if template is specified
-      let designSettings = undefined;
-      if (templateId && templateId !== 'default') {
-        const { data: template } = await supabase
-          .from('proposal_templates')
-          .select('design_settings')
-          .eq('id', templateId)
-          .single();
-        
-        if (template?.design_settings) {
-          designSettings = template.design_settings;
-        }
-      }
-      
-      const generator = new ProposalPdfGenerator(designSettings);
-      await generator.generateProposalPdf(proposalData as any, templateId);
+      // Import and use React PDF generator
+      const { reactPdfGenerator } = await import('@/utils/reactPdfGenerator');
+      await reactPdfGenerator.generateProposalPdf(proposalData as any, templateId);
       toast.success(`PDF ${templateId ? 'şablon ile' : ''} oluşturuldu`);
     } catch (error) {
       console.error('PDF generation error:', error);

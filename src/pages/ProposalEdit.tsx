@@ -353,24 +353,8 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
     if (!proposal) return;
     
     try {
-      const { ProposalPdfGenerator } = await import('@/utils/proposalPdfGenerator');
-      
-      // Load template design settings if template is specified
-      let designSettings = undefined;
-      if (templateId && templateId !== 'default') {
-        const { data: template } = await supabase
-          .from('proposal_templates')
-          .select('design_settings')
-          .eq('id', templateId)
-          .single();
-        
-        if (template?.design_settings) {
-          designSettings = template.design_settings;
-        }
-      }
-      
-      const generator = new ProposalPdfGenerator(designSettings);
-      await generator.generateProposalPdf(proposal, templateId);
+      const { reactPdfGenerator } = await import('@/utils/reactPdfGenerator');
+      await reactPdfGenerator.generateProposalPdf(proposal, templateId);
       toast.success(`PDF ${templateId ? 'seçilen şablonla' : ''} yazdırma için hazırlandı`);
     } catch (error) {
       console.error('PDF oluşturma hatası:', error);
