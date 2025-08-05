@@ -1824,7 +1824,48 @@ export type Database = {
         }
         Relationships: []
       }
-
+      n8n_workflow_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          execution_id: string | null
+          execution_time_ms: number | null
+          id: string
+          result_data: Json | null
+          status: string
+          trigger_data: Json | null
+          updated_at: string | null
+          user_id: string | null
+          workflow_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          execution_id?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          result_data?: Json | null
+          status: string
+          trigger_data?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+          workflow_name: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          execution_id?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          result_data?: Json | null
+          status?: string
+          trigger_data?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+          workflow_name?: string
+        }
+        Relationships: []
+      }
       nilvera_auth: {
         Row: {
           access_token: string
@@ -2088,6 +2129,77 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pdf_template_elements: {
+        Row: {
+          created_at: string | null
+          element_config: Json
+          element_type: string
+          id: string
+          sort_order: number | null
+          template_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          element_config: Json
+          element_type: string
+          id?: string
+          sort_order?: number | null
+          template_id: string
+        }
+        Update: {
+          created_at?: string | null
+          element_config?: Json
+          element_type?: string
+          id?: string
+          sort_order?: number | null
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pdf_template_elements_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "pdf_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pdf_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          name: string
+          template_data: Json
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name: string
+          template_data: Json
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name?: string
+          template_data?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       product_categories: {
         Row: {
@@ -3079,6 +3191,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_template_preferences: {
+        Row: {
+          created_at: string | null
+          default_template_id: string | null
+          id: string
+          preferences: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          default_template_id?: string | null
+          id?: string
+          preferences?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          default_template_id?: string | null
+          id?: string
+          preferences?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_template_preferences_default_template_id_fkey"
+            columns: ["default_template_id"]
+            isOneToOne: false
+            referencedRelation: "pdf_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       veriban_incoming_invoices: {
         Row: {
           allowance_total_amount: number | null
@@ -3381,7 +3528,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
-
+      trigger_n8n_task_reminders: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       account_type: "vadesiz" | "vadeli" | "kredi" | "pos"
