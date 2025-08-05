@@ -361,7 +361,14 @@ export class ReactPdfGenerator {
       // Load company settings
       const companySettings = await this.loadCompanySettings();
       
-      // Generate PDF document
+      // Load template if specified (currently using default standard template)
+      console.log('React PDF Generator - Using template ID:', templateId);
+      console.log('React PDF Generator - Generating PDF for proposal:', proposal.number);
+      
+      // TODO: Load and apply template design settings based on templateId
+      // For now, using hardcoded standard template format
+      
+      // Generate PDF document with standard proposal format
       const doc = <ProposalPdf proposal={proposal} companySettings={companySettings} />;
       const pdfBlob = await pdf(doc).toBlob();
       
