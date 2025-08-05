@@ -276,14 +276,6 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
                       size="sm"
                       className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-destructive/20 hover:text-destructive"
                       type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
                     >
                       <Trash2 size={12} />
                     </Button>
@@ -298,7 +290,11 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
                     <AlertDialogFooter>
                       <AlertDialogCancel>İptal</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() => handleDeleteCustomTerm(category, term.id)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDeleteCustomTerm(category, term.id);
+                        }}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
                         Sil
