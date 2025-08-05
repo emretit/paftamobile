@@ -13,6 +13,9 @@ interface CompanyInfo {
   email?: string;
   tax_number?: string;
   logo_url?: string;
+  id?: string;
+  default_currency?: string;
+  email_settings?: any;
 }
 
 export class ReactPdfGenerator {
@@ -46,19 +49,21 @@ export class ReactPdfGenerator {
 
     try {
       // Generate PDF using React-PDF
+      const templateProps = { 
+        proposal, 
+        companySettings: this.companyInfo || {
+          company_name: 'Şirket Adı',
+          address: '',
+          phone: '',
+          email: '',
+          tax_number: '',
+          logo_url: ''
+        },
+        designSettings
+      };
+
       const pdfDocument = pdf(
-        React.createElement(TemplateComponent, { 
-          proposal, 
-          companySettings: this.companyInfo || {
-            company_name: 'Şirket Adı',
-            address: '',
-            phone: '',
-            email: '',
-            tax_number: '',
-            logo_url: ''
-          },
-          designSettings
-        })
+        React.createElement(TemplateComponent, templateProps) as any
       );
 
       // Create blob and open in new tab for printing
@@ -137,3 +142,6 @@ export class ReactPdfGenerator {
     return null;
   }
 }
+
+// Export an instance for easy importing
+export const reactPdfGenerator = new ReactPdfGenerator();

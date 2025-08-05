@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
 
 interface StandardTemplateProps {
   proposal: Proposal;
-  companySettings: CompanySettings;
+  companySettings: any;
   designSettings?: TemplateDesignSettings;
 }
 

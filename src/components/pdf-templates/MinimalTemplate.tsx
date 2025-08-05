@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
 
 interface MinimalTemplateProps {
   proposal: Proposal;
-  companySettings: CompanySettings;
+  companySettings: any;
 }
 
 export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ proposal, companySettings }) => {

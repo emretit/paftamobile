@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
 
 interface ModernTemplateProps {
   proposal: Proposal;
-  companySettings: CompanySettings;
+  companySettings: any;
 }
 
 export const ModernTemplate: React.FC<ModernTemplateProps> = ({ proposal, companySettings }) => {

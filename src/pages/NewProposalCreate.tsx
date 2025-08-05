@@ -258,8 +258,9 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
       };
 
       // Import and use React PDF generator
-      const { reactPdfGenerator } = await import('@/utils/reactPdfGenerator');
-      await reactPdfGenerator.generateProposalPdf(proposalData as any, templateId);
+      const { ReactPdfGenerator } = await import('@/utils/reactPdfGenerator');
+      const generator = new ReactPdfGenerator();
+      await generator.generateProposalPdf(proposalData as any, templateId);
       toast.success(`PDF ${templateId ? 'şablon ile' : ''} oluşturuldu`);
     } catch (error) {
       console.error('PDF generation error:', error);
