@@ -466,11 +466,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         </div>
         
         <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={handlePreview} className="gap-2">
-            <Eye className="h-4 w-4" />
-            Önizleme
-          </Button>
-          <PdfDownloadDropdown onDownloadWithTemplate={handleDownloadPdf} />
+          <PdfDownloadDropdown onDownloadWithTemplate={handleDownloadPdf} proposal={proposal} />
           <Button 
             variant="outline" 
             onClick={() => handleSaveChanges(proposal.status)}
