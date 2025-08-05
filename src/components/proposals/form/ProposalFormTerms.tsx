@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Check, Plus, X } from "lucide-react";
+import { Check, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -261,21 +261,19 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
                   <span className="text-xs text-muted-foreground leading-relaxed whitespace-normal break-words">{term.text}</span>
                 </div>
                 
-                {/* Delete button for custom terms only */}
-                {term.is_default === false && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 h-6 w-6 p-0 shrink-0 hover:bg-destructive/20 hover:text-destructive"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleDeleteCustomTerm(category, term.id);
-                    }}
-                  >
-                    <X size={12} />
-                  </Button>
-                )}
+                {/* Delete button for all terms */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 h-6 w-6 p-0 shrink-0 hover:bg-destructive/20 hover:text-destructive"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDeleteCustomTerm(category, term.id);
+                  }}
+                >
+                  <Trash2 size={12} />
+                </Button>
               </div>
             </SelectItem>
           ))}
