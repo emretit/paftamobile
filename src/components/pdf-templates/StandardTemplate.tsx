@@ -2,6 +2,7 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { Proposal } from '@/types/proposal';
 import { CompanySettings } from '@/hooks/useCompanySettings';
+import { TemplateDesignSettings } from '@/types/proposal-template';
 
 const styles = StyleSheet.create({
   page: {
@@ -175,9 +176,10 @@ const styles = StyleSheet.create({
 interface StandardTemplateProps {
   proposal: Proposal;
   companySettings: CompanySettings;
+  designSettings?: TemplateDesignSettings;
 }
 
-export const StandardTemplate: React.FC<StandardTemplateProps> = ({ proposal, companySettings }) => {
+export const StandardTemplate: React.FC<StandardTemplateProps> = ({ proposal, companySettings, designSettings }) => {
   const formatCurrency = (amount: number, currency: string = 'TRY') => {
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',

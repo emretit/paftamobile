@@ -353,8 +353,9 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
     if (!proposal) return;
     
     try {
-      const { reactPdfGenerator } = await import('@/utils/reactPdfGenerator');
-      await reactPdfGenerator.generateProposalPdf(proposal, templateId);
+      const { ReactPdfGenerator } = await import('@/utils/reactPdfGenerator');
+      const generator = new ReactPdfGenerator();
+      await generator.generateProposalPdf(proposal, templateId);
       toast.success(`PDF ${templateId ? 'seçilen şablonla' : ''} yazdırma için hazırlandı`);
     } catch (error) {
       console.error('PDF oluşturma hatası:', error);
