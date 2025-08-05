@@ -261,7 +261,13 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
               value={term.id} 
               className="group cursor-pointer hover:bg-muted/50 focus:bg-muted/50 data-[highlighted]:bg-muted/50 p-0 transition-colors"
             >
-              <div className="relative w-full p-3">
+              <div className="relative w-full p-3" onClick={(e) => {
+                // Allow normal selection when clicking on the main area
+                if ((e.target as HTMLElement).closest('button')) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              }}>
                 <div className="flex flex-col gap-1 pr-8">
                   <span className="font-medium text-sm text-foreground">{term.label}</span>
                   <span className="text-xs text-muted-foreground leading-relaxed whitespace-normal break-words">{term.text}</span>
@@ -278,11 +284,15 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
                         e.preventDefault();
                         e.stopPropagation();
                       }}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
                     >
                       <Trash2 size={12} />
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
+                  <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Şartı Sil</AlertDialogTitle>
                       <AlertDialogDescription>
