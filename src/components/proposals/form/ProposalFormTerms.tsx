@@ -330,32 +330,6 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
           {renderDropdown('price', 'Fiyat', 'Fiyat koşulu seçin')}
         </div>
 
-        {/* Custom Terms Input */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="payment_terms">Ödeme Koşulları</Label>
-            <Textarea
-              id="payment_terms"
-              name="payment_terms"
-              value={paymentTerms || ""}
-              onChange={onInputChange}
-              placeholder="Seçilen ödeme koşulları burada görünecek"
-              className="min-h-[80px]"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="delivery_terms">Teslimat Koşulları</Label>
-            <Textarea
-              id="delivery_terms"
-              name="delivery_terms"
-              value={deliveryTerms || ""}
-              onChange={onInputChange}
-              placeholder="Seçilen teslimat koşulları burada görünecek"
-              className="min-h-[80px]"
-            />
-          </div>
-        </div>
 
         {/* Other Terms Input */}
         <div className="space-y-2">
