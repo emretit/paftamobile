@@ -5,7 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Check, Plus } from "lucide-react";
 
 interface ProposalTermsProps {
   paymentTerms?: string;
@@ -50,7 +51,7 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
   const [selectedWarrantyTerms, setSelectedWarrantyTerms] = useState<string[]>([]);
   const [selectedPriceTerms, setSelectedPriceTerms] = useState<string[]>([]);
 
-  const handleTermSelect = (category: 'payment' | 'delivery' | 'warranty' | 'price', termId: string, termText: string) => {
+  const handleTermSelect = (category: 'payment' | 'delivery' | 'warranty' | 'price', termId: string) => {
     const setters = {
       payment: setSelectedPaymentTerms,
       delivery: setSelectedDeliveryTerms,
@@ -66,60 +67,62 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
     };
 
     const currentTerms = getters[category];
-    const isSelected = currentTerms.includes(termId);
-    
-    let newTerms: string[];
-    if (isSelected) {
-      newTerms = currentTerms.filter(id => id !== termId);
-    } else {
-      newTerms = [...currentTerms, termId];
-    }
-    
+    const newTerms = [...currentTerms, termId];
     setters[category](newTerms);
 
-    // Build the combined text for the appropriate field
-    const selectedTexts = newTerms.map(id => {
-      const term = PREDEFINED_TERMS[category].find(t => t.id === id);
-      return term ? term.text : '';
-    }).filter(Boolean);
+    // Find the selected term text
+    const selectedTerm = PREDEFINED_TERMS[category].find(t => t.id === termId);
+    if (!selectedTerm) return;
+
+    // Get current field value
+    const currentValue = category === 'payment' ? paymentTerms || '' : deliveryTerms || '';
+    const newValue = currentValue ? `${currentValue}\n\n${selectedTerm.text}` : selectedTerm.text;
 
     // Create a synthetic event to update the form
     const syntheticEvent = {
       target: {
         name: category === 'payment' ? 'payment_terms' : 'delivery_terms',
-        value: selectedTexts.join('\n\n')
+        value: newValue
       }
     } as React.ChangeEvent<HTMLTextAreaElement>;
 
     onInputChange(syntheticEvent);
   };
 
-  const renderTermCategory = (category: 'payment' | 'delivery' | 'warranty' | 'price', title: string, selectedTerms: string[]) => (
-    <Card className="p-4">
-      <h4 className="font-medium mb-3">{title}</h4>
-      <div className="space-y-2">
-        {PREDEFINED_TERMS[category].map((term) => {
-          const isSelected = selectedTerms.includes(term.id);
-          return (
-            <Button
-              key={term.id}
-              variant={isSelected ? "default" : "outline"}
-              size="sm"
-              className={`w-full justify-start text-left h-auto p-3 ${isSelected ? 'bg-primary text-primary-foreground' : ''}`}
-              onClick={() => handleTermSelect(category, term.id, term.text)}
-            >
-              <div className="flex items-start gap-2 w-full">
-                <Check className={`h-4 w-4 mt-0.5 flex-shrink-0 ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
-                <div className="flex flex-col gap-1 text-left">
+  const renderDropdown = (category: 'payment' | 'delivery' | 'warranty' | 'price', title: string, placeholder: string) => (
+    <div className="space-y-2">
+      <Label>{title}</Label>
+      <div className="flex gap-2">
+        <Select onValueChange={(value) => handleTermSelect(category, value)}>
+          <SelectTrigger className="flex-1">
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+          <SelectContent className="bg-background border shadow-lg z-50">
+            {PREDEFINED_TERMS[category].map((term) => (
+              <SelectItem key={term.id} value={term.id} className="cursor-pointer hover:bg-accent">
+                <div className="flex flex-col gap-1">
                   <span className="font-medium">{term.label}</span>
-                  <span className="text-xs opacity-80 font-normal">{term.text}</span>
+                  <span className="text-xs text-muted-foreground">{term.text}</span>
                 </div>
-              </div>
-            </Button>
-          );
-        })}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => {
+            // Reset the dropdown selection
+            const selectElement = document.querySelector(`[data-category="${category}"] button[role="combobox"]`);
+            if (selectElement) {
+              (selectElement as HTMLElement).click();
+            }
+          }}
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
       </div>
-    </Card>
+    </div>
   );
 
   return (
@@ -131,10 +134,18 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
       <CardContent className="p-0 space-y-6">
         {/* Predefined Terms Selection */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {renderTermCategory('payment', 'Peşin Ödeme', selectedPaymentTerms)}
-          {renderTermCategory('delivery', 'Teslimat', selectedDeliveryTerms)}
-          {renderTermCategory('warranty', 'Garanti', selectedWarrantyTerms)}
-          {renderTermCategory('price', 'Fiyat', selectedPriceTerms)}
+          <div data-category="payment">
+            {renderDropdown('payment', 'Peşin Ödeme', 'Ödeme koşulu seçin')}
+          </div>
+          <div data-category="delivery">
+            {renderDropdown('delivery', 'Teslimat', 'Teslimat koşulu seçin')}
+          </div>
+          <div data-category="warranty">
+            {renderDropdown('warranty', 'Garanti', 'Garanti koşulu seçin')}
+          </div>
+          <div data-category="price">
+            {renderDropdown('price', 'Fiyat', 'Fiyat koşulu seçin')}
+          </div>
         </div>
 
         {/* Custom Terms Input */}
