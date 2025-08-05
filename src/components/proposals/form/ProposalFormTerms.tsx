@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,8 +18,14 @@ interface ProposalTermsProps {
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
 }
 
+interface Term {
+  id: string;
+  label: string;
+  text: string;
+}
+
 // Predefined terms based on the image
-const PREDEFINED_TERMS = {
+const INITIAL_TERMS = {
   payment: [
     { id: "pesin", label: "Peşin Ödeme", text: "%100 peşin ödeme yapılacaktır." },
     { id: "vade30", label: "30-70 Avans - Vadeli", text: "%30 avans, kalan %70 teslimde ödenecektir." },
@@ -49,6 +55,14 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
   notes,
   onInputChange
 }) => {
+  // State to hold all available terms (predefined + custom from DB)
+  const [availableTerms, setAvailableTerms] = useState<{[key: string]: Term[]}>({
+    payment: INITIAL_TERMS.payment,
+    delivery: INITIAL_TERMS.delivery,
+    warranty: INITIAL_TERMS.warranty,
+    price: INITIAL_TERMS.price
+  });
+
   const [customTermInputs, setCustomTermInputs] = useState<{[key: string]: { show: boolean, label: string, text: string }}>({
     payment: { show: false, label: '', text: '' },
     delivery: { show: false, label: '', text: '' },
@@ -57,9 +71,52 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
   });
 
   const [isLoading, setIsLoading] = useState(false);
+
+  // Load custom terms from database on component mount
+  useEffect(() => {
+    loadCustomTerms();
+  }, []);
+
+  const loadCustomTerms = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('proposal_terms')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+
+      if (data) {
+        // Group custom terms by category and add to existing terms
+        const customTermsByCategory = data.reduce((acc, term) => {
+          if (!acc[term.category]) {
+            acc[term.category] = [];
+          }
+          acc[term.category].push({
+            id: term.id,
+            label: term.label,
+            text: term.text
+          });
+          return acc;
+        }, {} as {[key: string]: Term[]});
+
+        // Merge with initial terms
+        setAvailableTerms(prev => ({
+          payment: [...INITIAL_TERMS.payment, ...(customTermsByCategory.payment || [])],
+          delivery: [...INITIAL_TERMS.delivery, ...(customTermsByCategory.delivery || [])],
+          warranty: [...INITIAL_TERMS.warranty, ...(customTermsByCategory.warranty || [])],
+          price: [...INITIAL_TERMS.price, ...(customTermsByCategory.price || [])]
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading custom terms:', error);
+    }
+  };
+
   const handleTermSelect = (category: 'payment' | 'delivery' | 'warranty' | 'price', termId: string) => {
     // Find the selected term text
-    const selectedTerm = PREDEFINED_TERMS[category].find(t => t.id === termId);
+    const selectedTerm = availableTerms[category].find(t => t.id === termId);
     if (!selectedTerm) return;
 
     // Get the current field value based on category
@@ -95,8 +152,6 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
     const customLabel = customTermInputs[category].label.trim();
     const customText = customTermInputs[category].text.trim();
     
-    console.log('Adding custom term:', { category, customLabel, customText });
-    
     if (!customLabel || !customText) {
       toast.error("Lütfen hem başlık hem de açıklama giriniz.");
       return;
@@ -106,7 +161,7 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
 
     try {
       // Save to database
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('proposal_terms')
         .insert({
           category: category,
@@ -115,48 +170,23 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
           is_default: false,
           is_active: true,
           sort_order: 999 // Put custom terms at the end
-        });
+        })
+        .select()
+        .single();
 
-      if (error) {
-        console.error('Database error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Custom term saved to database successfully');
+      // Add the new term to available terms
+      const newTerm: Term = {
+        id: data.id,
+        label: customLabel,
+        text: customText
+      };
 
-      // Get the current field value based on category
-      let currentValue = '';
-      let fieldName = '';
-      
-      if (category === 'payment') {
-        currentValue = paymentTerms || '';
-        fieldName = 'payment_terms';
-      } else if (category === 'delivery') {
-        currentValue = deliveryTerms || '';
-        fieldName = 'delivery_terms';
-      } else {
-        // For warranty and price, we'll add to notes
-        currentValue = notes || '';
-        fieldName = 'notes';
-      }
-
-      console.log('Current field values:', { category, fieldName, currentValue });
-
-      const newValue = currentValue ? `${currentValue}\n\n${customText}` : customText;
-      
-      console.log('New value to set:', newValue);
-
-      // Create a synthetic event to update the appropriate field
-      const syntheticEvent = {
-        target: {
-          name: fieldName,
-          value: newValue
-        }
-      } as React.ChangeEvent<HTMLTextAreaElement>;
-
-      console.log('Calling onInputChange with:', syntheticEvent);
-      
-      onInputChange(syntheticEvent);
+      setAvailableTerms(prev => ({
+        ...prev,
+        [category]: [...prev[category], newTerm]
+      }));
 
       // Reset the custom input
       setCustomTermInputs(prev => ({
@@ -164,7 +194,7 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
         [category]: { show: false, label: '', text: '' }
       }));
 
-      toast.success("Yeni şart başarıyla eklendi!");
+      toast.success("Yeni şart başarıyla eklendi! Şimdi dropdown'dan seçebilirsiniz.");
 
     } catch (error) {
       console.error('Error saving custom term:', error);
@@ -193,7 +223,7 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent className="bg-background border border-border shadow-xl z-[100] max-h-[300px] overflow-y-auto">
-          {PREDEFINED_TERMS[category].map((term) => (
+          {availableTerms[category].map((term) => (
             <SelectItem 
               key={term.id} 
               value={term.id} 
@@ -273,7 +303,7 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
                 className="h-8 px-3 text-xs"
               >
                 <Plus size={14} className="mr-1" />
-                {isLoading ? "Ekleniyor..." : "Ekle"}
+                {isLoading ? "Ekleniyor..." : "Dropdown'a Ekle"}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
