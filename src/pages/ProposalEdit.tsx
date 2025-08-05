@@ -349,6 +349,21 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
     toast.success("Yazdırma işlemi başlatıldı");
   };
 
+  const handleTestReactPdf = async () => {
+    try {
+      const { testReactPdf } = await import('@/utils/testReactPdf');
+      const success = await testReactPdf();
+      if (success) {
+        toast.success("React-PDF test başarılı!");
+      } else {
+        toast.error("React-PDF test başarısız!");
+      }
+    } catch (error) {
+      console.error('React-PDF test hatası:', error);
+      toast.error("React-PDF test hatası");
+    }
+  };
+
   const handleDownloadPdf = async (templateId?: string) => {
     if (!proposal) return;
     
@@ -467,6 +482,14 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         </div>
         
         <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleTestReactPdf}
+            className="text-xs"
+          >
+            Test React-PDF
+          </Button>
           <PdfDownloadDropdown onDownloadWithTemplate={handleDownloadPdf} proposal={proposal} />
           <Button 
             variant="outline" 
