@@ -16,6 +16,22 @@ const ProposalTemplateSelect: React.FC = () => {
       templateType: "standard",
       templateFeatures: ["Temel bilgiler", "Ürün listesi", "Ödeme koşulları"],
       items: []
+    },
+    {
+      id: "2",
+      name: "Servis Teklifi",
+      description: "Teknik servis hizmetleri için özelleştirilmiş teklif şablonu",
+      templateType: "service",
+      templateFeatures: ["Servis detayları", "İşçilik", "Parçalar", "Garanti bilgileri"],
+      items: []
+    },
+    {
+      id: "3",
+      name: "Kurumsal Teklif",
+      description: "Kurumsal müşteriler için kapsamlı teklif şablonu",
+      templateType: "corporate",
+      templateFeatures: ["Detaylı ürün açıklamaları", "Kurumsal şartlar", "Destek detayları"],
+      items: []
     }
   ];
 
