@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -22,30 +22,31 @@ interface Term {
   id: string;
   label: string;
   text: string;
+  is_default?: boolean;
 }
 
 // Predefined terms based on the image
 const INITIAL_TERMS = {
   payment: [
-    { id: "pesin", label: "Peşin Ödeme", text: "%100 peşin ödeme yapılacaktır." },
-    { id: "vade30", label: "30-70 Avans - Vadeli", text: "%30 avans, kalan %70 teslimde ödenecektir." },
-    { id: "vade50", label: "50-50 Avans - Vadeli", text: "%50 avans, kalan %50 teslimde ödenecektir." },
-    { id: "vade30gun", label: "30 Gün Vadeli", text: "Fatura tarihinden itibaren 30 gün vadeli ödenecektir." }
+    { id: "pesin", label: "Peşin Ödeme", text: "%100 peşin ödeme yapılacaktır.", is_default: true },
+    { id: "vade30", label: "30-70 Avans - Vadeli", text: "%30 avans, kalan %70 teslimde ödenecektir.", is_default: true },
+    { id: "vade50", label: "50-50 Avans - Vadeli", text: "%50 avans, kalan %50 teslimde ödenecektir.", is_default: true },
+    { id: "vade30gun", label: "30 Gün Vadeli", text: "Fatura tarihinden itibaren 30 gün vadeli ödenecektir.", is_default: true }
   ],
   delivery: [
-    { id: "hemen", label: "Teslimat", text: "Sipariş tarihinden itibaren 7-10 iş günü içinde teslimat yapılacaktır." },
-    { id: "standart", label: "Standart Teslimat", text: "Sipariş tarihinden itibaren 15-20 iş günü içinde teslimat yapılacaktır." },
-    { id: "hizli", label: "Hızlı Teslimat", text: "Sipariş tarihinden itibaren 3-5 iş günü içinde teslimat yapılacaktır." }
+    { id: "hemen", label: "Teslimat", text: "Sipariş tarihinden itibaren 7-10 iş günü içinde teslimat yapılacaktır.", is_default: true },
+    { id: "standart", label: "Standart Teslimat", text: "Sipariş tarihinden itibaren 15-20 iş günü içinde teslimat yapılacaktır.", is_default: true },
+    { id: "hizli", label: "Hızlı Teslimat", text: "Sipariş tarihinden itibaren 3-5 iş günü içinde teslimat yapılacaktır.", is_default: true }
   ],
   warranty: [
-    { id: "garanti1", label: "Garanti", text: "Ürünlerimiz 1 yıl garantilidir." },
-    { id: "garanti2", label: "2 Yıl Garanti", text: "Ürünlerimiz 2 yıl garantilidir." },
-    { id: "garanti3", label: "Uzatılmış Garanti", text: "Ürünlerimiz 3 yıl garantilidir." }
+    { id: "garanti1", label: "Garanti", text: "Ürünlerimiz 1 yıl garantilidir.", is_default: true },
+    { id: "garanti2", label: "2 Yıl Garanti", text: "Ürünlerimiz 2 yıl garantilidir.", is_default: true },
+    { id: "garanti3", label: "Uzatılmış Garanti", text: "Ürünlerimiz 3 yıl garantilidir.", is_default: true }
   ],
   price: [
-    { id: "fiyat", label: "Fiyat", text: "Belirtilen fiyatlar KDV hariçtir." },
-    { id: "fiyatdahil", label: "KDV Dahil Fiyat", text: "Belirtilen fiyatlar KDV dahildir." },
-    { id: "fiyatgecerli", label: "Fiyat Geçerliliği", text: "Fiyatlar 30 gün geçerlidir." }
+    { id: "fiyat", label: "Fiyat", text: "Belirtilen fiyatlar KDV hariçtir.", is_default: true },
+    { id: "fiyatdahil", label: "KDV Dahil Fiyat", text: "Belirtilen fiyatlar KDV dahildir.", is_default: true },
+    { id: "fiyatgecerli", label: "Fiyat Geçerliliği", text: "Fiyatlar 30 gün geçerlidir.", is_default: true }
   ]
 };
 
@@ -96,7 +97,8 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
           acc[term.category].push({
             id: term.id,
             label: term.label,
-            text: term.text
+            text: term.text,
+            is_default: false
           });
           return acc;
         }, {} as {[key: string]: Term[]});
@@ -180,7 +182,8 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
       const newTerm: Term = {
         id: data.id,
         label: customLabel,
-        text: customText
+        text: customText,
+        is_default: false
       };
 
       setAvailableTerms(prev => ({
@@ -201,6 +204,29 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
       toast.error("Şart eklenirken bir hata oluştu: " + (error as Error).message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteCustomTerm = async (category: 'payment' | 'delivery' | 'warranty' | 'price', termId: string) => {
+    try {
+      const { error } = await supabase
+        .from('proposal_terms')
+        .delete()
+        .eq('id', termId);
+
+      if (error) throw error;
+
+      // Remove from available terms
+      setAvailableTerms(prev => ({
+        ...prev,
+        [category]: prev[category].filter(term => term.id !== termId)
+      }));
+
+      toast.success("Şart başarıyla silindi!");
+
+    } catch (error) {
+      console.error('Error deleting custom term:', error);
+      toast.error("Şart silinirken bir hata oluştu: " + (error as Error).message);
     }
   };
 
@@ -227,17 +253,35 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
             <SelectItem 
               key={term.id} 
               value={term.id} 
-              className="cursor-pointer hover:bg-accent focus:bg-accent data-[highlighted]:bg-accent p-3 transition-colors"
+              className="group cursor-pointer hover:bg-muted/50 focus:bg-muted/50 data-[highlighted]:bg-muted/50 p-0 transition-colors"
             >
-              <div className="flex flex-col gap-1 w-full">
-                <span className="font-medium text-sm text-foreground">{term.label}</span>
-                <span className="text-xs text-muted-foreground leading-relaxed whitespace-normal max-w-[250px]">{term.text}</span>
+              <div className="flex items-start justify-between w-full p-3">
+                <div className="flex flex-col gap-1 flex-1 min-w-0">
+                  <span className="font-medium text-sm text-foreground">{term.label}</span>
+                  <span className="text-xs text-muted-foreground leading-relaxed whitespace-normal break-words">{term.text}</span>
+                </div>
+                
+                {/* Delete button for custom terms only */}
+                {term.is_default === false && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 h-6 w-6 p-0 shrink-0 hover:bg-destructive/20 hover:text-destructive"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDeleteCustomTerm(category, term.id);
+                    }}
+                  >
+                    <X size={12} />
+                  </Button>
+                )}
               </div>
             </SelectItem>
           ))}
           
           {/* Add custom option */}
-          <SelectItem value="add_custom" className="cursor-pointer hover:bg-accent focus:bg-accent data-[highlighted]:bg-accent p-3 border-t border-border mt-1">
+          <SelectItem value="add_custom" className="cursor-pointer hover:bg-primary/10 focus:bg-primary/10 data-[highlighted]:bg-primary/10 p-3 border-t border-border mt-1">
             <div className="flex items-center gap-2">
               <Plus size={16} className="text-primary" />
               <span className="text-sm font-medium text-primary">Yeni şart ekle</span>
