@@ -8,6 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Check, Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ProposalTermsProps {
   paymentTerms?: string;
@@ -47,12 +49,14 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
   notes,
   onInputChange
 }) => {
-  const [customTermInputs, setCustomTermInputs] = useState<{[key: string]: { show: boolean, value: string }}>({
-    payment: { show: false, value: '' },
-    delivery: { show: false, value: '' },
-    warranty: { show: false, value: '' },
-    price: { show: false, value: '' }
+  const [customTermInputs, setCustomTermInputs] = useState<{[key: string]: { show: boolean, label: string, text: string }}>({
+    payment: { show: false, label: '', text: '' },
+    delivery: { show: false, label: '', text: '' },
+    warranty: { show: false, label: '', text: '' },
+    price: { show: false, label: '', text: '' }
   });
+
+  const [isLoading, setIsLoading] = useState(false);
   const handleTermSelect = (category: 'payment' | 'delivery' | 'warranty' | 'price', termId: string) => {
     // Find the selected term text
     const selectedTerm = PREDEFINED_TERMS[category].find(t => t.id === termId);
@@ -87,43 +91,74 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
     onInputChange(syntheticEvent);
   };
 
-  const handleAddCustomTerm = (category: 'payment' | 'delivery' | 'warranty' | 'price') => {
-    const customText = customTermInputs[category].value.trim();
-    if (!customText) return;
-
-    // Get the current field value based on category
-    let currentValue = '';
-    let fieldName = '';
+  const handleAddCustomTerm = async (category: 'payment' | 'delivery' | 'warranty' | 'price') => {
+    const customLabel = customTermInputs[category].label.trim();
+    const customText = customTermInputs[category].text.trim();
     
-    if (category === 'payment') {
-      currentValue = paymentTerms || '';
-      fieldName = 'payment_terms';
-    } else if (category === 'delivery') {
-      currentValue = deliveryTerms || '';
-      fieldName = 'delivery_terms';
-    } else {
-      // For warranty and price, we'll add to notes
-      currentValue = notes || '';
-      fieldName = 'notes';
+    if (!customLabel || !customText) {
+      toast.error("Lütfen hem başlık hem de açıklama giriniz.");
+      return;
     }
 
-    const newValue = currentValue ? `${currentValue}\n\n${customText}` : customText;
+    setIsLoading(true);
 
-    // Create a synthetic event to update the appropriate field
-    const syntheticEvent = {
-      target: {
-        name: fieldName,
-        value: newValue
+    try {
+      // Save to database
+      const { error } = await supabase
+        .from('proposal_terms')
+        .insert({
+          category: category,
+          label: customLabel,
+          text: customText,
+          is_default: false,
+          is_active: true,
+          sort_order: 999 // Put custom terms at the end
+        });
+
+      if (error) throw error;
+
+      // Get the current field value based on category
+      let currentValue = '';
+      let fieldName = '';
+      
+      if (category === 'payment') {
+        currentValue = paymentTerms || '';
+        fieldName = 'payment_terms';
+      } else if (category === 'delivery') {
+        currentValue = deliveryTerms || '';
+        fieldName = 'delivery_terms';
+      } else {
+        // For warranty and price, we'll add to notes
+        currentValue = notes || '';
+        fieldName = 'notes';
       }
-    } as React.ChangeEvent<HTMLTextAreaElement>;
 
-    onInputChange(syntheticEvent);
+      const newValue = currentValue ? `${currentValue}\n\n${customText}` : customText;
 
-    // Reset the custom input
-    setCustomTermInputs(prev => ({
-      ...prev,
-      [category]: { show: false, value: '' }
-    }));
+      // Create a synthetic event to update the appropriate field
+      const syntheticEvent = {
+        target: {
+          name: fieldName,
+          value: newValue
+        }
+      } as React.ChangeEvent<HTMLTextAreaElement>;
+
+      onInputChange(syntheticEvent);
+
+      // Reset the custom input
+      setCustomTermInputs(prev => ({
+        ...prev,
+        [category]: { show: false, label: '', text: '' }
+      }));
+
+      toast.success("Yeni şart başarıyla eklendi!");
+
+    } catch (error) {
+      console.error('Error saving custom term:', error);
+      toast.error("Şart eklenirken bir hata oluştu.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderDropdown = (category: 'payment' | 'delivery' | 'warranty' | 'price', title: string, placeholder: string) => (
@@ -160,20 +195,29 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
             ) : (
               <div className="p-2 space-y-2">
                 <Input
-                  placeholder="Yeni şart yazın..."
-                  value={customTermInputs[category].value}
+                  placeholder="Şart başlığı..."
+                  value={customTermInputs[category].label}
                   onChange={(e) => setCustomTermInputs(prev => ({ 
                     ...prev, 
-                    [category]: { ...prev[category], value: e.target.value } 
+                    [category]: { ...prev[category], label: e.target.value } 
                   }))}
                   className="text-sm"
+                />
+                <Textarea
+                  placeholder="Şart açıklaması..."
+                  value={customTermInputs[category].text}
+                  onChange={(e) => setCustomTermInputs(prev => ({ 
+                    ...prev, 
+                    [category]: { ...prev[category], text: e.target.value } 
+                  }))}
+                  className="text-sm min-h-[60px]"
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === 'Enter' && e.ctrlKey) {
                       handleAddCustomTerm(category);
                     } else if (e.key === 'Escape') {
                       setCustomTermInputs(prev => ({ 
                         ...prev, 
-                        [category]: { show: false, value: '' } 
+                        [category]: { show: false, label: '', text: '' } 
                       }));
                     }
                   }}
@@ -182,16 +226,17 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
                   <Button 
                     size="sm" 
                     onClick={() => handleAddCustomTerm(category)}
+                    disabled={isLoading}
                     className="h-7 px-2 text-xs"
                   >
-                    Ekle
+                    {isLoading ? "Ekleniyor..." : "Ekle"}
                   </Button>
                   <Button 
                     size="sm" 
                     variant="outline" 
                     onClick={() => setCustomTermInputs(prev => ({ 
                       ...prev, 
-                      [category]: { show: false, value: '' } 
+                      [category]: { show: false, label: '', text: '' } 
                     }))}
                     className="h-7 px-2 text-xs"
                   >
