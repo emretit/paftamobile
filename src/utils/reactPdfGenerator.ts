@@ -1,3 +1,4 @@
+import React from 'react';
 import { pdf } from '@react-pdf/renderer';
 import { StandardTemplate } from '@/components/pdf-templates/StandardTemplate';
 import { ModernTemplate } from '@/components/pdf-templates/ModernTemplate';
@@ -46,7 +47,7 @@ export class ReactPdfGenerator {
     try {
       // Generate PDF using React-PDF
       const pdfDocument = pdf(
-        TemplateComponent({ 
+        React.createElement(TemplateComponent, { 
           proposal, 
           companySettings: this.companyInfo || {
             company_name: 'Şirket Adı',
@@ -74,7 +75,26 @@ export class ReactPdfGenerator {
       console.log('React PDF generated successfully');
     } catch (error) {
       console.error('React PDF generation error:', error);
-      throw error;
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        proposal: proposal,
+        companyInfo: this.companyInfo,
+        designSettings: designSettings
+      });
+      
+      // Fallback to jsPDF generator
+      console.warn('Falling back to jsPDF generator');
+      try {
+        const { ProposalPdfGenerator } = await import('./proposalPdfGenerator');
+        const fallbackGenerator = new ProposalPdfGenerator();
+        await fallbackGenerator.generateProposalPdf(proposal, templateId);
+        console.log('Fallback PDF generation successful');
+      } catch (fallbackError) {
+        console.error('Fallback PDF generation also failed:', fallbackError);
+        alert(`PDF oluşturulamadı: ${error.message}`);
+        throw error;
+      }
     }
   }
 

@@ -236,10 +236,10 @@ export const StandardTemplate: React.FC<StandardTemplateProps> = ({ proposal, co
           <View style={styles.infoColumn}>
             <View style={styles.infoBox}>
               <Text style={styles.infoTitle}>MÜŞTERİ BİLGİLERİ</Text>
-              <Text style={styles.infoText}>Firma: {proposal.customer_name || 'Belirtilmemiş'}</Text>
+              <Text style={styles.infoText}>Firma: {proposal.customer?.company || proposal.customer_name || 'Belirtilmemiş'}</Text>
               <Text style={styles.infoText}>Yetkili: {proposal.customer?.name || '-'}</Text>
-              <Text style={styles.infoText}>Tel: {proposal.customer?.phone || '-'}</Text>
-              <Text style={styles.infoText}>E-posta: {proposal.customer_email || '-'}</Text>
+              <Text style={styles.infoText}>Tel: {proposal.customer?.mobile_phone || proposal.customer?.office_phone || proposal.customer?.phone || '-'}</Text>
+              <Text style={styles.infoText}>E-posta: {proposal.customer?.email || proposal.customer_email || '-'}</Text>
               <Text style={styles.infoText}>Adres: {proposal.customer?.address || '-'}</Text>
             </View>
           </View>
