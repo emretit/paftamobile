@@ -8,9 +8,9 @@ import ProposalItems from "./items/ProposalItems";
 import { DatePicker } from "@/components/ui/date-picker";
 import CustomerSelector from "./CustomerSelector";
 import EmployeeSelector from "./EmployeeSelector";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSearchParams } from "react-router-dom";
-import { FileText, Calendar, AlertCircle, ShoppingCart, MessageSquare } from "lucide-react";
+import { FileText, Calendar, AlertCircle, ShoppingCart, MessageSquare, FileCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ProposalFormContentProps {
@@ -162,40 +162,71 @@ const ProposalFormContent: React.FC<ProposalFormContentProps> = ({
         </div>
       </div>
 
-      {/* Koşullar - İyileştirilmiş Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="payment_terms" className="text-sm font-medium flex items-center gap-2">
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-            Ödeme Koşulları
-          </Label>
-          <Textarea
-            id="payment_terms"
-            name="payment_terms"
-            value={formData.payment_terms || ""}
-            onChange={handleInputChange}
-            placeholder="Ödeme koşullarını girin"
-            rows={4}
-            className="resize-none"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="delivery_terms" className="text-sm font-medium flex items-center gap-2">
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-            Teslimat Koşulları
-          </Label>
-          <Textarea
-            id="delivery_terms"
-            name="delivery_terms"
-            value={formData.delivery_terms || ""}
-            onChange={handleInputChange}
-            placeholder="Teslimat koşullarını girin"
-            rows={4}
-            className="resize-none"
-          />
-        </div>
-      </div>
+      {/* Seçilebilir Şartlar Sistemi */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileCheck className="h-5 w-5" />
+            Şartlar ve Koşullar
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Ödeme Şartları */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Ödeme Şartları</Label>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="payment_prepaid" className="rounded" />
+                  <label htmlFor="payment_prepaid" className="text-sm">Peşin Ödeme - %100 peşin ödeme yapılacaktır.</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="payment_30_70" className="rounded" />
+                  <label htmlFor="payment_30_70" className="text-sm">30-70 Avans - %30 avans, %70 işin tamamlanmasının ardından ödenecektir.</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="payment_50_50" className="rounded" />
+                  <label htmlFor="payment_50_50" className="text-sm">50-50 Avans - %50 avans, %50 işin tamamlanmasının ardından ödenecektir.</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="payment_net30" className="rounded" />
+                  <label htmlFor="payment_net30" className="text-sm">30 Gün Vadeli - Fatura tarihinden itibaren 30 gün vadeli ödenecektir.</label>
+                </div>
+              </div>
+            </div>
+
+            {/* Teslimat Şartları */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Teslimat Şartları</Label>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="delivery_standard" className="rounded" />
+                  <label htmlFor="delivery_standard" className="text-sm">Standart Teslimat - Ürünler siparişten sonra 15 gün içinde teslim edilecektir.</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="delivery_express" className="rounded" />
+                  <label htmlFor="delivery_express" className="text-sm">Hızlı Teslimat - Ürünler siparişten sonra 7 gün içinde teslim edilecektir.</label>
+                </div>
+              </div>
+            </div>
+
+            {/* Garanti Şartları */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Garanti Şartları</Label>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="warranty_1year" className="rounded" />
+                  <label htmlFor="warranty_1year" className="text-sm">1 Yıl - Ürünlerimiz fatura tarihinden itibaren 1 yıl garantilidir.</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="warranty_2year" className="rounded" defaultChecked />
+                  <label htmlFor="warranty_2year" className="text-sm">2 Yıl - Ürünlerimiz fatura tarihinden itibaren 2(iki) yıl garantilidir.</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Teklif Kalemleri - Vurgulanmış Section */}
       <Card className="border-l-4 border-l-primary bg-gradient-to-r from-primary/5 to-transparent" id="proposal-items-section">
