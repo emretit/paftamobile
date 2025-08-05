@@ -30,22 +30,16 @@ export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
     onDownloadWithTemplate(templateId);
   };
 
-  const handleQuickDownload = () => {
-    onDownloadWithTemplate(selectedTemplateId);
-  };
+
 
   return (
     <div className="flex gap-2">
-      {/* Quick Download with Selected Template */}
-      <Button onClick={handleQuickDownload} className="gap-2">
-        <Printer className="h-4 w-4" />
-        PDF İndir
-      </Button>
-
-      {/* Template Selection Dropdown */}
+      {/* PDF Yazdır with Template Selection */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon">
+          <Button className="gap-2">
+            <Printer className="h-4 w-4" />
+            PDF Yazdır
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
