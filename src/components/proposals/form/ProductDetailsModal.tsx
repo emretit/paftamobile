@@ -63,14 +63,21 @@ const ProductDetailsModal = ({
       const productCurrency = product.currency || "TRY";
       setOriginalPrice(product.price);
       setOriginalCurrency(productCurrency);
-      setSelectedCurrency(productCurrency);
-      setUnitPrice(product.price);
+      setSelectedCurrency(currency); // Use form currency instead of product currency
       setDescription(product.description || product.name);
       setUnit(product.unit || "adet");
       setVatRate(product.tax_rate || 20);
       setIsManualPriceEdit(false);
+      
+      // Convert product price to form currency if different
+      if (productCurrency !== currency && exchangeRates) {
+        const convertedPrice = convertAmount(product.price, productCurrency, currency);
+        setUnitPrice(Number(convertedPrice.toFixed(2)));
+      } else {
+        setUnitPrice(product.price);
+      }
     }
-  }, [product, open]);
+  }, [product, open, currency, exchangeRates, convertAmount]);
 
   // Store previous currency to convert from current price instead of original price
   const [previousCurrency, setPreviousCurrency] = useState(selectedCurrency);
