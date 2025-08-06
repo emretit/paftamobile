@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import ProposalFormTerms from "@/components/proposals/form/ProposalFormTerms";
 import EmployeeSelector from "@/components/proposals/form/EmployeeSelector";
+import ContactPersonInput from "@/components/proposals/form/ContactPersonInput";
 
 interface LineItem extends ProposalItem {
   row_number: number;
@@ -416,15 +417,12 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                   </Popover>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="contact_name">İletişim Kişisi *</Label>
-                    <Input
-                      id="contact_name"
-                      value={formData.contact_name}
-                      onChange={(e) => handleFieldChange('contact_name', e.target.value)}
-                      placeholder="Ad Soyad"
-                    />
-                  </div>
+                  <ContactPersonInput
+                    value={formData.contact_name}
+                    onChange={(value) => handleFieldChange('contact_name', value)}
+                    customerId={formData.customer_id}
+                    error=""
+                  />
                   <div>
                     <Label htmlFor="contact_title">Ünvan</Label>
                     <Input
