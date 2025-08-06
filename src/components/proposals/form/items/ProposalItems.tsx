@@ -192,22 +192,44 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     const item = items[index];
     const itemId = item.id;
     
-    // Ürünün orijinal para birimi ve fiyatını kullan
-    const sourceCurrency = item.currency || globalCurrency;
-    const sourcePrice = item.unit_price || 0;
+    // Ürünün orijinal para birimi ve fiyatını kullan (daha doğru dönüşüm için)
+    const sourceCurrency = item.original_currency || item.currency || globalCurrency;
+    const sourcePrice = 
+      sourceCurrency === item.original_currency && item.original_price !== undefined
+        ? item.original_price
+        : item.unit_price || 0;
     
-    // Yeni para birimine dönüştür
+    // Dashboard exchange rates ile dönüştür
     const convertedPrice = dashboardConvert(sourcePrice, sourceCurrency, newCurrency);
     
-    // Güncellenmiş birim fiyatı ile item'ı güncelle
-    const updatedItems = handleItemChange(itemId, "unit_price", convertedPrice);
+    // Önce currency'yi güncelle
+    let updatedItems = handleItemChange(itemId, "currency", newCurrency);
     if (updatedItems) {
-      // Ayrıca currency alanını da güncelle
-      const finalUpdatedItems = handleItemChange(itemId, "currency", newCurrency);
-      if (finalUpdatedItems) {
-        onItemsChange(finalUpdatedItems);
-        toast.success(`Kalem para birimi ${newCurrency} olarak güncellendi`);
-      }
+      // Sonra dönüştürülmüş fiyatı güncelle
+      updatedItems = updatedItems.map(updatedItem => {
+        if (updatedItem.id === itemId) {
+          return { ...updatedItem, unit_price: convertedPrice };
+        }
+        return updatedItem;
+      });
+      
+      // Total price'ı yeniden hesapla
+      updatedItems = updatedItems.map(updatedItem => {
+        if (updatedItem.id === itemId) {
+          const quantity = Number(updatedItem.quantity);
+          const discountRate = Number(updatedItem.discount_rate || 0);
+          const taxRate = Number(updatedItem.tax_rate || 0);
+          
+          const discountedPrice = convertedPrice * (1 - discountRate / 100);
+          const totalPrice = quantity * discountedPrice * (1 + taxRate / 100);
+          
+          return { ...updatedItem, total_price: totalPrice };
+        }
+        return updatedItem;
+      });
+      
+      onItemsChange(updatedItems);
+      toast.success(`Kalem para birimi ${newCurrency} olarak güncellendi`);
     }
   };
 

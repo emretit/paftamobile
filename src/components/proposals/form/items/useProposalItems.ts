@@ -198,10 +198,21 @@ export const useProposalItems = () => {
     return updatedItems;
   }, [items, selectedCurrency, dashboardRates]);
 
-  // Convert using dashboard exchange rates
+   
+  // Convert using dashboard exchange rates with fallback
   const convertCurrency = useCallback((amount: number, fromCurrency: string, toCurrency: string) => {
-    return dashboardRates.convertCurrency(amount, fromCurrency, toCurrency);
-  }, [dashboardRates]);
+    if (fromCurrency === toCurrency) return amount;
+    
+    // Use dashboard rates if available, fallback to exchangeRates if not
+    if (dashboardRates?.convertCurrency) {
+      return dashboardRates.convertCurrency(amount, fromCurrency, toCurrency);
+    }
+    
+    // Fallback calculation
+    const usdFromRate = exchangeRates[fromCurrency] || 1;
+    const usdToRate = exchangeRates[toCurrency] || 1;
+    return (amount / usdFromRate) * usdToRate;
+  }, [dashboardRates, exchangeRates]);
 
   return {
     selectedCurrency,
