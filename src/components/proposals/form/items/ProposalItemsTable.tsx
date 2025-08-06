@@ -173,17 +173,20 @@ const ProposalItemsTable: React.FC<ProposalItemsTableProps> = ({
                         const currentPrice = item.unit_price || 0;
                         const fromCurrency = item.currency || selectedCurrency;
                         
-                        console.log(`Currency change: ${fromCurrency} → ${newCurrency} for price ${currentPrice}`);
-                        
-                        // Convert the price to new currency
-                        const convertedPrice = convertCurrency(currentPrice, fromCurrency, newCurrency);
-                        
-                        console.log(`Converted price: ${convertedPrice}`);
-                        
-                        // Update currency first
-                        handleItemChange(index, "currency", newCurrency);
-                        // Then update the price
-                        handleItemChange(index, "unit_price", convertedPrice);
+                        if (fromCurrency !== newCurrency) {
+                          console.log(`Converting ${currentPrice} ${fromCurrency} to ${newCurrency}`);
+                          
+                          // Convert the price to new currency
+                          const convertedPrice = convertCurrency(currentPrice, fromCurrency, newCurrency);
+                          
+                          console.log(`Result: ${convertedPrice} ${newCurrency}`);
+                          
+                          // Update both currency and price at the same time
+                          handleItemChange(index, "currency", newCurrency);
+                          setTimeout(() => {
+                            handleItemChange(index, "unit_price", Math.round(convertedPrice * 100) / 100);
+                          }, 50);
+                        }
                       }}
                     >
                       <SelectTrigger className="h-9 w-full">
