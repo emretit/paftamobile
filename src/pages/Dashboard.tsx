@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
 import { DetailedFinancialOverview } from "@/components/dashboard/DetailedFinancialOverview";
 import CashflowOverview from "@/components/cashflow/CashflowOverview";
+import ExchangeRateCard from "@/components/dashboard/ExchangeRateCard";
 
 interface DashboardProps {
   isCollapsed: boolean;
@@ -28,9 +29,16 @@ const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
             </div>
           </div>
 
-          {/* Genel Bakış Özeti */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <DetailedFinancialOverview />
+          {/* Genel Bakış ve Döviz Kurları */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <DetailedFinancialOverview />
+              </div>
+            </div>
+            <div className="lg:col-span-1">
+              <ExchangeRateCard />
+            </div>
           </div>
 
           {/* Finansal Genel Bakış */}
