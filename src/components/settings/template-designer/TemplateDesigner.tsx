@@ -1,16 +1,16 @@
 import React, { useState } from "react";
-import { ProposalTemplate, TemplateDesignSettings } from "@/types/proposal-template";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Save, Eye, Settings } from "lucide-react";
+import { ProposalTemplate } from "@/types/proposal-template";
 import { TemplateCanvas } from "./TemplateCanvas";
-import { VisualEditor } from "./VisualEditor";
+import { TemplateSettings } from "./TemplateSettings";
 
 interface TemplateDesignerProps {
-  template: ProposalTemplate;
+  template?: ProposalTemplate;
   onSave: (template: ProposalTemplate) => void;
   onCancel: () => void;
 }
@@ -20,213 +20,146 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
   onSave,
   onCancel,
 }) => {
-  const [designSettings, setDesignSettings] = useState<TemplateDesignSettings>(
-    template.designSettings || getDefaultDesignSettings()
-  );
-  const [templateName, setTemplateName] = useState(template.name);
-  const [templateDescription, setTemplateDescription] = useState(template.description || "");
-  const showPreview = true; // Her zaman önizleme göster
+  const [templateName, setTemplateName] = useState(template?.name || "Yeni Şablon");
+  const [templateDescription, setTemplateDescription] = useState(template?.description || "");
+  const [showSettings, setShowSettings] = useState(false);
+  const [templateData, setTemplateData] = useState<ProposalTemplate>(template || {
+    id: crypto.randomUUID(),
+    name: "Yeni Şablon",
+    description: "",
+    templateType: "standard",
+    templateFeatures: ["header", "customer", "items", "totals", "terms"],
+    items: [],
+    designSettings: {
+      pageSize: 'A4',
+      orientation: 'portrait',
+      margins: { top: 40, bottom: 40, left: 40, right: 40 },
+      header: {
+        enabled: true,
+        height: 80,
+        logoPosition: 'left',
+        logoSize: 'medium',
+        showCompanyInfo: true,
+        backgroundColor: '#ffffff',
+        textColor: '#1f2937',
+      },
+      footer: {
+        enabled: false,
+        height: 50,
+        showPageNumbers: false,
+        showContactInfo: false,
+        backgroundColor: '#ffffff',
+        textColor: '#1f2937',
+      },
+      colors: {
+        primary: '#2563eb',
+        secondary: '#64748b',
+        accent: '#0ea5e9',
+        text: '#1f2937',
+        background: '#ffffff',
+        border: '#e5e7eb',
+      },
+      fonts: {
+        primary: 'Inter',
+        secondary: 'Inter',
+        sizes: { title: 32, heading: 24, body: 14, small: 12 },
+      },
+      table: {
+        headerBackground: '#f8fafc',
+        headerText: '#374151',
+        rowAlternating: true,
+        borderColor: '#e5e7eb',
+        borderWidth: 1,
+      },
+      layout: {
+        spacing: 'normal',
+        showBorders: true,
+        roundedCorners: true,
+        shadowEnabled: false,
+      },
+      branding: {
+        companyName: 'Şirket Adı',
+        tagline: 'Profesyonel Hizmetler',
+        website: 'www.sirket.com',
+      },
+      sections: [
+        { id: 'header', type: 'header', title: 'Başlık', enabled: true, order: 1, settings: {} },
+        { id: 'customer', type: 'customer-info', title: 'Müşteri Bilgileri', enabled: true, order: 2, settings: {} },
+        { id: 'items', type: 'items-table', title: 'Kalemler', enabled: true, order: 3, settings: {} },
+        { id: 'totals', type: 'totals', title: 'Toplamlar', enabled: true, order: 4, settings: {} },
+        { id: 'terms', type: 'terms', title: 'Şartlar', enabled: true, order: 5, settings: {} },
+      ],
+    },
+  });
 
   const handleSave = () => {
     const updatedTemplate = {
-      ...template,
+      ...templateData,
       name: templateName,
       description: templateDescription,
-      designSettings,
-    };
-    onSave(updatedTemplate);
-  };
-
-  // Otomatik kaydetme için designSettings değiştiğinde çağrılır
-  const handleSettingsChange = (newSettings: TemplateDesignSettings) => {
-    setDesignSettings(newSettings);
-    // Otomatik kaydetme - her değişiklikte Supabase'e kaydet
-    const updatedTemplate = {
-      ...template,
-      name: templateName,
-      description: templateDescription,
-      designSettings: newSettings,
+      updated_at: new Date().toISOString(),
     };
     onSave(updatedTemplate);
   };
 
   return (
-    <div className="fixed inset-0 bg-background z-50 overflow-hidden">
-      <div className="flex h-full">
-        {/* Header */}
-        <div className="absolute top-0 left-0 right-0 z-10 bg-background border-b p-4">
-          <div className="flex items-center justify-between">
-            {/* Sol taraf - Navigasyon ve başlık */}
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={onCancel}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Geri Dön
-              </Button>
-              <div className="border-l pl-4">
-                <Input
-                  value={templateName}
-                  onChange={(e) => setTemplateName(e.target.value)}
-                  placeholder="Şablon adı"
-                  className="text-lg font-semibold bg-transparent border-none p-0 h-auto focus-visible:ring-0"
-                />
-                <Input
-                  value={templateDescription}
-                  onChange={(e) => setTemplateDescription(e.target.value)}
-                  placeholder="Açıklama"
-                  className="text-xs text-muted-foreground bg-transparent border-none p-0 h-auto focus-visible:ring-0 mt-1"
-                />
-              </div>
-            </div>
-
-
-
-            {/* Sağ taraf - Kaydet butonu */}
-            <div className="flex items-center gap-2">
-              <Button onClick={handleSave} size="sm" className="h-8">
-                Değişiklikleri Kaydet
-              </Button>
-            </div>
+    <div className="h-screen bg-background flex flex-col">
+      {/* Header */}
+      <div className="border-b bg-card px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" onClick={onCancel}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Geri
+          </Button>
+          <div>
+            <Input
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              className="text-lg font-semibold border-none p-0 h-auto bg-transparent"
+              placeholder="Şablon adı"
+            />
+            <Textarea
+              value={templateDescription}
+              onChange={(e) => setTemplateDescription(e.target.value)}
+              className="text-sm text-muted-foreground border-none p-0 h-auto bg-transparent resize-none"
+              placeholder="Şablon açıklaması"
+              rows={1}
+            />
           </div>
         </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSettings(!showSettings)}
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Ayarlar
+          </Button>
+          <Button size="sm" onClick={handleSave}>
+            <Save className="w-4 h-4 mr-2" />
+            Kaydet
+          </Button>
+        </div>
+      </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex pt-20">
-        <div className="flex h-[calc(100%-80px)] w-full">
-            <div className="w-96 border-r bg-card overflow-y-auto p-4">
-              {/* Design Settings */}
-              <VisualEditor
-                designSettings={designSettings}
-                onSettingsChange={handleSettingsChange}
-              />
-            </div>
-            {showPreview && (
-              <div className="flex-1 overflow-hidden">
-                <TemplateCanvas
-                  template={template}
-                  designSettings={designSettings}
-                  onSectionEdit={(sectionId) => console.log('Edit section:', sectionId)}
-                  onSectionToggle={(sectionId) => console.log('Toggle section:', sectionId)}
-                  onSectionReorder={(from, to) => console.log('Reorder section:', from, to)}
-                />
-              </div>
-            )}
+      {/* Main Content */}
+      <div className="flex-1 flex">
+        {/* Settings Panel */}
+        {showSettings && (
+          <div className="w-80 border-r bg-card">
+            <TemplateSettings
+              template={templateData}
+              onChange={setTemplateData}
+            />
           </div>
+        )}
+
+        {/* Canvas */}
+        <div className="flex-1">
+          <TemplateCanvas template={templateData} />
         </div>
       </div>
     </div>
   );
 };
-
-function getDefaultDesignSettings(): TemplateDesignSettings {
-  return {
-    pageSize: 'A4',
-    orientation: 'portrait',
-    margins: { top: 20, bottom: 20, left: 20, right: 20 },
-    header: {
-      enabled: true,
-      height: 60,
-      logoPosition: 'left',
-      logoSize: 'medium',
-      showCompanyInfo: true,
-      backgroundColor: '#ffffff',
-      textColor: '#000000',
-    },
-    footer: {
-      enabled: true,
-      height: 40,
-      showPageNumbers: true,
-      showContactInfo: true,
-      backgroundColor: '#f8f9fa',
-      textColor: '#6c757d',
-    },
-    colors: {
-      primary: '#2563eb',
-      secondary: '#64748b',
-      accent: '#3b82f6',
-      text: '#1e293b',
-      background: '#ffffff',
-      border: '#e2e8f0',
-    },
-    fonts: {
-      primary: 'Inter',
-      secondary: 'Arial',
-      sizes: { title: 24, heading: 18, body: 12, small: 10 },
-    },
-    table: {
-      headerBackground: '#f8f9fa',
-      headerText: '#1e293b',
-      rowAlternating: true,
-      borderColor: '#e2e8f0',
-      borderWidth: 1,
-    },
-    layout: {
-      spacing: 'normal',
-      showBorders: true,
-      roundedCorners: false,
-      shadowEnabled: false,
-    },
-    branding: {
-      companyName: 'Şirket Adı',
-      tagline: 'Şirket slogan',
-      website: 'www.sirket.com',
-    },
-    sections: [
-      {
-        id: 'header',
-        type: 'header',
-        title: 'Başlık',
-        enabled: true,
-        order: 0,
-        settings: {},
-      },
-      {
-        id: 'proposal-info',
-        type: 'proposal-info',
-        title: 'Teklif Bilgileri',
-        enabled: true,
-        order: 1,
-        settings: {},
-      },
-      {
-        id: 'customer-info',
-        type: 'customer-info',
-        title: 'Müşteri Bilgileri',
-        enabled: true,
-        order: 2,
-        settings: {},
-      },
-      {
-        id: 'items-table',
-        type: 'items-table',
-        title: 'Teklif Kalemleri',
-        enabled: true,
-        order: 3,
-        settings: {},
-      },
-      {
-        id: 'totals',
-        type: 'totals',
-        title: 'Toplam',
-        enabled: true,
-        order: 4,
-        settings: {},
-      },
-      {
-        id: 'terms',
-        type: 'terms',
-        title: 'Şartlar',
-        enabled: true,
-        order: 5,
-        settings: {},
-      },
-      {
-        id: 'footer',
-        type: 'footer',
-        title: 'Alt Bilgi',
-        enabled: true,
-        order: 6,
-        settings: {},
-      },
-    ],
-  };
-}
