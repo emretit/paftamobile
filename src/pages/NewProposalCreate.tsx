@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ProposalFormTerms from "@/components/proposals/form/ProposalFormTerms";
 import EmployeeSelector from "@/components/proposals/form/EmployeeSelector";
 import ContactPersonInput from "@/components/proposals/form/ContactPersonInput";
+import ProductSelector from "@/components/proposals/form/ProductSelector";
 
 interface LineItem extends ProposalItem {
   row_number: number;
@@ -520,13 +521,19 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                       
                       <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
                         <div className="md:col-span-5">
-                          <Label className="text-sm">Ürün/Hizmet Açıklaması *</Label>
-                          <Textarea
+                          <Label className="text-sm">Ürün/Hizmet *</Label>
+                          <ProductSelector
                             value={item.description || ''}
-                            onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                            placeholder="Teknik detaylar ve açıklamalar..."
-                            rows={2}
-                            className="mt-1 resize-none"
+                            onChange={(productName, product) => {
+                              handleItemChange(index, 'description', productName);
+                              if (product) {
+                                handleItemChange(index, 'name', product.name);
+                                handleItemChange(index, 'unit_price', product.price);
+                                handleItemChange(index, 'unit', product.unit);
+                              }
+                            }}
+                            placeholder="Ürün seçin..."
+                            className="mt-1"
                           />
                         </div>
                         <div className="md:col-span-2">
