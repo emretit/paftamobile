@@ -48,6 +48,7 @@ const ProductDetailsModal = ({
   const [selectedCurrency, setSelectedCurrency] = useState(currency);
   const [originalPrice, setOriginalPrice] = useState(0);
   const [originalCurrency, setOriginalCurrency] = useState("");
+  const [isManualPriceEdit, setIsManualPriceEdit] = useState(false);
 
   const {
     currencyOptions,
@@ -67,18 +68,19 @@ const ProductDetailsModal = ({
       setDescription(product.description || product.name);
       setUnit(product.unit || "adet");
       setVatRate(product.tax_rate || 20);
+      setIsManualPriceEdit(false);
     }
   }, [product, open]);
 
-  // Handle currency conversion when currency changes
+  // Handle currency conversion when currency changes (only if not manually edited)
   useEffect(() => {
-    if (originalPrice && originalCurrency && selectedCurrency !== originalCurrency && exchangeRates) {
+    if (!isManualPriceEdit && originalPrice && originalCurrency && selectedCurrency !== originalCurrency && exchangeRates) {
       const convertedPrice = convertAmount(originalPrice, originalCurrency, selectedCurrency);
       setUnitPrice(Number(convertedPrice.toFixed(2)));
-    } else if (selectedCurrency === originalCurrency) {
+    } else if (!isManualPriceEdit && selectedCurrency === originalCurrency) {
       setUnitPrice(originalPrice);
     }
-  }, [selectedCurrency, originalPrice, originalCurrency, convertAmount, exchangeRates]);
+  }, [selectedCurrency, originalPrice, originalCurrency, convertAmount, exchangeRates, isManualPriceEdit]);
 
   const calculateTotals = () => {
     const subtotal = quantity * unitPrice;
@@ -120,6 +122,7 @@ const ProductDetailsModal = ({
 
   const handleCurrencyChange = (newCurrency: string) => {
     setSelectedCurrency(newCurrency);
+    setIsManualPriceEdit(false); // Reset manual edit flag when currency changes
   };
 
   const showStockWarning = product && quantity > product.stock_quantity;
@@ -217,6 +220,7 @@ const ProductDetailsModal = ({
                   onChange={(e) => {
                     const value = e.target.value;
                     setUnitPrice(value === "" ? 0 : Number(value));
+                    setIsManualPriceEdit(true); // Mark as manually edited
                   }}
                   step="0.01"
                   placeholder="0.00"
