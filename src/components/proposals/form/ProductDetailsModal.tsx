@@ -205,71 +205,77 @@ const ProductDetailsModal = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="unit_price" className="text-sm font-medium">
-                  Birim Fiyat ({selectedCurrency})
-                </Label>
+            <div>
+              <Label htmlFor="unit_price" className="text-sm font-medium">
+                Birim Fiyat ve Para Birimi
+              </Label>
+              <div className="flex gap-2 mt-1">
                 <Input
                   id="unit_price"
                   type="number"
                   value={unitPrice}
                   onChange={(e) => setUnitPrice(Number(e.target.value))}
                   step="0.01"
-                  className="mt-1"
+                  placeholder="0.00"
+                  className="flex-1"
                 />
-                {originalCurrency !== selectedCurrency && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Orijinal fiyat: {formatCurrencyValue(originalPrice, originalCurrency)}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <CurrencySelector
-                  selectedCurrency={selectedCurrency}
-                  onCurrencyChange={handleCurrencyChange}
-                  currencyOptions={currencyOptions}
-                  isLoading={isLoadingRates}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="vat_rate" className="text-sm font-medium">
-                  KDV(%)
-                </Label>
-                <Select value={vatRate.toString()} onValueChange={(value) => setVatRate(Number(value))}>
-                  <SelectTrigger className="mt-1">
+                <Select value={selectedCurrency} onValueChange={handleCurrencyChange}>
+                  <SelectTrigger className="w-24">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">%0</SelectItem>
-                    <SelectItem value="1">%1</SelectItem>
-                    <SelectItem value="8">%8</SelectItem>
-                    <SelectItem value="18">%18</SelectItem>
-                    <SelectItem value="20">%20</SelectItem>
+                  <SelectContent position="popper" className="bg-white z-[100]">
+                    {currencyOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.value}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
+              {originalCurrency !== selectedCurrency && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Orijinal fiyat: {formatCurrencyValue(originalPrice, originalCurrency)}
+                </p>
+              )}
+              {isLoadingRates && (
+                <p className="text-xs text-muted-foreground mt-1">Kurlar yükleniyor...</p>
+              )}
+            </div>
 
-              <div>
-                <Label htmlFor="discount" className="text-sm font-medium">
-                  İndirim
-                </Label>
-                <div className="flex mt-1">
-                  <Input
-                    id="discount"
-                    type="number"
-                    value={discountRate}
-                    onChange={(e) => setDiscountRate(Number(e.target.value))}
-                    step="0.01"
-                    max="100"
-                    className="rounded-r-none"
-                  />
-                  <div className="px-3 py-2 bg-muted border border-l-0 rounded-r-md text-sm">
-                    %
+            <div>
+              <Label htmlFor="vat_rate" className="text-sm font-medium">
+                KDV ve İndirim
+              </Label>
+              <div className="flex gap-2 mt-1">
+                <div className="flex-1">
+                  <Select value={vatRate.toString()} onValueChange={(value) => setVatRate(Number(value))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">KDV %0</SelectItem>
+                      <SelectItem value="1">KDV %1</SelectItem>
+                      <SelectItem value="8">KDV %8</SelectItem>
+                      <SelectItem value="18">KDV %18</SelectItem>
+                      <SelectItem value="20">KDV %20</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1">
+                  <div className="flex">
+                    <Input
+                      id="discount"
+                      type="number"
+                      value={discountRate}
+                      onChange={(e) => setDiscountRate(Number(e.target.value))}
+                      step="0.01"
+                      max="100"
+                      placeholder="İndirim"
+                      className="rounded-r-none"
+                    />
+                    <div className="px-3 py-2 bg-muted border border-l-0 rounded-r-md text-sm">
+                      %
+                    </div>
                   </div>
                 </div>
               </div>
