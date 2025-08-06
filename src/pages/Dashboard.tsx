@@ -1,12 +1,10 @@
 
-import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
 import SimpleDashboardCards from "@/components/dashboard/SimpleDashboardCards";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import ExchangeRateCard from "@/components/dashboard/ExchangeRateCard";
 import CashflowOverview from "@/components/cashflow/CashflowOverview";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface DashboardProps {
   isCollapsed: boolean;
@@ -50,17 +48,15 @@ const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
           </div>
 
           {/* Cashflow Overview */}
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-muted/20">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl">Nakit Akış Genel Bakışı</CardTitle>
-              <CardDescription>
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+            <div className="pb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Nakit Akış Genel Bakışı</h2>
+              <p className="text-gray-600 mt-1">
                 Aylık gelir ve gider trendleri
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CashflowOverview />
-            </CardContent>
-          </Card>
+              </p>
+            </div>
+            <CashflowOverview />
+          </div>
         </div>
       </main>
     </div>
