@@ -86,7 +86,7 @@ const ExchangeRateCard: React.FC = () => {
               </thead>
               <tbody>
                 {filteredRates.map((rate: ExchangeRate) => (
-                  <tr key={rate.id} className="border-b hover:bg-muted/50">
+                  <tr key={rate.currency_code} className="border-b hover:bg-muted/50">
                     <td className="p-2 font-medium">{rate.currency_code}</td>
                     <td className="text-right p-2">{formatRate(rate.forex_buying)}</td>
                     <td className="text-right p-2">{formatRate(rate.forex_selling)}</td>
