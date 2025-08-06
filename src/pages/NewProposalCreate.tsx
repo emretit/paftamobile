@@ -202,7 +202,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         unit: productData.unit,
         unit_price: productData.unit_price,
         total_price: productData.total_price,
-        currency: formData.currency
+        currency: productData.currency || formData.currency
       };
       setItems(updatedItems);
     } else {
@@ -216,7 +216,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         unit: productData.unit,
         unit_price: productData.unit_price,
         total_price: productData.total_price,
-        currency: formData.currency
+        currency: productData.currency || formData.currency
       };
       setItems([...items, newItem]);
     }
