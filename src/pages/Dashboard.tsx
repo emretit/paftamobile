@@ -2,9 +2,11 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
-import { DetailedFinancialOverview } from "@/components/dashboard/DetailedFinancialOverview";
-import CashflowOverview from "@/components/cashflow/CashflowOverview";
+import SimpleDashboardCards from "@/components/dashboard/SimpleDashboardCards";
+import { QuickActions } from "@/components/dashboard/QuickActions";
 import ExchangeRateCard from "@/components/dashboard/ExchangeRateCard";
+import CashflowOverview from "@/components/cashflow/CashflowOverview";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface DashboardProps {
   isCollapsed: boolean;
@@ -21,30 +23,44 @@ const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
         }`}
       >
         <TopBar />
-        <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6 animate-fade-in">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-8 animate-fade-in">
+          {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Finansal Yönetim Merkezi</h1>
-              <p className="text-gray-600 mt-1">Genel bakış ve ana nakit akış tablosu</p>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                Finansal Kontrol Paneli
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                İşletmenizin finansal durumunu tek bakışta görün
+              </p>
             </div>
           </div>
 
-          {/* Genel Bakış ve Döviz Kurları */}
+          {/* Main Dashboard Cards */}
+          <SimpleDashboardCards />
+
+          {/* Secondary Section: Quick Actions & Exchange Rates */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <DetailedFinancialOverview />
-              </div>
-            </div>
             <div className="lg:col-span-1">
+              <QuickActions />
+            </div>
+            <div className="lg:col-span-2">
               <ExchangeRateCard />
             </div>
           </div>
 
-          {/* Finansal Genel Bakış */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <CashflowOverview />
-          </div>
+          {/* Cashflow Overview */}
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-background to-muted/20">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl">Nakit Akış Genel Bakışı</CardTitle>
+              <CardDescription>
+                Aylık gelir ve gider trendleri
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CashflowOverview />
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
