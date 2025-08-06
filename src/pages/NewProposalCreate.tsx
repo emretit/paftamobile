@@ -113,27 +113,57 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
     }
   ]);
 
-  // Calculate totals
-  const calculations = {
-    gross_total: items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0),
-    discount_amount: 0,
-    net_total: 0,
-    vat_amount: 0,
-    grand_total: 0
+  // Calculate totals by currency
+  const calculateTotalsByCurrency = () => {
+    const totals: Record<string, { gross: number; discount: number; net: number; vat: number; grand: number }> = {};
+    
+    items.forEach(item => {
+      const currency = item.currency || 'TRY';
+      if (!totals[currency]) {
+        totals[currency] = { gross: 0, discount: 0, net: 0, vat: 0, grand: 0 };
+      }
+      totals[currency].gross += item.quantity * item.unit_price;
+    });
+    
+    // Apply discount and VAT calculations for each currency
+    Object.keys(totals).forEach(currency => {
+      const gross = totals[currency].gross;
+      const discount = (gross * formData.discount_percentage) / 100;
+      const net = gross - discount;
+      const vat = (net * formData.vat_percentage) / 100;
+      const grand = net + vat;
+      
+      totals[currency] = {
+        gross,
+        discount,
+        net,
+        vat,
+        grand
+      };
+    });
+    
+    return totals;
   };
 
-  useEffect(() => {
-    const grossTotal = calculations.gross_total;
-    const discountAmount = (grossTotal * formData.discount_percentage) / 100;
-    const netTotal = grossTotal - discountAmount;
-    const vatAmount = (netTotal * formData.vat_percentage) / 100;
-    const grandTotal = netTotal + vatAmount;
-
-    calculations.discount_amount = discountAmount;
-    calculations.net_total = netTotal;
-    calculations.vat_amount = vatAmount;
-    calculations.grand_total = grandTotal;
-  }, [items, formData.discount_percentage, formData.vat_percentage]);
+  const calculationsByCurrency = calculateTotalsByCurrency();
+  
+  // Legacy calculations for backward compatibility (using primary currency)
+  const primaryCurrency = formData.currency;
+  const primaryTotals = calculationsByCurrency[primaryCurrency] || {
+    gross: 0,
+    discount: 0,
+    net: 0,
+    vat: 0,
+    grand: 0
+  };
+  
+  const calculations = {
+    gross_total: primaryTotals.gross,
+    discount_amount: primaryTotals.discount,
+    net_total: primaryTotals.net,
+    vat_amount: primaryTotals.vat,
+    grand_total: primaryTotals.grand
+  };
 
   // Update item calculations
   useEffect(() => {
@@ -636,15 +666,15 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                         </div>
                         <div className="md:col-span-2">
                           <Label className="text-sm">Birim Fiyat</Label>
-                          <div className="mt-1 p-2 bg-gray-100 rounded text-right font-medium text-sm">
-                            {formatCurrency(item.unit_price)} {item.currency || 'TRY'}
-                          </div>
-                        </div>
-                        <div className="md:col-span-1">
-                          <Label className="text-sm">Toplam</Label>
-                          <div className="mt-1 p-2 bg-gray-100 rounded text-right font-medium text-sm">
-                            {formatCurrency(item.total_price)}
-                          </div>
+                           <div className="mt-1 p-2 bg-gray-100 rounded text-right font-medium text-sm">
+                             {formatCurrency(item.unit_price, item.currency || 'TRY')}
+                           </div>
+                         </div>
+                         <div className="md:col-span-1">
+                           <Label className="text-sm">Toplam</Label>
+                           <div className="mt-1 p-2 bg-gray-100 rounded text-right font-medium text-sm">
+                             {formatCurrency(item.total_price, item.currency || 'TRY')}
+                           </div>
                         </div>
                       </div>
                     </div>
@@ -664,69 +694,144 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 pt-0">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Brüt Toplam:</span>
-                    <span className="font-medium">{formatCurrency(calculations.gross_total)}</span>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label htmlFor="discount" className="text-sm">İndirim (%)</Label>
-                    <Input
-                      id="discount"
-                      type="number"
-                      value={formData.discount_percentage}
-                      onChange={(e) => handleFieldChange('discount_percentage', Number(e.target.value))}
-                      min="0"
-                      max="100"
-                      step="0.1"
-                    />
-                  </div>
-                  
-                  {formData.discount_percentage > 0 && (
-                    <div className="flex justify-between text-red-600 text-sm">
-                      <span>İndirim Tutarı:</span>
-                      <span>-{formatCurrency(calculations.discount_amount)}</span>
+                {Object.keys(calculationsByCurrency).length > 1 ? (
+                  // Multi-currency display
+                  <div className="space-y-4">
+                    {Object.entries(calculationsByCurrency).map(([currency, totals]) => (
+                      <div key={currency} className="border rounded-lg p-3 space-y-2">
+                        <div className="font-medium text-sm text-center mb-2 text-primary">
+                          {currency} Toplamları
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Brüt Toplam:</span>
+                            <span className="font-medium">{formatCurrency(totals.gross, currency)}</span>
+                          </div>
+                          
+                          {formData.discount_percentage > 0 && (
+                            <div className="flex justify-between text-red-600 text-sm">
+                              <span>İndirim ({formData.discount_percentage}%):</span>
+                              <span>-{formatCurrency(totals.discount, currency)}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Net Toplam:</span>
+                            <span className="font-medium">{formatCurrency(totals.net, currency)}</span>
+                          </div>
+                          
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">KDV ({formData.vat_percentage}%):</span>
+                            <span className="font-medium">{formatCurrency(totals.vat, currency)}</span>
+                          </div>
+                          
+                          <Separator />
+                          
+                          <div className="flex justify-between font-bold">
+                            <span>TOPLAM:</span>
+                            <span className="text-green-600">{formatCurrency(totals.grand, currency)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    <div className="space-y-1 mt-4">
+                      <Label htmlFor="discount" className="text-sm">İndirim (%)</Label>
+                      <Input
+                        id="discount"
+                        type="number"
+                        value={formData.discount_percentage}
+                        onChange={(e) => handleFieldChange('discount_percentage', Number(e.target.value))}
+                        min="0"
+                        max="100"
+                        step="0.1"
+                      />
                     </div>
-                  )}
-                  
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Net Toplam:</span>
-                    <span className="font-medium">{formatCurrency(calculations.net_total)}</span>
+                    
+                    <div className="space-y-1">
+                      <Label htmlFor="vat" className="text-sm">KDV (%)</Label>
+                      <Select 
+                        value={formData.vat_percentage.toString()} 
+                        onValueChange={(value) => handleFieldChange('vat_percentage', Number(value))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">0%</SelectItem>
+                          <SelectItem value="1">1%</SelectItem>
+                          <SelectItem value="10">10%</SelectItem>
+                          <SelectItem value="20">20%</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  
-                  <Separator />
-                  
-                  <div className="space-y-1">
-                    <Label htmlFor="vat" className="text-sm">KDV (%)</Label>
-                    <Select 
-                      value={formData.vat_percentage.toString()} 
-                      onValueChange={(value) => handleFieldChange('vat_percentage', Number(value))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">0%</SelectItem>
-                        <SelectItem value="1">1%</SelectItem>
-                        <SelectItem value="10">10%</SelectItem>
-                        <SelectItem value="20">20%</SelectItem>
-                      </SelectContent>
-                    </Select>
+                ) : (
+                  // Single currency display
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Brüt Toplam:</span>
+                      <span className="font-medium">{formatCurrency(calculations.gross_total, primaryCurrency)}</span>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label htmlFor="discount" className="text-sm">İndirim (%)</Label>
+                      <Input
+                        id="discount"
+                        type="number"
+                        value={formData.discount_percentage}
+                        onChange={(e) => handleFieldChange('discount_percentage', Number(e.target.value))}
+                        min="0"
+                        max="100"
+                        step="0.1"
+                      />
+                    </div>
+                    
+                    {formData.discount_percentage > 0 && (
+                      <div className="flex justify-between text-red-600 text-sm">
+                        <span>İndirim Tutarı:</span>
+                        <span>-{formatCurrency(calculations.discount_amount, primaryCurrency)}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Net Toplam:</span>
+                      <span className="font-medium">{formatCurrency(calculations.net_total, primaryCurrency)}</span>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="space-y-1">
+                      <Label htmlFor="vat" className="text-sm">KDV (%)</Label>
+                      <Select 
+                        value={formData.vat_percentage.toString()} 
+                        onValueChange={(value) => handleFieldChange('vat_percentage', Number(value))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">0%</SelectItem>
+                          <SelectItem value="1">1%</SelectItem>
+                          <SelectItem value="10">10%</SelectItem>
+                          <SelectItem value="20">20%</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">KDV Tutarı:</span>
+                      <span className="font-medium">{formatCurrency(calculations.vat_amount, primaryCurrency)}</span>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="flex justify-between font-bold">
+                      <span>GENEL TOPLAM:</span>
+                      <span className="text-green-600">{formatCurrency(calculations.grand_total, primaryCurrency)}</span>
+                    </div>
                   </div>
-                  
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">KDV Tutarı:</span>
-                    <span className="font-medium">{formatCurrency(calculations.vat_amount)}</span>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="flex justify-between font-bold">
-                    <span>GENEL TOPLAM:</span>
-                    <span className="text-green-600">{formatCurrency(calculations.grand_total)}</span>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
