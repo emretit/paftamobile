@@ -68,7 +68,7 @@ const ProductSelector = ({ value, onChange, placeholder = "Ürün seçin...", cl
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0" align="start">
+      <PopoverContent className="w-[500px] p-0" align="start">
         <Command shouldFilter={false} className="rounded-lg border shadow-md">
           <CommandInput 
             placeholder="Ürün ara..." 
@@ -76,7 +76,7 @@ const ProductSelector = ({ value, onChange, placeholder = "Ürün seçin...", cl
             value={searchQuery}
             onValueChange={setSearchQuery}
           />
-          <CommandList className="max-h-[300px]">
+          <CommandList className="max-h-[400px]">
             <CommandEmpty className="py-6 text-center text-sm">
               Aramanızla eşleşen ürün bulunamadı.
             </CommandEmpty>
@@ -90,36 +90,37 @@ const ProductSelector = ({ value, onChange, placeholder = "Ürün seçin...", cl
                 >
                   <Check
                     className={cn(
-                      "h-4 w-4 shrink-0 mt-0.5",
+                      "h-4 w-4 shrink-0 mt-1",
                       value === product.name ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  <div className="flex flex-col gap-1 min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-foreground truncate">
+                  <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                    <div className="flex flex-col gap-1">
+                      <span className="font-semibold text-foreground text-sm leading-tight">
                         {product.name}
                       </span>
                       {product.sku && (
-                        <span className="px-2 py-1 text-xs bg-muted rounded-md text-muted-foreground">
-                          {product.sku}
+                        <span className="text-xs text-muted-foreground">
+                          Kod: {product.sku}
                         </span>
                       )}
                     </div>
                     {product.description && (
-                      <span className="text-xs text-muted-foreground line-clamp-2">
+                      <span className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                         {product.description}
                       </span>
                     )}
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="font-medium text-primary">
+                    <div className="flex items-center gap-3 text-xs">
+                      <span className="font-semibold text-primary">
                         {new Intl.NumberFormat('tr-TR', { 
                           style: 'currency', 
                           currency: product.currency || 'TRY',
                           minimumFractionDigits: 2
                         }).format(product.price)}
                       </span>
-                      <span>•</span>
-                      <span>Stok: {product.stock_quantity} {product.unit}</span>
+                      <span className="text-muted-foreground">
+                        Stok: {product.stock_quantity} {product.unit}
+                      </span>
                     </div>
                   </div>
                 </CommandItem>
