@@ -6,7 +6,7 @@ import { ArrowLeft, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { TemplatePreview } from "./TemplatePreview";
+import { TemplateCanvas } from "./TemplateCanvas";
 import { VisualEditor } from "./VisualEditor";
 
 interface TemplateDesignerProps {
@@ -100,23 +100,14 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
               />
             </div>
             {showPreview && (
-              <div className="flex-1 bg-muted/30 overflow-y-auto">
-                <div className="p-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Eye className="w-5 h-5" />
-                        Canlı Önizleme
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <TemplatePreview
-                        template={template}
-                        designSettings={designSettings}
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
+              <div className="flex-1 overflow-hidden">
+                <TemplateCanvas
+                  template={template}
+                  designSettings={designSettings}
+                  onSectionEdit={(sectionId) => console.log('Edit section:', sectionId)}
+                  onSectionToggle={(sectionId) => console.log('Toggle section:', sectionId)}
+                  onSectionReorder={(from, to) => console.log('Reorder section:', from, to)}
+                />
               </div>
             )}
           </div>
