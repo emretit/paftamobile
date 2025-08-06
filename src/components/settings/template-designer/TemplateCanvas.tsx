@@ -99,7 +99,7 @@ export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({
     }
   };
 
-  // A4 dimensions in pixels at 96 DPI: 794x1123px
+  // A4 dimensions in pixels at 96 DPI: 794x1123px (21cm x 29.7cm)
   const pageWidth = 794;
   const pageHeight = 1123;
   const scaledWidth = (pageWidth * zoom) / 100;
@@ -235,16 +235,17 @@ export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({
 
               {/* Page Content */}
               <div 
-                className="relative h-full p-8 print:p-8"
+                className="relative h-full print:p-8"
                 style={{
                   fontFamily: fonts.primary,
                   color: colors.text,
                   backgroundColor: colors.background,
-                  fontSize: `${(fonts.sizes.body * zoom) / 100}px`,
+                  fontSize: `${fonts.sizes.body}px`,
                   transform: `scale(${zoom / 100})`,
                   transformOrigin: 'top left',
                   width: pageWidth,
                   height: pageHeight,
+                  padding: `${designSettings.margins.top}px ${designSettings.margins.right}px ${designSettings.margins.bottom}px ${designSettings.margins.left}px`,
                 }}
               >
                 <div className={`space-y-6 ${layout.spacing === 'compact' ? 'space-y-4' : layout.spacing === 'spacious' ? 'space-y-8' : 'space-y-6'}`}>
