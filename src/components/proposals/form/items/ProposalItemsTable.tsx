@@ -169,9 +169,21 @@ const ProposalItemsTable: React.FC<ProposalItemsTableProps> = ({
                   <TableCell className="py-3 px-4">
                     <Select
                       value={item.currency || selectedCurrency}
-                      onValueChange={(value) => {
-                        // Call the currency change handler which will handle conversion
-                        handleItemCurrencyChange(index, value);
+                      onValueChange={(newCurrency) => {
+                        const currentPrice = item.unit_price || 0;
+                        const fromCurrency = item.currency || selectedCurrency;
+                        
+                        console.log(`Currency change: ${fromCurrency} → ${newCurrency} for price ${currentPrice}`);
+                        
+                        // Convert the price to new currency
+                        const convertedPrice = convertCurrency(currentPrice, fromCurrency, newCurrency);
+                        
+                        console.log(`Converted price: ${convertedPrice}`);
+                        
+                        // Update currency first
+                        handleItemChange(index, "currency", newCurrency);
+                        // Then update the price
+                        handleItemChange(index, "unit_price", convertedPrice);
                       }}
                     >
                       <SelectTrigger className="h-9 w-full">
