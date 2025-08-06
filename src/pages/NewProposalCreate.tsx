@@ -416,23 +416,12 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                     </PopoverContent>
                   </Popover>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <ContactPersonInput
-                    value={formData.contact_name}
-                    onChange={(value) => handleFieldChange('contact_name', value)}
-                    customerId={formData.customer_id}
-                    error=""
-                  />
-                  <div>
-                    <Label htmlFor="contact_title">Ünvan</Label>
-                    <Input
-                      id="contact_title"
-                      value={formData.contact_title}
-                      onChange={(e) => handleFieldChange('contact_title', e.target.value)}
-                      placeholder="Pozisyon/Ünvan"
-                    />
-                  </div>
-                </div>
+                <ContactPersonInput
+                  value={formData.contact_name}
+                  onChange={(value) => handleFieldChange('contact_name', value)}
+                  customerId={formData.customer_id}
+                  error=""
+                />
                 <div>
                   <Label htmlFor="prepared_by">Teklifi Hazırlayan</Label>
                   <EmployeeSelector
