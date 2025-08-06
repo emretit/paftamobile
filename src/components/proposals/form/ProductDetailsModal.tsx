@@ -9,6 +9,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { X, Plus } from "lucide-react";
 import { Product } from "@/types/product";
 import { formatCurrency } from "@/utils/formatters";
+import { useCurrencyManagement } from "@/components/proposals/form/items/hooks/useCurrencyManagement";
+import CurrencySelector from "@/components/proposals/form/items/product-dialog/components/price-section/CurrencySelector";
 
 interface ProductDetailsModalProps {
   open: boolean;
@@ -23,6 +25,9 @@ interface ProductDetailsModalProps {
     vat_rate: number;
     discount_rate: number;
     total_price: number;
+    currency: string;
+    original_price?: number;
+    original_currency?: string;
   }) => void;
   currency: string;
 }
@@ -40,15 +45,40 @@ const ProductDetailsModal = ({
   const [discountRate, setDiscountRate] = useState(0);
   const [description, setDescription] = useState("");
   const [unit, setUnit] = useState("adet");
+  const [selectedCurrency, setSelectedCurrency] = useState(currency);
+  const [originalPrice, setOriginalPrice] = useState(0);
+  const [originalCurrency, setOriginalCurrency] = useState("");
+
+  const {
+    currencyOptions,
+    formatCurrency: formatCurrencyValue,
+    convertAmount,
+    isLoadingRates,
+    exchangeRates
+  } = useCurrencyManagement();
 
   useEffect(() => {
-    if (product) {
+    if (product && open) {
+      const productCurrency = product.currency || "TRY";
+      setOriginalPrice(product.price);
+      setOriginalCurrency(productCurrency);
+      setSelectedCurrency(productCurrency);
       setUnitPrice(product.price);
       setDescription(product.description || product.name);
       setUnit(product.unit || "adet");
       setVatRate(product.tax_rate || 20);
     }
-  }, [product]);
+  }, [product, open]);
+
+  // Handle currency conversion when currency changes
+  useEffect(() => {
+    if (originalPrice && originalCurrency && selectedCurrency !== originalCurrency && exchangeRates) {
+      const convertedPrice = convertAmount(originalPrice, originalCurrency, selectedCurrency);
+      setUnitPrice(Number(convertedPrice.toFixed(2)));
+    } else if (selectedCurrency === originalCurrency) {
+      setUnitPrice(originalPrice);
+    }
+  }, [selectedCurrency, originalPrice, originalCurrency, convertAmount, exchangeRates]);
 
   const calculateTotals = () => {
     const subtotal = quantity * unitPrice;
@@ -79,13 +109,21 @@ const ProductDetailsModal = ({
       unit_price: unitPrice,
       vat_rate: vatRate,
       discount_rate: discountRate,
-      total_price: total
+      total_price: total,
+      currency: selectedCurrency,
+      original_price: originalPrice,
+      original_currency: originalCurrency
     });
 
     onOpenChange(false);
   };
 
+  const handleCurrencyChange = (newCurrency: string) => {
+    setSelectedCurrency(newCurrency);
+  };
+
   const showStockWarning = product && quantity > product.stock_quantity;
+  const showCurrencyWarning = product && product.currency !== selectedCurrency;
 
   if (!product) return null;
 
@@ -115,10 +153,16 @@ const ProductDetailsModal = ({
           {showStockWarning && (
             <Alert variant="destructive">
               <AlertDescription>
-                <strong>Dikkat!</strong> Bu ürün kartındaki fiyat ile seçtiğiniz çarinin para birimi farklı.
-                Aşağıdaki fiyat kutusunun yanındaki para birimini değiştirerek işleme devam edebilirsiniz.
-                Günlük kur üzerinden otomatik olarak fiyatı hesaplarız.
-                Dilerseniz hesapladığımız rakamı değiştirerek farklı bir kurdan da işlem yapabilirsiniz.
+                <strong>Stok Uyarısı!</strong> Seçilen miktar ({quantity}) mevcut stoktan ({product?.stock_quantity}) fazla.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {showCurrencyWarning && (
+            <Alert>
+              <AlertDescription>
+                <strong>Para Birimi Uyarısı!</strong> Bu ürün kartındaki fiyat ({originalCurrency}) ile seçilen para birimi ({selectedCurrency}) farklı.
+                Günlük kur üzerinden otomatik olarak fiyat hesaplanmıştır. Dilerseniz hesaplanan rakamı değiştirebilirsiniz.
               </AlertDescription>
             </Alert>
           )}
@@ -160,64 +204,75 @@ const ProductDetailsModal = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="unit_price" className="text-sm font-medium">
-                Fiyat
-              </Label>
-              <div className="flex mt-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="unit_price" className="text-sm font-medium">
+                  Birim Fiyat ({selectedCurrency})
+                </Label>
                 <Input
                   id="unit_price"
                   type="number"
                   value={unitPrice}
                   onChange={(e) => setUnitPrice(Number(e.target.value))}
                   step="0.01"
-                  className="rounded-r-none"
+                  className="mt-1"
                 />
-                <div className="px-3 py-2 bg-muted border border-l-0 rounded-r-md text-sm">
-                  {currency}
-                </div>
+                {originalCurrency !== selectedCurrency && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Orijinal fiyat: {formatCurrencyValue(originalPrice, originalCurrency)}
+                  </p>
+                )}
               </div>
-              <p className="text-xs text-green-600 mt-1">önceki fiyatlar</p>
+
+              <div>
+                <CurrencySelector
+                  selectedCurrency={selectedCurrency}
+                  onCurrencyChange={handleCurrencyChange}
+                  currencyOptions={currencyOptions}
+                  isLoading={isLoadingRates}
+                />
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="vat_rate" className="text-sm font-medium">
-                KDV(%)
-              </Label>
-              <Select value={vatRate.toString()} onValueChange={(value) => setVatRate(Number(value))}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">%0</SelectItem>
-                  <SelectItem value="1">%1</SelectItem>
-                  <SelectItem value="8">%8</SelectItem>
-                  <SelectItem value="18">%18</SelectItem>
-                  <SelectItem value="20">%20</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="vat_rate" className="text-sm font-medium">
+                  KDV(%)
+                </Label>
+                <Select value={vatRate.toString()} onValueChange={(value) => setVatRate(Number(value))}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">%0</SelectItem>
+                    <SelectItem value="1">%1</SelectItem>
+                    <SelectItem value="8">%8</SelectItem>
+                    <SelectItem value="18">%18</SelectItem>
+                    <SelectItem value="20">%20</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div>
-              <Label htmlFor="discount" className="text-sm font-medium">
-                İndirim
-              </Label>
-              <div className="flex mt-1">
-                <Input
-                  id="discount"
-                  type="number"
-                  value={discountRate}
-                  onChange={(e) => setDiscountRate(Number(e.target.value))}
-                  step="0.01"
-                  max="100"
-                  className="rounded-r-none"
-                />
-                <div className="px-3 py-2 bg-muted border border-l-0 rounded-r-md text-sm">
-                  %
+              <div>
+                <Label htmlFor="discount" className="text-sm font-medium">
+                  İndirim
+                </Label>
+                <div className="flex mt-1">
+                  <Input
+                    id="discount"
+                    type="number"
+                    value={discountRate}
+                    onChange={(e) => setDiscountRate(Number(e.target.value))}
+                    step="0.01"
+                    max="100"
+                    className="rounded-r-none"
+                  />
+                  <div className="px-3 py-2 bg-muted border border-l-0 rounded-r-md text-sm">
+                    %
+                  </div>
                 </div>
               </div>
-              <p className="text-xs text-green-600 mt-1">çoklu iskonto</p>
             </div>
           </div>
 
@@ -225,13 +280,13 @@ const ProductDetailsModal = ({
             <div className="flex justify-between items-center text-lg font-bold">
               <span>TOPLAM</span>
               <span className="text-primary">
-                {formatCurrency(total, currency)}
+                {formatCurrencyValue(total, selectedCurrency)}
               </span>
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              (Ara Toplam: {formatCurrency(subtotal, currency)} - 
-              İndirim: {formatCurrency(discountAmount, currency)} + 
-              KDV: {formatCurrency(vatAmount, currency)})
+              (Ara Toplam: {formatCurrencyValue(subtotal, selectedCurrency)} - 
+              İndirim: {formatCurrencyValue(discountAmount, selectedCurrency)} + 
+              KDV: {formatCurrencyValue(vatAmount, selectedCurrency)})
             </div>
           </div>
 
