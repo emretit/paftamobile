@@ -20,6 +20,7 @@ import { PdfDownloadDropdown } from "@/components/proposals/PdfDownloadDropdown"
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import ProposalFormTerms from "@/components/proposals/form/ProposalFormTerms";
+import EmployeeSelector from "@/components/proposals/form/EmployeeSelector";
 
 interface LineItem extends ProposalItem {
   row_number: number;
@@ -436,11 +437,10 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                 </div>
                 <div>
                   <Label htmlFor="prepared_by">Teklifi Hazırlayan</Label>
-                  <Input
-                    id="prepared_by"
-                    value={formData.prepared_by}
-                    onChange={(e) => handleFieldChange('prepared_by', e.target.value)}
-                    placeholder="Satış temsilcisi"
+                  <EmployeeSelector
+                    value={formData.prepared_by || ""}
+                    onChange={(value) => handleFieldChange('prepared_by', value)}
+                    error=""
                   />
                 </div>
               </div>
