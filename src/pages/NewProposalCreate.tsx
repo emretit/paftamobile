@@ -279,8 +279,8 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
       subtitle="Hızlı ve kolay teklif oluşturma"
     >
       {/* Header Actions */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <Button 
             variant="ghost" 
             size="sm" 
@@ -292,12 +292,13 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
           </Button>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <PdfDownloadDropdown onDownloadWithTemplate={handleExportPDF} />
           <Button 
             variant="outline" 
             onClick={() => handleSave('draft')}
             disabled={saving}
+            size="sm"
           >
             Taslak Kaydet
           </Button>
@@ -305,6 +306,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
             onClick={() => handleSave('sent')}
             disabled={saving}
             className="gap-2"
+            size="sm"
           >
             <Calculator className="h-4 w-4" />
             {saving ? "Kaydediliyor..." : "Teklifi Kaydet"}
@@ -313,18 +315,18 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
       </div>
 
       {/* Main Content */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Top Row - Customer & Proposal Details Combined */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {/* Customer Information */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Müşteri Bilgileri</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold">Müşteri Bilgileri</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
+            <CardContent className="space-y-3 pt-0">
+              <div className="grid grid-cols-1 gap-3">
                 <div>
-                  <Label htmlFor="customer_company">Firma Adı *</Label>
+                  <Label htmlFor="customer_company" className="text-sm">Firma Adı *</Label>
                   <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -436,13 +438,13 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
 
           {/* Offer Details */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Teklif Detayları</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold">Teklif Detayları</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <CardContent className="space-y-3 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <Label htmlFor="offer_date">Teklif Tarihi</Label>
+                  <Label htmlFor="offer_date" className="text-sm">Teklif Tarihi</Label>
                   <Input
                     id="offer_date"
                     type="date"
@@ -451,7 +453,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                   />
                 </div>
                 <div>
-                  <Label htmlFor="offer_number">Teklif No</Label>
+                  <Label htmlFor="offer_number" className="text-sm">Teklif No</Label>
                   <Input
                     id="offer_number"
                     value={formData.offer_number}
@@ -459,7 +461,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                   />
                 </div>
                 <div>
-                  <Label htmlFor="validity_date">Geçerlilik Tarihi *</Label>
+                  <Label htmlFor="validity_date" className="text-sm">Geçerlilik Tarihi *</Label>
                   <Input
                     id="validity_date"
                     type="date"
@@ -469,13 +471,14 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                 </div>
               </div>
               <div>
-                <Label htmlFor="notes">Notlar</Label>
+                <Label htmlFor="notes" className="text-sm">Notlar</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => handleFieldChange('notes', e.target.value)}
                   placeholder="Teklif hakkında özel notlar..."
-                  rows={3}
+                  rows={2}
+                  className="resize-none"
                 />
               </div>
             </CardContent>
@@ -483,23 +486,23 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         </div>
 
         {/* Products/Services Table - Full Width */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
           <div className="xl:col-span-3">
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">Ürün/Hizmet Listesi</CardTitle>
+                  <CardTitle className="text-base font-semibold">Ürün/Hizmet Listesi</CardTitle>
                   <Button onClick={addItem} size="sm" className="gap-2">
                     <Plus className="h-4 w-4" />
                     Satır Ekle
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="pt-0">
+                <div className="space-y-3">
                   {items.map((item, index) => (
-                    <div key={item.id} className="border rounded-lg p-4 bg-gray-50">
-                      <div className="flex items-center justify-between mb-3">
+                    <div key={item.id} className="border rounded-lg p-3 bg-gray-50/50">
+                      <div className="flex items-center justify-between mb-2">
                         <span className="font-medium text-sm text-gray-600">
                           Satır {item.row_number}
                         </span>
@@ -515,19 +518,19 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                         )}
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
                         <div className="md:col-span-5">
-                          <Label>Ürün/Hizmet Açıklaması *</Label>
+                          <Label className="text-sm">Ürün/Hizmet Açıklaması *</Label>
                           <Textarea
                             value={item.description || ''}
                             onChange={(e) => handleItemChange(index, 'description', e.target.value)}
                             placeholder="Teknik detaylar ve açıklamalar..."
-                            rows={3}
-                            className="mt-1"
+                            rows={2}
+                            className="mt-1 resize-none"
                           />
                         </div>
                         <div className="md:col-span-2">
-                          <Label>Miktar</Label>
+                          <Label className="text-sm">Miktar</Label>
                           <Input
                             type="number"
                             value={item.quantity}
@@ -537,7 +540,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                           />
                         </div>
                         <div className="md:col-span-2">
-                          <Label>Birim</Label>
+                          <Label className="text-sm">Birim</Label>
                           <Select 
                             value={item.name || 'Ad'} 
                             onValueChange={(value) => handleItemChange(index, 'name', value)}
@@ -557,7 +560,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                           </Select>
                         </div>
                         <div className="md:col-span-2">
-                          <Label>Birim Fiyat (₺)</Label>
+                          <Label className="text-sm">Birim Fiyat (₺)</Label>
                           <Input
                             type="number"
                             value={item.unit_price}
@@ -568,8 +571,8 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                           />
                         </div>
                         <div className="md:col-span-1">
-                          <Label>Toplam</Label>
-                          <div className="mt-1 p-2 bg-gray-100 rounded text-right font-medium">
+                          <Label className="text-sm">Toplam</Label>
+                          <div className="mt-1 p-2 bg-gray-100 rounded text-right font-medium text-sm">
                             {formatCurrency(item.total_price)}
                           </div>
                         </div>
@@ -584,21 +587,21 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
           {/* Financial Summary - Right Side */}
           <div className="xl:col-span-1">
             <Card className="sticky top-6">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <Calculator className="h-5 w-5" />
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Calculator className="h-4 w-4" />
                   Finansal Özet
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex justify-between">
+              <CardContent className="space-y-3 pt-0">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Brüt Toplam:</span>
                     <span className="font-medium">{formatCurrency(calculations.gross_total)}</span>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="discount">İndirim (%)</Label>
+                  <div className="space-y-1">
+                    <Label htmlFor="discount" className="text-sm">İndirim (%)</Label>
                     <Input
                       id="discount"
                       type="number"
@@ -611,21 +614,21 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                   </div>
                   
                   {formData.discount_percentage > 0 && (
-                    <div className="flex justify-between text-red-600">
+                    <div className="flex justify-between text-red-600 text-sm">
                       <span>İndirim Tutarı:</span>
                       <span>-{formatCurrency(calculations.discount_amount)}</span>
                     </div>
                   )}
                   
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Net Toplam:</span>
                     <span className="font-medium">{formatCurrency(calculations.net_total)}</span>
                   </div>
                   
                   <Separator />
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="vat">KDV (%)</Label>
+                  <div className="space-y-1">
+                    <Label htmlFor="vat" className="text-sm">KDV (%)</Label>
                     <Select 
                       value={formData.vat_percentage.toString()} 
                       onValueChange={(value) => handleFieldChange('vat_percentage', Number(value))}
@@ -642,14 +645,14 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                     </Select>
                   </div>
                   
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm">
                     <span className="text-gray-600">KDV Tutarı:</span>
                     <span className="font-medium">{formatCurrency(calculations.vat_amount)}</span>
                   </div>
                   
                   <Separator />
                   
-                  <div className="flex justify-between text-lg font-bold">
+                  <div className="flex justify-between font-bold">
                     <span>GENEL TOPLAM:</span>
                     <span className="text-green-600">{formatCurrency(calculations.grand_total)}</span>
                   </div>
@@ -661,7 +664,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
 
         {/* Terms & Conditions - Full Width */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <ProposalFormTerms
               paymentTerms={formData.payment_terms}
               deliveryTerms={formData.delivery_terms}
