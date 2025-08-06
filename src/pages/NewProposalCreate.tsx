@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { CalendarDays, Plus, Trash2, Eye, FileDown, ArrowLeft, Calculator, Check, ChevronsUpDown } from "lucide-react";
+import { CalendarDays, Plus, Trash2, Eye, FileDown, ArrowLeft, Calculator, Check, ChevronsUpDown, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/utils/formatters";
 import { useProposalCreation } from "@/hooks/proposals/useProposalCreation";
@@ -43,6 +43,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
   const [customerSearchQuery, setCustomerSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [productModalOpen, setProductModalOpen] = useState(false);
+  const [editingItemIndex, setEditingItemIndex] = useState<number | undefined>(undefined);
 
   // Turkish character normalization function
   const normalizeTurkish = (text: string): string => {
@@ -220,6 +221,10 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
       };
       setItems([...items, newItem]);
     }
+    
+    setProductModalOpen(false);
+    setEditingItemIndex(undefined);
+    setSelectedProduct(null);
   };
 
   const handleSave = async (status: 'draft' | 'sent' = 'draft') => {
@@ -547,16 +552,38 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                         <span className="font-medium text-sm text-gray-600">
                           Satır {item.row_number}
                         </span>
-                        {items.length > 1 && (
+                        <div className="flex gap-1">
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => removeItem(index)}
-                            className="text-red-600 hover:text-red-700"
+                            onClick={() => {
+                              const product = {
+                                id: item.id,
+                                name: item.name,
+                                description: item.description,
+                                unit_price: item.unit_price,
+                                currency: item.currency,
+                                unit: item.unit
+                              };
+                               setSelectedProduct(product);
+                               setEditingItemIndex(index);
+                               setProductModalOpen(true);
+                            }}
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Edit className="h-4 w-4" />
                           </Button>
-                        )}
+                          {items.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeItem(index)}
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
@@ -715,9 +742,15 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         {/* Product Details Modal */}
         <ProductDetailsModal
           open={productModalOpen}
-          onOpenChange={setProductModalOpen}
+          onOpenChange={(open) => {
+            setProductModalOpen(open);
+            if (!open) {
+              setEditingItemIndex(undefined);
+              setSelectedProduct(null);
+            }
+          }}
           product={selectedProduct}
-          onAddToProposal={handleAddProductToProposal}
+          onAddToProposal={(productData) => handleAddProductToProposal(productData, editingItemIndex)}
           currency={formData.currency}
         />
       </div>

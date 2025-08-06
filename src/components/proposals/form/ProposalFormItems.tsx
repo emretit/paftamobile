@@ -3,16 +3,17 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Edit } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { ProposalItem } from "@/types/proposal";
 
 interface ProposalFormItemsProps {
   items: ProposalItem[];
   onItemsChange: (items: ProposalItem[]) => void;
+  onEditItem?: (item: ProposalItem) => void;
 }
 
-const ProposalFormItems: React.FC<ProposalFormItemsProps> = ({ items, onItemsChange }) => {
+const ProposalFormItems: React.FC<ProposalFormItemsProps> = ({ items, onItemsChange, onEditItem }) => {
   const addItem = () => {
     const newItem = {
       id: uuidv4(),
@@ -85,7 +86,7 @@ const ProposalFormItems: React.FC<ProposalFormItemsProps> = ({ items, onItemsCha
               <TableHead>Birim Fiyat</TableHead>
               <TableHead>Vergi %</TableHead>
               <TableHead className="text-right">Toplam</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
+              <TableHead className="w-[100px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className="dark:bg-gray-900">
@@ -140,15 +141,28 @@ const ProposalFormItems: React.FC<ProposalFormItemsProps> = ({ items, onItemsCha
                       {formatMoney(item.total_price)}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeItem(item.id)}
-                        className="h-8 w-8 p-0 text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Sil</span>
-                      </Button>
+                      <div className="flex gap-1">
+                        {onEditItem && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEditItem(item)}
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                          >
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">Düzenle</span>
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeItem(item.id)}
+                          className="h-8 w-8 p-0 text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Sil</span>
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
