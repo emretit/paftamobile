@@ -603,15 +603,10 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                           </Select>
                         </div>
                         <div className="md:col-span-2">
-                          <Label className="text-sm">Birim Fiyat (₺)</Label>
-                          <Input
-                            type="number"
-                            value={item.unit_price}
-                            onChange={(e) => handleItemChange(index, 'unit_price', Number(e.target.value))}
-                            min="0"
-                            step="0.01"
-                            className="mt-1"
-                          />
+                          <Label className="text-sm">Birim Fiyat</Label>
+                          <div className="mt-1 p-2 bg-gray-100 rounded text-right font-medium text-sm">
+                            {formatCurrency(item.unit_price)} {item.currency || 'TRY'}
+                          </div>
                         </div>
                         <div className="md:col-span-1">
                           <Label className="text-sm">Toplam</Label>
