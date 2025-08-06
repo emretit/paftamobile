@@ -213,17 +213,25 @@ const ProductDetailsModal = ({
                 <Input
                   id="unit_price"
                   type="number"
-                  value={unitPrice}
-                  onChange={(e) => setUnitPrice(Number(e.target.value))}
+                  value={unitPrice || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setUnitPrice(value === "" ? 0 : Number(value));
+                  }}
                   step="0.01"
                   placeholder="0.00"
                   className="flex-1"
+                  disabled={isLoadingRates}
                 />
-                <Select value={selectedCurrency} onValueChange={handleCurrencyChange}>
+                <Select 
+                  value={selectedCurrency} 
+                  onValueChange={handleCurrencyChange}
+                  disabled={isLoadingRates}
+                >
                   <SelectTrigger className="w-24">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent position="popper" className="bg-white z-[100]">
+                  <SelectContent position="popper" className="bg-background border z-[100]">
                     {currencyOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.value}
