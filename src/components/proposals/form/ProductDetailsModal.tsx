@@ -72,15 +72,18 @@ const ProductDetailsModal = ({
     }
   }, [product, open]);
 
-  // Handle currency conversion when currency changes (only if not manually edited)
+  // Store previous currency to convert from current price instead of original price
+  const [previousCurrency, setPreviousCurrency] = useState(selectedCurrency);
+
+  // Handle currency conversion when currency changes
   useEffect(() => {
-    if (!isManualPriceEdit && originalPrice && originalCurrency && selectedCurrency !== originalCurrency && exchangeRates) {
-      const convertedPrice = convertAmount(originalPrice, originalCurrency, selectedCurrency);
+    if (selectedCurrency !== previousCurrency && unitPrice > 0 && exchangeRates) {
+      const convertedPrice = convertAmount(unitPrice, previousCurrency, selectedCurrency);
       setUnitPrice(Number(convertedPrice.toFixed(2)));
-    } else if (!isManualPriceEdit && selectedCurrency === originalCurrency) {
-      setUnitPrice(originalPrice);
+      console.log(`Price converted from ${unitPrice} ${previousCurrency} to ${convertedPrice.toFixed(2)} ${selectedCurrency}`);
     }
-  }, [selectedCurrency, originalPrice, originalCurrency, convertAmount, exchangeRates, isManualPriceEdit]);
+    setPreviousCurrency(selectedCurrency);
+  }, [selectedCurrency]);
 
   const calculateTotals = () => {
     const subtotal = quantity * unitPrice;
