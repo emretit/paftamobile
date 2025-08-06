@@ -30,6 +30,16 @@ interface ProductDetailsModalProps {
     original_currency?: string;
   }) => void;
   currency: string;
+  existingData?: {
+    name: string;
+    description: string;
+    quantity: number;
+    unit: string;
+    unit_price: number;
+    vat_rate: number;
+    discount_rate: number;
+    currency: string;
+  } | null;
 }
 
 const ProductDetailsModal = ({ 
@@ -37,7 +47,8 @@ const ProductDetailsModal = ({
   onOpenChange, 
   product, 
   onAddToProposal,
-  currency 
+  currency,
+  existingData = null
 }: ProductDetailsModalProps) => {
   const [quantity, setQuantity] = useState(1);
   const [unitPrice, setUnitPrice] = useState(0);
@@ -59,18 +70,35 @@ const ProductDetailsModal = ({
   } = useCurrencyManagement();
 
   useEffect(() => {
-    if (product && open) {
-      const productCurrency = product.currency || "TRY";
-      setOriginalPrice(product.price);
-      setOriginalCurrency(productCurrency);
-      setSelectedCurrency(productCurrency);
-      setUnitPrice(product.price);
-      setDescription(product.description || product.name);
-      setUnit(product.unit || "adet");
-      setVatRate(product.tax_rate || 20);
-      setIsManualPriceEdit(false);
+    if (open) {
+      if (existingData) {
+        // We're editing an existing line item
+        setQuantity(existingData.quantity);
+        setUnitPrice(existingData.unit_price);
+        setVatRate(existingData.vat_rate);
+        setDiscountRate(existingData.discount_rate);
+        setDescription(existingData.description);
+        setUnit(existingData.unit);
+        setSelectedCurrency(existingData.currency);
+        setOriginalPrice(existingData.unit_price);
+        setOriginalCurrency(existingData.currency);
+        setIsManualPriceEdit(false);
+      } else if (product) {
+        // We're adding a new product
+        const productCurrency = product.currency || "TRY";
+        setOriginalPrice(product.price);
+        setOriginalCurrency(productCurrency);
+        setSelectedCurrency(productCurrency);
+        setUnitPrice(product.price);
+        setDescription(product.description || product.name);
+        setUnit(product.unit || "adet");
+        setVatRate(product.tax_rate || 20);
+        setDiscountRate(0);
+        setQuantity(1);
+        setIsManualPriceEdit(false);
+      }
     }
-  }, [product, open]);
+  }, [product, open, existingData]);
 
   // Store previous currency to convert from current price instead of original price
   const [previousCurrency, setPreviousCurrency] = useState(selectedCurrency);

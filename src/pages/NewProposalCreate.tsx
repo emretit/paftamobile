@@ -44,6 +44,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingItemIndex, setEditingItemIndex] = useState<number | undefined>(undefined);
+  const [editingItemData, setEditingItemData] = useState<any>(null);
 
   // Turkish character normalization function
   const normalizeTurkish = (text: string): string => {
@@ -557,17 +558,21 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                             variant="ghost"
                             size="sm"
                             onClick={() => {
-                              const product = {
-                                id: item.id,
+                              const existingData = {
                                 name: item.name,
-                                description: item.description,
+                                description: item.description || '',
+                                quantity: item.quantity,
+                                unit: item.unit,
                                 unit_price: item.unit_price,
-                                currency: item.currency,
-                                unit: item.unit
+                                vat_rate: item.tax_rate || 20,
+                                discount_rate: item.discount_rate || 0,
+                                currency: item.currency || formData.currency
                               };
-                               setSelectedProduct(product);
-                               setEditingItemIndex(index);
-                               setProductModalOpen(true);
+                              
+                              setSelectedProduct(null);
+                              setEditingItemIndex(index);
+                              setEditingItemData(existingData);
+                              setProductModalOpen(true);
                             }}
                             className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                           >
@@ -747,11 +752,13 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
             if (!open) {
               setEditingItemIndex(undefined);
               setSelectedProduct(null);
+              setEditingItemData(null);
             }
           }}
           product={selectedProduct}
           onAddToProposal={(productData) => handleAddProductToProposal(productData, editingItemIndex)}
           currency={formData.currency}
+          existingData={editingItemData}
         />
       </div>
     </DefaultLayout>
