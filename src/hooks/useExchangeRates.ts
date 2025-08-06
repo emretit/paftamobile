@@ -190,11 +190,13 @@ export const useExchangeRates = () => {
     const ratesMap: Record<string, number> = { TRY: 1 };
     
     exchangeRates.forEach(rate => {
-      if (rate.currency_code && rate.forex_buying) {
-        ratesMap[rate.currency_code] = rate.forex_buying;
+      if (rate.currency_code && rate.forex_selling) {
+        // Use forex_selling for converting FROM foreign currency TO TRY
+        ratesMap[rate.currency_code] = rate.forex_selling;
       }
     });
     
+    console.log('Exchange rates map:', ratesMap);
     return ratesMap;
   }, [exchangeRates]);
 
@@ -202,17 +204,32 @@ export const useExchangeRates = () => {
   const convertCurrency = useCallback((amount: number, fromCurrency: string, toCurrency: string): number => {
     if (fromCurrency === toCurrency) return amount;
     
+    console.log(`Converting ${amount} ${fromCurrency} to ${toCurrency}`);
+    
     const rates = getRatesMap();
+    console.log('Using rates:', rates);
     
-    // Convert to TRY first (base currency)
-    const amountInTRY = fromCurrency === 'TRY' 
-      ? amount 
-      : amount * (rates[fromCurrency] || 1);
+    // If converting FROM foreign currency TO TRY
+    if (toCurrency === 'TRY') {
+      const rate = rates[fromCurrency] || 1;
+      const result = amount * rate;
+      console.log(`${amount} ${fromCurrency} × ${rate} = ${result} TRY`);
+      return result;
+    }
     
-    // Then convert from TRY to target currency
-    return toCurrency === 'TRY' 
-      ? amountInTRY 
-      : amountInTRY / (rates[toCurrency] || 1);
+    // If converting FROM TRY TO foreign currency
+    if (fromCurrency === 'TRY') {
+      const rate = rates[toCurrency] || 1;
+      const result = amount / rate;
+      console.log(`${amount} TRY ÷ ${rate} = ${result} ${toCurrency}`);
+      return result;
+    }
+    
+    // If converting between two foreign currencies, go through TRY
+    const amountInTRY = amount * (rates[fromCurrency] || 1);
+    const result = amountInTRY / (rates[toCurrency] || 1);
+    console.log(`${amount} ${fromCurrency} → ${amountInTRY} TRY → ${result} ${toCurrency}`);
+    return result;
   }, [getRatesMap]);
 
   // Format currency with proper symbol

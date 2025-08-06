@@ -192,6 +192,9 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
     const item = items[index];
     const itemId = item.id;
     
+    console.log(`Currency change for item ${itemId}: ${item.currency} → ${newCurrency}`);
+    console.log(`Current unit price: ${item.unit_price}`);
+    
     // Ürünün orijinal para birimi ve fiyatını kullan (daha doğru dönüşüm için)
     const sourceCurrency = item.original_currency || item.currency || globalCurrency;
     const sourcePrice = 
@@ -199,8 +202,11 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
         ? item.original_price
         : item.unit_price || 0;
     
+    console.log(`Source currency: ${sourceCurrency}, Source price: ${sourcePrice}`);
+    
     // Dashboard exchange rates ile dönüştür
     const convertedPrice = dashboardConvert(sourcePrice, sourceCurrency, newCurrency);
+    console.log(`Converted price: ${convertedPrice}`);
     
     // Önce currency'yi güncelle
     let updatedItems = handleItemChange(itemId, "currency", newCurrency);
@@ -223,13 +229,15 @@ const ProposalItems: React.FC<ProposalItemsProps> = ({
           const discountedPrice = convertedPrice * (1 - discountRate / 100);
           const totalPrice = quantity * discountedPrice * (1 + taxRate / 100);
           
+          console.log(`New total price: ${totalPrice}`);
+          
           return { ...updatedItem, total_price: totalPrice };
         }
         return updatedItem;
       });
       
       onItemsChange(updatedItems);
-      toast.success(`Kalem para birimi ${newCurrency} olarak güncellendi`);
+      toast.success(`Para birimi ${newCurrency} olarak güncellendi (${sourcePrice} ${sourceCurrency} → ${convertedPrice.toFixed(2)} ${newCurrency})`);
     }
   };
 
