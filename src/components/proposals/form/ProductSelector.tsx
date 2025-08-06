@@ -11,11 +11,12 @@ import { Product } from "@/types/product";
 interface ProductSelectorProps {
   value: string;
   onChange: (productName: string, product?: Product) => void;
+  onProductSelect?: (product: Product) => void;
   placeholder?: string;
   className?: string;
 }
 
-const ProductSelector = ({ value, onChange, placeholder = "Ürün seçin...", className }: ProductSelectorProps) => {
+const ProductSelector = ({ value, onChange, onProductSelect, placeholder = "Ürün seçin...", className }: ProductSelectorProps) => {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -46,7 +47,11 @@ const ProductSelector = ({ value, onChange, placeholder = "Ürün seçin...", cl
   });
 
   const handleSelect = (product: Product) => {
-    onChange(product.name, product);
+    if (onProductSelect) {
+      onProductSelect(product);
+    } else {
+      onChange(product.name, product);
+    }
     setOpen(false);
   };
 

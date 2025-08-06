@@ -23,6 +23,7 @@ import ProposalFormTerms from "@/components/proposals/form/ProposalFormTerms";
 import EmployeeSelector from "@/components/proposals/form/EmployeeSelector";
 import ContactPersonInput from "@/components/proposals/form/ContactPersonInput";
 import ProductSelector from "@/components/proposals/form/ProductSelector";
+import ProductDetailsModal from "@/components/proposals/form/ProductDetailsModal";
 
 interface LineItem extends ProposalItem {
   row_number: number;
@@ -40,6 +41,8 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
   const [saving, setSaving] = useState(false);
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [customerSearchQuery, setCustomerSearchQuery] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [productModalOpen, setProductModalOpen] = useState(false);
 
   // Turkish character normalization function
   const normalizeTurkish = (text: string): string => {
@@ -179,6 +182,43 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         row_number: i + 1
       }));
       setItems(renumberedItems);
+    }
+  };
+
+  const handleProductModalSelect = (product: any) => {
+    setSelectedProduct(product);
+    setProductModalOpen(true);
+  };
+
+  const handleAddProductToProposal = (productData: any, itemIndex?: number) => {
+    if (itemIndex !== undefined) {
+      // Update existing item
+      const updatedItems = [...items];
+      updatedItems[itemIndex] = {
+        ...updatedItems[itemIndex],
+        name: productData.name,
+        description: productData.description,
+        quantity: productData.quantity,
+        unit: productData.unit,
+        unit_price: productData.unit_price,
+        total_price: productData.total_price,
+        currency: formData.currency
+      };
+      setItems(updatedItems);
+    } else {
+      // Add new item
+      const newItem: LineItem = {
+        id: Date.now().toString(),
+        row_number: items.length + 1,
+        name: productData.name,
+        description: productData.description,
+        quantity: productData.quantity,
+        unit: productData.unit,
+        unit_price: productData.unit_price,
+        total_price: productData.total_price,
+        currency: formData.currency
+      };
+      setItems([...items, newItem]);
     }
   };
 
@@ -524,14 +564,10 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                           <Label className="text-sm">Ürün/Hizmet *</Label>
                           <ProductSelector
                             value={item.description || ''}
-                            onChange={(productName, product) => {
+                            onChange={(productName) => {
                               handleItemChange(index, 'description', productName);
-                              if (product) {
-                                handleItemChange(index, 'name', product.name);
-                                handleItemChange(index, 'unit_price', product.price);
-                                handleItemChange(index, 'unit', product.unit);
-                              }
                             }}
+                            onProductSelect={handleProductModalSelect}
                             placeholder="Ürün seçin..."
                             className="mt-1"
                           />
@@ -680,6 +716,15 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
             />
           </CardContent>
         </Card>
+
+        {/* Product Details Modal */}
+        <ProductDetailsModal
+          open={productModalOpen}
+          onOpenChange={setProductModalOpen}
+          product={selectedProduct}
+          onAddToProposal={handleAddProductToProposal}
+          currency={formData.currency}
+        />
       </div>
     </DefaultLayout>
   );
