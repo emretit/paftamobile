@@ -87,6 +87,9 @@ export async function createProposal(proposal: Partial<Proposal>) {
       valid_until?: string;
       payment_terms?: string;
       delivery_terms?: string;
+      warranty_terms?: string;
+      price_terms?: string;
+      other_terms?: string;
       notes?: string;
       terms?: string;
       currency: string;
@@ -106,6 +109,9 @@ export async function createProposal(proposal: Partial<Proposal>) {
       valid_until: proposal.valid_until,
       payment_terms: proposal.payment_terms,
       delivery_terms: proposal.delivery_terms,
+      warranty_terms: proposal.warranty_terms,
+      price_terms: proposal.price_terms,
+      other_terms: proposal.other_terms,
       notes: proposal.notes,
       terms: proposal.terms,
       currency: proposal.currency || 'TRY',
@@ -158,6 +164,9 @@ export async function updateProposal(id: string, proposal: Partial<Proposal>) {
       valid_until?: string;
       payment_terms?: string;
       delivery_terms?: string;
+      warranty_terms?: string;
+      price_terms?: string;
+      other_terms?: string;
       notes?: string;
       terms?: string;
       currency?: string;
@@ -178,6 +187,9 @@ export async function updateProposal(id: string, proposal: Partial<Proposal>) {
     if (proposal.valid_until !== undefined) updateData.valid_until = proposal.valid_until;
     if (proposal.payment_terms !== undefined) updateData.payment_terms = proposal.payment_terms;
     if (proposal.delivery_terms !== undefined) updateData.delivery_terms = proposal.delivery_terms;
+    if (proposal.warranty_terms !== undefined) updateData.warranty_terms = proposal.warranty_terms;
+    if (proposal.price_terms !== undefined) updateData.price_terms = proposal.price_terms;
+    if (proposal.other_terms !== undefined) updateData.other_terms = proposal.other_terms;
     if (proposal.notes !== undefined) updateData.notes = proposal.notes;
     if (proposal.terms !== undefined) updateData.terms = proposal.terms;
     if (proposal.currency !== undefined) updateData.currency = proposal.currency;
