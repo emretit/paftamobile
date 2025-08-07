@@ -711,9 +711,9 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                           <span className="font-medium">{formatCurrency(totals.gross, currency)}</span>
                         </div>
                         
-                        {formData.discount_percentage > 0 && (
+                        {totals.discount > 0 && (
                           <div className="flex justify-between text-red-600 text-sm">
-                            <span>İndirim ({formData.discount_percentage}%):</span>
+                            <span>İndirim:</span>
                             <span>-{formatCurrency(totals.discount, currency)}</span>
                           </div>
                         )}
@@ -723,51 +723,22 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                           <span className="font-medium">{formatCurrency(totals.net, currency)}</span>
                         </div>
                         
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">KDV ({formData.vat_percentage}%):</span>
-                          <span className="font-medium">{formatCurrency(totals.vat, currency)}</span>
-                        </div>
+                        {totals.vat > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">KDV:</span>
+                            <span className="font-medium">{formatCurrency(totals.vat, currency)}</span>
+                          </div>
+                        )}
                         
                         <Separator />
                         
                         <div className="flex justify-between font-bold">
-                          <span>TOPLAM:</span>
+                          <span>GENEL TOPLAM:</span>
                           <span className="text-green-600">{formatCurrency(totals.grand, currency)}</span>
                         </div>
                       </div>
                     </div>
                   ))}
-                  
-                  <div className="space-y-1 mt-4">
-                    <Label htmlFor="discount" className="text-sm">İndirim (%)</Label>
-                    <Input
-                      id="discount"
-                      type="number"
-                      value={formData.discount_percentage}
-                      onChange={(e) => handleFieldChange('discount_percentage', Number(e.target.value))}
-                      min="0"
-                      max="100"
-                      step="0.1"
-                    />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label htmlFor="vat" className="text-sm">KDV (%)</Label>
-                    <Select 
-                      value={formData.vat_percentage.toString()} 
-                      onValueChange={(value) => handleFieldChange('vat_percentage', Number(value))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">0%</SelectItem>
-                        <SelectItem value="1">1%</SelectItem>
-                        <SelectItem value="10">10%</SelectItem>
-                        <SelectItem value="20">20%</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
               </CardContent>
             </Card>
