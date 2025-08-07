@@ -10,12 +10,14 @@ export interface PdfTemplateComponent {
   name: string;
   description: string;
   category: string;
-  component: React.ComponentType<{
+  component?: React.ComponentType<{
     proposal: Proposal;
     companySettings: CompanySettings;
-  }>;
+  }> | null;
   previewImage?: string;
   features: string[];
+  designSettings?: any;
+  isDynamic?: boolean;
 }
 
 export const pdfTemplateRegistry: PdfTemplateComponent[] = [

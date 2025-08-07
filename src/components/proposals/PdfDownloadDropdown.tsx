@@ -22,7 +22,7 @@ export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
   onDownloadWithTemplate,
   proposal
 }) => {
-  const { templates, selectedTemplateId, selectTemplate } = usePdfTemplates();
+  const { templates, selectedTemplateId, selectTemplate, isLoading } = usePdfTemplates();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const handleTemplateSelect = (templateId: string) => {
@@ -49,7 +49,12 @@ export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
           </div>
           <DropdownMenuSeparator />
           
-          {templates.map((template) => (
+          {isLoading ? (
+            <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+              Şablonlar yükleniyor...
+            </div>
+          ) : (
+            templates.map((template) => (
             <DropdownMenuItem
               key={template.id}
               onClick={() => handleTemplateSelect(template.id)}
@@ -69,7 +74,7 @@ export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
                 </span>
               </div>
             </DropdownMenuItem>
-          ))}
+          )))}
           
           <DropdownMenuSeparator />
           <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>

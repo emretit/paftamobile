@@ -12,13 +12,40 @@ export class ReactPdfGenerator {
       // Load company settings
       const companySettings = await this.loadCompanySettings();
       
-      // Load the selected template component
-      const { getPdfTemplate, getDefaultTemplate } = await import('./pdfTemplateRegistry');
-      const selectedTemplate = templateId ? getPdfTemplate(templateId) : null;
-      const templateConfig = selectedTemplate || getDefaultTemplate();
+      let TemplateComponent;
+      let templateConfig;
+      
+      if (templateId) {
+        // Önce sabit template'lerde ara
+        const { getPdfTemplate } = await import('./pdfTemplateRegistry');
+        templateConfig = getPdfTemplate(templateId);
+        
+        if (templateConfig && templateConfig.component) {
+          // Sabit template bulundu
+          TemplateComponent = templateConfig.component;
+        } else {
+          // Dinamik template ara
+          const dynamicTemplate = await this.loadDynamicTemplate(templateId);
+          if (dynamicTemplate) {
+            // Dinamik template bulundu - DynamicTemplate kullan
+            const { DynamicTemplate } = await import('@/components/pdf-templates/DynamicTemplate');
+            TemplateComponent = (props: any) => 
+              <DynamicTemplate {...props} designSettings={dynamicTemplate.design_settings} />;
+          } else {
+            // Template bulunamadı - varsayılan kullan
+            const { getDefaultTemplate } = await import('./pdfTemplateRegistry');
+            templateConfig = getDefaultTemplate();
+            TemplateComponent = templateConfig.component;
+          }
+        }
+      } else {
+        // Template ID yoksa varsayılan kullan
+        const { getDefaultTemplate } = await import('./pdfTemplateRegistry');
+        templateConfig = getDefaultTemplate();
+        TemplateComponent = templateConfig.component;
+      }
       
       // Generate PDF document with selected template
-      const TemplateComponent = templateConfig.component;
       const doc = <TemplateComponent proposal={proposal} companySettings={companySettings} />;
       const pdfBlob = await pdf(doc).toBlob();
       
@@ -35,6 +62,23 @@ export class ReactPdfGenerator {
       console.error('PDF generation error:', error);
       throw error;
     }
+  }
+
+  private async loadDynamicTemplate(templateId: string): Promise<any> {
+    try {
+      const { data, error } = await supabase
+        .from('proposal_templates')
+        .select('*')
+        .eq('id', templateId)
+        .single();
+
+      if (!error && data) {
+        return data;
+      }
+    } catch (error) {
+      console.warn('Could not load dynamic template:', error);
+    }
+    return null;
   }
 
   private async loadCompanySettings(): Promise<CompanySettings> {
