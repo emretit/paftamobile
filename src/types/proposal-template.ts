@@ -151,4 +151,6 @@ export interface ProposalTemplate {
   isRecommended?: boolean;
   tags?: string[];
   previewImage?: string;
+  created_at?: string;
+  updated_at?: string;
 }

@@ -296,53 +296,99 @@ const TemplateRenderer: React.FC<TemplateRendererProps> = ({ template, data }) =
     sections = []
   } = designSettings;
 
+  // Provide default values for nested objects
+  const safeColors = {
+    background: '#ffffff',
+    text: '#1f2937',
+    primary: '#3b82f6',
+    ...colors
+  };
+
+  const safeFonts = {
+    primary: 'Inter',
+    sizes: {
+      body: 14,
+      heading: 18,
+      title: 24,
+      small: 12,
+      ...((fonts as any)?.sizes || {})
+    },
+    ...fonts
+  };
+
+  const safeHeader = {
+    enabled: true,
+    backgroundColor: safeColors.background,
+    textColor: safeColors.text,
+    height: 80,
+    logoPosition: 'left',
+    logoSize: 'medium',
+    showCompanyInfo: true,
+    ...header
+  };
+
+  const safeFooter = {
+    enabled: true,
+    backgroundColor: safeColors.background,
+    textColor: safeColors.text,
+    showContactInfo: true,
+    showPageNumbers: true,
+    ...footer
+  };
+
+  const safeBranding = {
+    companyName: 'Company Name',
+    logo: '',
+    ...branding
+  };
+
   return (
     <div 
       className="min-h-[842px] w-full" // A4 aspect ratio
       style={{ 
-        backgroundColor: colors.background || '#ffffff',
-        color: colors.text || '#1f2937',
-        fontFamily: fonts.primary || 'Inter',
-        fontSize: `${fonts.sizes?.body || 14}px`
+        backgroundColor: safeColors.background,
+        color: safeColors.text,
+        fontFamily: safeFonts.primary,
+        fontSize: `${safeFonts.sizes.body}px`
       }}
     >
       {/* Header Section */}
-      {header.enabled && (
+      {safeHeader.enabled && (
         <div 
           className="p-6 border-b"
           style={{ 
-            backgroundColor: header.backgroundColor || colors.background,
-            color: header.textColor || colors.text,
-            height: `${header.height || 80}px`
+            backgroundColor: safeHeader.backgroundColor,
+            color: safeHeader.textColor,
+            height: `${safeHeader.height}px`
           }}
         >
           <div className="flex items-center justify-between h-full">
             {/* Logo Area */}
             <div className={cn(
               "flex items-center",
-              header.logoPosition === 'center' && "mx-auto",
-              header.logoPosition === 'right' && "ml-auto"
+              safeHeader.logoPosition === 'center' && "mx-auto",
+              safeHeader.logoPosition === 'right' && "ml-auto"
             )}>
-              {branding.logo ? (
+              {safeBranding.logo ? (
                 <img 
-                  src={branding.logo} 
+                  src={safeBranding.logo} 
                   alt="Logo" 
                   className={cn(
                     "object-contain",
-                    header.logoSize === 'small' && "h-8",
-                    header.logoSize === 'medium' && "h-12",
-                    header.logoSize === 'large' && "h-16"
+                    safeHeader.logoSize === 'small' && "h-8",
+                    safeHeader.logoSize === 'medium' && "h-12",
+                    safeHeader.logoSize === 'large' && "h-16"
                   )}
                 />
               ) : (
                 <div 
                   className={cn(
                     "flex items-center justify-center rounded text-white font-bold",
-                    header.logoSize === 'small' && "h-8 w-20 text-sm",
-                    header.logoSize === 'medium' && "h-12 w-32 text-lg",
-                    header.logoSize === 'large' && "h-16 w-40 text-xl"
+                    safeHeader.logoSize === 'small' && "h-8 w-20 text-sm",
+                    safeHeader.logoSize === 'medium' && "h-12 w-32 text-lg",
+                    safeHeader.logoSize === 'large' && "h-16 w-40 text-xl"
                   )}
-                  style={{ backgroundColor: colors.primary || '#ef4444' }}
+                  style={{ backgroundColor: safeColors.primary }}
                 >
                   LOGO
                 </div>
@@ -350,9 +396,9 @@ const TemplateRenderer: React.FC<TemplateRendererProps> = ({ template, data }) =
             </div>
 
             {/* Company Info */}
-            {header.showCompanyInfo && (
+            {safeHeader.showCompanyInfo && (
               <div className="text-right text-sm">
-                <div className="font-semibold" style={{ fontSize: `${fonts.sizes?.heading || 18}px` }}>
+                <div className="font-semibold" style={{ fontSize: `${safeFonts.sizes.heading}px` }}>
                   {data.company.name}
                 </div>
                 <div className="text-xs mt-1 space-y-1">
@@ -372,8 +418,8 @@ const TemplateRenderer: React.FC<TemplateRendererProps> = ({ template, data }) =
         <h1 
           className="font-bold"
           style={{ 
-            fontSize: `${fonts.sizes?.title || 32}px`,
-            color: colors.primary || '#2563eb'
+            fontSize: `${safeFonts.sizes.title}px`,
+            color: safeColors.primary
           }}
         >
           TEKLİF
@@ -401,18 +447,18 @@ const TemplateRenderer: React.FC<TemplateRendererProps> = ({ template, data }) =
       </div>
 
       {/* Footer */}
-      {footer.enabled && (
+      {safeFooter.enabled && (
         <div 
           className="mt-8 p-4 border-t text-center text-sm"
           style={{ 
-            backgroundColor: footer.backgroundColor || colors.background,
-            color: footer.textColor || colors.text
+            backgroundColor: safeFooter.backgroundColor,
+            color: safeFooter.textColor
           }}
         >
-          {footer.showContactInfo && (
+          {safeFooter.showContactInfo && (
             <div>{data.company.name} • {data.company.phone} • {data.company.email}</div>
           )}
-          {footer.showPageNumbers && (
+          {safeFooter.showPageNumbers && (
             <div className="mt-2">Sayfa 1</div>
           )}
         </div>
