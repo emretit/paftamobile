@@ -10,7 +10,7 @@ import { ProposalTemplate } from "@/types/proposal-template";
 import { TemplateCanvas } from "./TemplateCanvas";
 import { TemplateSettings } from "./TemplateSettings";
 import { TemplatePreviewPanel } from "./TemplatePreviewPanel";
-import { FieldPalette } from "./FieldPalette";
+import FieldPalette from "./FieldPalette";
 
 interface TemplateDesignerProps {
   template?: ProposalTemplate;
@@ -230,12 +230,7 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
               </TabsContent>
 
               <TabsContent value="fields" className="h-full m-0">
-                <FieldPalette
-                  onAddField={(field) => {
-                    console.log('Add field:', field);
-                    // Field ekleme logic'i burada olacak
-                  }}
-                />
+                <FieldPalette />
               </TabsContent>
 
               <TabsContent value="preview" className="h-full m-0 p-0">

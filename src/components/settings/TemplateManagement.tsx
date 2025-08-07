@@ -20,6 +20,7 @@ import type { Database } from "@/integrations/supabase/types";
 // type ProposalTemplateUpdate = Database['public']['Tables']['proposal_templates']['Update'];
 
 export const TemplateManagement: React.FC = () => {
+  const [isCreating, setIsCreating] = useState(false);
   const [isDesigning, setIsDesigning] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState<ProposalTemplate | null>(null);
@@ -256,6 +257,18 @@ export const TemplateManagement: React.FC = () => {
   }
 
   return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Teklif Şablonları</h2>
+          <p className="text-gray-600">Şablonlarınızı yönetin ve düzenleyin</p>
+        </div>
+        <Button onClick={() => setIsCreating(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Yeni Şablon
+        </Button>
+      </div>
+
       <TemplateGallery
         templates={templates || []}
         onCreateNew={() => {
@@ -283,5 +296,6 @@ export const TemplateManagement: React.FC = () => {
           // Burada kullanıcıyı teklif oluşturma sayfasına yönlendirebilirsiniz
         }}
       />
+    </div>
   );
 };
