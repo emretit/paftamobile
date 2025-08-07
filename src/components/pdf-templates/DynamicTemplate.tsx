@@ -42,18 +42,41 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
 
   // Dinamik stiller oluştur
   const createDynamicStyles = () => {
-    const colors = designSettings?.colors || {};
-    const fonts = designSettings?.fonts || {};
+    const colors = designSettings?.colors || {
+      primary: '#ff0000',
+      secondary: '#666666',
+      accent: '#333333',
+      text: '#333333',
+      background: '#ffffff',
+      border: '#cccccc'
+    };
+    const fonts = designSettings?.fonts || {
+      primary: 'Helvetica',
+      secondary: 'Helvetica',
+      sizes: {
+        title: 18,
+        heading: 16,
+        body: 10,
+        small: 8
+      }
+    };
+    const table = designSettings?.table || {
+      headerBackground: '#f5f5f5',
+      headerText: '#333333',
+      rowAlternating: false,
+      borderColor: '#cccccc',
+      borderWidth: 1
+    };
     const margins = designSettings?.margins || { top: 30, bottom: 65, left: 35, right: 35 };
     
     return StyleSheet.create({
       page: {
-        fontFamily: fonts.primary || 'Helvetica',
-        fontSize: fonts.sizes?.body || 10,
+        fontFamily: fonts.primary,
+        fontSize: fonts.sizes.body,
         paddingTop: margins.top,
         paddingBottom: margins.bottom,
         paddingHorizontal: margins.left,
-        backgroundColor: colors.background || '#ffffff',
+        backgroundColor: colors.background,
       },
       header: {
         flexDirection: 'row',
@@ -63,7 +86,7 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
       logoContainer: {
         width: 120,
         height: 80,
-        backgroundColor: colors.primary || '#ff0000',
+        backgroundColor: colors.primary,
         marginRight: 20,
         alignItems: 'center',
         justifyContent: 'center',
@@ -77,14 +100,14 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
         flex: 1,
       },
       companyName: {
-        fontSize: fonts.sizes?.heading || 16,
+        fontSize: fonts.sizes.heading,
         fontWeight: 'bold',
         marginBottom: 5,
-        color: colors.text || '#333333',
+        color: colors.text,
       },
       companyDetails: {
         fontSize: 9,
-        color: colors.textSecondary || '#666666',
+        color: colors.secondary,
         lineHeight: 1.4,
       },
       titleSection: {
@@ -92,14 +115,14 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
         alignItems: 'flex-end',
       },
       title: {
-        fontSize: fonts.sizes?.title || 18,
+        fontSize: fonts.sizes.title,
         fontWeight: 'bold',
-        color: colors.primary || '#ff0000',
+        color: colors.primary,
         textAlign: 'right',
       },
       proposalNumber: {
         fontSize: 10,
-        color: colors.text || '#333333',
+        color: colors.text,
         textAlign: 'right',
         marginTop: 5,
       },
@@ -112,20 +135,20 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
         flex: 1,
       },
       infoBox: {
-        border: `1 solid ${colors.border || '#cccccc'}`,
+        border: `1 solid ${colors.border}`,
         padding: 10,
         marginBottom: 10,
-        backgroundColor: colors.backgroundSecondary || '#ffffff',
+        backgroundColor: colors.background,
       },
       infoTitle: {
         fontSize: 11,
         fontWeight: 'bold',
         marginBottom: 8,
-        color: colors.text || '#333333',
+        color: colors.text,
       },
       infoText: {
         fontSize: 9,
-        color: colors.textSecondary || '#666666',
+        color: colors.secondary,
         lineHeight: 1.3,
         marginBottom: 2,
       },
@@ -134,25 +157,25 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
       },
       tableHeader: {
         flexDirection: 'row',
-        backgroundColor: colors.tableHeader || '#f5f5f5',
-        borderBottom: `1 solid ${colors.border || '#cccccc'}`,
+        backgroundColor: table.headerBackground,
+        borderBottom: `1 solid ${table.borderColor}`,
         paddingVertical: 8,
         paddingHorizontal: 5,
       },
       tableRow: {
         flexDirection: 'row',
-        borderBottom: `1 solid ${colors.border || '#eeeeee'}`,
+        borderBottom: `1 solid ${colors.border}`,
         paddingVertical: 6,
         paddingHorizontal: 5,
       },
       tableCell: {
         fontSize: 9,
-        color: colors.text || '#333333',
+        color: colors.text,
       },
       tableCellHeader: {
         fontSize: 9,
         fontWeight: 'bold',
-        color: colors.text || '#333333',
+        color: colors.text,
       },
       col1: { width: '5%' },
       col2: { width: '35%' },
@@ -167,42 +190,42 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
       },
       totalsBox: {
         width: 200,
-        border: `1 solid ${colors.border || '#cccccc'}`,
+        border: `1 solid ${colors.border}`,
       },
       totalRow: {
         flexDirection: 'row',
         paddingVertical: 4,
         paddingHorizontal: 8,
-        borderBottom: `1 solid ${colors.border || '#eeeeee'}`,
+        borderBottom: `1 solid ${colors.border}`,
       },
       totalLabel: {
         flex: 1,
         fontSize: 9,
-        color: colors.text || '#333333',
+        color: colors.text,
       },
       totalValue: {
         width: 80,
         fontSize: 9,
-        color: colors.text || '#333333',
+        color: colors.text,
         textAlign: 'right',
       },
       grandTotalRow: {
         flexDirection: 'row',
         paddingVertical: 6,
         paddingHorizontal: 8,
-        backgroundColor: colors.tableHeader || '#f5f5f5',
+        backgroundColor: table.headerBackground,
       },
       grandTotalLabel: {
         flex: 1,
         fontSize: 10,
         fontWeight: 'bold',
-        color: colors.text || '#333333',
+        color: colors.text,
       },
       grandTotalValue: {
         width: 80,
         fontSize: 10,
         fontWeight: 'bold',
-        color: colors.text || '#333333',
+        color: colors.text,
         textAlign: 'right',
       },
       termsSection: {
@@ -212,11 +235,11 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
         fontSize: 11,
         fontWeight: 'bold',
         marginBottom: 5,
-        color: colors.text || '#333333',
+        color: colors.text,
       },
       termsText: {
         fontSize: 9,
-        color: colors.textSecondary || '#666666',
+        color: colors.secondary,
         lineHeight: 1.4,
         marginBottom: 10,
       },
