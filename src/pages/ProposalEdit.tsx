@@ -118,8 +118,8 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
       const customer = customers?.find(c => c.id === proposal.customer_id);
       
       setFormData({
-        customer_company: customer?.company || customer?.name || proposal.customer_name || "",
-        contact_name: proposal.customer_name || "",
+        customer_company: customer?.company || customer?.name || "",
+        contact_name: customer?.name || "",
         contact_title: "",
         offer_date: proposal.created_at ? proposal.created_at.split('T')[0] : "",
         offer_number: proposal.number || "",
