@@ -28,7 +28,7 @@ const LoginButton = () => {
   const handleClick = () => {
     if (user) {
       // User is logged in, go to dashboard
-      navigate("/orders/purchase");
+      navigate("/dashboard");
     } else {
       // User is not logged in, go to auth page
       navigate("/auth");
@@ -46,7 +46,7 @@ const LoginButton = () => {
         <span className="text-sm text-gray-700">
           Merhaba, {user.email}
         </span>
-        <Button variant="outline" onClick={() => navigate("/orders/purchase")}>
+        <Button variant="outline" onClick={() => navigate("/dashboard")}>
           Dashboard
         </Button>
         <Button variant="outline" onClick={handleLogout}>

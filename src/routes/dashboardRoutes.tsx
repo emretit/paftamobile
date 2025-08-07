@@ -1,5 +1,6 @@
 
 import Dashboard from "@/pages/Dashboard";
+import CrmDashboard from "@/pages/crm/CrmDashboard";
 import IncomeManagement from "@/pages/IncomeManagement";
 import ExpenseManagement from "@/pages/ExpenseManagement";
 import InvestmentManagement from "@/pages/InvestmentManagement";
@@ -15,7 +16,7 @@ export const dashboardRoutes: RouteConfig[] = [
   },
   {
     path: "/crm", 
-    component: Dashboard, 
+    component: CrmDashboard, 
     protected: true 
   },
   {

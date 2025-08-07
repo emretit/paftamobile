@@ -74,7 +74,7 @@ const Auth = () => {
       // Updated to use the correct method
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        navigate("/crm"); // Always redirect to the dashboard
+        navigate("/dashboard"); // Always redirect to the dashboard
       }
     };
     
@@ -84,7 +84,7 @@ const Auth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          navigate("/crm"); // Always redirect to the dashboard
+          navigate("/dashboard"); // Always redirect to the dashboard
         }
       }
     );
