@@ -167,12 +167,13 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
 
   // Update item calculations
   useEffect(() => {
-    const updatedItems = items.map(item => ({
-      ...item,
-      total_price: item.quantity * item.unit_price
-    }));
-    setItems(updatedItems);
-  }, [items.map(item => `${item.quantity}-${item.unit_price}`).join(',')]);
+    setItems(prevItems => 
+      prevItems.map(item => ({
+        ...item,
+        total_price: item.quantity * item.unit_price
+      }))
+    );
+  }, []);
 
   const handleFieldChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -185,7 +186,11 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
     const updatedItems = [...items];
     updatedItems[index] = {
       ...updatedItems[index],
-      [field]: value
+      [field]: value,
+      total_price: field === 'quantity' || field === 'unit_price' 
+        ? (field === 'quantity' ? value : updatedItems[index].quantity) * 
+          (field === 'unit_price' ? value : updatedItems[index].unit_price)
+        : updatedItems[index].total_price
     };
     setItems(updatedItems);
   };
