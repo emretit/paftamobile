@@ -78,79 +78,132 @@ export const CompanySettingsTab = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {isDirty && (
+            <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <p className="text-sm text-orange-800 font-medium">
+                ⚠️ Kaydedilmemiş değişiklikleriniz var
+              </p>
+              <p className="text-xs text-orange-600 mt-1">
+                Değişiklikleri kaydetmek için aşağıdaki "Ayarları Kaydet" butonuna tıklayın.
+              </p>
+            </div>
+          )}
+          
           <div className="grid gap-4">
             <div className="space-y-2">
-              <Label htmlFor="company_name">Şirket Adı *</Label>
+              <Label htmlFor="company_name" className="flex items-center gap-1">
+                Şirket Adı *
+                {formData?.company_name !== settings?.company_name && (
+                  <span className="text-xs text-orange-500">●</span>
+                )}
+              </Label>
               <Input
                 id="company_name"
                 placeholder="örn: NGS Teknoloji Ltd. Şti."
                 value={formData?.company_name || ''}
                 onChange={(e) => handleFieldChange('company_name', e.target.value)}
+                className={formData?.company_name !== settings?.company_name ? 'border-orange-300 bg-orange-50' : ''}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address">Şirket Adresi</Label>
+              <Label htmlFor="address" className="flex items-center gap-1">
+                Şirket Adresi
+                {formData?.address !== settings?.address && (
+                  <span className="text-xs text-orange-500">●</span>
+                )}
+              </Label>
               <Textarea
                 id="address"
                 placeholder="Tam şirket adresinizi giriniz"
                 rows={3}
                 value={formData?.address || ''}
                 onChange={(e) => handleFieldChange('address', e.target.value)}
+                className={formData?.address !== settings?.address ? 'border-orange-300 bg-orange-50' : ''}
               />
             </div>
 
             <div className="grid gap-4 grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="phone">Telefon</Label>
+                <Label htmlFor="phone" className="flex items-center gap-1">
+                  Telefon
+                  {formData?.phone !== settings?.phone && (
+                    <span className="text-xs text-orange-500">●</span>
+                  )}
+                </Label>
                 <Input
                   id="phone"
                   placeholder="+90 212 555 0123"
                   value={formData?.phone || ''}
                   onChange={(e) => handleFieldChange('phone', e.target.value)}
+                  className={formData?.phone !== settings?.phone ? 'border-orange-300 bg-orange-50' : ''}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">E-posta</Label>
+                <Label htmlFor="email" className="flex items-center gap-1">
+                  E-posta
+                  {formData?.email !== settings?.email && (
+                    <span className="text-xs text-orange-500">●</span>
+                  )}
+                </Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="info@sirket.com"
                   value={formData?.email || ''}
                   onChange={(e) => handleFieldChange('email', e.target.value)}
+                  className={formData?.email !== settings?.email ? 'border-orange-300 bg-orange-50' : ''}
                 />
               </div>
             </div>
 
             <div className="grid gap-4 grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="tax_number">Vergi Numarası</Label>
+                <Label htmlFor="tax_number" className="flex items-center gap-1">
+                  Vergi Numarası
+                  {formData?.tax_number !== settings?.tax_number && (
+                    <span className="text-xs text-orange-500">●</span>
+                  )}
+                </Label>
                 <Input
                   id="tax_number"
                   placeholder="1234567890"
                   value={formData?.tax_number || ''}
                   onChange={(e) => handleFieldChange('tax_number', e.target.value)}
+                  className={formData?.tax_number !== settings?.tax_number ? 'border-orange-300 bg-orange-50' : ''}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="tax_office">Vergi Dairesi</Label>
+                <Label htmlFor="tax_office" className="flex items-center gap-1">
+                  Vergi Dairesi
+                  {formData?.tax_office !== settings?.tax_office && (
+                    <span className="text-xs text-orange-500">●</span>
+                  )}
+                </Label>
                 <Input
                   id="tax_office"
                   placeholder="Beşiktaş Vergi Dairesi"
                   value={formData?.tax_office || ''}
                   onChange={(e) => handleFieldChange('tax_office', e.target.value)}
+                  className={formData?.tax_office !== settings?.tax_office ? 'border-orange-300 bg-orange-50' : ''}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="website">Web Sitesi</Label>
+              <Label htmlFor="website" className="flex items-center gap-1">
+                Web Sitesi
+                {formData?.website !== settings?.website && (
+                  <span className="text-xs text-orange-500">●</span>
+                )}
+              </Label>
               <Input
                 id="website"
                 type="url"
                 placeholder="https://www.sirket.com"
                 value={formData?.website || ''}
                 onChange={(e) => handleFieldChange('website', e.target.value)}
+                className={formData?.website !== settings?.website ? 'border-orange-300 bg-orange-50' : ''}
               />
             </div>
 
@@ -247,11 +300,17 @@ export const CompanySettingsTab = () => {
         <Button 
           onClick={handleSave}
           disabled={isSaving || !isDirty}
-          className="gap-2"
+          className={`gap-2 ${isDirty ? 'bg-primary hover:bg-primary/90' : ''}`}
+          size="lg"
         >
           <Save className="h-4 w-4" />
-          {isSaving ? 'Kaydediliyor...' : 'Ayarları Kaydet'}
+          {isSaving ? 'Kaydediliyor...' : isDirty ? `Değişiklikleri Kaydet` : 'Ayarları Kaydet'}
         </Button>
+        {!isDirty && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Kaydetmek için önce bir değişiklik yapın
+          </p>
+        )}
       </div>
     </div>
   );
