@@ -117,11 +117,21 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
   const calculateTotalsByCurrency = () => {
     const totals: Record<string, { gross: number; discount: number; net: number; vat: number; grand: number }> = {};
     
+    // First, collect all currencies used in items (even if values are 0)
+    const usedCurrencies = new Set<string>();
     items.forEach(item => {
       const currency = item.currency || 'TRY';
-      if (!totals[currency]) {
-        totals[currency] = { gross: 0, discount: 0, net: 0, vat: 0, grand: 0 };
-      }
+      usedCurrencies.add(currency);
+    });
+    
+    // Initialize totals for all used currencies
+    usedCurrencies.forEach(currency => {
+      totals[currency] = { gross: 0, discount: 0, net: 0, vat: 0, grand: 0 };
+    });
+    
+    // Calculate gross totals
+    items.forEach(item => {
+      const currency = item.currency || 'TRY';
       totals[currency].gross += item.quantity * item.unit_price;
     });
     
