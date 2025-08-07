@@ -11,6 +11,8 @@ export type CompanySettings = {
   phone: string | null;
   email: string | null;
   tax_number: string | null;
+  tax_office: string | null;
+  website: string | null;
   logo_url: string | null;
   default_currency: string;
   email_settings: {
@@ -47,6 +49,8 @@ export const useCompanySettings = () => {
           phone: '',
           email: '',
           tax_number: '',
+          tax_office: '',
+          website: '',
           logo_url: '',
           default_currency: 'TRY',
           email_settings: {

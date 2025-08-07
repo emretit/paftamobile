@@ -6,14 +6,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Save, Building, Settings } from "lucide-react";
-import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useCompanySettings, CompanySettings } from "@/hooks/useCompanySettings";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export const CompanySettingsTab = () => {
   const { settings, updateSettings } = useCompanySettings();
   const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<Partial<CompanySettings>>({});
+  const [isDirty, setIsDirty] = useState(false);
+
+  useEffect(() => {
+    if (settings) {
+      setFormData(settings);
+    }
+  }, [settings]);
+
+  const handleFieldChange = (field: keyof CompanySettings, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setIsDirty(true);
+  };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,7 +47,7 @@ export const CompanySettingsTab = () => {
         .from('logos')
         .getPublicUrl(data.path);
 
-      updateSettings({ logo_url: publicUrl });
+      handleFieldChange('logo_url', publicUrl);
       toast.success('Logo başarıyla yüklendi');
     }
   };
@@ -42,9 +55,8 @@ export const CompanySettingsTab = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // updateSettings fonksiyonu zaten kaydetme işlemini yapıyor
-      // Burada ekstra bir şey yapmaya gerek yok, sadece kullanıcıya feedback verelim
-      toast.success('Ayarlar başarıyla kaydedildi');
+      await updateSettings(formData);
+      setIsDirty(false);
     } catch (error) {
       toast.error('Ayarlar kaydedilirken hata oluştu');
     } finally {
@@ -72,8 +84,8 @@ export const CompanySettingsTab = () => {
               <Input
                 id="company_name"
                 placeholder="örn: NGS Teknoloji Ltd. Şti."
-                value={settings?.company_name || ''}
-                onChange={(e) => updateSettings({ company_name: e.target.value })}
+                value={formData?.company_name || ''}
+                onChange={(e) => handleFieldChange('company_name', e.target.value)}
               />
             </div>
 
@@ -83,8 +95,8 @@ export const CompanySettingsTab = () => {
                 id="address"
                 placeholder="Tam şirket adresinizi giriniz"
                 rows={3}
-                value={settings?.address || ''}
-                onChange={(e) => updateSettings({ address: e.target.value })}
+                value={formData?.address || ''}
+                onChange={(e) => handleFieldChange('address', e.target.value)}
               />
             </div>
 
@@ -94,8 +106,8 @@ export const CompanySettingsTab = () => {
                 <Input
                   id="phone"
                   placeholder="+90 212 555 0123"
-                  value={settings?.phone || ''}
-                  onChange={(e) => updateSettings({ phone: e.target.value })}
+                  value={formData?.phone || ''}
+                  onChange={(e) => handleFieldChange('phone', e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -104,8 +116,8 @@ export const CompanySettingsTab = () => {
                   id="email"
                   type="email"
                   placeholder="info@sirket.com"
-                  value={settings?.email || ''}
-                  onChange={(e) => updateSettings({ email: e.target.value })}
+                  value={formData?.email || ''}
+                  onChange={(e) => handleFieldChange('email', e.target.value)}
                 />
               </div>
             </div>
@@ -116,8 +128,8 @@ export const CompanySettingsTab = () => {
                 <Input
                   id="tax_number"
                   placeholder="1234567890"
-                  value={settings?.tax_number || ''}
-                  onChange={(e) => updateSettings({ tax_number: e.target.value })}
+                  value={formData?.tax_number || ''}
+                  onChange={(e) => handleFieldChange('tax_number', e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -125,8 +137,8 @@ export const CompanySettingsTab = () => {
                 <Input
                   id="tax_office"
                   placeholder="Beşiktaş Vergi Dairesi"
-                  value={settings?.tax_office || ''}
-                  onChange={(e) => updateSettings({ tax_office: e.target.value })}
+                  value={formData?.tax_office || ''}
+                  onChange={(e) => handleFieldChange('tax_office', e.target.value)}
                 />
               </div>
             </div>
@@ -137,8 +149,8 @@ export const CompanySettingsTab = () => {
                 id="website"
                 type="url"
                 placeholder="https://www.sirket.com"
-                value={settings?.website || ''}
-                onChange={(e) => updateSettings({ website: e.target.value })}
+                value={formData?.website || ''}
+                onChange={(e) => handleFieldChange('website', e.target.value)}
               />
             </div>
 
@@ -146,9 +158,9 @@ export const CompanySettingsTab = () => {
             <div className="space-y-2">
               <Label>Şirket Logosu</Label>
               <div className="flex items-center gap-4">
-                {settings?.logo_url && (
+                {formData?.logo_url && (
                   <img 
-                    src={settings.logo_url} 
+                    src={formData.logo_url} 
                     alt="Company logo" 
                     className="h-16 w-16 object-contain border rounded p-2 bg-white"
                   />
@@ -166,7 +178,7 @@ export const CompanySettingsTab = () => {
                     onClick={() => document.getElementById('logo-upload')?.click()}
                   >
                     <Upload className="mr-2 h-4 w-4" />
-                    {settings?.logo_url ? 'Logo Değiştir' : 'Logo Yükle'}
+                    {formData?.logo_url ? 'Logo Değiştir' : 'Logo Yükle'}
                   </Button>
                   <p className="text-xs text-muted-foreground mt-1">
                     PNG, JPG veya SVG • Maksimum 2MB
@@ -194,8 +206,8 @@ export const CompanySettingsTab = () => {
             <div className="space-y-2">
               <Label>Varsayılan Para Birimi</Label>
               <Select
-                value={settings?.default_currency || 'TRY'}
-                onValueChange={(value) => updateSettings({ default_currency: value })}
+                value={formData?.default_currency || 'TRY'}
+                onValueChange={(value) => handleFieldChange('default_currency', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Para birimi seçin" />
@@ -217,13 +229,11 @@ export const CompanySettingsTab = () => {
                 </div>
               </div>
               <Switch
-                checked={settings?.email_settings?.notifications_enabled || false}
+                checked={formData?.email_settings?.notifications_enabled || false}
                 onCheckedChange={(checked) =>
-                  updateSettings({ 
-                    email_settings: { 
-                      ...settings?.email_settings,
-                      notifications_enabled: checked 
-                    } 
+                  handleFieldChange('email_settings', { 
+                    ...formData?.email_settings,
+                    notifications_enabled: checked 
                   })
                 }
               />
@@ -236,7 +246,7 @@ export const CompanySettingsTab = () => {
       <div className="flex justify-end">
         <Button 
           onClick={handleSave}
-          disabled={isSaving}
+          disabled={isSaving || !isDirty}
           className="gap-2"
         >
           <Save className="h-4 w-4" />
