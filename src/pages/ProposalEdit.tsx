@@ -341,36 +341,45 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
 
   // Save function
   const handleSaveChanges = async (status: ProposalStatus = proposal?.status || 'draft') => {
+    console.log("🔍 Save changes clicked with status:", status);
+    console.log("🔍 FormData:", formData);
+    console.log("🔍 Items:", items);
+    
     // Validation
     if (!formData.customer_company.trim()) {
+      console.log("❌ Validation failed: customer_company is empty");
       toast.error("Müşteri firma adı gereklidir");
       return;
     }
     if (!formData.contact_name.trim()) {
+      console.log("❌ Validation failed: contact_name is empty");
       toast.error("İletişim kişisi adı gereklidir");
       return;
     }
     if (!formData.validity_date) {
+      console.log("❌ Validation failed: validity_date is empty");
       toast.error("Geçerlilik tarihi gereklidir");
       return;
     }
     if (items.length === 0 || items.every(item => !item.name.trim() && !item.description.trim())) {
+      console.log("❌ Validation failed: no valid items");
       toast.error("En az bir teklif kalemi eklenmelidir");
       return;
     }
 
+    console.log("✅ All validations passed, proceeding with save...");
+
     setIsSaving(true);
     try {
-      // Prepare data for backend
+      // Prepare data for backend compatible with database schema
       const proposalData = {
         title: `${formData.customer_company} - Teklif`,
         description: formData.notes,
-        customer_name: formData.customer_company,
-        customer_id: formData.customer_id || "",
-        employee_id: formData.employee_id || "",
+        number: formData.offer_number,
+        customer_id: formData.customer_id || null,
+        employee_id: formData.employee_id || null,
         valid_until: formData.validity_date,
-        payment_terms: formData.payment_terms,
-        delivery_terms: `${formData.delivery_terms}\n\nGaranti: ${formData.warranty_terms}`,
+        terms: `${formData.payment_terms}\n\n${formData.delivery_terms}\n\nGaranti: ${formData.warranty_terms}`,
         notes: formData.notes,
         status: status,
         total_amount: calculations.grand_total,
@@ -381,10 +390,13 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         }))
       };
 
+      console.log("🔍 Prepared proposal data:", proposalData);
+
       await handleSave(proposalData);
       setHasChanges(false);
       toast.success("Teklif başarıyla güncellendi");
     } catch (error) {
+      console.error("💥 Error saving proposal:", error);
       toast.error("Teklif güncellenirken bir hata oluştu");
     } finally {
       setIsSaving(false);
