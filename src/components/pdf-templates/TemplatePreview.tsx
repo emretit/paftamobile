@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Eye, Download, Settings, Check } from 'lucide-react';
-import { pdfTemplateRegistry, PdfTemplateComponent } from '@/utils/pdfTemplateRegistry';
+import { PdfTemplateComponent } from '@/utils/pdfTemplateRegistry';
+import { usePdfTemplates } from '@/hooks/usePdfTemplates';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Proposal } from '@/types/proposal';
 import { toast } from 'sonner';
@@ -22,6 +23,7 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
   onDownloadWithTemplate,
   proposal
 }) => {
+  const { templates } = usePdfTemplates();
   const [previewTemplate, setPreviewTemplate] = useState<PdfTemplateComponent | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
@@ -53,7 +55,7 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {pdfTemplateRegistry.map((template) => (
+        {templates.map((template) => (
           <Card 
             key={template.id} 
             className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
@@ -154,7 +156,7 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
             <SelectValue placeholder="Şablon seçin..." />
           </SelectTrigger>
           <SelectContent>
-            {pdfTemplateRegistry.map((template) => (
+            {templates.map((template) => (
               <SelectItem key={template.id} value={template.id}>
                 {template.name}
               </SelectItem>

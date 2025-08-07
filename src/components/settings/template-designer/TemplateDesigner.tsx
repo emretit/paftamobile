@@ -4,10 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save, Eye, Settings } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Save, Eye, Settings, Palette, Layout, Type, Image, FileText } from "lucide-react";
 import { ProposalTemplate } from "@/types/proposal-template";
 import { TemplateCanvas } from "./TemplateCanvas";
 import { TemplateSettings } from "./TemplateSettings";
+import { TemplatePreviewPanel } from "./TemplatePreviewPanel";
+import { FieldPalette } from "./FieldPalette";
 
 interface TemplateDesignerProps {
   template?: ProposalTemplate;
@@ -22,7 +25,8 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
 }) => {
   const [templateName, setTemplateName] = useState(template?.name || "Yeni Şablon");
   const [templateDescription, setTemplateDescription] = useState(template?.description || "");
-  const [showSettings, setShowSettings] = useState(false);
+  const [activeTab, setActiveTab] = useState("design");
+  const [isPreviewFullscreen, setIsPreviewFullscreen] = useState(false);
   const [templateData, setTemplateData] = useState<ProposalTemplate>(template || {
     id: crypto.randomUUID(),
     name: "Yeni Şablon",
@@ -131,10 +135,11 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setShowSettings(!showSettings)}
+            onClick={() => setActiveTab("preview")}
+            disabled={activeTab === "preview"}
           >
-            <Settings className="w-4 h-4 mr-2" />
-            Ayarlar
+            <Eye className="w-4 h-4 mr-2" />
+            Önizleme
           </Button>
           <Button size="sm" onClick={handleSave}>
             <Save className="w-4 h-4 mr-2" />
@@ -145,19 +150,130 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
 
       {/* Main Content */}
       <div className="flex-1 flex">
-        {/* Settings Panel */}
-        {showSettings && (
-          <div className="w-80 border-r bg-card">
-            <TemplateSettings
-              template={templateData}
-              onChange={setTemplateData}
-            />
-          </div>
-        )}
+        {/* Left Sidebar - Tools */}
+        <div className="w-80 border-r bg-card">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+            <div className="border-b p-4">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="design" className="p-2">
+                  <Layout className="w-4 h-4" />
+                </TabsTrigger>
+                <TabsTrigger value="style" className="p-2">
+                  <Palette className="w-4 h-4" />
+                </TabsTrigger>
+                <TabsTrigger value="fields" className="p-2">
+                  <Type className="w-4 h-4" />
+                </TabsTrigger>
+                <TabsTrigger value="preview" className="p-2">
+                  <Eye className="w-4 h-4" />
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-        {/* Canvas */}
+            <div className="flex-1 overflow-auto">
+              <TabsContent value="design" className="h-full m-0">
+                <TemplateSettings
+                  template={templateData}
+                  onChange={setTemplateData}
+                />
+              </TabsContent>
+
+              <TabsContent value="style" className="h-full m-0">
+                <div className="p-4 space-y-6">
+                  <h3 className="font-semibold mb-4">Stil Ayarları</h3>
+                  {/* Color picker, font settings, etc. */}
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Ana Renk</Label>
+                      <input
+                        type="color"
+                        value={templateData.designSettings?.colors?.primary || '#2563eb'}
+                        onChange={(e) => {
+                          const updatedTemplate = {
+                            ...templateData,
+                            designSettings: {
+                              ...templateData.designSettings!,
+                              colors: {
+                                ...templateData.designSettings!.colors,
+                                primary: e.target.value
+                              }
+                            }
+                          };
+                          setTemplateData(updatedTemplate);
+                        }}
+                        className="w-full h-10 rounded border"
+                      />
+                    </div>
+                    <div>
+                      <Label>İkincil Renk</Label>
+                      <input
+                        type="color"
+                        value={templateData.designSettings?.colors?.secondary || '#64748b'}
+                        onChange={(e) => {
+                          const updatedTemplate = {
+                            ...templateData,
+                            designSettings: {
+                              ...templateData.designSettings!,
+                              colors: {
+                                ...templateData.designSettings!.colors,
+                                secondary: e.target.value
+                              }
+                            }
+                          };
+                          setTemplateData(updatedTemplate);
+                        }}
+                        className="w-full h-10 rounded border"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="fields" className="h-full m-0">
+                <FieldPalette
+                  onAddField={(field) => {
+                    console.log('Add field:', field);
+                    // Field ekleme logic'i burada olacak
+                  }}
+                />
+              </TabsContent>
+
+              <TabsContent value="preview" className="h-full m-0 p-0">
+                {/* Preview will be in main area */}
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
+
+        {/* Main Canvas/Preview Area */}
         <div className="flex-1">
-          <TemplateCanvas template={templateData} />
+          {activeTab === "preview" ? (
+            <TemplatePreviewPanel
+              template={templateData}
+              isFullscreen={isPreviewFullscreen}
+              onToggleFullscreen={() => setIsPreviewFullscreen(!isPreviewFullscreen)}
+            />
+          ) : (
+            <div className="h-full flex">
+              <div className="flex-1">
+                <TemplateCanvas template={templateData} />
+              </div>
+              {/* Mini preview sidebar */}
+              <div className="w-80 border-l bg-muted/30">
+                <div className="p-4">
+                  <h4 className="font-medium mb-3">Canlı Önizleme</h4>
+                  <div className="aspect-[3/4] bg-white border rounded-lg overflow-hidden">
+                    <div className="scale-[0.3] origin-top-left w-[300%] h-[300%]">
+                      <TemplatePreviewPanel
+                        template={templateData}
+                        isFullscreen={false}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { pdfTemplateRegistry, PdfTemplateComponent, getDefaultTemplate } from '@/utils/pdfTemplateRegistry';
+import { PdfTemplateComponent } from '@/utils/pdfTemplateRegistry';
 import { ProposalTemplate } from '@/types/proposal-template';
 
 // Supabase şablonunu PdfTemplateComponent formatına çevir
@@ -40,22 +40,19 @@ export const usePdfTemplates = () => {
     }
   });
 
-  // Sabit template'ler + dinamik template'leri birleştir
-  const allTemplates = [
-    ...pdfTemplateRegistry, // Sabit template'ler (StandardTemplate, ModernTemplate, MinimalTemplate)
-    ...(dynamicTemplates || []) // Dinamik template'ler (Ayarlar'dan oluşturulan)
-  ];
+  // Sadece Supabase'den gelen dinamik template'leri kullan
+  const allTemplates = dynamicTemplates || [];
 
   // Set default template on mount
   useEffect(() => {
     if (!selectedTemplateId && allTemplates.length > 0) {
-      const defaultTemplate = getDefaultTemplate();
-      setSelectedTemplateId(defaultTemplate.id);
+      // İlk template'i varsayılan olarak seç
+      setSelectedTemplateId(allTemplates[0].id);
     }
   }, [selectedTemplateId, allTemplates.length]);
 
   const getSelectedTemplate = () => {
-    return allTemplates.find(t => t.id === selectedTemplateId) || getDefaultTemplate();
+    return allTemplates.find(t => t.id === selectedTemplateId) || (allTemplates.length > 0 ? allTemplates[0] : null);
   };
 
   const selectTemplate = (templateId: string) => {

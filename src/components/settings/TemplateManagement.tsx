@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ProposalTemplate } from "@/types/proposal-template";
-import { Plus, Edit, Trash2, Save, X, Palette, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X, Palette, Loader2, Eye, Copy, Download, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { TemplateDesigner } from "./template-designer/TemplateDesigner";
+import { TemplateGallery } from "./template-designer/TemplateGallery";
+import { TemplatePreviewPanel } from "./template-designer/TemplatePreviewPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Database } from "@/integrations/supabase/types";
@@ -20,6 +22,8 @@ import type { Database } from "@/integrations/supabase/types";
 export const TemplateManagement: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [isDesigning, setIsDesigning] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [viewMode, setViewMode] = useState<'gallery' | 'list'>('gallery');
   const [currentTemplate, setCurrentTemplate] = useState<ProposalTemplate | null>(null);
   
   const queryClient = useQueryClient();
@@ -195,6 +199,24 @@ export const TemplateManagement: React.FC = () => {
     setIsDesigning(true);
   };
 
+  const handleDuplicateTemplate = async (template: ProposalTemplate) => {
+    const duplicatedTemplate = {
+      ...template,
+      id: crypto.randomUUID(),
+      name: `${template.name} (Kopya)`,
+      description: `${template.description} - Kopyalandı`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    try {
+      await handleCreateTemplate(duplicatedTemplate);
+      toast.success('Şablon kopyalandı');
+    } catch (error) {
+      toast.error('Şablon kopyalanırken bir hata oluştu');
+    }
+  };
+
   const handleDesignSave = async (template: ProposalTemplate) => {
     handleUpdateTemplate(template);
     setIsDesigning(false);
@@ -210,15 +232,27 @@ export const TemplateManagement: React.FC = () => {
     );
   }
 
-  if (isDesigning && currentTemplate) {
+  if (isDesigning) {
     return (
       <TemplateDesigner
-        template={currentTemplate}
-        onSave={handleDesignSave}
+        template={currentTemplate || undefined}
+        onSave={currentTemplate ? handleDesignSave : handleCreateTemplate}
         onCancel={() => {
           setIsDesigning(false);
           setCurrentTemplate(null);
         }}
+      />
+    );
+  }
+
+  if (isPreviewMode && currentTemplate) {
+    return (
+      <TemplatePreviewPanel
+        template={currentTemplate}
+        onToggleFullscreen={() => {}}
+        onDownloadPDF={() => toast.info('PDF indirme özelliği yakında eklenecek')}
+        onPrint={() => toast.info('Yazdırma özelliği yakında eklenecek')}
+        onShare={() => toast.info('Paylaşma özelliği yakında eklenecek')}
       />
     );
   }
@@ -296,56 +330,34 @@ export const TemplateManagement: React.FC = () => {
         </Card>
       )}
 
-      <div className="space-y-2">
-        {templates?.map((template) => (
-          <div key={template.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-            <div className="flex items-center gap-3 flex-1">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-medium">{template.name}</h3>
-                  {template.isRecommended && (
-                    <Badge variant="secondary" className="text-xs">Önerilen</Badge>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
-                  {template.description}
-                </p>
-                <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                  <span>Tip: {template.templateType}</span>
-                  {template.popularity && (
-                    <span>Popülerlik: {template.popularity}/5</span>
-                  )}
-                  {template.usageCount && (
-                    <span>Kullanım: {template.usageCount}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-1">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleDesignSettings(template)}
-                className="h-8 w-8 p-0"
-                title="Şablonu düzenle"
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleDeleteTemplateWithError(template.id)}
-                disabled={deleteMutation.isPending}
-                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                title="Şablonu sil"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Gallery View */}
+      <TemplateGallery
+        templates={templates || []}
+        onCreateNew={() => {
+          setCurrentTemplate(null);
+          setIsDesigning(true);
+        }}
+        onEdit={(template) => {
+          setCurrentTemplate(template);
+          setIsDesigning(true);
+        }}
+        onPreview={(template) => {
+          setCurrentTemplate(template);
+          setIsPreviewMode(true);
+        }}
+        onDuplicate={handleDuplicateTemplate}
+        onDelete={(template) => handleDeleteTemplateWithError(template.id)}
+        onImport={() => {
+          toast.info('İçe aktarma özelliği yakında eklenecek');
+        }}
+        onExport={(template) => {
+          toast.info('Dışa aktarma özelliği yakında eklenecek');
+        }}
+        onUseTemplate={(template) => {
+          toast.success(`"${template.name}" şablonu kullanıma hazır`);
+          // Burada kullanıcıyı teklif oluşturma sayfasına yönlendirebilirsiniz
+        }}
+      />
 
     </div>
   );
