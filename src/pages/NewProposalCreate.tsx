@@ -156,6 +156,9 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
   };
 
   const calculationsByCurrency = calculateTotalsByCurrency();
+  console.log("🔍 Debug - Items:", items);
+  console.log("🔍 Debug - CalculationsByCurrency:", calculationsByCurrency);
+  console.log("🔍 Debug - Object.keys length:", Object.keys(calculationsByCurrency).length);
   
   // Legacy calculations for backward compatibility (using primary currency)
   const primaryCurrency = formData.currency;
