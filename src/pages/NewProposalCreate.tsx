@@ -622,7 +622,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
-                        <div className="md:col-span-5">
+                        <div className="md:col-span-6">
                           <Label className="text-sm">Ürün/Hizmet *</Label>
                           <ProductSelector
                             value={item.description || ''}
@@ -634,7 +634,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                             className="mt-1"
                           />
                         </div>
-                        <div className="md:col-span-2">
+                        <div className="md:col-span-1">
                           <Label className="text-sm">Miktar</Label>
                           <Input
                             type="number"
@@ -644,13 +644,13 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                             className="mt-1"
                           />
                         </div>
-                        <div className="md:col-span-2">
+                        <div className="md:col-span-1">
                           <Label className="text-sm">Birim</Label>
                           <div className="mt-1 p-2 bg-gray-100 rounded text-left font-medium text-sm">
                             {item.unit || 'adet'}
                           </div>
                         </div>
-                        <div className="md:col-span-2">
+                        <div className="md:col-span-3">
                           <Label className="text-sm">Birim Fiyat</Label>
                            <div className="mt-1 p-2 bg-gray-100 rounded text-right font-medium text-sm">
                              {formatCurrency(item.unit_price, item.currency || 'TRY')}
