@@ -33,6 +33,23 @@ export const ProposalTableRow = ({
   const navigate = useNavigate();
   const { calculateTotals } = useProposalCalculations();
   
+  const calculateGrandTotal = () => {
+    if (!proposal.items || proposal.items.length === 0) {
+      return proposal.total_amount || proposal.total_value || 0;
+    }
+    
+    // Use the same calculation as in ProposalItemsTab - Genel Toplam
+    const subtotal = proposal.items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+    const taxAmount = proposal.items.reduce((sum, item) => {
+      const itemTotal = item.quantity * item.unit_price;
+      return sum + (itemTotal * (item.tax_rate || 0) / 100);
+    }, 0);
+    const discounts = proposal.discounts || 0;
+    const additionalCharges = proposal.additional_charges || 0;
+    
+    return subtotal + taxAmount - discounts + additionalCharges;
+  };
+  
   const formatDate = (date: string | null | undefined) => {
     if (!date) return "-";
     
@@ -96,12 +113,7 @@ export const ProposalTableRow = ({
         )}
       </TableCell>
       <TableCell className="font-medium p-4">
-        {(() => {
-          const total = proposal.items && proposal.items.length > 0 
-            ? calculateTotals(proposal.items)
-            : proposal.total_amount || proposal.total_value || 0;
-          return formatProposalAmount(total, proposal.currency || 'TRY');
-        })()}
+        {formatProposalAmount(calculateGrandTotal(), proposal.currency || 'TRY')}
       </TableCell>
       <TableCell className="p-4">{formatDate(proposal.created_at)}</TableCell>
       <TableCell className="p-4">{formatDate(proposal.valid_until)}</TableCell>
