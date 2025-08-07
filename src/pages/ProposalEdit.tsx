@@ -391,7 +391,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         other_terms: formData.other_terms,
         notes: formData.notes,
         status: status,
-        total_amount: calculations.grand_total,
+        total_amount: primaryTotals.grand, // Save the calculated grand total from the financial summary
         currency: formData.currency,
         items: items.map(item => ({
           ...item,
