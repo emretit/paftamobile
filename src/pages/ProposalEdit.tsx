@@ -218,7 +218,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
       }
       
       const net = gross - globalDiscount;
-      const vat = (net * formData.vat_percentage) / 100;
+      const vat = (net * (formData.vat_percentage || 0)) / 100;
       const grand = net + vat;
       
       totals[currency] = {
