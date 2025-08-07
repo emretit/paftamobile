@@ -296,6 +296,10 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
   };
 
   const handleSave = async (status: 'draft' | 'sent' = 'draft') => {
+    console.log("🔍 Save button clicked with status:", status);
+    console.log("🔍 FormData:", formData);
+    console.log("🔍 Items:", items);
+    
     // Validation
     if (!formData.customer_company.trim()) {
       toast.error("Müşteri firma adı gereklidir");
@@ -309,7 +313,12 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
       toast.error("Geçerlilik tarihi gereklidir");
       return;
     }
-    if (items.length === 0 || items.every(item => !item.name.trim())) {
+    
+    // Check if items have any meaningful content
+    const validItems = items.filter(item => item.name.trim() || item.description.trim());
+    console.log("🔍 Valid items count:", validItems.length);
+    
+    if (validItems.length === 0) {
       toast.error("En az bir teklif kalemi eklenmelidir");
       return;
     }
@@ -330,7 +339,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         status: status,
         total_amount: calculations.grand_total,
         currency: formData.currency,
-        items: items.map(item => ({
+        items: validItems.map(item => ({
           ...item,
           total_price: item.quantity * item.unit_price
         }))
