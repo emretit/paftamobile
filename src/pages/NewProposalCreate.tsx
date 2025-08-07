@@ -302,14 +302,17 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
     
     // Validation
     if (!formData.customer_company.trim()) {
+      console.log("❌ Validation failed: customer_company is empty");
       toast.error("Müşteri firma adı gereklidir");
       return;
     }
     if (!formData.contact_name.trim()) {
+      console.log("❌ Validation failed: contact_name is empty");
       toast.error("İletişim kişisi adı gereklidir");
       return;
     }
     if (!formData.validity_date) {
+      console.log("❌ Validation failed: validity_date is empty");
       toast.error("Geçerlilik tarihi gereklidir");
       return;
     }
@@ -319,9 +322,12 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
     console.log("🔍 Valid items count:", validItems.length);
     
     if (validItems.length === 0) {
+      console.log("❌ Validation failed: no valid items");
       toast.error("En az bir teklif kalemi eklenmelidir");
       return;
     }
+    
+    console.log("✅ All validations passed, proceeding with save...");
 
     setSaving(true);
     try {
