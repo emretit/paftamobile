@@ -63,6 +63,12 @@ export const useProposalEdit = () => {
         customer_id: formData.customer_id,
         employee_id: formData.employee_id,
         total_amount: formData.total_amount || proposal.total_amount,
+        // Şartlar ve koşullar kaydet
+        payment_terms: formData.payment_terms,
+        delivery_terms: formData.delivery_terms,
+        warranty_terms: formData.warranty_terms,
+        price_terms: formData.price_terms,
+        other_terms: formData.other_terms,
         updated_at: new Date().toISOString()
       };
       
