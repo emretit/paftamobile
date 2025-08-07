@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Eye, FileDown, ArrowLeft, Calculator, Check, ChevronsUpDown, Printer, Download, Mail, Clock, Send, ShoppingCart, FileText } from "lucide-react";
+import { Plus, Trash2, Edit, ArrowLeft, Calculator, Check, ChevronsUpDown, Clock, Send, ShoppingCart, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/utils/formatters";
 import { useProposalEdit } from "@/hooks/useProposalEdit";
@@ -21,11 +21,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { proposalStatusColors, proposalStatusLabels, ProposalStatus } from "@/types/proposal";
-import { calculateProposalTotals, formatProposalAmount } from "@/services/workflow/proposalWorkflow";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { handleProposalStatusChange } from "@/services/workflow/proposalWorkflow";
-import { supabase } from "@/integrations/supabase/client";
 import ProposalFormTerms from "@/components/proposals/form/ProposalFormTerms";
+import EmployeeSelector from "@/components/proposals/form/EmployeeSelector";
+import ContactPersonInput from "@/components/proposals/form/ContactPersonInput";
+import ProductSelector from "@/components/proposals/form/ProductSelector";
+import ProductDetailsModal from "@/components/proposals/form/ProductDetailsModal";
 
 interface LineItem extends ProposalItem {
   row_number: number;
@@ -42,6 +44,14 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
   const { customers, isLoading: isLoadingCustomers } = useCustomerSelect();
   const [customerSearchOpen, setCustomerSearchOpen] = useState(false);
   const [customerSearchQuery, setCustomerSearchQuery] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [productModalOpen, setProductModalOpen] = useState(false);
+  const [editingItemIndex, setEditingItemIndex] = useState<number | undefined>(undefined);
+  const [editingItemData, setEditingItemData] = useState<any>(null);
+  
+  // Global discount state
+  const [globalDiscountType, setGlobalDiscountType] = useState<'percentage' | 'amount'>('percentage');
+  const [globalDiscountValue, setGlobalDiscountValue] = useState<number>(0);
 
   // Turkish character normalization function
   const normalizeTurkish = (text: string): string => {
@@ -159,27 +169,82 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
     setHasChanges(true);
   };
 
-  // Calculate totals
-  const calculations = {
-    gross_total: items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0),
-    discount_amount: 0,
-    net_total: 0,
-    vat_amount: 0,
-    grand_total: 0
+  // Calculate totals by currency (modern approach like NewProposalCreate)
+  const calculateTotalsByCurrency = () => {
+    const totals: Record<string, { gross: number; discount: number; net: number; vat: number; grand: number }> = {};
+    
+    // First, collect all currencies used in items
+    const usedCurrencies = new Set<string>();
+    items.forEach(item => {
+      const currency = item.currency || 'TRY';
+      usedCurrencies.add(currency);
+    });
+    
+    // Initialize totals for all used currencies
+    usedCurrencies.forEach(currency => {
+      totals[currency] = { gross: 0, discount: 0, net: 0, vat: 0, grand: 0 };
+    });
+    
+    // Calculate gross totals
+    items.forEach(item => {
+      const currency = item.currency || 'TRY';
+      totals[currency].gross += item.quantity * item.unit_price;
+    });
+    
+    // Calculate total gross across all currencies for global discount
+    const totalGross = Object.values(totals).reduce((sum, total) => sum + total.gross, 0);
+    
+    // Apply global discount and VAT calculations for each currency
+    Object.keys(totals).forEach(currency => {
+      const gross = totals[currency].gross;
+      
+      // Calculate global discount proportionally for this currency
+      let globalDiscount = 0;
+      if (globalDiscountValue > 0 && totalGross > 0) {
+        const currencyProportion = gross / totalGross;
+        if (globalDiscountType === 'percentage') {
+          globalDiscount = (gross * globalDiscountValue) / 100;
+        } else {
+          // Amount discount distributed proportionally
+          globalDiscount = globalDiscountValue * currencyProportion;
+        }
+      }
+      
+      const net = gross - globalDiscount;
+      const vat = (net * formData.vat_percentage) / 100;
+      const grand = net + vat;
+      
+      totals[currency] = {
+        gross,
+        discount: globalDiscount,
+        net,
+        vat,
+        grand
+      };
+    });
+    
+    return totals;
   };
 
-  useEffect(() => {
-    const grossTotal = calculations.gross_total;
-    const discountAmount = (grossTotal * formData.discount_percentage) / 100;
-    const netTotal = grossTotal - discountAmount;
-    const vatAmount = (netTotal * formData.vat_percentage) / 100;
-    const grandTotal = netTotal + vatAmount;
-
-    calculations.discount_amount = discountAmount;
-    calculations.net_total = netTotal;
-    calculations.vat_amount = vatAmount;
-    calculations.grand_total = grandTotal;
-  }, [items, formData.discount_percentage, formData.vat_percentage]);
+  const calculationsByCurrency = calculateTotalsByCurrency();
+  
+  // Legacy calculations for backward compatibility (using primary currency)
+  const primaryCurrency = formData.currency;
+  const primaryTotals = calculationsByCurrency[primaryCurrency] || {
+    gross: 0,
+    discount: 0,
+    net: 0,
+    vat: 0,
+    grand: 0
+  };
+  
+  const calculations = {
+    gross_total: primaryTotals.gross,
+    discount_amount: primaryTotals.discount,
+    net_total: primaryTotals.net,
+    vat_amount: primaryTotals.vat,
+    grand_total: primaryTotals.grand
+  };
 
   // Update item calculations
   useEffect(() => {
@@ -213,6 +278,48 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
       currency: formData.currency
     };
     setItems([...items, newItem]);
+    setHasChanges(true);
+  };
+
+  const handleProductModalSelect = (product: any) => {
+    setSelectedProduct(product);
+    setProductModalOpen(true);
+  };
+
+  const handleAddProductToProposal = (productData: any, itemIndex?: number) => {
+    if (itemIndex !== undefined) {
+      // Update existing item
+      const updatedItems = [...items];
+      updatedItems[itemIndex] = {
+        ...updatedItems[itemIndex],
+        name: productData.name,
+        description: productData.description,
+        quantity: productData.quantity,
+        unit: productData.unit,
+        unit_price: productData.unit_price,
+        total_price: productData.total_price,
+        currency: productData.currency || formData.currency
+      };
+      setItems(updatedItems);
+    } else {
+      // Add new item
+      const newItem: LineItem = {
+        id: Date.now().toString(),
+        row_number: items.length + 1,
+        name: productData.name,
+        description: productData.description,
+        quantity: productData.quantity,
+        unit: productData.unit,
+        unit_price: productData.unit_price,
+        total_price: productData.total_price,
+        currency: productData.currency || formData.currency
+      };
+      setItems([...items, newItem]);
+    }
+    
+    setProductModalOpen(false);
+    setEditingItemIndex(undefined);
+    setSelectedProduct(null);
     setHasChanges(true);
   };
 
@@ -445,11 +552,11 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
       isCollapsed={isCollapsed} 
       setIsCollapsed={setIsCollapsed}
       title="Teklif Düzenle"
-      subtitle="Teklif bilgilerini güncelleyin ve kaydedin"
+      subtitle="Hızlı ve kolay teklif düzenleme"
     >
       {/* Header Actions */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <Button 
             variant="ghost" 
             size="sm" 
@@ -461,25 +568,26 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
           </Button>
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-muted-foreground" />
-            <h1 className="text-xl font-semibold">Teklif Düzenle</h1>
+            <h1 className="text-lg font-semibold">Teklif Düzenle</h1>
             <Badge className={proposalStatusColors[proposal.status]}>
               {proposalStatusLabels[proposal.status]}
             </Badge>
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <PdfDownloadDropdown onDownloadWithTemplate={handleDownloadPdf} proposal={proposal} />
           <Button 
             variant="outline" 
             onClick={() => handleSaveChanges(proposal.status)}
             disabled={isSaving || !hasChanges}
+            size="sm"
           >
             {hasChanges ? "Değişiklikleri Kaydet" : "Kaydedildi"}
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" className="bg-red-600 hover:bg-red-700 text-white">
+              <Button variant="outline" className="bg-red-600 hover:bg-red-700 text-white" size="sm">
                 <Trash2 className="h-4 w-4 mr-2" />
                 Sil
               </Button>
@@ -504,18 +612,18 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
       {getStatusActions()}
 
       {/* Main Content */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Top Row - Customer & Proposal Details Combined */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {/* Customer Information */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Müşteri Bilgileri</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold">Müşteri Bilgileri</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
+            <CardContent className="space-y-3 pt-0">
+              <div className="grid grid-cols-1 gap-3">
                 <div>
-                  <Label htmlFor="customer_company">Firma Adı *</Label>
+                  <Label htmlFor="customer_company" className="text-sm">Firma Adı *</Label>
                   <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -607,33 +715,18 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
                     </PopoverContent>
                   </Popover>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="contact_name">İletişim Kişisi *</Label>
-                    <Input
-                      id="contact_name"
-                      value={formData.contact_name}
-                      onChange={(e) => handleFieldChange('contact_name', e.target.value)}
-                      placeholder="Ad Soyad"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="contact_title">Ünvan</Label>
-                    <Input
-                      id="contact_title"
-                      value={formData.contact_title}
-                      onChange={(e) => handleFieldChange('contact_title', e.target.value)}
-                      placeholder="Pozisyon/Ünvan"
-                    />
-                  </div>
-                </div>
+                <ContactPersonInput
+                  value={formData.contact_name}
+                  onChange={(value) => handleFieldChange('contact_name', value)}
+                  customerId={formData.customer_id}
+                  error=""
+                />
                 <div>
                   <Label htmlFor="prepared_by">Teklifi Hazırlayan</Label>
-                  <Input
-                    id="prepared_by"
-                    value={formData.prepared_by}
-                    onChange={(e) => handleFieldChange('prepared_by', e.target.value)}
-                    placeholder="Satış temsilcisi"
+                  <EmployeeSelector
+                    value={formData.prepared_by || ""}
+                    onChange={(value) => handleFieldChange('prepared_by', value)}
+                    error=""
                   />
                 </div>
               </div>
@@ -642,13 +735,13 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
 
           {/* Offer Details */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Teklif Detayları</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold">Teklif Detayları</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <CardContent className="space-y-3 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <Label htmlFor="offer_date">Teklif Tarihi</Label>
+                  <Label htmlFor="offer_date" className="text-sm">Teklif Tarihi</Label>
                   <Input
                     id="offer_date"
                     type="date"
@@ -657,7 +750,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="offer_number">Teklif No</Label>
+                  <Label htmlFor="offer_number" className="text-sm">Teklif No</Label>
                   <Input
                     id="offer_number"
                     value={formData.offer_number}
@@ -665,7 +758,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="validity_date">Geçerlilik Tarihi *</Label>
+                  <Label htmlFor="validity_date" className="text-sm">Geçerlilik Tarihi *</Label>
                   <Input
                     id="validity_date"
                     type="date"
@@ -675,13 +768,14 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
                 </div>
               </div>
               <div>
-                <Label htmlFor="notes">Notlar</Label>
+                <Label htmlFor="notes" className="text-sm">Notlar</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => handleFieldChange('notes', e.target.value)}
                   placeholder="Teklif hakkında özel notlar..."
-                  rows={3}
+                  rows={2}
+                  className="resize-none"
                 />
               </div>
             </CardContent>
@@ -689,51 +783,79 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         </div>
 
         {/* Products/Services Table - Full Width */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
           <div className="xl:col-span-3">
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">Ürün/Hizmet Listesi</CardTitle>
+                  <CardTitle className="text-base font-semibold">Ürün/Hizmet Listesi</CardTitle>
                   <Button onClick={addItem} size="sm" className="gap-2">
                     <Plus className="h-4 w-4" />
                     Satır Ekle
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="pt-0">
+                <div className="space-y-3">
                   {items.map((item, index) => (
-                    <div key={item.id} className="border rounded-lg p-4 bg-gray-50">
-                      <div className="flex items-center justify-between mb-3">
+                    <div key={item.id} className="border rounded-lg p-3 bg-gray-50/50">
+                      <div className="flex items-center justify-between mb-2">
                         <span className="font-medium text-sm text-gray-600">
                           Satır {item.row_number}
                         </span>
-                        {items.length > 1 && (
+                        <div className="flex gap-1">
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => removeItem(index)}
-                            className="text-red-600 hover:text-red-700"
+                            onClick={() => {
+                              const existingData = {
+                                name: item.name,
+                                description: item.description || '',
+                                quantity: item.quantity,
+                                unit: item.unit,
+                                unit_price: item.unit_price,
+                                vat_rate: item.tax_rate || 20,
+                                discount_rate: item.discount_rate || 0,
+                                currency: item.currency || formData.currency
+                              };
+                              
+                              setSelectedProduct(null);
+                              setEditingItemIndex(index);
+                              setEditingItemData(existingData);
+                              setProductModalOpen(true);
+                            }}
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Edit className="h-4 w-4" />
                           </Button>
-                        )}
+                          {items.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeItem(index)}
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                        <div className="md:col-span-5">
-                          <Label>Ürün/Hizmet Açıklaması *</Label>
-                          <Textarea
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
+                        <div className="md:col-span-7">
+                          <Label className="text-sm">Ürün/Hizmet *</Label>
+                          <ProductSelector
                             value={item.description || ''}
-                            onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                            placeholder="Teknik detaylar ve açıklamalar..."
-                            rows={3}
+                            onChange={(productName) => {
+                              handleItemChange(index, 'description', productName);
+                            }}
+                            onProductSelect={handleProductModalSelect}
+                            placeholder="Ürün seçin..."
                             className="mt-1"
                           />
                         </div>
-                        <div className="md:col-span-2">
-                          <Label>Miktar</Label>
+                        <div className="md:col-span-1">
+                          <Label className="text-sm">Miktar</Label>
                           <Input
                             type="number"
                             value={item.quantity}
@@ -742,42 +864,23 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
                             className="mt-1"
                           />
                         </div>
-                        <div className="md:col-span-2">
-                          <Label>Birim</Label>
-                          <Select 
-                            value={item.name || 'Ad'} 
-                            onValueChange={(value) => handleItemChange(index, 'name', value)}
-                          >
-                            <SelectTrigger className="mt-1">
-                              <SelectValue placeholder="Seçin" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Ad">Ad</SelectItem>
-                              <SelectItem value="Paket">Paket</SelectItem>
-                              <SelectItem value="Kg">Kg</SelectItem>
-                              <SelectItem value="M2">M²</SelectItem>
-                              <SelectItem value="M3">M³</SelectItem>
-                              <SelectItem value="Saat">Saat</SelectItem>
-                              <SelectItem value="Gün">Gün</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="md:col-span-2">
-                          <Label>Birim Fiyat (₺)</Label>
-                          <Input
-                            type="number"
-                            value={item.unit_price}
-                            onChange={(e) => handleItemChange(index, 'unit_price', Number(e.target.value))}
-                            min="0"
-                            step="0.01"
-                            className="mt-1"
-                          />
-                        </div>
                         <div className="md:col-span-1">
-                          <Label>Toplam</Label>
-                          <div className="mt-1 p-2 bg-gray-100 rounded text-right font-medium">
-                            {formatCurrency(item.total_price)}
+                          <Label className="text-sm">Birim</Label>
+                          <div className="mt-1 p-2 bg-gray-100 rounded text-left font-medium text-sm">
+                            {item.unit || 'adet'}
                           </div>
+                        </div>
+                        <div className="md:col-span-2">
+                          <Label className="text-sm">Birim Fiyat</Label>
+                           <div className="mt-1 p-2 bg-gray-100 rounded text-right font-medium text-sm">
+                             {formatCurrency(item.unit_price, item.currency || 'TRY')}
+                           </div>
+                         </div>
+                         <div className="md:col-span-1">
+                           <Label className="text-sm">Toplam</Label>
+                           <div className="mt-1 p-2 bg-gray-100 rounded text-right font-medium text-sm">
+                             {formatCurrency(item.total_price, item.currency || 'TRY')}
+                           </div>
                         </div>
                       </div>
                     </div>
@@ -790,75 +893,82 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
           {/* Financial Summary - Right Side */}
           <div className="xl:col-span-1">
             <Card className="sticky top-6">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <Calculator className="h-5 w-5" />
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Calculator className="h-4 w-4" />
                   Finansal Özet
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Brüt Toplam:</span>
-                    <span className="font-medium">{formatCurrency(calculations.gross_total)}</span>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="discount">İndirim (%)</Label>
-                    <Input
-                      id="discount"
-                      type="number"
-                      value={formData.discount_percentage}
-                      onChange={(e) => handleFieldChange('discount_percentage', Number(e.target.value))}
-                      min="0"
-                      max="100"
-                      step="0.1"
-                    />
-                  </div>
-                  
-                  {formData.discount_percentage > 0 && (
-                    <div className="flex justify-between text-red-600">
-                      <span>İndirim Tutarı:</span>
-                      <span>-{formatCurrency(calculations.discount_amount)}</span>
+              <CardContent className="space-y-3 pt-0">
+                {/* Multi-currency display */}
+                <div className="space-y-4">
+                  {Object.entries(calculationsByCurrency).map(([currency, totals]) => (
+                    <div key={currency} className="border rounded-lg p-3 space-y-2">
+                      <div className="font-medium text-sm text-center mb-2 text-primary">
+                        {Object.keys(calculationsByCurrency).length > 1 ? `${currency} Toplamları` : "Finansal Toplam"}
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Brüt Toplam:</span>
+                          <span className="font-medium">{formatCurrency(totals.gross, currency)}</span>
+                        </div>
+                        
+                        {/* Global Discount Controls */}
+                        <div className="border-t pt-2 space-y-2">
+                          <div className="font-medium text-xs text-center text-muted-foreground">
+                            Genel İndirim
+                          </div>
+                          <div className="flex gap-2">
+                            <Select value={globalDiscountType} onValueChange={(value: 'percentage' | 'amount') => setGlobalDiscountType(value)}>
+                              <SelectTrigger className="w-20 h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="percentage">%</SelectItem>
+                                <SelectItem value="amount">₺</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            
+                            <Input
+                              type="number"
+                              value={globalDiscountValue}
+                              onChange={(e) => setGlobalDiscountValue(Number(e.target.value))}
+                              placeholder="0"
+                              min="0"
+                              step={globalDiscountType === 'percentage' ? '0.1' : '0.01'}
+                              className="flex-1 h-8 text-xs"
+                            />
+                          </div>
+                        </div>
+                        
+                        {totals.discount > 0 && (
+                          <div className="flex justify-between text-red-600 text-sm">
+                            <span>İndirim:</span>
+                            <span>-{formatCurrency(totals.discount, currency)}</span>
+                          </div>
+                        )}
+                        
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Net Toplam:</span>
+                          <span className="font-medium">{formatCurrency(totals.net, currency)}</span>
+                        </div>
+                        
+                        {totals.vat > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">KDV:</span>
+                            <span className="font-medium">{formatCurrency(totals.vat, currency)}</span>
+                          </div>
+                        )}
+                        
+                        <Separator />
+                        
+                        <div className="flex justify-between font-bold">
+                          <span>GENEL TOPLAM:</span>
+                          <span className="text-green-600">{formatCurrency(totals.grand, currency)}</span>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                  
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Net Toplam:</span>
-                    <span className="font-medium">{formatCurrency(calculations.net_total)}</span>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="vat">KDV (%)</Label>
-                    <Select 
-                      value={formData.vat_percentage.toString()} 
-                      onValueChange={(value) => handleFieldChange('vat_percentage', Number(value))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">0%</SelectItem>
-                        <SelectItem value="1">1%</SelectItem>
-                        <SelectItem value="10">10%</SelectItem>
-                        <SelectItem value="20">20%</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">KDV Tutarı:</span>
-                    <span className="font-medium">{formatCurrency(calculations.vat_amount)}</span>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>GENEL TOPLAM:</span>
-                    <span className="text-green-600">{formatCurrency(calculations.grand_total)}</span>
-                  </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -867,7 +977,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
 
         {/* Terms & Conditions - Full Width */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <ProposalFormTerms
               paymentTerms={formData.payment_terms}
               deliveryTerms={formData.delivery_terms}
@@ -876,6 +986,23 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
             />
           </CardContent>
         </Card>
+
+        {/* Product Details Modal */}
+        <ProductDetailsModal
+          open={productModalOpen}
+          onOpenChange={(open) => {
+            setProductModalOpen(open);
+            if (!open) {
+              setEditingItemIndex(undefined);
+              setSelectedProduct(null);
+              setEditingItemData(null);
+            }
+          }}
+          product={selectedProduct}
+          onAddToProposal={(productData) => handleAddProductToProposal(productData, editingItemIndex)}
+          currency={formData.currency}
+          existingData={editingItemData}
+        />
       </div>
     </DefaultLayout>
   );
