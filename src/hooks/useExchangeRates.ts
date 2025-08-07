@@ -58,6 +58,33 @@ const fallbackRates: ExchangeRate[] = [
   }
 ];
 
+// Normalize rates: keep only latest day and deduplicate by currency_code
+const getDateOnly = (s: string) => {
+  try {
+    return new Date(s).toISOString().split('T')[0];
+  } catch {
+    return s.slice(0, 10);
+  }
+};
+
+const normalizeRates = (rates: ExchangeRate[]) => {
+  if (!rates || rates.length === 0) return { rates: [] as ExchangeRate[], lastDate: null as string | null };
+  const latestDate = rates.reduce((max, r) => {
+    const d = getDateOnly(r.update_date);
+    return d > max ? d : max;
+  }, "1970-01-01");
+  const latest = rates.filter(r => getDateOnly(r.update_date) === latestDate);
+  const seen = new Set<string>();
+  const unique: ExchangeRate[] = [];
+  for (const r of latest) {
+    if (!seen.has(r.currency_code)) {
+      seen.add(r.currency_code);
+      unique.push(r);
+    }
+  }
+  return { rates: unique, lastDate: latestDate };
+};
+
 export const useExchangeRates = () => {
   const [exchangeRates, setExchangeRates] = useState<ExchangeRate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,9 +122,10 @@ export const useExchangeRates = () => {
         const dbRates = await fetchExchangeRatesFromDB();
         
         if (dbRates.length > 0) {
-          setExchangeRates(dbRates);
-          setLastUpdate(dbRates[0].update_date);
-          console.log("Exchange rates loaded from database:", dbRates.length);
+          const { rates: norm, lastDate } = normalizeRates(dbRates);
+          setExchangeRates(norm);
+          setLastUpdate(lastDate);
+          console.log("Exchange rates loaded from database:", norm.length, "date:", lastDate);
           return;
         }
         
@@ -105,14 +133,16 @@ export const useExchangeRates = () => {
         console.log("No rates in database, fetching fresh rates");
         try {
           const freshRates = await fetchFreshRates();
-          setExchangeRates(freshRates);
-          setLastUpdate(freshRates[0]?.update_date || new Date().toISOString().split('T')[0]);
-          console.log("Fresh exchange rates loaded:", freshRates.length);
+          const { rates: norm, lastDate } = normalizeRates(freshRates);
+          setExchangeRates(norm);
+          setLastUpdate(lastDate || new Date().toISOString().split('T')[0]);
+          console.log("Fresh exchange rates loaded:", norm.length, "date:", lastDate);
         } catch (freshError) {
           console.error("Failed to fetch fresh rates:", freshError);
-          // Use fallback rates
-          setExchangeRates(fallbackRates);
-          setLastUpdate(fallbackRates[0].update_date);
+          // Use fallback rates (normalized)
+          const { rates: norm, lastDate } = normalizeRates(fallbackRates);
+          setExchangeRates(norm);
+          setLastUpdate(lastDate || fallbackRates[0].update_date);
           console.log("Using fallback exchange rates");
         }
       } catch (err) {
@@ -140,11 +170,12 @@ export const useExchangeRates = () => {
       const freshRates = await fetchFreshRates();
       
       if (freshRates.length > 0) {
-        setExchangeRates(freshRates);
-        setLastUpdate(freshRates[0].update_date);
+        const { rates: norm, lastDate } = normalizeRates(freshRates);
+        setExchangeRates(norm);
+        setLastUpdate(lastDate);
         
         toast.success('Döviz kurları başarıyla güncellendi', {
-          description: `${freshRates.length} adet kur bilgisi alındı.`,
+          description: `${norm.length} adet kur bilgisi alındı.`,
         });
         return;
       }
@@ -153,18 +184,20 @@ export const useExchangeRates = () => {
       const dbRates = await fetchExchangeRatesFromDB();
       
       if (dbRates.length > 0) {
-        setExchangeRates(dbRates);
-        setLastUpdate(dbRates[0].update_date);
+        const { rates: norm, lastDate } = normalizeRates(dbRates);
+        setExchangeRates(norm);
+        setLastUpdate(lastDate);
         
         toast.info('Mevcut kur bilgileri yüklendi', {
-          description: `Son güncelleme tarihi: ${new Date(dbRates[0].update_date).toLocaleDateString('tr-TR')}`,
+          description: `Son güncelleme tarihi: ${new Date(lastDate || dbRates[0].update_date).toLocaleDateString('tr-TR')}`,
         });
         return;
       }
       
-      // Last resort - use fallback rates
-      setExchangeRates(fallbackRates);
-      setLastUpdate(fallbackRates[0].update_date);
+      // Last resort - use fallback rates (normalized)
+      const { rates: norm, lastDate } = normalizeRates(fallbackRates);
+      setExchangeRates(norm);
+      setLastUpdate(lastDate || fallbackRates[0].update_date);
       
       toast.warning('Varsayılan kurlar kullanılıyor', {
         description: 'Güncel kurlar alınamadı, geçici referans değerler kullanılıyor.',
