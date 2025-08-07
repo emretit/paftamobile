@@ -646,23 +646,9 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                         </div>
                         <div className="md:col-span-2">
                           <Label className="text-sm">Birim</Label>
-                          <Select 
-                            value={item.name || 'Ad'} 
-                            onValueChange={(value) => handleItemChange(index, 'name', value)}
-                          >
-                            <SelectTrigger className="mt-1">
-                              <SelectValue placeholder="Seçin" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Ad">Ad</SelectItem>
-                              <SelectItem value="Paket">Paket</SelectItem>
-                              <SelectItem value="Kg">Kg</SelectItem>
-                              <SelectItem value="M2">M²</SelectItem>
-                              <SelectItem value="M3">M³</SelectItem>
-                              <SelectItem value="Saat">Saat</SelectItem>
-                              <SelectItem value="Gün">Gün</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="mt-1 p-2 bg-gray-100 rounded text-left font-medium text-sm">
+                            {item.unit || 'adet'}
+                          </div>
                         </div>
                         <div className="md:col-span-2">
                           <Label className="text-sm">Birim Fiyat</Label>
