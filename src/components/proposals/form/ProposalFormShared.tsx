@@ -37,6 +37,9 @@ const ProposalFormShared = ({
     valid_until: "",
     payment_terms: "",
     delivery_terms: "",
+    warranty_terms: "",
+    price_terms: "",
+    other_terms: "",
     notes: "",
     status: "draft" as ProposalStatus
   });
@@ -53,6 +56,9 @@ const ProposalFormShared = ({
         valid_until: proposal.valid_until || "",
         payment_terms: proposal.payment_terms || "",
         delivery_terms: proposal.delivery_terms || "",
+        warranty_terms: proposal.warranty_terms || "",
+        price_terms: proposal.price_terms || "",
+        other_terms: proposal.other_terms || "",
         notes: proposal.notes || "",
         status: proposal.status
       });
