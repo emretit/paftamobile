@@ -19,11 +19,9 @@ export const mockCrmProposalsService = {
 
       if (error) throw error;
       
-      // Transform proposals to ensure items are properly cast
-      const proposals = data.map(proposal => ({
-        ...proposal,
-        items: Array.isArray(proposal.items) ? proposal.items as unknown as ProposalItem[] : []
-      })) as unknown as Proposal[];
+      // Use the proper data parser to handle JSON parsing for all proposals
+      const { parseProposalData } = await import('../proposal/helpers/dataParser');
+      const proposals = data.map(proposal => parseProposalData(proposal)).filter(Boolean) as Proposal[];
       
       return { data: proposals, error: null };
     } catch (error) {
@@ -45,11 +43,9 @@ export const mockCrmProposalsService = {
 
       if (error) throw error;
       
-      // Transform proposal to ensure items are properly cast
-      const proposal = {
-        ...data,
-        items: Array.isArray(data.items) ? data.items as unknown as ProposalItem[] : []
-      } as unknown as Proposal;
+      // Use the proper data parser to handle JSON parsing
+      const { parseProposalData } = await import('../proposal/helpers/dataParser');
+      const proposal = parseProposalData(data);
       
       return { data: proposal, error: null };
     } catch (error) {
