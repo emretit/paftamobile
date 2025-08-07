@@ -283,21 +283,41 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
           <View style={styles.infoColumn}>
             <View style={styles.infoBox}>
               <Text style={styles.infoTitle}>MÜŞTERİ BİLGİLERİ</Text>
-              <Text style={styles.infoText}>Firma: {proposal.customer?.company || proposal.customer_name || 'Belirtilmemiş'}</Text>
-              <Text style={styles.infoText}>Yetkili: {proposal.customer?.name || '-'}</Text>
-              <Text style={styles.infoText}>Tel: {proposal.customer?.mobile_phone || proposal.customer?.office_phone || proposal.customer?.phone || '-'}</Text>
-              <Text style={styles.infoText}>E-posta: {proposal.customer?.email || proposal.customer_email || '-'}</Text>
-              <Text style={styles.infoText}>Adres: {proposal.customer?.address || '-'}</Text>
+              <Text style={styles.infoText}>
+                Firma: {proposal.customer?.company || proposal.customer_name || 'Belirtilmemiş'}
+              </Text>
+              <Text style={styles.infoText}>
+                Yetkili: {proposal.customer?.name || 'Belirtilmemiş'}
+              </Text>
+              <Text style={styles.infoText}>
+                Tel: {proposal.customer?.mobile_phone || proposal.customer?.office_phone || proposal.customer?.phone || 'Belirtilmemiş'}
+              </Text>
+              <Text style={styles.infoText}>
+                E-posta: {proposal.customer?.email || proposal.customer_email || 'Belirtilmemiş'}
+              </Text>
+              <Text style={styles.infoText}>
+                Adres: {proposal.customer?.address || 'Belirtilmemiş'}
+              </Text>
             </View>
           </View>
           <View style={styles.infoColumn}>
             <View style={styles.infoBox}>
               <Text style={styles.infoTitle}>TEKLİF BİLGİLERİ</Text>
-              <Text style={styles.infoText}>Teklif No: {proposal.number || '-'}</Text>
-              <Text style={styles.infoText}>Tarih: {formatDate(proposal.created_at)}</Text>
-              <Text style={styles.infoText}>Geçerlilik: {proposal.valid_until ? formatDate(proposal.valid_until) : '-'}</Text>
-              <Text style={styles.infoText}>Durum: {proposal.status === 'draft' ? 'Taslak' : proposal.status === 'sent' ? 'Gönderildi' : 'Onaylandı'}</Text>
-              <Text style={styles.infoText}>Para Birimi: {proposal.currency}</Text>
+              <Text style={styles.infoText}>
+                Teklif No: {proposal.number || 'TKF-555647'}
+              </Text>
+              <Text style={styles.infoText}>
+                Tarih: {formatDate(proposal.created_at)}
+              </Text>
+              <Text style={styles.infoText}>
+                Geçerlilik: {proposal.valid_until ? formatDate(proposal.valid_until) : 'Belirtilmemiş'}
+              </Text>
+              <Text style={styles.infoText}>
+                Durum: {proposal.status === 'draft' ? 'Gönderildi' : proposal.status === 'sent' ? 'Gönderildi' : 'Onaylandı'}
+              </Text>
+              <Text style={styles.infoText}>
+                Para Birimi: {proposal.currency}
+              </Text>
             </View>
           </View>
         </View>
@@ -307,23 +327,33 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
           <View style={styles.tableHeader}>
             <Text style={[styles.tableCellHeader, styles.col1]}>#</Text>
             <Text style={[styles.tableCellHeader, styles.col2]}>AÇIKLAMA</Text>
-            <Text style={[styles.tableCellHeader, styles.col3]}>MİKTAR</Text>
-            <Text style={[styles.tableCellHeader, styles.col4]}>BİRİM</Text>
-            <Text style={[styles.tableCellHeader, styles.col5]}>BİRİM FİYAT</Text>
+            <Text style={[styles.tableCellHeader, styles.col3]}>MIKTAR</Text>
+            <Text style={[styles.tableCellHeader, styles.col4]}>BIRIM</Text>
+            <Text style={[styles.tableCellHeader, styles.col5]}>BIRIM FIYAT</Text>
             <Text style={[styles.tableCellHeader, styles.col6]}>KDV %</Text>
             <Text style={[styles.tableCellHeader, styles.col7]}>TOPLAM</Text>
           </View>
-          {proposal.items?.map((item, index) => (
+          {proposal.items && proposal.items.length > 0 ? proposal.items.map((item, index) => (
             <View key={index} style={styles.tableRow}>
               <Text style={[styles.tableCell, styles.col1]}>{index + 1}</Text>
-              <Text style={[styles.tableCell, styles.col2]}>{item.name}</Text>
-              <Text style={[styles.tableCell, styles.col3]}>{item.quantity}</Text>
-              <Text style={[styles.tableCell, styles.col4]}>{item.unit || 'Adet'}</Text>
-              <Text style={[styles.tableCell, styles.col5]}>{formatCurrency(item.unit_price, proposal.currency)}</Text>
+              <Text style={[styles.tableCell, styles.col2]}>{item.name || 'Ürün/Hizmet'}</Text>
+              <Text style={[styles.tableCell, styles.col3]}>{item.quantity || 1}</Text>
+              <Text style={[styles.tableCell, styles.col4]}>{item.unit || 'adet'}</Text>
+              <Text style={[styles.tableCell, styles.col5]}>{formatCurrency(item.unit_price || 0, proposal.currency)}</Text>
               <Text style={[styles.tableCell, styles.col6]}>20</Text>
-              <Text style={[styles.tableCell, styles.col7]}>{formatCurrency(item.quantity * item.unit_price, proposal.currency)}</Text>
+              <Text style={[styles.tableCell, styles.col7]}>{formatCurrency((item.quantity || 1) * (item.unit_price || 0), proposal.currency)}</Text>
             </View>
-          ))}
+          )) : (
+            <View style={styles.tableRow}>
+              <Text style={[styles.tableCell, styles.col1]}>1</Text>
+              <Text style={[styles.tableCell, styles.col2]}>Ürün/Hizmet belirtilmemiş</Text>
+              <Text style={[styles.tableCell, styles.col3]}>1</Text>
+              <Text style={[styles.tableCell, styles.col4]}>adet</Text>
+              <Text style={[styles.tableCell, styles.col5]}>{formatCurrency(0, proposal.currency)}</Text>
+              <Text style={[styles.tableCell, styles.col6]}>20</Text>
+              <Text style={[styles.tableCell, styles.col7]}>{formatCurrency(0, proposal.currency)}</Text>
+            </View>
+          )}
         </View>
 
         {/* Totals */}
@@ -356,6 +386,18 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
             <>
               <Text style={styles.termsTitle}>TESLİMAT KOŞULLARI</Text>
               <Text style={styles.termsText}>{proposal.delivery_terms}</Text>
+            </>
+          )}
+          {!proposal.payment_terms && !proposal.delivery_terms && (
+            <>
+              <Text style={styles.termsTitle}>ÖDEME KOŞULLARI</Text>
+              <Text style={styles.termsText}>
+                Sipariş ile birlikte %50 avans, teslimde kalan tutar ödenecektir.
+              </Text>
+              <Text style={styles.termsTitle}>TESLİMAT KOŞULLARI</Text>
+              <Text style={styles.termsText}>
+                Teslimat süresi: Sipariş tarihinden itibaren 15-20 iş günü.
+              </Text>
             </>
           )}
           {proposal.notes && (
