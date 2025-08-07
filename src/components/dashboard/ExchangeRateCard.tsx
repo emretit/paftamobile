@@ -19,13 +19,6 @@ const ExchangeRateCard: React.FC = () => {
   const filteredRates = exchangeRates.filter(rate => 
     ["USD", "EUR", "GBP"].includes(rate.currency_code)
   );
-  // Safeguard: ensure unique currency entries
-  const uniqueRates = Object.values(
-    filteredRates.reduce((acc, r) => {
-      if (!acc[r.currency_code]) acc[r.currency_code] = r;
-      return acc;
-    }, {} as Record<string, ExchangeRate>)
-  );
 
   return (
     <Card>
@@ -34,7 +27,7 @@ const ExchangeRateCard: React.FC = () => {
           <CardTitle className="text-xl font-bold">Döviz Kurları</CardTitle>
           <CardDescription>
             {lastUpdate 
-              ? `Son güncelleme: ${lastUpdate}`
+              ? `Son güncelleme: ${new Date(lastUpdate).toLocaleDateString('tr-TR')}`
               : 'Güncelleme bilgisi alınamadı'}
           </CardDescription>
         </div>
@@ -92,7 +85,7 @@ const ExchangeRateCard: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {uniqueRates.map((rate: ExchangeRate) => (
+                {filteredRates.map((rate: ExchangeRate) => (
                   <tr key={rate.currency_code} className="border-b hover:bg-muted/50">
                     <td className="p-2 font-medium">{rate.currency_code}</td>
                     <td className="text-right p-2">{formatRate(rate.forex_buying)}</td>
