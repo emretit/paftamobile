@@ -3530,14 +3530,6 @@ export type Database = {
         Args: { "": string }
         Returns: string[]
       }
-      trigger_daily_financial_report: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      trigger_n8n_task_reminders: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
     }
     Enums: {
       account_type: "vadesiz" | "vadeli" | "kredi" | "pos"
