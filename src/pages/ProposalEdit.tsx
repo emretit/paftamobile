@@ -796,16 +796,70 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
                   />
                 </div>
               </div>
-              <div>
-                <Label htmlFor="notes" className="text-sm">Notlar</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => handleFieldChange('notes', e.target.value)}
-                  placeholder="Teklif hakkında özel notlar..."
-                  rows={2}
-                  className="resize-none"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="status" className="text-sm">Teklif Durumu</Label>
+                  <Select value={formData.status} onValueChange={(value: ProposalStatus) => handleFieldChange('status', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Durum seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">
+                        <div className="flex items-center gap-2">
+                          <Badge className={proposalStatusColors.draft}>
+                            {proposalStatusLabels.draft}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="pending_approval">
+                        <div className="flex items-center gap-2">
+                          <Badge className={proposalStatusColors.pending_approval}>
+                            {proposalStatusLabels.pending_approval}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="sent">
+                        <div className="flex items-center gap-2">
+                          <Badge className={proposalStatusColors.sent}>
+                            {proposalStatusLabels.sent}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="accepted">
+                        <div className="flex items-center gap-2">
+                          <Badge className={proposalStatusColors.accepted}>
+                            {proposalStatusLabels.accepted}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="rejected">
+                        <div className="flex items-center gap-2">
+                          <Badge className={proposalStatusColors.rejected}>
+                            {proposalStatusLabels.rejected}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="expired">
+                        <div className="flex items-center gap-2">
+                          <Badge className={proposalStatusColors.expired}>
+                            {proposalStatusLabels.expired}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="notes" className="text-sm">Notlar</Label>
+                  <Textarea
+                    id="notes"
+                    value={formData.notes}
+                    onChange={(e) => handleFieldChange('notes', e.target.value)}
+                    placeholder="Teklif hakkında özel notlar..."
+                    rows={2}
+                    className="resize-none"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
