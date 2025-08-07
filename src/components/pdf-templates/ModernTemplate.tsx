@@ -5,7 +5,7 @@ import { CompanySettings } from '@/hooks/useCompanySettings';
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: 'Roboto',
+    fontFamily: 'Helvetica',
     fontSize: 10,
     paddingTop: 0,
     paddingBottom: 30,

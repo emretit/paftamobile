@@ -6,7 +6,7 @@ import { TemplateDesignSettings } from '@/types/proposal-template';
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: 'Roboto',
+    fontFamily: 'Helvetica',
     fontSize: 10,
     paddingTop: 30,
     paddingBottom: 65,
