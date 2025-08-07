@@ -20,10 +20,8 @@ import type { Database } from "@/integrations/supabase/types";
 // type ProposalTemplateUpdate = Database['public']['Tables']['proposal_templates']['Update'];
 
 export const TemplateManagement: React.FC = () => {
-  const [isCreating, setIsCreating] = useState(false);
   const [isDesigning, setIsDesigning] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [viewMode, setViewMode] = useState<'gallery' | 'list'>('gallery');
   const [currentTemplate, setCurrentTemplate] = useState<ProposalTemplate | null>(null);
   
   const queryClient = useQueryClient();
@@ -258,79 +256,6 @@ export const TemplateManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Teklif Şablonları</h2>
-          <p className="text-gray-600">Şablonlarınızı yönetin ve düzenleyin</p>
-        </div>
-        <Button onClick={() => setIsCreating(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Yeni Şablon
-        </Button>
-      </div>
-
-      {isCreating && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Yeni Şablon Oluştur</CardTitle>
-            <CardDescription>
-              Yeni bir teklif şablonu oluşturun
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Şablon Adı</Label>
-                <Input
-                  id="name"
-                  placeholder="Standart Teklif"
-                  onChange={(e) => {
-                    // Handle name change
-                  }}
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">Açıklama</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Şablon açıklaması..."
-                  rows={3}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => {
-                    handleCreateTemplate({
-                      name: 'Yeni Şablon',
-                      description: 'Yeni oluşturulan şablon',
-                      templateType: 'standard',
-                      templateFeatures: ['Temel özellikler']
-                    });
-                  }}
-                  disabled={createMutation.isPending}
-                >
-                  {createMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4 mr-2" />
-                  )}
-                  Oluştur
-                </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsCreating(false)}
-              >
-                  <X className="h-4 w-4 mr-2" />
-                İptal
-              </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Gallery View */}
       <TemplateGallery
         templates={templates || []}
         onCreateNew={() => {
@@ -358,7 +283,5 @@ export const TemplateManagement: React.FC = () => {
           // Burada kullanıcıyı teklif oluşturma sayfasına yönlendirebilirsiniz
         }}
       />
-
-    </div>
   );
 };
