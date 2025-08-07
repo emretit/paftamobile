@@ -730,6 +730,34 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                           <span className="font-medium">{formatCurrency(totals.gross, currency)}</span>
                         </div>
                         
+                        {/* Global Discount Controls */}
+                        <div className="border-t pt-2 space-y-2">
+                          <div className="font-medium text-xs text-center text-muted-foreground">
+                            Genel İndirim
+                          </div>
+                          <div className="flex gap-2">
+                            <Select value={globalDiscountType} onValueChange={(value: 'percentage' | 'amount') => setGlobalDiscountType(value)}>
+                              <SelectTrigger className="w-20 h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="percentage">%</SelectItem>
+                                <SelectItem value="amount">₺</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            
+                            <Input
+                              type="number"
+                              value={globalDiscountValue}
+                              onChange={(e) => setGlobalDiscountValue(Number(e.target.value))}
+                              placeholder="0"
+                              min="0"
+                              step={globalDiscountType === 'percentage' ? '0.1' : '0.01'}
+                              className="flex-1 h-8 text-xs"
+                            />
+                          </div>
+                        </div>
+                        
                         {totals.discount > 0 && (
                           <div className="flex justify-between text-red-600 text-sm">
                             <span>İndirim:</span>
@@ -758,46 +786,6 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                       </div>
                     </div>
                   ))}
-                  
-                  {/* Global Discount Section */}
-                  <div className="border rounded-lg p-4 space-y-3 bg-muted/20">
-                    <div className="font-medium text-sm text-center mb-2">
-                      Genel İndirim
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex gap-2">
-                        <Select value={globalDiscountType} onValueChange={(value: 'percentage' | 'amount') => setGlobalDiscountType(value)}>
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="percentage">Yüzde (%)</SelectItem>
-                            <SelectItem value="amount">Tutar</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        
-                        <Input
-                          type="number"
-                          value={globalDiscountValue}
-                          onChange={(e) => setGlobalDiscountValue(Number(e.target.value))}
-                          placeholder={globalDiscountType === 'percentage' ? '0' : '0.00'}
-                          min="0"
-                          step={globalDiscountType === 'percentage' ? '0.1' : '0.01'}
-                          className="flex-1"
-                        />
-                      </div>
-                      
-                      {globalDiscountValue > 0 && (
-                        <div className="text-xs text-muted-foreground text-center">
-                          {globalDiscountType === 'percentage' 
-                            ? `%${globalDiscountValue} indirim uygulanacak`
-                            : `${globalDiscountValue} TL indirim uygulanacak`
-                          }
-                        </div>
-                      )}
-                    </div>
-                  </div>
                 </div>
               </CardContent>
             </Card>
