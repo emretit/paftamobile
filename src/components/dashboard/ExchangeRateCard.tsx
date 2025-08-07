@@ -34,7 +34,7 @@ const ExchangeRateCard: React.FC = () => {
           <CardTitle className="text-xl font-bold">Döviz Kurları</CardTitle>
           <CardDescription>
             {lastUpdate 
-              ? `Son güncelleme: ${new Date(lastUpdate).toLocaleDateString('tr-TR')}`
+              ? `Son güncelleme: ${lastUpdate}`
               : 'Güncelleme bilgisi alınamadı'}
           </CardDescription>
         </div>

@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -60,11 +61,10 @@ const fallbackRates: ExchangeRate[] = [
 
 // Normalize rates: keep only latest day and deduplicate by currency_code
 const getDateOnly = (s: string) => {
-  try {
-    return new Date(s).toISOString().split('T')[0];
-  } catch {
-    return s.slice(0, 10);
-  }
+  if (!s) return "";
+  // Avoid timezone shifts: just take date part without converting
+  if (s.includes('T')) return s.slice(0, 10);
+  return s.length >= 10 ? s.slice(0, 10) : s;
 };
 
 const normalizeRates = (rates: ExchangeRate[]) => {
@@ -189,7 +189,7 @@ export const useExchangeRates = () => {
         setLastUpdate(lastDate);
         
         toast.info('Mevcut kur bilgileri yüklendi', {
-          description: `Son güncelleme tarihi: ${new Date(lastDate || dbRates[0].update_date).toLocaleDateString('tr-TR')}`,
+          description: `Son güncelleme tarihi: ${lastDate || getDateOnly(dbRates[0].update_date)}`,
         });
         return;
       }
