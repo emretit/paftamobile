@@ -99,7 +99,9 @@ export interface Proposal {
   opportunity_title?: string;
   valid_until?: string;
   payment_terms?: string;
+  payment_method?: string;
   delivery_terms?: string;
+  delivery_method?: string;
   notes?: string;
   terms?: string;
   status: ProposalStatus;

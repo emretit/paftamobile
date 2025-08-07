@@ -22,7 +22,7 @@ const OrderPaymentInfo: React.FC<OrderPaymentInfoProps> = ({ proposal }) => {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="payment-method">Ödeme Yöntemi</Label>
-              <Select defaultValue="bank-transfer">
+              <Select defaultValue={proposal?.payment_method || "bank-transfer"}>
                 <SelectTrigger id="payment-method">
                   <SelectValue placeholder="Ödeme yöntemi seçiniz" />
                 </SelectTrigger>
@@ -48,7 +48,7 @@ const OrderPaymentInfo: React.FC<OrderPaymentInfoProps> = ({ proposal }) => {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="delivery-method">Teslimat Yöntemi</Label>
-              <Select defaultValue="standard">
+              <Select defaultValue={proposal?.delivery_method || "standard"}>
                 <SelectTrigger id="delivery-method">
                   <SelectValue placeholder="Teslimat yöntemi seçiniz" />
                 </SelectTrigger>
