@@ -321,7 +321,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         title: `${formData.customer_company} - Teklif`,
         description: formData.notes,
         customer_name: formData.customer_company,
-        customer_id: "", // Will be set by backend if customer exists
+        customer_id: formData.customer_id || "", // Use selected customer ID
         employee_id: "", // Will be set by backend
         valid_until: formData.validity_date,
         payment_terms: formData.payment_terms,
@@ -474,20 +474,21 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                                <CommandItem
                                  key={customer.id}
                                  value={customer.searchableText}
-                                onSelect={() => {
-                                  const selectedName = customer.company || customer.name;
-                                  handleFieldChange('customer_company', selectedName);
-                                  handleFieldChange('contact_name', customer.name);
-                                  setCustomerSearchOpen(false);
-                                }}
+                                 onSelect={() => {
+                                   const selectedName = customer.company || customer.name;
+                                   handleFieldChange('customer_company', selectedName);
+                                   handleFieldChange('contact_name', customer.name);
+                                   handleFieldChange('customer_id', customer.id);
+                                   setCustomerSearchOpen(false);
+                                 }}
                                 className="flex items-center gap-2 p-3 cursor-pointer hover:bg-muted/50 data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent-foreground rounded-sm transition-colors"
                               >
-                                <Check
-                                  className={cn(
-                                    "h-4 w-4 shrink-0",
-                                    formData.customer_company === (customer.company || customer.name) ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
+                                 <Check
+                                   className={cn(
+                                     "h-4 w-4 shrink-0",
+                                     formData.customer_id === customer.id ? "opacity-100" : "opacity-0"
+                                   )}
+                                 />
                                 <div className="flex flex-col gap-1 min-w-0 flex-1">
                                   <div className="flex items-center gap-2">
                                     {customer.company ? (
