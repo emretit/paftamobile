@@ -102,6 +102,9 @@ export interface Proposal {
   payment_method?: string;
   delivery_terms?: string;
   delivery_method?: string;
+  warranty_terms?: string;
+  price_terms?: string;
+  other_terms?: string;
   notes?: string;
   terms?: string;
   status: ProposalStatus;

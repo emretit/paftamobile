@@ -2452,6 +2452,7 @@ export type Database = {
           created_at: string
           currency: string | null
           customer_id: string | null
+          delivery_terms: string | null
           description: string | null
           employee_id: string | null
           id: string
@@ -2459,18 +2460,23 @@ export type Database = {
           notes: string | null
           number: string
           opportunity_id: string | null
+          other_terms: string | null
+          payment_terms: string | null
+          price_terms: string | null
           status: string
           terms: string | null
           title: string
           total_amount: number
           updated_at: string
           valid_until: string | null
+          warranty_terms: string | null
         }
         Insert: {
           attachments?: Json | null
           created_at?: string
           currency?: string | null
           customer_id?: string | null
+          delivery_terms?: string | null
           description?: string | null
           employee_id?: string | null
           id?: string
@@ -2478,18 +2484,23 @@ export type Database = {
           notes?: string | null
           number: string
           opportunity_id?: string | null
+          other_terms?: string | null
+          payment_terms?: string | null
+          price_terms?: string | null
           status?: string
           terms?: string | null
           title: string
           total_amount?: number
           updated_at?: string
           valid_until?: string | null
+          warranty_terms?: string | null
         }
         Update: {
           attachments?: Json | null
           created_at?: string
           currency?: string | null
           customer_id?: string | null
+          delivery_terms?: string | null
           description?: string | null
           employee_id?: string | null
           id?: string
@@ -2497,12 +2508,16 @@ export type Database = {
           notes?: string | null
           number?: string
           opportunity_id?: string | null
+          other_terms?: string | null
+          payment_terms?: string | null
+          price_terms?: string | null
           status?: string
           terms?: string | null
           title?: string
           total_amount?: number
           updated_at?: string
           valid_until?: string | null
+          warranty_terms?: string | null
         }
         Relationships: [
           {

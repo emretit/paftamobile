@@ -96,6 +96,8 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
     payment_terms: "",
     delivery_terms: "",
     warranty_terms: "",
+    price_terms: "",
+    other_terms: "",
     
     // Backend compatibility fields
     title: "",
@@ -131,7 +133,9 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         vat_percentage: 20,
         payment_terms: proposal.payment_terms || "Siparişle birlikte %50 avans, teslimde kalan tutar ödenecektir.",
         delivery_terms: proposal.delivery_terms || "Teslimat süresi: Sipariş tarihinden itibaren 15-20 iş günü",
-        warranty_terms: "Ürünlerimiz 2 yıl garantilidir.",
+        warranty_terms: proposal.warranty_terms || "Ürünlerimiz 2 yıl garantilidir.",
+        price_terms: proposal.price_terms || "",
+        other_terms: proposal.other_terms || "",
         title: proposal.title || "",
         customer_id: proposal.customer_id || "",
         employee_id: proposal.employee_id || "",
@@ -382,6 +386,9 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         terms: `${formData.payment_terms}\n\n${formData.delivery_terms}\n\nGaranti: ${formData.warranty_terms}`,
         payment_terms: formData.payment_terms,
         delivery_terms: formData.delivery_terms,
+        warranty_terms: formData.warranty_terms,
+        price_terms: formData.price_terms,
+        other_terms: formData.other_terms,
         notes: formData.notes,
         status: status,
         total_amount: calculations.grand_total,
@@ -1064,7 +1071,9 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
             <ProposalFormTerms
               paymentTerms={formData.payment_terms}
               deliveryTerms={formData.delivery_terms}
-              notes={formData.notes}
+              warrantyTerms={formData.warranty_terms}
+              priceTerms={formData.price_terms}
+              otherTerms={formData.other_terms}
               onInputChange={(e) => handleFieldChange(e.target.name, e.target.value)}
             />
           </CardContent>

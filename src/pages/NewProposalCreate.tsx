@@ -95,6 +95,8 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
     payment_terms: "Siparişle birlikte %50 avans, teslimde kalan tutar ödenecektir.",
     delivery_terms: "Teslimat süresi: Sipariş tarihinden itibaren 15-20 iş günü",
     warranty_terms: "Ürünlerimiz 2 yıl garantilidir.",
+    price_terms: "",
+    other_terms: "",
     
     // Backend compatibility fields
     title: "",
@@ -342,6 +344,11 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         employee_id: formData.prepared_by || null,
         valid_until: formData.validity_date,
         terms: `${formData.payment_terms}\n\n${formData.delivery_terms}\n\nGaranti: ${formData.warranty_terms}`,
+        payment_terms: formData.payment_terms,
+        delivery_terms: formData.delivery_terms,
+        warranty_terms: formData.warranty_terms,
+        price_terms: formData.price_terms,
+        other_terms: formData.other_terms,
         notes: formData.notes,
         status: status,
         total_amount: calculations.grand_total,
@@ -872,7 +879,9 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
             <ProposalFormTerms
               paymentTerms={formData.payment_terms}
               deliveryTerms={formData.delivery_terms}
-              notes={formData.notes}
+              warrantyTerms={formData.warranty_terms}
+              priceTerms={formData.price_terms}
+              otherTerms={formData.other_terms}
               onInputChange={(e) => handleFieldChange(e.target.name, e.target.value)}
             />
           </CardContent>

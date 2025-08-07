@@ -10,6 +10,9 @@ export interface ProposalFormData {
   valid_until?: string;
   payment_terms?: string;
   delivery_terms?: string;
+  warranty_terms?: string;
+  price_terms?: string;
+  other_terms?: string;
   notes?: string;
   internalNotes?: string;
   terms?: string;

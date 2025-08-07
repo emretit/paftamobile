@@ -15,7 +15,9 @@ import { toast } from "sonner";
 interface ProposalTermsProps {
   paymentTerms?: string;
   deliveryTerms?: string;
-  notes?: string;
+  warrantyTerms?: string;
+  priceTerms?: string;
+  otherTerms?: string;
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
 }
 
@@ -54,7 +56,9 @@ const INITIAL_TERMS = {
 const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
   paymentTerms,
   deliveryTerms,
-  notes,
+  warrantyTerms,
+  priceTerms,
+  otherTerms,
   onInputChange
 }) => {
   // State to hold all available terms (predefined + custom from DB)
@@ -132,10 +136,12 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
     } else if (category === 'delivery') {
       currentValue = deliveryTerms || '';
       fieldName = 'delivery_terms';
-    } else {
-      // For warranty and price, we'll add to notes
-      currentValue = notes || '';
-      fieldName = 'notes';
+    } else if (category === 'warranty') {
+      currentValue = warrantyTerms || '';
+      fieldName = 'warranty_terms';
+    } else if (category === 'price') {
+      currentValue = priceTerms || '';
+      fieldName = 'price_terms';
     }
 
     const newValue = currentValue ? `${currentValue}\n\n${selectedTerm.text}` : selectedTerm.text;
@@ -403,11 +409,11 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
 
         {/* Other Terms Input */}
         <div className="space-y-2">
-          <Label htmlFor="notes">Diğer Şartlar</Label>
+          <Label htmlFor="other_terms">Diğer Şartlar</Label>
           <Textarea
-            id="notes"
-            name="notes"
-            value={notes || ""}
+            id="other_terms"
+            name="other_terms"
+            value={otherTerms || ""}
             onChange={onInputChange}
             placeholder="Ekstra şartlar ve notlar buraya yazılabilir"
             className="min-h-[120px]"
