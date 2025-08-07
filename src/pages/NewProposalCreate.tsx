@@ -557,7 +557,10 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                   <Label htmlFor="prepared_by">Teklifi Hazırlayan</Label>
                   <EmployeeSelector
                     value={formData.prepared_by || ""}
-                    onChange={(value) => handleFieldChange('prepared_by', value)}
+                    onChange={(value) => {
+                      handleFieldChange('prepared_by', value);
+                      handleFieldChange('employee_id', value);
+                    }}
                     error=""
                   />
                 </div>

@@ -122,9 +122,9 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         contact_name: proposal.customer_name || "",
         contact_title: "",
         offer_date: proposal.created_at ? proposal.created_at.split('T')[0] : "",
-        offer_number: proposal.proposal_number || "",
+        offer_number: proposal.number || "",
         validity_date: proposal.valid_until ? proposal.valid_until.split('T')[0] : "",
-        prepared_by: proposal.employee_name || "",
+        prepared_by: proposal.employee_id || "",
         notes: proposal.notes || "",
         currency: proposal.currency || "TRY",
         discount_percentage: 0,
@@ -739,7 +739,10 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
                   <Label htmlFor="prepared_by">Teklifi Hazırlayan</Label>
                   <EmployeeSelector
                     value={formData.prepared_by || ""}
-                    onChange={(value) => handleFieldChange('prepared_by', value)}
+                    onChange={(value) => {
+                      handleFieldChange('prepared_by', value);
+                      handleFieldChange('employee_id', value);
+                    }}
                     error=""
                   />
                 </div>
