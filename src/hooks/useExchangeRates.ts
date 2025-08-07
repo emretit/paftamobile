@@ -64,6 +64,22 @@ export const useExchangeRates = () => {
   const [error, setError] = useState<Error | null>(null);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
 
+  // Keep only the latest update_date entries and dedupe by currency_code
+  const normalizeLatestRates = useCallback((rates: ExchangeRate[]): { list: ExchangeRate[]; latestDate: string | null } => {
+    if (!rates?.length) return { list: [], latestDate: null };
+    const latestDate = rates.reduce((max, r) => (r.update_date > max ? r.update_date : max), rates[0].update_date);
+    const forLatest = rates.filter(r => r.update_date === latestDate);
+    const seen = new Set<string>();
+    const deduped: ExchangeRate[] = [];
+    for (const r of forLatest) {
+      if (!seen.has(r.currency_code)) {
+        seen.add(r.currency_code);
+        deduped.push(r);
+      }
+    }
+    return { list: deduped, latestDate };
+  }, []);
+
   // Fetch exchange rates from database
   const fetchExchangeRatesFromDB = async (): Promise<ExchangeRate[]> => {
     const { data, error } = await supabase
@@ -95,9 +111,10 @@ export const useExchangeRates = () => {
         const dbRates = await fetchExchangeRatesFromDB();
         
         if (dbRates.length > 0) {
-          setExchangeRates(dbRates);
-          setLastUpdate(dbRates[0].update_date);
-          console.log("Exchange rates loaded from database:", dbRates.length);
+          const { list, latestDate } = normalizeLatestRates(dbRates);
+          setExchangeRates(list);
+          setLastUpdate(latestDate);
+          console.log(`Exchange rates loaded for latest date ${latestDate}:`, list.length);
           return;
         }
         
@@ -105,9 +122,10 @@ export const useExchangeRates = () => {
         console.log("No rates in database, fetching fresh rates");
         try {
           const freshRates = await fetchFreshRates();
-          setExchangeRates(freshRates);
-          setLastUpdate(freshRates[0]?.update_date || new Date().toISOString().split('T')[0]);
-          console.log("Fresh exchange rates loaded:", freshRates.length);
+          const { list, latestDate } = normalizeLatestRates(freshRates);
+          setExchangeRates(list);
+          setLastUpdate(latestDate);
+          console.log(`Fresh exchange rates loaded for latest date ${latestDate}:`, list.length);
         } catch (freshError) {
           console.error("Failed to fetch fresh rates:", freshError);
           // Use fallback rates
@@ -140,11 +158,12 @@ export const useExchangeRates = () => {
       const freshRates = await fetchFreshRates();
       
       if (freshRates.length > 0) {
-        setExchangeRates(freshRates);
-        setLastUpdate(freshRates[0].update_date);
+        const { list, latestDate } = normalizeLatestRates(freshRates);
+        setExchangeRates(list);
+        setLastUpdate(latestDate);
         
         toast.success('Döviz kurları başarıyla güncellendi', {
-          description: `${freshRates.length} adet kur bilgisi alındı.`,
+          description: `${list.length} adet kur bilgisi alındı.`,
         });
         return;
       }
@@ -153,11 +172,12 @@ export const useExchangeRates = () => {
       const dbRates = await fetchExchangeRatesFromDB();
       
       if (dbRates.length > 0) {
-        setExchangeRates(dbRates);
-        setLastUpdate(dbRates[0].update_date);
+        const { list, latestDate } = normalizeLatestRates(dbRates);
+        setExchangeRates(list);
+        setLastUpdate(latestDate);
         
         toast.info('Mevcut kur bilgileri yüklendi', {
-          description: `Son güncelleme tarihi: ${new Date(dbRates[0].update_date).toLocaleDateString('tr-TR')}`,
+          description: `Son güncelleme tarihi: ${latestDate ? latestDate.split('-').reverse().join('.') : '-'}`,
         });
         return;
       }
