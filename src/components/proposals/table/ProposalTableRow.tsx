@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProposalStatusCell } from "./ProposalStatusCell";
 import { useNavigate } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { calculateProposalTotals, formatProposalAmount } from "@/services/workflow/proposalWorkflow";
 
 interface ProposalTableRowProps {
   proposal: Proposal;
@@ -92,7 +93,14 @@ export const ProposalTableRow = ({
           <span className="text-muted-foreground">-</span>
         )}
       </TableCell>
-      <TableCell className="font-medium p-4">{formatMoney(proposal.total_amount || proposal.total_value || 0)}</TableCell>
+      <TableCell className="font-medium p-4">
+        {(() => {
+          const totals = proposal.items && proposal.items.length > 0 
+            ? calculateProposalTotals(proposal.items)
+            : { total: proposal.total_amount || proposal.total_value || 0 };
+          return formatProposalAmount(totals.total, proposal.currency || 'TRY');
+        })()}
+      </TableCell>
       <TableCell className="p-4">{formatDate(proposal.created_at)}</TableCell>
       <TableCell className="p-4">{formatDate(proposal.valid_until)}</TableCell>
       <TableCell className="p-4">
