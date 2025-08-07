@@ -65,6 +65,31 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
     }
   };
 
+  const handleDeleteProposal = async (proposalId: string) => {
+    if (!confirm("Bu teklifi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.")) {
+      return;
+    }
+
+    try {
+      // TODO: Add actual delete API call here
+      // await deleteProposal(proposalId);
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
+      
+      toast({
+        title: "Teklif silindi",
+        description: "Teklif başarıyla silindi.",
+        className: "bg-green-50 border-green-200",
+      });
+    } catch (error) {
+      console.error('Error deleting proposal:', error);
+      toast({
+        title: "Hata",
+        description: "Teklif silinirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const formatMoney = (amount: number) => {
     if (!amount && amount !== 0) return "₺0";
     
@@ -149,6 +174,7 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
                 formatMoney={formatMoney}
                 onSelect={onProposalSelect}
                 onStatusChange={handleStatusUpdate}
+                onDelete={handleDeleteProposal}
               />
             ))}
           </TableBody>

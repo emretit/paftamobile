@@ -4,7 +4,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Proposal, ProposalStatus } from "@/types/proposal";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Eye, PenLine, MoreHorizontal } from "lucide-react";
+import { Eye, PenLine, MoreHorizontal, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProposalStatusCell } from "./ProposalStatusCell";
@@ -17,6 +17,7 @@ interface ProposalTableRowProps {
   formatMoney: (amount: number) => string;
   onSelect: (proposal: Proposal) => void;
   onStatusChange: (proposalId: string, newStatus: ProposalStatus) => void;
+  onDelete: (proposalId: string) => void;
 }
 
 export const ProposalTableRow = ({ 
@@ -24,7 +25,8 @@ export const ProposalTableRow = ({
   index, 
   formatMoney, 
   onSelect,
-  onStatusChange 
+  onStatusChange,
+  onDelete
 }: ProposalTableRowProps) => {
   const navigate = useNavigate();
   
@@ -145,6 +147,13 @@ export const ProposalTableRow = ({
                 }}
               >
                 {proposal.status === 'draft' ? 'Gönderildi Olarak İşaretle' : 'Taslak Olarak İşaretle'}
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onDelete(proposal.id)}
+                className="text-red-600 focus:text-red-700"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Sil
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
