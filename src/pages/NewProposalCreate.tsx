@@ -45,6 +45,10 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingItemIndex, setEditingItemIndex] = useState<number | undefined>(undefined);
   const [editingItemData, setEditingItemData] = useState<any>(null);
+  
+  // Global discount state
+  const [globalDiscountType, setGlobalDiscountType] = useState<'percentage' | 'amount'>('percentage');
+  const [globalDiscountValue, setGlobalDiscountValue] = useState<number>(0);
 
   // Turkish character normalization function
   const normalizeTurkish = (text: string): string => {
@@ -135,17 +139,32 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
       totals[currency].gross += item.quantity * item.unit_price;
     });
     
-    // Apply discount and VAT calculations for each currency
+    // Calculate total gross across all currencies for global discount
+    const totalGross = Object.values(totals).reduce((sum, total) => sum + total.gross, 0);
+    
+    // Apply global discount and VAT calculations for each currency
     Object.keys(totals).forEach(currency => {
       const gross = totals[currency].gross;
-      const discount = (gross * formData.discount_percentage) / 100;
-      const net = gross - discount;
+      
+      // Calculate global discount proportionally for this currency
+      let globalDiscount = 0;
+      if (globalDiscountValue > 0 && totalGross > 0) {
+        const currencyProportion = gross / totalGross;
+        if (globalDiscountType === 'percentage') {
+          globalDiscount = (gross * globalDiscountValue) / 100;
+        } else {
+          // Amount discount distributed proportionally
+          globalDiscount = globalDiscountValue * currencyProportion;
+        }
+      }
+      
+      const net = gross - globalDiscount;
       const vat = (net * formData.vat_percentage) / 100;
       const grand = net + vat;
       
       totals[currency] = {
         gross,
-        discount,
+        discount: globalDiscount,
         net,
         vat,
         grand
@@ -739,6 +758,46 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                       </div>
                     </div>
                   ))}
+                  
+                  {/* Global Discount Section */}
+                  <div className="border rounded-lg p-4 space-y-3 bg-muted/20">
+                    <div className="font-medium text-sm text-center mb-2">
+                      Genel İndirim
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <Select value={globalDiscountType} onValueChange={(value: 'percentage' | 'amount') => setGlobalDiscountType(value)}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="percentage">Yüzde (%)</SelectItem>
+                            <SelectItem value="amount">Tutar</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        
+                        <Input
+                          type="number"
+                          value={globalDiscountValue}
+                          onChange={(e) => setGlobalDiscountValue(Number(e.target.value))}
+                          placeholder={globalDiscountType === 'percentage' ? '0' : '0.00'}
+                          min="0"
+                          step={globalDiscountType === 'percentage' ? '0.1' : '0.01'}
+                          className="flex-1"
+                        />
+                      </div>
+                      
+                      {globalDiscountValue > 0 && (
+                        <div className="text-xs text-muted-foreground text-center">
+                          {globalDiscountType === 'percentage' 
+                            ? `%${globalDiscountValue} indirim uygulanacak`
+                            : `${globalDiscountValue} TL indirim uygulanacak`
+                          }
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
