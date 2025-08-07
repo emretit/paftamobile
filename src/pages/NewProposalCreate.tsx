@@ -212,6 +212,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
   }, []);
 
   const handleFieldChange = (field: string, value: any) => {
+    console.log('🔍 NewProposalCreate - handleFieldChange:', { field, value });
     setFormData(prev => ({
       ...prev,
       [field]: value

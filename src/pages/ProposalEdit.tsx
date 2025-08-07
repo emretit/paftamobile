@@ -169,6 +169,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
 
   // Track changes
   const handleFieldChange = (field: string, value: any) => {
+    console.log('🔍 ProposalEdit - handleFieldChange:', { field, value });
     setFormData(prev => ({
       ...prev,
       [field]: value

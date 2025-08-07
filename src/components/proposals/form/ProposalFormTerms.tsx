@@ -146,6 +146,14 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
 
     const newValue = currentValue ? `${currentValue}\n\n${selectedTerm.text}` : selectedTerm.text;
 
+    console.log('🔍 ProposalFormTerms - handleTermSelect:', {
+      category,
+      fieldName,
+      currentValue,
+      newValue,
+      selectedTerm: selectedTerm.text
+    });
+
     // Create a synthetic event to update the appropriate field
     const syntheticEvent = {
       target: {
