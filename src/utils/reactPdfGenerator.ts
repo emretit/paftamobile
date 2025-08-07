@@ -88,18 +88,8 @@ export class ReactPdfGenerator {
         designSettings: designSettings
       });
       
-      // Fallback to jsPDF generator
-      console.warn('Falling back to jsPDF generator');
-      try {
-        const { ProposalPdfGenerator } = await import('./proposalPdfGenerator');
-        const fallbackGenerator = new ProposalPdfGenerator();
-        await fallbackGenerator.generateProposalPdf(proposal, templateId);
-        console.log('Fallback PDF generation successful');
-      } catch (fallbackError) {
-        console.error('Fallback PDF generation also failed:', fallbackError);
-        alert(`PDF oluşturulamadı: ${error.message}`);
-        throw error;
-      }
+      alert(`PDF oluşturulamadı: ${error.message}`);
+      throw error;
     }
   }
 
