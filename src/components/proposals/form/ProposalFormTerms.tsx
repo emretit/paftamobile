@@ -151,7 +151,8 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
       fieldName = 'price_terms';
     }
 
-    const newValue = currentValue ? `${currentValue}\n\n${selectedTerm.text}` : selectedTerm.text;
+    // Yeni seçim önceki değeri değiştirsin, eklemesin
+    const newValue = selectedTerm.text;
 
     console.log('🔍 ProposalFormTerms - handleTermSelect:', {
       category,
@@ -264,9 +265,9 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
     else if (category === 'warranty') currentTerms = warrantyTerms || '';
     else if (category === 'price') currentTerms = priceTerms || '';
 
-    // Find matching term ID based on text content
+    // Tam eşleşme arıyoruz, içermek yerine
     const matchingTerm = availableTerms[category].find(term => 
-      currentTerms.includes(term.text)
+      currentTerms.trim() === term.text.trim()
     );
     
     console.log('🔍 ProposalFormTerms - getCurrentValue:', {
