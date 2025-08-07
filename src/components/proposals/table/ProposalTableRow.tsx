@@ -35,19 +35,39 @@ export const ProposalTableRow = ({
   
   const calculateGrandTotal = () => {
     if (!proposal.items || proposal.items.length === 0) {
+      console.log('No items, using stored total_amount:', proposal.total_amount);
       return proposal.total_amount || proposal.total_value || 0;
     }
     
+    console.log('Proposal items:', proposal.items);
+    console.log('Proposal currency:', proposal.currency);
+    
     // Use the same calculation as in ProposalItemsTab - Genel Toplam
-    const subtotal = proposal.items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+    const subtotal = proposal.items.reduce((sum, item) => {
+      console.log(`Item: ${item.name}, price: ${item.unit_price}, quantity: ${item.quantity}, currency: ${item.currency}`);
+      return sum + item.quantity * item.unit_price;
+    }, 0);
+    
     const taxAmount = proposal.items.reduce((sum, item) => {
       const itemTotal = item.quantity * item.unit_price;
       return sum + (itemTotal * (item.tax_rate || 0) / 100);
     }, 0);
+    
     const discounts = proposal.discounts || 0;
     const additionalCharges = proposal.additional_charges || 0;
     
-    return subtotal + taxAmount - discounts + additionalCharges;
+    const grandTotal = subtotal + taxAmount - discounts + additionalCharges;
+    
+    console.log('Calculation breakdown:', {
+      subtotal,
+      taxAmount,
+      discounts,
+      additionalCharges,
+      grandTotal,
+      proposalCurrency: proposal.currency
+    });
+    
+    return grandTotal;
   };
   
   const formatDate = (date: string | null | undefined) => {
