@@ -61,6 +61,13 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
   otherTerms,
   onInputChange
 }) => {
+  console.log('🔍 ProposalFormTerms - Props:', {
+    paymentTerms,
+    deliveryTerms,
+    warrantyTerms,
+    priceTerms,
+    otherTerms
+  });
   // State to hold all available terms (predefined + custom from DB)
   const [availableTerms, setAvailableTerms] = useState<{[key: string]: Term[]}>({
     payment: INITIAL_TERMS.payment,
@@ -250,21 +257,46 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
     }
   };
 
+  const getCurrentValue = (category: 'payment' | 'delivery' | 'warranty' | 'price') => {
+    let currentTerms = '';
+    if (category === 'payment') currentTerms = paymentTerms || '';
+    else if (category === 'delivery') currentTerms = deliveryTerms || '';
+    else if (category === 'warranty') currentTerms = warrantyTerms || '';
+    else if (category === 'price') currentTerms = priceTerms || '';
+
+    // Find matching term ID based on text content
+    const matchingTerm = availableTerms[category].find(term => 
+      currentTerms.includes(term.text)
+    );
+    
+    console.log('🔍 ProposalFormTerms - getCurrentValue:', {
+      category,
+      currentTerms,
+      matchingTerm: matchingTerm?.label,
+      selectedId: matchingTerm?.id || ''
+    });
+    
+    return matchingTerm?.id || '';
+  };
+
   const renderDropdown = (category: 'payment' | 'delivery' | 'warranty' | 'price', title: string, placeholder: string) => (
     <div className="space-y-2">
       <Label>{title}</Label>
       
       {/* Dropdown for predefined terms */}
-      <Select onValueChange={(value) => {
-        if (value === 'add_custom') {
-          setCustomTermInputs(prev => ({ 
-            ...prev, 
-            [category]: { ...prev[category], show: true } 
-          }));
-        } else {
-          handleTermSelect(category, value);
-        }
-      }}>
+      <Select 
+        value={getCurrentValue(category)}
+        onValueChange={(value) => {
+          if (value === 'add_custom') {
+            setCustomTermInputs(prev => ({ 
+              ...prev, 
+              [category]: { ...prev[category], show: true } 
+            }));
+          } else {
+            handleTermSelect(category, value);
+          }
+        }}
+      >
         <SelectTrigger className="w-full bg-background border-border hover:border-primary transition-colors">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
@@ -422,7 +454,13 @@ const ProposalFormTerms: React.FC<ProposalTermsProps> = ({
             id="other_terms"
             name="other_terms"
             value={otherTerms || ""}
-            onChange={onInputChange}
+            onChange={(e) => {
+              console.log('🔍 ProposalFormTerms - Other Terms onChange:', {
+                name: e.target.name,
+                value: e.target.value
+              });
+              onInputChange(e);
+            }}
             placeholder="Ekstra şartlar ve notlar buraya yazılabilir"
             className="min-h-[120px]"
           />
