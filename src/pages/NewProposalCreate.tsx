@@ -335,8 +335,9 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
       const proposalData = {
         title: `${formData.customer_company} - Teklif`,
         description: formData.notes,
-        customer_id: formData.customer_id || "", // Use selected customer ID
-        employee_id: "", // Will be set by backend
+        number: formData.offer_number,
+        customer_id: formData.customer_id || null,
+        employee_id: formData.prepared_by || null,
         valid_until: formData.validity_date,
         terms: `${formData.payment_terms}\n\n${formData.delivery_terms}\n\nGaranti: ${formData.warranty_terms}`,
         notes: formData.notes,
