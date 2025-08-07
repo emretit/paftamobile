@@ -45,28 +45,11 @@ export const mockCrmProposalsService = {
 
       if (error) throw error;
       
-      // Transform proposal to ensure items are properly cast and have all required fields
+      // Transform proposal to ensure items are properly cast
       const proposal = {
         ...data,
-        items: Array.isArray(data.items) ? (data.items as any[]).map(item => ({
-          id: item.id || crypto.randomUUID(),
-          name: item.name || "",
-          description: item.description || item.name || "",
-          quantity: item.quantity || 1,
-          unit: item.unit || "adet",
-          unit_price: item.unit_price || 0,
-          total_price: item.total_price || (item.quantity || 1) * (item.unit_price || 0),
-          currency: item.currency || data.currency || "TRY",
-          tax_rate: item.tax_rate || 18,
-          discount_rate: item.discount_rate || 0,
-          product_id: item.product_id,
-          original_currency: item.original_currency,
-          original_price: item.original_price,
-          stock_status: item.stock_status
-        })) : []
+        items: Array.isArray(data.items) ? data.items as unknown as ProposalItem[] : []
       } as unknown as Proposal;
-      
-      console.log("🔍 Fetched proposal with items:", proposal);
       
       return { data: proposal, error: null };
     } catch (error) {

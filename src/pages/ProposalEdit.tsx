@@ -114,17 +114,14 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
   // Initialize form data when proposal loads
   useEffect(() => {
     if (proposal) {
-      console.log("🔍 Proposal loaded:", proposal);
-      console.log("🔍 Proposal items:", proposal.items);
-      
       setFormData({
-        customer_company: proposal.customer?.name || proposal.customer_name || "Müşteri Belirtilmemiş",
-        contact_name: proposal.customer?.name || proposal.customer_name || "Müşteri Belirtilmemiş",
+        customer_company: proposal.customer_name || "",
+        contact_name: proposal.customer_name || "",
         contact_title: "",
         offer_date: proposal.created_at ? proposal.created_at.split('T')[0] : "",
         offer_number: proposal.proposal_number || "",
         validity_date: proposal.valid_until ? proposal.valid_until.split('T')[0] : "",
-        prepared_by: proposal.employee ? ((proposal.employee.first_name || '') + ' ' + (proposal.employee.last_name || '')).trim() || proposal.employee_name : proposal.employee_name || "",
+        prepared_by: proposal.employee_name || "",
         notes: proposal.notes || "",
         currency: proposal.currency || "TRY",
         discount_percentage: 0,
@@ -141,29 +138,13 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
 
       // Initialize items from proposal
       if (proposal.items && proposal.items.length > 0) {
-        console.log("📦 Processing proposal items:", proposal.items);
-        const initialItems = proposal.items.map((item, index) => {
-          const lineItem = {
-            ...item,
-            id: item.id || crypto.randomUUID(),
-            row_number: index + 1,
-            name: item.name || "",
-            description: item.description || item.name || "",
-            quantity: item.quantity || 1,
-            unit: item.unit || "adet",
-            unit_price: item.unit_price || 0,
-            total_price: item.total_price || (item.quantity || 1) * (item.unit_price || 0),
-            currency: item.currency || proposal.currency || "TRY",
-            tax_rate: item.tax_rate || 18,
-            discount_rate: item.discount_rate || 0
-          };
-          console.log("📦 Processed line item:", lineItem);
-          return lineItem;
-        });
+        const initialItems = proposal.items.map((item, index) => ({
+          ...item,
+          id: item.id || crypto.randomUUID(),
+          row_number: index + 1,
+        }));
         setItems(initialItems);
-        console.log("📦 Final items set:", initialItems);
       } else {
-        console.log("📦 No items found, creating default item");
         setItems([{
           id: "1",
           row_number: 1,
@@ -864,12 +845,9 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
                         <div className="md:col-span-7">
                           <Label className="text-sm">Ürün/Hizmet *</Label>
                           <ProductSelector
-                            value={item.name || item.description || ''}
+                            value={item.description || ''}
                             onChange={(productName) => {
-                              handleItemChange(index, 'name', productName);
-                              if (!item.description) {
-                                handleItemChange(index, 'description', productName);
-                              }
+                              handleItemChange(index, 'description', productName);
                             }}
                             onProductSelect={handleProductModalSelect}
                             placeholder="Ürün seçin..."
