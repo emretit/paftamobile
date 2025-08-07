@@ -655,9 +655,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
                            (() => {
                              const customer = customers?.find(c => c.id === formData.customer_id);
                              if (customer) {
-                               return customer.company 
-                                 ? `${customer.name} (${customer.company})`
-                                 : customer.name;
+                               return customer.company || customer.name;
                              }
                              return formData.customer_company || "Müşteri bulunamadı";
                            })()
