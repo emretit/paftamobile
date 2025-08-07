@@ -114,8 +114,11 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
   // Initialize form data when proposal loads
   useEffect(() => {
     if (proposal) {
+      // Find the customer to get the company name
+      const customer = customers?.find(c => c.id === proposal.customer_id);
+      
       setFormData({
-        customer_company: proposal.customer_name || "",
+        customer_company: customer?.company || customer?.name || proposal.customer_name || "",
         contact_name: proposal.customer_name || "",
         contact_title: "",
         offer_date: proposal.created_at ? proposal.created_at.split('T')[0] : "",
@@ -158,7 +161,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         }]);
       }
     }
-  }, [proposal]);
+  }, [proposal, customers]);
 
   // Track changes
   const handleFieldChange = (field: string, value: any) => {
@@ -635,10 +638,20 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
                           !formData.customer_company && "text-muted-foreground"
                         )}
                         disabled={isLoadingCustomers}
-                      >
-                        {formData.customer_company || "Müşteri ara..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
+                       >
+                         {formData.customer_id ? (
+                           (() => {
+                             const customer = customers?.find(c => c.id === formData.customer_id);
+                             if (customer) {
+                               return customer.company 
+                                 ? `${customer.name} (${customer.company})`
+                                 : customer.name;
+                             }
+                             return formData.customer_company || "Müşteri bulunamadı";
+                           })()
+                         ) : (formData.customer_company || "Müşteri ara...")}
+                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[400px] p-0" align="start">
                        <Command shouldFilter={false} className="rounded-lg border shadow-md">
@@ -657,20 +670,21 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
                                <CommandItem
                                  key={customer.id}
                                  value={customer.searchableText}
-                                onSelect={() => {
-                                  const selectedName = customer.company || customer.name;
-                                  handleFieldChange('customer_company', selectedName);
-                                  handleFieldChange('contact_name', customer.name);
-                                  setCustomerSearchOpen(false);
-                                }}
+                                 onSelect={() => {
+                                   const selectedName = customer.company || customer.name;
+                                   handleFieldChange('customer_company', selectedName);
+                                   handleFieldChange('contact_name', customer.name);
+                                   handleFieldChange('customer_id', customer.id);
+                                   setCustomerSearchOpen(false);
+                                 }}
                                 className="flex items-center gap-2 p-3 cursor-pointer hover:bg-muted/50 data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent-foreground rounded-sm transition-colors"
                               >
-                                <Check
-                                  className={cn(
-                                    "h-4 w-4 shrink-0",
-                                    formData.customer_company === (customer.company || customer.name) ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
+                                 <Check
+                                   className={cn(
+                                     "h-4 w-4 shrink-0",
+                                     formData.customer_id === customer.id ? "opacity-100" : "opacity-0"
+                                   )}
+                                 />
                                 <div className="flex flex-col gap-1 min-w-0 flex-1">
                                   <div className="flex items-center gap-2">
                                     {customer.company ? (
