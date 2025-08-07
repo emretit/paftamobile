@@ -451,8 +451,10 @@ export type Database = {
           logo_url: string | null
           phone: string | null
           tax_number: string | null
+          tax_office: string | null
           updated_at: string | null
           updated_by: string | null
+          website: string | null
         }
         Insert: {
           address?: string | null
@@ -464,8 +466,10 @@ export type Database = {
           logo_url?: string | null
           phone?: string | null
           tax_number?: string | null
+          tax_office?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          website?: string | null
         }
         Update: {
           address?: string | null
@@ -477,8 +481,10 @@ export type Database = {
           logo_url?: string | null
           phone?: string | null
           tax_number?: string | null
+          tax_office?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          website?: string | null
         }
         Relationships: []
       }

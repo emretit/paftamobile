@@ -32,23 +32,47 @@ export const CompanySettingsTab = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const { data, error } = await supabase.storage
-      .from('logos')
-      .upload(`${settings?.id}/${file.name}`, file);
+    try {
+      // Generate unique filename with timestamp
+      const timestamp = Date.now();
+      const fileExtension = file.name.split('.').pop();
+      const uniqueFileName = `logo-${timestamp}.${fileExtension}`;
+      const filePath = `${settings?.id}/${uniqueFileName}`;
 
-    if (error) {
-      console.error('Error uploading logo:', error);
-      toast.error('Logo yüklenirken hata oluştu');
-      return;
-    }
+      // First, try to delete any existing logo for this company
+      if (formData?.logo_url) {
+        try {
+          const existingPath = formData.logo_url.split('/').slice(-2).join('/');
+          await supabase.storage.from('logos').remove([existingPath]);
+        } catch (deleteError) {
+          console.log('No existing logo to delete or delete failed:', deleteError);
+        }
+      }
 
-    if (data) {
-      const { data: { publicUrl } } = supabase.storage
+      // Upload the new logo
+      const { data, error } = await supabase.storage
         .from('logos')
-        .getPublicUrl(data.path);
+        .upload(filePath, file, {
+          upsert: true
+        });
 
-      handleFieldChange('logo_url', publicUrl);
-      toast.success('Logo başarıyla yüklendi');
+      if (error) {
+        console.error('Error uploading logo:', error);
+        toast.error('Logo yüklenirken hata oluştu');
+        return;
+      }
+
+      if (data) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('logos')
+          .getPublicUrl(data.path);
+
+        handleFieldChange('logo_url', publicUrl);
+        toast.success('Logo başarıyla yüklendi');
+      }
+    } catch (error) {
+      console.error('Error in logo upload process:', error);
+      toast.error('Logo yüklenirken hata oluştu');
     }
   };
 
