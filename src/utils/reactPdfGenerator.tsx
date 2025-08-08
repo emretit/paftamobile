@@ -3,10 +3,38 @@ import { pdf } from '@react-pdf/renderer';
 import { Proposal } from '@/types/proposal';
 import { supabase } from '@/integrations/supabase/client';
 import { CompanySettings } from '@/hooks/useCompanySettings';
+import { TemplateDesignSettings } from '@/types/proposal-template';
 
 // React-PDF varsayılan font'ları kullanıyoruz (Helvetica, Times-Roman vb.)
 
 export class ReactPdfGenerator {
+  async generatePdfPreviewWithDesign(design: TemplateDesignSettings): Promise<void> {
+    // Örnek/rasgele verilerle PDF oluşturur (şablon denemesi)
+    const mockProposal: any = {
+      number: 'PREV-TEST-001',
+      created_at: new Date().toISOString(),
+      valid_until: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
+      status: 'draft',
+      customer: { name: 'Örnek Müşteri A.Ş.', contact: 'Ahmet Yılmaz', title: 'Satın Alma' },
+      items: [
+        { name: 'Ürün 1', description: 'Açıklama', quantity: 2, unit: 'Adet', unit_price: 1500, total_price: 3000 },
+        { name: 'Hizmet 1', description: 'Kurulum', quantity: 1, unit: 'Paket', unit_price: 2500, total_price: 2500 },
+      ],
+    };
+
+    const companySettings = await this.loadCompanySettings();
+    const { DynamicTemplate } = await import('@/components/pdf-templates/DynamicTemplate');
+    const doc = <DynamicTemplate proposal={mockProposal} companySettings={companySettings} designSettings={design} />;
+    const blob = await pdf(doc).toBlob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'sablon-onizleme.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
   async generateProposalPdf(proposal: Proposal, templateId?: string): Promise<void> {
     try {
       // Load company settings

@@ -25,6 +25,7 @@ const nodeTypes = { section: SectionNode } as any;
 type EditorProps = {
   initialDesign?: TemplateDesignSettings | null;
   onSave: (design: TemplateDesignSettings) => Promise<void> | void;
+  onPreview?: (design: TemplateDesignSettings) => Promise<void> | void;
 };
 
 const defaultNodes: Node[] = [
@@ -104,7 +105,7 @@ function designFromNodes(nodes: Node[], globals?: GlobalDesign): TemplateDesignS
   };
 }
 
-export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onSave }) => {
+export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onSave, onPreview }) => {
   const initialNodes = useMemo(() => nodesFromDesign(initialDesign), [initialDesign]);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>(initialNodes);
   const [edges, , onEdgesChange] = useEdgesState<Edge>([]);
@@ -296,7 +297,12 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
               ))}
               <MiniMap />
               <Panel position="top-right">
-                <Button size="sm" onClick={handleSave}>Kaydet ve Etkinleştir</Button>
+                <div className="flex gap-2">
+                  {onPreview && (
+                    <Button size="sm" variant="outline" onClick={() => onPreview(designFromNodes(nodes, { pageSize, orientation, margins, colors }))}>Önizleme</Button>
+                  )}
+                  <Button size="sm" onClick={handleSave}>Kaydet ve Etkinleştir</Button>
+                </div>
               </Panel>
               <Panel position="top-left" className="space-x-2">
                 <Button variant={showGrid ? 'default' : 'outline'} size="sm" onClick={() => setShowGrid(v => !v)}>
