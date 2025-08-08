@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 export const VisualTemplateManager: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [initialDesign, setInitialDesign] = useState<TemplateDesignSettings | null>(null);
+  const [templateName, setTemplateName] = useState<string>('Yeni Şablon');
 
   useEffect(() => {
     const load = async () => {
@@ -24,6 +25,7 @@ export const VisualTemplateManager: React.FC = () => {
 
       if (!activeError && active?.design_settings) {
         setInitialDesign(active.design_settings as TemplateDesignSettings);
+        if (active.name) setTemplateName(active.name);
         setLoading(false);
         return;
       }
@@ -36,6 +38,7 @@ export const VisualTemplateManager: React.FC = () => {
         .maybeSingle();
 
       setInitialDesign((latest?.design_settings as TemplateDesignSettings) || null);
+      if (latest?.name) setTemplateName(latest.name);
       setLoading(false);
     };
     load();
@@ -55,14 +58,14 @@ export const VisualTemplateManager: React.FC = () => {
       if (active?.id) {
         const { error: updErr } = await supabase
           .from('proposal_templates')
-          .update({ design_settings: design, is_active: true, name: 'Özel Şablon', description: 'Görsel editör ile oluşturuldu' })
+          .update({ design_settings: design, is_active: true, name: templateName, description: 'Görsel editör ile oluşturuldu' })
           .eq('id', active.id);
         if (updErr) throw updErr;
       } else {
         const { error: insErr } = await supabase
           .from('proposal_templates')
           .insert({
-            name: 'Özel Şablon',
+            name: templateName,
             description: 'Görsel editör ile oluşturuldu',
             template_type: 'custom',
             template_features: ['drag', 'resize', 'branding'],
@@ -79,7 +82,7 @@ export const VisualTemplateManager: React.FC = () => {
         const { error } = await supabase
           .from('proposal_templates')
           .insert({
-            name: 'Özel Şablon',
+            name: templateName,
             description: 'Görsel editör ile oluşturuldu',
             template_type: 'custom',
             template_features: ['drag', 'resize', 'branding'],
@@ -109,14 +112,19 @@ export const VisualTemplateManager: React.FC = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex items-center gap-4">
           <h2 className="text-xl font-semibold">Teklif Şablonu Tasarımcısı</h2>
-          <p className="text-sm opacity-70">Önceden tanımlı düzeni sürükle-bırak ile konumlandırın, metin ve logo düzenleyin.</p>
+          <input
+            className="h-9 px-3 border rounded text-sm"
+            placeholder="Şablon adı"
+            value={templateName}
+            onChange={(e) => setTemplateName(e.target.value)}
+          />
         </div>
-        <Button onClick={async () => initialDesign && (await handleSave(initialDesign))} variant="secondary">Varsayılanı Etkinleştir</Button>
+        <Button onClick={async () => initialDesign && (await handleSave(initialDesign))}>Kaydet</Button>
       </div>
 
-      <TemplateVisualEditor initialDesign={initialDesign} onSave={handleSave} onPreview={handlePreview} />
+      <TemplateVisualEditor initialDesign={initialDesign} onSave={handleSave} />
     </div>
   );
 };
