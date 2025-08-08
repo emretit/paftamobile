@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { TemplateDesignSettings, TemplateSection } from '@/types/proposal-template';
-import { Grid as GridIcon, Magnet, ZoomIn, ZoomOut } from 'lucide-react';
+// Removed toggle icons since grid/snap/guides are now always-on on the design page
 
 const nodeTypes = { section: SectionNode } as any;
 
@@ -119,9 +119,10 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
   const [colors, setColors] = useState<{ primary: string; secondary: string; accent: string; text: string; background: string; border: string }>(
     initialDesign?.colors ?? { primary: '#111111', secondary: '#666666', accent: '#0ea5e9', text: '#111111', background: '#ffffff', border: '#e5e7eb' }
   );
-  const [showGrid, setShowGrid] = useState(true);
-  const [snapToGrid, setSnapToGrid] = useState(true);
-  const [smartGuides, setSmartGuides] = useState(true);
+  // Always-on behaviors for design page
+  const showGrid = true;
+  const snapToGrid = true;
+  const smartGuides = true;
   const [gridSize, setGridSize] = useState<number>(10);
   const [guides, setGuides] = useState<Array<{ type: 'v'; x: number; y1: number; y2: number } | { type: 'h'; y: number; x1: number; x2: number }>>([]);
 
@@ -237,10 +238,9 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
   );
 
   const onNodeDrag = useCallback((_: any, node: Node) => {
-    if (!smartGuides) return;
     const { guides: g } = computeSmartSnap(node.id, node.position.x, node.position.y);
     setGuides(g);
-  }, [smartGuides, computeSmartSnap]);
+  }, [computeSmartSnap]);
 
   const onNodeDragStop = useCallback((_: any, node: Node) => {
     setGuides([]);
@@ -285,14 +285,14 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
               onNodeDrag={onNodeDrag}
               onNodeDragStop={onNodeDragStop}
             >
-              {showGrid && <Background gap={gridSize} size={1} color="#e5e7eb" />}
+              <Background gap={gridSize} size={2} color="#9ca3af" />
               <Controls />
               {/* Smart guide lines */}
-              {smartGuides && guides.map((g, i) => (
+              {guides.map((g, i) => (
                 g.type === 'v' ? (
-                  <div key={`gv-${i}`} className="absolute bg-blue-500/60" style={{ left: g.x, top: g.y1, width: 1, height: g.y2 - g.y1 }} />
+                  <div key={`gv-${i}`} className="absolute bg-sky-500/80" style={{ left: g.x, top: g.y1, width: 2, height: g.y2 - g.y1 }} />
                 ) : (
-                  <div key={`gh-${i}`} className="absolute bg-blue-500/60" style={{ top: g.y, left: g.x1, height: 1, width: g.x2 - g.x1 }} />
+                  <div key={`gh-${i}`} className="absolute bg-sky-500/80" style={{ top: g.y, left: g.x1, height: 2, width: g.x2 - g.x1 }} />
                 )
               ))}
               <MiniMap />
@@ -304,20 +304,7 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
                   <Button size="sm" onClick={handleSave}>Kaydet ve Etkinleştir</Button>
                 </div>
               </Panel>
-              <Panel position="top-left" className="space-x-2">
-                <Button variant={showGrid ? 'default' : 'outline'} size="sm" onClick={() => setShowGrid(v => !v)}>
-                  <GridIcon className="w-4 h-4 mr-1" /> Izgara
-                </Button>
-                <Button variant={snapToGrid ? 'default' : 'outline'} size="sm" onClick={() => setSnapToGrid(v => !v)}>
-                  <Magnet className="w-4 h-4 mr-1" /> Grid Snap
-                </Button>
-                <Button variant={smartGuides ? 'default' : 'outline'} size="sm" onClick={() => setSmartGuides(v => !v)}>
-                  <Magnet className="w-4 h-4 mr-1" /> Akıllı Kılavuz
-                </Button>
-                <span className="text-xs ml-2">Grid:</span>
-                <Input type="number" className="h-8 w-16 inline-block" min={2} max={64} value={gridSize} onChange={(e) => setGridSize(Math.max(2, Math.min(64, Number(e.target.value) || 10)))} />
-                <span className="text-xs">px</span>
-              </Panel>
+              {/* Toggles removed: grid, snap and smart guides are always enabled on the design page */}
             </ReactFlow>
           </div>
         </div>
