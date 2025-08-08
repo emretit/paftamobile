@@ -41,21 +41,20 @@ export const TemplateDesignerPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-white">
       <Navbar isCollapsed={false} setIsCollapsed={() => {}} />
       <main className="ml-64 p-8">
         <div className="max-w-6xl mx-auto space-y-4">
-          <header className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold leading-tight">Şablon Tasarım</h1>
-              <label className="sr-only" htmlFor="template-name">Şablon adı</label>
-              <input id="template-name" className="h-9 px-3 border border-border rounded bg-background text-sm" placeholder="Şablon adını girin" value={name} onChange={(e) => setName(e.target.value)} />
+              <h1 className="text-xl font-semibold">Şablon Tasarım</h1>
+              <input className="h-9 px-3 border rounded text-sm" placeholder="Şablon adı" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => navigate('/settings')} aria-label="Ayarlar sayfasına geri dön">Geri</Button>
-              <Button onClick={() => design && handleSave(design)} disabled={loading || !design} aria-label="Şablonu kaydet ve uygula">Kaydet</Button>
+            <div className="space-x-2">
+              <Button variant="outline" onClick={() => navigate('/settings')}>Geri</Button>
+              <Button onClick={() => design && handleSave(design)}>Kaydet</Button>
             </div>
-          </header>
+          </div>
 
           <Card className="p-0">
             {!loading && (

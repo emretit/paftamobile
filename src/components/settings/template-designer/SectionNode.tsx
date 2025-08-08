@@ -35,13 +35,13 @@ export interface SectionNodeData {
     borderColor?: string;
     borderWidth?: number;
     radius?: number;
+    padding?: number;
     table?: {
-      columns?: Array<{ key: string; label: string; width?: number; align?: 'left'|'center'|'right' }>;
+      columns?: Array<{ key: string; label: string; width?: number; align?: 'left'|'center'|'right' }>; // teklif kalemleri özelleştirme
       showIndex?: boolean;
       showTax?: boolean;
     };
   };
-  [key: string]: unknown;
 }
 
 const SectionNode: React.FC<any> = ({ data }) => {
