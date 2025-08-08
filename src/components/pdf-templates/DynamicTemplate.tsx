@@ -189,6 +189,7 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
         fontWeight: 'bold',
         color: colors.text,
       },
+      // default widths, will be overridden if designSettings.sections includes items section with columns
       col1: { width: '5%' },
       col2: { width: '35%' },
       col3: { width: '10%' },
@@ -335,37 +336,47 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
         </View>
 
         {/* Items Table */}
+        {/* Items Table - dynamic columns */}
         <View style={styles.table}>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableCellHeader, styles.col1]}>#</Text>
-            <Text style={[styles.tableCellHeader, styles.col2]}>AÇIKLAMA</Text>
-            <Text style={[styles.tableCellHeader, styles.col3]}>MİKTAR</Text>
-            <Text style={[styles.tableCellHeader, styles.col4]}>BİRİM</Text>
-            <Text style={[styles.tableCellHeader, styles.col5]}>BİRİM FİYAT</Text>
-            <Text style={[styles.tableCellHeader, styles.col6]}>KDV %</Text>
-            <Text style={[styles.tableCellHeader, styles.col7]}>TOPLAM</Text>
-          </View>
-          {proposal.items && proposal.items.length > 0 ? proposal.items.map((item, index) => (
-            <View key={index} style={styles.tableRow}>
-              <Text style={[styles.tableCell, styles.col1]}>{index + 1}</Text>
-              <Text style={[styles.tableCell, styles.col2]}>{item.name || 'Ürün/Hizmet'}</Text>
-              <Text style={[styles.tableCell, styles.col3]}>{item.quantity || 1}</Text>
-              <Text style={[styles.tableCell, styles.col4]}>{item.unit || 'adet'}</Text>
-              <Text style={[styles.tableCell, styles.col5]}>{formatCurrency(item.unit_price || 0, proposal.currency)}</Text>
-              <Text style={[styles.tableCell, styles.col6]}>20</Text>
-              <Text style={[styles.tableCell, styles.col7]}>{formatCurrency((item.quantity || 1) * (item.unit_price || 0), proposal.currency)}</Text>
-            </View>
-          )) : (
-            <View style={styles.tableRow}>
-              <Text style={[styles.tableCell, styles.col1]}>1</Text>
-              <Text style={[styles.tableCell, styles.col2]}>Ürün/Hizmet belirtilmemiş</Text>
-              <Text style={[styles.tableCell, styles.col3]}>1</Text>
-              <Text style={[styles.tableCell, styles.col4]}>adet</Text>
-              <Text style={[styles.tableCell, styles.col5]}>{formatCurrency(0, proposal.currency)}</Text>
-              <Text style={[styles.tableCell, styles.col6]}>20</Text>
-              <Text style={[styles.tableCell, styles.col7]}>{formatCurrency(0, proposal.currency)}</Text>
-            </View>
-          )}
+          {(() => {
+            const itemsSection = designSettings?.sections?.find((s) => s.type === 'items-table');
+            const cols = (itemsSection?.settings?.columns as any[]) || [
+              { key: 'name', label: 'AÇIKLAMA', width: 35, align: 'left' },
+              { key: 'quantity', label: 'MİKTAR', width: 10, align: 'center' },
+              { key: 'unit', label: 'BİRİM', width: 10, align: 'center' },
+              { key: 'unit_price', label: 'BİRİM FİYAT', width: 15, align: 'right' },
+              { key: 'tax', label: 'KDV %', width: 10, align: 'center' },
+              { key: 'total_price', label: 'TOPLAM', width: 20, align: 'right' },
+            ];
+            const widthPct = (w: number) => `${Math.max(5, Math.min(80, w))}%`;
+            return (
+              <>
+                <View style={styles.tableHeader}>
+                  <Text style={[styles.tableCellHeader, { width: '5%' }]}>#</Text>
+                  {cols.map((c, i) => (
+                    <Text key={i} style={[styles.tableCellHeader, { width: widthPct(c.width || 10), textAlign: (c.align || 'left') as any }]}>
+                      {c.label}
+                    </Text>
+                  ))}
+                </View>
+                {(proposal.items && proposal.items.length ? proposal.items : [{ name: 'Ürün', quantity: 1, unit: 'adet', unit_price: 0, tax: 20, total_price: 0 }]).map((item: any, index: number) => (
+                  <View key={index} style={styles.tableRow}>
+                    <Text style={[styles.tableCell, { width: '5%' }]}>{index + 1}</Text>
+                    {cols.map((c, i) => {
+                      let value: any = item[c.key];
+                      if (c.key === 'unit_price' || c.key === 'total_price') value = formatCurrency(Number(value ?? ((item.quantity||1)*(item.unit_price||0))), proposal.currency);
+                      if (c.key === 'tax' && (value == null)) value = 20;
+                      return (
+                        <Text key={i} style={[styles.tableCell, { width: widthPct(c.width || 10), textAlign: (c.align || 'left') as any }]}>
+                          {String(value ?? '')}
+                        </Text>
+                      );
+                    })}
+                  </View>
+                ))}
+              </>
+            );
+          })()}
         </View>
 
         {/* Totals */}

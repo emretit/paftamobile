@@ -447,6 +447,49 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
                   />
                 </div>
               )}
+              {/* Tablo (tekil items alanı) için sütun yönetimi */}
+              {(selected.data as any).kind === 'items' && (
+                <div className="space-y-2 pt-2">
+                  <div className="text-xs font-semibold">Tablo Sütunları</div>
+                  <div className="space-y-2">
+                    {(((selected.data as any).style?.table?.columns) || [
+                      { key: 'name', label: 'Açıklama', width: 40, align: 'left' },
+                      { key: 'quantity', label: 'Miktar', width: 12, align: 'center' },
+                      { key: 'unit', label: 'Birim', width: 10, align: 'center' },
+                      { key: 'unit_price', label: 'Birim Fiyat', width: 18, align: 'right' },
+                      { key: 'tax', label: 'KDV %', width: 10, align: 'center' },
+                      { key: 'total_price', label: 'Toplam', width: 20, align: 'right' },
+                    ]).map((col: any, idx: number) => (
+                      <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                        <Input className="col-span-4 h-8 text-xs" value={col.label} onChange={(e) => {
+                          const cols = [ ...((((selected.data as any).style?.table?.columns) || [])) ];
+                          cols[idx] = { ...col, label: e.target.value };
+                          updateSelected({ style: { ...((selected.data as any).style || {}), table: { ...(((selected.data as any).style?.table) || {}), columns: cols } } });
+                        }} />
+                        <Input className="col-span-4 h-8 text-xs" value={col.key} onChange={(e) => {
+                          const cols = [ ...((((selected.data as any).style?.table?.columns) || [])) ];
+                          cols[idx] = { ...col, key: e.target.value };
+                          updateSelected({ style: { ...((selected.data as any).style || {}), table: { ...(((selected.data as any).style?.table) || {}), columns: cols } } });
+                        }} />
+                        <Input type="number" className="col-span-2 h-8 text-xs" value={col.width ?? 10} onChange={(e) => {
+                          const cols = [ ...((((selected.data as any).style?.table?.columns) || [])) ];
+                          cols[idx] = { ...col, width: Number(e.target.value) };
+                          updateSelected({ style: { ...((selected.data as any).style || {}), table: { ...(((selected.data as any).style?.table) || {}), columns: cols } } });
+                        }} />
+                        <select className="col-span-2 h-9 rounded border px-2 text-xs" value={col.align || 'left'} onChange={(e) => {
+                          const cols = [ ...((((selected.data as any).style?.table?.columns) || [])) ];
+                          cols[idx] = { ...col, align: e.target.value };
+                          updateSelected({ style: { ...((selected.data as any).style || {}), table: { ...(((selected.data as any).style?.table) || {}), columns: cols } } });
+                        }}>
+                          <option value="left">Sol</option>
+                          <option value="center">Orta</option>
+                          <option value="right">Sağ</option>
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {/* DİA benzeri veri bağlama ve formül alanları */}
               <div className="grid grid-cols-2 gap-2 pt-2">
                 <div>
