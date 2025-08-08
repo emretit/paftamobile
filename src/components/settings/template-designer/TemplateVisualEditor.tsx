@@ -6,7 +6,6 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
-  SelectionDrag,
   Panel,
   Node,
   Edge,
@@ -20,14 +19,14 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { TemplateDesignSettings, TemplateSection } from '@/types/proposal-template';
 
-const nodeTypes = { section: SectionNode } as const;
+const nodeTypes = { section: SectionNode } as any;
 
 type EditorProps = {
   initialDesign?: TemplateDesignSettings | null;
   onSave: (design: TemplateDesignSettings) => Promise<void> | void;
 };
 
-const defaultNodes: Node<SectionNodeData>[] = [
+const defaultNodes: Node[] = [
   { id: 'header', type: 'section', position: { x: 40, y: 24 }, data: { label: 'Başlık / Firma', kind: 'header', text: 'Şirket Adı\nTagline' }, style: { width: 520, height: 80 } },
   { id: 'logo', type: 'section', position: { x: 570, y: 24 }, data: { label: 'Logo', kind: 'logo', imageUrl: '' }, style: { width: 120, height: 80 } },
   { id: 'customer', type: 'section', position: { x: 40, y: 120 }, data: { label: 'Müşteri Bilgileri', kind: 'customer', text: 'Müşteri Adı\nAdres\nVergi No' }, style: { width: 320, height: 120 } },
@@ -38,14 +37,14 @@ const defaultNodes: Node<SectionNodeData>[] = [
   { id: 'footer', type: 'section', position: { x: 40, y: 680 }, data: { label: 'Alt Bilgi', kind: 'footer', text: 'Adres • Telefon • Web' }, style: { width: 650, height: 60 } },
 ];
 
-function nodesFromDesign(design?: TemplateDesignSettings | null): Node<SectionNodeData>[] {
+function nodesFromDesign(design?: TemplateDesignSettings | null): Node[] {
   if (!design?.sections?.length) return defaultNodes;
   return design.sections.map((s, idx) => {
     const x = s.settings?.x ?? 40 + (idx % 2) * 340;
     const y = s.settings?.y ?? 24 + idx * 60;
     const width = s.settings?.width ?? 300;
     const height = s.settings?.height ?? 80;
-    const kind: SectionKind = (s.settings?.kind as SectionKind) || 'text';
+    const kind = (s.settings?.kind as string) || 'text';
     return {
       id: s.id,
       type: 'section',
@@ -57,27 +56,30 @@ function nodesFromDesign(design?: TemplateDesignSettings | null): Node<SectionNo
         imageUrl: s.settings?.imageUrl,
       },
       style: { width, height },
-    } as Node<SectionNodeData>;
+    } as Node;
   });
 }
 
-function designFromNodes(nodes: Node<SectionNodeData>[]): TemplateDesignSettings {
-  const sections: TemplateSection[] = nodes.map((n, i) => ({
-    id: n.id,
-    type: 'custom',
-    title: n.data.label,
-    enabled: true,
-    order: i,
-    settings: {
-      kind: n.data.kind,
-      text: n.data.text,
-      imageUrl: n.data.imageUrl,
-      x: n.position.x,
-      y: n.position.y,
-      width: (n.style as any)?.width ?? 300,
-      height: (n.style as any)?.height ?? 80,
-    },
-  }));
+function designFromNodes(nodes: Node[]): TemplateDesignSettings {
+  const sections: TemplateSection[] = nodes.map((n, i) => {
+    const d = n.data as any;
+    return {
+      id: n.id,
+      type: 'custom',
+      title: d.label,
+      enabled: true,
+      order: i,
+      settings: {
+        kind: d.kind,
+        text: d.text,
+        imageUrl: d.imageUrl,
+        x: n.position.x,
+        y: n.position.y,
+        width: (n.style as any)?.width ?? 300,
+        height: (n.style as any)?.height ?? 80,
+      },
+    };
+  });
 
   return {
     pageSize: 'A4',
@@ -96,23 +98,21 @@ function designFromNodes(nodes: Node<SectionNodeData>[]): TemplateDesignSettings
 
 export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onSave }) => {
   const initialNodes = useMemo(() => nodesFromDesign(initialDesign), [initialDesign]);
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node<SectionNodeData>>(initialNodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>(initialNodes);
   const [edges, , onEdgesChange] = useEdgesState<Edge>([]);
-  const [selected, setSelected] = useState<Node<SectionNodeData> | null>(null);
+  const [selected, setSelected] = useState<Node | null>(null);
 
   useEffect(() => {
     setNodes(nodesFromDesign(initialDesign));
   }, [initialDesign, setNodes]);
 
   const onSelectionChange = useCallback(({ nodes: selNodes }: { nodes: Node[] }) => {
-    setSelected((selNodes?.[0] as Node<SectionNodeData>) || null);
+    setSelected(selNodes?.[0] || null);
   }, []);
 
-  const updateSelected = (patch: Partial<SectionNodeData>) => {
+  const updateSelected = (patch: Partial<any>) => {
     if (!selected) return;
-    setNodes((nds) =>
-      nds.map((n) => (n.id === selected.id ? { ...n, data: { ...n.data, ...patch } } as Node<SectionNodeData> : n))
-    );
+    setNodes((nds) => nds.map((n) => (n.id === selected.id ? ({ ...n, data: { ...(n.data as any), ...patch } } as Node) : n)));
   };
 
   const handleSave = async () => {
@@ -138,7 +138,6 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
               style={{ backgroundColor: 'transparent' }}
             >
               <Background />
-              <SelectionDrag />
               <Controls />
               <MiniMap />
               <Panel position="top-right">
@@ -156,14 +155,14 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
             <div className="space-y-3">
               <div>
                 <Label className="text-xs">Başlık</Label>
-                <Input value={selected.data.label} onChange={(e) => updateSelected({ label: e.target.value })} />
+                <Input value={(selected.data as any).label as string} onChange={(e) => updateSelected({ label: e.target.value })} />
               </div>
-              {selected.data.kind === 'logo' ? (
+              {(selected.data as any).kind === 'logo' ? (
                 <div>
                   <Label className="text-xs">Logo URL</Label>
                   <Input
                     placeholder="https://..."
-                    value={selected.data.imageUrl || ''}
+                    value={((selected.data as any).imageUrl as string) || ''}
                     onChange={(e) => updateSelected({ imageUrl: e.target.value })}
                   />
                 </div>
@@ -171,7 +170,7 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
                 <div>
                   <Label className="text-xs">Metin</Label>
                   <Input
-                    value={selected.data.text || ''}
+                    value={((selected.data as any).text as string) || ''}
                     onChange={(e) => updateSelected({ text: e.target.value })}
                   />
                 </div>
