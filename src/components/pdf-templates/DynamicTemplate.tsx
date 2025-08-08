@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
 import { Proposal } from '@/types/proposal';
 import { CompanySettings } from '@/hooks/useCompanySettings';
 import { TemplateDesignSettings } from '@/types/proposal-template';
@@ -15,6 +15,18 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
   companySettings, 
   designSettings 
 }) => {
+  // Türkçe karakter desteği için Unicode font kaydı (Noto Sans)
+  try {
+    Font.register({
+      family: 'NotoSans',
+      fonts: [
+        { src: 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/NotoSans-Regular.ttf' },
+        { src: 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/NotoSans-Bold.ttf', fontWeight: 'bold' },
+      ],
+    });
+  } catch (e) {
+    // font kaydı başarısız olsa bile default Helvetica ile devam eder
+  }
   const formatCurrency = (amount: number, currency: string = 'TRY') => {
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
@@ -51,8 +63,8 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
       border: '#cccccc'
     };
     const fonts = designSettings?.fonts || {
-      primary: 'Helvetica',
-      secondary: 'Helvetica',
+      primary: 'NotoSans',
+      secondary: 'NotoSans',
       sizes: {
         title: 18,
         heading: 16,
@@ -250,7 +262,7 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" orientation={designSettings?.orientation === 'landscape' ? 'landscape' : 'portrait'} style={styles.page}>
         {/* Header with Logo and Company Info */}
         <View style={styles.header}>
           <View style={styles.logoContainer}>
@@ -273,7 +285,7 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
 
         {/* Title */}
         <View style={styles.titleSection}>
-          <Text style={styles.title}>TEKLİF</Text>
+           <Text style={styles.title}>TEKLİF</Text>
           <Text style={styles.proposalNumber}>#{proposal.number || 'TKL-001'}</Text>
           <Text style={styles.proposalNumber}>{formatDate(proposal.created_at)}</Text>
         </View>
@@ -282,7 +294,7 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
         <View style={styles.infoSection}>
           <View style={styles.infoColumn}>
             <View style={styles.infoBox}>
-              <Text style={styles.infoTitle}>MÜŞTERİ BİLGİLERİ</Text>
+             <Text style={styles.infoTitle}>MÜŞTERİ BİLGİLERİ</Text>
               <Text style={styles.infoText}>
                 Firma: {proposal.customer?.company || proposal.customer_name || 'Belirtilmemiş'}
               </Text>
@@ -302,7 +314,7 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
           </View>
           <View style={styles.infoColumn}>
             <View style={styles.infoBox}>
-              <Text style={styles.infoTitle}>TEKLİF BİLGİLERİ</Text>
+             <Text style={styles.infoTitle}>TEKLİF BİLGİLERİ</Text>
               <Text style={styles.infoText}>
                 Teklif No: {proposal.number || 'TKF-555647'}
               </Text>
@@ -327,9 +339,9 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
           <View style={styles.tableHeader}>
             <Text style={[styles.tableCellHeader, styles.col1]}>#</Text>
             <Text style={[styles.tableCellHeader, styles.col2]}>AÇIKLAMA</Text>
-            <Text style={[styles.tableCellHeader, styles.col3]}>MIKTAR</Text>
-            <Text style={[styles.tableCellHeader, styles.col4]}>BIRIM</Text>
-            <Text style={[styles.tableCellHeader, styles.col5]}>BIRIM FIYAT</Text>
+            <Text style={[styles.tableCellHeader, styles.col3]}>MİKTAR</Text>
+            <Text style={[styles.tableCellHeader, styles.col4]}>BİRİM</Text>
+            <Text style={[styles.tableCellHeader, styles.col5]}>BİRİM FİYAT</Text>
             <Text style={[styles.tableCellHeader, styles.col6]}>KDV %</Text>
             <Text style={[styles.tableCellHeader, styles.col7]}>TOPLAM</Text>
           </View>

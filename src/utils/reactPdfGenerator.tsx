@@ -15,6 +15,7 @@ export class ReactPdfGenerator {
       created_at: new Date().toISOString(),
       valid_until: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
       status: 'draft',
+      currency: 'TRY',
       customer: { name: 'Örnek Müşteri A.Ş.', contact: 'Ahmet Yılmaz', title: 'Satın Alma' },
       items: [
         { name: 'Ürün 1', description: 'Açıklama', quantity: 2, unit: 'Adet', unit_price: 1500, total_price: 3000 },
