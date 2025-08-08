@@ -292,6 +292,55 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
                 <Label className="text-xs">Başlık</Label>
                 <Input value={(selected.data as any).label as string} onChange={(e) => updateSelected({ label: e.target.value })} />
               </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Metin Boyutu</Label>
+                  <Input type="number" min={9} max={24} value={(selected.data as any).style?.fontSize ?? 12} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), fontSize: Number(e.target.value) } })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Padding</Label>
+                  <Input type="number" min={4} max={24} value={(selected.data as any).style?.padding ?? 12} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), padding: Number(e.target.value) } })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Köşe Yarıçapı</Label>
+                  <Input type="number" min={0} max={24} value={(selected.data as any).style?.radius ?? 8} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), radius: Number(e.target.value) } })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Kenarlık (px)</Label>
+                  <Input type="number" min={0} max={4} value={(selected.data as any).style?.borderWidth ?? 1} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), borderWidth: Number(e.target.value) } })} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Arka Plan</Label>
+                  <Input type="color" value={(selected.data as any).style?.bgColor ?? '#ffffff'} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), bgColor: e.target.value } })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Kenarlık Rengi</Label>
+                  <Input type="color" value={(selected.data as any).style?.borderColor ?? '#e5e7eb'} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), borderColor: e.target.value } })} />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs">Hizalama</Label>
+                  <select className="w-full h-9 rounded border px-2 text-xs" value={(selected.data as any).style?.align ?? 'left'} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), align: e.target.value } })}>
+                    <option value="left">Sol</option>
+                    <option value="center">Orta</option>
+                    <option value="right">Sağ</option>
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-xs">Kalınlık</Label>
+                  <select className="w-full h-9 rounded border px-2 text-xs" value={(selected.data as any).style?.fontWeight ?? 'normal'} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), fontWeight: e.target.value } })}>
+                    <option value="normal">Normal</option>
+                    <option value="bold">Kalın</option>
+                  </select>
+                </div>
+                <div className="flex items-end gap-2">
+                  <input id="showLabel" type="checkbox" className="h-4 w-4" checked={(selected.data as any).style?.showLabel ?? true} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), showLabel: e.target.checked } })} />
+                  <Label htmlFor="showLabel" className="text-xs">Başlığı Göster</Label>
+                </div>
+              </div>
               {(selected.data as any).kind === 'logo' ? (
                 <div>
                   <Label className="text-xs">Logo URL</Label>
