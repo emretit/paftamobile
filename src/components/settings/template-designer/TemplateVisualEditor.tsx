@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import {
   ReactFlow,
   Background,
@@ -6,6 +6,7 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   Panel,
   Node,
   Edge,
@@ -123,7 +124,66 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [smartGuides, setSmartGuides] = useState(true);
   const [gridSize, setGridSize] = useState<number>(10);
-  const [guides, setGuides] = useState<Array<{ type: 'v'; x: number; y1: number; y2: number } | { type: 'h'; y: number; x1: number; x2: number }>>([]);
+const [guides, setGuides] = useState<Array<{ type: 'v'; x: number; y1: number; y2: number } | { type: 'h'; y: number; x1: number; x2: number }>>([]);
+
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const { screenToFlowPosition } = useReactFlow();
+
+  const PALETTE: { kind: SectionKind; label: string }[] = [
+    { kind: 'header', label: 'Başlık' },
+    { kind: 'logo', label: 'Logo' },
+    { kind: 'customer', label: 'Müşteri' },
+    { kind: 'proposal', label: 'Teklif' },
+    { kind: 'items', label: 'Kalemler' },
+    { kind: 'totals', label: 'Toplamlar' },
+    { kind: 'terms', label: 'Şartlar' },
+    { kind: 'footer', label: 'Alt Bilgi' },
+    { kind: 'text', label: 'Metin' },
+  ];
+
+  const onDragStart = (event: React.DragEvent, kind: SectionKind) => {
+    event.dataTransfer.setData('application/reactflow', `section:${kind}`);
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
+  const onDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  };
+
+  const createNodeForKind = (kind: SectionKind, position: { x: number; y: number }): Node => {
+    const id = crypto.randomUUID();
+    const defaults: Record<SectionKind, { w: number; h: number; label: string; text?: string }> = {
+      header: { w: 520, h: 80, label: 'Başlık / Firma', text: 'Şirket Adı\nTagline' },
+      logo: { w: 120, h: 80, label: 'Logo' },
+      customer: { w: 320, h: 120, label: 'Müşteri Bilgileri', text: 'Müşteri Adı\nAdres\nVergi No' },
+      proposal: { w: 310, h: 120, label: 'Teklif Bilgileri', text: 'Teklif No\nTarih\nGeçerlilik' },
+      items: { w: 650, h: 280, label: 'Kalemler (Tablo Alanı)', text: 'Ürün/Servis tablosu burada yer alır.' },
+      totals: { w: 300, h: 100, label: 'Ara Toplam / KDV / Genel Toplam', text: 'Ara Toplam: 0,00\nKDV: 0,00\nGenel Toplam: 0,00' },
+      terms: { w: 330, h: 100, label: 'Şartlar / Notlar', text: 'Ödeme şartları ve diğer notlar.' },
+      footer: { w: 650, h: 60, label: 'Alt Bilgi', text: 'Adres • Telefon • Web' },
+      text: { w: 300, h: 80, label: 'Metin', text: 'Örnek metin' },
+    };
+    const d = defaults[kind];
+    return {
+      id,
+      type: 'section',
+      position,
+      data: { label: d.label, kind, text: d.text } as any,
+      style: { width: d.w, height: d.h },
+    } as Node;
+  };
+
+  const onDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    const type = event.dataTransfer.getData('application/reactflow');
+    if (!type?.startsWith('section:') || !reactFlowWrapper.current) return;
+    const kind = type.split(':')[1] as SectionKind;
+    const bounds = reactFlowWrapper.current.getBoundingClientRect();
+    const pos = screenToFlowPosition({ x: event.clientX - bounds.left, y: event.clientY - bounds.top });
+    const newNode = createNodeForKind(kind, pos);
+    setNodes((nds) => [...nds, newNode]);
+  };
 
   useEffect(() => {
     setNodes(nodesFromDesign(initialDesign));
@@ -260,9 +320,32 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
 
   return (
     <div className="grid grid-cols-12 gap-4">
-      <Card className="col-span-9 p-3">
+      <Card className="col-span-2 p-4 space-y-3">
+        <div className="text-sm font-semibold">Bileşen Paleti</div>
+        <div className="grid grid-cols-2 gap-2">
+          {PALETTE.map((p) => (
+            <button
+              key={p.kind}
+              draggable
+              onDragStart={(e) => onDragStart(e, p.kind)}
+              className="h-9 text-xs rounded border border-dashed border-border px-2 hover:bg-muted/50 transition-colors"
+              aria-label={`${p.label} bileşenini sürükle`}
+              type="button"
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">Ögeleri sürükleyip sayfaya bırakın.</p>
+      </Card>
+
+      <Card className="col-span-7 p-3">
         <div className="relative border border-border rounded-md overflow-hidden" aria-label="PDF A4 Canvas">
-          <div className="mx-auto my-2" style={{ width: PAGE_W, height: PAGE_H, backgroundColor: colors.background, color: colors.text }}>
+          <div
+            ref={reactFlowWrapper}
+            className="mx-auto my-2"
+            style={{ width: PAGE_W, height: PAGE_H, backgroundColor: colors.background, color: colors.text }}
+          >
             {/* Margin guides */}
             <div className="absolute inset-0 pointer-events-none">
               <div
@@ -284,6 +367,8 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
               snapGrid={[gridSize, gridSize]}
               onNodeDrag={onNodeDrag}
               onNodeDragStop={onNodeDragStop}
+              onDrop={onDrop}
+              onDragOver={onDragOver}
             >
               {showGrid && <Background gap={gridSize} size={1} color="#e5e7eb" />}
               <Controls />
