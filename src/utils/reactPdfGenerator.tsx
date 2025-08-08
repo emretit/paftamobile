@@ -100,6 +100,8 @@ export class ReactPdfGenerator {
         phone: 'Telefon',
         email: 'email@domain.com',
         tax_number: 'Vergi No',
+        tax_office: '',
+        website: '',
         logo_url: '',
         default_currency: 'TRY',
         email_settings: { notifications_enabled: false }
@@ -113,6 +115,8 @@ export class ReactPdfGenerator {
         phone: 'Telefon',
         email: 'email@domain.com',
         tax_number: 'Vergi No',
+        tax_office: '',
+        website: '',
         logo_url: '',
         default_currency: 'TRY',
         email_settings: { notifications_enabled: false }

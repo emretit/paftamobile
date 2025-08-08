@@ -39,7 +39,7 @@ export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
         <DropdownMenuTrigger asChild>
           <Button className="gap-2">
             <Printer className="h-4 w-4" />
-            PDF Yazdır
+            PDF İndir
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
