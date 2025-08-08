@@ -2355,6 +2355,7 @@ export type Database = {
           design_settings: Json | null
           estimated_time: string | null
           id: string
+          is_active: boolean
           is_recommended: boolean | null
           items: Json | null
           name: string
@@ -2374,6 +2375,7 @@ export type Database = {
           design_settings?: Json | null
           estimated_time?: string | null
           id?: string
+          is_active?: boolean
           is_recommended?: boolean | null
           items?: Json | null
           name: string
@@ -2393,6 +2395,7 @@ export type Database = {
           design_settings?: Json | null
           estimated_time?: string | null
           id?: string
+          is_active?: boolean
           is_recommended?: boolean | null
           items?: Json | null
           name?: string

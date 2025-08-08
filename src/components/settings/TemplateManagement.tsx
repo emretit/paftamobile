@@ -1,5 +1,5 @@
-import { SimpleTemplateManagement } from "./SimpleTemplateManagement";
+import { VisualTemplateManager } from "./VisualTemplateManager";
 
 export const TemplateManagement: React.FC = () => {
-  return <SimpleTemplateManagement />;
+  return <VisualTemplateManager />;
 };

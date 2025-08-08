@@ -39,10 +39,18 @@ export class ReactPdfGenerator {
           }
         }
       } else {
-        // Template ID yoksa varsayılan kullan
-        const { getDefaultTemplate } = await import('./pdfTemplateRegistry');
-        templateConfig = getDefaultTemplate();
-        TemplateComponent = templateConfig.component;
+        // Template ID yoksa önce aktif dinamik şablonu dene, yoksa varsayılanı kullan
+        const activeDynamic = await this.loadActiveDynamicTemplate();
+        if (activeDynamic) {
+          const { DynamicTemplate } = await import('@/components/pdf-templates/DynamicTemplate');
+          TemplateComponent = (props: any) => (
+            <DynamicTemplate {...props} designSettings={activeDynamic.design_settings} />
+          );
+        } else {
+          const { getDefaultTemplate } = await import('./pdfTemplateRegistry');
+          templateConfig = getDefaultTemplate();
+          TemplateComponent = templateConfig.component;
+        }
       }
       
       // Generate PDF document with selected template
@@ -62,6 +70,40 @@ export class ReactPdfGenerator {
       console.error('PDF generation error:', error);
       throw error;
     }
+  }
+
+  private async loadActiveDynamicTemplate(): Promise<any> {
+    try {
+      const { data: active, error: activeError } = await supabase
+        .from('proposal_templates')
+        .select('*')
+        .eq('is_active', true)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!activeError && active) {
+        return active;
+      }
+    } catch (e) {
+      // ignore and fallback to latest
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('proposal_templates')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!error && data) {
+        return data;
+      }
+    } catch (e) {
+      // no-op
+    }
+    return null;
   }
 
   private async loadDynamicTemplate(templateId: string): Promise<any> {

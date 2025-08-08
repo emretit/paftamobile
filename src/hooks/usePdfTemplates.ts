@@ -43,12 +43,28 @@ export const usePdfTemplates = () => {
   // Sadece Supabase'den gelen dinamik template'leri kullan
   const allTemplates = dynamicTemplates || [];
 
-  // Set default template on mount
+  // Set default template on mount (prefer active)
   useEffect(() => {
-    if (!selectedTemplateId && allTemplates.length > 0) {
-      // İlk template'i varsayılan olarak seç
-      setSelectedTemplateId(allTemplates[0].id);
-    }
+    const pickDefault = async () => {
+      if (!selectedTemplateId && allTemplates.length > 0) {
+        try {
+          const { data } = await supabase
+            .from('proposal_templates')
+            .select('id')
+            .eq('is_active', true)
+            .limit(1)
+            .maybeSingle();
+          if (data?.id) {
+            setSelectedTemplateId(data.id);
+          } else {
+            setSelectedTemplateId(allTemplates[0].id);
+          }
+        } catch (err) {
+          setSelectedTemplateId(allTemplates[0].id);
+        }
+      }
+    };
+    pickDefault();
   }, [selectedTemplateId, allTemplates.length]);
 
   const getSelectedTemplate = () => {
