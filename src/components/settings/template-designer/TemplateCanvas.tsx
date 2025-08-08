@@ -1,85 +1,254 @@
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ZoomIn, ZoomOut, Maximize, Grid } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ZoomIn, ZoomOut, Maximize, Grid, Magnet } from "lucide-react";
 import { ProposalTemplate } from "@/types/proposal-template";
+import ReactFlow, {
+  Background,
+  Controls,
+  ReactFlowProvider,
+  useEdgesState,
+  useNodesState,
+  useReactFlow,
+  Node,
+  Edge,
+  OnConnect,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import FieldNode from "./FieldNode";
 
 interface TemplateCanvasProps {
   template: ProposalTemplate;
 }
 
+type GuideLine =
+  | { type: "v"; x: number; y1: number; y2: number }
+  | { type: "h"; y: number; x1: number; x2: number };
+
 const ZOOM_LEVELS = [50, 75, 100, 125, 150];
+const DEFAULT_GRID_SIZE = 10;
+const SNAP_THRESHOLD = 6; // px
+
+const nodeTypes = { fieldNode: FieldNode };
 
 export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({ template }) => {
   const [zoom, setZoom] = useState(100);
   const [showGrid, setShowGrid] = useState(true);
+  const [snapToGrid, setSnapToGrid] = useState(true);
+  const [smartGuides, setSmartGuides] = useState(true);
+  const [gridSize, setGridSize] = useState<number>(DEFAULT_GRID_SIZE);
 
-  const handleZoomIn = () => {
-    const currentIndex = ZOOM_LEVELS.indexOf(zoom);
-    if (currentIndex < ZOOM_LEVELS.length - 1) {
-      setZoom(ZOOM_LEVELS[currentIndex + 1]);
-    }
-  };
-
-  const handleZoomOut = () => {
-    const currentIndex = ZOOM_LEVELS.indexOf(zoom);
-    if (currentIndex > 0) {
-      setZoom(ZOOM_LEVELS[currentIndex - 1]);
-    }
-  };
-
-  const handleFitToScreen = () => {
-    setZoom(75);
-  };
-
-  // A4 dimensions: 210mm x 297mm = 794px x 1123px at 96 DPI
+  // A4 @ 96DPI
   const pageWidth = 794;
   const pageHeight = 1123;
   const scaledWidth = (pageWidth * zoom) / 100;
   const scaledHeight = (pageHeight * zoom) / 100;
 
-  // Sample data for preview
-  const sampleData = {
-    proposalNumber: "TKL-2024-001",
-    date: "15 Ocak 2024",
-    customer: {
-      name: "Örnek Şirket A.Ş.",
-      contact: "Ahmet Yılmaz",
-      email: "ahmet@ornek.com",
-      phone: "+90 212 555 0123",
-      address: "Maslak Mahallesi, Büyükdere Cad. No:123 Sarıyer/İstanbul",
-    },
-    items: [
-      { description: "Web Sitesi Tasarımı", quantity: 1, price: 15000, total: 15000 },
-      { description: "SEO Optimizasyonu", quantity: 1, price: 5000, total: 5000 },
-      { description: "Hosting (1 Yıl)", quantity: 1, price: 2400, total: 2400 },
-    ],
-    subtotal: 22400,
-    discount: 2000,
-    tax: 3672,
-    total: 24072,
+  const margins = template.designSettings?.margins ?? {
+    top: 40,
+    bottom: 40,
+    left: 40,
+    right: 40,
   };
+
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
+  const [edges, , onEdgesChange] = useEdgesState<Edge[]>([]);
+  const { project } = useReactFlow();
+
+  const [guides, setGuides] = useState<GuideLine[]>([]);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  const handleZoomIn = () => {
+    const currentIndex = ZOOM_LEVELS.indexOf(zoom);
+    if (currentIndex < ZOOM_LEVELS.length - 1) setZoom(ZOOM_LEVELS[currentIndex + 1]);
+  };
+  const handleZoomOut = () => {
+    const currentIndex = ZOOM_LEVELS.indexOf(zoom);
+    if (currentIndex > 0) setZoom(ZOOM_LEVELS[currentIndex - 1]);
+  };
+  const handleFitToScreen = () => setZoom(75);
+
+  // HTML5 drag & drop from FieldPalette → create node
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const onDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      if (!reactFlowWrapper.current) return;
+
+      const type = event.dataTransfer.getData("application/reactflow");
+      if (!type) return;
+
+      const bounds = reactFlowWrapper.current.getBoundingClientRect();
+      const position = project({ x: event.clientX - bounds.left, y: event.clientY - bounds.top });
+
+      const id = crypto.randomUUID();
+      const newNode: Node = {
+        id,
+        type: "fieldNode",
+        position,
+        data: {
+          fieldType: type,
+          label: `${type.toUpperCase()} Alanı`,
+          required: false,
+          style: {
+            width: "200px",
+            alignment: "left",
+            fontSize: 14,
+            fontWeight: "normal",
+          },
+        },
+      };
+      setNodes((nds) => nds.concat(newNode));
+    },
+    [project]
+  );
+
+  const getNodeRects = useCallback(() => {
+    return nodes.map((n) => ({
+      id: n.id,
+      x: n.position.x,
+      y: n.position.y,
+      w: (typeof (n.data?.style?.width) === "string" ? parseInt(n.data?.style?.width) : 200) || 200,
+      h: 48, // approx height; NodeResizer allows change but we keep a baseline
+      cx: n.position.x + (((typeof (n.data?.style?.width) === "string" ? parseInt(n.data?.style?.width) : 200) || 200) / 2),
+      cy: n.position.y + 24,
+    }));
+  }, [nodes]);
+
+  const pageRects = useMemo(() => {
+    // page inner area (content area considering margins)
+    const left = margins.left;
+    const right = pageWidth - margins.right;
+    const top = margins.top;
+    const bottom = pageHeight - margins.bottom;
+    const hCenter = pageWidth / 2;
+    const vCenter = pageHeight / 2;
+    return { left, right, top, bottom, hCenter, vCenter };
+  }, [margins, pageWidth, pageHeight]);
+
+  const computeSmartSnap = useCallback(
+    (nodeId: string, x: number, y: number) => {
+      const rects = getNodeRects();
+      const me = rects.find((r) => r.id === nodeId);
+      if (!me) return { x, y, guides: [] as GuideLine[] };
+
+      const candidatesV: number[] = [pageRects.left, pageRects.right, pageRects.hCenter];
+      const candidatesH: number[] = [pageRects.top, pageRects.bottom, pageRects.vCenter];
+
+      rects.forEach((r) => {
+        if (r.id === nodeId) return;
+        candidatesV.push(r.x, r.x + r.w, r.cx);
+        candidatesH.push(r.y, r.y + r.h, r.cy);
+      });
+
+      let snappedX = x;
+      let snappedY = y;
+      const g: GuideLine[] = [];
+
+      // snap left edge
+      for (const vx of candidatesV) {
+        if (Math.abs(snappedX - vx) <= SNAP_THRESHOLD) {
+          snappedX = vx;
+          g.push({ type: "v", x: vx, y1: 0, y2: pageHeight });
+          break;
+        }
+      }
+      // snap horizontal (top)
+      for (const hy of candidatesH) {
+        if (Math.abs(snappedY - hy) <= SNAP_THRESHOLD) {
+          snappedY = hy;
+          g.push({ type: "h", y: hy, x1: 0, x2: pageWidth });
+          break;
+        }
+      }
+
+      // center snapping (approximate) – align centers
+      const myWidth = me.w;
+      const myHeight = me.h;
+      const myCenterX = snappedX + myWidth / 2;
+      const myCenterY = snappedY + myHeight / 2;
+
+      for (const vx of candidatesV) {
+        if (Math.abs(myCenterX - vx) <= SNAP_THRESHOLD) {
+          snappedX = vx - myWidth / 2;
+          g.push({ type: "v", x: vx, y1: 0, y2: pageHeight });
+          break;
+        }
+      }
+      for (const hy of candidatesH) {
+        if (Math.abs(myCenterY - hy) <= SNAP_THRESHOLD) {
+          snappedY = hy - myHeight / 2;
+          g.push({ type: "h", y: hy, x1: 0, x2: pageWidth });
+          break;
+        }
+      }
+
+      return { x: snappedX, y: snappedY, guides: g };
+    },
+    [getNodeRects, pageHeight, pageWidth]
+  );
+
+  const onNodeDragStart = useCallback((_, node: Node) => {
+    setDraggingId(node.id);
+  }, []);
+
+  const onNodeDrag = useCallback(
+    (_: any, node: Node) => {
+      if (!smartGuides) return;
+      const { x, y, guides } = computeSmartSnap(node.id, node.position.x, node.position.y);
+      // Sadece kılavuzları canlı göster; nihai snap bırakışta uygulansın
+      setGuides(guides);
+    },
+    [smartGuides, computeSmartSnap]
+  );
+
+  const onNodeDragStop = useCallback(
+    (_: any, node: Node) => {
+      setDraggingId(null);
+      setGuides([]);
+
+      if (!smartGuides && !snapToGrid) return;
+
+      let nextX = node.position.x;
+      let nextY = node.position.y;
+
+      if (smartGuides) {
+        const res = computeSmartSnap(node.id, nextX, nextY);
+        nextX = res.x;
+        nextY = res.y;
+      }
+      if (snapToGrid && gridSize > 0) {
+        nextX = Math.round(nextX / gridSize) * gridSize;
+        nextY = Math.round(nextY / gridSize) * gridSize;
+      }
+
+      const id = node.id;
+      setNodes((nds) => nds.map((n) => (n.id === id ? { ...n, position: { x: nextX, y: nextY } } : n)));
+    },
+    [smartGuides, snapToGrid, gridSize, computeSmartSnap, setNodes]
+  );
+
+  const onConnect: OnConnect = useCallback(() => {
+    // connecting is disabled in this canvas
+    return undefined as any;
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-muted/30">
       {/* Toolbar */}
       <div className="flex items-center justify-between p-4 bg-card border-b">
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleZoomOut}
-            disabled={zoom <= ZOOM_LEVELS[0]}
-          >
+          <Button variant="outline" size="sm" onClick={handleZoomOut} disabled={zoom <= ZOOM_LEVELS[0]}>
             <ZoomOut className="w-4 h-4" />
           </Button>
           <span className="text-sm font-medium w-12 text-center">{zoom}%</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleZoomIn}
-            disabled={zoom >= ZOOM_LEVELS[ZOOM_LEVELS.length - 1]}
-          >
+          <Button variant="outline" size="sm" onClick={handleZoomIn} disabled={zoom >= ZOOM_LEVELS[ZOOM_LEVELS.length - 1]}>
             <ZoomIn className="w-4 h-4" />
           </Button>
           <Button variant="outline" size="sm" onClick={handleFitToScreen}>
@@ -89,14 +258,30 @@ export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({ template }) => {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant={showGrid ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowGrid(!showGrid)}
-          >
+          <Button variant={showGrid ? "default" : "outline"} size="sm" onClick={() => setShowGrid(!showGrid)}>
             <Grid className="w-4 h-4 mr-1" />
             Izgara
           </Button>
+          <Button variant={snapToGrid ? "default" : "outline"} size="sm" onClick={() => setSnapToGrid((v) => !v)}>
+            <Magnet className="w-4 h-4 mr-1" />
+            Grid Snap
+          </Button>
+          <Button variant={smartGuides ? "default" : "outline"} size="sm" onClick={() => setSmartGuides((v) => !v)}>
+            <Magnet className="w-4 h-4 mr-1" />
+            Akıllı Kılavuz
+          </Button>
+          <div className="flex items-center gap-2 ml-2">
+            <span className="text-xs text-muted-foreground">Grid:</span>
+            <Input
+              type="number"
+              className="h-8 w-16"
+              min={2}
+              max={64}
+              value={gridSize}
+              onChange={(e) => setGridSize(Math.max(2, Math.min(64, Number(e.target.value) || DEFAULT_GRID_SIZE)))}
+            />
+            <span className="text-xs text-muted-foreground">px</span>
+          </div>
         </div>
       </div>
 
@@ -105,132 +290,73 @@ export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({ template }) => {
         <div className="flex justify-center">
           <Card
             className="relative shadow-xl bg-white overflow-hidden"
-            style={{
-              width: scaledWidth,
-              height: scaledHeight,
-              minHeight: scaledHeight,
-            }}
+            style={{ width: scaledWidth, height: scaledHeight, minHeight: scaledHeight }}
           >
-            {/* Grid Overlay */}
-            {showGrid && (
-              <div
-                className="absolute inset-0 opacity-10 pointer-events-none"
-                style={{
-                  backgroundImage: `
-                    linear-gradient(hsl(var(--border)) 1px, transparent 1px),
-                    linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)
-                  `,
-                  backgroundSize: `${(20 * zoom) / 100}px ${(20 * zoom) / 100}px`
-                }}
-              />
-            )}
-
-            {/* Page Content */}
+            {/* Page */}
             <div
-              className="relative h-full"
-              style={{
-                transform: `scale(${zoom / 100})`,
-                transformOrigin: 'top left',
-                width: pageWidth,
-                height: pageHeight,
-                padding: '40px',
-                fontFamily: 'Inter',
-                fontSize: '14px',
-                color: '#1f2937',
-                backgroundColor: '#ffffff',
-              }}
+              className="relative"
+              style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top left", width: pageWidth, height: pageHeight }}
             >
-              {/* Header Section */}
-              <div className="flex items-start justify-between pb-8 border-b mb-8">
-                <div className="flex items-center">
-                  <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-xl mr-6">
-                    LOGO
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold">Şirket Adı</h2>
-                    <p className="text-muted-foreground">Profesyonel Hizmetler</p>
-                    <p className="text-sm text-muted-foreground">www.sirket.com</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <h1 className="text-4xl font-bold text-primary">
-                    TEKLİF
-                  </h1>
-                  <p className="text-muted-foreground mt-2">#{sampleData.proposalNumber}</p>
-                  <p className="text-sm text-muted-foreground">{sampleData.date}</p>
-                </div>
+              {/* Margin guides */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div
+                  className="absolute border border-dashed"
+                  style={{
+                    left: margins.left,
+                    right: margins.right,
+                    top: margins.top,
+                    bottom: margins.bottom,
+                    borderColor: "#e5e7eb",
+                  }}
+                />
               </div>
 
-              {/* Customer Section */}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold mb-4">Müşteri Bilgileri</h3>
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <h4 className="font-medium">{sampleData.customer.name}</h4>
-                  <p className="text-sm text-muted-foreground">{sampleData.customer.contact}</p>
-                  <p className="text-sm text-muted-foreground">{sampleData.customer.email}</p>
-                  <p className="text-sm text-muted-foreground">{sampleData.customer.phone}</p>
-                  <p className="text-sm text-muted-foreground mt-2">{sampleData.customer.address}</p>
-                </div>
-              </div>
-
-              {/* Items Section */}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold mb-4">Hizmet Kalemleri</h3>
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2">Açıklama</th>
-                      <th className="text-center py-2 w-20">Adet</th>
-                      <th className="text-right py-2 w-24">Birim Fiyat</th>
-                      <th className="text-right py-2 w-24">Toplam</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sampleData.items.map((item, index) => (
-                      <tr key={index} className="border-b border-muted">
-                        <td className="py-3">{item.description}</td>
-                        <td className="py-3 text-center">{item.quantity}</td>
-                        <td className="py-3 text-right">{item.price.toLocaleString('tr-TR')} ₺</td>
-                        <td className="py-3 text-right font-medium">{item.total.toLocaleString('tr-TR')} ₺</td>
-                      </tr>
+              {/* ReactFlow canvas */}
+              <div ref={reactFlowWrapper} className="absolute inset-0">
+                <ReactFlowProvider>
+                  <ReactFlow
+                    nodeTypes={nodeTypes}
+                    nodes={nodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    panOnDrag
+                    selectionOnDrag
+                    nodesDraggable
+                    nodesConnectable={false}
+                    zoomOnScroll={false}
+                    zoomOnPinch={false}
+                    zoomOnDoubleClick={false}
+                    snapToGrid={snapToGrid}
+                    snapGrid={[gridSize, gridSize]}
+                    fitView={false}
+                    onDrop={onDrop}
+                    onDragOver={onDragOver}
+                    onNodeDragStart={onNodeDragStart}
+                    onNodeDrag={onNodeDrag}
+                    onNodeDragStop={onNodeDragStop}
+                  >
+                    {showGrid && <Background gap={gridSize} size={1} color="#e5e7eb" />}
+                    <Controls showInteractive={false} position="bottom-right" />
+                    {/* Smart guide lines */}
+                    {smartGuides && guides.map((g, i) => (
+                      g.type === "v" ? (
+                        <div
+                          key={`gv-${i}`}
+                          className="absolute bg-blue-500/60"
+                          style={{ left: g.x, top: g.y1, width: 1, height: g.y2 - g.y1 }}
+                        />
+                      ) : (
+                        <div
+                          key={`gh-${i}`}
+                          className="absolute bg-blue-500/60"
+                          style={{ top: g.y, left: g.x1, height: 1, width: g.x2 - g.x1 }}
+                        />
+                      )
                     ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Totals Section */}
-              <div className="flex justify-end mb-8">
-                <div className="w-80">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Ara Toplam:</span>
-                      <span>{sampleData.subtotal.toLocaleString('tr-TR')} ₺</span>
-                    </div>
-                    <div className="flex justify-between text-red-600">
-                      <span>İndirim:</span>
-                      <span>-{sampleData.discount.toLocaleString('tr-TR')} ₺</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>KDV (%18):</span>
-                      <span>{sampleData.tax.toLocaleString('tr-TR')} ₺</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg pt-2 border-t text-primary">
-                      <span>Genel Toplam:</span>
-                      <span>{sampleData.total.toLocaleString('tr-TR')} ₺</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Terms Section */}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold mb-4">Şartlar ve Koşullar</h3>
-                <div className="text-sm space-y-2">
-                  <p>• Teklif geçerlilik süresi: 30 gün</p>
-                  <p>• Ödeme şekli: %50 peşin, %50 teslimde</p>
-                  <p>• Proje teslim süresi: 4-6 hafta</p>
-                  <p>• Fiyatlara KDV dahildir</p>
-                </div>
+                  </ReactFlow>
+                </ReactFlowProvider>
               </div>
             </div>
           </Card>
@@ -241,7 +367,7 @@ export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({ template }) => {
       <div className="p-4 bg-card border-t text-sm text-muted-foreground">
         <div className="flex items-center justify-between">
           <span>A4 Sayfa • Dikey • {scaledWidth}×{scaledHeight}px ({zoom}%)</span>
-          <span>5 bölüm</span>
+          <span>{nodes.length} öğe</span>
         </div>
       </div>
     </div>

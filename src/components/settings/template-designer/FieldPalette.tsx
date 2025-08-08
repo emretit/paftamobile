@@ -59,4 +59,5 @@ const FieldPalette: React.FC = () => {
   );
 };
 
+export { FieldPalette };
 export default FieldPalette;
