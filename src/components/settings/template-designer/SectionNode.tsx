@@ -17,6 +17,14 @@ export interface SectionNodeData {
   kind: SectionKind;
   text?: string;
   imageUrl?: string;
+  // DİA benzeri alanlar
+  bindingKey?: string; // örn: proposal.number
+  format?: 'text' | 'number' | 'currency' | 'date';
+  decimals?: number;
+  expression?: string; // formül
+  visibleIf?: string; // koşul
+  sliceStart?: number;
+  sliceEnd?: number;
   style?: {
     showLabel?: boolean;
     align?: 'left' | 'center' | 'right';

@@ -447,6 +447,44 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
                   />
                 </div>
               )}
+              {/* DİA benzeri veri bağlama ve formül alanları */}
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <div>
+                  <Label className="text-xs">Veri Bağlama (binding)</Label>
+                  <Input placeholder="proposal.number" value={(selected.data as any).bindingKey || ''} onChange={(e) => updateSelected({ bindingKey: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Format</Label>
+                  <select className="w-full h-9 rounded border px-2 text-xs" value={(selected.data as any).format || 'text'} onChange={(e) => updateSelected({ format: e.target.value })}>
+                    <option value="text">Metin</option>
+                    <option value="number">Sayı</option>
+                    <option value="currency">Para</option>
+                    <option value="date">Tarih</option>
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-xs">Ondalık</Label>
+                  <Input type="number" min={0} max={6} value={(selected.data as any).decimals ?? 2} onChange={(e) => updateSelected({ decimals: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Koşul (visibleIf)</Label>
+                  <Input placeholder="proposal.currency === 'USD'" value={(selected.data as any).visibleIf || ''} onChange={(e) => updateSelected({ visibleIf: e.target.value })} />
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-xs">Formül (expression)</Label>
+                  <Input placeholder="({Tutar} * {DovizKur})" value={(selected.data as any).expression || ''} onChange={(e) => updateSelected({ expression: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-2 gap-2 col-span-2">
+                  <div>
+                    <Label className="text-xs">İlk Karakter</Label>
+                    <Input type="number" min={0} value={(selected.data as any).sliceStart ?? 0} onChange={(e) => updateSelected({ sliceStart: Number(e.target.value) })} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Son Karakter</Label>
+                    <Input type="number" min={0} value={(selected.data as any).sliceEnd ?? 0} onChange={(e) => updateSelected({ sliceEnd: Number(e.target.value) })} />
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="text-xs opacity-70">Bir alan seçin ve özelliklerini düzenleyin.</div>
