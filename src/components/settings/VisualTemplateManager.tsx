@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { TemplateDesignSettings } from '@/types/proposal-template';
 import { TemplateVisualEditor } from './template-designer/TemplateVisualEditor';
 import { toast } from 'sonner';
+import { TemplatePreview } from './template-designer/TemplatePreview';
 
 export const VisualTemplateManager: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -109,7 +110,25 @@ export const VisualTemplateManager: React.FC = () => {
         </div>
         <Button onClick={async () => initialDesign && (await handleSave(initialDesign))} variant="secondary">Varsayılanı Etkinleştir</Button>
       </div>
-      <TemplateVisualEditor initialDesign={initialDesign} onSave={handleSave} />
+
+      {/* Önizleme + Editor yan yana */}
+      <div className="grid grid-cols-12 gap-4">
+        <Card className="col-span-5 p-3">
+          <div className="text-sm font-medium mb-2">Canlı Önizleme</div>
+          {/* Random verili preview */}
+          {initialDesign ? (
+            <TemplatePreview 
+              template={{ id: 'preview', name: 'Önizleme', description: '', templateType: 'standard', templateFeatures: [], items: [], designSettings: initialDesign }}
+              designSettings={initialDesign}
+            />
+          ) : (
+            <Card className="p-6">Önizleme için veri yükleniyor…</Card>
+          )}
+        </Card>
+        <div className="col-span-7">
+          <TemplateVisualEditor initialDesign={initialDesign} onSave={handleSave} />
+        </div>
+      </div>
     </div>
   );
 };

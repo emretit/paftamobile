@@ -61,7 +61,14 @@ function nodesFromDesign(design?: TemplateDesignSettings | null): Node[] {
   });
 }
 
-function designFromNodes(nodes: Node[]): TemplateDesignSettings {
+type GlobalDesign = {
+  pageSize: 'A4' | 'A3' | 'Letter';
+  orientation: 'portrait' | 'landscape';
+  margins: { top: number; bottom: number; left: number; right: number };
+  colors: { primary: string; secondary: string; accent: string; text: string; background: string; border: string };
+};
+
+function designFromNodes(nodes: Node[], globals?: GlobalDesign): TemplateDesignSettings {
   const sections: TemplateSection[] = nodes.map((n, i) => {
     const d = n.data as any;
     return {
@@ -83,12 +90,12 @@ function designFromNodes(nodes: Node[]): TemplateDesignSettings {
   });
 
   return {
-    pageSize: 'A4',
-    orientation: 'portrait',
-    margins: { top: 24, bottom: 24, left: 24, right: 24 },
+    pageSize: globals?.pageSize ?? 'A4',
+    orientation: globals?.orientation ?? 'portrait',
+    margins: globals?.margins ?? { top: 24, bottom: 24, left: 24, right: 24 },
     header: { enabled: true, height: 80, logoPosition: 'right', logoSize: 'medium', showCompanyInfo: true, backgroundColor: '#ffffff', textColor: '#111111' },
     footer: { enabled: true, height: 60, showPageNumbers: false, showContactInfo: true, backgroundColor: '#ffffff', textColor: '#111111' },
-    colors: { primary: '#111111', secondary: '#666666', accent: '#0ea5e9', text: '#111111', background: '#ffffff', border: '#e5e7eb' },
+    colors: globals?.colors ?? { primary: '#111111', secondary: '#666666', accent: '#0ea5e9', text: '#111111', background: '#ffffff', border: '#e5e7eb' },
     fonts: { primary: 'Helvetica', secondary: 'Helvetica', sizes: { title: 18, heading: 14, body: 11, small: 9 } },
     table: { headerBackground: '#f5f5f5', headerText: '#111111', rowAlternating: true, borderColor: '#e5e7eb', borderWidth: 1 },
     layout: { spacing: 'normal', showBorders: true, roundedCorners: true, shadowEnabled: false },
@@ -102,6 +109,15 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>(initialNodes);
   const [edges, , onEdgesChange] = useEdgesState<Edge>([]);
   const [selected, setSelected] = useState<Node | null>(null);
+  // Global page settings
+  const [pageSize, setPageSize] = useState<'A4' | 'A3' | 'Letter'>(initialDesign?.pageSize ?? 'A4');
+  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>(initialDesign?.orientation ?? 'portrait');
+  const [margins, setMargins] = useState<{ top: number; bottom: number; left: number; right: number }>(
+    initialDesign?.margins ?? { top: 24, bottom: 24, left: 24, right: 24 }
+  );
+  const [colors, setColors] = useState<{ primary: string; secondary: string; accent: string; text: string; background: string; border: string }>(
+    initialDesign?.colors ?? { primary: '#111111', secondary: '#666666', accent: '#0ea5e9', text: '#111111', background: '#ffffff', border: '#e5e7eb' }
+  );
   const [showGrid, setShowGrid] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [smartGuides, setSmartGuides] = useState(true);
@@ -122,14 +138,25 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
   };
 
   const handleSave = async () => {
-    const design = designFromNodes(nodes);
+    const design = designFromNodes(nodes, { pageSize, orientation, margins, colors });
     await onSave(design);
     toast.success('Şablon kaydedildi ve etkinleştirildi');
   };
 
   // Smart guides helpers
-  const PAGE_W = 744;
-  const PAGE_H = 1052;
+  const getBaseSize = (ps: 'A4' | 'A3' | 'Letter') => {
+    switch (ps) {
+      case 'A3':
+        return { w: 1123, h: 1587 };
+      case 'Letter':
+        return { w: 816, h: 1056 };
+      default:
+        return { w: 794, h: 1123 };
+    }
+  };
+  const base = getBaseSize(pageSize);
+  const PAGE_W = orientation === 'portrait' ? base.w : base.h;
+  const PAGE_H = orientation === 'portrait' ? base.h : base.w;
   const SNAP_THRESHOLD = 6;
 
   const getRects = useCallback(() => {
@@ -234,7 +261,14 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
     <div className="grid grid-cols-12 gap-4">
       <Card className="col-span-9 p-3">
         <div className="relative border border-border rounded-md overflow-hidden" aria-label="PDF A4 Canvas">
-          <div className="mx-auto my-2 bg-background" style={{ width: 744, height: 1052 }}>
+          <div className="mx-auto my-2" style={{ width: PAGE_W, height: PAGE_H, backgroundColor: colors.background, color: colors.text }}>
+            {/* Margin guides */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div
+                className="absolute border border-dashed"
+                style={{ left: margins.left, right: margins.right, top: margins.top, bottom: margins.bottom, borderColor: colors.border }}
+              />
+            </div>
             <ReactFlow
               nodes={nodes}
               edges={edges}
@@ -284,6 +318,54 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
       </Card>
 
       <Card className="col-span-3 p-4 space-y-4">
+        {/* Global page settings */}
+        <div>
+          <div className="text-sm font-semibold mb-3">Genel Sayfa Ayarları</div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-xs">Sayfa Boyutu</Label>
+              <select className="w-full h-9 rounded border px-2 text-xs" value={pageSize} onChange={(e) => setPageSize(e.target.value as any)}>
+                <option value="A4">A4</option>
+                <option value="A3">A3</option>
+                <option value="Letter">Letter</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-xs">Yön</Label>
+              <select className="w-full h-9 rounded border px-2 text-xs" value={orientation} onChange={(e) => setOrientation(e.target.value as any)}>
+                <option value="portrait">Dikey</option>
+                <option value="landscape">Yatay</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-xs">Arka Plan</Label>
+              <Input type="color" value={colors.background} onChange={(e) => setColors({ ...colors, background: e.target.value })} />
+            </div>
+            <div>
+              <Label className="text-xs">Metin</Label>
+              <Input type="color" value={colors.text} onChange={(e) => setColors({ ...colors, text: e.target.value })} />
+            </div>
+          </div>
+          <div className="mt-2 grid grid-cols-4 gap-2">
+            <div>
+              <Label className="text-xs">Üst</Label>
+              <Input type="number" value={margins.top} onChange={(e) => setMargins({ ...margins, top: Number(e.target.value) })} />
+            </div>
+            <div>
+              <Label className="text-xs">Alt</Label>
+              <Input type="number" value={margins.bottom} onChange={(e) => setMargins({ ...margins, bottom: Number(e.target.value) })} />
+            </div>
+            <div>
+              <Label className="text-xs">Sol</Label>
+              <Input type="number" value={margins.left} onChange={(e) => setMargins({ ...margins, left: Number(e.target.value) })} />
+            </div>
+            <div>
+              <Label className="text-xs">Sağ</Label>
+              <Input type="number" value={margins.right} onChange={(e) => setMargins({ ...margins, right: Number(e.target.value) })} />
+            </div>
+          </div>
+        </div>
+
         <div>
           <div className="text-sm font-semibold mb-3">Seçili Alan Özellikleri</div>
           {selected ? (
