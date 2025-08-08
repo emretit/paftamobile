@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { TemplateDesignSettings, TemplateSection } from '@/types/proposal-template';
+import { Grid as GridIcon, Magnet, ZoomIn, ZoomOut } from 'lucide-react';
 
 const nodeTypes = { section: SectionNode } as any;
 
@@ -101,6 +102,11 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>(initialNodes);
   const [edges, , onEdgesChange] = useEdgesState<Edge>([]);
   const [selected, setSelected] = useState<Node | null>(null);
+  const [showGrid, setShowGrid] = useState(true);
+  const [snapToGrid, setSnapToGrid] = useState(true);
+  const [smartGuides, setSmartGuides] = useState(true);
+  const [gridSize, setGridSize] = useState<number>(10);
+  const [guides, setGuides] = useState<Array<{ type: 'v'; x: number; y1: number; y2: number } | { type: 'h'; y: number; x1: number; x2: number }>>([]);
 
   useEffect(() => {
     setNodes(nodesFromDesign(initialDesign));
@@ -121,6 +127,109 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
     toast.success('Şablon kaydedildi ve etkinleştirildi');
   };
 
+  // Smart guides helpers
+  const PAGE_W = 744;
+  const PAGE_H = 1052;
+  const SNAP_THRESHOLD = 6;
+
+  const getRects = useCallback(() => {
+    return nodes.map((n) => {
+      const style = (n.style as any) || {};
+      const w = Number(style.width) || 300;
+      const h = Number(style.height) || 80;
+      return {
+        id: n.id,
+        x: n.position.x,
+        y: n.position.y,
+        w,
+        h,
+        cx: n.position.x + w / 2,
+        cy: n.position.y + h / 2,
+      };
+    });
+  }, [nodes]);
+
+  const computeSmartSnap = useCallback(
+    (nodeId: string, x: number, y: number) => {
+      const rects = getRects();
+      const me = rects.find((r) => r.id === nodeId);
+      if (!me) return { x, y, guides: [] as typeof guides };
+
+      const candidatesV: number[] = [0, PAGE_W / 2, PAGE_W];
+      const candidatesH: number[] = [0, PAGE_H / 2, PAGE_H];
+      rects.forEach((r) => {
+        if (r.id === nodeId) return;
+        candidatesV.push(r.x, r.x + r.w, r.cx);
+        candidatesH.push(r.y, r.y + r.h, r.cy);
+      });
+
+      let nx = x;
+      let ny = y;
+      const g: typeof guides = [];
+
+      // snap left/top edges
+      for (const vx of candidatesV) {
+        if (Math.abs(nx - vx) <= SNAP_THRESHOLD) {
+          nx = vx;
+          g.push({ type: 'v', x: vx, y1: 0, y2: PAGE_H });
+          break;
+        }
+      }
+      for (const hy of candidatesH) {
+        if (Math.abs(ny - hy) <= SNAP_THRESHOLD) {
+          ny = hy;
+          g.push({ type: 'h', y: hy, x1: 0, x2: PAGE_W });
+          break;
+        }
+      }
+
+      // center snapping
+      const w = me.w;
+      const h = me.h;
+      const cx = nx + w / 2;
+      const cy = ny + h / 2;
+      for (const vx of candidatesV) {
+        if (Math.abs(cx - vx) <= SNAP_THRESHOLD) {
+          nx = vx - w / 2;
+          g.push({ type: 'v', x: vx, y1: 0, y2: PAGE_H });
+          break;
+        }
+      }
+      for (const hy of candidatesH) {
+        if (Math.abs(cy - hy) <= SNAP_THRESHOLD) {
+          ny = hy - h / 2;
+          g.push({ type: 'h', y: hy, x1: 0, x2: PAGE_W });
+          break;
+        }
+      }
+
+      return { x: nx, y: ny, guides: g };
+    },
+    [getRects]
+  );
+
+  const onNodeDrag = useCallback((_: any, node: Node) => {
+    if (!smartGuides) return;
+    const { guides: g } = computeSmartSnap(node.id, node.position.x, node.position.y);
+    setGuides(g);
+  }, [smartGuides, computeSmartSnap]);
+
+  const onNodeDragStop = useCallback((_: any, node: Node) => {
+    setGuides([]);
+    let x = node.position.x;
+    let y = node.position.y;
+    if (smartGuides) {
+      const res = computeSmartSnap(node.id, x, y);
+      x = res.x; y = res.y;
+    }
+    if (snapToGrid && gridSize > 0) {
+      x = Math.round(x / gridSize) * gridSize;
+      y = Math.round(y / gridSize) * gridSize;
+    }
+    const id = node.id;
+    setNodes((nds) => nds.map((n) => (n.id === id ? ({ ...n, position: { x, y } } as Node) : n)));
+  }, [smartGuides, snapToGrid, gridSize, setNodes, computeSmartSnap]);
+
   return (
     <div className="grid grid-cols-12 gap-4">
       <Card className="col-span-9 p-3">
@@ -136,12 +245,38 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
               nodeTypes={nodeTypes}
               proOptions={{ hideAttribution: true }}
               style={{ backgroundColor: 'transparent' }}
+              snapToGrid={snapToGrid}
+              snapGrid={[gridSize, gridSize]}
+              onNodeDrag={onNodeDrag}
+              onNodeDragStop={onNodeDragStop}
             >
-              <Background />
+              {showGrid && <Background gap={gridSize} size={1} color="#e5e7eb" />}
               <Controls />
+              {/* Smart guide lines */}
+              {smartGuides && guides.map((g, i) => (
+                g.type === 'v' ? (
+                  <div key={`gv-${i}`} className="absolute bg-blue-500/60" style={{ left: g.x, top: g.y1, width: 1, height: g.y2 - g.y1 }} />
+                ) : (
+                  <div key={`gh-${i}`} className="absolute bg-blue-500/60" style={{ top: g.y, left: g.x1, height: 1, width: g.x2 - g.x1 }} />
+                )
+              ))}
               <MiniMap />
               <Panel position="top-right">
                 <Button size="sm" onClick={handleSave}>Kaydet ve Etkinleştir</Button>
+              </Panel>
+              <Panel position="top-left" className="space-x-2">
+                <Button variant={showGrid ? 'default' : 'outline'} size="sm" onClick={() => setShowGrid(v => !v)}>
+                  <GridIcon className="w-4 h-4 mr-1" /> Izgara
+                </Button>
+                <Button variant={snapToGrid ? 'default' : 'outline'} size="sm" onClick={() => setSnapToGrid(v => !v)}>
+                  <Magnet className="w-4 h-4 mr-1" /> Grid Snap
+                </Button>
+                <Button variant={smartGuides ? 'default' : 'outline'} size="sm" onClick={() => setSmartGuides(v => !v)}>
+                  <Magnet className="w-4 h-4 mr-1" /> Akıllı Kılavuz
+                </Button>
+                <span className="text-xs ml-2">Grid:</span>
+                <Input type="number" className="h-8 w-16 inline-block" min={2} max={64} value={gridSize} onChange={(e) => setGridSize(Math.max(2, Math.min(64, Number(e.target.value) || 10)))} />
+                <span className="text-xs">px</span>
               </Panel>
             </ReactFlow>
           </div>
