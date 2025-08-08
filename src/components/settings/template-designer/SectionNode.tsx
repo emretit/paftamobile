@@ -1,5 +1,5 @@
 import React from 'react';
-import { NodeResizer } from '@xyflow/react';
+import { NodeResizer, useNodeId, useReactFlow } from '@xyflow/react';
 
 export type SectionKind =
   | 'header'
@@ -45,6 +45,8 @@ export interface SectionNodeData {
 }
 
 const SectionNode: React.FC<any> = ({ data }) => {
+  const nodeId = useNodeId();
+  const { setNodes } = useReactFlow();
   const d = data as SectionNodeData;
   const style = d.style || {};
   const padding = style.padding ?? 12;
@@ -57,7 +59,7 @@ const SectionNode: React.FC<any> = ({ data }) => {
   const fontWeight = style.fontWeight ?? 'normal';
   return (
     <div
-      className="w-full h-full relative text-foreground"
+      className="w-full h-full relative text-foreground cursor-move"
       style={{
         padding,
         borderWidth,
@@ -67,7 +69,26 @@ const SectionNode: React.FC<any> = ({ data }) => {
         backgroundColor: bgColor,
       }}
     >
-      <NodeResizer minWidth={80} minHeight={40} />
+      <NodeResizer
+        minWidth={80}
+        minHeight={40}
+        color="#0ea5e9"
+        handleStyle={{ width: 8, height: 8, borderRadius: 2 }}
+        lineStyle={{ strokeWidth: 1.5 }}
+        onResizeEnd={(_, params) => {
+          if (!nodeId) return;
+          const width = Math.max(80, Math.round(params.width));
+          const height = Math.max(40, Math.round(params.height));
+          setNodes((nodes) => nodes.map((n) => (
+            n.id === nodeId
+              ? ({
+                  ...n,
+                  style: { ...(n.style as any), width, height },
+                } as any)
+              : n
+          )));
+        }}
+      />
       {(style.showLabel ?? true) && (
         <div className="text-[10px] font-medium opacity-70 mb-1 select-none">
           {d.label}

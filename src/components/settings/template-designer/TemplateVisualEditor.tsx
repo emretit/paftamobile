@@ -16,6 +16,10 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
 import { TemplateDesignSettings, TemplateSection } from '@/types/proposal-template';
 // Removed toggle icons since grid/snap/guides are now always-on on the design page
@@ -282,6 +286,7 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
               style={{ backgroundColor: 'transparent' }}
               snapToGrid={snapToGrid}
               snapGrid={[gridSize, gridSize]}
+              nodesDraggable
               onNodeDrag={onNodeDrag}
               onNodeDragStop={onNodeDragStop}
             >
@@ -362,160 +367,208 @@ export const TemplateVisualEditor: React.FC<EditorProps> = ({ initialDesign, onS
         <div>
           <div className="text-sm font-semibold mb-3">Seçili Alan Özellikleri</div>
           {selected ? (
-            <div className="space-y-3">
-              <div>
-                <Label className="text-xs">Başlık</Label>
-                <Input value={(selected.data as any).label as string} onChange={(e) => updateSelected({ label: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Metin Boyutu</Label>
-                  <Input type="number" min={9} max={24} value={(selected.data as any).style?.fontSize ?? 12} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), fontSize: Number(e.target.value) } })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Padding</Label>
-                  <Input type="number" min={4} max={24} value={(selected.data as any).style?.padding ?? 12} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), padding: Number(e.target.value) } })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Köşe Yarıçapı</Label>
-                  <Input type="number" min={0} max={24} value={(selected.data as any).style?.radius ?? 8} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), radius: Number(e.target.value) } })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Kenarlık (px)</Label>
-                  <Input type="number" min={0} max={4} value={(selected.data as any).style?.borderWidth ?? 1} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), borderWidth: Number(e.target.value) } })} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Arka Plan</Label>
-                  <Input type="color" value={(selected.data as any).style?.bgColor ?? '#ffffff'} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), bgColor: e.target.value } })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Kenarlık Rengi</Label>
-                  <Input type="color" value={(selected.data as any).style?.borderColor ?? '#e5e7eb'} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), borderColor: e.target.value } })} />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <Label className="text-xs">Hizalama</Label>
-                  <select className="w-full h-9 rounded border px-2 text-xs" value={(selected.data as any).style?.align ?? 'left'} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), align: e.target.value } })}>
-                    <option value="left">Sol</option>
-                    <option value="center">Orta</option>
-                    <option value="right">Sağ</option>
-                  </select>
-                </div>
-                <div>
-                  <Label className="text-xs">Kalınlık</Label>
-                  <select className="w-full h-9 rounded border px-2 text-xs" value={(selected.data as any).style?.fontWeight ?? 'normal'} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), fontWeight: e.target.value } })}>
-                    <option value="normal">Normal</option>
-                    <option value="bold">Kalın</option>
-                  </select>
-                </div>
-                <div className="flex items-end gap-2">
-                  <input id="showLabel" type="checkbox" className="h-4 w-4" checked={(selected.data as any).style?.showLabel ?? true} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), showLabel: e.target.checked } })} />
-                  <Label htmlFor="showLabel" className="text-xs">Başlığı Göster</Label>
-                </div>
-              </div>
-              {(selected.data as any).kind === 'logo' ? (
-                <div>
-                  <Label className="text-xs">Logo URL</Label>
-                  <Input
-                    placeholder="https://..."
-                    value={((selected.data as any).imageUrl as string) || ''}
-                    onChange={(e) => updateSelected({ imageUrl: e.target.value })}
-                  />
-                </div>
-              ) : (
-                <div>
-                  <Label className="text-xs">Metin</Label>
-                  <Input
-                    value={((selected.data as any).text as string) || ''}
-                    onChange={(e) => updateSelected({ text: e.target.value })}
-                  />
-                </div>
-              )}
-              {/* Tablo (tekil items alanı) için sütun yönetimi */}
-              {(selected.data as any).kind === 'items' && (
-                <div className="space-y-2 pt-2">
-                  <div className="text-xs font-semibold">Tablo Sütunları</div>
-                  <div className="space-y-2">
-                    {(((selected.data as any).style?.table?.columns) || [
-                      { key: 'name', label: 'Açıklama', width: 40, align: 'left' },
-                      { key: 'quantity', label: 'Miktar', width: 12, align: 'center' },
-                      { key: 'unit', label: 'Birim', width: 10, align: 'center' },
-                      { key: 'unit_price', label: 'Birim Fiyat', width: 18, align: 'right' },
-                      { key: 'tax', label: 'KDV %', width: 10, align: 'center' },
-                      { key: 'total_price', label: 'Toplam', width: 20, align: 'right' },
-                    ]).map((col: any, idx: number) => (
-                      <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                        <Input className="col-span-4 h-8 text-xs" value={col.label} onChange={(e) => {
-                          const cols = [ ...((((selected.data as any).style?.table?.columns) || [])) ];
-                          cols[idx] = { ...col, label: e.target.value };
-                          updateSelected({ style: { ...((selected.data as any).style || {}), table: { ...(((selected.data as any).style?.table) || {}), columns: cols } } });
-                        }} />
-                        <Input className="col-span-4 h-8 text-xs" value={col.key} onChange={(e) => {
-                          const cols = [ ...((((selected.data as any).style?.table?.columns) || [])) ];
-                          cols[idx] = { ...col, key: e.target.value };
-                          updateSelected({ style: { ...((selected.data as any).style || {}), table: { ...(((selected.data as any).style?.table) || {}), columns: cols } } });
-                        }} />
-                        <Input type="number" className="col-span-2 h-8 text-xs" value={col.width ?? 10} onChange={(e) => {
-                          const cols = [ ...((((selected.data as any).style?.table?.columns) || [])) ];
-                          cols[idx] = { ...col, width: Number(e.target.value) };
-                          updateSelected({ style: { ...((selected.data as any).style || {}), table: { ...(((selected.data as any).style?.table) || {}), columns: cols } } });
-                        }} />
-                        <select className="col-span-2 h-9 rounded border px-2 text-xs" value={col.align || 'left'} onChange={(e) => {
-                          const cols = [ ...((((selected.data as any).style?.table?.columns) || [])) ];
-                          cols[idx] = { ...col, align: e.target.value };
-                          updateSelected({ style: { ...((selected.data as any).style || {}), table: { ...(((selected.data as any).style?.table) || {}), columns: cols } } });
-                        }}>
-                          <option value="left">Sol</option>
-                          <option value="center">Orta</option>
-                          <option value="right">Sağ</option>
-                        </select>
+            <Accordion type="multiple" className="space-y-2">
+              <AccordionItem value="content">
+                <AccordionTrigger>İçerik</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs">Başlık</Label>
+                      <Input value={(selected.data as any).label as string} onChange={(e) => updateSelected({ label: e.target.value })} />
+                    </div>
+                    {(selected.data as any).kind === 'logo' ? (
+                      <div>
+                        <Label className="text-xs">Logo URL</Label>
+                        <Input placeholder="https://..." value={((selected.data as any).imageUrl as string) || ''} onChange={(e) => updateSelected({ imageUrl: e.target.value })} />
                       </div>
-                    ))}
+                    ) : (
+                      <div>
+                        <Label className="text-xs">Metin</Label>
+                        <Input value={((selected.data as any).text as string) || ''} onChange={(e) => updateSelected({ text: e.target.value })} />
+                      </div>
+                    )}
                   </div>
-                </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="style">
+                <AccordionTrigger>Stil</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs">Metin Boyutu</Label>
+                        <span className="text-xs opacity-70">{(selected.data as any).style?.fontSize ?? 12}px</span>
+                      </div>
+                      <Slider defaultValue={[((selected.data as any).style?.fontSize ?? 12)]} min={9} max={24} step={1} onValueChange={(v) => updateSelected({ style: { ...((selected.data as any).style || {}), fontSize: v[0] } })} />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs">Padding</Label>
+                        <span className="text-xs opacity-70">{(selected.data as any).style?.padding ?? 12}px</span>
+                      </div>
+                      <Slider defaultValue={[((selected.data as any).style?.padding ?? 12)]} min={4} max={24} step={1} onValueChange={(v) => updateSelected({ style: { ...((selected.data as any).style || {}), padding: v[0] } })} />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs">Köşe Yarıçapı</Label>
+                        <span className="text-xs opacity-70">{(selected.data as any).style?.radius ?? 8}px</span>
+                      </div>
+                      <Slider defaultValue={[((selected.data as any).style?.radius ?? 8)]} min={0} max={24} step={1} onValueChange={(v) => updateSelected({ style: { ...((selected.data as any).style || {}), radius: v[0] } })} />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs">Kenarlık</Label>
+                        <span className="text-xs opacity-70">{(selected.data as any).style?.borderWidth ?? 1}px</span>
+                      </div>
+                      <Slider defaultValue={[((selected.data as any).style?.borderWidth ?? 1)]} min={0} max={4} step={1} onValueChange={(v) => updateSelected({ style: { ...((selected.data as any).style || {}), borderWidth: v[0] } })} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Hizalama</Label>
+                        <Select value={(selected.data as any).style?.align ?? 'left'} onValueChange={(val) => updateSelected({ style: { ...((selected.data as any).style || {}), align: val } })}>
+                          <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="left">Sol</SelectItem>
+                            <SelectItem value="center">Orta</SelectItem>
+                            <SelectItem value="right">Sağ</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Kalınlık</Label>
+                        <Select value={(selected.data as any).style?.fontWeight ?? 'normal'} onValueChange={(val) => updateSelected({ style: { ...((selected.data as any).style || {}), fontWeight: val } })}>
+                          <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="normal">Normal</SelectItem>
+                            <SelectItem value="bold">Kalın</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <Switch checked={(selected.data as any).style?.showLabel ?? true} onCheckedChange={(checked) => updateSelected({ style: { ...((selected.data as any).style || {}), showLabel: checked } })} />
+                      <Label className="text-xs">Başlığı Göster</Label>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="colors">
+                <AccordionTrigger>Renkler</AccordionTrigger>
+                <AccordionContent>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">Arka Plan</Label>
+                      <Input type="color" value={(selected.data as any).style?.bgColor ?? '#ffffff'} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), bgColor: e.target.value } })} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Kenarlık Rengi</Label>
+                      <Input type="color" value={(selected.data as any).style?.borderColor ?? '#e5e7eb'} onChange={(e) => updateSelected({ style: { ...((selected.data as any).style || {}), borderColor: e.target.value } })} />
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {(selected.data as any).kind === 'items' && (
+                <AccordionItem value="table">
+                  <AccordionTrigger>Tablo Sütunları</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-2">
+                      {(((selected.data as any).style?.table?.columns) || [
+                        { key: 'name', label: 'Açıklama', width: 40, align: 'left' },
+                        { key: 'quantity', label: 'Miktar', width: 12, align: 'center' },
+                        { key: 'unit', label: 'Birim', width: 10, align: 'center' },
+                        { key: 'unit_price', label: 'Birim Fiyat', width: 18, align: 'right' },
+                        { key: 'tax', label: 'KDV %', width: 10, align: 'center' },
+                        { key: 'total_price', label: 'Toplam', width: 20, align: 'right' },
+                      ]).map((col: any, idx: number) => (
+                        <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                          <Input className="col-span-4 h-8 text-xs" value={col.label} onChange={(e) => {
+                            const cols = [ ...((((selected.data as any).style?.table?.columns) || [])) ];
+                            cols[idx] = { ...col, label: e.target.value };
+                            updateSelected({ style: { ...((selected.data as any).style || {}), table: { ...(((selected.data as any).style?.table) || {}), columns: cols } } });
+                          }} />
+                          <Input className="col-span-4 h-8 text-xs" value={col.key} onChange={(e) => {
+                            const cols = [ ...((((selected.data as any).style?.table?.columns) || [])) ];
+                            cols[idx] = { ...col, key: e.target.value };
+                            updateSelected({ style: { ...((selected.data as any).style || {}), table: { ...(((selected.data as any).style?.table) || {}), columns: cols } } });
+                          }} />
+                          <Input type="number" className="col-span-2 h-8 text-xs" value={col.width ?? 10} onChange={(e) => {
+                            const cols = [ ...((((selected.data as any).style?.table?.columns) || [])) ];
+                            cols[idx] = { ...col, width: Number(e.target.value) };
+                            updateSelected({ style: { ...((selected.data as any).style || {}), table: { ...(((selected.data as any).style?.table) || {}), columns: cols } } });
+                          }} />
+                          <Select value={col.align || 'left'} onValueChange={(val) => {
+                            const cols = [ ...((((selected.data as any).style?.table?.columns) || [])) ];
+                            cols[idx] = { ...col, align: val };
+                            updateSelected({ style: { ...((selected.data as any).style || {}), table: { ...(((selected.data as any).style?.table) || {}), columns: cols } } });
+                          }}>
+                            <SelectTrigger className="col-span-2 h-9 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="left">Sol</SelectItem>
+                              <SelectItem value="center">Orta</SelectItem>
+                              <SelectItem value="right">Sağ</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               )}
-              {/* DİA benzeri veri bağlama ve formül alanları */}
-              <div className="grid grid-cols-2 gap-2 pt-2">
-                <div>
-                  <Label className="text-xs">Veri Bağlama (binding)</Label>
-                  <Input placeholder="proposal.number" value={(selected.data as any).bindingKey || ''} onChange={(e) => updateSelected({ bindingKey: e.target.value })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Format</Label>
-                  <select className="w-full h-9 rounded border px-2 text-xs" value={(selected.data as any).format || 'text'} onChange={(e) => updateSelected({ format: e.target.value })}>
-                    <option value="text">Metin</option>
-                    <option value="number">Sayı</option>
-                    <option value="currency">Para</option>
-                    <option value="date">Tarih</option>
-                  </select>
-                </div>
-                <div>
-                  <Label className="text-xs">Ondalık</Label>
-                  <Input type="number" min={0} max={6} value={(selected.data as any).decimals ?? 2} onChange={(e) => updateSelected({ decimals: Number(e.target.value) })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Koşul (visibleIf)</Label>
-                  <Input placeholder="proposal.currency === 'USD'" value={(selected.data as any).visibleIf || ''} onChange={(e) => updateSelected({ visibleIf: e.target.value })} />
-                </div>
-                <div className="col-span-2">
-                  <Label className="text-xs">Formül (expression)</Label>
-                  <Input placeholder="({Tutar} * {DovizKur})" value={(selected.data as any).expression || ''} onChange={(e) => updateSelected({ expression: e.target.value })} />
-                </div>
-                <div className="grid grid-cols-2 gap-2 col-span-2">
-                  <div>
-                    <Label className="text-xs">İlk Karakter</Label>
-                    <Input type="number" min={0} value={(selected.data as any).sliceStart ?? 0} onChange={(e) => updateSelected({ sliceStart: Number(e.target.value) })} />
+
+              <AccordionItem value="data">
+                <AccordionTrigger>Veri & Kurallar</AccordionTrigger>
+                <AccordionContent>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">Veri Bağlama (binding)</Label>
+                      <Input placeholder="proposal.number" value={(selected.data as any).bindingKey || ''} onChange={(e) => updateSelected({ bindingKey: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Format</Label>
+                      <Select value={(selected.data as any).format || 'text'} onValueChange={(val) => updateSelected({ format: val })}>
+                        <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="text">Metin</SelectItem>
+                          <SelectItem value="number">Sayı</SelectItem>
+                          <SelectItem value="currency">Para</SelectItem>
+                          <SelectItem value="date">Tarih</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs">Ondalık</Label>
+                        <span className="text-xs opacity-70">{(selected.data as any).decimals ?? 2}</span>
+                      </div>
+                      <Slider defaultValue={[((selected.data as any).decimals ?? 2)]} min={0} max={6} step={1} onValueChange={(v) => updateSelected({ decimals: v[0] })} />
+                    </div>
+                    <div className="col-span-2">
+                      <Label className="text-xs">Formül (expression)</Label>
+                      <Input placeholder="({Tutar} * {DovizKur})" value={(selected.data as any).expression || ''} onChange={(e) => updateSelected({ expression: e.target.value })} />
+                    </div>
+                    <div className="col-span-2">
+                      <Label className="text-xs">Koşul (visibleIf)</Label>
+                      <Input placeholder="proposal.currency === 'USD'" value={(selected.data as any).visibleIf || ''} onChange={(e) => updateSelected({ visibleIf: e.target.value })} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 col-span-2">
+                      <div>
+                        <Label className="text-xs">İlk Karakter</Label>
+                        <Input type="number" min={0} value={(selected.data as any).sliceStart ?? 0} onChange={(e) => updateSelected({ sliceStart: Number(e.target.value) })} />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Son Karakter</Label>
+                        <Input type="number" min={0} value={(selected.data as any).sliceEnd ?? 0} onChange={(e) => updateSelected({ sliceEnd: Number(e.target.value) })} />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-xs">Son Karakter</Label>
-                    <Input type="number" min={0} value={(selected.data as any).sliceEnd ?? 0} onChange={(e) => updateSelected({ sliceEnd: Number(e.target.value) })} />
-                  </div>
-                </div>
-              </div>
-            </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           ) : (
             <div className="text-xs opacity-70">Bir alan seçin ve özelliklerini düzenleyin.</div>
           )}
