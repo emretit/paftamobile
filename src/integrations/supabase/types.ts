@@ -2359,6 +2359,7 @@ export type Database = {
           is_recommended: boolean | null
           items: Json | null
           name: string
+          pdfme_template: Json | null
           popularity: number | null
           prefilled_fields: Json | null
           preview_image: string | null
@@ -2379,6 +2380,7 @@ export type Database = {
           is_recommended?: boolean | null
           items?: Json | null
           name: string
+          pdfme_template?: Json | null
           popularity?: number | null
           prefilled_fields?: Json | null
           preview_image?: string | null
@@ -2399,6 +2401,7 @@ export type Database = {
           is_recommended?: boolean | null
           items?: Json | null
           name?: string
+          pdfme_template?: Json | null
           popularity?: number | null
           prefilled_fields?: Json | null
           preview_image?: string | null

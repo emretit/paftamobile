@@ -3,12 +3,14 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { TemplateDesignSettings } from '@/types/proposal-template';
-import { TemplateVisualEditor } from './template-designer/TemplateVisualEditor';
+import { PDFMeTemplateDesigner } from './template-designer/PDFMeTemplateDesigner';
+import { pdfmeGenerator } from '@/utils/pdfmeGenerator';
+
 import { toast } from 'sonner';
 
 export const VisualTemplateManager: React.FC = () => {
   const [loading, setLoading] = useState(true);
-  const [initialDesign, setInitialDesign] = useState<TemplateDesignSettings | null>(null);
+  const [initialTemplate, setInitialTemplate] = useState<any | null>(null);
   const [templateName, setTemplateName] = useState<string>('Yeni Şablon');
 
   useEffect(() => {
@@ -23,8 +25,8 @@ export const VisualTemplateManager: React.FC = () => {
         .limit(1)
         .maybeSingle();
 
-      if (!activeError && active?.design_settings) {
-        setInitialDesign(active.design_settings as TemplateDesignSettings);
+      if (!activeError && active?.pdfme_template) {
+        setInitialTemplate(active.pdfme_template);
         if (active.name) setTemplateName(active.name);
         setLoading(false);
         return;
@@ -37,14 +39,14 @@ export const VisualTemplateManager: React.FC = () => {
         .limit(1)
         .maybeSingle();
 
-      setInitialDesign((latest?.design_settings as TemplateDesignSettings) || null);
+      setInitialTemplate(latest?.pdfme_template || null);
       if (latest?.name) setTemplateName(latest.name);
       setLoading(false);
     };
     load();
   }, []);
 
-  const handleSave = async (design: TemplateDesignSettings) => {
+  const handleSave = async (template: any) => {
     try {
       // Ensure one active template. If an active exists, update it; else insert new as active
       const { data: active } = await supabase
@@ -58,7 +60,7 @@ export const VisualTemplateManager: React.FC = () => {
       if (active?.id) {
         const { error: updErr } = await supabase
           .from('proposal_templates')
-          .update({ design_settings: design, is_active: true, name: templateName, description: 'Görsel editör ile oluşturuldu' })
+          .update({ pdfme_template: template, is_active: true, name: templateName, description: 'PDFMe editörü ile oluşturuldu' })
           .eq('id', active.id);
         if (updErr) throw updErr;
       } else {
@@ -66,10 +68,10 @@ export const VisualTemplateManager: React.FC = () => {
           .from('proposal_templates')
           .insert({
             name: templateName,
-            description: 'Görsel editör ile oluşturuldu',
+            description: 'PDFMe editörü ile oluşturuldu',
             template_type: 'custom',
-            template_features: ['drag', 'resize', 'branding'],
-            design_settings: design,
+            template_features: ['pdfme', 'drag', 'resize', 'professional'],
+            pdfme_template: template,
             is_active: true,
           });
         if (insErr) throw insErr;
@@ -83,10 +85,10 @@ export const VisualTemplateManager: React.FC = () => {
           .from('proposal_templates')
           .insert({
             name: templateName,
-            description: 'Görsel editör ile oluşturuldu',
+            description: 'PDFMe editörü ile oluşturuldu',
             template_type: 'custom',
-            template_features: ['drag', 'resize', 'branding'],
-            design_settings: design,
+            template_features: ['pdfme', 'drag', 'resize', 'professional'],
+            pdfme_template: template,
           });
         if (error) throw error;
         toast.warning('Şablon kaydedildi ancak aktif olarak işaretlenemedi. Yetkileri kontrol edin.');
@@ -103,10 +105,8 @@ export const VisualTemplateManager: React.FC = () => {
     );
   }
 
-  const handlePreview = async (design: TemplateDesignSettings) => {
-    const { ReactPdfGenerator } = await import('@/utils/reactPdfGenerator');
-    const generator = new ReactPdfGenerator();
-    await generator.generatePdfPreviewWithDesign(design);
+  const handlePreview = async (template: any) => {
+    await pdfmeGenerator.generatePreviewPDF(template);
   };
 
   return (
@@ -121,10 +121,14 @@ export const VisualTemplateManager: React.FC = () => {
             onChange={(e) => setTemplateName(e.target.value)}
           />
         </div>
-        <Button onClick={async () => initialDesign && (await handleSave(initialDesign))}>Kaydet</Button>
+        <Button onClick={async () => initialTemplate && (await handleSave(initialTemplate))}>Kaydet</Button>
       </div>
 
-      <TemplateVisualEditor initialDesign={initialDesign} onSave={handleSave} />
+      <PDFMeTemplateDesigner 
+        initialTemplate={initialTemplate} 
+        onSave={handleSave}
+        onPreview={handlePreview}
+      />
     </div>
   );
 };
