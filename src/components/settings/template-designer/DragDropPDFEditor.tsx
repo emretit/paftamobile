@@ -42,14 +42,15 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
 
           // PDFme'nin schema'larını basit gruplarla hazırlayalım
           const predefinedSchemas = {
-            // Temel Bilgiler
+            // Temel Bilgiler - Teklif Başlığı (Proje Adı)
             'teklifBasligi': {
               type: 'text',
               position: { x: 20, y: 30 },
               width: 120,
               height: 12,
               fontSize: 18,
-              fontColor: '#000000'
+              fontColor: '#000000',
+              content: 'Proje Adı'
             },
             'teklifNo': {
               type: 'text',
@@ -57,7 +58,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               width: 60,
               height: 8,
               fontSize: 12,
-              fontColor: '#000000'
+              fontColor: '#000000',
+              content: 'Teklif No'
             },
             'teklifTarihi': {
               type: 'text',
@@ -65,7 +67,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               width: 60,
               height: 8,
               fontSize: 10,
-              fontColor: '#666666'
+              fontColor: '#666666',
+              content: 'Teklif Tarihi'
             },
             'gecerlilikTarihi': {
               type: 'text',
@@ -73,7 +76,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               width: 60,
               height: 8,
               fontSize: 10,
-              fontColor: '#666666'
+              fontColor: '#666666',
+              content: 'Geçerlilik Tarihi'
             },
 
             // Müşteri Bilgileri
@@ -83,7 +87,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               width: 100,
               height: 10,
               fontSize: 14,
-              fontColor: '#000000'
+              fontColor: '#000000',
+              content: 'Müşteri Adı'
             },
             'musteriAdres': {
               type: 'text',
@@ -91,7 +96,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               width: 100,
               height: 20,
               fontSize: 10,
-              fontColor: '#666666'
+              fontColor: '#666666',
+              content: 'Müşteri Adresi'
             },
             'musteriTelefon': {
               type: 'text',
@@ -99,7 +105,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               width: 80,
               height: 8,
               fontSize: 10,
-              fontColor: '#666666'
+              fontColor: '#666666',
+              content: 'Müşteri Telefon'
             },
 
             // Ürün/Hizmet Tablosu
@@ -123,7 +130,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               width: 50,
               height: 8,
               fontSize: 12,
-              fontColor: '#000000'
+              fontColor: '#000000',
+              content: 'Brüt Toplam'
             },
             'indirim': {
               type: 'text',
@@ -131,7 +139,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               width: 50,
               height: 8,
               fontSize: 12,
-              fontColor: '#000000'
+              fontColor: '#000000',
+              content: 'İndirim'
             },
             'kdvTutari': {
               type: 'text',
@@ -139,7 +148,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               width: 50,
               height: 8,
               fontSize: 12,
-              fontColor: '#000000'
+              fontColor: '#000000',
+              content: 'KDV Tutarı'
             },
             'genelToplam': {
               type: 'text',
@@ -147,7 +157,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               width: 50,
               height: 10,
               fontSize: 14,
-              fontColor: '#000000'
+              fontColor: '#000000',
+              content: 'Genel Toplam'
             },
 
             // Şartlar
@@ -157,7 +168,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               width: 170,
               height: 15,
               fontSize: 10,
-              fontColor: '#666666'
+              fontColor: '#666666',
+              content: 'Ödeme Koşulları'
             },
             'teslimatKosullari': {
               type: 'text',
@@ -165,7 +177,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               width: 170,
               height: 15,
               fontSize: 10,
-              fontColor: '#666666'
+              fontColor: '#666666',
+              content: 'Teslimat Koşulları'
             }
           };
 
@@ -175,7 +188,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               ...defaultTemplate,
               schemas: [predefinedSchemas] // Tüm alanları PDFme'nin schema panel'ine ekle
             },
-            plugins: { text, image, qrcode: barcodes.qrcode, table },
+            plugins: { text, image, qrcode: barcodes.qrcode, table } as any,
             options: {
               theme: {
                 token: {
@@ -188,7 +201,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
           // Designer yüklendikten sonra sample data'yı set et
           setTimeout(() => {
             try {
-              designerInstance.updateInputs([{
+              const sampleData = {
                 teklifBasligi: 'Web Sitesi Geliştirme Projesi',
                 teklifNo: 'TKL-2024-001',
                 teklifTarihi: new Date().toLocaleDateString('tr-TR'),
@@ -207,7 +220,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
                 genelToplam: '90.000 ₺',
                 odemeKosullari: 'Siparişle birlikte %50 avans, teslimde kalan tutar ödenecektir.',
                 teslimatKosullari: 'Teslimat süresi: Sipariş tarihinden itibaren 15-20 iş günü'
-              }]);
+              };
+              
               console.log('Sample data set successfully');
             } catch (error) {
               console.error('Error setting sample data:', error);

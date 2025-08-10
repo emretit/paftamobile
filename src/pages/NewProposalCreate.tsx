@@ -398,7 +398,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         </div>
         
         <div className="flex items-center gap-2">
-          <PdfDownloadDropdown onDownloadWithTemplate={handleExportPDF} />
+          {/* PDF Export functionality disabled for new proposals - use standard save instead */}
           <Button 
             variant="outline" 
             onClick={() => handleSave('draft')}
