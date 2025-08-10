@@ -165,6 +165,77 @@ export const TemplateManagement: React.FC = () => {
     }
   };
 
+  // Create a ready-to-use default PDFMe template in DB
+  const handleCreateDefaultTemplate = async () => {
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      if (!userRes.user) return;
+
+      const defaultTemplate = {
+        basePdf: { width: 210, height: 297, padding: [30, 20, 30, 20] },
+        schemas: [
+          {
+            companyHeader: {
+              type: 'text', position: { x: 20, y: 10 }, width: 100, height: 8, fontSize: 12, fontColor: '#666666', content: 'Şirket Adı', readOnly: true
+            },
+            headerLine: {
+              type: 'text', position: { x: 20, y: 18 }, width: 170, height: 1, fontSize: 8, backgroundColor: '#cccccc', content: ' ', readOnly: true
+            },
+            pageNumber: {
+              type: 'text', position: { x: 150, y: 10 }, width: 40, height: 8, fontSize: 10, fontColor: '#666666', content: 'Sayfa {currentPage}/{totalPages}', readOnly: true
+            }
+          },
+          {
+            companyLogo: { type: 'image', position: { x: 20, y: 24 }, width: 20, height: 20 },
+            companyName: { type: 'text', position: { x: 45, y: 24 }, width: 100, height: 10, fontSize: 16, fontColor: '#000000' },
+            companyAddress: { type: 'text', position: { x: 45, y: 34 }, width: 100, height: 8, fontSize: 9, fontColor: '#444444' },
+            companyContact: { type: 'text', position: { x: 45, y: 42 }, width: 100, height: 8, fontSize: 9, fontColor: '#444444' },
+            proposalTitle: { type: 'text', position: { x: 20, y: 50 }, width: 170, height: 10, fontSize: 14, fontColor: '#000000' },
+            customerName: { type: 'text', position: { x: 20, y: 70 }, width: 100, height: 8, fontSize: 12, fontColor: '#000000' },
+            customerAddress: { type: 'text', position: { x: 20, y: 78 }, width: 100, height: 10, fontSize: 9, fontColor: '#444444' },
+            customerTaxNo: { type: 'text', position: { x: 20, y: 88 }, width: 100, height: 8, fontSize: 9, fontColor: '#444444' },
+            proposalNumber: { type: 'text', position: { x: 130, y: 70 }, width: 60, height: 8, fontSize: 10, fontColor: '#000000' },
+            createdDate: { type: 'text', position: { x: 130, y: 78 }, width: 60, height: 8, fontSize: 9, fontColor: '#444444' },
+            validUntil: { type: 'text', position: { x: 130, y: 86 }, width: 60, height: 8, fontSize: 9, fontColor: '#444444' },
+            proposalItemsTable: {
+              type: 'table', position: { x: 20, y: 100 }, width: 170, height: 50,
+              content: '[["Ürün/Hizmet","Miktar","Birim","Birim Fiyat","Toplam"],["Web Sitesi","1","Adet","50.000 ₺","50.000 ₺"]]',
+              showHead: true, head: [ 'Ürün/Hizmet', 'Miktar', 'Birim', 'Birim Fiyat', 'Toplam' ], headWidthPercentages: [40,15,15,15,15],
+              tableStyles: { borderWidth: 0.5, borderColor: '#000000' }, headStyles: { fontSize: 10, fontColor: '#ffffff', backgroundColor: '#2980ba' }, bodyStyles: { fontSize: 9, fontColor: '#000000' }
+            },
+            subTotalLabel: { type: 'text', position: { x: 120, y: 152 }, width: 40, height: 6, fontSize: 9, fontColor: '#444444', content: 'Ara Toplam:' },
+            subTotal: { type: 'text', position: { x: 160, y: 152 }, width: 30, height: 6, fontSize: 10, fontColor: '#000000' },
+            discountLabel: { type: 'text', position: { x: 120, y: 160 }, width: 40, height: 6, fontSize: 9, fontColor: '#444444', content: 'İndirim:' },
+            discountAmount: { type: 'text', position: { x: 160, y: 160 }, width: 30, height: 6, fontSize: 10, fontColor: '#000000' },
+            netTotalLabel: { type: 'text', position: { x: 120, y: 168 }, width: 40, height: 6, fontSize: 9, fontColor: '#444444', content: 'Net Toplam:' },
+            netTotal: { type: 'text', position: { x: 160, y: 168 }, width: 30, height: 6, fontSize: 12, fontColor: '#000000' },
+            proposalQRCode: { type: 'qrcode', position: { x: 20, y: 160 }, width: 30, height: 30, backgroundColor: '#ffffff', color: '#000000' },
+            proposalSummary: { type: 'text', position: { x: 60, y: 160 }, width: 130, height: 12, fontSize: 10, fontColor: '#333333' },
+            termsHeader: { type: 'text', position: { x: 20, y: 200 }, width: 170, height: 8, fontSize: 10, fontColor: '#000000', content: 'Şartlar ve Koşullar' },
+            termsText: { type: 'text', position: { x: 20, y: 208 }, width: 170, height: 60, fontSize: 9, fontColor: '#444444' }
+          },
+          {
+            footerLine: { type: 'text', position: { x: 20, y: 280 }, width: 170, height: 1, fontSize: 8, backgroundColor: '#cccccc', content: ' ', readOnly: true },
+            currentDate: { type: 'text', position: { x: 20, y: 285 }, width: 80, height: 8, fontSize: 9, fontColor: '#666666', content: '{date}', readOnly: true },
+            companyFooter: { type: 'text', position: { x: 110, y: 285 }, width: 80, height: 8, fontSize: 9, fontColor: '#666666', content: 'www.sirketadi.com | info@sirketadi.com', readOnly: true }
+          }
+        ]
+      } as any;
+
+      const { error } = await supabase.from('templates').insert({
+        name: 'Varsayılan Teklif Şablonu',
+        template_json: defaultTemplate,
+        user_id: userRes.user.id
+      });
+      if (error) throw error;
+      toast.success('Varsayılan şablon eklendi');
+      loadTemplates();
+    } catch (err) {
+      console.error('Create default template error:', err);
+      toast.error('Varsayılan şablon eklenemedi');
+    }
+  };
+
   if (loading) {
     return (
       <Card className="p-6">
@@ -204,6 +275,10 @@ export const TemplateManagement: React.FC = () => {
               <Button onClick={handleNewTemplate}>
                 <Plus size={16} className="mr-2" />
                 İlk Şablonunuzu Oluşturun
+              </Button>
+              <div className="mt-3" />
+              <Button variant="outline" onClick={handleCreateDefaultTemplate}>
+                Varsayılan Şablonu Yükle
               </Button>
             </Card>
           ) : (
@@ -250,23 +325,7 @@ export const TemplateManagement: React.FC = () => {
             </div>
           )}
           
-          <Card className="p-4 bg-blue-50 border-blue-200">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                <FileText size={16} className="text-white" />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-medium text-blue-900">PDFMe ile Güçlü Şablonlar</h4>
-                <p className="text-sm text-blue-700">
-                  Sürükle-bırak editörü ile profesyonel PDF şablonları oluşturun. 
-                  Tekliflerinizi otomatik olarak bu şablonlarla PDF'e çevirin.
-                </p>
-              </div>
-              <Button variant="outline" onClick={() => navigate('/templates/editor')}>
-                Detaylı Editör
-              </Button>
-            </div>
-          </Card>
+          {/* Bilgi kartı ve eski route kaldırıldı */}
         </TabsContent>
 
         <TabsContent value="designer">
