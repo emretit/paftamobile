@@ -17,6 +17,7 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
   const designerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [designer, setDesigner] = useState<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const initializeDesigner = async () => {
@@ -237,6 +238,43 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">PDF Şablon Tasarımcısı</h3>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => {
+            if (!designer) return;
+            const blankTemplate = {
+              basePdf: { width: 210, height: 297, padding: [30, 20, 30, 20] },
+              schemas: [{}]
+            };
+            designer.setTemplate(blankTemplate);
+          }}>
+            Boş Şablon
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file || !designer) return;
+              try {
+                const arrayBuffer = await file.arrayBuffer();
+                const current = designer.getTemplate();
+                designer.setTemplate({
+                  ...current,
+                  basePdf: arrayBuffer,
+                  schemas: current?.schemas?.length ? current.schemas : [{}]
+                });
+                toast.success('PDF yüklendi');
+              } catch (err) {
+                toast.error('PDF yüklenemedi');
+              } finally {
+                if (fileInputRef.current) fileInputRef.current.value = '';
+              }
+            }}
+          />
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+            PDF Yükle
+          </Button>
           {onPreview && (
             <Button variant="outline" onClick={handlePreview}>
               Önizleme
