@@ -175,6 +175,26 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               ...defaultTemplate,
               schemas: [predefinedSchemas] // Tüm alanları PDFme'nin schema panel'ine ekle
             },
+            inputs: [{ // Sample data ile başla ki alanlar görünsün
+              teklifBasligi: 'Web Sitesi Geliştirme Projesi',
+              teklifNo: 'TKL-2024-001',
+              teklifTarihi: new Date().toLocaleDateString('tr-TR'),
+              gecerlilikTarihi: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('tr-TR'),
+              musteriAdi: 'XYZ İnşaat A.Ş.',
+              musteriAdres: 'Sanayi Mah. İnşaat Cd. No:456\nKadıköy/İstanbul',
+              musteriTelefon: '+90 216 555 0123',
+              urunTablosu: [
+                ['Web Sitesi Tasarımı', '1', 'Adet', '50.000 ₺', '50.000 ₺'],
+                ['SEO Optimizasyonu', '1', 'Adet', '25.000 ₺', '25.000 ₺'],
+                ['Hosting (1 Yıl)', '1', 'Adet', '5.000 ₺', '5.000 ₺']
+              ],
+              brutToplam: '80.000 ₺',
+              indirim: '5.000 ₺',
+              kdvTutari: '15.000 ₺',
+              genelToplam: '90.000 ₺',
+              odemeKosullari: 'Siparişle birlikte %50 avans, teslimde kalan tutar ödenecektir.',
+              teslimatKosullari: 'Teslimat süresi: Sipariş tarihinden itibaren 15-20 iş günü'
+            }],
             plugins: { text, image, qrcode: barcodes.qrcode, table },
             options: {
               theme: {
@@ -253,7 +273,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               />
             </div>
             <div className="text-sm text-muted-foreground">
-              📝 Sol panelden alanları PDF'e sürükleyip bırakın
+              🎯 PDF'teki alanları tıklayın, sağ panelde özelleştirin
             </div>
           </div>
           <div className="flex gap-2">
