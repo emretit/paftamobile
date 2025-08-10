@@ -51,7 +51,18 @@ export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
       }
 
       const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes } = await import('@pdfme/schemas');
+      const { text, image, barcodes, table } = await import('@pdfme/schemas');
+
+      // Convert proposal items to table format
+      const proposalItems = proposal.items && proposal.items.length > 0 
+        ? proposal.items.map((item: any) => [
+            item.name || 'Ürün',
+            (item.quantity || 0).toString(),
+            item.unit || 'Adet',
+            item.unit_price ? `${item.unit_price.toLocaleString('tr-TR')} ₺` : '0 ₺',
+            item.total_price ? `${item.total_price.toLocaleString('tr-TR')} ₺` : '0 ₺'
+          ])
+        : [['Ürün/Hizmet bulunamadı', '-', '-', '-', '-']];
 
       // Map proposal data to template inputs
       const inputs = {
@@ -63,13 +74,15 @@ export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
         createdDate: proposal.created_at ? new Date(proposal.created_at).toLocaleDateString('tr-TR') : new Date().toLocaleDateString('tr-TR'),
         validUntil: proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString('tr-TR') : '',
         paymentTerms: proposal.payment_terms || 'Standart ödeme koşulları',
-        notes: proposal.notes || ''
+        notes: proposal.notes || '',
+        proposalItemsTable: proposalItems,
+        proposalQRCode: `${proposal.proposal_number || 'TKL-001'} | ${proposal.customer_name || 'Müşteri'} | ${proposal.total_amount ? proposal.total_amount.toLocaleString('tr-TR') : '0'} ₺`
       };
 
       const pdf = await generate({
         template: template.template_json,
         inputs: [inputs],
-        plugins: { text, image, qrcode: barcodes.qrcode } as any
+        plugins: { text, image, qrcode: barcodes.qrcode, table } as any
       });
 
       const blob = new Blob([pdf.buffer], { type: 'application/pdf' });

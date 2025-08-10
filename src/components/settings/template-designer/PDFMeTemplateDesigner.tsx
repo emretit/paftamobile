@@ -23,11 +23,11 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
       try {
         // Dynamically import PDFMe to avoid SSR issues
         const { Designer } = await import('@pdfme/ui');
-        const { text, image, barcodes } = await import('@pdfme/schemas');
+        const { text, image, barcodes, table } = await import('@pdfme/schemas');
         
         if (designerRef.current) {
           const defaultTemplate = {
-            basePdf: { width: 210, height: 297 },
+            basePdf: { width: 210, height: 297, padding: [20, 20, 20, 20] },
             schemas: [[{
               companyName: {
                 type: 'text',
@@ -53,13 +53,65 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
                 fontSize: 12,
                 fontColor: '#000000'
               },
+              proposalItemsTable: {
+                type: 'table',
+                position: { x: 20, y: 80 },
+                width: 170,
+                height: 50,
+                content: '[["Ürün/Hizmet","Miktar","Birim","Birim Fiyat","Toplam"],["Web Sitesi","1","Adet","50.000 ₺","50.000 ₺"]]',
+                showHead: true,
+                head: ["Ürün/Hizmet", "Miktar", "Birim", "Birim Fiyat", "Toplam"],
+                headWidthPercentages: [40, 15, 15, 15, 15],
+                tableStyles: {
+                  borderWidth: 0.5,
+                  borderColor: '#000000'
+                },
+                headStyles: {
+                  fontSize: 10,
+                  fontColor: '#ffffff',
+                  backgroundColor: '#2980ba'
+                },
+                bodyStyles: {
+                  fontSize: 9,
+                  fontColor: '#000000'
+                }
+              },
               totalAmount: {
                 type: 'text',
-                position: { x: 20, y: 80 },
-                width: 100,
+                position: { x: 120, y: 140 },
+                width: 70,
                 height: 8,
                 fontSize: 12,
-                fontColor: '#000000'
+                fontColor: '#000000',
+                alignment: 'right'
+              },
+              proposalQRCode: {
+                type: 'qrcode',
+                position: { x: 20, y: 150 },
+                width: 30,
+                height: 30,
+                backgroundColor: '#ffffff',
+                color: '#000000'
+              },
+              currentDate: {
+                type: 'text',
+                position: { x: 150, y: 150 },
+                width: 40,
+                height: 8,
+                fontSize: 9,
+                fontColor: '#666666',
+                content: '{date}',
+                readOnly: true
+              },
+              pageInfo: {
+                type: 'text',
+                position: { x: 150, y: 160 },
+                width: 40,
+                height: 8,
+                fontSize: 9,
+                fontColor: '#666666',
+                content: 'Sayfa {currentPage}/{totalPages}',
+                readOnly: true
               }
             }]]
           };
@@ -67,7 +119,7 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
           const designerInstance = new Designer({
             domContainer: designerRef.current,
             template: initialTemplate || defaultTemplate,
-            plugins: { text, image, qrcode: barcodes.qrcode } as any
+            plugins: { text, image, qrcode: barcodes.qrcode, table } as any
           });
 
           setDesigner(designerInstance);
