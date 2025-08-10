@@ -4,16 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ZoomIn, ZoomOut, Maximize, Grid, Magnet } from "lucide-react";
 import { ProposalTemplate } from "@/types/proposal-template";
-import ReactFlow, {
+import {
+  ReactFlow,
   Background,
   Controls,
   ReactFlowProvider,
   useEdgesState,
   useNodesState,
   useReactFlow,
-  Node,
-  Edge,
-  OnConnect,
+  type Node,
+  type Edge,
+  type OnConnect,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import FieldNode from "./FieldNode";
@@ -53,9 +54,10 @@ export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({ template }) => {
   };
 
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
-  const [edges, , onEdgesChange] = useEdgesState<Edge[]>([]);
-  const { project } = useReactFlow();
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, , onEdgesChange] = useEdgesState<Edge>([]);
+  const rf = useReactFlow<Node, Edge>();
+  const screenToFlowPosition = rf.screenToFlowPosition;
 
   const [guides, setGuides] = useState<GuideLine[]>([]);
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -85,7 +87,7 @@ export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({ template }) => {
       if (!type) return;
 
       const bounds = reactFlowWrapper.current.getBoundingClientRect();
-      const position = project({ x: event.clientX - bounds.left, y: event.clientY - bounds.top });
+      const position = screenToFlowPosition({ x: event.clientX - bounds.left, y: event.clientY - bounds.top });
 
       const id = crypto.randomUUID();
       const newNode: Node = {
@@ -106,19 +108,24 @@ export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({ template }) => {
       };
       setNodes((nds) => nds.concat(newNode));
     },
-    [project]
+    [screenToFlowPosition]
   );
 
   const getNodeRects = useCallback(() => {
-    return nodes.map((n) => ({
-      id: n.id,
-      x: n.position.x,
-      y: n.position.y,
-      w: (typeof (n.data?.style?.width) === "string" ? parseInt(n.data?.style?.width) : 200) || 200,
-      h: 48, // approx height; NodeResizer allows change but we keep a baseline
-      cx: n.position.x + (((typeof (n.data?.style?.width) === "string" ? parseInt(n.data?.style?.width) : 200) || 200) / 2),
-      cy: n.position.y + 24,
-    }));
+    return nodes.map((n) => {
+      const d = (n.data || {}) as any;
+      const rawWidth = typeof d?.style?.width === "string" ? parseInt(d.style.width) : 200;
+      const w = rawWidth || 200;
+      return {
+        id: n.id,
+        x: n.position.x,
+        y: n.position.y,
+        w,
+        h: 48,
+        cx: n.position.x + w / 2,
+        cy: n.position.y + 24,
+      };
+    });
   }, [nodes]);
 
   const pageRects = useMemo(() => {
