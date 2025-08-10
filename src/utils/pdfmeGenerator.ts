@@ -5,7 +5,7 @@ export class PDFMeGenerator {
     try {
       // Dynamically import PDFMe to avoid SSR issues
       const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes, table, multiVariableText } = await import('@pdfme/schemas');
+      const { text, image, barcodes, table } = await import('@pdfme/schemas');
       
       // Map proposal data to template inputs
       const inputs = this.mapProposalToInputs(proposal, template);
@@ -14,7 +14,7 @@ export class PDFMeGenerator {
       const pdf = await generate({
         template,
         inputs: [inputs],
-        plugins: { text, image, qrcode: barcodes.qrcode, table, multiVariableText } as any
+        plugins: { text, image, qrcode: barcodes.qrcode, table } as any
       });
 
       // Download the PDF
@@ -37,7 +37,7 @@ export class PDFMeGenerator {
     try {
       // Dynamically import PDFMe to avoid SSR issues
       const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes, table, multiVariableText } = await import('@pdfme/schemas');
+      const { text, image, barcodes, table } = await import('@pdfme/schemas');
       
       // Use mock data or default values
       const inputs = mockData || this.getMockData();
@@ -45,7 +45,7 @@ export class PDFMeGenerator {
       const pdf = await generate({
         template,
         inputs: [inputs],
-        plugins: { text, image, qrcode: barcodes.qrcode, table, multiVariableText } as any
+        plugins: { text, image, qrcode: barcodes.qrcode, table } as any
       });
 
       // Download preview
@@ -95,12 +95,8 @@ export class PDFMeGenerator {
       footerLine: ' ',
       currentDate: new Date().toLocaleDateString('tr-TR'),
       companyFooter: 'www.sirketadi.com | info@sirketadi.com',
-      // Multivariate text data
-      proposalSummary: {
-        proposalNumber: proposal.proposal_number || 'TKL-001',
-        customerName: proposal.customer_name || 'Müşteri',
-        totalAmount: proposal.total_amount ? `${proposal.total_amount.toLocaleString('tr-TR')} ₺` : '0 ₺'
-      }
+      // Summary text data
+      proposalSummary: `Teklif: ${proposal.proposal_number || 'TKL-001'} | Müşteri: ${proposal.customer_name || 'Müşteri'} | Toplam: ${proposal.total_amount ? proposal.total_amount.toLocaleString('tr-TR') : '0'} ₺`
     };
 
     // Map schema fields to proposal data
@@ -156,12 +152,8 @@ export class PDFMeGenerator {
       footerLine: ' ',
       currentDate: new Date().toLocaleDateString('tr-TR'),
       companyFooter: 'www.abcteknoloji.com | info@abcteknoloji.com',
-      // Multivariate text data
-      proposalSummary: {
-        proposalNumber: 'TKL-2024-001',
-        customerName: 'XYZ İnşaat A.Ş.',
-        totalAmount: '125.000 ₺'
-      }
+      // Summary text data
+      proposalSummary: 'Teklif: TKL-2024-001 | Müşteri: XYZ İnşaat A.Ş. | Toplam: 125.000 ₺'
     };
   }
 }

@@ -23,7 +23,7 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
       try {
         // Dynamically import PDFMe to avoid SSR issues
         const { Designer } = await import('@pdfme/ui');
-        const { text, image, barcodes, table, multiVariableText } = await import('@pdfme/schemas');
+        const { text, image, barcodes, table } = await import('@pdfme/schemas');
         
         if (designerRef.current) {
           const defaultTemplate = {
@@ -38,7 +38,7 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
                   height: 8,
                   fontSize: 12,
                   fontColor: '#666666',
-                  fontName: 'NotoSans',
+
                   content: 'Şirket Adı',
                   readOnly: true
                 },
@@ -59,7 +59,6 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
                   height: 8,
                   fontSize: 10,
                   fontColor: '#666666',
-                  alignment: 'right',
                   content: 'Sayfa {currentPage}/{totalPages}',
                   readOnly: true
                 }
@@ -125,8 +124,8 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
                   height: 8,
                   fontSize: 12,
                   fontColor: '#000000',
-                  fontName: 'NotoSans',
-                  alignment: 'right'
+
+
                 },
                 proposalQRCode: {
                   type: 'qrcode',
@@ -137,15 +136,13 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
                   color: '#000000'
                 },
                 proposalSummary: {
-                  type: 'multiVariableText',
+                  type: 'text',
                   position: { x: 60, y: 160 },
                   width: 130,
                   height: 20,
                   fontSize: 10,
                   fontColor: '#333333',
-                  fontName: 'NotoSans',
-                  content: 'Teklif No: {proposalNumber} | Müşteri: {customerName} | Toplam: {totalAmount}',
-                  lineHeight: 1.4
+                  fontName: 'NotoSans'
                 }
               },
               // Footer schema (her sayfada tekrarlanır)
@@ -167,7 +164,7 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
                   height: 8,
                   fontSize: 9,
                   fontColor: '#666666',
-                  fontName: 'NotoSans',
+
                   content: '{date}',
                   readOnly: true
                 },
@@ -178,8 +175,8 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
                   height: 8,
                   fontSize: 9,
                   fontColor: '#666666',
-                  fontName: 'NotoSans',
-                  alignment: 'right',
+
+,
                   content: 'www.sirketadi.com | info@sirketadi.com',
                   readOnly: true
                 }
@@ -190,7 +187,7 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
           const designerInstance = new Designer({
             domContainer: designerRef.current,
             template: initialTemplate || defaultTemplate,
-            plugins: { text, image, qrcode: barcodes.qrcode, table, multiVariableText } as any
+            plugins: { text, image, qrcode: barcodes.qrcode, table } as any
           });
 
           setDesigner(designerInstance);
