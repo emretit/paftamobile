@@ -2,10 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
-  Building, User, FileText, ClipboardList, DollarSign, Settings, 
-  Eye, Save, Type, Image, QrCode, Table2
-} from 'lucide-react';
+import { Eye, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DragDropPDFEditorProps {
@@ -14,411 +11,7 @@ interface DragDropPDFEditorProps {
   onPreview?: (template: any) => void;
 }
 
-interface FieldTemplate {
-  id: string;
-  name: string;
-  label: string;
-  type: 'text' | 'image' | 'table' | 'qrcode';
-  category: string;
-  icon: React.ComponentType<any>;
-  defaultConfig: any;
-}
 
-// NewProposalCreate ve Proposal types'ına göre güncellenmiş field'lar
-const FIELD_TEMPLATES: FieldTemplate[] = [
-  // Şirket Bilgileri
-  {
-    id: 'companyLogo',
-    name: 'companyLogo',
-    label: 'Şirket Logosu',
-    type: 'image',
-    category: 'company',
-    icon: Image,
-    defaultConfig: { width: 30, height: 20 }
-  },
-  {
-    id: 'companyName',
-    name: 'companyName',
-    label: 'Şirket Adı',
-    type: 'text',
-    category: 'company',
-    icon: Type,
-    defaultConfig: { fontSize: 16, fontColor: '#000000' }
-  },
-  {
-    id: 'companyAddress',
-    name: 'companyAddress',
-    label: 'Şirket Adresi',
-    type: 'text',
-    category: 'company',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-  {
-    id: 'companyContact',
-    name: 'companyContact',
-    label: 'İletişim Bilgileri',
-    type: 'text',
-    category: 'company',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-
-  // Müşteri Bilgileri (NewProposalCreate form'undan)
-  {
-    id: 'customerCompany',
-    name: 'customerCompany',
-    label: 'Müşteri Firma Adı',
-    type: 'text',
-    category: 'customer',
-    icon: Type,
-    defaultConfig: { fontSize: 14, fontColor: '#000000' }
-  },
-  {
-    id: 'contactName',
-    name: 'contactName',
-    label: 'İletişim Kişisi',
-    type: 'text',
-    category: 'customer',
-    icon: Type,
-    defaultConfig: { fontSize: 12, fontColor: '#000000' }
-  },
-  {
-    id: 'contactTitle',
-    name: 'contactTitle',
-    label: 'İletişim Kişisi Ünvanı',
-    type: 'text',
-    category: 'customer',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-  {
-    id: 'customerEmail',
-    name: 'customerEmail',
-    label: 'Müşteri E-posta',
-    type: 'text',
-    category: 'customer',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-  {
-    id: 'customerPhone',
-    name: 'customerPhone',
-    label: 'Müşteri Telefon',
-    type: 'text',
-    category: 'customer',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-  {
-    id: 'customerAddress',
-    name: 'customerAddress',
-    label: 'Müşteri Adresi',
-    type: 'text',
-    category: 'customer',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-  {
-    id: 'customerTaxNumber',
-    name: 'customerTaxNumber',
-    label: 'Vergi Numarası',
-    type: 'text',
-    category: 'customer',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-  {
-    id: 'customerTaxOffice',
-    name: 'customerTaxOffice',
-    label: 'Vergi Dairesi',
-    type: 'text',
-    category: 'customer',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-
-  // Teklif Bilgileri
-  {
-    id: 'proposalTitle',
-    name: 'proposalTitle',
-    label: 'Teklif Başlığı',
-    type: 'text',
-    category: 'proposal',
-    icon: Type,
-    defaultConfig: { fontSize: 18, fontColor: '#000000' }
-  },
-  {
-    id: 'proposalNumber',
-    name: 'proposalNumber',
-    label: 'Teklif Numarası',
-    type: 'text',
-    category: 'proposal',
-    icon: Type,
-    defaultConfig: { fontSize: 12, fontColor: '#000000' }
-  },
-  {
-    id: 'offerDate',
-    name: 'offerDate',
-    label: 'Teklif Tarihi',
-    type: 'text',
-    category: 'proposal',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-  {
-    id: 'validityDate',
-    name: 'validityDate',
-    label: 'Geçerlilik Tarihi',
-    type: 'text',
-    category: 'proposal',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-  {
-    id: 'proposalDescription',
-    name: 'proposalDescription',
-    label: 'Teklif Açıklaması',
-    type: 'text',
-    category: 'proposal',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 20 }
-  },
-  {
-    id: 'proposalStatus',
-    name: 'proposalStatus',
-    label: 'Teklif Durumu',
-    type: 'text',
-    category: 'proposal',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-  {
-    id: 'employeeName',
-    name: 'employeeName',
-    label: 'Teklifi Hazırlayan',
-    type: 'text',
-    category: 'proposal',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-  {
-    id: 'opportunityTitle',
-    name: 'opportunityTitle',
-    label: 'Fırsat Başlığı',
-    type: 'text',
-    category: 'proposal',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-  {
-    id: 'proposalNotes',
-    name: 'proposalNotes',
-    label: 'Teklif Notları',
-    type: 'text',
-    category: 'proposal',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 20 }
-  },
-
-  // Ürün/Hizmet
-  {
-    id: 'proposalItemsTable',
-    name: 'proposalItemsTable',
-    label: 'Ürün/Hizmet Tablosu',
-    type: 'table',
-    category: 'items',
-    icon: Table2,
-    defaultConfig: {
-      width: 170,
-      height: 60,
-      showHead: true,
-      head: ["Ürün/Hizmet", "Açıklama", "Miktar", "Birim", "Birim Fiyat", "Toplam"],
-      headWidthPercentages: [25, 30, 10, 10, 12.5, 12.5],
-      tableStyles: { borderWidth: 0.5, borderColor: '#000000' },
-      headStyles: { fontSize: 9, fontColor: '#ffffff', backgroundColor: '#2980ba' },
-      bodyStyles: { fontSize: 8, fontColor: '#000000' }
-    }
-  },
-
-  // Mali Bilgiler (NewProposalCreate form'undan)
-  {
-    id: 'currency',
-    name: 'currency',
-    label: 'Para Birimi',
-    type: 'text',
-    category: 'financial',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-  {
-    id: 'grossTotal',
-    name: 'grossTotal',
-    label: 'Brüt Toplam',
-    type: 'text',
-    category: 'financial',
-    icon: Type,
-    defaultConfig: { fontSize: 12, fontColor: '#000000' }
-  },
-  {
-    id: 'discountAmount',
-    name: 'discountAmount',
-    label: 'İndirim Tutarı',
-    type: 'text',
-    category: 'financial',
-    icon: Type,
-    defaultConfig: { fontSize: 12, fontColor: '#000000' }
-  },
-  {
-    id: 'netTotal',
-    name: 'netTotal',
-    label: 'Net Toplam',
-    type: 'text',
-    category: 'financial',
-    icon: Type,
-    defaultConfig: { fontSize: 12, fontColor: '#000000' }
-  },
-  {
-    id: 'vatAmount',
-    name: 'vatAmount',
-    label: 'KDV Tutarı',
-    type: 'text',
-    category: 'financial',
-    icon: Type,
-    defaultConfig: { fontSize: 12, fontColor: '#000000' }
-  },
-  {
-    id: 'vatPercentage',
-    name: 'vatPercentage',
-    label: 'KDV Oranı',
-    type: 'text',
-    category: 'financial',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-  {
-    id: 'grandTotal',
-    name: 'grandTotal',
-    label: 'Genel Toplam',
-    type: 'text',
-    category: 'financial',
-    icon: Type,
-    defaultConfig: { fontSize: 14, fontColor: '#000000' }
-  },
-  {
-    id: 'additionalCharges',
-    name: 'additionalCharges',
-    label: 'Ek Masraflar',
-    type: 'text',
-    category: 'financial',
-    icon: Type,
-    defaultConfig: { fontSize: 12, fontColor: '#000000' }
-  },
-
-  // Şartlar ve Koşullar (NewProposalCreate form'undan)
-  {
-    id: 'paymentTerms',
-    name: 'paymentTerms',
-    label: 'Ödeme Koşulları',
-    type: 'text',
-    category: 'terms',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 20 }
-  },
-  {
-    id: 'deliveryTerms',
-    name: 'deliveryTerms',
-    label: 'Teslimat Koşulları',
-    type: 'text',
-    category: 'terms',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 20 }
-  },
-  {
-    id: 'warrantyTerms',
-    name: 'warrantyTerms',
-    label: 'Garanti Koşulları',
-    type: 'text',
-    category: 'terms',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 20 }
-  },
-  {
-    id: 'priceTerms',
-    name: 'priceTerms',
-    label: 'Fiyat Koşulları',
-    type: 'text',
-    category: 'terms',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 15 }
-  },
-  {
-    id: 'otherTerms',
-    name: 'otherTerms',
-    label: 'Diğer Şartlar',
-    type: 'text',
-    category: 'terms',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 20 }
-  },
-  {
-    id: 'generalTerms',
-    name: 'generalTerms',
-    label: 'Genel Şartlar',
-    type: 'text',
-    category: 'terms',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 30 }
-  },
-
-  // Ek Özellikler
-  {
-    id: 'proposalQRCode',
-    name: 'proposalQRCode',
-    label: 'QR Kod (Teklif Detayı)',
-    type: 'qrcode',
-    category: 'extra',
-    icon: QrCode,
-    defaultConfig: { width: 25, height: 25, backgroundColor: '#ffffff', color: '#000000' }
-  },
-  {
-    id: 'proposalSummary',
-    name: 'proposalSummary',
-    label: 'Teklif Özeti',
-    type: 'text',
-    category: 'extra',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#333333', height: 15 }
-  },
-  {
-    id: 'createdAt',
-    name: 'createdAt',
-    label: 'Oluşturma Tarihi',
-    type: 'text',
-    category: 'extra',
-    icon: Type,
-    defaultConfig: { fontSize: 9, fontColor: '#999999' }
-  },
-  {
-    id: 'updatedAt',
-    name: 'updatedAt',
-    label: 'Güncellenme Tarihi',
-    type: 'text',
-    category: 'extra',
-    icon: Type,
-    defaultConfig: { fontSize: 9, fontColor: '#999999' }
-  }
-];
-
-const CATEGORIES = {
-  company: { label: 'Şirket', icon: Building, color: 'bg-blue-500' },
-  customer: { label: 'Müşteri', icon: User, color: 'bg-green-500' },
-  proposal: { label: 'Teklif', icon: FileText, color: 'bg-purple-500' },
-  items: { label: 'Ürün/Hizmet', icon: ClipboardList, color: 'bg-orange-500' },
-  financial: { label: 'Mali', icon: DollarSign, color: 'bg-yellow-500' },
-  terms: { label: 'Şartlar', icon: Settings, color: 'bg-gray-500' },
-  extra: { label: 'Ek', icon: FileText, color: 'bg-indigo-500' }
-};
 
 export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
   initialTemplate,
@@ -447,17 +40,134 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
 
           console.log('Creating PDFme Designer with template:', defaultTemplate);
 
-          // PDFme'nin schema'larını hazırlayalım - built-in panel için
-          const predefinedSchemas = {};
-          FIELD_TEMPLATES.forEach(field => {
-            predefinedSchemas[field.name] = {
-              type: field.type,
+          // PDFme'nin schema'larını basit gruplarla hazırlayalım
+          const predefinedSchemas = {
+            // Temel Bilgiler
+            'teklifBasligi': {
+              type: 'text',
               position: { x: 20, y: 30 },
-              width: field.defaultConfig.width || 60,
-              height: field.defaultConfig.height || 8,
-              ...field.defaultConfig
-            };
-          });
+              width: 120,
+              height: 12,
+              fontSize: 18,
+              fontColor: '#000000'
+            },
+            'teklifNo': {
+              type: 'text',
+              position: { x: 150, y: 30 },
+              width: 60,
+              height: 8,
+              fontSize: 12,
+              fontColor: '#000000'
+            },
+            'teklifTarihi': {
+              type: 'text',
+              position: { x: 20, y: 50 },
+              width: 60,
+              height: 8,
+              fontSize: 10,
+              fontColor: '#666666'
+            },
+            'gecerlilikTarihi': {
+              type: 'text',
+              position: { x: 90, y: 50 },
+              width: 60,
+              height: 8,
+              fontSize: 10,
+              fontColor: '#666666'
+            },
+
+            // Müşteri Bilgileri
+            'musteriAdi': {
+              type: 'text',
+              position: { x: 20, y: 70 },
+              width: 100,
+              height: 10,
+              fontSize: 14,
+              fontColor: '#000000'
+            },
+            'musteriAdres': {
+              type: 'text',
+              position: { x: 20, y: 85 },
+              width: 100,
+              height: 20,
+              fontSize: 10,
+              fontColor: '#666666'
+            },
+            'musteriTelefon': {
+              type: 'text',
+              position: { x: 20, y: 110 },
+              width: 80,
+              height: 8,
+              fontSize: 10,
+              fontColor: '#666666'
+            },
+
+            // Ürün/Hizmet Tablosu
+            'urunTablosu': {
+              type: 'table',
+              position: { x: 20, y: 130 },
+              width: 170,
+              height: 60,
+              showHead: true,
+              head: ["Ürün/Hizmet", "Miktar", "Birim", "Birim Fiyat", "Toplam"],
+              headWidthPercentages: [45, 15, 15, 12.5, 12.5],
+              tableStyles: { borderWidth: 0.5, borderColor: '#000000' },
+              headStyles: { fontSize: 10, fontColor: '#ffffff', backgroundColor: '#2980ba' },
+              bodyStyles: { fontSize: 9, fontColor: '#000000' }
+            },
+
+            // Mali Bilgiler
+            'brutToplam': {
+              type: 'text',
+              position: { x: 140, y: 200 },
+              width: 50,
+              height: 8,
+              fontSize: 12,
+              fontColor: '#000000'
+            },
+            'indirim': {
+              type: 'text',
+              position: { x: 140, y: 215 },
+              width: 50,
+              height: 8,
+              fontSize: 12,
+              fontColor: '#000000'
+            },
+            'kdvTutari': {
+              type: 'text',
+              position: { x: 140, y: 230 },
+              width: 50,
+              height: 8,
+              fontSize: 12,
+              fontColor: '#000000'
+            },
+            'genelToplam': {
+              type: 'text',
+              position: { x: 140, y: 245 },
+              width: 50,
+              height: 10,
+              fontSize: 14,
+              fontColor: '#000000'
+            },
+
+            // Şartlar
+            'odemeKosullari': {
+              type: 'text',
+              position: { x: 20, y: 260 },
+              width: 170,
+              height: 15,
+              fontSize: 10,
+              fontColor: '#666666'
+            },
+            'teslimatKosullari': {
+              type: 'text',
+              position: { x: 20, y: 280 },
+              width: 170,
+              height: 15,
+              fontSize: 10,
+              fontColor: '#666666'
+            }
+          };
 
           const designerInstance = new Designer({
             domContainer: designerRef.current,
