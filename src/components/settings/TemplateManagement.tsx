@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
-// PDFMe template designer component
-import { PDFMeTemplateDesigner } from './template-designer/PDFMeTemplateDesigner';
+// Simple PDF template editor component
+import { SimplePDFTemplateEditor } from './template-designer/SimplePDFTemplateEditor';
 
 interface Template {
   id: string;
@@ -166,76 +166,7 @@ export const TemplateManagement: React.FC = () => {
   };
 
   // Create a ready-to-use default PDFMe template in DB
-  // Kaldırıldı: Varsayılan şablon oluşturma
-  const handleCreateDefaultTemplate = async () => {
-    try {
-      const { data: userRes } = await supabase.auth.getUser();
-      if (!userRes.user) return;
 
-      const defaultTemplate = {
-        basePdf: { width: 210, height: 297, padding: [30, 20, 30, 20] },
-        schemas: [
-          {
-            companyHeader: {
-              type: 'text', position: { x: 20, y: 10 }, width: 100, height: 8, fontSize: 12, fontColor: '#666666', content: 'Şirket Adı', readOnly: true
-            },
-            headerLine: {
-              type: 'text', position: { x: 20, y: 18 }, width: 170, height: 1, fontSize: 8, backgroundColor: '#cccccc', content: ' ', readOnly: true
-            },
-            pageNumber: {
-              type: 'text', position: { x: 150, y: 10 }, width: 40, height: 8, fontSize: 10, fontColor: '#666666', content: 'Sayfa {currentPage}/{totalPages}', readOnly: true
-            }
-          },
-          {
-            companyLogo: { type: 'image', position: { x: 20, y: 24 }, width: 20, height: 20 },
-            companyName: { type: 'text', position: { x: 45, y: 24 }, width: 100, height: 10, fontSize: 16, fontColor: '#000000' },
-            companyAddress: { type: 'text', position: { x: 45, y: 34 }, width: 100, height: 8, fontSize: 9, fontColor: '#444444' },
-            companyContact: { type: 'text', position: { x: 45, y: 42 }, width: 100, height: 8, fontSize: 9, fontColor: '#444444' },
-            proposalTitle: { type: 'text', position: { x: 20, y: 50 }, width: 170, height: 10, fontSize: 14, fontColor: '#000000' },
-            customerName: { type: 'text', position: { x: 20, y: 70 }, width: 100, height: 8, fontSize: 12, fontColor: '#000000' },
-            customerAddress: { type: 'text', position: { x: 20, y: 78 }, width: 100, height: 10, fontSize: 9, fontColor: '#444444' },
-            customerTaxNo: { type: 'text', position: { x: 20, y: 88 }, width: 100, height: 8, fontSize: 9, fontColor: '#444444' },
-            proposalNumber: { type: 'text', position: { x: 130, y: 70 }, width: 60, height: 8, fontSize: 10, fontColor: '#000000' },
-            createdDate: { type: 'text', position: { x: 130, y: 78 }, width: 60, height: 8, fontSize: 9, fontColor: '#444444' },
-            validUntil: { type: 'text', position: { x: 130, y: 86 }, width: 60, height: 8, fontSize: 9, fontColor: '#444444' },
-            proposalItemsTable: {
-              type: 'table', position: { x: 20, y: 100 }, width: 170, height: 50,
-              content: '[["Ürün/Hizmet","Miktar","Birim","Birim Fiyat","Toplam"],["Web Sitesi","1","Adet","50.000 ₺","50.000 ₺"]]',
-              showHead: true, head: [ 'Ürün/Hizmet', 'Miktar', 'Birim', 'Birim Fiyat', 'Toplam' ], headWidthPercentages: [40,15,15,15,15],
-              tableStyles: { borderWidth: 0.5, borderColor: '#000000' }, headStyles: { fontSize: 10, fontColor: '#ffffff', backgroundColor: '#2980ba' }, bodyStyles: { fontSize: 9, fontColor: '#000000' }
-            },
-            subTotalLabel: { type: 'text', position: { x: 120, y: 152 }, width: 40, height: 6, fontSize: 9, fontColor: '#444444', content: 'Ara Toplam:' },
-            subTotal: { type: 'text', position: { x: 160, y: 152 }, width: 30, height: 6, fontSize: 10, fontColor: '#000000' },
-            discountLabel: { type: 'text', position: { x: 120, y: 160 }, width: 40, height: 6, fontSize: 9, fontColor: '#444444', content: 'İndirim:' },
-            discountAmount: { type: 'text', position: { x: 160, y: 160 }, width: 30, height: 6, fontSize: 10, fontColor: '#000000' },
-            netTotalLabel: { type: 'text', position: { x: 120, y: 168 }, width: 40, height: 6, fontSize: 9, fontColor: '#444444', content: 'Net Toplam:' },
-            netTotal: { type: 'text', position: { x: 160, y: 168 }, width: 30, height: 6, fontSize: 12, fontColor: '#000000' },
-            proposalQRCode: { type: 'qrcode', position: { x: 20, y: 160 }, width: 30, height: 30, backgroundColor: '#ffffff', color: '#000000' },
-            proposalSummary: { type: 'text', position: { x: 60, y: 160 }, width: 130, height: 12, fontSize: 10, fontColor: '#333333' },
-            termsHeader: { type: 'text', position: { x: 20, y: 200 }, width: 170, height: 8, fontSize: 10, fontColor: '#000000', content: 'Şartlar ve Koşullar' },
-            termsText: { type: 'text', position: { x: 20, y: 208 }, width: 170, height: 60, fontSize: 9, fontColor: '#444444' }
-          },
-          {
-            footerLine: { type: 'text', position: { x: 20, y: 280 }, width: 170, height: 1, fontSize: 8, backgroundColor: '#cccccc', content: ' ', readOnly: true },
-            currentDate: { type: 'text', position: { x: 20, y: 285 }, width: 80, height: 8, fontSize: 9, fontColor: '#666666', content: '{date}', readOnly: true },
-            companyFooter: { type: 'text', position: { x: 110, y: 285 }, width: 80, height: 8, fontSize: 9, fontColor: '#666666', content: 'www.sirketadi.com | info@sirketadi.com', readOnly: true }
-          }
-        ]
-      } as any;
-
-      const { error } = await supabase.from('templates').insert({
-        name: 'Varsayılan Teklif Şablonu',
-        template_json: defaultTemplate,
-        user_id: userRes.user.id
-      });
-      if (error) throw error;
-      toast.success('Varsayılan şablon eklendi');
-      loadTemplates();
-    } catch (err) {
-      console.error('Create default template error:', err);
-      toast.error('Varsayılan şablon eklenemedi');
-    }
-  };
 
   if (loading) {
     return (
@@ -342,26 +273,31 @@ export const TemplateManagement: React.FC = () => {
                 </div>
               </div>
               
-              <PDFMeTemplateDesigner
+              <SimplePDFTemplateEditor
                 initialTemplate={selectedTemplate?.template_json || null}
                 onSave={handleSaveTemplate}
                 onPreview={async (template) => {
-                  // Preview with mock data
-                  const mockInputs = {
-                    companyName: 'ABC Teknoloji Ltd. Şti.',
-                    documentTitle: 'TEKLİF BELGESİ',
-                    quotationNumber: 'TKL-2025-001',
-                    totalAmount: '125.000,00 ₺'
-                  };
-
                   try {
                     const { generate } = await import('@pdfme/generator');
-                    const { text, image, barcodes } = await import('@pdfme/schemas');
+                    const { text, image, barcodes, table } = await import('@pdfme/schemas');
+                    
+                    // Mock data for preview
+                    const mockInputs = {
+                      companyName: 'ABC Teknoloji Ltd. Şti.',
+                      proposalTitle: 'Web Sitesi Geliştirme Projesi',
+                      proposalNumber: 'TKL-2024-001',
+                      customerName: 'XYZ İnşaat A.Ş.',
+                      totalAmount: '125.000 ₺',
+                      netTotal: '125.000 ₺',
+                      proposalItemsTable: [
+                        ['Web Sitesi', '1', 'Adet', '125.000 ₺', '125.000 ₺']
+                      ]
+                    };
                     
                     const pdf = await generate({
                       template,
                       inputs: [mockInputs],
-                      plugins: { text, image, qrcode: barcodes.qrcode } as any
+                      plugins: { text, image, qrcode: barcodes.qrcode, table } as any
                     });
 
                     const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
@@ -369,6 +305,7 @@ export const TemplateManagement: React.FC = () => {
                     window.open(url, '_blank');
                     setTimeout(() => URL.revokeObjectURL(url), 5000);
                   } catch (error) {
+                    console.error('Preview error:', error);
                     toast.error('Önizleme oluşturulamadı');
                   }
                 }}
