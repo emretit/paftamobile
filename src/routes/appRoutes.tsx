@@ -9,7 +9,7 @@ import { financeRoutes, cashflowRoutes } from "./financeRoutes";
 import { serviceRoutes } from "./serviceRoutes";
 import { orderRoutes } from "./orderRoutes";
 import { crmRoutes } from "./crmRoutes";
-import { settingsRoutes } from "./settingsRoutes";
+import { settingsRoutes, templateRoutes } from "./settingsRoutes";
 import { purchaseRoutes } from "./purchaseRoutes";
 import { proposalRoutes } from "./proposalRoutes";
 
@@ -31,6 +31,7 @@ export const appRoutes: RouteConfig[] = [
   ...orderRoutes,
   ...crmRoutes,
   ...settingsRoutes,
+  ...templateRoutes,
   ...purchaseRoutes,
   ...proposalRoutes,
 

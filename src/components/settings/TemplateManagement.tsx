@@ -10,7 +10,7 @@ export const TemplateManagement: React.FC = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Şablon Yönetimi</h2>
-        <Button onClick={() => navigate('/settings/templates/pdfme')}>PDFMe Şablon Editörü</Button>
+        <Button onClick={() => navigate('/templates/editor')}>PDFMe Şablon Editörü</Button>
       </div>
 
       <Card className="p-6 space-y-2">
@@ -18,7 +18,7 @@ export const TemplateManagement: React.FC = () => {
           Artık teklif PDF şablonlarını PDFMe editörüyle düzenleyebilirsiniz. Mevcut şablon listesi kaldırıldı.
         </p>
         <div>
-          <Button variant="outline" onClick={() => navigate('/settings/templates/pdfme')}>
+          <Button variant="outline" onClick={() => navigate('/templates/editor')}>
             Editöre Git
           </Button>
         </div>

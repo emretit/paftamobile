@@ -7,6 +7,10 @@ import { RouteConfig } from "./types";
 // Define settings routes
 export const settingsRoutes: RouteConfig[] = [
   { path: "/settings", component: Settings, protected: true },
-  { path: "/settings/templates/pdfme", component: TemplateEditor, protected: true },
-  { path: "/settings/test-pdfme", component: TestPDFMe, protected: true },
+];
+
+// Define template routes
+export const templateRoutes: RouteConfig[] = [
+  { path: "/templates/editor", component: TemplateEditor, protected: true },
+  { path: "/templates/test", component: TestPDFMe, protected: true },
 ];
