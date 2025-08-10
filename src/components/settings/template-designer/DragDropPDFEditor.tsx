@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  Building, User, FileText, ClipboardList, DollarSign, Settings, Plus, 
+  Building, User, FileText, ClipboardList, DollarSign, Settings, 
   Eye, Save, Type, Image, QrCode, Table2
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -332,46 +332,13 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
                 token: {
                   colorPrimary: '#dc2626'
                 }
+              },
+              // PDFme'nin kendi side panel'ini gizle, bizim sol paneli kullan
+              sidebar: {
+                hideSchemaPanel: true
               }
             }
           });
-
-          // Field ekleme fonksiyonu - her defasında yeni Y pozisyonu
-          let lastY = 30;
-          (window as any).addFieldToDesigner = (fieldTemplate: FieldTemplate) => {
-            try {
-              const currentTemplate = designerInstance.getTemplate();
-              
-              const newField = {
-                [fieldTemplate.name]: {
-                  type: fieldTemplate.type,
-                  position: { x: 20, y: lastY },
-                  width: fieldTemplate.defaultConfig.width || 60,
-                  height: fieldTemplate.defaultConfig.height || 8,
-                  ...fieldTemplate.defaultConfig
-                }
-              };
-
-              lastY += (fieldTemplate.defaultConfig.height || 8) + 5; // 5mm spacing
-
-              const updatedSchemas = currentTemplate.schemas.map((schema: any, index: number) => {
-                if (index === 0) {
-                  return { ...schema, ...newField };
-                }
-                return schema;
-              });
-
-              designerInstance.setTemplate({
-                ...currentTemplate,
-                schemas: updatedSchemas
-              });
-
-              toast.success(`${fieldTemplate.label} eklendi`);
-            } catch (error) {
-              console.error('Field add error:', error);
-              toast.error(`${fieldTemplate.label} eklenirken hata oluştu`);
-            }
-          };
 
           setDesigner(designerInstance);
           setIsLoading(false);
@@ -399,9 +366,56 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
     };
   }, [initialTemplate, designer]);
 
-  const handleFieldDrop = (fieldTemplate: FieldTemplate) => {
-    if (window.addFieldToDesigner) {
-      (window as any).addFieldToDesigner(fieldTemplate);
+  const handleDragStart = (e: React.DragEvent, fieldTemplate: FieldTemplate) => {
+    // PDFme'nin beklediği format
+    const dragData = {
+      type: fieldTemplate.type,
+      key: fieldTemplate.name,
+      ...fieldTemplate.defaultConfig
+    };
+    
+    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+    e.dataTransfer.setData('text/plain', fieldTemplate.name);
+    
+    // Visual feedback için
+    e.dataTransfer.effectAllowed = 'copy';
+  };
+
+  const addFieldToDesigner = (fieldTemplate: FieldTemplate, x: number = 20, y: number = 30) => {
+    if (!designer) return;
+
+    try {
+      const currentTemplate = designer.getTemplate();
+      
+      // Yeni field objesi
+      const newField = {
+        [fieldTemplate.name]: {
+          type: fieldTemplate.type,
+          position: { x, y },
+          width: fieldTemplate.defaultConfig.width || 60,
+          height: fieldTemplate.defaultConfig.height || 8,
+          ...fieldTemplate.defaultConfig
+        }
+      };
+
+      // Mevcut schema'ya field ekle
+      const updatedSchemas = currentTemplate.schemas.map((schema: any, index: number) => {
+        if (index === 0) {
+          return { ...schema, ...newField };
+        }
+        return schema;
+      });
+
+      // Template'ı güncelle
+      designer.setTemplate({
+        ...currentTemplate,
+        schemas: updatedSchemas
+      });
+
+      toast.success(`${fieldTemplate.label} eklendi`);
+    } catch (error) {
+      console.error('Field add error:', error);
+      toast.error(`${fieldTemplate.label} eklenirken hata oluştu`);
     }
   };
 
@@ -441,7 +455,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
         <div className="p-4 border-b border-gray-200">
           <h3 className="font-semibold text-lg">PDF Alanları</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Alanları tıklayarak PDF'e ekleyin
+            Alanları PDF'e sürükleyip bırakın
           </p>
         </div>
 
@@ -466,15 +480,16 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
                       return (
                         <div
                           key={field.id}
-                          onClick={() => handleFieldDrop(field)}
-                          className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 cursor-pointer transition-colors"
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, field)}
+                          className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 cursor-grab active:cursor-grabbing transition-colors select-none"
                         >
                           <FieldIcon className="w-4 h-4 text-gray-600" />
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium truncate">{field.label}</div>
                             <div className="text-xs text-gray-500">{field.type}</div>
                           </div>
-                          <Plus className="w-4 h-4 text-gray-400" />
+                          <div className="text-xs text-blue-600 font-medium">Sürükle</div>
                         </div>
                       );
                     })}
@@ -527,6 +542,32 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
           <div
             ref={designerRef}
             className="w-full h-full min-h-[600px]"
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'copy';
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              try {
+                const dragDataStr = e.dataTransfer.getData('application/json');
+                if (dragDataStr) {
+                  const dragData = JSON.parse(dragDataStr);
+                  
+                  // Canvas içindeki relative pozisyonu hesapla
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = ((e.clientX - rect.left) / rect.width) * 210; // A4 width mm
+                  const y = ((e.clientY - rect.top) / rect.height) * 297; // A4 height mm
+                  
+                  // Field template'ı bul
+                  const fieldTemplate = FIELD_TEMPLATES.find(f => f.name === dragData.key);
+                  if (fieldTemplate) {
+                    addFieldToDesigner(fieldTemplate, Math.max(0, x), Math.max(0, y));
+                  }
+                }
+              } catch (error) {
+                console.error('Drop handling error:', error);
+              }
+            }}
           />
         </div>
       </div>
