@@ -82,52 +82,66 @@ export class PDFMeGenerator {
     const discountAmount = Number((proposal as any)?.discount_amount ?? (proposal as any)?.discount ?? 0) || 0;
     const totalAmount = Number((proposal as any)?.total_amount ?? (computedSubTotal - discountAmount)) || 0;
     
-    // Map common proposal fields
+    // Map proposal fields to match NewProposalCreate form structure
     const fieldMappings: Record<string, any> = {
+      // Şirket Bilgileri
       companyName: (proposal as any)?.company_name || 'Şirket Adı',
       companyLogo: (proposal as any)?.company_logo || '',
       companyAddress: (proposal as any)?.company_address || '',
       companyContact: (proposal as any)?.company_contact || '',
+      
+      // Müşteri Bilgileri (NewProposalCreate form fields)
+      customerCompany: (proposal as any)?.customer_company || proposal.customer_name || 'Müşteri Firma Adı',
+      contactName: (proposal as any)?.contact_name || (proposal as any)?.customer?.name || '',
+      contactTitle: (proposal as any)?.contact_title || '',
+      customerEmail: (proposal as any)?.customer_email || (proposal as any)?.customer?.email || '',
+      customerPhone: (proposal as any)?.customer_phone || (proposal as any)?.customer?.phone || (proposal as any)?.customer?.mobile_phone || '',
+      customerAddress: (proposal as any)?.customer_address || (proposal as any)?.customer?.address || '',
+      customerTaxNumber: (proposal as any)?.customer_tax_number || (proposal as any)?.customer?.tax_number || '',
+      customerTaxOffice: (proposal as any)?.customer_tax_office || (proposal as any)?.customer?.tax_office || '',
+      
+      // Teklif Bilgileri
       proposalTitle: proposal.title || 'Teklif Başlığı',
-      proposalNumber: proposal.proposal_number || 'TKL-001',
+      proposalNumber: proposal.number || proposal.proposal_number || 'TKL-001',
+      offerDate: (proposal as any)?.offer_date ? new Date((proposal as any).offer_date).toLocaleDateString('tr-TR') : 
+                  proposal.created_at ? new Date(proposal.created_at).toLocaleDateString('tr-TR') : 
+                  new Date().toLocaleDateString('tr-TR'),
+      validityDate: (proposal as any)?.validity_date ? new Date((proposal as any).validity_date).toLocaleDateString('tr-TR') :
+                     proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString('tr-TR') : '',
       proposalDescription: proposal.description || '',
-      customerName: proposal.customer_name || 'Müşteri Adı',
-      customerAddress: (proposal as any)?.customer_address || '',
-      customerTaxNo: (proposal as any)?.customer_tax_no || '',
-      totalAmount: proposal.total_amount ? `${proposal.total_amount.toLocaleString('tr-TR')} ₺` : '0 ₺',
-      createdDate: proposal.created_at ? new Date(proposal.created_at).toLocaleDateString('tr-TR') : new Date().toLocaleDateString('tr-TR'),
-      validUntil: proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString('tr-TR') : '',
-      paymentTerms: proposal.payment_terms || '',
-      deliveryTerms: (proposal as any)?.delivery_terms || '',
-      warrantyTerms: (proposal as any)?.warranty_terms || '',
-      priceTerms: (proposal as any)?.price_terms || '',
-      otherTerms: (proposal as any)?.other_terms || '',
-      notes: proposal.notes || '',
-      // Table data for proposal items
-      proposalItemsTable: proposalItems,
-      // Totals
-      subTotal: `${computedSubTotal.toLocaleString('tr-TR')} ₺`,
-      discountAmount: `${discountAmount.toLocaleString('tr-TR')} ₺`,
-      netTotal: `${totalAmount.toLocaleString('tr-TR')} ₺`,
-      additionalCharges: `${Number((proposal as any)?.additional_charges || 0).toLocaleString('tr-TR')} ₺`,
-      discounts: `${Number((proposal as any)?.discounts || discountAmount).toLocaleString('tr-TR')} ₺`,
-      currency: (proposal as any)?.currency || 'TRY',
-      status: (proposal as any)?.status || '',
-      employeeName: (proposal as any)?.employee_name || (proposal as any)?.employee?.first_name ? `${(proposal as any)?.employee?.first_name} ${(proposal as any)?.employee?.last_name}` : '',
+      proposalStatus: proposal.status || '',
+      employeeName: (proposal as any)?.employee_name || 
+                    (proposal as any)?.employee?.first_name ? `${(proposal as any)?.employee?.first_name} ${(proposal as any)?.employee?.last_name}` : 
+                    (proposal as any)?.prepared_by || '',
       opportunityTitle: (proposal as any)?.opportunity_title || (proposal as any)?.opportunity?.title || '',
-      // Terms & Conditions
-      termsText: (proposal as any)?.terms_text || 'Şartlar ve koşullar burada yer alacaktır.',
-      // QR Code data
-      proposalQRCode: `${proposal.proposal_number || 'TKL-001'} | ${proposal.customer_name || 'Müşteri'} | ${proposal.total_amount ? proposal.total_amount.toLocaleString('tr-TR') : '0'} ₺`,
-      // Header/Footer data
-      companyHeader: 'Şirket Adı',
-      headerLine: ' ',
-      pageNumber: 'Sayfa {currentPage}/{totalPages}',
-      footerLine: ' ',
-      currentDate: new Date().toLocaleDateString('tr-TR'),
-      companyFooter: 'www.sirketadi.com | info@sirketadi.com',
-      // Summary text data
-      proposalSummary: `Teklif: ${proposal.proposal_number || 'TKL-001'} | Müşteri: ${proposal.customer_name || 'Müşteri'} | Toplam: ${proposal.total_amount ? proposal.total_amount.toLocaleString('tr-TR') : '0'} ₺`
+      proposalNotes: proposal.notes || (proposal as any)?.notes || '',
+      
+      // Ürün/Hizmet Tablosu
+      proposalItemsTable: proposalItems,
+      
+      // Mali Bilgiler (NewProposalCreate calculations)
+      currency: (proposal as any)?.currency || 'TRY',
+      grossTotal: `${computedSubTotal.toLocaleString('tr-TR')} ₺`,
+      discountAmount: `${discountAmount.toLocaleString('tr-TR')} ₺`,
+      netTotal: `${(computedSubTotal - discountAmount).toLocaleString('tr-TR')} ₺`,
+      vatAmount: `${((computedSubTotal - discountAmount) * 0.20).toLocaleString('tr-TR')} ₺`, // 20% KDV varsayımı
+      vatPercentage: (proposal as any)?.vat_percentage ? `%${(proposal as any).vat_percentage}` : '%20',
+      grandTotal: `${totalAmount.toLocaleString('tr-TR')} ₺`,
+      additionalCharges: `${Number((proposal as any)?.additional_charges || 0).toLocaleString('tr-TR')} ₺`,
+      
+      // Şartlar ve Koşullar (NewProposalCreate form fields)
+      paymentTerms: proposal.payment_terms || '',
+      deliveryTerms: proposal.delivery_terms || '',
+      warrantyTerms: proposal.warranty_terms || '',
+      priceTerms: proposal.price_terms || '',
+      otherTerms: proposal.other_terms || '',
+      generalTerms: proposal.terms || 'Genel şartlar ve koşullar',
+      
+      // Ek Özellikler
+      proposalQRCode: `${proposal.number || proposal.proposal_number || 'TKL-001'} | ${(proposal as any)?.customer_company || proposal.customer_name || 'Müşteri'} | ${totalAmount.toLocaleString('tr-TR')} ₺`,
+      proposalSummary: `Teklif: ${proposal.number || proposal.proposal_number || 'TKL-001'} | Müşteri: ${(proposal as any)?.customer_company || proposal.customer_name || 'Müşteri'} | Toplam: ${totalAmount.toLocaleString('tr-TR')} ₺`,
+      createdAt: proposal.created_at ? new Date(proposal.created_at).toLocaleDateString('tr-TR') : new Date().toLocaleDateString('tr-TR'),
+      updatedAt: proposal.updated_at ? new Date(proposal.updated_at).toLocaleDateString('tr-TR') : ''
     };
 
     // Map schema fields to proposal data
@@ -145,11 +159,12 @@ export class PDFMeGenerator {
 
   private convertItemsToTableData(items: any[]): string[][] {
     if (!items || items.length === 0) {
-      return [['Ürün/Hizmet bulunamadı', '-', '-', '-', '-']];
+      return [['Ürün/Hizmet bulunamadı', '-', '-', '-', '-', '-']];
     }
 
     return items.map(item => [
       item.name || 'Ürün',
+      item.description || '',
       (item.quantity || 0).toString(),
       item.unit || 'Adet',
       item.unit_price ? `${item.unit_price.toLocaleString('tr-TR')} ₺` : '0 ₺',
@@ -159,42 +174,65 @@ export class PDFMeGenerator {
 
   private getMockData(): Record<string, any> {
     const mockItems = [
-      ['Web Sitesi Tasarımı', '1', 'Adet', '50.000 ₺', '50.000 ₺'],
-      ['SEO Optimizasyonu', '1', 'Adet', '25.000 ₺', '25.000 ₺'],
-      ['Hosting (1 Yıl)', '1', 'Adet', '5.000 ₺', '5.000 ₺']
+      ['Web Sitesi Tasarımı', 'Modern responsive tasarım', '1', 'Adet', '50.000 ₺', '50.000 ₺'],
+      ['SEO Optimizasyonu', 'Arama motoru optimizasyonu', '1', 'Adet', '25.000 ₺', '25.000 ₺'],
+      ['Hosting (1 Yıl)', 'Premium hosting hizmeti', '1', 'Adet', '5.000 ₺', '5.000 ₺']
     ];
 
     return {
+      // Şirket Bilgileri
       companyName: 'ABC Teknoloji Ltd. Şti.',
       companyLogo: '',
       companyAddress: 'Merkez Mah. Teknoloji Cd. No:1 İstanbul',
       companyContact: 'hello@abc.com | +90 212 000 00 00',
+      
+      // Müşteri Bilgileri
+      customerCompany: 'XYZ İnşaat A.Ş.',
+      contactName: 'Ahmet Yılmaz',
+      contactTitle: 'Genel Müdür',
+      customerEmail: 'ahmet@xyzinsaat.com',
+      customerPhone: '+90 216 555 0123',
+      customerAddress: 'Sanayi Mah. İnşaat Cd. No:456 Kadıköy/İstanbul',
+      customerTaxNumber: '1234567890',
+      customerTaxOffice: 'Kadıköy VD',
+      
+      // Teklif Bilgileri
       proposalTitle: 'Web Sitesi Geliştirme Projesi',
       proposalNumber: 'TKL-2024-001',
-      proposalDescription: 'Kurumsal web sitesi ve SEO hizmetleri',
-      customerName: 'XYZ İnşaat A.Ş.',
-      customerAddress: 'Sanayi Mah. İnşaat Cd. No:456 Kadıköy/İstanbul',
-      customerTaxNo: 'VKN: 1234567890',
-      totalAmount: '125.000 ₺',
-      createdDate: new Date().toLocaleDateString('tr-TR'),
-      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('tr-TR'),
-      paymentTerms: '30 gün vadeli',
-      deliveryTerms: 'Teslimat 2-4 hafta',
-      warrantyTerms: '12 ay garanti',
-      priceTerms: 'KDV hariçtir',
-      otherTerms: 'Diğer özel koşullar',
-      notes: 'Bu bir örnek teklif belgesidir.',
+      offerDate: new Date().toLocaleDateString('tr-TR'),
+      validityDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('tr-TR'),
+      proposalDescription: 'Kurumsal web sitesi ve SEO hizmetleri için kapsamlı teklif',
+      proposalStatus: 'Gönderildi',
+      employeeName: 'Mehmet Demir',
+      opportunityTitle: 'Dijital Dönüşüm Projesi',
+      proposalNotes: 'Bu bir örnek teklif belgesidir.',
+      
+      // Ürün/Hizmet
       proposalItemsTable: mockItems,
-      proposalQRCode: 'TKL-2024-001 | XYZ İnşaat A.Ş. | 125.000 ₺',
-      // Header/Footer data
-      companyHeader: 'ABC Teknoloji Ltd. Şti.',
-      headerLine: ' ',
-      pageNumber: 'Sayfa {currentPage}/{totalPages}',
-      footerLine: ' ',
-      currentDate: new Date().toLocaleDateString('tr-TR'),
-      companyFooter: 'www.abcteknoloji.com | info@abcteknoloji.com',
-      // Summary text data
-      proposalSummary: 'Teklif: TKL-2024-001 | Müşteri: XYZ İnşaat A.Ş. | Toplam: 125.000 ₺'
+      
+      // Mali Bilgiler
+      currency: 'TRY',
+      grossTotal: '80.000 ₺',
+      discountAmount: '5.000 ₺',
+      netTotal: '75.000 ₺',
+      vatAmount: '15.000 ₺',
+      vatPercentage: '%20',
+      grandTotal: '90.000 ₺',
+      additionalCharges: '0 ₺',
+      
+      // Şartlar
+      paymentTerms: 'Siparişle birlikte %50 avans, teslimde kalan tutar ödenecektir.',
+      deliveryTerms: 'Teslimat süresi: Sipariş tarihinden itibaren 15-20 iş günü',
+      warrantyTerms: 'Ürünlerimiz 2 yıl garantilidir.',
+      priceTerms: 'Fiyatlarımız KDV hariçtir.',
+      otherTerms: 'Diğer özel koşullar ve şartlar burada yer alır.',
+      generalTerms: 'Bu teklif 30 gün geçerlidir. Fiyatlar TL olup KDV hariçtir.',
+      
+      // Ek Özellikler
+      proposalQRCode: 'TKL-2024-001 | XYZ İnşaat A.Ş. | 90.000 ₺',
+      proposalSummary: 'Teklif: TKL-2024-001 | Müşteri: XYZ İnşaat A.Ş. | Toplam: 90.000 ₺',
+      createdAt: new Date().toLocaleDateString('tr-TR'),
+      updatedAt: new Date().toLocaleDateString('tr-TR')
     };
   }
 }

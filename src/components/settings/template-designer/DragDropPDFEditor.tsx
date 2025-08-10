@@ -24,6 +24,7 @@ interface FieldTemplate {
   defaultConfig: any;
 }
 
+// NewProposalCreate ve Proposal types'ına göre güncellenmiş field'lar
 const FIELD_TEMPLATES: FieldTemplate[] = [
   // Şirket Bilgileri
   {
@@ -63,15 +64,51 @@ const FIELD_TEMPLATES: FieldTemplate[] = [
     defaultConfig: { fontSize: 10, fontColor: '#666666' }
   },
 
-  // Müşteri Bilgileri
+  // Müşteri Bilgileri (NewProposalCreate form'undan)
   {
-    id: 'customerName',
-    name: 'customerName',
-    label: 'Müşteri Adı',
+    id: 'customerCompany',
+    name: 'customerCompany',
+    label: 'Müşteri Firma Adı',
     type: 'text',
     category: 'customer',
     icon: Type,
     defaultConfig: { fontSize: 14, fontColor: '#000000' }
+  },
+  {
+    id: 'contactName',
+    name: 'contactName',
+    label: 'İletişim Kişisi',
+    type: 'text',
+    category: 'customer',
+    icon: Type,
+    defaultConfig: { fontSize: 12, fontColor: '#000000' }
+  },
+  {
+    id: 'contactTitle',
+    name: 'contactTitle',
+    label: 'İletişim Kişisi Ünvanı',
+    type: 'text',
+    category: 'customer',
+    icon: Type,
+    defaultConfig: { fontSize: 10, fontColor: '#666666' }
+  },
+  {
+    id: 'customerEmail',
+    name: 'customerEmail',
+    label: 'Müşteri E-posta',
+    type: 'text',
+    category: 'customer',
+    icon: Type,
+    defaultConfig: { fontSize: 10, fontColor: '#666666' }
+  },
+  {
+    id: 'customerPhone',
+    name: 'customerPhone',
+    label: 'Müşteri Telefon',
+    type: 'text',
+    category: 'customer',
+    icon: Type,
+    defaultConfig: { fontSize: 10, fontColor: '#666666' }
   },
   {
     id: 'customerAddress',
@@ -83,9 +120,18 @@ const FIELD_TEMPLATES: FieldTemplate[] = [
     defaultConfig: { fontSize: 10, fontColor: '#666666' }
   },
   {
-    id: 'customerTaxNo',
-    name: 'customerTaxNo',
-    label: 'Vergi No',
+    id: 'customerTaxNumber',
+    name: 'customerTaxNumber',
+    label: 'Vergi Numarası',
+    type: 'text',
+    category: 'customer',
+    icon: Type,
+    defaultConfig: { fontSize: 10, fontColor: '#666666' }
+  },
+  {
+    id: 'customerTaxOffice',
+    name: 'customerTaxOffice',
+    label: 'Vergi Dairesi',
     type: 'text',
     category: 'customer',
     icon: Type,
@@ -105,34 +151,43 @@ const FIELD_TEMPLATES: FieldTemplate[] = [
   {
     id: 'proposalNumber',
     name: 'proposalNumber',
-    label: 'Teklif No',
+    label: 'Teklif Numarası',
     type: 'text',
     category: 'proposal',
     icon: Type,
     defaultConfig: { fontSize: 12, fontColor: '#000000' }
   },
   {
+    id: 'offerDate',
+    name: 'offerDate',
+    label: 'Teklif Tarihi',
+    type: 'text',
+    category: 'proposal',
+    icon: Type,
+    defaultConfig: { fontSize: 10, fontColor: '#666666' }
+  },
+  {
+    id: 'validityDate',
+    name: 'validityDate',
+    label: 'Geçerlilik Tarihi',
+    type: 'text',
+    category: 'proposal',
+    icon: Type,
+    defaultConfig: { fontSize: 10, fontColor: '#666666' }
+  },
+  {
     id: 'proposalDescription',
     name: 'proposalDescription',
-    label: 'Açıklama',
+    label: 'Teklif Açıklaması',
     type: 'text',
     category: 'proposal',
     icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
+    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 20 }
   },
   {
-    id: 'createdDate',
-    name: 'createdDate',
-    label: 'Oluşturma Tarihi',
-    type: 'text',
-    category: 'proposal',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
-  },
-  {
-    id: 'validUntil',
-    name: 'validUntil',
-    label: 'Geçerlilik Tarihi',
+    id: 'proposalStatus',
+    name: 'proposalStatus',
+    label: 'Teklif Durumu',
     type: 'text',
     category: 'proposal',
     icon: Type,
@@ -141,11 +196,29 @@ const FIELD_TEMPLATES: FieldTemplate[] = [
   {
     id: 'employeeName',
     name: 'employeeName',
-    label: 'Satış Temsilcisi',
+    label: 'Teklifi Hazırlayan',
     type: 'text',
     category: 'proposal',
     icon: Type,
     defaultConfig: { fontSize: 10, fontColor: '#666666' }
+  },
+  {
+    id: 'opportunityTitle',
+    name: 'opportunityTitle',
+    label: 'Fırsat Başlığı',
+    type: 'text',
+    category: 'proposal',
+    icon: Type,
+    defaultConfig: { fontSize: 10, fontColor: '#666666' }
+  },
+  {
+    id: 'proposalNotes',
+    name: 'proposalNotes',
+    label: 'Teklif Notları',
+    type: 'text',
+    category: 'proposal',
+    icon: Type,
+    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 20 }
   },
 
   // Ürün/Hizmet
@@ -160,37 +233,37 @@ const FIELD_TEMPLATES: FieldTemplate[] = [
       width: 170,
       height: 60,
       showHead: true,
-      head: ["Ürün/Hizmet", "Miktar", "Birim", "Birim Fiyat", "Toplam"],
-      headWidthPercentages: [40, 15, 15, 15, 15],
+      head: ["Ürün/Hizmet", "Açıklama", "Miktar", "Birim", "Birim Fiyat", "Toplam"],
+      headWidthPercentages: [25, 30, 10, 10, 12.5, 12.5],
       tableStyles: { borderWidth: 0.5, borderColor: '#000000' },
-      headStyles: { fontSize: 10, fontColor: '#ffffff', backgroundColor: '#2980ba' },
-      bodyStyles: { fontSize: 9, fontColor: '#000000' }
+      headStyles: { fontSize: 9, fontColor: '#ffffff', backgroundColor: '#2980ba' },
+      bodyStyles: { fontSize: 8, fontColor: '#000000' }
     }
   },
 
-  // Mali Bilgiler
+  // Mali Bilgiler (NewProposalCreate form'undan)
   {
-    id: 'subTotal',
-    name: 'subTotal',
-    label: 'Ara Toplam',
+    id: 'currency',
+    name: 'currency',
+    label: 'Para Birimi',
+    type: 'text',
+    category: 'financial',
+    icon: Type,
+    defaultConfig: { fontSize: 10, fontColor: '#666666' }
+  },
+  {
+    id: 'grossTotal',
+    name: 'grossTotal',
+    label: 'Brüt Toplam',
     type: 'text',
     category: 'financial',
     icon: Type,
     defaultConfig: { fontSize: 12, fontColor: '#000000' }
   },
   {
-    id: 'discounts',
-    name: 'discounts',
-    label: 'İndirim',
-    type: 'text',
-    category: 'financial',
-    icon: Type,
-    defaultConfig: { fontSize: 12, fontColor: '#000000' }
-  },
-  {
-    id: 'additionalCharges',
-    name: 'additionalCharges',
-    label: 'Ek Masraflar',
+    id: 'discountAmount',
+    name: 'discountAmount',
+    label: 'İndirim Tutarı',
     type: 'text',
     category: 'financial',
     icon: Type,
@@ -203,19 +276,46 @@ const FIELD_TEMPLATES: FieldTemplate[] = [
     type: 'text',
     category: 'financial',
     icon: Type,
-    defaultConfig: { fontSize: 14, fontColor: '#000000' }
+    defaultConfig: { fontSize: 12, fontColor: '#000000' }
   },
   {
-    id: 'totalAmount',
-    name: 'totalAmount',
+    id: 'vatAmount',
+    name: 'vatAmount',
+    label: 'KDV Tutarı',
+    type: 'text',
+    category: 'financial',
+    icon: Type,
+    defaultConfig: { fontSize: 12, fontColor: '#000000' }
+  },
+  {
+    id: 'vatPercentage',
+    name: 'vatPercentage',
+    label: 'KDV Oranı',
+    type: 'text',
+    category: 'financial',
+    icon: Type,
+    defaultConfig: { fontSize: 10, fontColor: '#666666' }
+  },
+  {
+    id: 'grandTotal',
+    name: 'grandTotal',
     label: 'Genel Toplam',
     type: 'text',
     category: 'financial',
     icon: Type,
     defaultConfig: { fontSize: 14, fontColor: '#000000' }
   },
+  {
+    id: 'additionalCharges',
+    name: 'additionalCharges',
+    label: 'Ek Masraflar',
+    type: 'text',
+    category: 'financial',
+    icon: Type,
+    defaultConfig: { fontSize: 12, fontColor: '#000000' }
+  },
 
-  // Şartlar
+  // Şartlar ve Koşullar (NewProposalCreate form'undan)
   {
     id: 'paymentTerms',
     name: 'paymentTerms',
@@ -223,7 +323,7 @@ const FIELD_TEMPLATES: FieldTemplate[] = [
     type: 'text',
     category: 'terms',
     icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
+    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 20 }
   },
   {
     id: 'deliveryTerms',
@@ -232,7 +332,7 @@ const FIELD_TEMPLATES: FieldTemplate[] = [
     type: 'text',
     category: 'terms',
     icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
+    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 20 }
   },
   {
     id: 'warrantyTerms',
@@ -241,45 +341,72 @@ const FIELD_TEMPLATES: FieldTemplate[] = [
     type: 'text',
     category: 'terms',
     icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
+    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 20 }
   },
   {
-    id: 'termsText',
-    name: 'termsText',
+    id: 'priceTerms',
+    name: 'priceTerms',
+    label: 'Fiyat Koşulları',
+    type: 'text',
+    category: 'terms',
+    icon: Type,
+    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 15 }
+  },
+  {
+    id: 'otherTerms',
+    name: 'otherTerms',
+    label: 'Diğer Şartlar',
+    type: 'text',
+    category: 'terms',
+    icon: Type,
+    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 20 }
+  },
+  {
+    id: 'generalTerms',
+    name: 'generalTerms',
     label: 'Genel Şartlar',
     type: 'text',
     category: 'terms',
     icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 40 }
-  },
-  {
-    id: 'notes',
-    name: 'notes',
-    label: 'Notlar',
-    type: 'text',
-    category: 'terms',
-    icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#666666' }
+    defaultConfig: { fontSize: 10, fontColor: '#666666', height: 30 }
   },
 
   // Ek Özellikler
   {
     id: 'proposalQRCode',
     name: 'proposalQRCode',
-    label: 'QR Kod',
+    label: 'QR Kod (Teklif Detayı)',
     type: 'qrcode',
     category: 'extra',
     icon: QrCode,
-    defaultConfig: { width: 30, height: 30, backgroundColor: '#ffffff', color: '#000000' }
+    defaultConfig: { width: 25, height: 25, backgroundColor: '#ffffff', color: '#000000' }
   },
   {
     id: 'proposalSummary',
     name: 'proposalSummary',
-    label: 'Özet Bilgi',
+    label: 'Teklif Özeti',
     type: 'text',
     category: 'extra',
     icon: Type,
-    defaultConfig: { fontSize: 10, fontColor: '#333333' }
+    defaultConfig: { fontSize: 10, fontColor: '#333333', height: 15 }
+  },
+  {
+    id: 'createdAt',
+    name: 'createdAt',
+    label: 'Oluşturma Tarihi',
+    type: 'text',
+    category: 'extra',
+    icon: Type,
+    defaultConfig: { fontSize: 9, fontColor: '#999999' }
+  },
+  {
+    id: 'updatedAt',
+    name: 'updatedAt',
+    label: 'Güncellenme Tarihi',
+    type: 'text',
+    category: 'extra',
+    icon: Type,
+    defaultConfig: { fontSize: 9, fontColor: '#999999' }
   }
 ];
 
@@ -374,8 +501,6 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
     };
   }, [initialTemplate, designer]);
 
-
-
   const handleSave = () => {
     if (designer) {
       try {
@@ -400,8 +525,6 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
       }
     }
   };
-
-
 
   return (
     <div className="flex h-[800px] bg-gray-50 rounded-lg overflow-hidden">
