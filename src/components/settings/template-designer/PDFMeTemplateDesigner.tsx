@@ -175,8 +175,6 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
                   height: 8,
                   fontSize: 9,
                   fontColor: '#666666',
-
-,
                   content: 'www.sirketadi.com | info@sirketadi.com',
                   readOnly: true
                 }
