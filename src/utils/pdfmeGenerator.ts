@@ -70,15 +70,29 @@ export class PDFMeGenerator {
     // Get schema fields from first schema
     const schema = template.schemas?.[0] || {};
     
-    // Convert proposal items to table format
-    const proposalItems = this.convertItemsToTableData(proposal.items || []);
+    // Convert proposal items to table format and compute money fields
+    const itemsArray = Array.isArray((proposal as any).items) ? (proposal as any).items : [];
+    const proposalItems = this.convertItemsToTableData(itemsArray);
+    const computedSubTotal = itemsArray.reduce((sum: number, it: any) => {
+      const qty = Number(it?.quantity ?? 0) || 0;
+      const unit = Number(it?.unit_price ?? 0) || 0;
+      const total = Number(it?.total_price ?? qty * unit) || 0;
+      return sum + total;
+    }, 0);
+    const discountAmount = Number((proposal as any)?.discount_amount ?? (proposal as any)?.discount ?? 0) || 0;
+    const totalAmount = Number((proposal as any)?.total_amount ?? (computedSubTotal - discountAmount)) || 0;
     
     // Map common proposal fields
     const fieldMappings: Record<string, any> = {
-      companyName: 'Şirket Adı',
+      companyName: (proposal as any)?.company_name || 'Şirket Adı',
+      companyLogo: (proposal as any)?.company_logo || '',
+      companyAddress: (proposal as any)?.company_address || '',
+      companyContact: (proposal as any)?.company_contact || '',
       proposalTitle: proposal.title || 'Teklif Başlığı',
       proposalNumber: proposal.proposal_number || 'TKL-001',
       customerName: proposal.customer_name || 'Müşteri Adı',
+      customerAddress: (proposal as any)?.customer_address || '',
+      customerTaxNo: (proposal as any)?.customer_tax_no || '',
       totalAmount: proposal.total_amount ? `${proposal.total_amount.toLocaleString('tr-TR')} ₺` : '0 ₺',
       createdDate: proposal.created_at ? new Date(proposal.created_at).toLocaleDateString('tr-TR') : new Date().toLocaleDateString('tr-TR'),
       validUntil: proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString('tr-TR') : '',
@@ -86,6 +100,12 @@ export class PDFMeGenerator {
       notes: proposal.notes || '',
       // Table data for proposal items
       proposalItemsTable: proposalItems,
+      // Totals
+      subTotal: `${computedSubTotal.toLocaleString('tr-TR')} ₺`,
+      discountAmount: `${discountAmount.toLocaleString('tr-TR')} ₺`,
+      netTotal: `${totalAmount.toLocaleString('tr-TR')} ₺`,
+      // Terms & Conditions
+      termsText: (proposal as any)?.terms_text || 'Şartlar ve koşullar burada yer alacaktır.',
       // QR Code data
       proposalQRCode: `${proposal.proposal_number || 'TKL-001'} | ${proposal.customer_name || 'Müşteri'} | ${proposal.total_amount ? proposal.total_amount.toLocaleString('tr-TR') : '0'} ₺`,
       // Header/Footer data
