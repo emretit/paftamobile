@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import '@pdfme/ui/dist/style.css';
 
 export const TemplateEditor: React.FC = () => {
   const designerRef = useRef<HTMLDivElement>(null);
@@ -56,22 +57,156 @@ export const TemplateEditor: React.FC = () => {
         const { Designer } = await import('@pdfme/ui');
         const { text, image, barcodes } = await import('@pdfme/schemas');
 
+        // Enhanced default template with better layout and more fields
         const defaultTemplate = {
-          basePdf: { width: 210, height: 297 },
-          schemas: [[{
-            companyName: {
-              type: 'text', position: { x: 20, y: 20 }, width: 100, height: 10, fontSize: 16, fontColor: '#000000'
-            },
-            quotationTitle: {
-              type: 'text', position: { x: 20, y: 40 }, width: 170, height: 10, fontSize: 14, fontColor: '#000000'
-            },
-            customerName: {
-              type: 'text', position: { x: 20, y: 60 }, width: 100, height: 8, fontSize: 12, fontColor: '#000000'
-            },
-            totalAmount: {
-              type: 'text', position: { x: 20, y: 80 }, width: 100, height: 8, fontSize: 12, fontColor: '#000000'
+          basePdf: { width: 210, height: 297, padding: 10 },
+          schemas: [
+            {
+              // Header section
+              companyName: {
+                type: 'text',
+                position: { x: 10, y: 15 },
+                width: 190,
+                height: 12,
+                fontSize: 18,
+                fontColor: '#1a1a1a',
+                alignment: 'center',
+                fontName: 'NotoSerifJP-Regular'
+              },
+              companyAddress: {
+                type: 'text',
+                position: { x: 10, y: 30 },
+                width: 190,
+                height: 8,
+                fontSize: 10,
+                fontColor: '#666666',
+                alignment: 'center'
+              },
+              companyPhone: {
+                type: 'text',
+                position: { x: 10, y: 40 },
+                width: 190,
+                height: 8,
+                fontSize: 10,
+                fontColor: '#666666',
+                alignment: 'center'
+              },
+              
+              // Title section
+              documentTitle: {
+                type: 'text',
+                position: { x: 10, y: 60 },
+                width: 190,
+                height: 12,
+                fontSize: 16,
+                fontColor: '#1a1a1a',
+                alignment: 'center',
+                fontName: 'NotoSerifJP-Regular'
+              },
+              
+              // Document info
+              quotationNumber: {
+                type: 'text',
+                position: { x: 140, y: 80 },
+                width: 60,
+                height: 8,
+                fontSize: 10,
+                fontColor: '#1a1a1a',
+                alignment: 'left'
+              },
+              quotationDate: {
+                type: 'text',
+                position: { x: 140, y: 90 },
+                width: 60,
+                height: 8,
+                fontSize: 10,
+                fontColor: '#1a1a1a',
+                alignment: 'left'
+              },
+              validUntil: {
+                type: 'text',
+                position: { x: 140, y: 100 },
+                width: 60,
+                height: 8,
+                fontSize: 10,
+                fontColor: '#1a1a1a',
+                alignment: 'left'
+              },
+              
+              // Customer info
+              customerName: {
+                type: 'text',
+                position: { x: 10, y: 80 },
+                width: 120,
+                height: 10,
+                fontSize: 12,
+                fontColor: '#1a1a1a',
+                fontName: 'NotoSerifJP-Regular'
+              },
+              customerAddress: {
+                type: 'text',
+                position: { x: 10, y: 92 },
+                width: 120,
+                height: 16,
+                fontSize: 9,
+                fontColor: '#666666',
+                lineHeight: 1.4
+              },
+              
+              // Items table header
+              itemsHeader: {
+                type: 'text',
+                position: { x: 10, y: 120 },
+                width: 190,
+                height: 8,
+                fontSize: 10,
+                fontColor: '#ffffff',
+                backgroundColor: '#333333',
+                alignment: 'center'
+              },
+              
+              // Total amount
+              totalLabel: {
+                type: 'text',
+                position: { x: 130, y: 200 },
+                width: 40,
+                height: 10,
+                fontSize: 12,
+                fontColor: '#1a1a1a',
+                alignment: 'right'
+              },
+              totalAmount: {
+                type: 'text',
+                position: { x: 175, y: 200 },
+                width: 25,
+                height: 10,
+                fontSize: 12,
+                fontColor: '#1a1a1a',
+                alignment: 'right',
+                fontName: 'NotoSerifJP-Regular'
+              },
+              
+              // Footer
+              paymentTerms: {
+                type: 'text',
+                position: { x: 10, y: 230 },
+                width: 190,
+                height: 20,
+                fontSize: 9,
+                fontColor: '#666666',
+                lineHeight: 1.3
+              },
+              notes: {
+                type: 'text',
+                position: { x: 10, y: 255 },
+                width: 190,
+                height: 25,
+                fontSize: 9,
+                fontColor: '#666666',
+                lineHeight: 1.3
+              }
             }
-          }]]
+          ]
         };
 
         if (designerRef.current) {
@@ -79,6 +214,18 @@ export const TemplateEditor: React.FC = () => {
             domContainer: designerRef.current,
             template: tmpl?.template_json || defaultTemplate,
             plugins: { text, image, qrcode: barcodes.qrcode } as any,
+            options: {
+              theme: {
+                token: {
+                  colorPrimary: '#3b82f6',
+                  borderRadius: 6,
+                },
+              },
+              lang: 'en',
+              labels: {
+                // Customize labels if needed
+              }
+            }
           });
           setDesigner(d);
           setTemplateId(tmpl?.id || null);
@@ -138,12 +285,22 @@ export const TemplateEditor: React.FC = () => {
       if (!designer) return;
       const template = designer.getTemplate();
 
-      // Simple mock inputs for quick preview
+      // Enhanced mock inputs for preview
       const inputs = {
-        companyName: 'Şirket A.Ş.',
-        quotationTitle: 'Teklif Başlığı',
-        customerName: 'Müşteri Adı',
-        totalAmount: '25.000 ₺',
+        companyName: 'ABC Teknoloji Ltd. Şti.',
+        companyAddress: 'Merkez Mah. Teknoloji Cad. No:123 Şişli/İstanbul',
+        companyPhone: 'Tel: (212) 555-0123 | Email: info@abcteknoloji.com',
+        documentTitle: 'TEKLİF BELGESİ',
+        quotationNumber: 'TKL-2025-001',
+        quotationDate: new Date().toLocaleDateString('tr-TR'),
+        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('tr-TR'),
+        customerName: 'XYZ İnşaat A.Ş.',
+        customerAddress: 'Sanayi Mah. İnşaat Cad. No:456\nKadıköy/İstanbul\nVergi No: 1234567890',
+        itemsHeader: 'ÜRÜN/HİZMET DETAYLARI',
+        totalLabel: 'TOPLAM:',
+        totalAmount: '125.000,00 ₺',
+        paymentTerms: 'Ödeme Koşulları: 30 gün vadeli, %2 peşin indirimi uygulanır.',
+        notes: 'Bu teklif 30 gün geçerlidir. Tüm fiyatlar KDV dahildir. Teslimat süresi sipariş onayından sonra 15 iş günüdür.'
       };
 
       const { generate } = await import('@pdfme/generator');

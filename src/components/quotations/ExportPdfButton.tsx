@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ExportPdfButtonProps {
   quotationId: string;
   label?: string;
+  quotationData?: any; // Quotation data to use instead of fetching
 }
 
 // Helper to safely get nested values like "customer.name" from an object
@@ -16,19 +18,53 @@ const buildInputsFromTemplate = (template: any, quotation: Record<string, any>) 
   const inputs: Record<string, any> = {};
   const schema = template?.schemas?.[0] || {};
 
-  Object.keys(schema).forEach((key) => {
-    // Try exact key, then nested accessor (e.g., proposal.number)
-    const direct = quotation?.[key];
-    const nested = getNested(quotation, key);
-    const val = nested ?? direct ?? '';
+  // Enhanced field mappings with fallbacks
+  const fieldMappings: Record<string, any> = {
+    // Company info
+    companyName: quotation.company_name || 'Şirket Adı',
+    companyAddress: quotation.company_address || 'Şirket Adresi',
+    companyPhone: quotation.company_phone || 'Tel: (0212) 555-0000',
+    
+    // Document info
+    documentTitle: 'TEKLİF BELGESİ',
+    quotationTitle: quotation.title || 'Teklif Başlığı',
+    quotationNumber: quotation.proposal_number || quotation.id?.slice(0, 8) || 'TKL-001',
+    quotationDate: quotation.created_at ? new Date(quotation.created_at).toLocaleDateString('tr-TR') : new Date().toLocaleDateString('tr-TR'),
+    validUntil: quotation.valid_until ? new Date(quotation.valid_until).toLocaleDateString('tr-TR') : '',
+    
+    // Customer info
+    customerName: quotation.customer_name || 'Müşteri Adı',
+    customerAddress: quotation.customer_address || 'Müşteri Adresi',
+    
+    // Items
+    itemsHeader: 'ÜRÜN/HİZMET DETAYLARI',
+    
+    // Financial
+    totalLabel: 'TOPLAM:',
+    totalAmount: quotation.total_amount ? `${quotation.total_amount.toLocaleString('tr-TR')} ₺` : '0,00 ₺',
+    
+    // Terms
+    paymentTerms: quotation.payment_terms || 'Ödeme koşulları belirtilmemiş.',
+    notes: quotation.notes || 'Ek notlar bulunmamaktadır.'
+  };
 
-    // Basic formatting for common types
-    if (val instanceof Date) {
-      inputs[key] = new Date(val).toLocaleDateString('tr-TR');
-    } else if (typeof val === 'number') {
-      inputs[key] = val.toLocaleString('tr-TR');
+  Object.keys(schema).forEach((key) => {
+    // Use enhanced mapping first, then fallback to direct/nested access
+    if (fieldMappings.hasOwnProperty(key)) {
+      inputs[key] = fieldMappings[key];
     } else {
-      inputs[key] = String(val);
+      const direct = quotation?.[key];
+      const nested = getNested(quotation, key);
+      const val = nested ?? direct ?? '';
+
+      // Basic formatting for common types
+      if (val instanceof Date) {
+        inputs[key] = new Date(val).toLocaleDateString('tr-TR');
+      } else if (typeof val === 'number') {
+        inputs[key] = val.toLocaleString('tr-TR');
+      } else {
+        inputs[key] = String(val);
+      }
     }
   });
 
@@ -108,8 +144,9 @@ export const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({ quotationId, l
   };
 
   return (
-    <Button onClick={handleExport} disabled={loading} aria-busy={loading}>
-      {loading ? 'Oluşturuluyor…' : label}
+    <Button onClick={handleExport} disabled={loading} aria-busy={loading} size="sm">
+      <FileDown className="h-4 w-4 mr-2" />
+      {loading ? 'PDF Hazırlanıyor...' : label}
     </Button>
   );
 };
