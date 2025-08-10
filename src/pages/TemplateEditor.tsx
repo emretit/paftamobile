@@ -14,6 +14,22 @@ export const TemplateEditor: React.FC = () => {
 
   useEffect(() => {
     document.title = 'PDF Şablon Düzenleyici | Quotations';
+    // SEO: meta description + canonical
+    const metaDesc = document.createElement('meta');
+    metaDesc.name = 'description';
+    metaDesc.content = 'PDFMe ile teklif PDF şablonlarını düzenleyin ve kaydedin.';
+
+    const canonical = document.createElement('link');
+    canonical.rel = 'canonical';
+    canonical.href = window.location.origin + '/settings/templates/pdfme';
+
+    document.head.appendChild(metaDesc);
+    document.head.appendChild(canonical);
+
+    return () => {
+      document.head.removeChild(metaDesc);
+      document.head.removeChild(canonical);
+    };
   }, []);
 
   useEffect(() => {
