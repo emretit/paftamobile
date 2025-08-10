@@ -293,7 +293,7 @@ const CATEGORIES = {
   items: { label: 'Ürün/Hizmet', icon: ClipboardList, color: 'bg-orange-500' },
   financial: { label: 'Mali', icon: DollarSign, color: 'bg-yellow-500' },
   terms: { label: 'Şartlar', icon: Settings, color: 'bg-gray-500' },
-  extra: { label: 'Ek', icon: Plus, color: 'bg-indigo-500' }
+  extra: { label: 'Ek', icon: FileText, color: 'bg-indigo-500' }
 };
 
 export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
