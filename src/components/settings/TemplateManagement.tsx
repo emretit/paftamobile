@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
-// Simple PDF template editor component
-import { SimplePDFTemplateEditor } from './template-designer/SimplePDFTemplateEditor';
+// Drag & Drop PDF template editor component
+import { DragDropPDFEditor } from './template-designer/DragDropPDFEditor';
 
 interface Template {
   id: string;
@@ -273,7 +273,7 @@ export const TemplateManagement: React.FC = () => {
                 </div>
               </div>
               
-              <SimplePDFTemplateEditor
+              <DragDropPDFEditor
                 initialTemplate={selectedTemplate?.template_json || null}
                 onSave={handleSaveTemplate}
                 onPreview={async (template) => {
