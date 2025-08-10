@@ -232,16 +232,6 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
     }
   };
 
-  if (isLoading) {
-    return (
-      <Card className="p-6">
-        <div className="flex items-center justify-center h-[400px]">
-          <div className="text-muted-foreground">PDF tasarımcısı yükleniyor...</div>
-        </div>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -258,9 +248,14 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
         </div>
       </div>
       
-      <Card className="p-4">
-        <div 
-          ref={designerRef} 
+      <Card className="p-4 relative">
+        {isLoading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60">
+            <div className="text-muted-foreground">PDF tasarımcısı yükleniyor...</div>
+          </div>
+        )}
+        <div
+          ref={designerRef}
           className="w-full h-[600px] border border-border rounded-md bg-background"
         />
       </Card>
