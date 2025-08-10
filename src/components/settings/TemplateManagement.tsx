@@ -166,6 +166,7 @@ export const TemplateManagement: React.FC = () => {
   };
 
   // Create a ready-to-use default PDFMe template in DB
+  // Kaldırıldı: Varsayılan şablon oluşturma
   const handleCreateDefaultTemplate = async () => {
     try {
       const { data: userRes } = await supabase.auth.getUser();
@@ -275,10 +276,6 @@ export const TemplateManagement: React.FC = () => {
               <Button onClick={handleNewTemplate}>
                 <Plus size={16} className="mr-2" />
                 İlk Şablonunuzu Oluşturun
-              </Button>
-              <div className="mt-3" />
-              <Button variant="outline" onClick={handleCreateDefaultTemplate}>
-                Varsayılan Şablonu Yükle
               </Button>
             </Card>
           ) : (
