@@ -485,16 +485,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
 
   const handleDownloadPdf = async (templateId?: string) => {
     if (!proposal) return;
-    
-    try {
-      const { ReactPdfGenerator } = await import('@/utils/reactPdfGenerator');
-      const generator = new ReactPdfGenerator();
-      await generator.generateProposalPdf(proposal, templateId);
-      toast.success(`PDF ${templateId ? 'seçilen şablonla' : ''} yazdırma için hazırlandı`);
-    } catch (error) {
-      console.error('PDF oluşturma hatası:', error);
-      toast.error("PDF oluşturulurken bir hata oluştu");
-    }
+    toast.info("PDF export özelliği PDFMe şablonları ile teklifler sayfasında mevcuttur");
   };
 
   const handleSendEmail = () => {
@@ -601,7 +592,8 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         </div>
         
         <div className="flex items-center gap-2">
-          <PdfDownloadDropdown onDownloadWithTemplate={handleDownloadPdf} proposal={proposal} />
+          {/* PDFme download dropdown with templates */}
+          <PdfDownloadDropdown proposal={proposal} />
           <Button 
             variant="outline" 
             onClick={() => handleSaveChanges(proposal.status)}

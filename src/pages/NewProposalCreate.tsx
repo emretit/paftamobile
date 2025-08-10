@@ -372,41 +372,8 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
     }
   };
 
-  const handleExportPDF = async (templateId?: string) => {
-    try {
-      // Create proposal data for PDF generation
-      const proposalData = {
-        number: formData.offer_number,
-        created_at: formData.offer_date,
-        valid_until: formData.validity_date,
-        status: 'sent',
-        customer: {
-          name: formData.customer_company,
-          contact: formData.contact_name,
-          title: formData.contact_title,
-        },
-        items: items.map(item => ({
-          name: item.name,
-          description: item.description,
-          quantity: item.quantity,
-          unit: item.unit,
-          unit_price: item.unit_price,
-          total_price: item.quantity * item.unit_price
-        })),
-        payment_terms: formData.payment_terms,
-        delivery_terms: formData.delivery_terms,
-        notes: formData.notes
-      };
-
-      // Import and use React PDF generator
-      const { ReactPdfGenerator } = await import('@/utils/reactPdfGenerator');
-      const generator = new ReactPdfGenerator();
-      await generator.generateProposalPdf(proposalData as any, templateId);
-      toast.success(`PDF ${templateId ? 'şablon ile' : ''} oluşturuldu`);
-    } catch (error) {
-      console.error('PDF generation error:', error);
-      toast.error('PDF oluşturulurken hata oluştu');
-    }
+  const handleExportPDF = async () => {
+    toast.info("PDF export özelliği PDFMe şablonları ile teklifler sayfasında mevcuttur");
   };
 
   return (

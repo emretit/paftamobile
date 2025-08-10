@@ -81,10 +81,7 @@ const TransactionsList = () => {
     console.log('Exporting to Excel...');
   };
 
-  const exportToPDF = () => {
-    // This would implement PDF export functionality
-    console.log('Exporting to PDF...');
-  };
+  // PDF export removed - use PDFMe templates for custom PDFs
 
   if (loading) {
     return (
@@ -182,10 +179,7 @@ const TransactionsList = () => {
                 <Download className="h-4 w-4 mr-2" />
                 Excel
               </Button>
-              <Button variant="outline" size="sm" onClick={exportToPDF}>
-                <Download className="h-4 w-4 mr-2" />
-                PDF
-              </Button>
+              {/* PDF export removed - use PDFMe templates */}
             </div>
           </div>
         </CardContent>

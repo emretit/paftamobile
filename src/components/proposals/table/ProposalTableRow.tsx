@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useProposalCalculations } from "@/hooks/proposals/useProposalCalculations";
 import { formatProposalAmount } from "@/services/workflow/proposalWorkflow";
+import { PdfDownloadDropdown } from "@/components/proposals/PdfDownloadDropdown";
 
 interface ProposalTableRowProps {
   proposal: Proposal;
@@ -128,6 +129,9 @@ export const ProposalTableRow = ({
           >
             <PenLine className="h-4 w-4" />
           </Button>
+          <div onClick={(e) => e.stopPropagation()}>
+            <PdfDownloadDropdown proposal={proposal} size="sm" variant="ghost" />
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 

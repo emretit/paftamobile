@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { PdfTemplateComponent } from '@/utils/pdfTemplateRegistry';
+// PDF template registry removed - using PDFMe templates now
 import { ProposalTemplate } from '@/types/proposal-template';
 
-// Supabase şablonunu PdfTemplateComponent formatına çevir
-const convertDbTemplateToPdfTemplate = (dbTemplate: any): PdfTemplateComponent => {
+// Supabase şablonunu template formatına çevir
+const convertDbTemplateToPdfTemplate = (dbTemplate: any) => {
   return {
     id: dbTemplate.id,
     name: dbTemplate.name,
     description: dbTemplate.description || '',
     category: dbTemplate.template_type || 'custom',
-    component: null, // Dinamik template için component yok
     features: dbTemplate.template_features || [],
     previewImage: dbTemplate.preview_image,
     designSettings: dbTemplate.design_settings,
