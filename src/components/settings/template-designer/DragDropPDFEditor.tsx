@@ -5,10 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { 
   Building, User, FileText, ClipboardList, DollarSign, Settings, Plus, 
-  Eye, Save, Type, Image, QrCode, Table2, GripVertical
+  Eye, Save, Type, Image, QrCode, Table2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -310,75 +309,95 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
   useEffect(() => {
     const initializeDesigner = async () => {
       try {
+        // Delay to ensure DOM is ready
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const { Designer } = await import('@pdfme/ui');
         const { text, image, barcodes, table } = await import('@pdfme/schemas');
         
-        if (designerRef.current) {
+        if (designerRef.current && !designer) {
           const defaultTemplate = initialTemplate || {
             basePdf: { width: 210, height: 297, padding: [20, 20, 20, 20] },
             schemas: [{}]
           };
 
+          console.log('Creating PDFme Designer with template:', defaultTemplate);
+
           const designerInstance = new Designer({
             domContainer: designerRef.current,
             template: defaultTemplate,
-            plugins: { text, image, qrcode: barcodes.qrcode, table } as any,
+            plugins: { text, image, qrcode: barcodes.qrcode, table },
             options: {
               theme: {
                 token: {
-                  colorPrimary: '#dc2626' // Sistem kırmızı rengi
+                  colorPrimary: '#dc2626'
                 }
               }
             }
           });
 
-          // Field ekleme fonksiyonu
+          // Field ekleme fonksiyonu - her defasında yeni Y pozisyonu
+          let lastY = 30;
           (window as any).addFieldToDesigner = (fieldTemplate: FieldTemplate) => {
-            const currentTemplate = designerInstance.getTemplate();
-            const newField = {
-              [fieldTemplate.name]: {
-                type: fieldTemplate.type,
-                position: { x: 20, y: 30 },
-                width: fieldTemplate.defaultConfig.width || 100,
-                height: fieldTemplate.defaultConfig.height || 8,
-                ...fieldTemplate.defaultConfig
-              }
-            };
+            try {
+              const currentTemplate = designerInstance.getTemplate();
+              
+              const newField = {
+                [fieldTemplate.name]: {
+                  type: fieldTemplate.type,
+                  position: { x: 20, y: lastY },
+                  width: fieldTemplate.defaultConfig.width || 60,
+                  height: fieldTemplate.defaultConfig.height || 8,
+                  ...fieldTemplate.defaultConfig
+                }
+              };
 
-            // Mevcut schema'ya yeni field'ı ekle
-            const updatedSchemas = currentTemplate.schemas.map((schema: any, index: number) => {
-              if (index === 0) {
-                return { ...schema, ...newField };
-              }
-              return schema;
-            });
+              lastY += (fieldTemplate.defaultConfig.height || 8) + 5; // 5mm spacing
 
-            designerInstance.setTemplate({
-              ...currentTemplate,
-              schemas: updatedSchemas
-            });
+              const updatedSchemas = currentTemplate.schemas.map((schema: any, index: number) => {
+                if (index === 0) {
+                  return { ...schema, ...newField };
+                }
+                return schema;
+              });
 
-            toast.success(`${fieldTemplate.label} eklendi`);
+              designerInstance.setTemplate({
+                ...currentTemplate,
+                schemas: updatedSchemas
+              });
+
+              toast.success(`${fieldTemplate.label} eklendi`);
+            } catch (error) {
+              console.error('Field add error:', error);
+              toast.error(`${fieldTemplate.label} eklenirken hata oluştu`);
+            }
           };
 
           setDesigner(designerInstance);
           setIsLoading(false);
+          console.log('PDFme Designer initialized successfully');
         }
       } catch (error) {
         console.error('PDFMe initialization error:', error);
-        toast.error('PDF tasarımcısı yüklenirken hata oluştu');
+        toast.error('PDF tasarımcısı yüklenirken hata oluştu: ' + error.message);
         setIsLoading(false);
       }
     };
 
-    initializeDesigner();
+    if (designerRef.current) {
+      initializeDesigner();
+    }
 
     return () => {
       if (designer) {
-        designer.destroy();
+        try {
+          designer.destroy();
+        } catch (error) {
+          console.error('Designer destroy error:', error);
+        }
       }
     };
-  }, [initialTemplate]);
+  }, [initialTemplate, designer]);
 
   const handleFieldDrop = (fieldTemplate: FieldTemplate) => {
     if (window.addFieldToDesigner) {
@@ -422,7 +441,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
         <div className="p-4 border-b border-gray-200">
           <h3 className="font-semibold text-lg">PDF Alanları</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Alanları sürükleyerek PDF'e ekleyin
+            Alanları tıklayarak PDF'e ekleyin
           </p>
         </div>
 
@@ -447,17 +466,15 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
                       return (
                         <div
                           key={field.id}
-                          draggable
-                          onDragEnd={() => handleFieldDrop(field)}
                           onClick={() => handleFieldDrop(field)}
-                          className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 cursor-grab active:cursor-grabbing transition-colors"
+                          className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 cursor-pointer transition-colors"
                         >
                           <FieldIcon className="w-4 h-4 text-gray-600" />
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium truncate">{field.label}</div>
                             <div className="text-xs text-gray-500">{field.type}</div>
                           </div>
-                          <GripVertical className="w-4 h-4 text-gray-400" />
+                          <Plus className="w-4 h-4 text-gray-400" />
                         </div>
                       );
                     })}
@@ -469,7 +486,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
         </ScrollArea>
       </div>
 
-      {/* Orta Panel - PDF Designer */}
+      {/* PDF Designer Area */}
       <div className="flex-1 flex flex-col">
         <div className="p-4 bg-white border-b border-gray-200 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -498,9 +515,9 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
           </div>
         </div>
 
-        <div className="flex-1 relative">
+        <div className="flex-1 relative bg-white">
           {isLoading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80">
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/90">
               <div className="text-center">
                 <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                 <div className="text-sm text-muted-foreground">PDF tasarımcısı yükleniyor...</div>
@@ -509,48 +526,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
           )}
           <div
             ref={designerRef}
-            className="w-full h-full"
-            style={{ minHeight: '600px' }}
+            className="w-full h-full min-h-[600px]"
           />
-        </div>
-      </div>
-
-      {/* Sağ Panel - Yardım */}
-      <div className="w-64 bg-white border-l border-gray-200 p-4">
-        <h4 className="font-semibold mb-3">Nasıl Kullanılır?</h4>
-        <div className="space-y-3 text-sm text-gray-600">
-          <div className="flex items-start gap-2">
-            <div className="w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium mt-0.5">1</div>
-            <div>Sol panelden istediğiniz alanı seçin veya sürükleyin</div>
-          </div>
-          <div className="flex items-start gap-2">
-            <div className="w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium mt-0.5">2</div>
-            <div>PDF üzerinde alanın konumunu ve boyutunu ayarlayın</div>
-          </div>
-          <div className="flex items-start gap-2">
-            <div className="w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium mt-0.5">3</div>
-            <div>Sağ panelde alan özelliklerini düzenleyin</div>
-          </div>
-          <div className="flex items-start gap-2">
-            <div className="w-5 h-5 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium mt-0.5">4</div>
-            <div>Önizleme ile kontrol edin ve kaydedin</div>
-          </div>
-        </div>
-
-        <Separator className="my-4" />
-
-        <div className="space-y-2">
-          <h5 className="font-medium">Alan Kategorileri</h5>
-          {Object.entries(CATEGORIES).map(([key, category]) => {
-            const CategoryIcon = category.icon;
-            return (
-              <div key={key} className="flex items-center gap-2 text-sm">
-                <div className={`w-2 h-2 rounded ${category.color}`} />
-                <CategoryIcon className="w-3 h-3" />
-                <span>{category.label}</span>
-              </div>
-            );
-          })}
         </div>
       </div>
     </div>
