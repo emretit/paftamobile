@@ -1,10 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Building, User, FileText, ClipboardList, DollarSign, Settings, 
   Eye, Save, Type, Image, QrCode, Table2
@@ -323,19 +320,30 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
 
           console.log('Creating PDFme Designer with template:', defaultTemplate);
 
+          // PDFme'nin schema'larını hazırlayalım - built-in panel için
+          const predefinedSchemas = {};
+          FIELD_TEMPLATES.forEach(field => {
+            predefinedSchemas[field.name] = {
+              type: field.type,
+              position: { x: 20, y: 30 },
+              width: field.defaultConfig.width || 60,
+              height: field.defaultConfig.height || 8,
+              ...field.defaultConfig
+            };
+          });
+
           const designerInstance = new Designer({
             domContainer: designerRef.current,
-            template: defaultTemplate,
+            template: {
+              ...defaultTemplate,
+              schemas: [predefinedSchemas] // Tüm alanları PDFme'nin schema panel'ine ekle
+            },
             plugins: { text, image, qrcode: barcodes.qrcode, table },
             options: {
               theme: {
                 token: {
                   colorPrimary: '#dc2626'
                 }
-              },
-              // PDFme'nin kendi side panel'ini gizle, bizim sol paneli kullan
-              sidebar: {
-                hideSchemaPanel: true
               }
             }
           });
@@ -366,58 +374,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
     };
   }, [initialTemplate, designer]);
 
-  const handleDragStart = (e: React.DragEvent, fieldTemplate: FieldTemplate) => {
-    // PDFme'nin beklediği format
-    const dragData = {
-      type: fieldTemplate.type,
-      key: fieldTemplate.name,
-      ...fieldTemplate.defaultConfig
-    };
-    
-    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
-    e.dataTransfer.setData('text/plain', fieldTemplate.name);
-    
-    // Visual feedback için
-    e.dataTransfer.effectAllowed = 'copy';
-  };
 
-  const addFieldToDesigner = (fieldTemplate: FieldTemplate, x: number = 20, y: number = 30) => {
-    if (!designer) return;
-
-    try {
-      const currentTemplate = designer.getTemplate();
-      
-      // Yeni field objesi
-      const newField = {
-        [fieldTemplate.name]: {
-          type: fieldTemplate.type,
-          position: { x, y },
-          width: fieldTemplate.defaultConfig.width || 60,
-          height: fieldTemplate.defaultConfig.height || 8,
-          ...fieldTemplate.defaultConfig
-        }
-      };
-
-      // Mevcut schema'ya field ekle
-      const updatedSchemas = currentTemplate.schemas.map((schema: any, index: number) => {
-        if (index === 0) {
-          return { ...schema, ...newField };
-        }
-        return schema;
-      });
-
-      // Template'ı güncelle
-      designer.setTemplate({
-        ...currentTemplate,
-        schemas: updatedSchemas
-      });
-
-      toast.success(`${fieldTemplate.label} eklendi`);
-    } catch (error) {
-      console.error('Field add error:', error);
-      toast.error(`${fieldTemplate.label} eklenirken hata oluştu`);
-    }
-  };
 
   const handleSave = () => {
     if (designer) {
@@ -444,64 +401,11 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
     }
   };
 
-  const getFieldsByCategory = (category: string) => {
-    return FIELD_TEMPLATES.filter(field => field.category === category);
-  };
+
 
   return (
     <div className="flex h-[800px] bg-gray-50 rounded-lg overflow-hidden">
-      {/* Sol Panel - Field Library */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="font-semibold text-lg">PDF Alanları</h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            Alanları PDF'e sürükleyip bırakın
-          </p>
-        </div>
-
-        <ScrollArea className="flex-1">
-          <div className="p-4 space-y-4">
-            {Object.entries(CATEGORIES).map(([categoryKey, category]) => {
-              const fields = getFieldsByCategory(categoryKey);
-              const CategoryIcon = category.icon;
-              
-              return (
-                <div key={categoryKey} className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded ${category.color}`} />
-                    <span className="font-medium text-sm">{category.label}</span>
-                    <Badge variant="secondary" className="text-xs">{fields.length}</Badge>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    {fields.map((field) => {
-                      const FieldIcon = field.icon;
-                      
-                      return (
-                        <div
-                          key={field.id}
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, field)}
-                          className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 cursor-grab active:cursor-grabbing transition-colors select-none"
-                        >
-                          <FieldIcon className="w-4 h-4 text-gray-600" />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium truncate">{field.label}</div>
-                            <div className="text-xs text-gray-500">{field.type}</div>
-                          </div>
-                          <div className="text-xs text-blue-600 font-medium">Sürükle</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
-      </div>
-
-      {/* PDF Designer Area */}
+      {/* PDF Designer Area - Full Width */}
       <div className="flex-1 flex flex-col">
         <div className="p-4 bg-white border-b border-gray-200 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -514,6 +418,9 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
                 className="mt-1 w-64"
                 placeholder="Şablon adını girin..."
               />
+            </div>
+            <div className="text-sm text-muted-foreground">
+              📝 Sol panelden alanları PDF'e sürükleyip bırakın
             </div>
           </div>
           <div className="flex gap-2">
@@ -542,32 +449,6 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
           <div
             ref={designerRef}
             className="w-full h-full min-h-[600px]"
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = 'copy';
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              try {
-                const dragDataStr = e.dataTransfer.getData('application/json');
-                if (dragDataStr) {
-                  const dragData = JSON.parse(dragDataStr);
-                  
-                  // Canvas içindeki relative pozisyonu hesapla
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const x = ((e.clientX - rect.left) / rect.width) * 210; // A4 width mm
-                  const y = ((e.clientY - rect.top) / rect.height) * 297; // A4 height mm
-                  
-                  // Field template'ı bul
-                  const fieldTemplate = FIELD_TEMPLATES.find(f => f.name === dragData.key);
-                  if (fieldTemplate) {
-                    addFieldToDesigner(fieldTemplate, Math.max(0, x), Math.max(0, y));
-                  }
-                }
-              } catch (error) {
-                console.error('Drop handling error:', error);
-              }
-            }}
           />
         </div>
       </div>
