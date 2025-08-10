@@ -23,103 +23,174 @@ export const PDFMeTemplateDesigner: React.FC<PDFMeTemplateDesignerProps> = ({
       try {
         // Dynamically import PDFMe to avoid SSR issues
         const { Designer } = await import('@pdfme/ui');
-        const { text, image, barcodes, table } = await import('@pdfme/schemas');
+        const { text, image, barcodes, table, multiVariableText } = await import('@pdfme/schemas');
         
         if (designerRef.current) {
           const defaultTemplate = {
-            basePdf: { width: 210, height: 297, padding: [20, 20, 20, 20] },
-            schemas: [[{
-              companyName: {
-                type: 'text',
-                position: { x: 20, y: 20 },
-                width: 100,
-                height: 10,
-                fontSize: 16,
-                fontColor: '#000000'
-              },
-              proposalTitle: {
-                type: 'text',
-                position: { x: 20, y: 40 },
-                width: 170,
-                height: 10,
-                fontSize: 14,
-                fontColor: '#000000'
-              },
-              customerName: {
-                type: 'text',
-                position: { x: 20, y: 60 },
-                width: 100,
-                height: 8,
-                fontSize: 12,
-                fontColor: '#000000'
-              },
-              proposalItemsTable: {
-                type: 'table',
-                position: { x: 20, y: 80 },
-                width: 170,
-                height: 50,
-                content: '[["Ürün/Hizmet","Miktar","Birim","Birim Fiyat","Toplam"],["Web Sitesi","1","Adet","50.000 ₺","50.000 ₺"]]',
-                showHead: true,
-                head: ["Ürün/Hizmet", "Miktar", "Birim", "Birim Fiyat", "Toplam"],
-                headWidthPercentages: [40, 15, 15, 15, 15],
-                tableStyles: {
-                  borderWidth: 0.5,
-                  borderColor: '#000000'
+            basePdf: { width: 210, height: 297, padding: [30, 20, 30, 20] }, // Top/bottom padding için alan
+            schemas: [
+              // Header schema (her sayfada tekrarlanır)
+              {
+                companyHeader: {
+                  type: 'text',
+                  position: { x: 20, y: 10 },
+                  width: 100,
+                  height: 8,
+                  fontSize: 12,
+                  fontColor: '#666666',
+                  fontName: 'NotoSans',
+                  content: 'Şirket Adı',
+                  readOnly: true
                 },
-                headStyles: {
+                headerLine: {
+                  type: 'text',
+                  position: { x: 20, y: 18 },
+                  width: 170,
+                  height: 1,
+                  fontSize: 8,
+                  backgroundColor: '#cccccc',
+                  content: ' ',
+                  readOnly: true
+                },
+                pageNumber: {
+                  type: 'text',
+                  position: { x: 150, y: 10 },
+                  width: 40,
+                  height: 8,
                   fontSize: 10,
-                  fontColor: '#ffffff',
-                  backgroundColor: '#2980ba'
-                },
-                bodyStyles: {
-                  fontSize: 9,
-                  fontColor: '#000000'
+                  fontColor: '#666666',
+                  alignment: 'right',
+                  content: 'Sayfa {currentPage}/{totalPages}',
+                  readOnly: true
                 }
               },
-              totalAmount: {
-                type: 'text',
-                position: { x: 120, y: 140 },
-                width: 70,
-                height: 8,
-                fontSize: 12,
-                fontColor: '#000000',
-                alignment: 'right'
+              // Main content schema
+              {
+                companyName: {
+                  type: 'text',
+                  position: { x: 20, y: 30 },
+                  width: 100,
+                  height: 10,
+                  fontSize: 16,
+                  fontColor: '#000000',
+                  fontName: 'NotoSans'
+                },
+                proposalTitle: {
+                  type: 'text',
+                  position: { x: 20, y: 50 },
+                  width: 170,
+                  height: 10,
+                  fontSize: 14,
+                  fontColor: '#000000',
+                  fontName: 'NotoSans'
+                },
+                customerName: {
+                  type: 'text',
+                  position: { x: 20, y: 70 },
+                  width: 100,
+                  height: 8,
+                  fontSize: 12,
+                  fontColor: '#000000',
+                  fontName: 'NotoSans'
+                },
+                proposalItemsTable: {
+                  type: 'table',
+                  position: { x: 20, y: 90 },
+                  width: 170,
+                  height: 50,
+                  content: '[["Ürün/Hizmet","Miktar","Birim","Birim Fiyat","Toplam"],["Web Sitesi","1","Adet","50.000 ₺","50.000 ₺"]]',
+                  showHead: true,
+                  head: ["Ürün/Hizmet", "Miktar", "Birim", "Birim Fiyat", "Toplam"],
+                  headWidthPercentages: [40, 15, 15, 15, 15],
+                  tableStyles: {
+                    borderWidth: 0.5,
+                    borderColor: '#000000'
+                  },
+                  headStyles: {
+                    fontSize: 10,
+                    fontColor: '#ffffff',
+                    backgroundColor: '#2980ba',
+                    fontName: 'NotoSans'
+                  },
+                  bodyStyles: {
+                    fontSize: 9,
+                    fontColor: '#000000',
+                    fontName: 'NotoSans'
+                  }
+                },
+                totalAmount: {
+                  type: 'text',
+                  position: { x: 120, y: 150 },
+                  width: 70,
+                  height: 8,
+                  fontSize: 12,
+                  fontColor: '#000000',
+                  fontName: 'NotoSans',
+                  alignment: 'right'
+                },
+                proposalQRCode: {
+                  type: 'qrcode',
+                  position: { x: 20, y: 160 },
+                  width: 30,
+                  height: 30,
+                  backgroundColor: '#ffffff',
+                  color: '#000000'
+                },
+                proposalSummary: {
+                  type: 'multiVariableText',
+                  position: { x: 60, y: 160 },
+                  width: 130,
+                  height: 20,
+                  fontSize: 10,
+                  fontColor: '#333333',
+                  fontName: 'NotoSans',
+                  content: 'Teklif No: {proposalNumber} | Müşteri: {customerName} | Toplam: {totalAmount}',
+                  lineHeight: 1.4
+                }
               },
-              proposalQRCode: {
-                type: 'qrcode',
-                position: { x: 20, y: 150 },
-                width: 30,
-                height: 30,
-                backgroundColor: '#ffffff',
-                color: '#000000'
-              },
-              currentDate: {
-                type: 'text',
-                position: { x: 150, y: 150 },
-                width: 40,
-                height: 8,
-                fontSize: 9,
-                fontColor: '#666666',
-                content: '{date}',
-                readOnly: true
-              },
-              pageInfo: {
-                type: 'text',
-                position: { x: 150, y: 160 },
-                width: 40,
-                height: 8,
-                fontSize: 9,
-                fontColor: '#666666',
-                content: 'Sayfa {currentPage}/{totalPages}',
-                readOnly: true
+              // Footer schema (her sayfada tekrarlanır)
+              {
+                footerLine: {
+                  type: 'text',
+                  position: { x: 20, y: 280 },
+                  width: 170,
+                  height: 1,
+                  fontSize: 8,
+                  backgroundColor: '#cccccc',
+                  content: ' ',
+                  readOnly: true
+                },
+                currentDate: {
+                  type: 'text',
+                  position: { x: 20, y: 285 },
+                  width: 80,
+                  height: 8,
+                  fontSize: 9,
+                  fontColor: '#666666',
+                  fontName: 'NotoSans',
+                  content: '{date}',
+                  readOnly: true
+                },
+                companyFooter: {
+                  type: 'text',
+                  position: { x: 110, y: 285 },
+                  width: 80,
+                  height: 8,
+                  fontSize: 9,
+                  fontColor: '#666666',
+                  fontName: 'NotoSans',
+                  alignment: 'right',
+                  content: 'www.sirketadi.com | info@sirketadi.com',
+                  readOnly: true
+                }
               }
-            }]]
+            ]
           };
 
           const designerInstance = new Designer({
             domContainer: designerRef.current,
             template: initialTemplate || defaultTemplate,
-            plugins: { text, image, qrcode: barcodes.qrcode, table } as any
+            plugins: { text, image, qrcode: barcodes.qrcode, table, multiVariableText } as any
           });
 
           setDesigner(designerInstance);

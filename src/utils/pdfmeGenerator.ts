@@ -5,7 +5,7 @@ export class PDFMeGenerator {
     try {
       // Dynamically import PDFMe to avoid SSR issues
       const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes, table } = await import('@pdfme/schemas');
+      const { text, image, barcodes, table, multiVariableText } = await import('@pdfme/schemas');
       
       // Map proposal data to template inputs
       const inputs = this.mapProposalToInputs(proposal, template);
@@ -14,7 +14,7 @@ export class PDFMeGenerator {
       const pdf = await generate({
         template,
         inputs: [inputs],
-        plugins: { text, image, qrcode: barcodes.qrcode, table } as any
+        plugins: { text, image, qrcode: barcodes.qrcode, table, multiVariableText } as any
       });
 
       // Download the PDF
@@ -37,7 +37,7 @@ export class PDFMeGenerator {
     try {
       // Dynamically import PDFMe to avoid SSR issues
       const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes, table } = await import('@pdfme/schemas');
+      const { text, image, barcodes, table, multiVariableText } = await import('@pdfme/schemas');
       
       // Use mock data or default values
       const inputs = mockData || this.getMockData();
@@ -45,7 +45,7 @@ export class PDFMeGenerator {
       const pdf = await generate({
         template,
         inputs: [inputs],
-        plugins: { text, image, qrcode: barcodes.qrcode, table } as any
+        plugins: { text, image, qrcode: barcodes.qrcode, table, multiVariableText } as any
       });
 
       // Download preview
@@ -87,7 +87,20 @@ export class PDFMeGenerator {
       // Table data for proposal items
       proposalItemsTable: proposalItems,
       // QR Code data
-      proposalQRCode: `${proposal.proposal_number || 'TKL-001'} | ${proposal.customer_name || 'Müşteri'} | ${proposal.total_amount ? proposal.total_amount.toLocaleString('tr-TR') : '0'} ₺`
+      proposalQRCode: `${proposal.proposal_number || 'TKL-001'} | ${proposal.customer_name || 'Müşteri'} | ${proposal.total_amount ? proposal.total_amount.toLocaleString('tr-TR') : '0'} ₺`,
+      // Header/Footer data
+      companyHeader: 'Şirket Adı',
+      headerLine: ' ',
+      pageNumber: 'Sayfa {currentPage}/{totalPages}',
+      footerLine: ' ',
+      currentDate: new Date().toLocaleDateString('tr-TR'),
+      companyFooter: 'www.sirketadi.com | info@sirketadi.com',
+      // Multivariate text data
+      proposalSummary: {
+        proposalNumber: proposal.proposal_number || 'TKL-001',
+        customerName: proposal.customer_name || 'Müşteri',
+        totalAmount: proposal.total_amount ? `${proposal.total_amount.toLocaleString('tr-TR')} ₺` : '0 ₺'
+      }
     };
 
     // Map schema fields to proposal data
@@ -135,7 +148,20 @@ export class PDFMeGenerator {
       paymentTerms: '30 gün vadeli',
       notes: 'Bu bir örnek teklif belgesidir.',
       proposalItemsTable: mockItems,
-      proposalQRCode: 'TKL-2024-001 | XYZ İnşaat A.Ş. | 125.000 ₺'
+      proposalQRCode: 'TKL-2024-001 | XYZ İnşaat A.Ş. | 125.000 ₺',
+      // Header/Footer data
+      companyHeader: 'ABC Teknoloji Ltd. Şti.',
+      headerLine: ' ',
+      pageNumber: 'Sayfa {currentPage}/{totalPages}',
+      footerLine: ' ',
+      currentDate: new Date().toLocaleDateString('tr-TR'),
+      companyFooter: 'www.abcteknoloji.com | info@abcteknoloji.com',
+      // Multivariate text data
+      proposalSummary: {
+        proposalNumber: 'TKL-2024-001',
+        customerName: 'XYZ İnşaat A.Ş.',
+        totalAmount: '125.000 ₺'
+      }
     };
   }
 }

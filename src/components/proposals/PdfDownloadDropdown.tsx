@@ -51,7 +51,7 @@ export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
       }
 
       const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes, table } = await import('@pdfme/schemas');
+      const { text, image, barcodes, table, multiVariableText } = await import('@pdfme/schemas');
 
       // Convert proposal items to table format
       const proposalItems = proposal.items && proposal.items.length > 0 
@@ -76,13 +76,26 @@ export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
         paymentTerms: proposal.payment_terms || 'Standart ödeme koşulları',
         notes: proposal.notes || '',
         proposalItemsTable: proposalItems,
-        proposalQRCode: `${proposal.proposal_number || 'TKL-001'} | ${proposal.customer_name || 'Müşteri'} | ${proposal.total_amount ? proposal.total_amount.toLocaleString('tr-TR') : '0'} ₺`
+        proposalQRCode: `${proposal.proposal_number || 'TKL-001'} | ${proposal.customer_name || 'Müşteri'} | ${proposal.total_amount ? proposal.total_amount.toLocaleString('tr-TR') : '0'} ₺`,
+        // Header/Footer data
+        companyHeader: 'Şirket Adı',
+        headerLine: ' ',
+        pageNumber: 'Sayfa {currentPage}/{totalPages}',
+        footerLine: ' ',
+        currentDate: new Date().toLocaleDateString('tr-TR'),
+        companyFooter: 'www.sirketadi.com | info@sirketadi.com',
+        // Multivariate text data
+        proposalSummary: {
+          proposalNumber: proposal.proposal_number || 'TKL-001',
+          customerName: proposal.customer_name || 'Müşteri',
+          totalAmount: proposal.total_amount ? `${proposal.total_amount.toLocaleString('tr-TR')} ₺` : '0 ₺'
+        }
       };
 
       const pdf = await generate({
         template: template.template_json,
         inputs: [inputs],
-        plugins: { text, image, qrcode: barcodes.qrcode, table } as any
+        plugins: { text, image, qrcode: barcodes.qrcode, table, multiVariableText } as any
       });
 
       const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
