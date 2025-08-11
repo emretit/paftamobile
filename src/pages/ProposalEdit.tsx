@@ -14,7 +14,7 @@ import { formatCurrency } from "@/utils/formatters";
 import { useProposalEdit } from "@/hooks/useProposalEdit";
 import { useCustomerSelect } from "@/hooks/useCustomerSelect";
 import { ProposalItem } from "@/types/proposal";
-import { PdfDownloadDropdown } from "@/components/proposals/PdfDownloadDropdown";
+
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -449,9 +449,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
     toast.info("Önizleme özelliği yakında eklenecek");
   };
 
-  const handleExportPDF = () => {
-    toast.info("PDF dışa aktarma özelliği yakında eklenecek");
-  };
+
 
   const handleStatusChange = async (newStatus: ProposalStatus) => {
     if (!proposal) return;
@@ -483,10 +481,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
   };
 
 
-  const handleDownloadPdf = async (templateId?: string) => {
-    if (!proposal) return;
-    toast.info("PDF export özelliği PDFMe şablonları ile teklifler sayfasında mevcuttur");
-  };
+
 
   const handleSendEmail = () => {
     toast.success("E-posta gönderme penceresi açıldı");
@@ -592,8 +587,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         </div>
         
         <div className="flex items-center gap-2">
-          {/* PDFme download dropdown with templates */}
-          <PdfDownloadDropdown proposal={proposal} />
+
           <Button 
             variant="outline" 
             onClick={() => handleSaveChanges(proposal.status)}

@@ -372,9 +372,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
     }
   };
 
-  const handleExportPDF = async () => {
-    toast.info("PDF export özelliği PDFMe şablonları ile teklifler sayfasında mevcuttur");
-  };
+
 
   return (
     <DefaultLayout 
@@ -398,7 +396,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         </div>
         
         <div className="flex items-center gap-2">
-          {/* PDF Export functionality disabled for new proposals - use standard save instead */}
+
           <Button 
             variant="outline" 
             onClick={() => handleSave('draft')}

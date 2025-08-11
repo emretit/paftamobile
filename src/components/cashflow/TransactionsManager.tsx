@@ -168,7 +168,7 @@ const TransactionsManager = () => {
     console.log('Exporting to Excel...');
   };
 
-  // PDF export removed - use PDFMe templates for custom PDFs
+
 
   const filteredCategories = categories.filter(cat => cat.type === transactionType);
 
@@ -445,7 +445,7 @@ const TransactionsManager = () => {
                 <Download className="h-4 w-4 mr-2" />
                 Excel
               </Button>
-              {/* PDF export removed - use PDFMe templates */}
+
             </div>
           </div>
         </CardContent>
