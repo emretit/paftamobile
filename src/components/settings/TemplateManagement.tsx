@@ -169,7 +169,7 @@ export const TemplateManagement: React.FC = () => {
       
       // PDF oluşturucu ve şemalar
       const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes, line, rectangle, ellipse, table, checkbox, radioGroup, select, multiVariableText, dateTime, signature } = await import('@pdfme/schemas');
+      const { text, image, barcodes, line, rectangle, ellipse, table, checkbox, radioGroup, select, multiVariableText, dateTime } = await import('@pdfme/schemas');
       const { BLANK_PDF } = await import('@pdfme/common');
 
       // Bazı şablonlarda basePdf string olarak tutulmuş olabilir -> gerçek BLANK_PDF ile değiştir
@@ -363,8 +363,7 @@ export const TemplateManagement: React.FC = () => {
           select,
           multiVariableText,
           dateTime,
-          signature,
-        },
+        } as any,
       });
 
       console.log('✅ PDF oluşturuldu! Boyut:', pdf.buffer.byteLength, 'bytes');

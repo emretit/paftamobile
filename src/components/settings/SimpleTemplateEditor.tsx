@@ -41,7 +41,7 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
         console.log('📦 PDFme modülleri yükleniyor...');
         const [
           { Designer },
-          { text, image, barcodes, line, rectangle, ellipse, table, checkbox, radioGroup, select, multiVariableText, dateTime, signature },
+          { text, image, barcodes, line, rectangle, ellipse, table, checkbox, radioGroup, select, multiVariableText, dateTime },
           { BLANK_PDF }
         ] = await Promise.all([
           import('@pdfme/ui'),
@@ -112,8 +112,7 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
             select,
             multiVariableText,
             dateTime,
-            signature,
-          },
+          } as any,
           options: {
             zoomLevel: 1.0,
             sidebarOpen: true,
@@ -240,7 +239,7 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
       
       // Preview için generate kullan
       const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes, line, rectangle, ellipse, table, checkbox, radioGroup, select, multiVariableText, dateTime, signature } = await import('@pdfme/schemas');
+      const { text, image, barcodes, line, rectangle, ellipse, table, checkbox, radioGroup, select, multiVariableText, dateTime } = await import('@pdfme/schemas');
       console.log('🔧 Plugins yüklendi');
 
       // Şablondaki alanları kontrol et ve uygun örnek veri oluştur
@@ -354,8 +353,7 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
           select,
           multiVariableText,
           dateTime,
-          signature
-        }
+        } as any
       });
 
       console.log('✅ PDF oluşturuldu! Boyut:', pdf.buffer.byteLength, 'bytes');
