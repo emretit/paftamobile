@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
+import { Button } from "@/components/ui/button";
 import { 
   CustomTabs, 
   CustomTabsContent, 
@@ -54,7 +55,18 @@ const Settings = ({ isCollapsed, setIsCollapsed }: SettingsProps) => {
             </CustomTabsContent>
 
             <CustomTabsContent value="templates">
-              <TemplateManagement />
+              <div className="text-center py-8">
+                <h3 className="text-lg font-semibold mb-4">PDF Şablonları</h3>
+                <p className="text-muted-foreground mb-6">
+                  PDF şablonlarını yönetmek için şablon sayfasına gidin
+                </p>
+                <Button 
+                  onClick={() => window.location.href = '/templates'}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Şablonlar Sayfasına Git
+                </Button>
+              </div>
             </CustomTabsContent>
 
 
