@@ -150,28 +150,83 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               content: 'Sayın\nMustafa Bey,\nYapmış olduğumuz görüşmeler sonrasında hazırlamış olduğumuz fiyat teklifimizi değerlendirmenize sunarız.'
             },
 
-            // Ürün tablosu
+            // Ürün tablosu - Esnek kolon yapısı
             'urunTablosu': {
               type: 'table',
               position: { x: 20, y: 120 },
               width: 170,
               height: 80,
               showHead: true,
-              head: ["No", "Açıklama", "BİLGİSAYAR", "Miktar", "Fiyat", "Tutar (KDV Hariç)"],
-              headWidthPercentages: [8, 35, 25, 12, 10, 10],
+              head: ["No", "Açıklama", "Ürün/Hizmet", "Miktar", "Birim Fiyat", "Tutar (KDV Hariç)"],
+              headWidthPercentages: [8, 30, 25, 12, 12.5, 12.5],
+              tableStyles: { 
+                borderWidth: 0.5, 
+                borderColor: '#000000',
+                cellPadding: 3
+              },
+              headStyles: { 
+                fontSize: 9, 
+                fontColor: '#ffffff', 
+                backgroundColor: '#dc2626',
+                alignment: 'center',
+                fontName: 'NotoSansCJKjp-Regular'
+              },
+              bodyStyles: { 
+                fontSize: 8, 
+                fontColor: '#000000',
+                alignment: 'left'
+              }
+            },
+
+            // Alternatif kolon düzeni - 4 kolonlu
+            'urunTablosu4Kolon': {
+              type: 'table',
+              position: { x: 20, y: 120 },
+              width: 170,
+              height: 80,
+              showHead: true,
+              head: ["Açıklama", "Miktar", "Birim Fiyat", "Toplam"],
+              headWidthPercentages: [50, 20, 15, 15],
+              tableStyles: { 
+                borderWidth: 0.5, 
+                borderColor: '#000000',
+                cellPadding: 3
+              },
+              headStyles: { 
+                fontSize: 10, 
+                fontColor: '#ffffff', 
+                backgroundColor: '#2980ba',
+                alignment: 'center'
+              },
+              bodyStyles: { 
+                fontSize: 9, 
+                fontColor: '#000000',
+                alignment: 'left'
+              }
+            },
+
+            // Alternatif kolon düzeni - Detaylı
+            'urunTablosuDetayli': {
+              type: 'table',
+              position: { x: 20, y: 120 },
+              width: 170,
+              height: 80,
+              showHead: true,
+              head: ["Sıra", "Ürün/Hizmet Açıklaması", "Özellik", "Adet", "Birim", "Birim Fiyat", "İndirim %", "Net Tutar"],
+              headWidthPercentages: [6, 28, 18, 8, 8, 12, 8, 12],
               tableStyles: { 
                 borderWidth: 0.5, 
                 borderColor: '#000000',
                 cellPadding: 2
               },
               headStyles: { 
-                fontSize: 9, 
+                fontSize: 8, 
                 fontColor: '#ffffff', 
-                backgroundColor: '#dc2626',
+                backgroundColor: '#27ae60',
                 alignment: 'center'
               },
               bodyStyles: { 
-                fontSize: 8, 
+                fontSize: 7, 
                 fontColor: '#000000',
                 alignment: 'left'
               }
