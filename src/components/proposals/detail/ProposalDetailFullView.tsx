@@ -16,6 +16,9 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { ProposalItemsTab } from "./ProposalItemsTab";
 import ProposalAttachments from "@/components/proposals/form/ProposalAttachments";
+import { PdfDownloadDropdown } from "../PdfDownloadDropdown";
+import { downloadProposalTablePdf } from "@/services/pdf/proposalTablePdfService";
+import { toast } from "sonner";
 
 interface ProposalDetailFullViewProps {
   proposal: Proposal;
@@ -91,10 +94,41 @@ const ProposalDetailFullView = ({
     }
   };
 
+  // PDF Export fonksiyonları
+  const handleDownloadTablePdf = async () => {
+    try {
+      toast.loading("Detaylı tablo PDF hazırlanıyor...");
+      await downloadProposalTablePdf(proposal);
+      toast.success("Detaylı tablo PDF başarıyla indirildi!");
+    } catch (error) {
+      console.error('Tablo PDF indirme hatası:', error);
+      toast.error("Tablo PDF indirme başarısız!");
+    }
+  };
+
+  const handlePreviewTablePdf = async () => {
+    toast.info("Detaylı tablo PDF önizleme özelliği yakında!");
+  };
+
   return (
     <Card className="h-full">
       <CardHeader className="pb-3">
-        <CardTitle>Teklif Detayları</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle>Teklif Detayları</CardTitle>
+          <div className="flex gap-2">
+            {isEditMode && (
+              <Button onClick={handleSaveChanges} size="sm" disabled={saving}>
+                <Save className="mr-2 h-4 w-4" />
+                {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+              </Button>
+            )}
+            <PdfDownloadDropdown
+              onDownloadTablePdf={handleDownloadTablePdf}
+              onGenerateTablePdf={handlePreviewTablePdf}
+              disabled={false}
+            />
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">

@@ -1,35 +1,36 @@
 import React from 'react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Download, FileText } from 'lucide-react';
+import { Download, FileText, Table } from 'lucide-react';
 
 interface PdfDownloadDropdownProps {
-  onDownloadPdf?: () => void;
-  onGeneratePdf?: () => void;
+  onDownloadTablePdf?: () => void;  // Dinamik tablo PDF
+  onGenerateTablePdf?: () => void;  // Dinamik tablo önizleme
   disabled?: boolean;
 }
 
 export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
-  onDownloadPdf,
-  onGeneratePdf,
+  onDownloadTablePdf,
+  onGenerateTablePdf,
   disabled = false
 }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" disabled={disabled}>
-          <Download className="h-4 w-4 mr-2" />
-          PDF
+          <Table className="h-4 w-4 mr-2" />
+          PDF Export
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={onGeneratePdf} disabled={disabled}>
-          <FileText className="h-4 w-4 mr-2" />
-          Önizle
+        {/* Dinamik Tablo PDF Export */}
+        <DropdownMenuItem onClick={onGenerateTablePdf} disabled={disabled}>
+          <Table className="h-4 w-4 mr-2" />
+          Detaylı Tablo Önizle
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onDownloadPdf} disabled={disabled}>
+        <DropdownMenuItem onClick={onDownloadTablePdf} disabled={disabled}>
           <Download className="h-4 w-4 mr-2" />
-          İndir
+          Detaylı Tablo İndir
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

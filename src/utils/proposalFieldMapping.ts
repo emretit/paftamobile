@@ -234,28 +234,35 @@ export const STANDARD_FIELD_MAPPING: Record<keyof StandardProposalFields, {
     formatter: (value) => value || 'TRY'
   },
 
-  // 6. ÜRÜN/HİZMET BİLGİLERİ
+  // 6. ÜRÜN/HİZMET BİLGİLERİ - pdfme table schema için dinamik veri
   itemsTable: {
-    templateKeys: ['itemsTable', 'items_table', 'urunTablo', 'kalemler', 'items', 'products'],
+    templateKeys: ['itemsTable', 'items_table', 'urunTablo', 'kalemler', 'items', 'products', 'orders'],
     dataPath: 'items',
     formatter: (value, proposal) => {
       const items = proposal?.items || [];
+      
+      // Her teklif için dinamik satır sayısı - pdfme table schema'sı için
       if (items.length === 0) {
-        return [['Ürün/Hizmet', 'Miktar', 'Birim', 'Birim Fiyat', 'Toplam']];
+        // Boş teklif için sadece header
+        return [['Ürün/Hizmet', 'Açıklama', 'Miktar', 'Birim', 'Birim Fiyat', 'KDV %', 'Toplam']];
       }
       
-      const tableData = [['Ürün/Hizmet', 'Miktar', 'Birim', 'Birim Fiyat', 'Toplam']];
+      // Header satırı dahil değil - pdfme table head ayrı tanımlanıyor
+      const tableData: string[][] = [];
       
       items.forEach(item => {
         tableData.push([
           item.name || '',
+          item.description || '',
           item.quantity?.toString() || '1',
           item.unit || 'adet',
           `${(item.unit_price || 0).toLocaleString('tr-TR')} ₺`,
+          `%${item.tax_rate || 18}`,
           `${(item.total_price || 0).toLocaleString('tr-TR')} ₺`
         ]);
       });
       
+      // pdfme table schema için 2D array döndür
       return tableData;
     }
   },

@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Proposal } from "@/types/proposal";
 import StatusBadge from "./detail/StatusBadge";
+import { PdfDownloadDropdown } from "./PdfDownloadDropdown";
+import { downloadProposalTablePdf } from "@/services/pdf/proposalTablePdfService";
 import { 
   Edit3,
   FileText,
@@ -20,6 +22,7 @@ import {
   Paperclip
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface ProposalDetailSheetProps {
   proposal: Proposal | null;
@@ -50,6 +53,22 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
     navigate(`/proposal/${proposal.id}/edit?focus=items`);
   };
 
+  // PDF Export fonksiyonları
+  const handleDownloadTablePdf = async () => {
+    try {
+      toast.loading("Detaylı tablo PDF hazırlanıyor...");
+      await downloadProposalTablePdf(proposal);
+      toast.success("Detaylı tablo PDF başarıyla indirildi!");
+    } catch (error) {
+      console.error('Tablo PDF indirme hatası:', error);
+      toast.error("Tablo PDF indirme başarısız!");
+    }
+  };
+
+  const handlePreviewTablePdf = async () => {
+    toast.info("Detaylı tablo PDF önizleme özelliği yakında!");
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
@@ -67,10 +86,18 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
             <StatusBadge status={proposal.status} size="sm" />
           </div>
 
-          <Button onClick={handleEdit} className="w-full">
-            <Edit3 className="mr-2 h-4 w-4" />
-            Teklifi Düzenle
-          </Button>
+          <div className="space-y-2">
+            <Button onClick={handleEdit} className="w-full">
+              <Edit3 className="mr-2 h-4 w-4" />
+              Teklifi Düzenle
+            </Button>
+            
+            <PdfDownloadDropdown
+              onDownloadTablePdf={handleDownloadTablePdf}
+              onGenerateTablePdf={handlePreviewTablePdf}
+              disabled={false}
+            />
+          </div>
         </SheetHeader>
 
         <div className="space-y-6">

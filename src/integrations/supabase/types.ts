@@ -2171,45 +2171,7 @@ export type Database = {
           },
         ]
       }
-      pdf_templates: {
-        Row: {
-          created_at: string | null
-          created_by: string | null
-          description: string | null
-          field_mapping_json: Json | null
-          id: string
-          is_active: boolean | null
-          is_default: boolean | null
-          name: string
-          template_json: Json
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          field_mapping_json?: Json | null
-          id?: string
-          is_active?: boolean | null
-          is_default?: boolean | null
-          name: string
-          template_json: Json
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          field_mapping_json?: Json | null
-          id?: string
-          is_active?: boolean | null
-          is_default?: boolean | null
-          name?: string
-          template_json?: Json
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
+
       product_categories: {
         Row: {
           created_at: string | null
@@ -3222,89 +3184,7 @@ export type Database = {
           },
         ]
       }
-      template_variables: {
-        Row: {
-          category: string | null
-          created_at: string | null
-          default_value: string | null
-          description: string | null
-          id: string
-          is_system: boolean | null
-          label: string
-          name: string
-          type: string
-          updated_at: string | null
-          validation_rules: Json | null
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string | null
-          default_value?: string | null
-          description?: string | null
-          id?: string
-          is_system?: boolean | null
-          label: string
-          name: string
-          type: string
-          updated_at?: string | null
-          validation_rules?: Json | null
-        }
-        Update: {
-          category?: string | null
-          created_at?: string | null
-          default_value?: string | null
-          description?: string | null
-          id?: string
-          is_system?: boolean | null
-          label?: string
-          name?: string
-          type?: string
-          updated_at?: string | null
-          validation_rules?: Json | null
-        }
-        Relationships: []
-      }
-      templates: {
-        Row: {
-          created_at: string | null
-          id: string
-          is_default: boolean | null
-          name: string
-          project_id: string
-          template_json: Json
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          is_default?: boolean | null
-          name: string
-          project_id: string
-          template_json: Json
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_default?: boolean | null
-          name?: string
-          project_id?: string
-          template_json?: Json
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "templates_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+
       user_preferences: {
         Row: {
           created_at: string | null
