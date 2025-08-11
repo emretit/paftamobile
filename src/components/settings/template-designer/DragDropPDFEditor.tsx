@@ -821,11 +821,14 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
     }
 
     try {
+      console.log('Starting PDF preview generation...');
       const template = designer.getTemplate();
+      console.log('Template retrieved:', template);
       
-      // PDFme generator import
+      // PDFme generator import with proper error handling
       const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes, table, line, rectangle, ellipse, svg, checkbox, radioGroup, select, date, time, dateTime, builtInPlugins } = await import('@pdfme/schemas');
+      const { builtInPlugins } = await import('@pdfme/schemas');
+      console.log('PDFme libraries imported successfully');
       
       // NGS Teklif Formu için güncel sample data
       const sampleData = {
@@ -845,6 +848,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
         musteriBaslik: 'BAHÇEŞEHİR GÖLEVLERİ SİTESİ',
         sayinLabel: 'Sayın\nMustafa Bey,\nYapmış olduğumuz görüşmeler sonrasında hazırlamış olduğumuz fiyat teklifimizi değerlendirmenize sunarız.',
         urunTablosu: [
+          ['S/N', 'ÜRÜN/HİZMET', 'MİKTAR', 'BİRİM FİYAT', 'TOPLAM'],
           ['1', 'BİLGİSAYAR\nHP Pro Tower 290 BUC5S G9 İ7-13700 32GB 512GB SSD DOS', '1,00 Ad', '700,00 $', '700,00 $'],
           ['2', 'Windows 11 Pro Lisans', '1,00 Ad', '165,00 $', '165,00 $'],
           ['3', 'Uranium POE-G8002-96W 8 Port + 2 Port RJ45 Uplink POE Switch', '2,00 Ad', '80,00 $', '160,00 $'],
@@ -895,27 +899,33 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
 
       // PDF Generate
       toast.info('PDF önizlemesi oluşturuluyor...');
+      console.log('Sample data prepared:', sampleData);
+      
+      // Create proper plugins object with type compatibility
+      const { text, image, barcodes, table, line, rectangle, ellipse, svg, checkbox, radioGroup, select, date, time, dateTime } = await import('@pdfme/schemas');
+      
+      const plugins = { 
+        text, 
+        image, 
+        qrcode: barcodes.qrcode,
+        ean13: barcodes.ean13,
+        table,
+        line,
+        rectangle,
+        ellipse,
+        svg,
+        checkbox,
+        radioGroup,
+        select,
+        date,
+        time,
+        dateTime
+      };
       
       const pdf = await generate({
         template,
         inputs: [sampleData],
-        plugins: { 
-          text, 
-          image, 
-          qrcode: barcodes.qrcode,
-          ean13: barcodes.ean13,
-          table,
-          line,
-          rectangle,
-          ellipse,
-          svg,
-          checkbox,
-          radioGroup,
-          select,
-          date,
-          time,
-          dateTime
-        } as any
+        plugins: plugins as any
       });
 
       // PDF'i yeni sekmede aç
