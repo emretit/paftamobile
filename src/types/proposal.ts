@@ -1,5 +1,5 @@
 
-import { FileText, Clock, Send, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { FileText, Clock, Send, CheckCircle, XCircle, AlertTriangle, type LucideIcon } from "lucide-react";
 
 export type ProposalStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'pending_approval';
 
@@ -13,8 +13,8 @@ export const proposalStatusLabels: Record<ProposalStatus, string> = {
   expired: 'Süresi Dolmuş'
 };
 
-// Status icon mapping for UI display
-export const proposalStatusIcons: Record<ProposalStatus, any> = {
+// Status icon mapping for UI display  
+export const proposalStatusIcons: Record<ProposalStatus, LucideIcon> = {
   draft: FileText,
   pending_approval: Clock,
   sent: Send,
@@ -85,7 +85,7 @@ export interface Employee {
   avatar_url?: string;
 }
 
-export interface Proposal {
+export interface Proposal extends Record<string, unknown> {
   id: string;
   number: string;
   title: string;

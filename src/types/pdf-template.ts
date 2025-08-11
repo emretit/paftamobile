@@ -65,7 +65,7 @@ export interface PdfTemplate {
   created_by?: string;
 }
 
-export interface QuoteData {
+export interface QuoteData extends Record<string, unknown> {
   id: string;
   number: string;
   title: string;
