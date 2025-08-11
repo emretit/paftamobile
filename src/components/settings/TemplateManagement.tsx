@@ -112,8 +112,18 @@ export const TemplateManagement: React.FC = () => {
 
   const handlePreviewTemplate = async (template: Template) => {
     try {
-      const { generatePdf } = await import('@/lib/pdfme');
-      await generatePdf(template.template_json);
+      const { generatePdfWithPdfme } = await import('@/lib/pdfme');
+      const pdf = await generatePdfWithPdfme(template.template_json as any);
+      const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, '_blank');
+      if (!win) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${template.name}-onizleme.pdf`;
+        a.click();
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (error: any) {
       console.error('❌ Template Preview hatası:', error);
       toast.error(`Önizleme oluşturulamadı: ${error?.message || 'Bilinmeyen hata'}`);
