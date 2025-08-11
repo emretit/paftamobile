@@ -325,72 +325,59 @@
   --pdfme-accent-hover: hsl(var(--primary)/0.9);
 }
 
-/* PDFme sidebar panel improvements */
-.pdfme-designer-container .sidebar {
+/* PDFme sidebar panel - Force proper styling */
+.pdfme-designer-container > div > div:first-child,
+.pdfme-designer-container [data-testid="sidebar"] {
   background: var(--pdfme-sidebar-bg) !important;
   border-right: 1px solid var(--pdfme-sidebar-border) !important;
-  min-width: 280px !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  min-width: 60px !important;
+  width: 60px !important;
+  padding: 8px 4px !important;
 }
 
-/* Sidebar icons and buttons */
-.pdfme-designer-container .sidebar button,
-.pdfme-designer-container .sidebar .tool-button {
-  background: var(--pdfme-button-bg) !important;
-  color: var(--pdfme-button-text) !important;
-  border: 1px solid var(--pdfme-sidebar-border) !important;
-  border-radius: 6px !important;
-  padding: 8px 12px !important;
-  margin: 4px !important;
-  font-weight: 500 !important;
-  transition: all 0.2s ease !important;
+/* Toolbar buttons in sidebar - Match playground style */
+.pdfme-designer-container > div > div:first-child button,
+.pdfme-designer-container [data-testid="sidebar"] button {
+  width: 48px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 8px !important;
+  margin: 4px auto !important;
+  background: transparent !important;
+  border: 2px solid transparent !important;
+  border-radius: 8px !important;
   display: flex !important;
   align-items: center !important;
-  gap: 8px !important;
-  min-height: 40px !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+  position: relative !important;
 }
 
-.pdfme-designer-container .sidebar button:hover,
-.pdfme-designer-container .sidebar .tool-button:hover {
-  background: var(--pdfme-button-hover) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+.pdfme-designer-container > div > div:first-child button:hover,
+.pdfme-designer-container [data-testid="sidebar"] button:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Active/selected buttons */
-.pdfme-designer-container .sidebar button.active,
-.pdfme-designer-container .sidebar .tool-button.active,
-.pdfme-designer-container .sidebar button[aria-pressed="true"] {
+.pdfme-designer-container > div > div:first-child button[aria-pressed="true"],
+.pdfme-designer-container > div > div:first-child button.active {
   background: var(--pdfme-accent) !important;
-  color: white !important;
   border-color: var(--pdfme-accent) !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+  color: white !important;
 }
 
-/* Icons in sidebar - Made larger and more prominent */
-.pdfme-designer-container .sidebar svg,
-.pdfme-designer-container .sidebar .icon {
-  width: 24px !important;
-  height: 24px !important;
-  stroke-width: 2.5 !important;
+/* Force icon sizes to be large like playground */
+.pdfme-designer-container > div > div:first-child button svg,
+.pdfme-designer-container [data-testid="sidebar"] button svg {
+  width: 32px !important;
+  height: 32px !important;
+  stroke-width: 1.5 !important;
   color: currentColor !important;
 }
 
-/* Tool icons specifically */
-.pdfme-designer-container .sidebar button svg,
-.pdfme-designer-container .sidebar .tool-button svg,
-.pdfme-designer-container .sidebar [role="button"] svg {
-  width: 28px !important;
-  height: 28px !important;
-  stroke-width: 2 !important;
-}
-
-/* Tool labels */
-.pdfme-designer-container .sidebar .tool-label,
-.pdfme-designer-container .sidebar span {
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  letter-spacing: 0.025em !important;
+.pdfme-designer-container > div > div:first-child button[aria-pressed="true"] svg,
+.pdfme-designer-container > div > div:first-child button.active svg {
+  color: white !important;
 }
 
 /* Sidebar sections */
