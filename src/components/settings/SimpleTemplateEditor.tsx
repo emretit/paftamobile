@@ -445,7 +445,8 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
             ref={designerRef} 
             className={`pdfme-designer-container w-full border rounded ${isLoading ? 'hidden' : ''}`}
             style={{
-              minHeight: '600px',
+              minHeight: '800px',
+              height: '800px',
               '--pdfme-sidebar-bg': 'hsl(var(--background))',
               '--pdfme-sidebar-border': 'hsl(var(--border))',
               '--pdfme-sidebar-text': 'hsl(var(--foreground))',
