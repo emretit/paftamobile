@@ -79,7 +79,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
         
         const { Designer } = await import('@pdfme/ui');
         const schemas = await import('@pdfme/schemas');
-        const { text, image, barcodes, table } = schemas;
+        const { text, image, barcodes, table, builtInPlugins } = schemas;
         
         if (designerRef.current && !designer) {
           const defaultTemplate = initialTemplate || {
@@ -402,18 +402,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               upce: barcodes.upce,
               gs1datamatrix: barcodes.gs1datamatrix,
               pdf417: barcodes.pdf417,
-              // Diğer mevcut tüm schema'ları ekle
-              ...Object.fromEntries(
-                Object.entries(schemas).filter(([key, value]) => 
-                  key !== 'text' && 
-                  key !== 'image' && 
-                  key !== 'barcodes' && 
-                  key !== 'table' &&
-                  key !== 'default' &&
-                  typeof value === 'object' && 
-                  value !== null
-                )
-              )
+              // BuiltIn plugins ekliyoruz
+              builtInPlugins
             } as any,
             options: {
               theme: {
