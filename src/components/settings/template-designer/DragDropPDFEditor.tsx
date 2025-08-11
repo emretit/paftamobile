@@ -78,7 +78,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
         await new Promise(resolve => setTimeout(resolve, 100));
         
         const { Designer } = await import('@pdfme/ui');
-        const { text, image, barcodes, table } = await import('@pdfme/schemas');
+        const { text, image, barcodes, table, line, rectangle, ellipse, svg, checkbox, radioGroup, select, date, time, dateTime } = await import('@pdfme/schemas');
         
         if (designerRef.current && !designer) {
           const defaultTemplate = initialTemplate || {
@@ -375,6 +375,135 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               fontSize: 8,
               fontColor: '#000000',
               content: 'Şirket İmzası:\n\n\n_____________________\nYetkili:'
+            },
+
+            // ========== EK ARAÇLAR ==========
+            
+            // Şekiller
+            'cizgiOrnek': {
+              type: 'line',
+              position: { x: 20, y: 340 },
+              width: 50,
+              height: 1,
+              color: '#000000'
+            },
+            'dikdortgenOrnek': {
+              type: 'rectangle',
+              position: { x: 80, y: 340 },
+              width: 30,
+              height: 20,
+              borderWidth: 1,
+              borderColor: '#000000',
+              color: '#f0f0f0'
+            },
+            'elipsOrnek': {
+              type: 'ellipse',
+              position: { x: 120, y: 340 },
+              width: 20,
+              height: 20,
+              borderWidth: 1,
+              borderColor: '#000000',
+              color: '#e0e0e0'
+            },
+
+            // Form Elemanları
+            'checkboxOrnek': {
+              type: 'checkbox',
+              position: { x: 20, y: 370 },
+              width: 4,
+              height: 4,
+              color: '#dc2626'
+            },
+            'checkboxEtiket': {
+              type: 'text',
+              position: { x: 27, y: 371 },
+              width: 40,
+              height: 6,
+              fontSize: 9,
+              fontColor: '#000000',
+              content: 'Şartları kabul ediyorum'
+            },
+
+            // Seçim Kutusu
+            'secimKutusu': {
+              type: 'select',
+              position: { x: 20, y: 385 },
+              width: 40,
+              height: 8,
+              fontSize: 9,
+              fontColor: '#000000',
+              backgroundColor: '#ffffff',
+              options: ['Nakit', 'Kredi Kartı', 'Havale', 'Çek']
+            },
+
+            // Tarih ve Saat
+            'tarihAlani': {
+              type: 'date',
+              position: { x: 70, y: 385 },
+              width: 30,
+              height: 8,
+              fontSize: 9,
+              fontColor: '#000000',
+              backgroundColor: '#ffffff',
+              format: 'DD/MM/YYYY'
+            },
+            'saatAlani': {
+              type: 'time',
+              position: { x: 110, y: 385 },
+              width: 25,
+              height: 8,
+              fontSize: 9,
+              fontColor: '#000000',
+              backgroundColor: '#ffffff',
+              format: 'HH:mm'
+            },
+
+            // QR Kod
+            'qrKodOrnek': {
+              type: 'qrcode',
+              position: { x: 145, y: 370 },
+              width: 20,
+              height: 20,
+              barColor: '#000000',
+              backgroundColor: '#ffffff'
+            },
+
+            // İmza Kutusu
+            'imzaKutusu': {
+              type: 'rectangle',
+              position: { x: 20, y: 400 },
+              width: 60,
+              height: 25,
+              borderWidth: 1,
+              borderColor: '#000000',
+              color: 'transparent'
+            },
+            'imzaEtiket': {
+              type: 'text',
+              position: { x: 22, y: 402 },
+              width: 56,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#666666',
+              content: 'İmza:'
+            },
+
+            // Logo/Resim Alanı
+            'logoAlani': {
+              type: 'image',
+              position: { x: 90, y: 400 },
+              width: 30,
+              height: 15
+            },
+
+            // Barkod Örnekleri
+            'barkodEAN13': {
+              type: 'ean13',
+              position: { x: 130, y: 400 },
+              width: 30,
+              height: 12,
+              barColor: '#000000',
+              backgroundColor: '#ffffff'
             }
           };
 
@@ -387,8 +516,19 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             plugins: { 
               text, 
               image, 
-              qrcode: barcodes.qrcode, 
-              table
+              qrcode: barcodes.qrcode,
+              ean13: barcodes.ean13,
+              table,
+              line,
+              rectangle,
+              ellipse,
+              svg,
+              checkbox,
+              radioGroup,
+              select,
+              date,
+              time,
+              dateTime
             } as any,
             options: {
               theme: {
@@ -456,7 +596,22 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
                 odeme: 'Ödeme: Siparişte %50 nakit avans, %50 iş bitimi nakit tahsil edilecektir.',
                 garanti: 'Garanti: Ürünlerimiz fatura tarihinden itibaren fabrikasyon hatalarına karşı 2(iki) yıl garantilidir',
                 musteriImza: 'Müşteri İmzası:\n\n\n_____________________\nAd Soyad:',
-                sirketImza: 'Şirket İmzası:\n\n\n_____________________\nYetkili:'
+                sirketImza: 'Şirket İmzası:\n\n\n_____________________\nYetkili:',
+                
+                // Ek araçlar için sample data
+                cizgiOrnek: '',
+                dikdortgenOrnek: '',
+                elipsOrnek: '',
+                checkboxOrnek: true,
+                checkboxEtiket: 'Şartları kabul ediyorum',
+                secimKutusu: 'Nakit',
+                tarihAlani: new Date().toLocaleDateString('tr-TR'),
+                saatAlani: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+                qrKodOrnek: 'https://example.com/teklif/NT.2508-1364.01',
+                imzaKutusu: '',
+                imzaEtiket: 'İmza:',
+                logoAlani: '',
+                barkodEAN13: '1234567890123'
               };
               
               console.log('Sample data set successfully');
