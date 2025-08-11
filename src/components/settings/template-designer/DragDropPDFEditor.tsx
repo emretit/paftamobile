@@ -773,8 +773,9 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
                 barkodEAN13: '1234567890123'
               };
               
-              designerInstance.updateInputs([sampleData]);
-              console.log('Sample data set successfully');
+              // PDFme Designer doesn't have updateInputs method
+              // The sample data will be used during preview generation
+              console.log('Sample data prepared successfully');
             } catch (error) {
               console.error('Error setting sample data:', error);
             }
@@ -883,7 +884,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
         checkboxOrnek: true,
         checkboxEtiket: 'Şartları kabul ediyorum',
         secimKutusu: 'Nakit',
-        tarihAlani: new Date().toLocaleDateString('tr-TR'),
+        tarihAlani: new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
         saatAlani: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
         qrKodOrnek: 'https://example.com/teklif/NT.2508-1364.01',
         imzaKutusu: '',
