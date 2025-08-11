@@ -35,8 +35,11 @@ export interface StandardProposalFields {
   
   // 5. FİNANSAL BİLGİLER
   subtotal: string;              // Ara toplam
+  subtotalLabel: string;         // Ara toplam etiketi
   taxAmount: string;             // KDV tutarı
+  taxLabel: string;              // KDV etiketi
   totalAmount: string;           // Genel toplam
+  totalLabel: string;            // Genel toplam etiketi
   currency: string;              // Para birimi
   
   // 6. ÜRÜN/HİZMET BİLGİLERİ
@@ -188,6 +191,11 @@ export const STANDARD_FIELD_MAPPING: Record<keyof StandardProposalFields, {
       return `${subtotal.toLocaleString('tr-TR')} ₺`;
     }
   },
+  subtotalLabel: {
+    templateKeys: ['subtotalLabel', 'subtotal_label', 'araToplamLabel'],
+    dataPath: 'static',
+    formatter: () => 'Ara Toplam:'
+  },
   taxAmount: {
     templateKeys: ['taxAmount', 'tax_amount', 'kdvTutar', 'kdv', 'vergi'],
     dataPath: 'calculated',
@@ -201,6 +209,11 @@ export const STANDARD_FIELD_MAPPING: Record<keyof StandardProposalFields, {
       return `${taxTotal.toLocaleString('tr-TR')} ₺`;
     }
   },
+  taxLabel: {
+    templateKeys: ['taxLabel', 'tax_label', 'kdvLabel'],
+    dataPath: 'static',
+    formatter: () => 'KDV:'
+  },
   totalAmount: {
     templateKeys: ['totalAmount', 'total_amount', 'genelToplam', 'toplam', 'total', 'tutar'],
     dataPath: 'total_amount',
@@ -209,6 +222,11 @@ export const STANDARD_FIELD_MAPPING: Record<keyof StandardProposalFields, {
       const currency = proposal?.currency || 'TRY';
       return `${total.toLocaleString('tr-TR')} ${currency === 'TRY' ? '₺' : currency}`;
     }
+  },
+  totalLabel: {
+    templateKeys: ['totalLabel', 'total_label', 'genelToplamLabel', 'toplamLabel'],
+    dataPath: 'static',
+    formatter: () => 'GENEL TOPLAM:'
   },
   currency: {
     templateKeys: ['currency', 'para_birimi', 'paraBirimi', 'doviz'],
@@ -292,14 +310,33 @@ export function mapProposalToTemplateInputs(
 ): Record<string, any> {
   const inputs: Record<string, any> = {};
   
+  console.log('🔄 Template Schema Debug:', {
+    rawSchema: templateSchema,
+    schemasLength: templateSchema?.schemas?.length,
+    schemasFirstItem: templateSchema?.schemas?.[0],
+    isFirstItemArray: Array.isArray(templateSchema?.schemas?.[0])
+  });
+  
   // PDFme template yapısını kontrol et
   if (!templateSchema?.schemas?.[0]) {
     console.warn('Template schemas bulunamadı:', templateSchema);
     return inputs;
   }
   
-  // PDFme schemas array'inin ilk elemanı field'ları içerir
-  const templateFields = templateSchema.schemas[0];
+  // PDFme schemas double array yapısını kontrol et
+  let templateFields = templateSchema.schemas[0];
+  
+  // Eğer schemas[0] array ise, ilk elemanı al (nested array durumu)
+  if (Array.isArray(templateFields)) {
+    // Schema yapısı [[field1, field2, ...]] şeklinde
+    const fieldsObject = {};
+    templateFields.forEach(field => {
+      if (field.name) {
+        fieldsObject[field.name] = field;
+      }
+    });
+    templateFields = fieldsObject;
+  }
   
   // Template'teki her field için uygun veriyi bul
   Object.keys(templateFields).forEach(fieldKey => {
@@ -327,6 +364,9 @@ export function mapProposalToTemplateInputs(
       console.log(`⚠️ Fallback for ${fieldName}: ${inputs[fieldName]}`);
     }
   });
+  
+  console.log('📋 Final Template Fields:', templateFields);
+  console.log('🎯 Generated Inputs:', inputs);
   
   return inputs;
 }

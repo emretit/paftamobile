@@ -1,30 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileText, Download, AlertCircle, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Proposal } from '@/types/proposal';
-import { ProposalTemplate } from '@/types/proposal-template';
 import { mapProposalToTemplateInputs, validateTemplateFields, STANDARD_FIELD_MAPPING } from '@/utils/proposalFieldMapping';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProposalPdfExporterProps {
   proposal: Proposal;
-  templates?: ProposalTemplate[]; // Gerçek uygulamada API'den gelecek
   onExportComplete?: () => void;
 }
 
 export const ProposalPdfExporter: React.FC<ProposalPdfExporterProps> = ({
   proposal,
-  templates = [],
   onExportComplete
 }) => {
-  const [selectedTemplate, setSelectedTemplate] = useState<ProposalTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [validationResult, setValidationResult] = useState<any>(null);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // PDFme uyumlu örnek template'ler (gerçek uygulamada Supabase'den gelecek)
+  // Supabase'den template'leri çek
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('templates')
+          .select('*')
+          .eq('template_type', 'proposal')
+          .eq('is_active', true)
+          .order('name');
+
+        if (error) {
+          console.error('Templates fetch error:', error);
+          toast.error('Template\'ler yüklenemedi');
+          return;
+        }
+
+        console.log('📋 Fetched templates:', data);
+        setTemplates(data || []);
+      } catch (error) {
+        console.error('Templates fetch error:', error);
+        toast.error('Template\'ler yüklenemedi');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTemplates();
+  }, []);
+
+  // PDFme uyumlu örnek template'ler (fallback)
   const defaultTemplates: ProposalTemplate[] = [
     {
       id: "standard-proposal",
@@ -189,7 +219,7 @@ export const ProposalPdfExporter: React.FC<ProposalPdfExporterProps> = ({
     }
   ];
 
-  const availableTemplates = templates.length > 0 ? templates : defaultTemplates;
+  const availableTemplates = templates;
 
   // Template seçildiğinde validation yap
   const handleTemplateSelect = (templateId: string) => {
@@ -278,21 +308,27 @@ export const ProposalPdfExporter: React.FC<ProposalPdfExporterProps> = ({
         {/* Template Seçici */}
         <div>
           <label className="text-sm font-medium mb-2 block">Template Seç</label>
-          <Select value={selectedTemplate?.id || ""} onValueChange={handleTemplateSelect}>
-            <SelectTrigger>
-              <SelectValue placeholder="PDF template'i seçin..." />
-            </SelectTrigger>
-            <SelectContent>
-              {availableTemplates.map((template) => (
-                <SelectItem key={template.id} value={template.id}>
-                  <div>
-                    <div className="font-medium">{template.name}</div>
-                    <div className="text-xs text-gray-500">{template.description}</div>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isLoading ? (
+            <div className="p-3 text-center text-gray-500">
+              Template'ler yükleniyor...
+            </div>
+          ) : (
+            <Select value={selectedTemplate?.id || ""} onValueChange={handleTemplateSelect}>
+              <SelectTrigger>
+                <SelectValue placeholder="PDF template'i seçin..." />
+              </SelectTrigger>
+              <SelectContent>
+                {availableTemplates.map((template) => (
+                  <SelectItem key={template.id} value={template.id}>
+                    <div>
+                      <div className="font-medium">{template.name}</div>
+                      <div className="text-xs text-gray-500">{template.description}</div>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {/* Template Bilgisi */}
@@ -303,11 +339,12 @@ export const ProposalPdfExporter: React.FC<ProposalPdfExporterProps> = ({
                 <h4 className="font-medium text-blue-900">{selectedTemplate.name}</h4>
                 <p className="text-sm text-blue-700 mt-1">{selectedTemplate.description}</p>
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {selectedTemplate.templateFeatures.map((feature, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {feature}
-                    </Badge>
-                  ))}
+                  <Badge variant="secondary" className="text-xs">
+                    {selectedTemplate.category || 'general'}
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    {Object.keys(selectedTemplate.template_json?.schemas?.[0] || {}).length} alan
+                  </Badge>
                 </div>
               </div>
               

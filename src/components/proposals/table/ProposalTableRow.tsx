@@ -13,6 +13,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useProposalCalculations } from "@/hooks/proposals/useProposalCalculations";
 import { formatProposalAmount } from "@/services/workflow/proposalWorkflow";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ProposalPdfExporter } from "../ProposalPdfExporter";
 
 
 interface ProposalTableRowProps {
@@ -35,7 +37,7 @@ export const ProposalTableRow = ({
   const navigate = useNavigate();
   const { calculateTotals } = useProposalCalculations();
   const { toast } = useToast();
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showPdfExporter, setShowPdfExporter] = useState(false);
   
   // Use the stored total_amount from database (calculated and saved correctly)
   const getGrandTotal = () => {
@@ -57,55 +59,7 @@ export const ProposalTableRow = ({
     navigate(`/proposal/${proposal.id}`);
   };
 
-  const handleExportPdf = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsGeneratingPdf(true);
-    
-    try {
-      // Template'leri ve mapping utility'lerini import et
-      const [
-        { generateDefaultTemplate },
-        { mapProposalToTemplateInputs },
-        { generateAndDownloadPdf }
-      ] = await Promise.all([
-        import('@/utils/defaultTemplateGenerator'),
-        import('@/utils/proposalFieldMapping'),
-        import('@/lib/pdf-utils')
-      ]);
 
-      // Standart template oluştur
-      const templateSchema = generateDefaultTemplate({ templateType: 'standard' });
-      
-      // Proposal verilerini PDFme input formatına dönüştür
-      const pdfInputs = mapProposalToTemplateInputs(proposal, templateSchema);
-      
-      console.log('🔄 PDF Generation için:', {
-        proposal: proposal.number,
-        customer: proposal.customer?.name,
-        inputs: pdfInputs
-      });
-
-      // PDF oluştur ve indir
-      const fileName = `Teklif_${proposal.number}_${proposal.customer?.name || 'Musteri'}`;
-      await generateAndDownloadPdf(templateSchema, pdfInputs, fileName);
-      
-      toast({
-        title: "PDF başarıyla oluşturuldu",
-        description: `${proposal.number} numaralı teklif PDF olarak indirildi.`,
-        className: "bg-green-50 border-green-200",
-      });
-      
-    } catch (error: any) {
-      console.error('❌ PDF Export Error:', error);
-      toast({
-        title: "PDF oluşturulamadı",
-        description: error?.message || "Bilinmeyen bir hata oluştu",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingPdf(false);
-    }
-  };
   
   return (
     <TableRow 
@@ -205,11 +159,14 @@ export const ProposalTableRow = ({
                 Düzenle
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={handleExportPdf}
-                disabled={isGeneratingPdf}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // PDF export component'ini modal olarak aç
+                  setShowPdfExporter(true);
+                }}
               >
                 <FileText className="h-4 w-4 mr-2" />
-                {isGeneratingPdf ? 'PDF Oluşturuluyor...' : 'PDF Yazdır'}
+                PDF Yazdır
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => {
@@ -230,6 +187,19 @@ export const ProposalTableRow = ({
           </DropdownMenu>
         </div>
       </TableCell>
+      
+      {/* PDF Export Modal */}
+      <Dialog open={showPdfExporter} onOpenChange={setShowPdfExporter}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>PDF Export - {proposal.number}</DialogTitle>
+          </DialogHeader>
+          <ProposalPdfExporter 
+            proposal={proposal}
+            onExportComplete={() => setShowPdfExporter(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </TableRow>
   );
 };
