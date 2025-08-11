@@ -54,7 +54,7 @@ export const TemplateManagement: React.FC = () => {
     }
   };
 
-  const createSampleTemplate = async () => {
+  const createTemplateWithType = async (templateType: 'minimal' | 'standard' | 'detailed') => {
     try {
       const { data: userRes } = await supabase.auth.getUser();
       if (!userRes.user) {
@@ -62,53 +62,37 @@ export const TemplateManagement: React.FC = () => {
         return;
       }
 
-      // Basit bir örnek şablon oluştur
-      const sampleTemplate = {
-        basePdf: 'BLANK_PDF',
-        schemas: [
-          {
-            companyName: {
-              type: 'text',
-              position: { x: 20, y: 20 },
-              width: 150,
-              height: 12,
-              fontSize: 16,
-              fontColor: '#000000',
-            },
-            proposalTitle: {
-              type: 'text',
-              position: { x: 20, y: 40 },
-              width: 100,
-              height: 10,
-              fontSize: 14,
-              fontColor: '#666666',
-            },
-          },
-        ],
-      };
+      // Default template generator'ı import et
+      const { generateDefaultTemplate, NEW_TEMPLATE_GUIDE, getTemplateCategory, getTemplateType } = await import('@/utils/defaultTemplateGenerator');
+      
+      // Seçilen türde template oluştur
+      const defaultTemplate = generateDefaultTemplate({ templateType });
+      const guide = NEW_TEMPLATE_GUIDE[templateType];
 
       const { error } = await supabase
         .from('templates')
         .insert({
-          name: `Örnek Şablon - ${new Date().toLocaleDateString('tr-TR')}`,
-          template_json: sampleTemplate,
+          name: `${guide.name} - ${new Date().toLocaleDateString('tr-TR')}`,
+          template_json: defaultTemplate,
           user_id: userRes.user.id,
-          template_type: 'proposal',
-          category: 'general',
-          description: 'Otomatik oluşturulan örnek şablon - PDFme ile düzenlenebilir',
+          template_type: getTemplateType(), // 'proposal' olarak sabit
+          category: getTemplateCategory(templateType), // 'general' olarak sabit
+          description: `${guide.description} - ${guide.fields.length} alan içerir`,
           is_active: true,
           variables: []
         });
 
       if (error) throw error;
 
-      toast.success('Örnek şablon oluşturuldu!');
+      toast.success(`${guide.name} oluşturuldu! Artık düzenleyebilirsiniz.`);
       loadTemplates();
     } catch (error) {
-      console.error('Örnek şablon oluşturma hatası:', error);
-      toast.error('Örnek şablon oluşturulamadı');
+      console.error('Template oluşturma hatası:', error);
+      toast.error('Şablon oluşturulamadı');
     }
   };
+
+  const createSampleTemplate = () => createTemplateWithType('minimal');
 
   const handleGenerateTemplatePdf = async (template: Template) => {
     console.log('🚀 Template PDF Generate başlıyor...');
@@ -212,23 +196,56 @@ export const TemplateManagement: React.FC = () => {
                 <option value="other">Diğer</option>
               </select>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={createSampleTemplate} variant="outline">
-                + Örnek Şablon
-              </Button>
-              <Button onClick={() => { setEditingTemplate(null); setActiveTab('editor'); }}>
-                + Yeni Şablon
-              </Button>
-              <Button 
-                onClick={() => {
-                  console.log('Test butonu tıklandı');
-                  toast.success('Test başarılı!');
-                }} 
-                variant="outline"
-                className="bg-green-50"
-              >
-                🧪 Test
-              </Button>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <Button onClick={() => { setEditingTemplate(null); setActiveTab('editor'); }}>
+                  + Boş Şablon
+                </Button>
+                <Button 
+                  onClick={() => {
+                    console.log('Test butonu tıklandı');
+                    toast.success('Test başarılı!');
+                  }} 
+                  variant="outline"
+                  className="bg-green-50"
+                >
+                  🧪 Test
+                </Button>
+              </div>
+              <div>
+                <div className="text-sm font-medium mb-2">Hazır Şablonlar:</div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => createTemplateWithType('minimal')} 
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    Minimal (8 alan)
+                  </Button>
+                  <Button 
+                    onClick={() => createTemplateWithType('standard')} 
+                    variant="outline"
+                    size="sm" 
+                    className="flex-1"
+                  >
+                    Standart (15 alan)
+                  </Button>
+                  <Button 
+                    onClick={() => createTemplateWithType('detailed')} 
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    Detaylı (25 alan)
+                  </Button>
+                </div>
+                <div className="text-xs text-gray-500 mt-2 space-y-1">
+                  <div><strong>Minimal:</strong> Sadece zorunlu alanlar (proposalNumber, customerName, totalAmount...)</div>
+                  <div><strong>Standart:</strong> En çok kullanılan alanlar + şirket/müşteri detayları</div>
+                  <div><strong>Detaylı:</strong> Tüm alanları içerir (logo, adres, telefon, notlar...)</div>
+                </div>
+              </div>
             </div>
           </div>
 

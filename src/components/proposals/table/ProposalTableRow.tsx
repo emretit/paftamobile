@@ -1,10 +1,10 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Proposal, ProposalStatus } from "@/types/proposal";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Eye, PenLine, MoreHorizontal, Trash2 } from "lucide-react";
+import { Eye, PenLine, MoreHorizontal, Trash2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProposalStatusCell } from "./ProposalStatusCell";
@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useProposalCalculations } from "@/hooks/proposals/useProposalCalculations";
 import { formatProposalAmount } from "@/services/workflow/proposalWorkflow";
+import { useToast } from "@/hooks/use-toast";
 
 
 interface ProposalTableRowProps {
@@ -33,6 +34,8 @@ export const ProposalTableRow = ({
 }: ProposalTableRowProps) => {
   const navigate = useNavigate();
   const { calculateTotals } = useProposalCalculations();
+  const { toast } = useToast();
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   
   // Use the stored total_amount from database (calculated and saved correctly)
   const getGrandTotal = () => {
@@ -52,6 +55,56 @@ export const ProposalTableRow = ({
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/proposal/${proposal.id}`);
+  };
+
+  const handleExportPdf = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsGeneratingPdf(true);
+    
+    try {
+      // Template'leri ve mapping utility'lerini import et
+      const [
+        { generateDefaultTemplate },
+        { mapProposalToTemplateInputs },
+        { generateAndDownloadPdf }
+      ] = await Promise.all([
+        import('@/utils/defaultTemplateGenerator'),
+        import('@/utils/proposalFieldMapping'),
+        import('@/lib/pdf-utils')
+      ]);
+
+      // Standart template oluştur
+      const templateSchema = generateDefaultTemplate({ templateType: 'standard' });
+      
+      // Proposal verilerini PDFme input formatına dönüştür
+      const pdfInputs = mapProposalToTemplateInputs(proposal, templateSchema);
+      
+      console.log('🔄 PDF Generation için:', {
+        proposal: proposal.number,
+        customer: proposal.customer?.name,
+        inputs: pdfInputs
+      });
+
+      // PDF oluştur ve indir
+      const fileName = `Teklif_${proposal.number}_${proposal.customer?.name || 'Musteri'}`;
+      await generateAndDownloadPdf(templateSchema, pdfInputs, fileName);
+      
+      toast({
+        title: "PDF başarıyla oluşturuldu",
+        description: `${proposal.number} numaralı teklif PDF olarak indirildi.`,
+        className: "bg-green-50 border-green-200",
+      });
+      
+    } catch (error: any) {
+      console.error('❌ PDF Export Error:', error);
+      toast({
+        title: "PDF oluşturulamadı",
+        description: error?.message || "Bilinmeyen bir hata oluştu",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
   
   return (
@@ -144,12 +197,20 @@ export const ProposalTableRow = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
               <DropdownMenuItem onClick={() => navigate(`/proposal/${proposal.id}`)}>
+                <Eye className="h-4 w-4 mr-2" />
                 Detayları Görüntüle
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate(`/proposal/${proposal.id}/edit`)}>
+                <PenLine className="h-4 w-4 mr-2" />
                 Düzenle
               </DropdownMenuItem>
-
+              <DropdownMenuItem 
+                onClick={handleExportPdf}
+                disabled={isGeneratingPdf}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                {isGeneratingPdf ? 'PDF Oluşturuluyor...' : 'PDF Yazdır'}
+              </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => {
                   const newStatus: ProposalStatus = proposal.status === 'draft' ? 'sent' : 'draft';
