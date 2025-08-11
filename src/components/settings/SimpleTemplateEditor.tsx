@@ -233,156 +233,18 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
     }
 
     try {
-      console.log('🎯 Preview başlatılıyor...');
+      console.log('🎯 SimpleTemplateEditor preview başlıyor...');
       const template = designerInstance.getTemplate();
       console.log('📄 Template alındı:', template);
       
-      // Preview için generate kullan
-      const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes, line, rectangle, ellipse, table, checkbox, radioGroup, select, multiVariableText, dateTime } = await import('@pdfme/schemas');
-      console.log('🔧 Plugins yüklendi');
-
-      // Şablondaki alanları kontrol et ve uygun örnek veri oluştur
-      const sampleInputs: any = {};
+      // Ortak preview utility'sini kullan
+      console.log('📦 pdfPreviewUtils import ediliyor...');
+      const { generatePDFPreview } = await import('@/utils/pdfPreviewUtils');
+      console.log('✅ pdfPreviewUtils import edildi');
       
-      if (template.schemas && template.schemas[0]) {
-        Object.keys(template.schemas[0]).forEach(key => {
-          switch (key) {
-            case 'companyName':
-            case 'sirketBaslik':
-              sampleInputs[key] = 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ';
-              break;
-            case 'proposalTitle':
-            case 'teklifBaslik':
-              sampleInputs[key] = 'TEKLİF FORMU';
-              break;
-            case 'customerName':
-            case 'musteriBaslik':
-              sampleInputs[key] = 'BAHÇEŞEHİR GÖLEVLERİ SİTESİ';
-              break;
-            case 'totalAmount':
-            case 'toplamDeger':
-              sampleInputs[key] = '1.320,00 $';
-              break;
-            // PDFme Quote Template alanları
-            case 'head':
-              sampleInputs[key] = 'QUOTE';
-              break;
-            case 'preparedForLabel':
-              sampleInputs[key] = 'Prepared for:';
-              break;
-            case 'preparedForInput':
-              sampleInputs[key] = 'İmam Dîane\n+123 456 7890\n63 İvy Road, Hawkville, GA, USA 31036';
-              break;
-            case 'quoteInfo':
-              sampleInputs[key] = 'Quote No: 12345\n18 June 2025\nValid Until: 16 July 2025';
-              break;
-            case 'subtotalLabel':
-              sampleInputs[key] = 'Subtotal';
-              break;
-            case 'subtotal':
-              sampleInputs[key] = '377';
-              break;
-            case 'taxInput':
-              sampleInputs[key] = 'Tax (10%)';
-              break;
-            case 'tax':
-              sampleInputs[key] = '37.7';
-              break;
-            case 'totalLabel':
-              sampleInputs[key] = 'Total';
-              break;
-            case 'total':
-              sampleInputs[key] = '$414.7';
-              break;
-            case 'thankyou':
-              sampleInputs[key] = 'Thank you for your interest!';
-              break;
-            case 'date':
-            case 'tarihDeger':
-              sampleInputs[key] = new Date().toLocaleDateString('tr-TR');
-              break;
-            case 'teklifNoDeger':
-              sampleInputs[key] = 'NT.2508-1364.01';
-              break;
-            case 'hazirlayanDeger':
-              sampleInputs[key] = 'Nurettin Emre AYDIN';
-              break;
-            case 'brutToplamDeger':
-              sampleInputs[key] = '1.100,00 $';
-              break;
-            case 'kdvDeger':
-              sampleInputs[key] = '220,00 $';
-              break;
-            case 'urunTablosu':
-              sampleInputs[key] = [
-                ['1', 'IP Kamera Sistemi', '10', '100$', '1.000$'],
-                ['2', 'Kurulum ve Ayar', '1', '100$', '100$']
-              ];
-              break;
-            default:
-              sampleInputs[key] = `Örnek ${key}`;
-          }
-        });
-      } else {
-        // Fallback örnek veriler
-        sampleInputs.companyName = 'NGS TEKNOLOJİ';
-        sampleInputs.proposalTitle = 'TEKLİF FORMU';
-        sampleInputs.customerName = 'ÖRNEK MÜŞTERİ';
-        sampleInputs.totalAmount = '1.320,00 $';
-      }
-      
-      console.log('📊 Örnek veriler hazırlandı:', sampleInputs);
-
-      console.log('🏗️ PDF oluşturuluyor...');
-      const pdf = await generate({
-        template,
-        inputs: [sampleInputs],
-        plugins: {
-          text,
-          image,
-          qrcode: barcodes.qrcode,
-          ean13: barcodes.ean13,
-          japanpost: barcodes.japanpost,
-          line,
-          rectangle,
-          ellipse,
-          table,
-          checkbox,
-          radioGroup,
-          select,
-          multiVariableText,
-          dateTime,
-        } as any
-      });
-
-      console.log('✅ PDF oluşturuldu! Boyut:', pdf.buffer.byteLength, 'bytes');
-      
-      // PDF'i yeni sekmede aç
-      const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      
-      console.log('🚀 PDF yeni sekmede açılıyor...');
-      const newWindow = window.open(url, '_blank');
-      
-      if (!newWindow) {
-        console.warn('⚠️ Popup engellendi, link olarak indirme önerilecek');
-        toast.error('Popup engellendi. Lütfen popup engelleyiciyi devre dışı bırakın.');
-        
-        // Alternatif: Download linki
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `onizleme-${Date.now()}.pdf`;
-        link.click();
-        toast.success('PDF indirildi!');
-      } else {
-        toast.success('Önizleme yeni sekmede açıldı! 🎉');
-      }
-      
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-        console.log('🧹 URL temizlendi');
-      }, 10000);
+      console.log('🚀 generatePDFPreview çağrılıyor...');
+      await generatePDFPreview(template, templateName);
+      console.log('✅ generatePDFPreview tamamlandı');
 
       onPreview?.(template);
 
