@@ -813,15 +813,123 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
     }
   };
 
-  const handlePreview = () => {
-    if (designer && onPreview) {
-      try {
-        const template = designer.getTemplate();
-        onPreview(template);
-      } catch (error) {
-        console.error('Template preview error:', error);
-        toast.error('Önizleme oluşturulurken hata oluştu: ' + error.message);
-      }
+  const handlePreview = async () => {
+    if (!designer) {
+      toast.error('PDF tasarımcısı henüz yüklenmemiş');
+      return;
+    }
+
+    try {
+      const template = designer.getTemplate();
+      
+      // PDFme generator import
+      const { generate } = await import('@pdfme/generator');
+      const { text, image, barcodes, table, line, rectangle, ellipse, svg, checkbox, radioGroup, select, date, time, dateTime } = await import('@pdfme/schemas');
+      
+      // NGS Teklif Formu için güncel sample data
+      const sampleData = {
+        ngsLogo: '',
+        sirketBaslik: 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ',
+        merkezAdres: 'Merkez    : Eğitim mah. Muratpaşa cad. No:1 D:29-30 Kadıköy, İstanbul',
+        subeAdres: 'Şube      : Topçular Mah. İşgören Sok. No: 2 A Keresteciler Sit. Eyüp, İstanbul',
+        teklifBaslik: 'TEKLİF FORMU',
+        tarihLabel: 'Tarih',
+        tarihDeger: ': 08.08.2025',
+        gecerlilikLabel: 'Geçerlilik',
+        gecerlilikDeger: ': 15.08.2025',
+        teklifNoLabel: 'Teklif No',
+        teklifNoDeger: ': NT.2508-1364.01',
+        hazirlayanLabel: 'Hazırlayan',
+        hazirlayanDeger: ': Nurettin Emre AYDIN',
+        musteriBaslik: 'BAHÇEŞEHİR GÖLEVLERİ SİTESİ',
+        sayinLabel: 'Sayın\nMustafa Bey,\nYapmış olduğumuz görüşmeler sonrasında hazırlamış olduğumuz fiyat teklifimizi değerlendirmenize sunarız.',
+        urunTablosu: [
+          ['1', 'BİLGİSAYAR\nHP Pro Tower 290 BUC5S G9 İ7-13700 32GB 512GB SSD DOS', '1,00 Ad', '700,00 $', '700,00 $'],
+          ['2', 'Windows 11 Pro Lisans', '1,00 Ad', '165,00 $', '165,00 $'],
+          ['3', 'Uranium POE-G8002-96W 8 Port + 2 Port RJ45 Uplink POE Switch', '2,00 Ad', '80,00 $', '160,00 $'],
+          ['4', 'İçilik, Montaj, Mühendislik ve Süpervizyon Hizmetleri, Programlama, Test, Devreye alma', '1,00 Ad', '75,00 $', '75,00 $']
+        ],
+        brutToplamLabel: 'Brüt Toplam',
+        brutToplamDeger: '1.100,00 $',
+        indirimLabel: 'İndirim',
+        indirimDeger: '0,00 $',
+        netToplamLabel: 'Net Toplam',
+        netToplamDeger: '1.100,00 $',
+        kdvLabel: 'KDV %20',
+        kdvDeger: '220,00 $',
+        toplamLabel: 'Toplam',
+        toplamDeger: '1.320,00 $',
+        notlarBaslik: 'Notlar           :',
+        fiyatlarNotu: 'Fiyatlar         : Teklifimiz USD cinsindan Merkez Bankası Döviz Satış Kuruna göre hazırlanmıştır.',
+        odemeNotu: 'Ödeme          : Siparişte %50 nakit avans, %50 iş bitimi nakit tahsil edilecektir.',
+        garantiNotu: 'Garanti          : Ürünlerimiz fatura tarihinden itibaren fabrikasyon hatalarına karşı 2(iki) yıl garantilidir',
+        stokTeslimNotu: 'Stok ve Teslim : Ürünler siparişe sonra 5 gün içinde temin edilecektir. Tahmini iş süresi ürün teslimatından sonra 10 iş günüdür.',
+        ticariSartlarNotu: 'Ticari Şartlar   :',
+        altNgsLogo: '',
+        altSirketBilgi: 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ\nEğitim mah. Muratpaşa cad. No:1 D:29-30 Kadıköy, İstanbul\nwww.ngsteknoloji.com / 0 (212) 577 35 72',
+        sayfaNo: 'Sayfa 1/2',
+        musteriImzaKutu: '',
+        musteriImzaBaslik: 'Teklifi Kabul Eden Firma Yetkilisi',
+        musteriImzaAlt: 'Kaşe - İmza',
+        sirketImzaKutu: '',
+        sirketImzaBaslik: 'Teklifi Onaylayan Firma Yetkilisi',
+        sirketImzaAlt: 'Kaşe - İmza',
+        sirketImzaAdi: 'Nurettin Emre AYDIN',
+        
+        // Ek araçlar için sample data
+        cizgiOrnek: '',
+        dikdortgenOrnek: '',
+        elipsOrnek: '',
+        checkboxOrnek: true,
+        checkboxEtiket: 'Şartları kabul ediyorum',
+        secimKutusu: 'Nakit',
+        tarihAlani: new Date().toLocaleDateString('tr-TR'),
+        saatAlani: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+        qrKodOrnek: 'https://example.com/teklif/NT.2508-1364.01',
+        imzaKutusu: '',
+        imzaEtiket: 'İmza:',
+        logoAlani: '',
+        barkodEAN13: '1234567890123'
+      };
+
+      // PDF Generate
+      toast.info('PDF önizlemesi oluşturuluyor...');
+      
+      const pdf = await generate({
+        template,
+        inputs: [sampleData],
+        plugins: { 
+          text, 
+          image, 
+          qrcode: barcodes.qrcode,
+          ean13: barcodes.ean13,
+          table,
+          line,
+          rectangle,
+          ellipse,
+          svg,
+          checkbox,
+          radioGroup,
+          select,
+          date,
+          time,
+          dateTime
+        } as any
+      });
+
+      // PDF'i yeni sekmede aç
+      const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      
+      // Memory temizligi için 5 saniye sonra URL'i temizle
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      
+      toast.success('PDF önizlemesi oluşturuldu!');
+      
+    } catch (error) {
+      console.error('Template preview error:', error);
+      toast.error('Önizleme oluşturulurken hata oluştu: ' + error.message);
     }
   };
 
