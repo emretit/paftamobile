@@ -112,23 +112,77 @@ export const TemplateManagement: React.FC = () => {
 
   const handlePreviewTemplate = async (template: Template) => {
     try {
-      console.log('🎯 TemplateManagement preview başlatılıyor...', template.name);
-      console.log('📄 Template data:', template.template_json);
-      
-      // Ortak preview utility'sini kullan
-      console.log('📦 pdfPreviewUtils import ediliyor...');
-      const { generatePDFPreview } = await import('@/utils/pdfPreviewUtils');
-      console.log('✅ pdfPreviewUtils import edildi');
-      
-      console.log('🚀 generatePDFPreview çağrılıyor...');
-      await generatePDFPreview(template.template_json, template.name);
-      console.log('✅ generatePDFPreview tamamlandı');
-      
+      const { generate } = await import('@pdfme/generator');
+      const { text, image, barcodes, line, rectangle, ellipse, table, checkbox, radioGroup, select, multiVariableText, dateTime, signature } = await import('@pdfme/schemas');
+      const { BLANK_PDF } = await import('@pdfme/common');
+
+      const prepared: any = JSON.parse(JSON.stringify(template.template_json || {}));
+      if (prepared.basePdf === 'BLANK_PDF') prepared.basePdf = BLANK_PDF;
+
+      const sampleInputs: Record<string, any> = {};
+      if (Array.isArray(prepared.schemas) && prepared.schemas[0]) {
+        Object.entries(prepared.schemas[0]).forEach(([field, cfg]: any) => {
+          const type = cfg?.type || 'text';
+          const key = String(field);
+          if (type === 'table') {
+            sampleInputs[key] = [['Kalem', 'Miktar', 'Birim', 'Toplam'], ['Ürün', '1', '1000', '1000']];
+          } else if (type === 'image' || key.toLowerCase().includes('logo')) {
+            sampleInputs[key] = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+          } else if (type === 'checkbox') {
+            sampleInputs[key] = true;
+          } else {
+            sampleInputs[key] = defaultSampleFor(key);
+          }
+        });
+      }
+
+      const pdf = await generate({
+        template: prepared,
+        inputs: [sampleInputs],
+        plugins: {
+          text,
+          image,
+          qrcode: barcodes.qrcode,
+          ean13: barcodes.ean13,
+          japanpost: barcodes.japanpost,
+          line,
+          rectangle,
+          ellipse,
+          table,
+          checkbox,
+          radioGroup,
+          select,
+          multiVariableText,
+          dateTime,
+          signature,
+        },
+      });
+
+      const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, '_blank');
+      if (!win) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${template.name}-onizleme.pdf`;
+        a.click();
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (error: any) {
       console.error('❌ Template Preview hatası:', error);
       toast.error(`Önizleme oluşturulamadı: ${error?.message || 'Bilinmeyen hata'}`);
     }
   };
+
+  function defaultSampleFor(field: string) {
+    const f = field.toLowerCase();
+    if (f.includes('company')) return 'NGS TEKNOLOJİ';
+    if (f.includes('title') || f.includes('baslik')) return 'TEKLİF FORMU';
+    if (f.includes('name') || f.includes('musteri')) return 'ÖRNEK MÜŞTERİ';
+    if (f.includes('date') || f.includes('tarih')) return new Date().toLocaleDateString('tr-TR');
+    if (f.includes('total') || f.includes('amount') || f.includes('tutar')) return '8.260,00 ₺';
+    return `Örnek ${field}`;
+  }
 
   const handleEditTemplate = (template: Template) => {
     setEditingTemplate(template);
