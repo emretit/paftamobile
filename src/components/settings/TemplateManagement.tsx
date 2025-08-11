@@ -268,7 +268,7 @@ export const TemplateManagement: React.FC = () => {
                       className="flex-1"
                     >
                       <FileText size={14} className="mr-1" />
-                      PDF Oluştur
+                      Önizle
                     </Button>
                     <Button
                       size="sm"

@@ -25,7 +25,7 @@ export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
       <DropdownMenuContent>
         <DropdownMenuItem onClick={onGeneratePdf} disabled={disabled}>
           <FileText className="h-4 w-4 mr-2" />
-          PDF Oluştur
+          Önizle
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onDownloadPdf} disabled={disabled}>
           <Download className="h-4 w-4 mr-2" />

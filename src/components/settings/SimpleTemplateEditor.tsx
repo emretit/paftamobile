@@ -303,14 +303,14 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
             <Button 
               onClick={(e) => {
                 e.preventDefault();
-                console.log('PDF Oluştur butonu tıklandı!');
+                console.log('Önizle butonu tıklandı!');
                 handleGeneratePdf();
               }}
               disabled={isLoading || !designerInstance} 
               variant="outline"
               className="bg-blue-50 hover:bg-blue-100"
             >
-              📄 PDF Oluştur
+              👁️ Önizle
             </Button>
             {/* Debug bilgiler */}
             <div className="text-xs text-gray-500 ml-2 self-center">

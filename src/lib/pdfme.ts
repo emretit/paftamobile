@@ -16,7 +16,17 @@ export async function generatePdf(template: any, inputs?: Record<string, any>) {
       const type = cfg?.type || 'text';
       if (sample[name] != null) return;
       if (type === 'table') sample[name] = [['Kalem', 'Miktar', 'Birim', 'Toplam'], ['Ürün', '1', '1000', '1000']];
-      else if (type === 'image' || key.includes('logo')) sample[name] = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+      else if (type === 'image' || key.includes('logo')) {
+        // Template'teki mevcut image data'sını kullan
+        if (cfg?.content && cfg.content !== '') {
+          sample[name] = cfg.content;
+        } else if (cfg?.src && cfg.src !== '') {
+          sample[name] = cfg.src;
+        } else {
+          // Fallback placeholder
+          sample[name] = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+        }
+      }
       else if (type === 'checkbox') sample[name] = true;
       else if (key.includes('company')) sample[name] = 'NGS TEKNOLOJİ';
       else if (key.includes('title') || key.includes('baslik')) sample[name] = 'TEKLİF FORMU';
@@ -52,13 +62,17 @@ export async function generatePdf(template: any, inputs?: Record<string, any>) {
   const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   
-  // Direkt indirme yap
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'teklif.pdf';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  // Yeni sekmede aç - indirme yapmak yerine
+  const win = window.open(url, '_blank');
+  if (!win) {
+    // Popup engellenirse fallback olarak indirme yap
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'teklif.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
   
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
 }

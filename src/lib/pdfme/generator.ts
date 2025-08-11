@@ -39,6 +39,16 @@ export async function generatePdfWithPdfme(template: Template, inputs?: Record<s
             if (cleanElement.fontName === 'NotoSerifJP-Regular') {
               delete cleanElement.fontName; // Default font kullan
             }
+            
+            // Image elementler için ek log
+            if (element.type === 'image') {
+              console.log(`🖼️ Image elementi korunuyor: ${key}`, {
+                hasContent: !!cleanElement.content,
+                hasSrc: !!cleanElement.src,
+                position: cleanElement.position
+              });
+            }
+            
             cleanedSchema[key] = cleanElement;
           } else {
             console.log(`⚠️ Desteklenmeyen tip atlandı: ${key} (${element.type})`);
