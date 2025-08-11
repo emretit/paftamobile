@@ -460,7 +460,7 @@ const PdfTemplateEditor: React.FC = () => {
                                   form.setValue('lineTable.columns', newColumns);
                                 }}
                               />
-                              {checked ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                              {column.show ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                             </div>
                           </div>
                           
