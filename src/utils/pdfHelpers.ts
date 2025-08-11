@@ -9,10 +9,14 @@ export const formatMoney = (amount: number | null | undefined, currency = '₺')
     return `0,00 ${currency}`;
   }
   
-  return new Intl.NumberFormat('tr-TR', {
+  const formatted = new Intl.NumberFormat('tr-TR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount) + ` ${currency}`;
+  }).format(amount);
+  
+  // Use TL symbol or currency code for better PDF compatibility
+  const symbol = currency === 'TRY' ? '₺' : currency;
+  return `${formatted} ${symbol}`;
 };
 
 /**

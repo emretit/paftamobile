@@ -4,11 +4,27 @@ import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { QuoteData, TemplateSchema } from '@/types/pdf-template';
 
-// Font register (if needed)
-// Font.register({
-//   family: 'Roboto',
-//   src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf'
-// });
+// Register fonts for Turkish character support
+Font.register({
+  family: 'Roboto',
+  fonts: [
+    {
+      src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-light-webfont.ttf',
+      fontWeight: 'normal',
+    },
+    {
+      src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf',
+      fontWeight: 'bold',
+    }
+  ]
+});
+
+// Safe text rendering function for Turkish characters
+const safeText = (text: string): string => {
+  if (!text) return '';
+  // Ensure text is properly encoded
+  return text.toString().normalize('NFC');
+};
 
 interface PdfRendererProps {
   data: QuoteData;
@@ -25,6 +41,7 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
       paddingBottom: schema.page.padding.bottom,
       paddingLeft: schema.page.padding.left,
       fontSize: schema.page.fontSize,
+      fontFamily: 'Roboto',
     },
     header: {
       flexDirection: 'row',
@@ -157,11 +174,14 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
   });
 
   const formatCurrency = (amount: number, currency: string = 'TRY') => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: currency,
+    // Manual formatting to avoid symbol rendering issues in PDF
+    const formatted = new Intl.NumberFormat('tr-TR', {
       minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
+    
+    const symbol = currency === 'TRY' ? '₺' : currency;
+    return `${formatted} ${symbol}`;
   };
 
   const formatDate = (dateString: string) => {
@@ -212,7 +232,7 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
 
     return (
       <Text key={fieldKey} style={styles.customerInfo}>
-        {labelMap[fieldKey]}: {value}
+        {safeText(`${labelMap[fieldKey]}: ${value}`)}
       </Text>
     );
   };
@@ -228,11 +248,11 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
             )}
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Text style={styles.title}>{schema.header.title}</Text>
-            <Text style={styles.subtitle}>#{data.number}</Text>
+            <Text style={styles.title}>{safeText(schema.header.title)}</Text>
+            <Text style={styles.subtitle}>#{safeText(data.number)}</Text>
             {schema.header.showValidity && data.valid_until && (
               <Text style={styles.subtitle}>
-                Geçerlilik: {formatDate(data.valid_until)}
+                {safeText(`Geçerlilik: ${formatDate(data.valid_until)}`)}
               </Text>
             )}
           </View>
@@ -241,7 +261,7 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
         {/* Customer Information */}
         {schema.customerBlock.show && data.customer && (
           <View style={styles.customerSection}>
-            <Text style={styles.customerTitle}>Müşteri Bilgileri</Text>
+            <Text style={styles.customerTitle}>{safeText('Müşteri Bilgileri')}</Text>
             {schema.customerBlock.fields.map(fieldKey => 
               renderCustomerField(fieldKey, data.customer)
             )}
@@ -257,7 +277,7 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
               .map(col => (
                 <View key={col.key} style={[styles.tableCell, { flex: col.key === 'description' ? 3 : 1 }]}>
                   <Text style={[styles.tableCellHeader, getColumnStyle(col.align)]}>
-                    {col.label}
+                    {safeText(col.label)}
                   </Text>
                 </View>
               ))
@@ -272,10 +292,10 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
                 .map(col => (
                   <View key={col.key} style={[styles.tableCell, { flex: col.key === 'description' ? 3 : 1 }]}>
                     <Text style={[styles.tableCell, getColumnStyle(col.align)]}>
-                      {col.key === 'description' && item.description}
-                      {col.key === 'quantity' && `${item.quantity} ${item.unit || ''}`}
-                      {col.key === 'unit_price' && formatCurrency(item.unit_price, data.currency)}
-                      {col.key === 'total' && formatCurrency(item.total, data.currency)}
+                      {col.key === 'description' && safeText(item.description)}
+                      {col.key === 'quantity' && safeText(`${item.quantity} ${item.unit || ''}`)}
+                      {col.key === 'unit_price' && safeText(formatCurrency(item.unit_price, data.currency))}
+                      {col.key === 'total' && safeText(formatCurrency(item.total, data.currency))}
                     </Text>
                   </View>
                 ))
@@ -288,36 +308,36 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
         <View style={styles.totalsSection}>
           {schema.totals.showGross && (
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Ara Toplam:</Text>
+              <Text style={styles.totalLabel}>{safeText('Ara Toplam:')}</Text>
               <Text style={styles.totalValue}>
-                {formatCurrency(data.subtotal, data.currency)}
+                {safeText(formatCurrency(data.subtotal, data.currency))}
               </Text>
             </View>
           )}
           
           {schema.totals.showDiscount && data.total_discount && data.total_discount > 0 && (
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>İndirim:</Text>
+              <Text style={styles.totalLabel}>{safeText('İndirim:')}</Text>
               <Text style={styles.totalValue}>
-                -{formatCurrency(data.total_discount, data.currency)}
+                {safeText(`-${formatCurrency(data.total_discount, data.currency)}`)}
               </Text>
             </View>
           )}
           
           {schema.totals.showTax && (
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>KDV:</Text>
+              <Text style={styles.totalLabel}>{safeText('KDV:')}</Text>
               <Text style={styles.totalValue}>
-                {formatCurrency(data.total_tax, data.currency)}
+                {safeText(formatCurrency(data.total_tax, data.currency))}
               </Text>
             </View>
           )}
           
           {schema.totals.showNet && (
             <View style={styles.totalRowFinal}>
-              <Text style={styles.totalLabelFinal}>Genel Toplam:</Text>
+              <Text style={styles.totalLabelFinal}>{safeText('Genel Toplam:')}</Text>
               <Text style={styles.totalValueFinal}>
-                {formatCurrency(data.total_amount, data.currency)}
+                {safeText(formatCurrency(data.total_amount, data.currency))}
               </Text>
             </View>
           )}
@@ -326,26 +346,26 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
         {/* Notes */}
         <View style={styles.notesSection}>
           {schema.notes.intro && (
-            <Text style={styles.notesText}>{schema.notes.intro}</Text>
+            <Text style={styles.notesText}>{safeText(schema.notes.intro)}</Text>
           )}
           {data.notes && (
-            <Text style={styles.notesText}>{data.notes}</Text>
+            <Text style={styles.notesText}>{safeText(data.notes)}</Text>
           )}
           {data.payment_terms && (
-            <Text style={styles.notesText}>Ödeme Şartları: {data.payment_terms}</Text>
+            <Text style={styles.notesText}>{safeText(`Ödeme Şartları: ${data.payment_terms}`)}</Text>
           )}
           {data.delivery_terms && (
-            <Text style={styles.notesText}>Teslimat Şartları: {data.delivery_terms}</Text>
+            <Text style={styles.notesText}>{safeText(`Teslimat Şartları: ${data.delivery_terms}`)}</Text>
           )}
           {data.warranty_terms && (
-            <Text style={styles.notesText}>Garanti Şartları: {data.warranty_terms}</Text>
+            <Text style={styles.notesText}>{safeText(`Garanti Şartları: ${data.warranty_terms}`)}</Text>
           )}
         </View>
 
         {/* Footer */}
         {schema.notes.footer && (
           <View style={styles.footer}>
-            <Text>{schema.notes.footer}</Text>
+            <Text>{safeText(schema.notes.footer)}</Text>
           </View>
         )}
       </Page>
