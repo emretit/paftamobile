@@ -179,3 +179,135 @@
   opacity: 0;
   transform: scale(0.95);
 }
+
+/* PDFme Designer Styles - Critical for functionality */
+.pdfme-designer-container {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 700px !important;
+  position: relative !important;
+  display: block !important;
+  overflow: hidden !important;
+}
+
+/* PDFme UI Root */
+.pdfme-designer-container > div {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+/* Sidebar Styles */
+.pdfme-designer-container [role="complementary"],
+.pdfme-designer-container .sidebar {
+  width: 250px !important;
+  min-width: 250px !important;
+  max-width: 250px !important;
+  background-color: #f8f9fa !important;
+  border-right: 1px solid #dee2e6 !important;
+  overflow-y: auto !important;
+  flex-shrink: 0 !important;
+}
+
+/* Main Canvas Area */
+.pdfme-designer-container .canvas-container,
+.pdfme-designer-container [role="main"] {
+  flex: 1 !important;
+  background-color: #ffffff !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+}
+
+/* Properties Panel */
+.pdfme-designer-container .properties-panel,
+.pdfme-designer-container [role="dialog"] {
+  width: 300px !important;
+  min-width: 300px !important;
+  max-width: 300px !important;
+  background-color: #f8f9fa !important;
+  border-left: 1px solid #dee2e6 !important;
+  overflow-y: auto !important;
+  flex-shrink: 0 !important;
+}
+
+/* Canvas SVG */
+.pdfme-designer-container svg {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* Toolbar */
+.pdfme-designer-container .toolbar {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #dee2e6 !important;
+  padding: 8px 16px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Generic Button Styles */
+.pdfme-designer-container button {
+  border: 1px solid #ced4da !important;
+  border-radius: 4px !important;
+  padding: 8px 12px !important;
+  background-color: #ffffff !important;
+  color: #495057 !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  transition: all 0.2s !important;
+}
+
+.pdfme-designer-container button:hover {
+  background-color: #e9ecef !important;
+  border-color: #adb5bd !important;
+}
+
+.pdfme-designer-container button:active,
+.pdfme-designer-container button.active {
+  background-color: #007bff !important;
+  border-color: #007bff !important;
+  color: #ffffff !important;
+}
+
+/* Input Styles */
+.pdfme-designer-container input,
+.pdfme-designer-container select,
+.pdfme-designer-container textarea {
+  border: 1px solid #ced4da !important;
+  border-radius: 4px !important;
+  padding: 6px 12px !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  color: #495057 !important;
+  background-color: #ffffff !important;
+  width: 100% !important;
+}
+
+.pdfme-designer-container input:focus,
+.pdfme-designer-container select:focus,
+.pdfme-designer-container textarea:focus {
+  border-color: #80bdff !important;
+  outline: 0 !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+}
+
+/* Scrollbar Styles */
+.pdfme-designer-container *::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+.pdfme-designer-container *::-webkit-scrollbar-track {
+  background: #f1f1f1 !important;
+  border-radius: 4px !important;
+}
+
+.pdfme-designer-container *::-webkit-scrollbar-thumb {
+  background: #c1c1c1 !important;
+  border-radius: 4px !important;
+}
+
+.pdfme-designer-container *::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8 !important;
+}

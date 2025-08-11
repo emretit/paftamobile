@@ -7,102 +7,169 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SimpleTemplateEditorProps {
-  onSave?: (template: any) => void;
+  onSave?: () => void;
   onPreview?: (template: any) => void;
+  initialTemplate?: any;
+  initialName?: string;
+  templateId?: string;
 }
 
 export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
   onSave,
-  onPreview
+  onPreview,
+  initialTemplate,
+  initialName,
+  templateId,
 }) => {
   const designerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [templateName, setTemplateName] = useState('Yeni Şablon');
+  const [templateName, setTemplateName] = useState(initialName ?? 'Yeni Şablon');
   const [designerInstance, setDesignerInstance] = useState<any>(null);
 
   useEffect(() => {
+    let mounted = true;
+    
     const initializeDesigner = async () => {
+      console.log('🚀 Designer initialization başlıyor...');
+      
+      if (!designerRef.current) {
+        console.error('❌ designerRef.current bulunamadı');
+        return;
+      }
+
       try {
-        const { Designer } = await import('@pdfme/ui');
-        const { text, image, barcodes } = await import('@pdfme/schemas');
+        console.log('📦 PDFme modülleri yükleniyor...');
+        const [
+          { Designer },
+          { text, image, barcodes, line, rectangle, ellipse, table, checkbox, radioGroup, select, multiVariableText, dateTime, signature },
+          { BLANK_PDF }
+        ] = await Promise.all([
+          import('@pdfme/ui'),
+          import('@pdfme/schemas'),
+          import('@pdfme/common')
+        ]);
 
-        if (!designerRef.current) return;
+        if (!mounted) return;
 
-        // Boş PDF template'i oluşturalım
-        const { BlankPdf } = await import('@pdfme/common');
-        
-        const template = {
-          basePdf: BlankPdf, // PDFme'nin kendi blank PDF'i
+        console.log('✅ PDFme modülleri yüklendi');
+
+        // Template hazırla
+        const template = initialTemplate ? JSON.parse(JSON.stringify(initialTemplate)) : {
+          basePdf: BLANK_PDF,
           schemas: [
             {
-              "companyName": {
-                "type": "text",
-                "position": { "x": 20, "y": 20 },
-                "width": 100,
-                "height": 10,
-                "fontSize": 16,
-                "fontColor": "#000000"
+              companyName: {
+                type: 'text',
+                position: { x: 20, y: 20 },
+                width: 150,
+                height: 12,
+                fontSize: 16,
+                fontColor: '#000000',
+                fontName: 'NotoSerifJP-Regular',
               },
-              "proposalTitle": {
-                "type": "text", 
-                "position": { "x": 20, "y": 40 },
-                "width": 100,
-                "height": 10,
-                "fontSize": 14,
-                "fontColor": "#000000"
+              proposalTitle: {
+                type: 'text',
+                position: { x: 20, y: 40 },
+                width: 100,
+                height: 10,
+                fontSize: 14,
+                fontColor: '#666666',
+                fontName: 'NotoSerifJP-Regular',
               },
-              "customerName": {
-                "type": "text",
-                "position": { "x": 20, "y": 60 },
-                "width": 100, 
-                "height": 10,
-                "fontSize": 12,
-                "fontColor": "#000000"
-              },
-              "totalAmount": {
-                "type": "text",
-                "position": { "x": 20, "y": 80 },
-                "width": 50,
-                "height": 10,
-                "fontSize": 12,
-                "fontColor": "#000000"
-              }
-            }
-          ]
+            },
+          ],
         };
 
-        // Designer'ı başlat
+        if (template.basePdf === 'BLANK_PDF') {
+          template.basePdf = BLANK_PDF;
+        }
+
+        console.log('📄 Template hazırlandı:', template);
+
+        // Container'ı temizle
+        if (designerRef.current) {
+          designerRef.current.innerHTML = '';
+        }
+
+        console.log('🎨 Designer oluşturuluyor...');
+
+        // Designer oluştur
         const designer = new Designer({
           domContainer: designerRef.current,
           template,
           plugins: {
             text,
             image,
-            qrcode: barcodes.qrcode
-          }
+            qrcode: barcodes.qrcode,
+            ean13: barcodes.ean13,
+            japanpost: barcodes.japanpost,
+            line,
+            rectangle,
+            ellipse,
+            table,
+            checkbox,
+            radioGroup,
+            select,
+            multiVariableText,
+            dateTime,
+            signature,
+          },
+          options: {
+            zoomLevel: 1.0,
+            sidebarOpen: true,
+            lang: 'en',
+          },
         });
 
+        if (!mounted) {
+          designer.destroy?.();
+          return;
+        }
+
+        console.log('✅ Designer oluşturuldu');
         setDesignerInstance(designer);
         setIsLoading(false);
         
-        toast.success('Template editörü hazır!');
+        // Başarı mesajını delay ile göster
+        setTimeout(() => {
+          if (mounted) {
+            toast.success('PDF editörü başarıyla yüklendi!');
+          }
+        }, 500);
 
       } catch (error) {
-        console.error('Designer initialization error:', error);
-        toast.error('Template editörü başlatılamadı');
-        setIsLoading(false);
+        console.error('❌ Designer initialization error:', error);
+        if (mounted) {
+          toast.error(`Editör başlatılamadı: ${error.message}`);
+          setIsLoading(false);
+        }
       }
     };
 
-    initializeDesigner();
+    // DOM ready bekle
+    setTimeout(() => {
+      if (mounted && designerRef.current) {
+        initializeDesigner();
+      }
+    }, 100);
 
     // Cleanup
     return () => {
+      mounted = false;
       if (designerInstance) {
-        designerInstance.destroy?.();
+        try {
+          designerInstance.destroy?.();
+        } catch (error) {
+          console.warn('Designer destroy error:', error);
+        }
       }
     };
-  }, []);
+  }, [initialTemplate]);
+
+  // initialName değişince inputu güncelle
+  useEffect(() => {
+    if (initialName) setTemplateName(initialName);
+  }, [initialName]);
 
   const handleSave = async () => {
     if (!designerInstance) {
@@ -120,18 +187,39 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
         return;
       }
 
-      const { error } = await supabase
-        .from('templates')
-        .insert({
-          name: templateName,
-          template_json: template,
-          user_id: userRes.user.id
-        });
+      let error: any = null;
+      if (templateId) {
+        // Güncelleme
+        const res = await supabase
+          .from('templates')
+          .update({
+            name: templateName,
+            template_json: template,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', templateId);
+        error = res.error;
+      } else {
+        // Yeni kayıt
+        const res = await supabase
+          .from('templates')
+          .insert({
+            name: templateName,
+            template_json: template,
+            user_id: userRes.user.id,
+            template_type: 'proposal',
+            category: 'general',
+            description: 'PDFme editörü ile oluşturulan şablon',
+            is_active: true,
+            variables: []
+          });
+        error = res.error;
+      }
 
       if (error) throw error;
 
       toast.success('Şablon kaydedildi!');
-      onSave?.(template);
+      onSave?.();
 
     } catch (error) {
       console.error('Save error:', error);
@@ -146,42 +234,168 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
     }
 
     try {
+      console.log('🎯 Preview başlatılıyor...');
       const template = designerInstance.getTemplate();
+      console.log('📄 Template alındı:', template);
       
       // Preview için generate kullan
       const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes } = await import('@pdfme/schemas');
+      const { text, image, barcodes, line, rectangle, ellipse, table, checkbox, radioGroup, select, multiVariableText, dateTime, signature } = await import('@pdfme/schemas');
+      console.log('🔧 Plugins yüklendi');
 
-      // Örnek veri
-      const sampleInputs = {
-        companyName: 'ABC Teknoloji Ltd. Şti.',
-        proposalTitle: 'Web Sitesi Geliştirme Projesi',
-        customerName: 'XYZ İnşaat A.Ş.',
-        totalAmount: '125.000 ₺'
-      };
+      // Şablondaki alanları kontrol et ve uygun örnek veri oluştur
+      const sampleInputs: any = {};
+      
+      if (template.schemas && template.schemas[0]) {
+        Object.keys(template.schemas[0]).forEach(key => {
+          switch (key) {
+            case 'companyName':
+            case 'sirketBaslik':
+              sampleInputs[key] = 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ';
+              break;
+            case 'proposalTitle':
+            case 'teklifBaslik':
+              sampleInputs[key] = 'TEKLİF FORMU';
+              break;
+            case 'customerName':
+            case 'musteriBaslik':
+              sampleInputs[key] = 'BAHÇEŞEHİR GÖLEVLERİ SİTESİ';
+              break;
+            case 'totalAmount':
+            case 'toplamDeger':
+              sampleInputs[key] = '1.320,00 $';
+              break;
+            // PDFme Quote Template alanları
+            case 'head':
+              sampleInputs[key] = 'QUOTE';
+              break;
+            case 'preparedForLabel':
+              sampleInputs[key] = 'Prepared for:';
+              break;
+            case 'preparedForInput':
+              sampleInputs[key] = 'İmam Dîane\n+123 456 7890\n63 İvy Road, Hawkville, GA, USA 31036';
+              break;
+            case 'quoteInfo':
+              sampleInputs[key] = 'Quote No: 12345\n18 June 2025\nValid Until: 16 July 2025';
+              break;
+            case 'subtotalLabel':
+              sampleInputs[key] = 'Subtotal';
+              break;
+            case 'subtotal':
+              sampleInputs[key] = '377';
+              break;
+            case 'taxInput':
+              sampleInputs[key] = 'Tax (10%)';
+              break;
+            case 'tax':
+              sampleInputs[key] = '37.7';
+              break;
+            case 'totalLabel':
+              sampleInputs[key] = 'Total';
+              break;
+            case 'total':
+              sampleInputs[key] = '$414.7';
+              break;
+            case 'thankyou':
+              sampleInputs[key] = 'Thank you for your interest!';
+              break;
+            case 'date':
+            case 'tarihDeger':
+              sampleInputs[key] = new Date().toLocaleDateString('tr-TR');
+              break;
+            case 'teklifNoDeger':
+              sampleInputs[key] = 'NT.2508-1364.01';
+              break;
+            case 'hazirlayanDeger':
+              sampleInputs[key] = 'Nurettin Emre AYDIN';
+              break;
+            case 'brutToplamDeger':
+              sampleInputs[key] = '1.100,00 $';
+              break;
+            case 'kdvDeger':
+              sampleInputs[key] = '220,00 $';
+              break;
+            case 'urunTablosu':
+              sampleInputs[key] = [
+                ['1', 'IP Kamera Sistemi', '10', '100$', '1.000$'],
+                ['2', 'Kurulum ve Ayar', '1', '100$', '100$']
+              ];
+              break;
+            default:
+              sampleInputs[key] = `Örnek ${key}`;
+          }
+        });
+      } else {
+        // Fallback örnek veriler
+        sampleInputs.companyName = 'NGS TEKNOLOJİ';
+        sampleInputs.proposalTitle = 'TEKLİF FORMU';
+        sampleInputs.customerName = 'ÖRNEK MÜŞTERİ';
+        sampleInputs.totalAmount = '1.320,00 $';
+      }
+      
+      console.log('📊 Örnek veriler hazırlandı:', sampleInputs);
 
+      console.log('🏗️ PDF oluşturuluyor...');
       const pdf = await generate({
         template,
         inputs: [sampleInputs],
         plugins: {
           text,
           image,
-          qrcode: barcodes.qrcode
+          qrcode: barcodes.qrcode,
+          ean13: barcodes.ean13,
+          japanpost: barcodes.japanpost,
+          line,
+          rectangle,
+          ellipse,
+          table,
+          checkbox,
+          radioGroup,
+          select,
+          multiVariableText,
+          dateTime,
+          signature
         }
       });
 
+      console.log('✅ PDF oluşturuldu! Boyut:', pdf.buffer.byteLength, 'bytes');
+      
       // PDF'i yeni sekmede aç
       const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      
+      console.log('🚀 PDF yeni sekmede açılıyor...');
+      const newWindow = window.open(url, '_blank');
+      
+      if (!newWindow) {
+        console.warn('⚠️ Popup engellendi, link olarak indirme önerilecek');
+        toast.error('Popup engellendi. Lütfen popup engelleyiciyi devre dışı bırakın.');
+        
+        // Alternatif: Download linki
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `onizleme-${Date.now()}.pdf`;
+        link.click();
+        toast.success('PDF indirildi!');
+      } else {
+        toast.success('Önizleme yeni sekmede açıldı! 🎉');
+      }
+      
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        console.log('🧹 URL temizlendi');
+      }, 10000);
 
-      toast.success('Önizleme oluşturuldu!');
       onPreview?.(template);
 
     } catch (error) {
-      console.error('Preview error:', error);
-      toast.error('Önizleme oluşturulamadı');
+      console.error('❌ Preview hatası:', error);
+      console.error('Hata detayları:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      toast.error(`Önizleme oluşturulamadı: ${error.message}`);
     }
   };
 
@@ -231,7 +445,7 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
           
           <div 
             ref={designerRef} 
-            className={`min-h-[600px] w-full border rounded ${isLoading ? 'hidden' : ''}`}
+            className={`pdfme-designer-container w-full border rounded ${isLoading ? 'hidden' : ''}`}
           />
         </CardContent>
       </Card>
