@@ -17,6 +17,7 @@ export const TopBar = () => {
   const { user, userInitials } = useAuthState();
   
   const handleProfileClick = () => {
+    console.log('TopBar navigating to profile');
     navigate("/profile");
   };
 
@@ -47,8 +48,14 @@ export const TopBar = () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem onClick={handleProfileClick}>Profilim</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate("/settings")}>Ayarlar</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600" onClick={() => navigate("/auth")}>Çıkış Yap</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              console.log('TopBar navigating to settings');
+              navigate("/settings");
+            }}>Ayarlar</DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600" onClick={() => {
+              console.log('TopBar navigating to auth');
+              navigate("/auth");
+            }}>Çıkış Yap</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

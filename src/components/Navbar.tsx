@@ -55,7 +55,10 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
     
     // Eğer path varsa navigate et
     if (path) {
+      console.log('Navbar navigating to:', path);
       navigate(path);
+    } else {
+      console.log('No path provided for navigation');
     }
   };
 
