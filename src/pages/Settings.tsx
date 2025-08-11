@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import { Button } from "@/components/ui/button";
 import { 
   CustomTabs, 
   CustomTabsContent, 
@@ -33,10 +32,12 @@ const Settings = ({ isCollapsed, setIsCollapsed }: SettingsProps) => {
           <h1 className="text-2xl font-bold mb-6">Ayarlar & Yönetim</h1>
           
           <CustomTabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <CustomTabsList className="w-full grid grid-cols-4">
+            <CustomTabsList className="w-full grid grid-cols-5">
               <CustomTabsTrigger value="users">Kullanıcılar</CustomTabsTrigger>
               <CustomTabsTrigger value="roles">Roller & İzinler</CustomTabsTrigger>
               <CustomTabsTrigger value="nilvera">Nilvera E-Fatura</CustomTabsTrigger>
+              <CustomTabsTrigger value="templates" data-tab="templates">Şablonlar</CustomTabsTrigger>
+
               <CustomTabsTrigger value="system">Sistem Ayarları</CustomTabsTrigger>
             </CustomTabsList>
 
@@ -52,6 +53,9 @@ const Settings = ({ isCollapsed, setIsCollapsed }: SettingsProps) => {
               <NilveraSettings />
             </CustomTabsContent>
 
+            <CustomTabsContent value="templates">
+              <TemplateManagement />
+            </CustomTabsContent>
 
 
 

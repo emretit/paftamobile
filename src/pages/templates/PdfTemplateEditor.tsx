@@ -258,8 +258,9 @@ const PdfTemplateEditor = () => {
               <CardContent>
                 <MappingPanel
                   template={templateJson}
-                  initialMapping={fieldMapping}
+                  mapping={fieldMapping}
                   onChange={handleMappingChange}
+                  disabled={!hasWriteAccess}
                 />
               </CardContent>
             </Card>
