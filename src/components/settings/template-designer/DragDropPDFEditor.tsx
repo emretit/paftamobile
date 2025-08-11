@@ -26,7 +26,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
   const [tableColumns, setTableColumns] = useState({
     no: true,
     aciklama: true,
-    urunHizmet: true,
+    urunHizmet: false,
     miktar: true,
     birimFiyat: true,
     tutar: true,
@@ -42,13 +42,13 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
       const widthPercentages = [];
       
       if (tableColumns.no) { activeColumns.push("No"); columnNames.push("no"); widthPercentages.push(8); }
-      if (tableColumns.aciklama) { activeColumns.push("Açıklama"); columnNames.push("aciklama"); widthPercentages.push(30); }
+      if (tableColumns.aciklama) { activeColumns.push("Açıklama"); columnNames.push("aciklama"); widthPercentages.push(52); }
       if (tableColumns.urunHizmet) { activeColumns.push("Ürün/Hizmet"); columnNames.push("urunHizmet"); widthPercentages.push(25); }
-      if (tableColumns.miktar) { activeColumns.push("Miktar"); columnNames.push("miktar"); widthPercentages.push(12); }
+      if (tableColumns.miktar) { activeColumns.push("Miktar"); columnNames.push("miktar"); widthPercentages.push(15); }
       if (tableColumns.birim) { activeColumns.push("Birim"); columnNames.push("birim"); widthPercentages.push(10); }
-      if (tableColumns.birimFiyat) { activeColumns.push("Birim Fiyat"); columnNames.push("birimFiyat"); widthPercentages.push(12.5); }
+      if (tableColumns.birimFiyat) { activeColumns.push("Fiyat"); columnNames.push("birimFiyat"); widthPercentages.push(12); }
       if (tableColumns.indirim) { activeColumns.push("İndirim %"); columnNames.push("indirim"); widthPercentages.push(10); }
-      if (tableColumns.tutar) { activeColumns.push("Tutar (KDV Hariç)"); columnNames.push("tutar"); widthPercentages.push(12.5); }
+      if (tableColumns.tutar) { activeColumns.push("Tutar (KDV Hariç)"); columnNames.push("tutar"); widthPercentages.push(13); }
 
       try {
         const template = designer.getTemplate();
@@ -72,7 +72,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
   };
 
   useEffect(() => {
-    const initializeDesigner = async () => {
+    const initializePDFme = async () => {
       try {
         // Delay to ensure DOM is ready
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -88,293 +88,431 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
 
           console.log('Creating PDFme Designer with template:', defaultTemplate);
 
-          // Gerçekçi Türkçe teklif formu şablonu
+          // NGS Teklif Formu - Gerçek Layout'a Uygun
           const predefinedSchemas = {
-            // Şirket Logo ve Bilgileri
-            'sirketLogo': {
-              type: 'text',
+            // NGS Logo (Sol üst)
+            'ngsLogo': {
+              type: 'image',
               position: { x: 20, y: 15 },
-              width: 40,
-              height: 15,
-              fontSize: 16,
-              fontColor: '#dc2626',
-              fontName: 'NotoSansCJKjp-Regular',
-              content: 'ŞİRKET LOGO'
+              width: 25,
+              height: 25
             },
-            'sirketAdi': {
+            
+            // Şirket Başlığı ve Adresler
+            'sirketBaslik': {
               type: 'text',
-              position: { x: 20, y: 35 },
-              width: 100,
+              position: { x: 50, y: 18 },
+              width: 80,
               height: 8,
-              fontSize: 12,
+              fontSize: 10,
               fontColor: '#000000',
-              content: 'ŞİRKETİNİZ TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ'
+              content: 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ'
             },
-            'sirketAdres': {
+            'merkezAdres': {
               type: 'text',
-              position: { x: 20, y: 45 },
+              position: { x: 50, y: 28 },
               width: 80,
               height: 6,
               fontSize: 8,
-              fontColor: '#666666',
-              content: 'Merkez: Eğitim mah. Muratpaşa cad. No:1 D:29-30 Kadıköy, İstanbul'
+              fontColor: '#000000',
+              content: 'Merkez    : Eğitim mah. Muratpaşa cad. No:1 D:29-30 Kadıköy, İstanbul'
             },
-            'sirketSubeAdres': {
+            'subeAdres': {
               type: 'text',
-              position: { x: 20, y: 52 },
+              position: { x: 50, y: 35 },
               width: 80,
               height: 6,
               fontSize: 8,
-              fontColor: '#666666',
-              content: 'Şube: Topçular Mah. İşgören Sok. No: 2 A Keresteciler Sit. Eyüp, İstanbul'
+              fontColor: '#000000',
+              content: 'Şube      : Topçular Mah. İşgören Sok. No: 2 A Keresteciler Sit. Eyüp, İstanbul'
             },
 
-            // Teklif Formu Başlığı
-            'teklifFormuBaslik': {
+            // Teklif Formu Başlığı (Orta)
+            'teklifBaslik': {
               type: 'text',
-              position: { x: 85, y: 70 },
+              position: { x: 85, y: 50 },
               width: 40,
-              height: 12,
-              fontSize: 16,
+              height: 10,
+              fontSize: 14,
               fontColor: '#000000',
+              textAlign: 'center',
               content: 'TEKLİF FORMU'
             },
 
-            // Sağ üst tarih ve bilgiler
-            'tarih': {
+            // Sağ üst bilgiler
+            'tarihLabel': {
               type: 'text',
-              position: { x: 150, y: 15 },
-              width: 40,
+              position: { x: 140, y: 15 },
+              width: 15,
               height: 6,
               fontSize: 8,
               fontColor: '#000000',
-              content: 'Tarih: 08.08.2025'
+              content: 'Tarih'
             },
-            'gecerlilik': {
+            'tarihDeger': {
               type: 'text',
-              position: { x: 150, y: 22 },
-              width: 40,
+              position: { x: 158, y: 15 },
+              width: 30,
               height: 6,
               fontSize: 8,
               fontColor: '#000000',
-              content: 'Geçerlilik: 15.08.2025'
+              content: ': 08.08.2025'
             },
-            'teklifNo': {
+            'gecerlilikLabel': {
               type: 'text',
-              position: { x: 150, y: 29 },
-              width: 40,
+              position: { x: 140, y: 22 },
+              width: 15,
               height: 6,
               fontSize: 8,
               fontColor: '#000000',
-              content: 'Teklif No: NT.2508-1364.01'
+              content: 'Geçerlilik'
             },
-            'hazirlayan': {
+            'gecerlilikDeger': {
               type: 'text',
-              position: { x: 150, y: 36 },
-              width: 40,
+              position: { x: 158, y: 22 },
+              width: 30,
               height: 6,
               fontSize: 8,
               fontColor: '#000000',
-              content: 'Hazırlayan: Nurettin Emre AYDIN'
+              content: ': 15.08.2025'
+            },
+            'teklifNoLabel': {
+              type: 'text',
+              position: { x: 140, y: 29 },
+              width: 15,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#000000',
+              content: 'Teklif No'
+            },
+            'teklifNoDeger': {
+              type: 'text',
+              position: { x: 158, y: 29 },
+              width: 30,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#000000',
+              content: ': NT.2508-1364.01'
+            },
+            'hazirlayanLabel': {
+              type: 'text',
+              position: { x: 140, y: 36 },
+              width: 15,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#000000',
+              content: 'Hazırlayan'
+            },
+            'hazirlayanDeger': {
+              type: 'text',
+              position: { x: 158, y: 36 },
+              width: 30,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#000000',
+              content: ': Nurettin Emre AYDIN'
             },
 
-            // Müşteri bilgileri başlığı
+            // Müşteri Bilgileri
             'musteriBaslik': {
               type: 'text',
-              position: { x: 20, y: 85 },
-              width: 100,
+              position: { x: 20, y: 70 },
+              width: 120,
               height: 8,
-              fontSize: 12,
+              fontSize: 11,
               fontColor: '#000000',
               content: 'BAHÇEŞEHİR GÖLEVLERİ SİTESİ'
             },
-            'musteriDetay': {
+            'sayinLabel': {
               type: 'text',
-              position: { x: 20, y: 95 },
+              position: { x: 20, y: 80 },
               width: 170,
-              height: 15,
+              height: 18,
               fontSize: 9,
-              fontColor: '#666666',
+              fontColor: '#000000',
               content: 'Sayın\nMustafa Bey,\nYapmış olduğumuz görüşmeler sonrasında hazırlamış olduğumuz fiyat teklifimizi değerlendirmenize sunarız.'
             },
 
-            // Ürün tablosu - Esnek kolon yapısı
+            // Ürün Tablosu - Gerçek formata uygun
             'urunTablosu': {
               type: 'table',
-              position: { x: 20, y: 120 },
+              position: { x: 20, y: 105 },
               width: 170,
-              height: 80,
+              height: 60,
               showHead: true,
-              head: ["No", "Açıklama", "Ürün/Hizmet", "Miktar", "Birim Fiyat", "Tutar (KDV Hariç)"],
-              headWidthPercentages: [8, 30, 25, 12, 12.5, 12.5],
+              head: ["No", "Açıklama", "Miktar", "Fiyat", "Tutar (KDV Hariç)"],
+              headWidthPercentages: [8, 52, 15, 12, 13],
               tableStyles: { 
                 borderWidth: 0.5, 
                 borderColor: '#000000',
-                cellPadding: 3
+                cellPadding: 2
               },
               headStyles: { 
-                fontSize: 9, 
-                fontColor: '#ffffff', 
-                backgroundColor: '#dc2626',
+                fontSize: 8, 
+                fontColor: '#000000', 
+                backgroundColor: '#ffffff',
                 alignment: 'center',
-                fontName: 'NotoSansCJKjp-Regular'
+                borderWidth: 0.5,
+                borderColor: '#000000'
               },
               bodyStyles: { 
-                fontSize: 8, 
+                fontSize: 7, 
                 fontColor: '#000000',
-                alignment: 'left'
+                alignment: 'left',
+                borderWidth: 0.5,
+                borderColor: '#000000'
               }
             },
 
-
-            // Mali özet
-            'brutToplam': {
+            // Mali Özet - Sağda
+            'brutToplamLabel': {
               type: 'text',
-              position: { x: 140, y: 210 },
+              position: { x: 125, y: 175 },
               width: 25,
               height: 6,
-              fontSize: 10,
+              fontSize: 9,
               fontColor: '#000000',
               content: 'Brüt Toplam'
             },
-            'brutToplamTutar': {
+            'brutToplamDeger': {
               type: 'text',
-              position: { x: 170, y: 210 },
-              width: 20,
+              position: { x: 155, y: 175 },
+              width: 30,
               height: 6,
-              fontSize: 10,
+              fontSize: 9,
               fontColor: '#000000',
+              textAlign: 'right',
               content: '1.100,00 $'
             },
-            'indirim': {
+            'indirimLabel': {
               type: 'text',
-              position: { x: 140, y: 220 },
+              position: { x: 125, y: 183 },
               width: 25,
               height: 6,
-              fontSize: 10,
+              fontSize: 9,
               fontColor: '#000000',
               content: 'İndirim'
             },
-            'indirimTutar': {
+            'indirimDeger': {
               type: 'text',
-              position: { x: 170, y: 220 },
-              width: 20,
+              position: { x: 155, y: 183 },
+              width: 30,
               height: 6,
-              fontSize: 10,
+              fontSize: 9,
               fontColor: '#000000',
+              textAlign: 'right',
               content: '0,00 $'
             },
-            'netToplam': {
+            'netToplamLabel': {
               type: 'text',
-              position: { x: 140, y: 230 },
+              position: { x: 125, y: 191 },
               width: 25,
               height: 6,
-              fontSize: 10,
+              fontSize: 9,
               fontColor: '#000000',
               content: 'Net Toplam'
             },
-            'netToplamTutar': {
+            'netToplamDeger': {
               type: 'text',
-              position: { x: 170, y: 230 },
-              width: 20,
+              position: { x: 155, y: 191 },
+              width: 30,
               height: 6,
-              fontSize: 10,
+              fontSize: 9,
               fontColor: '#000000',
+              textAlign: 'right',
               content: '1.100,00 $'
             },
-            'kdvOrani': {
+            'kdvLabel': {
               type: 'text',
-              position: { x: 140, y: 240 },
+              position: { x: 125, y: 199 },
               width: 25,
               height: 6,
-              fontSize: 10,
+              fontSize: 9,
               fontColor: '#000000',
               content: 'KDV %20'
             },
-            'kdvTutar': {
+            'kdvDeger': {
               type: 'text',
-              position: { x: 170, y: 240 },
-              width: 20,
+              position: { x: 155, y: 199 },
+              width: 30,
               height: 6,
-              fontSize: 10,
+              fontSize: 9,
               fontColor: '#000000',
+              textAlign: 'right',
               content: '220,00 $'
             },
-            'toplam': {
+            'toplamLabel': {
               type: 'text',
-              position: { x: 140, y: 250 },
+              position: { x: 125, y: 207 },
               width: 25,
               height: 8,
-              fontSize: 12,
+              fontSize: 10,
               fontColor: '#000000',
               content: 'Toplam'
             },
-            'toplamTutar': {
+            'toplamDeger': {
               type: 'text',
-              position: { x: 170, y: 250 },
-              width: 20,
+              position: { x: 155, y: 207 },
+              width: 30,
               height: 8,
-              fontSize: 12,
+              fontSize: 10,
               fontColor: '#000000',
+              textAlign: 'right',
               content: '1.320,00 $'
             },
 
-            // Notlar ve şartlar
-            'notlar': {
+            // Notlar Bölümü
+            'notlarBaslik': {
               type: 'text',
-              position: { x: 20, y: 270 },
+              position: { x: 20, y: 225 },
               width: 20,
               height: 6,
-              fontSize: 10,
+              fontSize: 9,
               fontColor: '#000000',
-              content: 'Notlar'
+              content: 'Notlar           :'
             },
-            'fiyatlar': {
+            'fiyatlarNotu': {
               type: 'text',
-              position: { x: 20, y: 280 },
+              position: { x: 20, y: 235 },
               width: 170,
               height: 6,
               fontSize: 8,
-              fontColor: '#666666',
-              content: 'Fiyatlar: Teklifimiz USD cinsindan Merkez Bankası Döviz Satış Kuruna göre hazırlanmıştır.'
+              fontColor: '#000000',
+              content: 'Fiyatlar         : Teklifimiz USD cinsindan Merkez Bankası Döviz Satış Kuruna göre hazırlanmıştır.'
             },
-            'odeme': {
+            'odemeNotu': {
               type: 'text',
-              position: { x: 20, y: 288 },
+              position: { x: 20, y: 242 },
               width: 170,
               height: 6,
               fontSize: 8,
-              fontColor: '#666666',
-              content: 'Ödeme: Siparişte %50 nakit avans, %50 iş bitimi nakit tahsil edilecektir.'
+              fontColor: '#000000',
+              content: 'Ödeme          : Siparişte %50 nakit avans, %50 iş bitimi nakit tahsil edilecektir.'
             },
-            'garanti': {
+            'garantiNotu': {
               type: 'text',
-              position: { x: 20, y: 296 },
+              position: { x: 20, y: 249 },
               width: 170,
               height: 6,
               fontSize: 8,
-              fontColor: '#666666',
-              content: 'Garanti: Ürünlerimiz fatura tarihinden itibaren fabrikasyon hatalarına karşı 2(iki) yıl garantilidir'
+              fontColor: '#000000',
+              content: 'Garanti          : Ürünlerimiz fatura tarihinden itibaren fabrikasyon hatalarına karşı 2(iki) yıl garantilidir'
+            },
+            'stokTeslimNotu': {
+              type: 'text',
+              position: { x: 20, y: 256 },
+              width: 170,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#000000',
+              content: 'Stok ve Teslim : Ürünler siparişe sonra 5 gün içinde temin edilecektir. Tahmini iş süresi ürün teslimatından sonra 10 iş günüdür.'
+            },
+            'ticariSartlarNotu': {
+              type: 'text',
+              position: { x: 20, y: 263 },
+              width: 170,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#000000',
+              content: 'Ticari Şartlar   :'
             },
 
-            // İmza alanı
-            'musteriImza': {
-              type: 'text',
-              position: { x: 20, y: 310 },
-              width: 60,
-              height: 25,
-              fontSize: 8,
-              fontColor: '#000000',
-              content: 'Müşteri İmzası:\n\n\n_____________________\nAd Soyad:'
+            // Alt NGS Logo ve Bilgiler
+            'altNgsLogo': {
+              type: 'image',
+              position: { x: 20, y: 275 },
+              width: 20,
+              height: 20
             },
-            'sirketImza': {
+            'altSirketBilgi': {
               type: 'text',
-              position: { x: 130, y: 310 },
-              width: 60,
-              height: 25,
+              position: { x: 45, y: 278 },
+              width: 80,
+              height: 10,
               fontSize: 8,
               fontColor: '#000000',
-              content: 'Şirket İmzası:\n\n\n_____________________\nYetkili:'
+              content: 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ\nEğitim mah. Muratpaşa cad. No:1 D:29-30 Kadıköy, İstanbul\nwww.ngsteknoloji.com / 0 (212) 577 35 72'
+            },
+            'sayfaNo': {
+              type: 'text',
+              position: { x: 170, y: 285 },
+              width: 20,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#000000',
+              textAlign: 'right',
+              content: 'Sayfa 1/2'
+            },
+
+            // İmza Alanları
+            'musteriImzaKutu': {
+              type: 'rectangle',
+              position: { x: 25, y: 300 },
+              width: 60,
+              height: 30,
+              borderWidth: 1,
+              borderColor: '#000000',
+              color: 'transparent'
+            },
+            'musteriImzaBaslik': {
+              type: 'text',
+              position: { x: 35, y: 305 },
+              width: 40,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#000000',
+              textAlign: 'center',
+              content: 'Teklifi Kabul Eden Firma Yetkilisi'
+            },
+            'musteriImzaAlt': {
+              type: 'text',
+              position: { x: 35, y: 320 },
+              width: 40,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#000000',
+              textAlign: 'center',
+              content: 'Kaşe - İmza'
+            },
+
+            'sirketImzaKutu': {
+              type: 'rectangle',
+              position: { x: 105, y: 300 },
+              width: 60,
+              height: 30,
+              borderWidth: 1,
+              borderColor: '#000000',
+              color: 'transparent'
+            },
+            'sirketImzaBaslik': {
+              type: 'text',
+              position: { x: 115, y: 305 },
+              width: 40,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#000000',
+              textAlign: 'center',
+              content: 'Teklifi Onaylayan Firma Yetkilisi'
+            },
+            'sirketImzaAlt': {
+              type: 'text',
+              position: { x: 115, y: 320 },
+              width: 40,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#000000',
+              textAlign: 'center',
+              content: 'Kaşe - İmza'
+            },
+            'sirketImzaAdi': {
+              type: 'text',
+              position: { x: 115, y: 325 },
+              width: 40,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#000000',
+              textAlign: 'center',
+              content: 'Nurettin Emre AYDIN'
             },
 
             // ========== EK ARAÇLAR ==========
@@ -566,37 +704,53 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
           setTimeout(() => {
             try {
               const sampleData = {
-                sirketLogo: 'NGS LOGO',
-                sirketAdi: 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ',
-                teklifFormuBaslik: 'TEKLİF FORMU',
-                tarih: 'Tarih: 08.08.2025',
-                gecerlilik: 'Geçerlilik: 15.08.2025',
-                teklifNo: 'Teklif No: NT.2508-1364.01',
-                hazirlayan: 'Hazırlayan: Nurettin Emre AYDIN',
+                ngsLogo: '',
+                sirketBaslik: 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ',
+                merkezAdres: 'Merkez    : Eğitim mah. Muratpaşa cad. No:1 D:29-30 Kadıköy, İstanbul',
+                subeAdres: 'Şube      : Topçular Mah. İşgören Sok. No: 2 A Keresteciler Sit. Eyüp, İstanbul',
+                teklifBaslik: 'TEKLİF FORMU',
+                tarihLabel: 'Tarih',
+                tarihDeger: ': 08.08.2025',
+                gecerlilikLabel: 'Geçerlilik',
+                gecerlilikDeger: ': 15.08.2025',
+                teklifNoLabel: 'Teklif No',
+                teklifNoDeger: ': NT.2508-1364.01',
+                hazirlayanLabel: 'Hazırlayan',
+                hazirlayanDeger: ': Nurettin Emre AYDIN',
                 musteriBaslik: 'BAHÇEŞEHİR GÖLEVLERİ SİTESİ',
-                musteriDetay: 'Sayın\nMustafa Bey,\nYapmış olduğumuz görüşmeler sonrasında hazırlamış olduğumuz fiyat teklifimizi değerlendirmenize sunarız.',
+                sayinLabel: 'Sayın\nMustafa Bey,\nYapmış olduğumuz görüşmeler sonrasında hazırlamış olduğumuz fiyat teklifimizi değerlendirmenize sunarız.',
                 urunTablosu: [
-                  ['1', 'BİLGİSAYAR', 'HP Pro Tower 290 B6/C3S5 G9 İ7-13700 32GB 512GB SSD DOS', '1,00 Ad', '700,00 $', '700,00 $'],
-                  ['2', 'Windows 11 Pro Lisans', '', '1,00 Ad', '165,00 $', '165,00 $'],
+                  ['1', 'BİLGİSAYAR\nHP Pro Tower 290 BUC5S G9 İ7-13700 32GB 512GB SSD DOS', '1,00 Ad', '700,00 $', '700,00 $'],
+                  ['2', 'Windows 11 Pro Lisans', '1,00 Ad', '165,00 $', '165,00 $'],
                   ['3', 'Uranium POE-G8002-96W 8 Port + 2 Port RJ45 Uplink POE Switch', '2,00 Ad', '80,00 $', '160,00 $'],
                   ['4', 'İçilik, Montaj, Mühendislik ve Süpervizyon Hizmetleri, Programlama, Test, Devreye alma', '1,00 Ad', '75,00 $', '75,00 $']
                 ],
-                brutToplam: 'Brüt Toplam',
-                brutToplamTutar: '1.100,00 $',
-                indirim: 'İndirim',
-                indirimTutar: '0,00 $',
-                netToplam: 'Net Toplam',
-                netToplamTutar: '1.100,00 $',
-                kdvOrani: 'KDV %20',
-                kdvTutar: '220,00 $',
-                toplam: 'Toplam',
-                toplamTutar: '1.320,00 $',
-                notlar: 'Notlar',
-                fiyatlar: 'Fiyatlar: Teklifimiz USD cinsindan Merkez Bankası Döviz Satış Kuruna göre hazırlanmıştır.',
-                odeme: 'Ödeme: Siparişte %50 nakit avans, %50 iş bitimi nakit tahsil edilecektir.',
-                garanti: 'Garanti: Ürünlerimiz fatura tarihinden itibaren fabrikasyon hatalarına karşı 2(iki) yıl garantilidir',
-                musteriImza: 'Müşteri İmzası:\n\n\n_____________________\nAd Soyad:',
-                sirketImza: 'Şirket İmzası:\n\n\n_____________________\nYetkili:',
+                brutToplamLabel: 'Brüt Toplam',
+                brutToplamDeger: '1.100,00 $',
+                indirimLabel: 'İndirim',
+                indirimDeger: '0,00 $',
+                netToplamLabel: 'Net Toplam',
+                netToplamDeger: '1.100,00 $',
+                kdvLabel: 'KDV %20',
+                kdvDeger: '220,00 $',
+                toplamLabel: 'Toplam',
+                toplamDeger: '1.320,00 $',
+                notlarBaslik: 'Notlar           :',
+                fiyatlarNotu: 'Fiyatlar         : Teklifimiz USD cinsindan Merkez Bankası Döviz Satış Kuruna göre hazırlanmıştır.',
+                odemeNotu: 'Ödeme          : Siparişte %50 nakit avans, %50 iş bitimi nakit tahsil edilecektir.',
+                garantiNotu: 'Garanti          : Ürünlerimiz fatura tarihinden itibaren fabrikasyon hatalarına karşı 2(iki) yıl garantilidir',
+                stokTeslimNotu: 'Stok ve Teslim : Ürünler siparişe sonra 5 gün içinde temin edilecektir. Tahmini iş süresi ürün teslimatından sonra 10 iş günüdür.',
+                ticariSartlarNotu: 'Ticari Şartlar   :',
+                altNgsLogo: '',
+                altSirketBilgi: 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ\nEğitim mah. Muratpaşa cad. No:1 D:29-30 Kadıköy, İstanbul\nwww.ngsteknoloji.com / 0 (212) 577 35 72',
+                sayfaNo: 'Sayfa 1/2',
+                musteriImzaKutu: '',
+                musteriImzaBaslik: 'Teklifi Kabul Eden Firma Yetkilisi',
+                musteriImzaAlt: 'Kaşe - İmza',
+                sirketImzaKutu: '',
+                sirketImzaBaslik: 'Teklifi Onaylayan Firma Yetkilisi',
+                sirketImzaAlt: 'Kaşe - İmza',
+                sirketImzaAdi: 'Nurettin Emre AYDIN',
                 
                 // Ek araçlar için sample data
                 cizgiOrnek: '',
@@ -614,6 +768,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
                 barkodEAN13: '1234567890123'
               };
               
+              designerInstance.updateInputs([sampleData]);
               console.log('Sample data set successfully');
             } catch (error) {
               console.error('Error setting sample data:', error);
@@ -631,30 +786,24 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
       }
     };
 
-    if (designerRef.current) {
-      initializeDesigner();
-    }
-
-    return () => {
-      if (designer) {
-        try {
-          designer.destroy();
-        } catch (error) {
-          console.error('Designer destroy error:', error);
-        }
-      }
-    };
-  }, [initialTemplate, designer]);
+    initializePDFme();
+  }, [initialTemplate]);
 
   const handleSave = () => {
     if (designer) {
       try {
         const template = designer.getTemplate();
-        onSave({ ...template, name: templateName });
-        toast.success('Şablon kaydedildi');
+        const templateData = {
+          name: templateName,
+          template: template,
+          created_at: new Date().toISOString()
+        };
+        
+        onSave(templateData);
+        toast.success('PDF şablonu başarıyla kaydedildi!');
       } catch (error) {
         console.error('Template save error:', error);
-        toast.error('Şablon kaydedilemedi');
+        toast.error('Şablon kaydedilirken hata oluştu: ' + error.message);
       }
     }
   };
@@ -666,7 +815,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
         onPreview(template);
       } catch (error) {
         console.error('Template preview error:', error);
-        toast.error('Önizleme oluşturulamadı');
+        toast.error('Önizleme oluşturulurken hata oluştu: ' + error.message);
       }
     }
   };
@@ -676,48 +825,58 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
       {/* PDF Designer Area */}
       <div className="flex-1 flex flex-col">
         <div className="p-4 bg-white border-b border-gray-200 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div>
-              <Label htmlFor="templateName" className="text-sm font-medium">Şablon Adı</Label>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="template-name">Şablon Adı:</Label>
               <Input
-                id="templateName"
+                id="template-name"
                 value={templateName}
                 onChange={(e) => setTemplateName(e.target.value)}
-                className="mt-1 w-64"
-                placeholder="Şablon adını girin..."
+                className="w-48"
+                placeholder="Şablon adını girin"
               />
             </div>
-            <div className="text-sm text-muted-foreground">
-              🎯 PDF'teki alanları tıklayın, sağ panelde özelleştirin
-            </div>
           </div>
-          <div className="flex gap-2">
-            {onPreview && (
-              <Button variant="outline" onClick={handlePreview}>
-                <Eye className="w-4 h-4 mr-2" />
-                Önizleme
-              </Button>
-            )}
-            <Button onClick={handleSave}>
-              <Save className="w-4 h-4 mr-2" />
-              Kaydet
+          
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-600">
+              🎯 PDF'teki alanları tıklayın, sağ panelde özelleştirin
+            </span>
+            <Button
+              onClick={handlePreview}
+              variant="outline"
+              size="sm"
+              className="flex items-center space-x-2"
+            >
+              <Eye className="w-4 h-4" />
+              <span>Önizle</span>
+            </Button>
+            <Button
+              onClick={handleSave}
+              size="sm"
+              className="flex items-center space-x-2 bg-primary text-white"
+            >
+              <Save className="w-4 h-4" />
+              <span>Kaydet</span>
             </Button>
           </div>
         </div>
 
-        <div className="flex-1 relative bg-white">
+        {/* Designer Container */}
+        <div className="flex-1 relative">
+          <div
+            ref={designerRef}
+            className="w-full h-full"
+            style={{ minHeight: '600px' }}
+          />
           {isLoading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/90">
+            <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
               <div className="text-center">
-                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                <div className="text-sm text-muted-foreground">PDF tasarımcısı yükleniyor...</div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="mt-2 text-sm text-gray-600">PDF tasarımcısı yükleniyor...</p>
               </div>
             </div>
           )}
-          <div
-            ref={designerRef}
-            className="w-full h-full min-h-[600px]"
-          />
         </div>
       </div>
 
@@ -745,7 +904,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
                     {key === 'urunHizmet' && 'Ürün/Hizmet'}
                     {key === 'miktar' && 'Miktar'}
                     {key === 'birim' && 'Birim'}
-                    {key === 'birimFiyat' && 'Birim Fiyat'}
+                    {key === 'birimFiyat' && 'Fiyat'}
                     {key === 'indirim' && 'İndirim %'}
                     {key === 'tutar' && 'Tutar'}
                   </label>
