@@ -119,7 +119,7 @@ export async function importPdfme() {
   const [
     { Designer },
     { generate },
-    { text, image, table, qrcode },
+    { text, image, table },
     { BLANK_PDF }
   ] = await Promise.all([
     import('@pdfme/ui'),
@@ -131,7 +131,7 @@ export async function importPdfme() {
   return {
     Designer,
     generate,
-    plugins: { text, image, table, qrcode },
+    plugins: { text, image, table },
     BLANK_PDF
   };
 }

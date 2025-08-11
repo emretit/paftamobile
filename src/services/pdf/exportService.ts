@@ -122,7 +122,7 @@ export class ExportService {
     const pdf = await generate({
       template: preparedTemplate,
       inputs: [inputs],
-      plugins,
+      plugins: plugins as any,
     });
 
     return pdf;

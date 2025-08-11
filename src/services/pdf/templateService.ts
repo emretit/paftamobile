@@ -11,7 +11,7 @@ export class TemplateService {
   /**
    * Get all templates for the current user
    */
-  static async getTemplates(): Promise<PdfTemplate[]> {
+  static async getTemplates(projectId?: string): Promise<PdfTemplate[]> {
     const { data, error } = await supabase
       .from('pdf_templates')
       .select('*')
@@ -39,9 +39,7 @@ export class TemplateService {
    * Create a new template
    */
   static async createTemplate(
-    name: string,
-    description: string,
-    templateJson: any
+    templateData: any
   ): Promise<PdfTemplate> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) throw new Error('User not authenticated');
@@ -49,10 +47,7 @@ export class TemplateService {
     const { data, error } = await supabase
       .from('pdf_templates')
       .insert({
-        name,
-        description,
-        template_json: templateJson,
-        field_mapping_json: {},
+        ...templateData,
         created_by: user.user.id,
       })
       .select()
