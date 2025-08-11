@@ -2365,6 +2365,7 @@ export type Database = {
           preview_image: string | null
           tags: string[] | null
           template_features: string[] | null
+          template_id: string | null
           template_type: string
           updated_at: string | null
           usage_count: string | null
@@ -2386,6 +2387,7 @@ export type Database = {
           preview_image?: string | null
           tags?: string[] | null
           template_features?: string[] | null
+          template_id?: string | null
           template_type?: string
           updated_at?: string | null
           usage_count?: string | null
@@ -2407,11 +2409,20 @@ export type Database = {
           preview_image?: string | null
           tags?: string[] | null
           template_features?: string[] | null
+          template_id?: string | null
           template_type?: string
           updated_at?: string | null
           usage_count?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "proposal_templates_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       proposal_terms: {
         Row: {
@@ -3170,30 +3181,96 @@ export type Database = {
           },
         ]
       }
-      templates: {
+      template_variables: {
         Row: {
-          created_at: string
+          category: string | null
+          created_at: string | null
+          default_value: string | null
+          description: string | null
           id: string
+          is_system: boolean | null
+          label: string
           name: string
-          template_json: Json
-          updated_at: string
-          user_id: string
+          type: string
+          updated_at: string | null
+          validation_rules: Json | null
         }
         Insert: {
-          created_at?: string
+          category?: string | null
+          created_at?: string | null
+          default_value?: string | null
+          description?: string | null
           id?: string
-          name?: string
-          template_json: Json
-          updated_at?: string
-          user_id: string
+          is_system?: boolean | null
+          label: string
+          name: string
+          type: string
+          updated_at?: string | null
+          validation_rules?: Json | null
         }
         Update: {
-          created_at?: string
+          category?: string | null
+          created_at?: string | null
+          default_value?: string | null
+          description?: string | null
           id?: string
+          is_system?: boolean | null
+          label?: string
           name?: string
+          type?: string
+          updated_at?: string | null
+          validation_rules?: Json | null
+        }
+        Relationships: []
+      }
+      templates: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          metadata: Json | null
+          name: string
+          preview_image_url: string | null
+          template_json: Json
+          template_type: string | null
+          updated_at: string
+          user_id: string
+          variables: Json | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          metadata?: Json | null
+          name?: string
+          preview_image_url?: string | null
+          template_json: Json
+          template_type?: string | null
+          updated_at?: string
+          user_id: string
+          variables?: Json | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          metadata?: Json | null
+          name?: string
+          preview_image_url?: string | null
           template_json?: Json
+          template_type?: string | null
           updated_at?: string
           user_id?: string
+          variables?: Json | null
         }
         Relationships: []
       }
