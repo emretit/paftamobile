@@ -5,16 +5,32 @@ export class PDFMeGenerator {
     try {
       // Dynamically import PDFMe to avoid SSR issues
       const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes, table } = await import('@pdfme/schemas');
+      const { text, image, barcodes, table, line, rectangle, ellipse, svg, checkbox, radioGroup, select, date, time, dateTime } = await import('@pdfme/schemas');
       
       // Map proposal data to template inputs
       const inputs = this.mapProposalToInputs(proposal, template);
       
-      // Generate PDF with type assertion for plugins
+      // Generate PDF with all schema types
       const pdf = await generate({
         template,
         inputs: [inputs],
-        plugins: { text, image, qrcode: barcodes.qrcode, table } as any
+        plugins: { 
+          text, 
+          image, 
+          qrcode: barcodes.qrcode,
+          ean13: barcodes.ean13,
+          table,
+          line,
+          rectangle,
+          ellipse,
+          svg,
+          checkbox,
+          radioGroup,
+          select,
+          date,
+          time,
+          dateTime
+        } as any
       });
 
       // Download the PDF
@@ -22,14 +38,14 @@ export class PDFMeGenerator {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `teklif-${proposal.proposal_number}.pdf`;
+      link.download = `teklif-${proposal.proposal_number || proposal.number || 'NGS-TEKLIF'}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('PDF generation error:', error);
-      throw new Error('PDF oluşturulamadı');
+      throw new Error('PDF oluşturulamadı: ' + error.message);
     }
   }
 
@@ -37,7 +53,7 @@ export class PDFMeGenerator {
     try {
       // Dynamically import PDFMe to avoid SSR issues
       const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes, table } = await import('@pdfme/schemas');
+      const { text, image, barcodes, table, line, rectangle, ellipse, svg, checkbox, radioGroup, select, date, time, dateTime } = await import('@pdfme/schemas');
       
       // Use mock data or default values
       const inputs = mockData || this.getMockData();
@@ -45,7 +61,23 @@ export class PDFMeGenerator {
       const pdf = await generate({
         template,
         inputs: [inputs],
-        plugins: { text, image, qrcode: barcodes.qrcode, table } as any
+        plugins: { 
+          text, 
+          image, 
+          qrcode: barcodes.qrcode,
+          ean13: barcodes.ean13,
+          table,
+          line,
+          rectangle,
+          ellipse,
+          svg,
+          checkbox,
+          radioGroup,
+          select,
+          date,
+          time,
+          dateTime
+        } as any
       });
 
       // Download preview
@@ -53,76 +85,118 @@ export class PDFMeGenerator {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'sablon-onizleme.pdf';
+      link.download = 'ngs-sablon-onizleme.pdf';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Preview generation error:', error);
-      throw new Error('Önizleme oluşturulamadı');
+      throw new Error('Önizleme oluşturulamadı: ' + error.message);
     }
   }
 
   private mapProposalToInputs(proposal: Proposal, template: any): Record<string, any> {
-    const inputs: Record<string, any> = {};
-    
-    // Get schema fields from first schema
-    const schema = template.schemas?.[0] || {};
-    
-    // Convert proposal items to table format and compute money fields
+    // Convert proposal items to NGS table format
     const itemsArray = Array.isArray((proposal as any).items) ? (proposal as any).items : [];
-    const proposalItems = this.convertItemsToTableData(itemsArray);
-    const computedSubTotal = itemsArray.reduce((sum: number, it: any) => {
-      const qty = Number(it?.quantity ?? 0) || 0;
-      const unit = Number(it?.unit_price ?? 0) || 0;
-      const total = Number(it?.total_price ?? qty * unit) || 0;
-      return sum + total;
+    const proposalItemsTable = itemsArray.length > 0 
+      ? itemsArray.map((item: any, index: number) => [
+          (index + 1).toString(), // No
+          item.description || item.name || 'Ürün/Hizmet',
+          `${item.quantity || 1},00 Ad`,
+          item.unit_price ? `${item.unit_price.toLocaleString('tr-TR')} ${(proposal as any).currency || '$'}` : '0 $',
+          item.total_price ? `${item.total_price.toLocaleString('tr-TR')} ${(proposal as any).currency || '$'}` : '0 $'
+        ])
+      : [['1', 'Ürün/Hizmet bulunamadı', '1,00 Ad', '0 $', '0 $']];
+
+    // Calculate totals
+    const subTotal = itemsArray.reduce((sum: number, item: any) => {
+      return sum + (Number(item?.total_price) || 0);
     }, 0);
-    const discountAmount = Number((proposal as any)?.discount_amount ?? (proposal as any)?.discount ?? 0) || 0;
-    const totalAmount = Number((proposal as any)?.total_amount ?? (computedSubTotal - discountAmount)) || 0;
-    
-    // Basit ve sade field mapping
-    const fieldMappings: Record<string, any> = {
-      // Temel Bilgiler
-      teklifBasligi: proposal.title || 'Teklif Başlığı',
-      teklifNo: proposal.number || proposal.proposal_number || 'TKL-001',
-      teklifTarihi: (proposal as any)?.offer_date ? new Date((proposal as any).offer_date).toLocaleDateString('tr-TR') : 
-                     proposal.created_at ? new Date(proposal.created_at).toLocaleDateString('tr-TR') : 
-                     new Date().toLocaleDateString('tr-TR'),
-      gecerlilikTarihi: (proposal as any)?.validity_date ? new Date((proposal as any).validity_date).toLocaleDateString('tr-TR') :
-                        proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString('tr-TR') : '',
+    const discountAmount = Number((proposal as any)?.discount_amount) || 0;
+    const netTotal = subTotal - discountAmount;
+    const vatRate = Number((proposal as any)?.vat_rate) || 20;
+    const vatAmount = netTotal * (vatRate / 100);
+    const grandTotal = netTotal + vatAmount;
+    const currency = (proposal as any)?.currency || '$';
+
+    // NGS Teklif Formu Data Mapping - Schema field adlarına uygun
+    return {
+      // NGS Logo ve Şirket Bilgileri
+      ngsLogo: '',
+      sirketBaslik: 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ',
+      merkezAdres: 'Merkez    : Eğitim mah. Muratpaşa cad. No:1 D:29-30 Kadıköy, İstanbul',
+      subeAdres: 'Şube      : Topçular Mah. İşgören Sok. No: 2 A Keresteciler Sit. Eyüp, İstanbul',
+      
+      // Teklif Başlığı
+      teklifBaslik: 'TEKLİF FORMU',
+      
+      // Sağ üst bilgiler
+      tarihLabel: 'Tarih',
+      tarihDeger: `: ${proposal.created_at ? new Date(proposal.created_at).toLocaleDateString('tr-TR') : new Date().toLocaleDateString('tr-TR')}`,
+      gecerlilikLabel: 'Geçerlilik',
+      gecerlilikDeger: `: ${proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString('tr-TR') : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('tr-TR')}`,
+      teklifNoLabel: 'Teklif No',
+      teklifNoDeger: `: ${proposal.proposal_number || proposal.number || 'NT.2508-1364.01'}`,
+      hazirlayanLabel: 'Hazırlayan',
+      hazirlayanDeger: `: ${(proposal as any)?.employee_name || 'Nurettin Emre AYDIN'}`,
       
       // Müşteri Bilgileri
-      musteriAdi: (proposal as any)?.customer_company || proposal.customer_name || 'Müşteri Firma Adı',
-      musteriAdres: (proposal as any)?.customer_address || (proposal as any)?.customer?.address || '',
-      musteriTelefon: (proposal as any)?.customer_phone || (proposal as any)?.customer?.phone || (proposal as any)?.customer?.mobile_phone || '',
+      musteriBaslik: ((proposal as any)?.customer_company || proposal.customer_name || 'MÜŞTERİ ADI').toUpperCase(),
+      sayinLabel: `Sayın\n${(proposal as any)?.contact_person || 'Müşteri Temsilcisi'},\nYapmış olduğumuz görüşmeler sonrasında hazırlamış olduğumuz fiyat teklifimizi değerlendirmenize sunarız.`,
       
-      // Ürün/Hizmet Tablosu
-      urunTablosu: proposalItems,
+      // Ürün Tablosu
+      urunTablosu: proposalItemsTable,
       
-      // Mali Bilgiler
-      brutToplam: `${computedSubTotal.toLocaleString('tr-TR')} ₺`,
-      indirim: `${discountAmount.toLocaleString('tr-TR')} ₺`,
-      kdvTutari: `${((computedSubTotal - discountAmount) * 0.20).toLocaleString('tr-TR')} ₺`,
-      genelToplam: `${totalAmount.toLocaleString('tr-TR')} ₺`,
+      // Mali Özet
+      brutToplamLabel: 'Brüt Toplam',
+      brutToplamDeger: `${subTotal.toLocaleString('tr-TR')} ${currency}`,
+      indirimLabel: 'İndirim',
+      indirimDeger: `${discountAmount.toLocaleString('tr-TR')} ${currency}`,
+      netToplamLabel: 'Net Toplam',
+      netToplamDeger: `${netTotal.toLocaleString('tr-TR')} ${currency}`,
+      kdvLabel: `KDV %${vatRate}`,
+      kdvDeger: `${vatAmount.toLocaleString('tr-TR')} ${currency}`,
+      toplamLabel: 'Toplam',
+      toplamDeger: `${grandTotal.toLocaleString('tr-TR')} ${currency}`,
       
-      // Şartlar
-      odemeKosullari: proposal.payment_terms || '',
-      teslimatKosullari: proposal.delivery_terms || ''
+      // Notlar Bölümü
+      notlarBaslik: 'Notlar           :',
+      fiyatlarNotu: `Fiyatlar         : Teklifimiz ${currency} cinsindan Merkez Bankası Döviz Satış Kuruna göre hazırlanmıştır.`,
+      odemeNotu: `Ödeme          : ${proposal.payment_terms || 'Siparişte %50 nakit avans, %50 iş bitimi nakit tahsil edilecektir.'}`,
+      garantiNotu: `Garanti          : ${(proposal as any)?.warranty_terms || 'Ürünlerimiz fatura tarihinden itibaren fabrikasyon hatalarına karşı 2(iki) yıl garantilidir'}`,
+      stokTeslimNotu: `Stok ve Teslim : ${proposal.delivery_terms || 'Ürünler siparişe sonra 5 gün içinde temin edilecektir. Tahmini iş süresi ürün teslimatından sonra 10 iş günüdür.'}`,
+      ticariSartlarNotu: 'Ticari Şartlar   :',
+      
+      // Alt NGS Logo ve Bilgiler
+      altNgsLogo: '',
+      altSirketBilgi: 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ\nEğitim mah. Muratpaşa cad. No:1 D:29-30 Kadıköy, İstanbul\nwww.ngsteknoloji.com / 0 (212) 577 35 72',
+      sayfaNo: 'Sayfa 1/2',
+      
+      // İmza Alanları
+      musteriImzaKutu: '',
+      musteriImzaBaslik: 'Teklifi Kabul Eden Firma Yetkilisi',
+      musteriImzaAlt: 'Kaşe - İmza',
+      sirketImzaKutu: '',
+      sirketImzaBaslik: 'Teklifi Onaylayan Firma Yetkilisi',
+      sirketImzaAlt: 'Kaşe - İmza',
+      sirketImzaAdi: (proposal as any)?.employee_name || 'Nurettin Emre AYDIN',
+      
+      // Ek araçlar için varsayılan değerler
+      cizgiOrnek: '',
+      dikdortgenOrnek: '',
+      elipsOrnek: '',
+      checkboxOrnek: true,
+      checkboxEtiket: 'Şartları kabul ediyorum',
+      secimKutusu: 'Nakit',
+      tarihAlani: new Date().toLocaleDateString('tr-TR'),
+      saatAlani: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+      qrKodOrnek: `${proposal.proposal_number || proposal.number || 'TKL-001'} | ${proposal.customer_name || 'Müşteri'} | ${grandTotal.toLocaleString('tr-TR')} ${currency}`,
+      imzaKutusu: '',
+      imzaEtiket: 'İmza:',
+      logoAlani: '',
+      barkodEAN13: (proposal.proposal_number || proposal.number || '1234567890123').replace(/[^0-9]/g, '').padEnd(13, '0').substring(0, 13)
     };
-
-    // Map schema fields to proposal data
-    Object.keys(schema).forEach(fieldKey => {
-      if (fieldMappings[fieldKey] !== undefined) {
-        inputs[fieldKey] = fieldMappings[fieldKey];
-      } else {
-        // Default empty value
-        inputs[fieldKey] = '';
-      }
-    });
-
-    return inputs;
   }
 
   private convertItemsToTableData(items: any[]): string[][] {
@@ -140,36 +214,71 @@ export class PDFMeGenerator {
   }
 
   private getMockData(): Record<string, any> {
-    const mockItems = [
-      ['Web Sitesi Tasarımı', '1', 'Adet', '50.000 ₺', '50.000 ₺'],
-      ['SEO Optimizasyonu', '1', 'Adet', '25.000 ₺', '25.000 ₺'],
-      ['Hosting (1 Yıl)', '1', 'Adet', '5.000 ₺', '5.000 ₺']
-    ];
-
+    // NGS Mock Data - Şablonumuza uygun
     return {
-      // Temel Bilgiler
-      teklifBasligi: 'Web Sitesi Geliştirme Projesi',
-      teklifNo: 'TKL-2024-001',
-      teklifTarihi: new Date().toLocaleDateString('tr-TR'),
-      gecerlilikTarihi: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('tr-TR'),
+      // NGS Logo ve Şirket Bilgileri
+      ngsLogo: '',
+      sirketBaslik: 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ',
+      merkezAdres: 'Merkez    : Eğitim mah. Muratpaşa cad. No:1 D:29-30 Kadıköy, İstanbul',
+      subeAdres: 'Şube      : Topçular Mah. İşgören Sok. No: 2 A Keresteciler Sit. Eyüp, İstanbul',
+      teklifBaslik: 'TEKLİF FORMU',
+      tarihLabel: 'Tarih',
+      tarihDeger: ': 08.08.2025',
+      gecerlilikLabel: 'Geçerlilik',
+      gecerlilikDeger: ': 15.08.2025',
+      teklifNoLabel: 'Teklif No',
+      teklifNoDeger: ': NT.2508-1364.01',
+      hazirlayanLabel: 'Hazırlayan',
+      hazirlayanDeger: ': Nurettin Emre AYDIN',
+      musteriBaslik: 'BAHÇEŞEHİR GÖLEVLERİ SİTESİ',
+      sayinLabel: 'Sayın\nMustafa Bey,\nYapmış olduğumuz görüşmeler sonrasında hazırlamış olduğumuz fiyat teklifimizi değerlendirmenize sunarız.',
+      urunTablosu: [
+        ['1', 'BİLGİSAYAR\nHP Pro Tower 290 BUC5S G9 İ7-13700 32GB 512GB SSD DOS', '1,00 Ad', '700,00 $', '700,00 $'],
+        ['2', 'Windows 11 Pro Lisans', '1,00 Ad', '165,00 $', '165,00 $'],
+        ['3', 'Uranium POE-G8002-96W 8 Port + 2 Port RJ45 Uplink POE Switch', '2,00 Ad', '80,00 $', '160,00 $'],
+        ['4', 'İçilik, Montaj, Mühendislik ve Süpervizyon Hizmetleri, Programlama, Test, Devreye alma', '1,00 Ad', '75,00 $', '75,00 $']
+      ],
+      brutToplamLabel: 'Brüt Toplam',
+      brutToplamDeger: '1.100,00 $',
+      indirimLabel: 'İndirim',
+      indirimDeger: '0,00 $',
+      netToplamLabel: 'Net Toplam',
+      netToplamDeger: '1.100,00 $',
+      kdvLabel: 'KDV %20',
+      kdvDeger: '220,00 $',
+      toplamLabel: 'Toplam',
+      toplamDeger: '1.320,00 $',
+      notlarBaslik: 'Notlar           :',
+      fiyatlarNotu: 'Fiyatlar         : Teklifimiz USD cinsindan Merkez Bankası Döviz Satış Kuruna göre hazırlanmıştır.',
+      odemeNotu: 'Ödeme          : Siparişte %50 nakit avans, %50 iş bitimi nakit tahsil edilecektir.',
+      garantiNotu: 'Garanti          : Ürünlerimiz fatura tarihinden itibaren fabrikasyon hatalarına karşı 2(iki) yıl garantilidir',
+      stokTeslimNotu: 'Stok ve Teslim : Ürünler siparişe sonra 5 gün içinde temin edilecektir. Tahmini iş süresi ürün teslimatından sonra 10 iş günüdür.',
+      ticariSartlarNotu: 'Ticari Şartlar   :',
+      altNgsLogo: '',
+      altSirketBilgi: 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ\nEğitim mah. Muratpaşa cad. No:1 D:29-30 Kadıköy, İstanbul\nwww.ngsteknoloji.com / 0 (212) 577 35 72',
+      sayfaNo: 'Sayfa 1/2',
+      musteriImzaKutu: '',
+      musteriImzaBaslik: 'Teklifi Kabul Eden Firma Yetkilisi',
+      musteriImzaAlt: 'Kaşe - İmza',
+      sirketImzaKutu: '',
+      sirketImzaBaslik: 'Teklifi Onaylayan Firma Yetkilisi',
+      sirketImzaAlt: 'Kaşe - İmza',
+      sirketImzaAdi: 'Nurettin Emre AYDIN',
       
-      // Müşteri Bilgileri
-      musteriAdi: 'XYZ İnşaat A.Ş.',
-      musteriAdres: 'Sanayi Mah. İnşaat Cd. No:456 Kadıköy/İstanbul',
-      musteriTelefon: '+90 216 555 0123',
-      
-      // Ürün/Hizmet
-      urunTablosu: mockItems,
-      
-      // Mali Bilgiler
-      brutToplam: '80.000 ₺',
-      indirim: '5.000 ₺',
-      kdvTutari: '15.000 ₺',
-      genelToplam: '90.000 ₺',
-      
-      // Şartlar
-      odemeKosullari: 'Siparişle birlikte %50 avans, teslimde kalan tutar ödenecektir.',
-      teslimatKosullari: 'Teslimat süresi: Sipariş tarihinden itibaren 15-20 iş günü'
+      // Ek araçlar için sample data
+      cizgiOrnek: '',
+      dikdortgenOrnek: '',
+      elipsOrnek: '',
+      checkboxOrnek: true,
+      checkboxEtiket: 'Şartları kabul ediyorum',
+      secimKutusu: 'Nakit',
+      tarihAlani: new Date().toLocaleDateString('tr-TR'),
+      saatAlani: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+      qrKodOrnek: 'https://example.com/teklif/NT.2508-1364.01',
+      imzaKutusu: '',
+      imzaEtiket: 'İmza:',
+      logoAlani: '',
+      barkodEAN13: '1234567890123'
     };
   }
 }
