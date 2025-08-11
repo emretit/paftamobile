@@ -12,7 +12,7 @@ import { RoleManagement } from "@/components/settings/RoleManagement";
 import { SystemSettings } from "@/components/settings/SystemSettings";
 import { NilveraSettings } from "@/components/settings/NilveraSettings";
 import { TemplateManagement } from "@/components/settings/TemplateManagement";
-import { PdfTemplateEditor } from "@/pages/templates/PdfTemplateEditor";
+import PdfTemplateEditor from "@/pages/templates/PdfTemplateEditor";
 
 
 interface SettingsProps {
@@ -21,7 +21,7 @@ interface SettingsProps {
 }
 
 const Settings = ({ isCollapsed, setIsCollapsed }: SettingsProps) => {
-  const [activeTab, setActiveTab] = useState("pdf-templates");
+  const [activeTab, setActiveTab] = useState("users");
   
   console.log("Settings page loaded successfully");
 
