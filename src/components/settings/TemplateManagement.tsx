@@ -1,343 +1,215 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Search, FileText, Edit, Trash2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Eye, Edit2, Trash2, Plus, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { SimpleTemplateEditor } from './SimpleTemplateEditor';
+import { TemplateService } from '@/services/pdf/templateService';
+import { ExportService } from '@/services/pdf/exportService';
+import { useActiveProject } from '@/hooks/useActiveProject';
+import type { PdfTemplate } from '@/lib/pdf/types';
 
-interface Template {
-  id: string;
-  name: string;
-  template_json: any;
-  user_id: string;
-  template_type: string;
-  category: string;
-  description: string;
-  is_active: boolean;
-  is_default: boolean;
-  preview_image_url: string | null;
-  variables: any[];
-  metadata: any;
-  created_at: string;
-  updated_at: string;
-}
-
-export const TemplateManagement: React.FC = () => {
-  const [templates, setTemplates] = useState<Template[]>([]);
+export const TemplateManagement = () => {
+  const navigate = useNavigate();
+  const { activeProject, hasWriteAccess } = useActiveProject();
+  const [templates, setTemplates] = useState<PdfTemplate[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('list');
-  const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
-  const [selectedType, setSelectedType] = useState('all');
 
   useEffect(() => {
-    loadTemplates();
-  }, []);
+    if (activeProject) {
+      loadTemplates();
+    }
+  }, [activeProject]);
 
   const loadTemplates = async () => {
-    setIsLoading(true);
+    if (!activeProject) return;
+    
     try {
-      const { data, error } = await supabase
-        .from('templates')
-        .select('*')
-        .order('updated_at', { ascending: false });
-
-      if (error) throw error;
-      setTemplates(data || []);
+      setIsLoading(true);
+      const data = await TemplateService.getTemplates(activeProject.id);
+      setTemplates(data);
     } catch (error) {
       console.error('Error loading templates:', error);
-      toast.error('Şablonlar yüklenirken hata oluştu');
+      toast.error('Şablonlar yüklenemedi');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const createTemplateWithType = async (templateType: 'minimal' | 'standard' | 'detailed') => {
-    try {
-      const { data: userRes } = await supabase.auth.getUser();
-      if (!userRes.user) {
-        toast.error('Giriş yapmanız gerekiyor');
-        return;
-      }
-
-      // Default template generator'ı import et
-      const { generateDefaultTemplate, NEW_TEMPLATE_GUIDE, getTemplateCategory, getTemplateType } = await import('@/utils/defaultTemplateGenerator');
-      
-      // Seçilen türde template oluştur
-      const defaultTemplate = generateDefaultTemplate({ templateType });
-      const guide = NEW_TEMPLATE_GUIDE[templateType];
-
-      const { error } = await supabase
-        .from('templates')
-        .insert({
-          name: `${guide.name} - ${new Date().toLocaleDateString('tr-TR')}`,
-          template_json: defaultTemplate,
-          user_id: userRes.user.id,
-          template_type: getTemplateType(), // 'proposal' olarak sabit
-          category: getTemplateCategory(templateType), // 'general' olarak sabit
-          description: `${guide.description} - ${guide.fields.length} alan içerir`,
-          is_active: true,
-          variables: []
-        });
-
-      if (error) throw error;
-
-      toast.success(`${guide.name} oluşturuldu! Artık düzenleyebilirsiniz.`);
-      loadTemplates();
-    } catch (error) {
-      console.error('Template oluşturma hatası:', error);
-      toast.error('Şablon oluşturulamadı');
+  const handleDelete = async (id: string) => {
+    if (!hasWriteAccess) {
+      toast.error('Bu işlem için yetkiniz yok');
+      return;
     }
-  };
 
-  const createSampleTemplate = () => createTemplateWithType('minimal');
-
-  const handleGenerateTemplatePdf = async (template: Template) => {
-    console.log('🚀 Template PDF Generate başlıyor...');
-    console.log('Template:', template);
-    
     try {
-      const { generateAndDownloadPdf, generateSampleData } = await import('@/lib/pdf-utils');
-      
-      console.log('Template JSON:', template.template_json);
-      
-      // Örnek veriler oluştur
-      const sampleInputs = generateSampleData(template.template_json);
-      console.log('Sample inputs:', sampleInputs);
-      
-      // PDF oluştur ve indir
-      console.log('PDF oluşturuluyor...');
-      await generateAndDownloadPdf(template.template_json, sampleInputs, template.name);
-      console.log('✅ PDF başarıyla oluşturuldu');
-    } catch (error: any) {
-      console.error('❌ Template PDF Generate hatası:', error);
-      console.error('Error stack:', error.stack);
-      toast.error(`PDF oluşturulamadı: ${error?.message || 'Bilinmeyen hata'}`);
-    }
-  };
-
-  function defaultSampleFor(field: string) {
-    const f = field.toLowerCase();
-    if (f.includes('company')) return 'NGS TEKNOLOJİ';
-    if (f.includes('title') || f.includes('baslik')) return 'TEKLİF FORMU';
-    if (f.includes('name') || f.includes('musteri')) return 'ÖRNEK MÜŞTERİ';
-    if (f.includes('date') || f.includes('tarih')) return new Date().toLocaleDateString('tr-TR');
-    if (f.includes('total') || f.includes('amount') || f.includes('tutar')) return '8.260,00 ₺';
-    return `Örnek ${field}`;
-  }
-
-  const handleEditTemplate = (template: Template) => {
-    setEditingTemplate(template);
-    setActiveTab('editor');
-  };
-
-  const handleDeleteTemplate = async (templateId: string) => {
-    try {
-      const { error } = await supabase
-        .from('templates')
-        .delete()
-        .eq('id', templateId);
-
-      if (error) throw error;
-
+      await TemplateService.deleteTemplate(id);
       toast.success('Şablon silindi');
       loadTemplates();
     } catch (error) {
       console.error('Error deleting template:', error);
-      toast.error('Şablon silinirken hata oluştu');
+      toast.error('Şablon silinemedi');
     }
   };
 
-  const handleTemplateSaved = () => {
-    loadTemplates();
-    setActiveTab('list');
-    setEditingTemplate(null);
+  const handlePreview = async (template: PdfTemplate) => {
+    try {
+      toast.info('PDF önizlemesi oluşturuluyor...');
+      await ExportService.previewPdf(
+        template.template_json,
+        template.field_mapping_json
+      );
+    } catch (error) {
+      console.error('Error previewing template:', error);
+      toast.error('Önizleme oluşturulamadı');
+    }
   };
 
-  const filteredTemplates = templates.filter(template => {
-    if (selectedType === 'all') return true;
-    return template.template_type === selectedType;
-  });
+  const filteredTemplates = templates.filter(template =>
+    template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (template.description && template.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
-  if (isLoading) {
+  if (!activeProject) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Şablonlar yükleniyor...</p>
-        </div>
+      <div className="text-center py-8">
+        <h3 className="text-lg font-semibold mb-2">Proje Seçilmedi</h3>
+        <p className="text-muted-foreground">Şablonları görüntülemek için bir proje seçin.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="list">Şablon Listesi</TabsTrigger>
-          <TabsTrigger value="editor">Şablon Editörü</TabsTrigger>
-        </TabsList>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">PDF Şablonları</h3>
+          <p className="text-sm text-muted-foreground">
+            PDF şablonlarını oluşturun ve düzenleyin
+          </p>
+        </div>
+        {hasWriteAccess && (
+          <Button 
+            onClick={() => navigate('/templates/new')}
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Yeni Şablon
+          </Button>
+        )}
+      </div>
 
-        <TabsContent value="list" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold">PDF Şablonları</h2>
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-              >
-                <option value="all">Tüm Tipler</option>
-                <option value="proposal">Teklif</option>
-                <option value="invoice">Fatura</option>
-                <option value="contract">Sözleşme</option>
-                <option value="other">Diğer</option>
-              </select>
-            </div>
-            <div className="space-y-3">
-              <div className="flex gap-2">
-                <Button onClick={() => { setEditingTemplate(null); setActiveTab('editor'); }}>
-                  + Boş Şablon
-                </Button>
-                <Button 
-                  onClick={() => {
-                    console.log('Test butonu tıklandı');
-                    toast.success('Test başarılı!');
-                  }} 
-                  variant="outline"
-                  className="bg-green-50"
-                >
-                  🧪 Test
-                </Button>
-              </div>
-              <div>
-                <div className="text-sm font-medium mb-2">Hazır Şablonlar:</div>
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={() => createTemplateWithType('minimal')} 
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                  >
-                    Minimal (8 alan)
-                  </Button>
-                  <Button 
-                    onClick={() => createTemplateWithType('standard')} 
-                    variant="outline"
-                    size="sm" 
-                    className="flex-1"
-                  >
-                    Standart (15 alan)
-                  </Button>
-                  <Button 
-                    onClick={() => createTemplateWithType('detailed')} 
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                  >
-                    Detaylı (25 alan)
-                  </Button>
-                </div>
-                <div className="text-xs text-gray-500 mt-2 space-y-1">
-                  <div><strong>Minimal:</strong> Sadece zorunlu alanlar (proposalNumber, customerName, totalAmount...)</div>
-                  <div><strong>Standart:</strong> En çok kullanılan alanlar + şirket/müşteri detayları</div>
-                  <div><strong>Detaylı:</strong> Tüm alanları içerir (logo, adres, telefon, notlar...)</div>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div className="flex items-center space-x-2">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Şablon ara..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredTemplates.map((template) => (
-              <Card key={template.id} className="p-4">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-semibold text-lg">{template.name}</h3>
-                    <div className="flex gap-1">
-                      {template.template_type && (
-                        <Badge variant="secondary" className="text-xs">
-                          {template.template_type === 'proposal' ? 'Teklif' : 
-                           template.template_type === 'invoice' ? 'Fatura' : 
-                           template.template_type === 'contract' ? 'Sözleşme' : 'Diğer'}
-                        </Badge>
-                      )}
-                      {template.is_default && (
-                        <Badge variant="default" className="text-xs">Varsayılan</Badge>
-                      )}
-                    </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader>
+                <div className="h-4 bg-muted rounded w-3/4"></div>
+                <div className="h-3 bg-muted rounded w-1/2"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-3 bg-muted rounded w-full mb-2"></div>
+                <div className="h-3 bg-muted rounded w-2/3"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : filteredTemplates.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">
+              {searchTerm ? 'Şablon bulunamadı' : 'Henüz şablon yok'}
+            </h3>
+            <p className="text-muted-foreground text-center mb-4">
+              {searchTerm 
+                ? 'Arama kriterlerinize uygun şablon bulunamadı.'
+                : 'İlk PDF şablonunuzu oluşturarak başlayın.'
+              }
+            </p>
+            {hasWriteAccess && !searchTerm && (
+              <Button onClick={() => navigate('/templates/new')}>
+                <Plus className="h-4 w-4 mr-2" />
+                İlk Şablonu Oluştur
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredTemplates.map((template) => (
+            <Card key={template.id} className="hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="text-base">{template.name}</CardTitle>
+                    {template.description && (
+                      <CardDescription className="mt-1 text-sm">
+                        {template.description}
+                      </CardDescription>
+                    )}
                   </div>
-                  
-                  {template.description && (
-                    <p className="text-sm text-muted-foreground">{template.description}</p>
-                  )}
-                  
+                  <Badge variant="secondary">PDF</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
                   <div className="text-xs text-muted-foreground">
                     Oluşturulma: {new Date(template.created_at).toLocaleDateString('tr-TR')}
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <Button
-                      size="sm"
                       variant="outline"
-                      onClick={() => handleGenerateTemplatePdf(template)}
+                      size="sm"
+                      onClick={() => handlePreview(template)}
                       className="flex-1"
                     >
-                      <FileText size={14} className="mr-1" />
+                      <Download className="h-4 w-4 mr-1" />
                       Önizle
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEditTemplate(template)}
-                    >
-                      <Edit2 size={14} className="mr-1" />
-                      Düzenle
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleDeleteTemplate(template.id)}
-                    >
-                      <Trash2 size={14} />
-                    </Button>
+                    {hasWriteAccess && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/templates/${template.id}`)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(template.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
-              </Card>
-            ))}
-          </div>
-
-          {filteredTemplates.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Henüz şablon bulunmuyor.</p>
-              <Button 
-                onClick={() => { setEditingTemplate(null); setActiveTab('editor'); }}
-                className="mt-4"
-              >
-                İlk Şablonunuzu Oluşturun
-              </Button>
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="editor" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">
-              {editingTemplate ? 'Şablon Düzenle' : 'Yeni Şablon Oluştur'}
-            </h3>
-            <Button variant="outline" onClick={() => setActiveTab('list')}>
-              ← Listeye Dön
-            </Button>
-          </div>
-          <SimpleTemplateEditor
-            initialTemplate={editingTemplate?.template_json}
-            initialName={editingTemplate?.name}
-            templateId={editingTemplate?.id}
-            onSave={handleTemplateSaved}
-          />
-        </TabsContent>
-      </Tabs>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
