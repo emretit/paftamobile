@@ -294,12 +294,12 @@ const PdfTemplateEditor: React.FC = () => {
   const watchedSchema = form.watch('schema_json');
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-screen flex flex-col">
       <div className="border-b bg-background p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold">PDF Şablon Editörü</h1>
-            <p className="text-sm text-muted-foreground">Teklif PDF şablonlarını düzenleyin</p>
+            <h1 className="text-2xl font-bold">PDF Şablon Editörü</h1>
+            <p className="text-muted-foreground">Teklif PDF şablonlarını düzenleyin</p>
           </div>
           <div className="flex items-center gap-2">
             <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
