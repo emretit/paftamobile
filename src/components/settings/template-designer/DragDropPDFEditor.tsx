@@ -355,6 +355,26 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               fontSize: 8,
               fontColor: '#666666',
               content: 'Garanti: Ürünlerimiz fatura tarihinden itibaren fabrikasyon hatalarına karşı 2(iki) yıl garantilidir'
+            },
+
+            // İmza alanı
+            'musteriImza': {
+              type: 'text',
+              position: { x: 20, y: 310 },
+              width: 60,
+              height: 25,
+              fontSize: 8,
+              fontColor: '#000000',
+              content: 'Müşteri İmzası:\n\n\n_____________________\nAd Soyad:'
+            },
+            'sirketImza': {
+              type: 'text',
+              position: { x: 130, y: 310 },
+              width: 60,
+              height: 25,
+              fontSize: 8,
+              fontColor: '#000000',
+              content: 'Şirket İmzası:\n\n\n_____________________\nYetkili:'
             }
           };
 
@@ -364,11 +384,25 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               ...defaultTemplate,
               schemas: [predefinedSchemas] // Tüm alanları PDFme'nin schema panel'ine ekle
             },
-            plugins: { text, image, qrcode: barcodes.qrcode, table } as any,
+            plugins: { 
+              text, 
+              image, 
+              qrcode: barcodes.qrcode, 
+              table
+            } as any,
             options: {
               theme: {
                 token: {
                   colorPrimary: '#dc2626'
+                }
+              },
+              ui: {
+                sidebar: {
+                  width: 280
+                },
+                fieldListPanel: {
+                  enabled: true,
+                  width: 300
                 }
               }
             }
@@ -420,7 +454,9 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
                 notlar: 'Notlar',
                 fiyatlar: 'Fiyatlar: Teklifimiz USD cinsindan Merkez Bankası Döviz Satış Kuruna göre hazırlanmıştır.',
                 odeme: 'Ödeme: Siparişte %50 nakit avans, %50 iş bitimi nakit tahsil edilecektir.',
-                garanti: 'Garanti: Ürünlerimiz fatura tarihinden itibaren fabrikasyon hatalarına karşı 2(iki) yıl garantilidir'
+                garanti: 'Garanti: Ürünlerimiz fatura tarihinden itibaren fabrikasyon hatalarına karşı 2(iki) yıl garantilidir',
+                musteriImza: 'Müşteri İmzası:\n\n\n_____________________\nAd Soyad:',
+                sirketImza: 'Şirket İmzası:\n\n\n_____________________\nYetkili:'
               };
               
               console.log('Sample data set successfully');
