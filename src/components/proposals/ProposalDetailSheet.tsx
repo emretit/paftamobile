@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import QuoteExportActions from "@/components/QuoteExportActions";
 
 interface ProposalDetailSheetProps {
   proposal: Proposal | null;
@@ -77,6 +78,13 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
               Teklifi Düzenle
             </Button>
             
+            <div className="border-t pt-3">
+              <QuoteExportActions 
+                quoteId={proposal.id} 
+                quoteNumber={proposal.number}
+                isPrivateStorage={true}
+              />
+            </div>
 
           </div>
         </SheetHeader>

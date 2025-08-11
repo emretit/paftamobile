@@ -1,6 +1,6 @@
-import { ElementCategory } from '@/types/template-builder';
+// import { ElementCategory } from '@/types/template-builder';
 
-export const PREDEFINED_ELEMENTS: ElementCategory[] = [
+export const PREDEFINED_ELEMENTS: any[] = [
   {
     id: 'company',
     name: 'Firma Bilgileri',

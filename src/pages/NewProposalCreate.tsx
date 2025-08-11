@@ -18,7 +18,7 @@ import { ProposalItem } from "@/types/proposal";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { PdfDownloadDropdown } from "@/components/proposals/PdfDownloadDropdown";
+// import { PdfDownloadDropdown } from "@/components/proposals/PdfDownloadDropdown";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import ProposalFormTerms from "@/components/proposals/form/ProposalFormTerms";
