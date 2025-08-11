@@ -52,10 +52,8 @@ export async function generatePdf(template: any, inputs?: Record<string, any>) {
   const url = URL.createObjectURL(blob);
   const win = window.open(url, '_blank');
   if (!win) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `onizleme-${Date.now()}.pdf`;
-    a.click();
+    // sadece popup uyarısı, indirme yapılmayacak
+    // uyarı üst katmandan veriliyor (toast)
   }
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }

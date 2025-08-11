@@ -118,10 +118,8 @@ export const TemplateManagement: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const win = window.open(url, '_blank');
       if (!win) {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${template.name}-onizleme.pdf`;
-        a.click();
+        // İndirme fallbackı kaldırıldı: yalnızca yeni sekme
+        toast.error('Popup engellendi. Lütfen bu site için pop-up iznine izin verin.');
       }
       setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (error: any) {
