@@ -238,36 +238,41 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               type: 'table',
               position: { x: 20, y: 105 },
               width: 170,
-              height: 60,
+              height: 50,
               showHead: true,
               head: ["No", "Açıklama", "Miktar", "Fiyat", "Tutar (KDV Hariç)"],
               headWidthPercentages: [8, 52, 15, 12, 13],
               tableStyles: { 
                 borderWidth: 0.5, 
                 borderColor: '#000000',
-                cellPadding: 2
+                alternateBackgroundColor: '#ffffff'
               },
               headStyles: { 
                 fontSize: 8, 
                 fontColor: '#000000', 
                 backgroundColor: '#ffffff',
-                alignment: 'center',
+                textAlign: 'center',
+                verticalAlign: 'middle',
                 borderWidth: 0.5,
-                borderColor: '#000000'
+                borderColor: '#000000',
+                padding: [2, 2, 2, 2]
               },
               bodyStyles: { 
                 fontSize: 7, 
                 fontColor: '#000000',
-                alignment: 'left',
+                textAlign: 'left',
+                verticalAlign: 'top',
                 borderWidth: 0.5,
-                borderColor: '#000000'
+                borderColor: '#000000',
+                padding: [2, 2, 2, 2],
+                lineHeight: 1.2
               }
             },
 
-            // Mali Özet - Sağda
+            // Mali Özet - Sağda (Tablo altında)
             'brutToplamLabel': {
               type: 'text',
-              position: { x: 125, y: 175 },
+              position: { x: 125, y: 165 },
               width: 25,
               height: 6,
               fontSize: 9,
@@ -276,7 +281,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'brutToplamDeger': {
               type: 'text',
-              position: { x: 155, y: 175 },
+              position: { x: 155, y: 165 },
               width: 30,
               height: 6,
               fontSize: 9,
@@ -286,7 +291,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'indirimLabel': {
               type: 'text',
-              position: { x: 125, y: 183 },
+              position: { x: 125, y: 172 },
               width: 25,
               height: 6,
               fontSize: 9,
@@ -295,7 +300,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'indirimDeger': {
               type: 'text',
-              position: { x: 155, y: 183 },
+              position: { x: 155, y: 172 },
               width: 30,
               height: 6,
               fontSize: 9,
@@ -305,7 +310,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'netToplamLabel': {
               type: 'text',
-              position: { x: 125, y: 191 },
+              position: { x: 125, y: 179 },
               width: 25,
               height: 6,
               fontSize: 9,
@@ -314,7 +319,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'netToplamDeger': {
               type: 'text',
-              position: { x: 155, y: 191 },
+              position: { x: 155, y: 179 },
               width: 30,
               height: 6,
               fontSize: 9,
@@ -324,7 +329,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'kdvLabel': {
               type: 'text',
-              position: { x: 125, y: 199 },
+              position: { x: 125, y: 186 },
               width: 25,
               height: 6,
               fontSize: 9,
@@ -333,7 +338,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'kdvDeger': {
               type: 'text',
-              position: { x: 155, y: 199 },
+              position: { x: 155, y: 186 },
               width: 30,
               height: 6,
               fontSize: 9,
@@ -343,7 +348,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'toplamLabel': {
               type: 'text',
-              position: { x: 125, y: 207 },
+              position: { x: 125, y: 193 },
               width: 25,
               height: 8,
               fontSize: 10,
@@ -352,7 +357,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'toplamDeger': {
               type: 'text',
-              position: { x: 155, y: 207 },
+              position: { x: 155, y: 193 },
               width: 30,
               height: 8,
               fontSize: 10,
@@ -364,7 +369,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             // Notlar Bölümü
             'notlarBaslik': {
               type: 'text',
-              position: { x: 20, y: 225 },
+              position: { x: 20, y: 210 },
               width: 20,
               height: 6,
               fontSize: 9,
@@ -373,7 +378,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'fiyatlarNotu': {
               type: 'text',
-              position: { x: 20, y: 235 },
+              position: { x: 20, y: 220 },
               width: 170,
               height: 6,
               fontSize: 8,
@@ -382,7 +387,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'odemeNotu': {
               type: 'text',
-              position: { x: 20, y: 242 },
+              position: { x: 20, y: 227 },
               width: 170,
               height: 6,
               fontSize: 8,
@@ -391,7 +396,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'garantiNotu': {
               type: 'text',
-              position: { x: 20, y: 249 },
+              position: { x: 20, y: 234 },
               width: 170,
               height: 6,
               fontSize: 8,
@@ -400,7 +405,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'stokTeslimNotu': {
               type: 'text',
-              position: { x: 20, y: 256 },
+              position: { x: 20, y: 241 },
               width: 170,
               height: 6,
               fontSize: 8,
@@ -409,7 +414,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'ticariSartlarNotu': {
               type: 'text',
-              position: { x: 20, y: 263 },
+              position: { x: 20, y: 248 },
               width: 170,
               height: 6,
               fontSize: 8,
@@ -420,13 +425,13 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             // Alt NGS Logo ve Bilgiler
             'altNgsLogo': {
               type: 'image',
-              position: { x: 20, y: 275 },
+              position: { x: 20, y: 260 },
               width: 20,
               height: 20
             },
             'altSirketBilgi': {
               type: 'text',
-              position: { x: 45, y: 278 },
+              position: { x: 45, y: 263 },
               width: 80,
               height: 10,
               fontSize: 8,
@@ -435,7 +440,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'sayfaNo': {
               type: 'text',
-              position: { x: 170, y: 285 },
+              position: { x: 170, y: 270 },
               width: 20,
               height: 6,
               fontSize: 8,
@@ -447,7 +452,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             // İmza Alanları
             'musteriImzaKutu': {
               type: 'rectangle',
-              position: { x: 25, y: 300 },
+              position: { x: 25, y: 285 },
               width: 60,
               height: 30,
               borderWidth: 1,
@@ -456,7 +461,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'musteriImzaBaslik': {
               type: 'text',
-              position: { x: 35, y: 305 },
+              position: { x: 35, y: 290 },
               width: 40,
               height: 6,
               fontSize: 8,
@@ -466,7 +471,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'musteriImzaAlt': {
               type: 'text',
-              position: { x: 35, y: 320 },
+              position: { x: 35, y: 305 },
               width: 40,
               height: 6,
               fontSize: 8,
@@ -477,7 +482,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
 
             'sirketImzaKutu': {
               type: 'rectangle',
-              position: { x: 105, y: 300 },
+              position: { x: 105, y: 285 },
               width: 60,
               height: 30,
               borderWidth: 1,
@@ -486,7 +491,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'sirketImzaBaslik': {
               type: 'text',
-              position: { x: 115, y: 305 },
+              position: { x: 115, y: 290 },
               width: 40,
               height: 6,
               fontSize: 8,
@@ -496,7 +501,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'sirketImzaAlt': {
               type: 'text',
-              position: { x: 115, y: 320 },
+              position: { x: 115, y: 305 },
               width: 40,
               height: 6,
               fontSize: 8,
@@ -506,7 +511,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'sirketImzaAdi': {
               type: 'text',
-              position: { x: 115, y: 325 },
+              position: { x: 115, y: 310 },
               width: 40,
               height: 6,
               fontSize: 8,
@@ -515,19 +520,19 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               content: 'Nurettin Emre AYDIN'
             },
 
-            // ========== EK ARAÇLAR ==========
+            // ========== EK ARAÇLAR (Sayfa 2) ==========
             
             // Şekiller
             'cizgiOrnek': {
               type: 'line',
-              position: { x: 20, y: 340 },
+              position: { x: 20, y: 400 },
               width: 50,
               height: 1,
               color: '#000000'
             },
             'dikdortgenOrnek': {
               type: 'rectangle',
-              position: { x: 80, y: 340 },
+              position: { x: 80, y: 400 },
               width: 30,
               height: 20,
               borderWidth: 1,
@@ -536,7 +541,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'elipsOrnek': {
               type: 'ellipse',
-              position: { x: 120, y: 340 },
+              position: { x: 120, y: 400 },
               width: 20,
               height: 20,
               borderWidth: 1,
@@ -547,14 +552,14 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             // Form Elemanları
             'checkboxOrnek': {
               type: 'checkbox',
-              position: { x: 20, y: 370 },
+              position: { x: 20, y: 430 },
               width: 4,
               height: 4,
               color: '#dc2626'
             },
             'checkboxEtiket': {
               type: 'text',
-              position: { x: 27, y: 371 },
+              position: { x: 27, y: 431 },
               width: 40,
               height: 6,
               fontSize: 9,
@@ -565,7 +570,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             // Seçim Kutusu
             'secimKutusu': {
               type: 'select',
-              position: { x: 20, y: 385 },
+              position: { x: 20, y: 445 },
               width: 40,
               height: 8,
               fontSize: 9,
@@ -577,7 +582,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             // Tarih ve Saat
             'tarihAlani': {
               type: 'date',
-              position: { x: 70, y: 385 },
+              position: { x: 70, y: 445 },
               width: 30,
               height: 8,
               fontSize: 9,
@@ -587,7 +592,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'saatAlani': {
               type: 'time',
-              position: { x: 110, y: 385 },
+              position: { x: 110, y: 445 },
               width: 25,
               height: 8,
               fontSize: 9,
@@ -599,7 +604,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             // QR Kod
             'qrKodOrnek': {
               type: 'qrcode',
-              position: { x: 145, y: 370 },
+              position: { x: 145, y: 430 },
               width: 20,
               height: 20,
               barColor: '#000000',
@@ -609,7 +614,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             // İmza Kutusu
             'imzaKutusu': {
               type: 'rectangle',
-              position: { x: 20, y: 400 },
+              position: { x: 20, y: 460 },
               width: 60,
               height: 25,
               borderWidth: 1,
@@ -618,7 +623,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             },
             'imzaEtiket': {
               type: 'text',
-              position: { x: 22, y: 402 },
+              position: { x: 22, y: 462 },
               width: 56,
               height: 6,
               fontSize: 8,
@@ -629,7 +634,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             // Logo/Resim Alanı
             'logoAlani': {
               type: 'image',
-              position: { x: 90, y: 400 },
+              position: { x: 90, y: 460 },
               width: 30,
               height: 15
             },
@@ -637,7 +642,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             // Barkod Örnekleri
             'barkodEAN13': {
               type: 'ean13',
-              position: { x: 130, y: 400 },
+              position: { x: 130, y: 460 },
               width: 30,
               height: 12,
               barColor: '#000000',
