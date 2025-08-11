@@ -3,10 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Eye, Edit2, Trash2, Plus, FileText } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Eye, Edit2, Trash2, Plus, FileText, Map } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { SimpleTemplateEditor } from './SimpleTemplateEditor';
+import { MappingPanel } from '@/components/pdf/MappingPanel';
 
 interface Template {
   id: string;
@@ -31,6 +33,8 @@ export const TemplateManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState('list');
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [selectedType, setSelectedType] = useState('all');
+  const [selectedMappingTemplate, setSelectedMappingTemplate] = useState<Template | null>(null);
+  const [fieldMapping, setFieldMapping] = useState({});
 
   useEffect(() => {
     loadTemplates();
@@ -156,6 +160,48 @@ export const TemplateManagement: React.FC = () => {
     setEditingTemplate(null);
   };
 
+  const handleMappingTemplateSelect = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    setSelectedMappingTemplate(template || null);
+    // Load existing field mapping if available
+    if (template?.metadata?.fieldMapping) {
+      setFieldMapping(template.metadata.fieldMapping);
+    } else {
+      setFieldMapping({});
+    }
+  };
+
+  const handleMappingChange = (newMapping: any) => {
+    setFieldMapping(newMapping);
+  };
+
+  const handleMappingSave = async (mapping: any) => {
+    if (!selectedMappingTemplate) {
+      toast.error('Şablon seçmelisiniz');
+      return;
+    }
+
+    try {
+      const updatedMetadata = {
+        ...selectedMappingTemplate.metadata,
+        fieldMapping: mapping
+      };
+
+      const { error } = await supabase
+        .from('templates')
+        .update({ metadata: updatedMetadata })
+        .eq('id', selectedMappingTemplate.id);
+
+      if (error) throw error;
+
+      toast.success('Field mapping kaydedildi');
+      loadTemplates();
+    } catch (error) {
+      console.error('Error saving field mapping:', error);
+      toast.error('Field mapping kaydedilemedi');
+    }
+  };
+
   const filteredTemplates = templates.filter(template => {
     if (selectedType === 'all') return true;
     return template.template_type === selectedType;
@@ -175,9 +221,10 @@ export const TemplateManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="list">Şablon Listesi</TabsTrigger>
           <TabsTrigger value="editor">Şablon Editörü</TabsTrigger>
+          <TabsTrigger value="mapping">Field Mapping</TabsTrigger>
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
@@ -336,6 +383,61 @@ export const TemplateManagement: React.FC = () => {
             templateId={editingTemplate?.id}
             onSave={handleTemplateSaved}
           />
+        </TabsContent>
+
+        <TabsContent value="mapping" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Field Mapping</h3>
+            <Button variant="outline" onClick={() => setActiveTab('list')}>
+              ← Listeye Dön
+            </Button>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Map className="h-5 w-5" />
+                Şablon Field Mapping
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Şablon Seçin:</label>
+                <Select onValueChange={handleMappingTemplateSelect}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Field mapping yapılacak şablonu seçin..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((template) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name} ({template.template_type})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedMappingTemplate && (
+                <div className="mt-6">
+                  <MappingPanel
+                    template={selectedMappingTemplate.template_json}
+                    initialMapping={fieldMapping}
+                    onChange={handleMappingChange}
+                    onSave={handleMappingSave}
+                    isLoading={false}
+                  />
+                </div>
+              )}
+
+              {!selectedMappingTemplate && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Map className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Field mapping yapmak için yukarıdan bir şablon seçin.</p>
+                  <p className="text-sm mt-2">Şablon fieldları veritabanı kolonlarıyla eşleştirebilirsiniz.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
