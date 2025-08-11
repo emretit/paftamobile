@@ -40,145 +40,271 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
 
           console.log('Creating PDFme Designer with template:', defaultTemplate);
 
-          // PDFme'nin schema'larını basit gruplarla hazırlayalım
+          // Gerçekçi Türkçe teklif formu şablonu
           const predefinedSchemas = {
-            // Temel Bilgiler - Teklif Başlığı (Proje Adı)
-            'teklifBasligi': {
+            // Şirket Logo ve Bilgileri
+            'sirketLogo': {
               type: 'text',
-              position: { x: 20, y: 30 },
-              width: 120,
-              height: 12,
-              fontSize: 18,
+              position: { x: 20, y: 15 },
+              width: 40,
+              height: 15,
+              fontSize: 16,
+              fontColor: '#dc2626',
+              fontName: 'NotoSansCJKjp-Regular',
+              content: 'ŞİRKET LOGO'
+            },
+            'sirketAdi': {
+              type: 'text',
+              position: { x: 20, y: 35 },
+              width: 100,
+              height: 8,
+              fontSize: 12,
               fontColor: '#000000',
-              content: 'Proje Adı'
+              content: 'ŞİRKETİNİZ TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ'
+            },
+            'sirketAdres': {
+              type: 'text',
+              position: { x: 20, y: 45 },
+              width: 80,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#666666',
+              content: 'Merkez: Eğitim mah. Muratpaşa cad. No:1 D:29-30 Kadıköy, İstanbul'
+            },
+            'sirketSubeAdres': {
+              type: 'text',
+              position: { x: 20, y: 52 },
+              width: 80,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#666666',
+              content: 'Şube: Topçular Mah. İşgören Sok. No: 2 A Keresteciler Sit. Eyüp, İstanbul'
+            },
+
+            // Teklif Formu Başlığı
+            'teklifFormuBaslik': {
+              type: 'text',
+              position: { x: 85, y: 70 },
+              width: 40,
+              height: 12,
+              fontSize: 16,
+              fontColor: '#000000',
+              content: 'TEKLİF FORMU'
+            },
+
+            // Sağ üst tarih ve bilgiler
+            'tarih': {
+              type: 'text',
+              position: { x: 150, y: 15 },
+              width: 40,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#000000',
+              content: 'Tarih: 08.08.2025'
+            },
+            'gecerlilik': {
+              type: 'text',
+              position: { x: 150, y: 22 },
+              width: 40,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#000000',
+              content: 'Geçerlilik: 15.08.2025'
             },
             'teklifNo': {
               type: 'text',
-              position: { x: 150, y: 30 },
-              width: 60,
-              height: 8,
-              fontSize: 12,
+              position: { x: 150, y: 29 },
+              width: 40,
+              height: 6,
+              fontSize: 8,
               fontColor: '#000000',
-              content: 'Teklif No'
+              content: 'Teklif No: NT.2508-1364.01'
             },
-            'teklifTarihi': {
+            'hazirlayan': {
               type: 'text',
-              position: { x: 20, y: 50 },
-              width: 60,
-              height: 8,
-              fontSize: 10,
-              fontColor: '#666666',
-              content: 'Teklif Tarihi'
-            },
-            'gecerlilikTarihi': {
-              type: 'text',
-              position: { x: 90, y: 50 },
-              width: 60,
-              height: 8,
-              fontSize: 10,
-              fontColor: '#666666',
-              content: 'Geçerlilik Tarihi'
+              position: { x: 150, y: 36 },
+              width: 40,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#000000',
+              content: 'Hazırlayan: Nurettin Emre AYDIN'
             },
 
-            // Müşteri Bilgileri
-            'musteriAdi': {
-              type: 'text',
-              position: { x: 20, y: 70 },
-              width: 100,
-              height: 10,
-              fontSize: 14,
-              fontColor: '#000000',
-              content: 'Müşteri Adı'
-            },
-            'musteriAdres': {
+            // Müşteri bilgileri başlığı
+            'musteriBaslik': {
               type: 'text',
               position: { x: 20, y: 85 },
               width: 100,
-              height: 20,
-              fontSize: 10,
-              fontColor: '#666666',
-              content: 'Müşteri Adresi'
-            },
-            'musteriTelefon': {
-              type: 'text',
-              position: { x: 20, y: 110 },
-              width: 80,
-              height: 8,
-              fontSize: 10,
-              fontColor: '#666666',
-              content: 'Müşteri Telefon'
-            },
-
-            // Ürün/Hizmet Tablosu
-            'urunTablosu': {
-              type: 'table',
-              position: { x: 20, y: 130 },
-              width: 170,
-              height: 60,
-              showHead: true,
-              head: ["Ürün/Hizmet", "Miktar", "Birim", "Birim Fiyat", "Toplam"],
-              headWidthPercentages: [45, 15, 15, 12.5, 12.5],
-              tableStyles: { borderWidth: 0.5, borderColor: '#000000' },
-              headStyles: { fontSize: 10, fontColor: '#ffffff', backgroundColor: '#2980ba' },
-              bodyStyles: { fontSize: 9, fontColor: '#000000' }
-            },
-
-            // Mali Bilgiler
-            'brutToplam': {
-              type: 'text',
-              position: { x: 140, y: 200 },
-              width: 50,
               height: 8,
               fontSize: 12,
+              fontColor: '#000000',
+              content: 'BAHÇEŞEHİR GÖLEVLERİ SİTESİ'
+            },
+            'musteriDetay': {
+              type: 'text',
+              position: { x: 20, y: 95 },
+              width: 170,
+              height: 15,
+              fontSize: 9,
+              fontColor: '#666666',
+              content: 'Sayın\nMustafa Bey,\nYapmış olduğumuz görüşmeler sonrasında hazırlamış olduğumuz fiyat teklifimizi değerlendirmenize sunarız.'
+            },
+
+            // Ürün tablosu
+            'urunTablosu': {
+              type: 'table',
+              position: { x: 20, y: 120 },
+              width: 170,
+              height: 80,
+              showHead: true,
+              head: ["No", "Açıklama", "BİLGİSAYAR", "Miktar", "Fiyat", "Tutar (KDV Hariç)"],
+              headWidthPercentages: [8, 35, 25, 12, 10, 10],
+              tableStyles: { 
+                borderWidth: 0.5, 
+                borderColor: '#000000',
+                cellPadding: 2
+              },
+              headStyles: { 
+                fontSize: 9, 
+                fontColor: '#ffffff', 
+                backgroundColor: '#dc2626',
+                alignment: 'center'
+              },
+              bodyStyles: { 
+                fontSize: 8, 
+                fontColor: '#000000',
+                alignment: 'left'
+              }
+            },
+
+            // Mali özet
+            'brutToplam': {
+              type: 'text',
+              position: { x: 140, y: 210 },
+              width: 25,
+              height: 6,
+              fontSize: 10,
               fontColor: '#000000',
               content: 'Brüt Toplam'
             },
+            'brutToplamTutar': {
+              type: 'text',
+              position: { x: 170, y: 210 },
+              width: 20,
+              height: 6,
+              fontSize: 10,
+              fontColor: '#000000',
+              content: '1.100,00 $'
+            },
             'indirim': {
               type: 'text',
-              position: { x: 140, y: 215 },
-              width: 50,
-              height: 8,
-              fontSize: 12,
+              position: { x: 140, y: 220 },
+              width: 25,
+              height: 6,
+              fontSize: 10,
               fontColor: '#000000',
               content: 'İndirim'
             },
-            'kdvTutari': {
+            'indirimTutar': {
+              type: 'text',
+              position: { x: 170, y: 220 },
+              width: 20,
+              height: 6,
+              fontSize: 10,
+              fontColor: '#000000',
+              content: '0,00 $'
+            },
+            'netToplam': {
               type: 'text',
               position: { x: 140, y: 230 },
-              width: 50,
+              width: 25,
+              height: 6,
+              fontSize: 10,
+              fontColor: '#000000',
+              content: 'Net Toplam'
+            },
+            'netToplamTutar': {
+              type: 'text',
+              position: { x: 170, y: 230 },
+              width: 20,
+              height: 6,
+              fontSize: 10,
+              fontColor: '#000000',
+              content: '1.100,00 $'
+            },
+            'kdvOrani': {
+              type: 'text',
+              position: { x: 140, y: 240 },
+              width: 25,
+              height: 6,
+              fontSize: 10,
+              fontColor: '#000000',
+              content: 'KDV %20'
+            },
+            'kdvTutar': {
+              type: 'text',
+              position: { x: 170, y: 240 },
+              width: 20,
+              height: 6,
+              fontSize: 10,
+              fontColor: '#000000',
+              content: '220,00 $'
+            },
+            'toplam': {
+              type: 'text',
+              position: { x: 140, y: 250 },
+              width: 25,
               height: 8,
               fontSize: 12,
               fontColor: '#000000',
-              content: 'KDV Tutarı'
+              content: 'Toplam'
             },
-            'genelToplam': {
+            'toplamTutar': {
               type: 'text',
-              position: { x: 140, y: 245 },
-              width: 50,
-              height: 10,
-              fontSize: 14,
+              position: { x: 170, y: 250 },
+              width: 20,
+              height: 8,
+              fontSize: 12,
               fontColor: '#000000',
-              content: 'Genel Toplam'
+              content: '1.320,00 $'
             },
 
-            // Şartlar
-            'odemeKosullari': {
+            // Notlar ve şartlar
+            'notlar': {
               type: 'text',
-              position: { x: 20, y: 260 },
-              width: 170,
-              height: 15,
+              position: { x: 20, y: 270 },
+              width: 20,
+              height: 6,
               fontSize: 10,
-              fontColor: '#666666',
-              content: 'Ödeme Koşulları'
+              fontColor: '#000000',
+              content: 'Notlar'
             },
-            'teslimatKosullari': {
+            'fiyatlar': {
               type: 'text',
               position: { x: 20, y: 280 },
               width: 170,
-              height: 15,
-              fontSize: 10,
+              height: 6,
+              fontSize: 8,
               fontColor: '#666666',
-              content: 'Teslimat Koşulları'
+              content: 'Fiyatlar: Teklifimiz USD cinsindan Merkez Bankası Döviz Satış Kuruna göre hazırlanmıştır.'
+            },
+            'odeme': {
+              type: 'text',
+              position: { x: 20, y: 288 },
+              width: 170,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#666666',
+              content: 'Ödeme: Siparişte %50 nakit avans, %50 iş bitimi nakit tahsil edilecektir.'
+            },
+            'garanti': {
+              type: 'text',
+              position: { x: 20, y: 296 },
+              width: 170,
+              height: 6,
+              fontSize: 8,
+              fontColor: '#666666',
+              content: 'Garanti: Ürünlerimiz fatura tarihinden itibaren fabrikasyon hatalarına karşı 2(iki) yıl garantilidir'
             }
           };
 
