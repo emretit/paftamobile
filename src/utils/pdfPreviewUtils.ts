@@ -229,7 +229,7 @@ export const generatePDFPreview = async (template: any, templateName?: string) =
         select,
         multiVariableText,
         dateTime,
-      },
+      } as any,
     });
 
     console.log('✅ PDF oluşturuldu! Boyut:', pdf.buffer.byteLength, 'bytes');
