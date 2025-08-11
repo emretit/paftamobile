@@ -149,9 +149,7 @@ export const ProposalTableRow = ({
               <DropdownMenuItem onClick={() => navigate(`/proposal/${proposal.id}/edit`)}>
                 Düzenle
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => window.open(`/proposal/${proposal.id}/print`, '_blank')}>
-                Yazdır
-              </DropdownMenuItem>
+
               <DropdownMenuItem 
                 onClick={() => {
                   const newStatus: ProposalStatus = proposal.status === 'draft' ? 'sent' : 'draft';

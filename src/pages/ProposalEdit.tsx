@@ -475,10 +475,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
     navigate("/proposals");
   };
 
-  const handlePrint = () => {
-    window.print();
-    toast.success("Yazdırma işlemi başlatıldı");
-  };
+
 
 
 
