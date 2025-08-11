@@ -78,8 +78,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
         await new Promise(resolve => setTimeout(resolve, 100));
         
         const { Designer } = await import('@pdfme/ui');
-        const schemas = await import('@pdfme/schemas');
-        const { text, image, barcodes, table, builtInPlugins } = schemas;
+        const { text, image, barcodes, table } = await import('@pdfme/schemas');
         
         if (designerRef.current && !designer) {
           const defaultTemplate = initialTemplate || {
@@ -385,25 +384,11 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               ...defaultTemplate,
               schemas: [predefinedSchemas] // Tüm alanları PDFme'nin schema panel'ine ekle
             },
-            plugins: {
-              text,
-              image,
-              qrcode: barcodes.qrcode,
-              table,
-              // Tüm mevcut barkod türleri
-              japanpost: barcodes.japanpost,
-              ean13: barcodes.ean13,
-              ean8: barcodes.ean8,
-              code39: barcodes.code39,
-              code128: barcodes.code128,
-              nw7: barcodes.nw7,
-              itf14: barcodes.itf14,
-              upca: barcodes.upca,
-              upce: barcodes.upce,
-              gs1datamatrix: barcodes.gs1datamatrix,
-              pdf417: barcodes.pdf417,
-              // BuiltIn plugins ekliyoruz
-              builtInPlugins
+            plugins: { 
+              text, 
+              image, 
+              qrcode: barcodes.qrcode, 
+              table
             } as any,
             options: {
               theme: {
