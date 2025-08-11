@@ -266,7 +266,8 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
                 borderColor: '#000000',
                 padding: [2, 2, 2, 2],
                 lineHeight: 1.2
-              }
+              },
+              alignment: 'left'
             },
 
             // Mali Özet - Sağda (Tablo altında)
@@ -825,7 +826,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
       
       // PDFme generator import
       const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes, table, line, rectangle, ellipse, svg, checkbox, radioGroup, select, date, time, dateTime } = await import('@pdfme/schemas');
+      const { text, image, barcodes, table, line, rectangle, ellipse, svg, checkbox, radioGroup, select, date, time, dateTime, builtInPlugins } = await import('@pdfme/schemas');
       
       // NGS Teklif Formu için güncel sample data
       const sampleData = {
