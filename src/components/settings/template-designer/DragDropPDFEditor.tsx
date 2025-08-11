@@ -266,8 +266,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
                 borderColor: '#000000',
                 padding: [2, 2, 2, 2],
                 lineHeight: 1.2
-              },
-              alignment: 'left'
+              }
             },
 
             // Mali Özet - Sağda (Tablo altında)
@@ -589,7 +588,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               fontSize: 9,
               fontColor: '#000000',
               backgroundColor: '#ffffff',
-              format: 'DD/MM/YYYY'
+              format: 'dd.MM.yyyy'
             },
             'saatAlani': {
               type: 'time',
@@ -765,7 +764,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
                 checkboxOrnek: true,
                 checkboxEtiket: 'Şartları kabul ediyorum',
                 secimKutusu: 'Nakit',
-                tarihAlani: new Date().toLocaleDateString('tr-TR'),
+                tarihAlani: new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
                 saatAlani: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
                 qrKodOrnek: 'https://example.com/teklif/NT.2508-1364.01',
                 imzaKutusu: '',
@@ -885,7 +884,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
         checkboxOrnek: true,
         checkboxEtiket: 'Şartları kabul ediyorum',
         secimKutusu: 'Nakit',
-        tarihAlani: new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+        tarihAlani: '11.08.2025',
         saatAlani: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
         qrKodOrnek: 'https://example.com/teklif/NT.2508-1364.01',
         imzaKutusu: '',
