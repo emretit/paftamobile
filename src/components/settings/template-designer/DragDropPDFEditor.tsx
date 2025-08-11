@@ -22,6 +22,54 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
   const [designer, setDesigner] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [templateName, setTemplateName] = useState('Yeni PDF Şablonu');
+  const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const [tableColumns, setTableColumns] = useState({
+    no: true,
+    aciklama: true,
+    urunHizmet: true,
+    miktar: true,
+    birimFiyat: true,
+    tutar: true,
+    birim: false,
+    indirim: false
+  });
+
+  // Tablo kolonlarını güncelle
+  const updateTableColumns = () => {
+    if (designer && selectedElement === 'urunTablosu') {
+      const activeColumns = [];
+      const columnNames = [];
+      const widthPercentages = [];
+      
+      if (tableColumns.no) { activeColumns.push("No"); columnNames.push("no"); widthPercentages.push(8); }
+      if (tableColumns.aciklama) { activeColumns.push("Açıklama"); columnNames.push("aciklama"); widthPercentages.push(30); }
+      if (tableColumns.urunHizmet) { activeColumns.push("Ürün/Hizmet"); columnNames.push("urunHizmet"); widthPercentages.push(25); }
+      if (tableColumns.miktar) { activeColumns.push("Miktar"); columnNames.push("miktar"); widthPercentages.push(12); }
+      if (tableColumns.birim) { activeColumns.push("Birim"); columnNames.push("birim"); widthPercentages.push(10); }
+      if (tableColumns.birimFiyat) { activeColumns.push("Birim Fiyat"); columnNames.push("birimFiyat"); widthPercentages.push(12.5); }
+      if (tableColumns.indirim) { activeColumns.push("İndirim %"); columnNames.push("indirim"); widthPercentages.push(10); }
+      if (tableColumns.tutar) { activeColumns.push("Tutar (KDV Hariç)"); columnNames.push("tutar"); widthPercentages.push(12.5); }
+
+      try {
+        const template = designer.getTemplate();
+        const updatedSchemas = { ...template.schemas[0] };
+        
+        if (updatedSchemas.urunTablosu) {
+          updatedSchemas.urunTablosu.head = activeColumns;
+          updatedSchemas.urunTablosu.headWidthPercentages = widthPercentages;
+        }
+        
+        designer.updateTemplate({
+          ...template,
+          schemas: [updatedSchemas]
+        });
+        
+        console.log('Table columns updated:', activeColumns);
+      } catch (error) {
+        console.error('Error updating table columns:', error);
+      }
+    }
+  };
 
   useEffect(() => {
     const initializeDesigner = async () => {
@@ -178,59 +226,6 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               }
             },
 
-            // Alternatif kolon düzeni - 4 kolonlu
-            'urunTablosu4Kolon': {
-              type: 'table',
-              position: { x: 20, y: 120 },
-              width: 170,
-              height: 80,
-              showHead: true,
-              head: ["Açıklama", "Miktar", "Birim Fiyat", "Toplam"],
-              headWidthPercentages: [50, 20, 15, 15],
-              tableStyles: { 
-                borderWidth: 0.5, 
-                borderColor: '#000000',
-                cellPadding: 3
-              },
-              headStyles: { 
-                fontSize: 10, 
-                fontColor: '#ffffff', 
-                backgroundColor: '#2980ba',
-                alignment: 'center'
-              },
-              bodyStyles: { 
-                fontSize: 9, 
-                fontColor: '#000000',
-                alignment: 'left'
-              }
-            },
-
-            // Alternatif kolon düzeni - Detaylı
-            'urunTablosuDetayli': {
-              type: 'table',
-              position: { x: 20, y: 120 },
-              width: 170,
-              height: 80,
-              showHead: true,
-              head: ["Sıra", "Ürün/Hizmet Açıklaması", "Özellik", "Adet", "Birim", "Birim Fiyat", "İndirim %", "Net Tutar"],
-              headWidthPercentages: [6, 28, 18, 8, 8, 12, 8, 12],
-              tableStyles: { 
-                borderWidth: 0.5, 
-                borderColor: '#000000',
-                cellPadding: 2
-              },
-              headStyles: { 
-                fontSize: 8, 
-                fontColor: '#ffffff', 
-                backgroundColor: '#27ae60',
-                alignment: 'center'
-              },
-              bodyStyles: { 
-                fontSize: 7, 
-                fontColor: '#000000',
-                alignment: 'left'
-              }
-            },
 
             // Mali özet
             'brutToplam': {
@@ -379,28 +374,53 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
             }
           });
 
+          // Element seçim için DOM event listener
+          const container = designerRef.current;
+          if (container) {
+            container.addEventListener('click', (e: any) => {
+              // Tablo elementine tıklama kontrolü
+              const target = e.target;
+              if (target && target.closest && target.closest('[data-pdfme-key="urunTablosu"]')) {
+                setSelectedElement('urunTablosu');
+              } else {
+                setSelectedElement(null);
+              }
+            });
+          }
+
           // Designer yüklendikten sonra sample data'yı set et
           setTimeout(() => {
             try {
               const sampleData = {
-                teklifBasligi: 'Web Sitesi Geliştirme Projesi',
-                teklifNo: 'TKL-2024-001',
-                teklifTarihi: new Date().toLocaleDateString('tr-TR'),
-                gecerlilikTarihi: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('tr-TR'),
-                musteriAdi: 'XYZ İnşaat A.Ş.',
-                musteriAdres: 'Sanayi Mah. İnşaat Cd. No:456\nKadıköy/İstanbul',
-                musteriTelefon: '+90 216 555 0123',
+                sirketLogo: 'NGS LOGO',
+                sirketAdi: 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ',
+                teklifFormuBaslik: 'TEKLİF FORMU',
+                tarih: 'Tarih: 08.08.2025',
+                gecerlilik: 'Geçerlilik: 15.08.2025',
+                teklifNo: 'Teklif No: NT.2508-1364.01',
+                hazirlayan: 'Hazırlayan: Nurettin Emre AYDIN',
+                musteriBaslik: 'BAHÇEŞEHİR GÖLEVLERİ SİTESİ',
+                musteriDetay: 'Sayın\nMustafa Bey,\nYapmış olduğumuz görüşmeler sonrasında hazırlamış olduğumuz fiyat teklifimizi değerlendirmenize sunarız.',
                 urunTablosu: [
-                  ['Web Sitesi Tasarımı', '1', 'Adet', '50.000 ₺', '50.000 ₺'],
-                  ['SEO Optimizasyonu', '1', 'Adet', '25.000 ₺', '25.000 ₺'],
-                  ['Hosting (1 Yıl)', '1', 'Adet', '5.000 ₺', '5.000 ₺']
+                  ['1', 'BİLGİSAYAR', 'HP Pro Tower 290 B6/C3S5 G9 İ7-13700 32GB 512GB SSD DOS', '1,00 Ad', '700,00 $', '700,00 $'],
+                  ['2', 'Windows 11 Pro Lisans', '', '1,00 Ad', '165,00 $', '165,00 $'],
+                  ['3', 'Uranium POE-G8002-96W 8 Port + 2 Port RJ45 Uplink POE Switch', '2,00 Ad', '80,00 $', '160,00 $'],
+                  ['4', 'İçilik, Montaj, Mühendislik ve Süpervizyon Hizmetleri, Programlama, Test, Devreye alma', '1,00 Ad', '75,00 $', '75,00 $']
                 ],
-                brutToplam: '80.000 ₺',
-                indirim: '5.000 ₺',
-                kdvTutari: '15.000 ₺',
-                genelToplam: '90.000 ₺',
-                odemeKosullari: 'Siparişle birlikte %50 avans, teslimde kalan tutar ödenecektir.',
-                teslimatKosullari: 'Teslimat süresi: Sipariş tarihinden itibaren 15-20 iş günü'
+                brutToplam: 'Brüt Toplam',
+                brutToplamTutar: '1.100,00 $',
+                indirim: 'İndirim',
+                indirimTutar: '0,00 $',
+                netToplam: 'Net Toplam',
+                netToplamTutar: '1.100,00 $',
+                kdvOrani: 'KDV %20',
+                kdvTutar: '220,00 $',
+                toplam: 'Toplam',
+                toplamTutar: '1.320,00 $',
+                notlar: 'Notlar',
+                fiyatlar: 'Fiyatlar: Teklifimiz USD cinsindan Merkez Bankası Döviz Satış Kuruna göre hazırlanmıştır.',
+                odeme: 'Ödeme: Siparişte %50 nakit avans, %50 iş bitimi nakit tahsil edilecektir.',
+                garanti: 'Garanti: Ürünlerimiz fatura tarihinden itibaren fabrikasyon hatalarına karşı 2(iki) yıl garantilidir'
               };
               
               console.log('Sample data set successfully');
@@ -462,7 +482,7 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
 
   return (
     <div className="flex h-[800px] bg-gray-50 rounded-lg overflow-hidden">
-      {/* PDF Designer Area - Full Width */}
+      {/* PDF Designer Area */}
       <div className="flex-1 flex flex-col">
         <div className="p-4 bg-white border-b border-gray-200 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -509,6 +529,54 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
           />
         </div>
       </div>
+
+      {/* Column Control Panel - Right Side */}
+      {selectedElement === 'urunTablosu' && (
+        <div className="w-80 bg-white border-l border-gray-200 p-4">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium">Tablo Kolonları</h3>
+              <Button 
+                size="sm" 
+                onClick={updateTableColumns}
+                className="bg-primary text-white"
+              >
+                Uygula
+              </Button>
+            </div>
+            
+            <div className="space-y-3">
+              {Object.entries(tableColumns).map(([key, value]) => (
+                <div key={key} className="flex items-center justify-between">
+                  <label className="text-sm font-medium">
+                    {key === 'no' && 'No'}
+                    {key === 'aciklama' && 'Açıklama'}
+                    {key === 'urunHizmet' && 'Ürün/Hizmet'}
+                    {key === 'miktar' && 'Miktar'}
+                    {key === 'birim' && 'Birim'}
+                    {key === 'birimFiyat' && 'Birim Fiyat'}
+                    {key === 'indirim' && 'İndirim %'}
+                    {key === 'tutar' && 'Tutar'}
+                  </label>
+                  <input
+                    type="checkbox"
+                    checked={value}
+                    onChange={(e) => setTableColumns(prev => ({
+                      ...prev,
+                      [key]: e.target.checked
+                    }))}
+                    className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="text-xs text-gray-500 mt-4">
+              💡 İstediğiniz kolonları seçin ve "Uygula" düğmesine basın
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
