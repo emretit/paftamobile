@@ -43,7 +43,7 @@ export interface StandardProposalFields {
   currency: string;              // Para birimi
   
   // 6. ÜRÜN/HİZMET BİLGİLERİ
-  itemsTable: any[][];           // Ürün tablosu
+  itemsTable: any;               // Ürün tablosu (can be string[][] or string)
   itemCount: string;             // Toplam kalem sayısı
   
   // 7. ŞART VE KOŞULLAR
@@ -63,7 +63,7 @@ export interface StandardProposalFields {
 export const STANDARD_FIELD_MAPPING: Record<keyof StandardProposalFields, {
   templateKeys: string[];        // Template'te kullanılabilecek field adları
   dataPath: string;             // Proposal object'indeki veri yolu
-  formatter?: (value: any, proposal?: Proposal) => string; // Veri formatı
+  formatter?: (value: any, proposal?: Proposal) => any; // Veri formatı - any type for table support
 }> = {
   // 1. TEKLİF BİLGİLERİ
   proposalNumber: {
@@ -168,7 +168,7 @@ export const STANDARD_FIELD_MAPPING: Record<keyof StandardProposalFields, {
   employeeTitle: {
     templateKeys: ['employeeTitle', 'employee_title', 'temsilciUnvan'],
     dataPath: 'employee.title',
-    formatter: (value, proposal) => proposal?.employee?.title || 'Satış Danışmanı'
+    formatter: (value, proposal) => proposal?.employee?.position || 'Satış Danışmanı'
   },
   employeePhone: {
     templateKeys: ['employeePhone', 'employee_phone', 'temsilciTelefon'],

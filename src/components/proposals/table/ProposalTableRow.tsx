@@ -14,7 +14,7 @@ import { useProposalCalculations } from "@/hooks/proposals/useProposalCalculatio
 import { formatProposalAmount } from "@/services/workflow/proposalWorkflow";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ProposalPdfExporter } from "../ProposalPdfExporter";
+// import { ProposalPdfExporter } from "../ProposalPdfExporter";
 
 
 interface ProposalTableRowProps {
@@ -188,16 +188,16 @@ export const ProposalTableRow = ({
         </div>
       </TableCell>
       
-      {/* PDF Export Modal */}
+      {/* PDF Export Modal - Temporarily disabled */}
       <Dialog open={showPdfExporter} onOpenChange={setShowPdfExporter}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>PDF Export - {proposal.number}</DialogTitle>
           </DialogHeader>
-          <ProposalPdfExporter 
-            proposal={proposal}
-            onExportComplete={() => setShowPdfExporter(false)}
-          />
+          <div className="p-8 text-center">
+            <p>PDF export is being migrated to the new template system.</p>
+            <p>Please use the Templates page to create and manage PDF templates.</p>
+          </div>
         </DialogContent>
       </Dialog>
     </TableRow>

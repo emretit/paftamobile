@@ -2347,82 +2347,64 @@ export type Database = {
         }
         Relationships: []
       }
-      proposal_templates: {
+      project_members: {
         Row: {
           created_at: string | null
-          created_by: string | null
-          description: string | null
-          design_settings: Json | null
-          estimated_time: string | null
           id: string
-          is_active: boolean
-          is_recommended: boolean | null
-          items: Json | null
-          name: string
-          pdfme_template: Json | null
-          popularity: number | null
-          prefilled_fields: Json | null
-          preview_image: string | null
-          tags: string[] | null
-          template_features: string[] | null
-          template_id: string | null
-          template_type: string
-          updated_at: string | null
-          usage_count: string | null
+          project_id: string
+          role: string
+          user_id: string
         }
         Insert: {
           created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          design_settings?: Json | null
-          estimated_time?: string | null
           id?: string
-          is_active?: boolean
-          is_recommended?: boolean | null
-          items?: Json | null
-          name: string
-          pdfme_template?: Json | null
-          popularity?: number | null
-          prefilled_fields?: Json | null
-          preview_image?: string | null
-          tags?: string[] | null
-          template_features?: string[] | null
-          template_id?: string | null
-          template_type?: string
-          updated_at?: string | null
-          usage_count?: string | null
+          project_id: string
+          role?: string
+          user_id: string
         }
         Update: {
           created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          design_settings?: Json | null
-          estimated_time?: string | null
           id?: string
-          is_active?: boolean
-          is_recommended?: boolean | null
-          items?: Json | null
-          name?: string
-          pdfme_template?: Json | null
-          popularity?: number | null
-          prefilled_fields?: Json | null
-          preview_image?: string | null
-          tags?: string[] | null
-          template_features?: string[] | null
-          template_id?: string | null
-          template_type?: string
-          updated_at?: string | null
-          usage_count?: string | null
+          project_id?: string
+          role?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "proposal_templates_template_id_fkey"
-            columns: ["template_id"]
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
-            referencedRelation: "templates"
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
+      }
+      projects: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       proposal_terms: {
         Row: {
@@ -2892,6 +2874,62 @@ export type Database = {
           },
         ]
       }
+      quotations: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          customer_company: string | null
+          customer_email: string | null
+          customer_name: string | null
+          id: string
+          items: Json | null
+          meta: Json | null
+          project_id: string
+          subtotal: number | null
+          tax: number | null
+          total: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          customer_company?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          id?: string
+          items?: Json | null
+          meta?: Json | null
+          project_id: string
+          subtotal?: number | null
+          tax?: number | null
+          total?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          customer_company?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          id?: string
+          items?: Json | null
+          meta?: Json | null
+          project_id?: string
+          subtotal?: number | null
+          tax?: number | null
+          total?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales_tracking: {
         Row: {
           actual_amount: number
@@ -3225,54 +3263,44 @@ export type Database = {
       }
       templates: {
         Row: {
-          category: string | null
-          created_at: string
-          description: string | null
+          created_at: string | null
           id: string
-          is_active: boolean | null
           is_default: boolean | null
-          metadata: Json | null
           name: string
-          preview_image_url: string | null
+          project_id: string
           template_json: Json
-          template_type: string | null
-          updated_at: string
+          updated_at: string | null
           user_id: string
-          variables: Json | null
         }
         Insert: {
-          category?: string | null
-          created_at?: string
-          description?: string | null
+          created_at?: string | null
           id?: string
-          is_active?: boolean | null
           is_default?: boolean | null
-          metadata?: Json | null
-          name?: string
-          preview_image_url?: string | null
+          name: string
+          project_id: string
           template_json: Json
-          template_type?: string | null
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
-          variables?: Json | null
         }
         Update: {
-          category?: string | null
-          created_at?: string
-          description?: string | null
+          created_at?: string | null
           id?: string
-          is_active?: boolean | null
           is_default?: boolean | null
-          metadata?: Json | null
           name?: string
-          preview_image_url?: string | null
+          project_id?: string
           template_json?: Json
-          template_type?: string | null
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
-          variables?: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "templates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_preferences: {
         Row: {
