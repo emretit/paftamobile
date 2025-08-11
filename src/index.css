@@ -367,13 +367,22 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Icons in sidebar */
+/* Icons in sidebar - Made larger and more prominent */
 .pdfme-designer-container .sidebar svg,
 .pdfme-designer-container .sidebar .icon {
-  width: 18px !important;
-  height: 18px !important;
-  stroke-width: 2 !important;
+  width: 24px !important;
+  height: 24px !important;
+  stroke-width: 2.5 !important;
   color: currentColor !important;
+}
+
+/* Tool icons specifically */
+.pdfme-designer-container .sidebar button svg,
+.pdfme-designer-container .sidebar .tool-button svg,
+.pdfme-designer-container .sidebar [role="button"] svg {
+  width: 28px !important;
+  height: 28px !important;
+  stroke-width: 2 !important;
 }
 
 /* Tool labels */
