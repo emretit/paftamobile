@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { SimpleTemplateEditor } from './SimpleTemplateEditor';
 import { MappingPanel } from '@/components/pdf/MappingPanel';
+import { TemplateBuilder } from '@/components/template-builder/TemplateBuilder';
 
 interface Template {
   id: string;
@@ -221,9 +222,10 @@ export const TemplateManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="list">Şablon Listesi</TabsTrigger>
           <TabsTrigger value="editor">Şablon Editörü</TabsTrigger>
+          <TabsTrigger value="builder">Şablon Tasarımcısı</TabsTrigger>
           <TabsTrigger value="mapping">Field Mapping</TabsTrigger>
         </TabsList>
 
@@ -247,6 +249,9 @@ export const TemplateManagement: React.FC = () => {
               <div className="flex gap-2">
                 <Button onClick={() => { setEditingTemplate(null); setActiveTab('editor'); }}>
                   + Boş Şablon
+                </Button>
+                <Button onClick={() => { setEditingTemplate(null); setActiveTab('builder'); }} variant="default">
+                  🎨 Tasarımcı
                 </Button>
                 <Button 
                   onClick={() => {
@@ -381,6 +386,24 @@ export const TemplateManagement: React.FC = () => {
             initialTemplate={editingTemplate?.template_json}
             initialName={editingTemplate?.name}
             templateId={editingTemplate?.id}
+            onSave={handleTemplateSaved}
+          />
+        </TabsContent>
+
+        <TabsContent value="builder" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold">Şablon Tasarımcısı</h3>
+              <p className="text-sm text-muted-foreground">
+                Hazır elementleri sürükleyip bırakarak profesyonel PDF şablonları oluşturun
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => setActiveTab('list')}>
+              ← Listeye Dön
+            </Button>
+          </div>
+          <TemplateBuilder
+            initialTemplate={editingTemplate?.template_json}
             onSave={handleTemplateSaved}
           />
         </TabsContent>
