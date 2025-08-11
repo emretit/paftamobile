@@ -329,30 +329,43 @@ export const TemplateManagement: React.FC = () => {
                     Oluşturulma: {new Date(template.created_at).toLocaleDateString('tr-TR')}
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleGenerateTemplatePdf(template)}
+                        className="flex-1"
+                      >
+                        <Eye size={14} className="mr-1" />
+                        Önizle
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditTemplate(template)}
+                      >
+                        <Edit2 size={14} className="mr-1" />
+                        Editör
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDeleteTemplate(template.id)}
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
                     <Button
                       size="sm"
-                      variant="outline"
-                      onClick={() => handleGenerateTemplatePdf(template)}
-                      className="flex-1"
+                      variant="default"
+                      onClick={() => {
+                        setEditingTemplate(template);
+                        setActiveTab('builder');
+                      }}
+                      className="w-full"
                     >
-                      <FileText size={14} className="mr-1" />
-                      Önizle
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEditTemplate(template)}
-                    >
-                      <Edit2 size={14} className="mr-1" />
-                      Düzenle
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleDeleteTemplate(template.id)}
-                    >
-                      <Trash2 size={14} />
+                      🎨 Tasarımcıda Düzenle
                     </Button>
                   </div>
                 </div>
@@ -404,7 +417,57 @@ export const TemplateManagement: React.FC = () => {
           </div>
           <TemplateBuilder
             initialTemplate={editingTemplate?.template_json}
-            onSave={handleTemplateSaved}
+            onTemplateChange={(template) => {
+              if (editingTemplate) {
+                setEditingTemplate(prev => prev ? { ...prev, template_json: template } : null);
+              }
+            }}
+            onSave={async (template, name) => {
+              try {
+                const { data: userRes } = await supabase.auth.getUser();
+                if (!userRes.user) {
+                  toast.error('Giriş yapmanız gerekiyor');
+                  return;
+                }
+
+                if (editingTemplate) {
+                  // Mevcut şablonu güncelle
+                  const { error } = await supabase
+                    .from('templates')
+                    .update({
+                      name: name,
+                      template_json: template,
+                      updated_at: new Date().toISOString()
+                    })
+                    .eq('id', editingTemplate.id);
+
+                  if (error) throw error;
+                  toast.success('Şablon güncellendi');
+                } else {
+                  // Yeni şablon oluştur
+                  const { error } = await supabase
+                    .from('templates')
+                    .insert({
+                      name: name,
+                      template_json: template,
+                      user_id: userRes.user.id,
+                      template_type: 'proposal',
+                      category: 'general',
+                      description: `Şablon tasarımcısı ile oluşturuldu`,
+                      is_active: true,
+                      variables: []
+                    });
+
+                  if (error) throw error;
+                  toast.success('Şablon oluşturuldu');
+                }
+
+                handleTemplateSaved();
+              } catch (error) {
+                console.error('Şablon kaydetme hatası:', error);
+                toast.error('Şablon kaydedilemedi');
+              }
+            }}
           />
         </TabsContent>
 
