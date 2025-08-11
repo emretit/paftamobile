@@ -1,186 +1,211 @@
 import { toast } from 'sonner';
 
 /**
- * PDFme template için standardize edilmiş örnek veri üretir
+ * Generates sample input data for PDF templates based on the provided schemas
+ * @param schemas - The PDFme template schemas
+ * @returns Object with sample data for each field
  */
-export const generateSampleInputs = (schemas: any[]): Record<string, any> => {
+export function generateSampleInputs(schemas: any): Record<string, any> {
+  console.log('🔍 Schemas received:', schemas);
+  
   const sampleInputs: Record<string, any> = {};
-  
-  if (schemas && schemas[0]) {
-    Object.keys(schemas[0]).forEach((key) => {
-      switch (key) {
-        // Şirket bilgileri
-        case 'companyName':
-        case 'sirketBaslik':
-          sampleInputs[key] = 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ';
-          break;
-        case 'companyAddress':
-          sampleInputs[key] = 'Eğitim Mah. Muratpaşa Cad. No:1 D:29-30\nKadıköy, İstanbul 34000\nTel: 0 (212) 577 35 72';
-          break;
-          
-        // Teklif bilgileri
-        case 'proposalTitle':
-        case 'teklifBaslik':
-          sampleInputs[key] = 'TEKLİF FORMU';
-          break;
-        case 'proposalNumber':
-          sampleInputs[key] = 'Teklif No: NT.2025-001';
-          break;
-        case 'proposalDate':
-        case 'date':
-        case 'tarihDeger':
-          sampleInputs[key] = 'Tarih: ' + new Date().toLocaleDateString('tr-TR');
-          break;
-          
-        // Müşteri bilgileri
-        case 'customerName':
-        case 'musteriBaslik':
-          sampleInputs[key] = 'BAHÇEŞEHİR GÖLEVLERİ SİTESİ';
-          break;
-        case 'customerHeader':
-          sampleInputs[key] = 'Müşteri Bilgileri:';
-          break;
-          
-        // Finansal bilgiler
-        case 'totalAmount':
-        case 'toplamDeger':
-          sampleInputs[key] = '8,260.00 $';
-          break;
-        case 'subtotalLabel':
-          sampleInputs[key] = 'Ara Toplam:';
-          break;
-        case 'subtotalAmount':
-        case 'subtotal':
-          sampleInputs[key] = '7,000.00 $';
-          break;
-        case 'taxLabel':
-        case 'taxInput':
-          sampleInputs[key] = 'KDV (%18):';
-          break;
-        case 'taxAmount':
-        case 'tax':
-          sampleInputs[key] = '1,260.00 $';
-          break;
-        case 'totalLabel':
-          sampleInputs[key] = 'GENEL TOPLAM:';
-          break;
-        case 'total':
-          sampleInputs[key] = '8,260.00 $';
-          break;
-          
-        // PDFme Quote Template alanları
-        case 'head':
-          sampleInputs[key] = 'QUOTE';
-          break;
-        case 'preparedForLabel':
-          sampleInputs[key] = 'Prepared for:';
-          break;
-        case 'preparedForInput':
-          sampleInputs[key] = 'İmam Dîane\n+123 456 7890\n63 İvy Road, Hawkville, GA, USA 31036';
-          break;
-        case 'quoteInfo':
-          sampleInputs[key] = 'Quote No: 12345\n18 June 2025\nValid Until: 16 July 2025';
-          break;
-        case 'thankyou':
-          sampleInputs[key] = 'Thank you for your interest!';
-          break;
-          
-        // Başlıklar ve etiketler
-        case 'itemsHeader':
-          sampleInputs[key] = 'Teklif Edilen Ürün/Hizmetler:';
-          break;
-        case 'termsHeader':
-          sampleInputs[key] = 'Şartlar ve Koşullar:';
-          break;
-          
-        // Şartlar ve imza
-        case 'paymentTerms':
-          sampleInputs[key] = '• Ödeme: %50 peşin, %50 iş bitimi\n• Teslimat: Siparişe müteakip 10 iş günü\n• Garanti: 2 yıl üretici garantisi';
-          break;
-        case 'validityPeriod':
-          sampleInputs[key] = 'Bu teklif 30 gün geçerlidir.';
-          break;
-        case 'signature':
-          sampleInputs[key] = 'Saygılarımızla,\n\nNGS Teknoloji\nSatış Departmanı';
-          break;
-        case 'footer':
-          sampleInputs[key] = 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ | www.ngsteknoloji.com | info@ngsteknoloji.com';
-          break;
-          
-        // Tablo ve liste örnekleri
-        case 'urunTablosu':
-          sampleInputs[key] = [
-            ['1', 'IP Kamera Sistemi (8 adet)', '8', '750.00 $', '6,000.00 $'],
-            ['2', 'DVR Kayıt Cihazı', '1', '500.00 $', '500.00 $'],
-            ['3', 'Kurulum ve Konfigürasyon', '1', '500.00 $', '500.00 $']
-          ];
-          break;
-          
-        // Diğer özel alanlar
-        case 'teklifNoDeger':
-          sampleInputs[key] = 'NT.2025-001';
-          break;
-        case 'hazirlayanDeger':
-          sampleInputs[key] = 'Nurettin Emre AYDIN';
-          break;
-        case 'brutToplamDeger':
-          sampleInputs[key] = '7,000.00 $';
-          break;
-        case 'kdvDeger':
-          sampleInputs[key] = '1,260.00 $';
-          break;
-          
-        // Fatura alanları
-        case 'invoiceHeader':
-          sampleInputs[key] = 'FATURA';
-          break;
-        case 'customerInfo':
-          sampleInputs[key] = 'Bahçeşehir Gölevleri Sitesi\nBahçeşehir Mah. \nİstanbul, Türkiye';
-          break;
-        case 'invoiceDetails':
-          sampleInputs[key] = 'Fatura No: F-2025-001\nTarih: ' + new Date().toLocaleDateString('tr-TR');
-          break;
-        case 'billToHeader':
-          sampleInputs[key] = 'Faturalanan:';
-          break;
-        case 'subtotalSection':
-          sampleInputs[key] = 'Ara Toplam';
-          break;
-          
-        // Default olarak field adına uygun örnek
-        default:
-          if (key.toLowerCase().includes('logo')) {
-            // Logo için base64 veya placeholder image
-            sampleInputs[key] = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-          } else if (key.toLowerCase().includes('image') || key.toLowerCase().includes('resim')) {
-            sampleInputs[key] = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-          } else if (key.toLowerCase().includes('name') || key.toLowerCase().includes('isim')) {
-            sampleInputs[key] = 'Örnek İsim';
-          } else if (key.toLowerCase().includes('amount') || key.toLowerCase().includes('tutar')) {
-            sampleInputs[key] = '1,000.00 $';
-          } else if (key.toLowerCase().includes('date') || key.toLowerCase().includes('tarih')) {
-            sampleInputs[key] = new Date().toLocaleDateString('tr-TR');
-          } else if (key.toLowerCase().includes('address') || key.toLowerCase().includes('adres')) {
-            sampleInputs[key] = 'Örnek Adres';
-          } else if (key.toLowerCase().includes('phone') || key.toLowerCase().includes('telefon')) {
-            sampleInputs[key] = '+90 212 577 35 72';
-          } else if (key.toLowerCase().includes('email') || key.toLowerCase().includes('mail')) {
-            sampleInputs[key] = 'info@ngsteknoloji.com';
-          } else {
-            sampleInputs[key] = `Örnek ${key}`;
-          }
-      }
-    });
-  } else {
-    // Fallback örnek veriler
-    sampleInputs.companyName = 'NGS TEKNOLOJİ VE GÜVENLİK SİSTEMLERİ';
-    sampleInputs.proposalTitle = 'TEKLİF FORMU';
-    sampleInputs.customerName = 'BAHÇEŞEHİR GÖLEVLERİ SİTESİ';
-    sampleInputs.totalAmount = '8,260.00 $';
+
+  try {
+    // PDFme şemalarını işle - schemas bir array of objects olmalı
+    if (schemas && Array.isArray(schemas)) {
+      // Her sayfa için şemaları işle
+      schemas.forEach((pageSchema, pageIndex) => {
+        console.log(`📄 Sayfa ${pageIndex} şeması:`, pageSchema);
+        
+        if (pageSchema && typeof pageSchema === 'object') {
+          // Her sayfadaki alanları işle
+          Object.keys(pageSchema).forEach(fieldName => {
+            const fieldConfig = pageSchema[fieldName];
+            console.log(`🔧 Alan işleniyor: ${fieldName}`, fieldConfig);
+            
+            if (fieldConfig && typeof fieldConfig === 'object') {
+              generateFieldSampleData(fieldName, fieldConfig, sampleInputs);
+            }
+          });
+        }
+      });
+    } else if (schemas && typeof schemas === 'object') {
+      // Eğer schemas direkt bir object ise
+      Object.keys(schemas).forEach(fieldName => {
+        const fieldConfig = schemas[fieldName];
+        console.log(`🔧 Alan işleniyor: ${fieldName}`, fieldConfig);
+        
+        if (fieldConfig && typeof fieldConfig === 'object') {
+          generateFieldSampleData(fieldName, fieldConfig, sampleInputs);
+        }
+      });
+    }
+
+    // Eksik önemli alanlar için fallback'ler ekle
+    addFallbackSampleData(sampleInputs);
+
+  } catch (error) {
+    console.error('❌ Schema işleme hatası:', error);
+    // Hata durumunda temel örnek veriler oluştur
+    sampleInputs['logo'] = generateImagePlaceholder();
+    sampleInputs['companyName'] = 'ABC Teknoloji A.Ş.';
+    sampleInputs['title'] = 'Örnek Teklif';
+    sampleInputs['customerName'] = 'Örnek Müşteri';
+    sampleInputs['date'] = new Date().toLocaleDateString('tr-TR');
+    sampleInputs['total'] = '15,750.00 ₺';
   }
-  
+
+  console.log('✅ Örnek veriler hazırlandı:', Object.keys(sampleInputs));
+  console.log('📊 Sample inputs:', sampleInputs);
   return sampleInputs;
-};
+}
+
+/**
+ * Generates sample data for a specific field based on its configuration
+ */
+function generateFieldSampleData(fieldName: string, fieldConfig: any, sampleInputs: Record<string, any>) {
+  // Alan türünü belirle - PDFme'de type veya schema property'si kullanılır
+  const fieldType = fieldConfig.type || fieldConfig.schema || 'text';
+  
+  console.log(`🎯 Alan: ${fieldName}, Tür: ${fieldType}`, fieldConfig);
+
+  // Alan türüne göre örnek veri üret
+  switch (fieldType) {
+    case 'text':
+      sampleInputs[fieldName] = generateTextSampleData(fieldName);
+      break;
+
+    case 'image':
+      sampleInputs[fieldName] = generateImagePlaceholder();
+      break;
+
+    case 'signature':
+      sampleInputs[fieldName] = generateSignaturePlaceholder();
+      break;
+
+    case 'table':
+      sampleInputs[fieldName] = generateTableSampleData();
+      break;
+
+    case 'line':
+      sampleInputs[fieldName] = '';
+      break;
+
+    case 'rectangle':
+    case 'ellipse':
+      sampleInputs[fieldName] = '';
+      break;
+          
+    default:
+      // Bilinmeyen türler için field adına göre tahmin et
+      if (fieldName.toLowerCase().includes('logo') || 
+          fieldName.toLowerCase().includes('image') || 
+          fieldName.toLowerCase().includes('resim')) {
+        sampleInputs[fieldName] = generateImagePlaceholder();
+      } else if (fieldName.toLowerCase().includes('signature') || 
+                 fieldName.toLowerCase().includes('imza')) {
+        sampleInputs[fieldName] = generateSignaturePlaceholder();
+      } else if (fieldName.toLowerCase().includes('table') || 
+                 fieldName.toLowerCase().includes('tablo')) {
+        sampleInputs[fieldName] = generateTableSampleData();
+      } else {
+        sampleInputs[fieldName] = generateTextSampleData(fieldName);
+      }
+      break;
+  }
+}
+
+/**
+ * Generates text sample data based on field name
+ */
+function generateTextSampleData(fieldName: string): string {
+  const lowerFieldName = fieldName.toLowerCase();
+  
+  if (lowerFieldName.includes('company') || lowerFieldName.includes('şirket')) {
+    return 'ABC Teknoloji A.Ş.';
+  } else if (lowerFieldName.includes('title') || lowerFieldName.includes('başlık')) {
+    return 'Profesyonel Hizmet Teklifi';
+  } else if (lowerFieldName.includes('customer') || lowerFieldName.includes('müşteri')) {
+    return 'XYZ İnşaat Ltd. Şti.';
+  } else if (lowerFieldName.includes('date') || lowerFieldName.includes('tarih')) {
+    return new Date().toLocaleDateString('tr-TR');
+  } else if (lowerFieldName.includes('amount') || lowerFieldName.includes('total') || lowerFieldName.includes('tutar')) {
+    return '15,750.00 ₺';
+  } else if (lowerFieldName.includes('address') || lowerFieldName.includes('adres')) {
+    return 'Atatürk Mah. İstiklal Cad. No:45 Şişli/İstanbul';
+  } else if (lowerFieldName.includes('phone') || lowerFieldName.includes('telefon')) {
+    return '+90 (212) 555 01 23';
+  } else if (lowerFieldName.includes('email') || lowerFieldName.includes('eposta')) {
+    return 'info@abcteknoloji.com';
+  } else if (lowerFieldName.includes('tax') || lowerFieldName.includes('vergi')) {
+    return '1234567890';
+  } else if (lowerFieldName.includes('description') || lowerFieldName.includes('açıklama')) {
+    return 'Bu teklif 30 gün süreyle geçerlidir ve tüm malzeme dahildir.';
+  } else {
+    return `${fieldName} örnek değeri`;
+  }
+}
+
+/**
+ * Generates a placeholder image as base64
+ */
+function generateImagePlaceholder(): string {
+  // 100x100 piksel şeffaf PNG
+  return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+}
+
+/**
+ * Generates a signature placeholder
+ */
+function generateSignaturePlaceholder(): string {
+  // Signature için özel placeholder veya boş string
+  return generateImagePlaceholder();
+}
+
+/**
+ * Generates sample table data
+ */
+function generateTableSampleData(): string[][] {
+  return [
+    ['Hizmet/Ürün', 'Miktar', 'Birim Fiyat', 'Toplam'],
+    ['Web Tasarım Hizmeti', '1 adet', '8,000.00 ₺', '8,000.00 ₺'],
+    ['SEO Optimizasyonu', '3 ay', '1,500.00 ₺', '4,500.00 ₺'],
+    ['Hosting Hizmeti', '12 ay', '250.00 ₺', '3,000.00 ₺'],
+    ['SSL Sertifikası', '1 adet', '250.00 ₺', '250.00 ₺']
+  ];
+}
+
+/**
+ * Adds fallback sample data for common missing fields
+ */
+function addFallbackSampleData(sampleInputs: Record<string, any>) {
+  // Yaygın field isimleri için fallback'ler
+  const commonFields = {
+    'logo': generateImagePlaceholder(),
+    'companyLogo': generateImagePlaceholder(),
+    'signature': generateSignaturePlaceholder(),
+    'customerSignature': generateSignaturePlaceholder(),
+    'companyName': 'ABC Teknoloji A.Ş.',
+    'customerName': 'XYZ İnşaat Ltd. Şti.',
+    'proposalTitle': 'Profesyonel Hizmet Teklifi',
+    'date': new Date().toLocaleDateString('tr-TR'),
+    'validUntil': new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('tr-TR'),
+    'totalAmount': '15,750.00 ₺',
+    'subtotal': '13,125.00 ₺',
+    'tax': '2,625.00 ₺',
+    'companyAddress': 'Atatürk Mah. İstiklal Cad. No:45 Şişli/İstanbul',
+    'companyPhone': '+90 (212) 555 01 23',
+    'companyEmail': 'info@abcteknoloji.com',
+    'proposalItems': generateTableSampleData()
+  };
+
+  // Eksik alanları ekle
+  Object.keys(commonFields).forEach(fieldName => {
+    if (!(fieldName in sampleInputs)) {
+      sampleInputs[fieldName] = commonFields[fieldName];
+    }
+  });
+}
 
 /**
  * PDFme template'i önizleme için generate eder ve yeni sekmede açar
