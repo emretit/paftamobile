@@ -22,15 +22,9 @@ const NavLink = ({
   isCrmButton = false,
   isSubItem = false 
 }: NavLinkProps) => {
-  const handleClick = (e: React.MouseEvent) => {
-    console.log('NavLink clicked:', to);
-    // Let Link handle the navigation
-  };
-
   return (
     <Link
       to={to}
-      onClick={handleClick}
       className={cn(
         "flex items-center transition-all duration-200 rounded-lg group",
         isCollapsed ? "justify-center px-3 h-10" : "px-3 space-x-3",

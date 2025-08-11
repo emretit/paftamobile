@@ -14,7 +14,7 @@ import { useProposalCalculations } from "@/hooks/proposals/useProposalCalculatio
 import { formatProposalAmount } from "@/services/workflow/proposalWorkflow";
 import { useToast } from "@/hooks/use-toast";
 
-import QuoteExportActions from "@/components/QuoteExportActions";
+// import { ProposalPdfExporter } from "../ProposalPdfExporter";
 
 
 interface ProposalTableRowProps {
@@ -114,36 +114,30 @@ export const ProposalTableRow = ({
       <TableCell className="p-4">{formatDate(proposal.created_at)}</TableCell>
       <TableCell className="p-4">{formatDate(proposal.valid_until)}</TableCell>
       <TableCell className="p-4">
-        <div className="flex justify-end items-center gap-2">
-          <QuoteExportActions 
-            quoteId={proposal.id} 
-            quoteNumber={proposal.number}
-          />
-          
-          <div className="flex">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelect(proposal);
-              }}
-              className="h-8 w-8"
-              title="Detayları Görüntüle"
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8"
-              onClick={handleEdit}
-              title="Düzenle"
-            >
-              <PenLine className="h-4 w-4" />
-            </Button>
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(proposal);
+            }}
+            className="h-8 w-8"
+            title="Detayları Görüntüle"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8"
+            onClick={handleEdit}
+            title="Düzenle"
+          >
+            <PenLine className="h-4 w-4" />
+          </Button>
 
-            <DropdownMenu>
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
@@ -182,7 +176,6 @@ export const ProposalTableRow = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          </div>
         </div>
       </TableCell>
       

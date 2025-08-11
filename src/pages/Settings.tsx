@@ -11,7 +11,7 @@ import { UserManagement } from "@/components/settings/UserManagement";
 import { RoleManagement } from "@/components/settings/RoleManagement";
 import { SystemSettings } from "@/components/settings/SystemSettings";
 import { NilveraSettings } from "@/components/settings/NilveraSettings";
-// import { TemplateManagement } from "@/components/settings/TemplateManagement";
+import { TemplateManagement } from "@/components/settings/TemplateManagement";
 
 
 interface SettingsProps {
