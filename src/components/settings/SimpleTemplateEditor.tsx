@@ -444,6 +444,17 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
           <div 
             ref={designerRef} 
             className={`pdfme-designer-container w-full border rounded ${isLoading ? 'hidden' : ''}`}
+            style={{
+              minHeight: '600px',
+              '--pdfme-sidebar-bg': 'hsl(var(--background))',
+              '--pdfme-sidebar-border': 'hsl(var(--border))',
+              '--pdfme-sidebar-text': 'hsl(var(--foreground))',
+              '--pdfme-button-bg': 'hsl(var(--secondary))',
+              '--pdfme-button-hover': 'hsl(var(--secondary)/0.8)',
+              '--pdfme-button-text': 'hsl(var(--secondary-foreground))',
+              '--pdfme-accent': 'hsl(var(--primary))',
+              '--pdfme-accent-hover': 'hsl(var(--primary)/0.9)',
+            } as React.CSSProperties & Record<string, string>}
           />
         </CardContent>
       </Card>

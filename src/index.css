@@ -311,3 +311,115 @@
 .pdfme-designer-container *::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8 !important;
 }
+
+/* Enhanced PDFme Designer Styling */
+.pdfme-designer-container {
+  /* Sidebar styling */
+  --pdfme-sidebar-bg: hsl(var(--background));
+  --pdfme-sidebar-border: hsl(var(--border));
+  --pdfme-sidebar-text: hsl(var(--foreground));
+  --pdfme-button-bg: hsl(var(--secondary));
+  --pdfme-button-hover: hsl(var(--secondary)/0.8);
+  --pdfme-button-text: hsl(var(--secondary-foreground));
+  --pdfme-accent: hsl(var(--primary));
+  --pdfme-accent-hover: hsl(var(--primary)/0.9);
+}
+
+/* PDFme sidebar panel improvements */
+.pdfme-designer-container .sidebar {
+  background: var(--pdfme-sidebar-bg) !important;
+  border-right: 1px solid var(--pdfme-sidebar-border) !important;
+  min-width: 280px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Sidebar icons and buttons */
+.pdfme-designer-container .sidebar button,
+.pdfme-designer-container .sidebar .tool-button {
+  background: var(--pdfme-button-bg) !important;
+  color: var(--pdfme-button-text) !important;
+  border: 1px solid var(--pdfme-sidebar-border) !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  margin: 4px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 40px !important;
+}
+
+.pdfme-designer-container .sidebar button:hover,
+.pdfme-designer-container .sidebar .tool-button:hover {
+  background: var(--pdfme-button-hover) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Active/selected buttons */
+.pdfme-designer-container .sidebar button.active,
+.pdfme-designer-container .sidebar .tool-button.active,
+.pdfme-designer-container .sidebar button[aria-pressed="true"] {
+  background: var(--pdfme-accent) !important;
+  color: white !important;
+  border-color: var(--pdfme-accent) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Icons in sidebar */
+.pdfme-designer-container .sidebar svg,
+.pdfme-designer-container .sidebar .icon {
+  width: 18px !important;
+  height: 18px !important;
+  stroke-width: 2 !important;
+  color: currentColor !important;
+}
+
+/* Tool labels */
+.pdfme-designer-container .sidebar .tool-label,
+.pdfme-designer-container .sidebar span {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.025em !important;
+}
+
+/* Sidebar sections */
+.pdfme-designer-container .sidebar .section-title,
+.pdfme-designer-container .sidebar h3 {
+  color: var(--pdfme-sidebar-text) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  margin: 16px 8px 8px 8px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* Property panel */
+.pdfme-designer-container .property-panel {
+  background: var(--pdfme-sidebar-bg) !important;
+  border: 1px solid var(--pdfme-sidebar-border) !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  margin: 8px !important;
+}
+
+/* Input fields in property panel */
+.pdfme-designer-container .property-panel input,
+.pdfme-designer-container .property-panel select,
+.pdfme-designer-container .property-panel textarea {
+  background: hsl(var(--input)) !important;
+  border: 1px solid var(--pdfme-sidebar-border) !important;
+  border-radius: 4px !important;
+  padding: 6px 8px !important;
+  color: var(--pdfme-sidebar-text) !important;
+  font-size: 13px !important;
+}
+
+.pdfme-designer-container .property-panel input:focus,
+.pdfme-designer-container .property-panel select:focus,
+.pdfme-designer-container .property-panel textarea:focus {
+  outline: none !important;
+  border-color: var(--pdfme-accent) !important;
+  box-shadow: 0 0 0 2px hsla(var(--primary), 0.2) !important;
+}
