@@ -239,7 +239,7 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
 
   return (
     <Document>
-      <Page size={schema.page.size} style={styles.page}>
+      <Page size={schema.page.size === "LETTER" ? "LETTER" : schema.page.size} style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
           <View>

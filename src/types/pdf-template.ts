@@ -1,5 +1,5 @@
 export interface PageSettings {
-  size: "A4" | "A3" | "Letter";
+  size: "A4" | "A3" | "LETTER";
   padding: {
     top: number;
     right: number;

@@ -100,12 +100,12 @@ export const truncateText = (text: string | null | undefined, maxLength: number)
 /**
  * Check if required fields are missing for PDF generation
  */
-export const validatePdfData = (data: Record<string, unknown>): { isValid: boolean; missingFields: string[] } => {
+export const validatePdfData = (data: any): { isValid: boolean; missingFields: string[] } => {
   const missingFields: string[] = [];
   
   if (!data.company?.name) missingFields.push('Şirket adı');
-  if (!data.customer?.name) missingFields.push('Müşteri adı');
-  if (!data.lines || data.lines.length === 0) missingFields.push('Teklif kalemleri');
+  if (!data.customer?.name) missingFields.push('Müşteri adı');  
+  if (!data.items || !Array.isArray(data.items) || data.items.length === 0) missingFields.push('Teklif kalemleri');
   
   return {
     isValid: missingFields.length === 0,
