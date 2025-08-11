@@ -440,6 +440,33 @@ export type Database = {
         }
         Relationships: []
       }
+      company_profile: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           address: string | null
@@ -2161,17 +2188,8 @@ export type Database = {
           sort_order?: number | null
           template_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "pdf_template_elements_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "pdf_templates"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
-
       product_categories: {
         Row: {
           created_at: string | null
@@ -2895,6 +2913,88 @@ export type Database = {
           },
         ]
       }
+      quote_items: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          qty: number
+          quote_id: string | null
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: string
+          qty: number
+          quote_id?: string | null
+          unit_price: number
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          qty?: number
+          quote_id?: string | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          customer_id: string | null
+          date: string
+          discount: number | null
+          id: string
+          notes: string | null
+          number: string
+          tax_rate: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          customer_id?: string | null
+          date?: string
+          discount?: number | null
+          id?: string
+          notes?: string | null
+          number: string
+          tax_rate?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          customer_id?: string | null
+          date?: string
+          discount?: number | null
+          id?: string
+          notes?: string | null
+          number?: string
+          tax_rate?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_quotes_customer"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales_tracking: {
         Row: {
           actual_amount: number
@@ -3184,7 +3284,48 @@ export type Database = {
           },
         ]
       }
-
+      template_variables: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          default_value: string | null
+          description: string | null
+          id: string
+          is_system: boolean | null
+          label: string
+          name: string
+          type: string
+          updated_at: string | null
+          validation_rules: Json | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          default_value?: string | null
+          description?: string | null
+          id?: string
+          is_system?: boolean | null
+          label: string
+          name: string
+          type: string
+          updated_at?: string | null
+          validation_rules?: Json | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          default_value?: string | null
+          description?: string | null
+          id?: string
+          is_system?: boolean | null
+          label?: string
+          name?: string
+          type?: string
+          updated_at?: string | null
+          validation_rules?: Json | null
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           created_at: string | null
@@ -3258,15 +3399,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_template_preferences_default_template_id_fkey"
-            columns: ["default_template_id"]
-            isOneToOne: false
-            referencedRelation: "pdf_templates"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       veriban_incoming_invoices: {
         Row: {
