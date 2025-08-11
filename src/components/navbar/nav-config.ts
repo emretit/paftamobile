@@ -25,7 +25,8 @@ import {
   UserCheck,
   Calculator,
   Zap,
-  Zap as ZapIcon
+  Zap as ZapIcon,
+  FileEdit
 } from "lucide-react";
 
 export const navItems = [
@@ -48,6 +49,11 @@ export const navItems = [
         path: "/proposals",
         icon: Quote,
         label: "Teklifler",
+      },
+      {
+        path: "/templates/pdf-editor",
+        icon: FileEdit,
+        label: "PDF Şablonları",
       },
       {
         path: "/orders/list",

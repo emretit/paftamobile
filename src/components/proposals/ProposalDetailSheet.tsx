@@ -18,10 +18,17 @@ import {
   CreditCard,
   MessageSquare,
   Target,
-  Paperclip
+  Paperclip,
+  Download,
+  Upload,
+  Settings
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PdfExportService } from "@/services/pdf/pdfExportService";
+import { PdfTemplate } from "@/types/pdf-template";
 
 interface ProposalDetailSheetProps {
   proposal: Proposal | null;
@@ -35,6 +42,28 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
   onOpenChange,
 }) => {
   const navigate = useNavigate();
+  const [templates, setTemplates] = useState<PdfTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Load templates when component mounts
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const loadTemplates = async () => {
+    try {
+      const data = await PdfExportService.getTemplates('quote');
+      setTemplates(data);
+      // Set default template as selected
+      const defaultTemplate = data.find(t => t.is_default) || data[0];
+      if (defaultTemplate) {
+        setSelectedTemplateId(defaultTemplate.id);
+      }
+    } catch (error) {
+      console.error('Error loading templates:', error);
+    }
+  };
 
   if (!proposal) return null;
 
@@ -50,6 +79,75 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
   const handleEdit = () => {
     onOpenChange(false);
     navigate(`/proposal/${proposal.id}/edit?focus=items`);
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!proposal) return;
+    
+    try {
+      setIsLoading(true);
+      
+      // Get company settings
+      const companySettings = await PdfExportService.getCompanySettings();
+      
+      // Transform proposal to QuoteData format
+      const quoteData = PdfExportService.transformProposalToQuoteData(
+        proposal, 
+        companySettings
+      );
+      
+      // Download PDF
+      await PdfExportService.downloadPdf(quoteData, {
+        templateId: selectedTemplateId,
+        filename: `teklif-${proposal.number || proposal.proposal_number}.pdf`,
+      });
+      
+      toast.success('PDF başarıyla indirildi');
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast.error('PDF indirilemedi: ' + (error as Error).message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUploadToStorage = async () => {
+    if (!proposal) return;
+    
+    try {
+      setIsLoading(true);
+      
+      // Get company settings
+      const companySettings = await PdfExportService.getCompanySettings();
+      
+      // Transform proposal to QuoteData format
+      const quoteData = PdfExportService.transformProposalToQuoteData(
+        proposal, 
+        companySettings
+      );
+      
+      // Upload to storage
+      const result = await PdfExportService.uploadPdfToStorage(quoteData, {
+        templateId: selectedTemplateId,
+        filename: `teklif-${proposal.number || proposal.proposal_number}.pdf`,
+        storagePath: `quotes/teklif-${proposal.number || proposal.proposal_number}.pdf`,
+      });
+      
+      toast.success('PDF başarıyla Storage\'a yüklendi', {
+        action: {
+          label: 'Linkti Kopyala',
+          onClick: () => {
+            navigator.clipboard.writeText(result.url);
+            toast.success('Link kopyalandı');
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error uploading PDF:', error);
+      toast.error('PDF yüklenemedi: ' + (error as Error).message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
 
@@ -71,12 +169,53 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
             <StatusBadge status={proposal.status} size="sm" />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Button onClick={handleEdit} className="w-full">
               <Edit3 className="mr-2 h-4 w-4" />
               Teklifi Düzenle
             </Button>
             
+            {/* Template Selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">
+                PDF Şablonu
+              </label>
+              <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Şablon seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map(template => (
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.name} {template.is_default && '(Varsayılan)'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* PDF Export Actions */}
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleDownloadPdf} 
+                disabled={isLoading || !selectedTemplateId}
+                className="flex-1"
+                variant="outline"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                PDF İndir
+              </Button>
+              
+              <Button 
+                onClick={handleUploadToStorage} 
+                disabled={isLoading || !selectedTemplateId}
+                className="flex-1"
+                variant="outline"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Storage'a Yükle
+              </Button>
+            </div>
 
           </div>
         </SheetHeader>

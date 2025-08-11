@@ -1,6 +1,49 @@
-# Welcome to your GPT Engineer project
+# NGS - İş Yönetim Sistemi
 
-## Project info
+Vite + React + TypeScript + Tailwind + shadcn/ui + Supabase ile geliştirilmiş kapsamlı iş yönetim sistemi.
+
+## PDF Export ve Şablon Sistemi
+
+Bu proje React-PDF tabanlı quote/teklif export sistemi içerir.
+
+### Gerekli Ortam Değişkenleri
+
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### Supabase Kurulumu
+
+1. **Storage Bucket**: `documents` adında public bir bucket oluşturun
+2. **Veritabanı**: `pdf_templates` tablosu otomatik olarak migration ile oluşturulur
+
+### PDF Şablonları
+
+#### İlk Şablon Oluşturma
+
+1. Uygulamaya giriş yapın
+2. **Satış Yönetimi > PDF Şablonları** menüsüne gidin
+3. Şablon düzenleyiciyi kullanarak özelleştirin
+4. "Kaydet" ve "Varsayılan Yap" butonlarını kullanın
+
+#### Şablon Ayarları
+
+- **Sayfa Ayarları**: A4, padding, font boyutu
+- **Header**: Logo, başlık, geçerlilik tarihi
+- **Müşteri Bloğu**: Gösterilecek alanları seçin
+- **Tablo Kolonları**: Her kolonu ayrı ayrı göster/gizle ve etiketleri düzenle
+- **Toplamlar**: Brüt, indirim, vergi, net toplamları göster/gizle
+- **Notlar**: Giriş ve alt notlar
+
+#### Kullanım
+
+1. **Teklifler** sayfasında bir teklif seçin
+2. Sağ panelde **PDF Şablonu** dropdown'undan şablon seçin
+3. **PDF İndir** ile dosyayı indirin
+4. **Storage'a Yükle** ile Supabase storage'a kaydedin
+
+### Project info
 
 **URL**: https://run.gptengineer.app/projects/7e753aa5-e867-4890-ab18-f97d53f001e8/improve
 
