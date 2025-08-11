@@ -149,7 +149,12 @@ export const generateSampleInputs = (schemas: any[]): Record<string, any> => {
           
         // Default olarak field adına uygun örnek
         default:
-          if (key.toLowerCase().includes('name') || key.toLowerCase().includes('isim')) {
+          if (key.toLowerCase().includes('logo')) {
+            // Logo için base64 veya placeholder image
+            sampleInputs[key] = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+          } else if (key.toLowerCase().includes('image') || key.toLowerCase().includes('resim')) {
+            sampleInputs[key] = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+          } else if (key.toLowerCase().includes('name') || key.toLowerCase().includes('isim')) {
             sampleInputs[key] = 'Örnek İsim';
           } else if (key.toLowerCase().includes('amount') || key.toLowerCase().includes('tutar')) {
             sampleInputs[key] = '1,000.00 $';
