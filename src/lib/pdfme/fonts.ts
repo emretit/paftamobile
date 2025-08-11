@@ -1,6 +1,6 @@
 import type { Font } from '@pdfme/common';
 
 export function getDefaultFonts(): Record<string, Font> {
-  // PDFme default fontları; gerekirse ek fontlar buraya eklenebilir
+  // Playground'daki gibi boş font config - PDFme built-in fontları kullanacak
   return {};
 }

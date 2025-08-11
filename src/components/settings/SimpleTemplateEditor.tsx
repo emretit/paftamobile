@@ -65,7 +65,7 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
                 height: 12,
                 fontSize: 16,
                 fontColor: '#000000',
-                fontName: 'NotoSerifJP-Regular',
+                // fontName kaldırıldı - default font kullanılacak
               },
               proposalTitle: {
                 type: 'text',
@@ -74,7 +74,7 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
                 height: 10,
                 fontSize: 14,
                 fontColor: '#666666',
-                fontName: 'NotoSerifJP-Regular',
+                // fontName kaldırıldı - default font kullanılacak
               },
             },
           ],
@@ -112,6 +112,7 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
             select,
             multiVariableText,
             dateTime,
+            // signature geçici olarak kaldırıldı
           } as any,
           options: {
             zoomLevel: 1.0,
@@ -226,77 +227,44 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
     }
   };
 
-  const handlePreview = async () => {
+  const handleGeneratePdf = async () => {
+    console.log('🚀 PDF Generate başlıyor...');
+    console.log('Designer instance:', designerInstance);
+    console.log('IsLoading:', isLoading);
+    
     if (!designerInstance) {
-      toast.error('Editör henüz hazır değil');
+      console.error('❌ Designer instance bulunamadı');
+      toast.error('Editör henüz hazır değil. Lütfen sayfayı yenileyin.');
       return;
     }
 
     try {
+      console.log('📄 Template alınıyor...');
       const template = designerInstance.getTemplate();
-      const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes, line, rectangle, ellipse, table, checkbox, radioGroup, select, multiVariableText, dateTime, signature } = await import('@pdfme/schemas');
-      const { BLANK_PDF } = await import('@pdfme/common');
-
-      const preparedTemplate: any = JSON.parse(JSON.stringify(template));
-      if (preparedTemplate.basePdf === 'BLANK_PDF') {
-        preparedTemplate.basePdf = BLANK_PDF;
+      console.log('Template alındı:', template);
+      
+      if (!template || !template.schemas) {
+        toast.error('Şablon verisi eksik. Lütfen template oluşturun.');
+        return;
       }
 
-      const sampleInputs: Record<string, any> = {};
-      if (Array.isArray(preparedTemplate.schemas) && preparedTemplate.schemas[0]) {
-        Object.entries(preparedTemplate.schemas[0]).forEach(([field, cfg]: any) => {
-          const type = cfg?.type || 'text';
-          const fieldKey = String(field);
-          if (type === 'table') {
-            sampleInputs[fieldKey] = [['Ürün', 'Miktar', 'Birim', 'Toplam'], ['Hizmet', '1', '1000', '1000']];
-          } else if (type === 'image' || fieldKey.toLowerCase().includes('logo')) {
-            sampleInputs[fieldKey] = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-          } else if (type === 'checkbox') {
-            sampleInputs[fieldKey] = true;
-          } else {
-            sampleInputs[fieldKey] = defaultSampleFor(fieldKey);
-          }
-        });
+      const { generateAndDownloadPdf, generateSampleData } = await import('@/lib/pdf-utils');
+
+      console.log('🔄 Örnek veriler oluşturuluyor...');
+      const sampleInputs = generateSampleData(template);
+      console.log('Örnek veriler:', sampleInputs);
+
+      console.log('📑 PDF oluşturuluyor...');
+      const success = await generateAndDownloadPdf(template, sampleInputs, templateName || 'sablon');
+      
+      if (success) {
+        console.log('✅ PDF başarıyla oluşturuldu');
+        onPreview?.(template);
       }
-
-      const pdf = await generate({
-        template: preparedTemplate,
-        inputs: [sampleInputs],
-        plugins: {
-          text,
-          image,
-          qrcode: barcodes.qrcode,
-          ean13: barcodes.ean13,
-          japanpost: barcodes.japanpost,
-          line,
-          rectangle,
-          ellipse,
-          table,
-          checkbox,
-          radioGroup,
-          select,
-          multiVariableText,
-          dateTime,
-          signature,
-        },
-      });
-
-      const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const win = window.open(url, '_blank');
-      if (!win) {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${templateName || 'onizleme'}.pdf`;
-        a.click();
-      }
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
-
-      onPreview?.(template);
     } catch (error: any) {
-      console.error('❌ Preview hatası:', error);
-      toast.error(`Önizleme oluşturulamadı: ${error?.message || 'Bilinmeyen hata'}`);
+      console.error('❌ PDF Generate hatası:', error);
+      console.error('Error stack:', error.stack);
+      toast.error(`PDF oluşturulamadı: ${error?.message || 'Bilinmeyen hata'}`);
     }
   };
 
@@ -332,6 +300,22 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
             <Button onClick={handleSave} disabled={isLoading}>
               💾 Kaydet
             </Button>
+            <Button 
+              onClick={(e) => {
+                e.preventDefault();
+                console.log('PDF Oluştur butonu tıklandı!');
+                handleGeneratePdf();
+              }}
+              disabled={isLoading || !designerInstance} 
+              variant="outline"
+              className="bg-blue-50 hover:bg-blue-100"
+            >
+              📄 PDF Oluştur
+            </Button>
+            {/* Debug bilgiler */}
+            <div className="text-xs text-gray-500 ml-2 self-center">
+              {isLoading ? 'Yükleniyor...' : !designerInstance ? 'Editör hazır değil' : 'Hazır'}
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -5,13 +5,13 @@ import { Download, FileText } from 'lucide-react';
 
 interface PdfDownloadDropdownProps {
   onDownloadPdf?: () => void;
-  onPreviewPdf?: () => void;
+  onGeneratePdf?: () => void;
   disabled?: boolean;
 }
 
 export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
   onDownloadPdf,
-  onPreviewPdf,
+  onGeneratePdf,
   disabled = false
 }) => {
   return (
@@ -23,9 +23,9 @@ export const PdfDownloadDropdown: React.FC<PdfDownloadDropdownProps> = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={onPreviewPdf} disabled={disabled}>
+        <DropdownMenuItem onClick={onGeneratePdf} disabled={disabled}>
           <FileText className="h-4 w-4 mr-2" />
-          Önizle
+          PDF Oluştur
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onDownloadPdf} disabled={disabled}>
           <Download className="h-4 w-4 mr-2" />

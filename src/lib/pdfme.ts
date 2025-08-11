@@ -45,15 +45,20 @@ export async function generatePdf(template: any, inputs?: Record<string, any>) {
       select,
       multiVariableText,
       dateTime,
+      // signature geçici olarak kaldırıldı
     },
   });
 
   const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
-  const win = window.open(url, '_blank');
-  if (!win) {
-    // sadece popup uyarısı, indirme yapılmayacak
-    // uyarı üst katmandan veriliyor (toast)
-  }
+  
+  // Direkt indirme yap
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'teklif.pdf';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }

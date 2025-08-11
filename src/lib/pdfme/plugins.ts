@@ -1,7 +1,7 @@
 import type { Schema } from '@pdfme/common';
 
 export async function getPdfmePlugins() {
-  const { text, image, barcodes, line, rectangle, ellipse, table, checkbox, radioGroup, select, multiVariableText, dateTime, signature } = await import('@pdfme/schemas');
+  const { text, image, barcodes, line, rectangle, ellipse, table, checkbox, radioGroup, select, multiVariableText, dateTime } = await import('@pdfme/schemas');
   return {
     text,
     image,
@@ -17,6 +17,6 @@ export async function getPdfmePlugins() {
     select,
     multiVariableText,
     dateTime,
-    signature,
+    // signature geçici olarak devre dışı
   } as Record<string, Schema>;
 }

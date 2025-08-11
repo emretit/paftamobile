@@ -110,21 +110,27 @@ export const TemplateManagement: React.FC = () => {
     }
   };
 
-  const handlePreviewTemplate = async (template: Template) => {
+  const handleGenerateTemplatePdf = async (template: Template) => {
+    console.log('🚀 Template PDF Generate başlıyor...');
+    console.log('Template:', template);
+    
     try {
-      const { generatePdfWithPdfme } = await import('@/lib/pdfme');
-      const pdf = await generatePdfWithPdfme(template.template_json as any);
-      const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const win = window.open(url, '_blank');
-      if (!win) {
-        // İndirme fallbackı kaldırıldı: yalnızca yeni sekme
-        toast.error('Popup engellendi. Lütfen bu site için pop-up iznine izin verin.');
-      }
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      const { generateAndDownloadPdf, generateSampleData } = await import('@/lib/pdf-utils');
+      
+      console.log('Template JSON:', template.template_json);
+      
+      // Örnek veriler oluştur
+      const sampleInputs = generateSampleData(template.template_json);
+      console.log('Sample inputs:', sampleInputs);
+      
+      // PDF oluştur ve indir
+      console.log('PDF oluşturuluyor...');
+      await generateAndDownloadPdf(template.template_json, sampleInputs, template.name);
+      console.log('✅ PDF başarıyla oluşturuldu');
     } catch (error: any) {
-      console.error('❌ Template Preview hatası:', error);
-      toast.error(`Önizleme oluşturulamadı: ${error?.message || 'Bilinmeyen hata'}`);
+      console.error('❌ Template PDF Generate hatası:', error);
+      console.error('Error stack:', error.stack);
+      toast.error(`PDF oluşturulamadı: ${error?.message || 'Bilinmeyen hata'}`);
     }
   };
 
@@ -213,6 +219,16 @@ export const TemplateManagement: React.FC = () => {
               <Button onClick={() => { setEditingTemplate(null); setActiveTab('editor'); }}>
                 + Yeni Şablon
               </Button>
+              <Button 
+                onClick={() => {
+                  console.log('Test butonu tıklandı');
+                  toast.success('Test başarılı!');
+                }} 
+                variant="outline"
+                className="bg-green-50"
+              >
+                🧪 Test
+              </Button>
             </div>
           </div>
 
@@ -248,11 +264,11 @@ export const TemplateManagement: React.FC = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handlePreviewTemplate(template)}
+                      onClick={() => handleGenerateTemplatePdf(template)}
                       className="flex-1"
                     >
-                      <Eye size={14} className="mr-1" />
-                      Önizle
+                      <FileText size={14} className="mr-1" />
+                      PDF Oluştur
                     </Button>
                     <Button
                       size="sm"
