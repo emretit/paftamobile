@@ -28,9 +28,11 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
 
         if (!designerRef.current) return;
 
-        // Basit template tanımı
+        // Boş PDF template'i oluşturalım
+        const { BlankPdf } = await import('@pdfme/common');
+        
         const template = {
-          basePdf: '', // Boş sayfa
+          basePdf: BlankPdf, // PDFme'nin kendi blank PDF'i
           schemas: [
             {
               "companyName": {
