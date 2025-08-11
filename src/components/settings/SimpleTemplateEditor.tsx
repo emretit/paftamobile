@@ -332,9 +332,6 @@ export const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
             <Button onClick={handleSave} disabled={isLoading}>
               💾 Kaydet
             </Button>
-            <Button variant="outline" onClick={handlePreview} disabled={isLoading}>
-              👁️ Önizle
-            </Button>
           </div>
         </CardContent>
       </Card>

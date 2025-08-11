@@ -112,62 +112,8 @@ export const TemplateManagement: React.FC = () => {
 
   const handlePreviewTemplate = async (template: Template) => {
     try {
-      const { generate } = await import('@pdfme/generator');
-      const { text, image, barcodes, line, rectangle, ellipse, table, checkbox, radioGroup, select, multiVariableText, dateTime, signature } = await import('@pdfme/schemas');
-      const { BLANK_PDF } = await import('@pdfme/common');
-
-      const prepared: any = JSON.parse(JSON.stringify(template.template_json || {}));
-      if (prepared.basePdf === 'BLANK_PDF') prepared.basePdf = BLANK_PDF;
-
-      const sampleInputs: Record<string, any> = {};
-      if (Array.isArray(prepared.schemas) && prepared.schemas[0]) {
-        Object.entries(prepared.schemas[0]).forEach(([field, cfg]: any) => {
-          const type = cfg?.type || 'text';
-          const key = String(field);
-          if (type === 'table') {
-            sampleInputs[key] = [['Kalem', 'Miktar', 'Birim', 'Toplam'], ['Ürün', '1', '1000', '1000']];
-          } else if (type === 'image' || key.toLowerCase().includes('logo')) {
-            sampleInputs[key] = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-          } else if (type === 'checkbox') {
-            sampleInputs[key] = true;
-          } else {
-            sampleInputs[key] = defaultSampleFor(key);
-          }
-        });
-      }
-
-      const pdf = await generate({
-        template: prepared,
-        inputs: [sampleInputs],
-        plugins: {
-          text,
-          image,
-          qrcode: barcodes.qrcode,
-          ean13: barcodes.ean13,
-          japanpost: barcodes.japanpost,
-          line,
-          rectangle,
-          ellipse,
-          table,
-          checkbox,
-          radioGroup,
-          select,
-          multiVariableText,
-          dateTime,
-          signature,
-        },
-      });
-
-      const blob = new Blob([pdf.buffer], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const win = window.open(url, '_blank');
-      if (!win) {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${template.name}-onizleme.pdf`;
-        a.click();
-      }
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      const { generatePdf } = await import('@/lib/pdfme');
+      await generatePdf(template.template_json);
     } catch (error: any) {
       console.error('❌ Template Preview hatası:', error);
       toast.error(`Önizleme oluşturulamadı: ${error?.message || 'Bilinmeyen hata'}`);
