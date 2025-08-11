@@ -398,11 +398,11 @@ export const DragDropPDFEditor: React.FC<DragDropPDFEditorProps> = ({
               },
               ui: {
                 sidebar: {
-                  width: 280
-                },
-                fieldListPanel: {
                   enabled: true,
-                  width: 300
+                  width: 60
+                },
+                toolbar: {
+                  enabled: true
                 }
               }
             }
