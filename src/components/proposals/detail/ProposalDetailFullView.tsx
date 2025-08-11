@@ -16,7 +16,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { ProposalItemsTab } from "./ProposalItemsTab";
 import ProposalAttachments from "@/components/proposals/form/ProposalAttachments";
-import { PdfDownloadDropdown } from "../PdfDownloadDropdown";
+
 import { toast } from "sonner";
 
 interface ProposalDetailFullViewProps {
@@ -93,14 +93,7 @@ const ProposalDetailFullView = ({
     }
   };
 
-  // PDF Export fonksiyonları
-  const handleDownloadTablePdf = async () => {
-    toast.info("PDF export özelliği yeniden tasarlanıyor!");
-  };
 
-  const handlePreviewTablePdf = async () => {
-    toast.info("PDF export özelliği yeniden tasarlanıyor!");
-  };
 
   return (
     <Card className="h-full">
@@ -114,11 +107,7 @@ const ProposalDetailFullView = ({
                 {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
               </Button>
             )}
-            <PdfDownloadDropdown
-              onDownloadTablePdf={handleDownloadTablePdf}
-              onGenerateTablePdf={handlePreviewTablePdf}
-              disabled={false}
-            />
+
           </div>
         </div>
       </CardHeader>

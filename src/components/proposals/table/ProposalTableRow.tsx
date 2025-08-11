@@ -4,7 +4,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Proposal, ProposalStatus } from "@/types/proposal";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Eye, PenLine, MoreHorizontal, Trash2, FileText } from "lucide-react";
+import { Eye, PenLine, MoreHorizontal, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProposalStatusCell } from "./ProposalStatusCell";
@@ -13,7 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useProposalCalculations } from "@/hooks/proposals/useProposalCalculations";
 import { formatProposalAmount } from "@/services/workflow/proposalWorkflow";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 // import { ProposalPdfExporter } from "../ProposalPdfExporter";
 
 
@@ -37,7 +37,7 @@ export const ProposalTableRow = ({
   const navigate = useNavigate();
   const { calculateTotals } = useProposalCalculations();
   const { toast } = useToast();
-  const [showPdfExporter, setShowPdfExporter] = useState(false);
+
   
   // Use the stored total_amount from database (calculated and saved correctly)
   const getGrandTotal = () => {
@@ -158,16 +158,7 @@ export const ProposalTableRow = ({
                 <PenLine className="h-4 w-4 mr-2" />
                 Düzenle
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // PDF export component'ini modal olarak aç
-                  setShowPdfExporter(true);
-                }}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                PDF Yazdır
-              </DropdownMenuItem>
+
               <DropdownMenuItem 
                 onClick={() => {
                   const newStatus: ProposalStatus = proposal.status === 'draft' ? 'sent' : 'draft';
@@ -188,18 +179,7 @@ export const ProposalTableRow = ({
         </div>
       </TableCell>
       
-      {/* PDF Export Modal - Yeniden tasarlanıyor */}
-      <Dialog open={showPdfExporter} onOpenChange={setShowPdfExporter}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>PDF Export - {proposal.number}</DialogTitle>
-          </DialogHeader>
-          <div className="p-8 text-center">
-            <p>PDF export sistemi yeniden tasarlanıyor.</p>
-            <p>Yakında yeni sistem ile tekrar kullanılabilir olacak.</p>
-          </div>
-        </DialogContent>
-      </Dialog>
+
     </TableRow>
   );
 };

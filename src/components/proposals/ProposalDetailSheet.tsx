@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Proposal } from "@/types/proposal";
 import StatusBadge from "./detail/StatusBadge";
-import { PdfDownloadDropdown } from "./PdfDownloadDropdown";
+
 import { 
   Edit3,
   FileText,
@@ -52,14 +52,7 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
     navigate(`/proposal/${proposal.id}/edit?focus=items`);
   };
 
-  // PDF Export fonksiyonları
-  const handleDownloadTablePdf = async () => {
-    toast.info("PDF export özelliği yeniden tasarlanıyor!");
-  };
 
-  const handlePreviewTablePdf = async () => {
-    toast.info("PDF export özelliği yeniden tasarlanıyor!");
-  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -84,11 +77,7 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
               Teklifi Düzenle
             </Button>
             
-            <PdfDownloadDropdown
-              onDownloadTablePdf={handleDownloadTablePdf}
-              onGenerateTablePdf={handlePreviewTablePdf}
-              disabled={false}
-            />
+
           </div>
         </SheetHeader>
 
