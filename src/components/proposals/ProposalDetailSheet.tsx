@@ -11,7 +11,6 @@ import { Separator } from "@/components/ui/separator";
 import { Proposal } from "@/types/proposal";
 import StatusBadge from "./detail/StatusBadge";
 import { PdfDownloadDropdown } from "./PdfDownloadDropdown";
-import { downloadProposalTablePdf } from "@/services/pdf/proposalTablePdfService";
 import { 
   Edit3,
   FileText,
@@ -55,18 +54,11 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
 
   // PDF Export fonksiyonları
   const handleDownloadTablePdf = async () => {
-    try {
-      toast.loading("Detaylı tablo PDF hazırlanıyor...");
-      await downloadProposalTablePdf(proposal);
-      toast.success("Detaylı tablo PDF başarıyla indirildi!");
-    } catch (error) {
-      console.error('Tablo PDF indirme hatası:', error);
-      toast.error("Tablo PDF indirme başarısız!");
-    }
+    toast.info("PDF export özelliği yeniden tasarlanıyor!");
   };
 
   const handlePreviewTablePdf = async () => {
-    toast.info("Detaylı tablo PDF önizleme özelliği yakında!");
+    toast.info("PDF export özelliği yeniden tasarlanıyor!");
   };
 
   return (

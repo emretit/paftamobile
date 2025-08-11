@@ -234,20 +234,18 @@ export const STANDARD_FIELD_MAPPING: Record<keyof StandardProposalFields, {
     formatter: (value) => value || 'TRY'
   },
 
-  // 6. ÜRÜN/HİZMET BİLGİLERİ - pdfme table schema için dinamik veri
+  // 6. ÜRÜN/HİZMET BİLGİLERİ - Basit tablo verisi
   itemsTable: {
     templateKeys: ['itemsTable', 'items_table', 'urunTablo', 'kalemler', 'items', 'products', 'orders'],
     dataPath: 'items',
     formatter: (value, proposal) => {
       const items = proposal?.items || [];
       
-      // Her teklif için dinamik satır sayısı - pdfme table schema'sı için
+      // Her teklif için dinamik satır sayısı
       if (items.length === 0) {
-        // Boş teklif için sadece header
         return [['Ürün/Hizmet', 'Açıklama', 'Miktar', 'Birim', 'Birim Fiyat', 'KDV %', 'Toplam']];
       }
       
-      // Header satırı dahil değil - pdfme table head ayrı tanımlanıyor
       const tableData: string[][] = [];
       
       items.forEach(item => {
@@ -262,7 +260,6 @@ export const STANDARD_FIELD_MAPPING: Record<keyof StandardProposalFields, {
         ]);
       });
       
-      // pdfme table schema için 2D array döndür
       return tableData;
     }
   },
@@ -308,8 +305,7 @@ export const STANDARD_FIELD_MAPPING: Record<keyof StandardProposalFields, {
 };
 
 /**
- * Proposal verilerini PDFme template input formatına dönüştürür
- * PDFme'de field mapping: template.schemas[0][field].name = inputs[field]
+ * Proposal verilerini basit template input formatına dönüştürür
  */
 export function mapProposalToTemplateInputs(
   proposal: Proposal,
@@ -324,13 +320,13 @@ export function mapProposalToTemplateInputs(
     isFirstItemArray: Array.isArray(templateSchema?.schemas?.[0])
   });
   
-  // PDFme template yapısını kontrol et
+  // Template yapısını kontrol et
   if (!templateSchema?.schemas?.[0]) {
     console.warn('Template schemas bulunamadı:', templateSchema);
     return inputs;
   }
   
-  // PDFme schemas double array yapısını kontrol et
+  // Template fields'ı al
   let templateFields = templateSchema.schemas[0];
   
   // Eğer schemas[0] array ise, ilk elemanı al (nested array durumu)
@@ -347,7 +343,6 @@ export function mapProposalToTemplateInputs(
   
   // Template'teki her field için uygun veriyi bul
   Object.keys(templateFields).forEach(fieldKey => {
-    // PDFme'de field.name input key'i olarak kullanılır
     const fieldConfig = templateFields[fieldKey];
     const fieldName = fieldConfig.name || fieldKey; // name yoksa key'i kullan
     
@@ -418,7 +413,7 @@ function getNestedValue(obj: any, path: string): any {
 }
 
 /**
- * PDFme template field'larını doğrular
+ * Template field'larını doğrular
  */
 export function validateTemplateFields(templateSchema: any): {
   valid: boolean;
@@ -435,13 +430,13 @@ export function validateTemplateFields(templateSchema: any): {
     return {
       valid: false,
       missingFields: ['Template schemas bulunamadı'],
-      recommendations: ['PDFme template yapısını kontrol edin - schemas[0] gerekli'],
+      recommendations: ['Template yapısını kontrol edin - schemas[0] gerekli'],
       templateFields: [],
       matchedFields: []
     };
   }
   
-  // PDFme template field'larını al
+  // Template field'larını al
   const templateFields = templateSchema.schemas[0];
   const templateFieldKeys = Object.keys(templateFields);
   
@@ -486,7 +481,7 @@ export function validateTemplateFields(templateSchema: any): {
   // İyi örnekler ver
   if (recommendations.length > 0) {
     recommendations.push('');
-    recommendations.push('PDFme Template Örneği:');
+    recommendations.push('Template Örneği:');
     recommendations.push('{');
     recommendations.push('  "schemas": [');
     recommendations.push('    [');

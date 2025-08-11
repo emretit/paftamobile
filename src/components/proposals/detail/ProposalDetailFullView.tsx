@@ -17,7 +17,6 @@ import { tr } from "date-fns/locale";
 import { ProposalItemsTab } from "./ProposalItemsTab";
 import ProposalAttachments from "@/components/proposals/form/ProposalAttachments";
 import { PdfDownloadDropdown } from "../PdfDownloadDropdown";
-import { downloadProposalTablePdf } from "@/services/pdf/proposalTablePdfService";
 import { toast } from "sonner";
 
 interface ProposalDetailFullViewProps {
@@ -96,18 +95,11 @@ const ProposalDetailFullView = ({
 
   // PDF Export fonksiyonları
   const handleDownloadTablePdf = async () => {
-    try {
-      toast.loading("Detaylı tablo PDF hazırlanıyor...");
-      await downloadProposalTablePdf(proposal);
-      toast.success("Detaylı tablo PDF başarıyla indirildi!");
-    } catch (error) {
-      console.error('Tablo PDF indirme hatası:', error);
-      toast.error("Tablo PDF indirme başarısız!");
-    }
+    toast.info("PDF export özelliği yeniden tasarlanıyor!");
   };
 
   const handlePreviewTablePdf = async () => {
-    toast.info("Detaylı tablo PDF önizleme özelliği yakında!");
+    toast.info("PDF export özelliği yeniden tasarlanıyor!");
   };
 
   return (

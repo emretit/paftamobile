@@ -188,15 +188,15 @@ export const ProposalTableRow = ({
         </div>
       </TableCell>
       
-      {/* PDF Export Modal - Temporarily disabled */}
+      {/* PDF Export Modal - Yeniden tasarlanıyor */}
       <Dialog open={showPdfExporter} onOpenChange={setShowPdfExporter}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>PDF Export - {proposal.number}</DialogTitle>
           </DialogHeader>
           <div className="p-8 text-center">
-            <p>PDF export is being migrated to the new template system.</p>
-            <p>Please use the Templates page to create and manage PDF templates.</p>
+            <p>PDF export sistemi yeniden tasarlanıyor.</p>
+            <p>Yakında yeni sistem ile tekrar kullanılabilir olacak.</p>
           </div>
         </DialogContent>
       </Dialog>
