@@ -51,11 +51,6 @@ export const navItems = [
         label: "Teklifler",
       },
       {
-        path: "/templates/pdf-editor",
-        icon: FileEdit,
-        label: "PDF Şablonları",
-      },
-      {
         path: "/orders/list",
         icon: ShoppingCart,
         label: "Siparişler",

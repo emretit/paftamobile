@@ -12,6 +12,7 @@ import { RoleManagement } from "@/components/settings/RoleManagement";
 import { SystemSettings } from "@/components/settings/SystemSettings";
 import { NilveraSettings } from "@/components/settings/NilveraSettings";
 import { TemplateManagement } from "@/components/settings/TemplateManagement";
+import { PdfTemplateEditor } from "@/pages/templates/PdfTemplateEditor";
 
 
 interface SettingsProps {
@@ -20,7 +21,7 @@ interface SettingsProps {
 }
 
 const Settings = ({ isCollapsed, setIsCollapsed }: SettingsProps) => {
-  const [activeTab, setActiveTab] = useState("users");
+  const [activeTab, setActiveTab] = useState("pdf-templates");
   
   console.log("Settings page loaded successfully");
 
@@ -32,11 +33,12 @@ const Settings = ({ isCollapsed, setIsCollapsed }: SettingsProps) => {
           <h1 className="text-2xl font-bold mb-6">Ayarlar & Yönetim</h1>
           
           <CustomTabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <CustomTabsList className="w-full grid grid-cols-4">
+            <CustomTabsList className="w-full grid grid-cols-5">
               <CustomTabsTrigger value="users">Kullanıcılar</CustomTabsTrigger>
               <CustomTabsTrigger value="roles">Roller & İzinler</CustomTabsTrigger>
               <CustomTabsTrigger value="nilvera">Nilvera E-Fatura</CustomTabsTrigger>
               <CustomTabsTrigger value="system">Sistem Ayarları</CustomTabsTrigger>
+              <CustomTabsTrigger value="pdf-templates">PDF Şablonları</CustomTabsTrigger>
             </CustomTabsList>
 
             <CustomTabsContent value="users">
@@ -57,6 +59,10 @@ const Settings = ({ isCollapsed, setIsCollapsed }: SettingsProps) => {
 
             <CustomTabsContent value="system">
               <SystemSettings />
+            </CustomTabsContent>
+
+            <CustomTabsContent value="pdf-templates">
+              <PdfTemplateEditor />
             </CustomTabsContent>
           </CustomTabs>
         </div>
