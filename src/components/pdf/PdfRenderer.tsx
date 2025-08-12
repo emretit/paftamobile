@@ -171,6 +171,15 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
       color: '#9CA3AF',
       textAlign: 'center',
     },
+    customField: {
+      marginVertical: 8,
+      paddingHorizontal: 0,
+    },
+    customFieldText: {
+      fontSize: 12,
+      color: '#000',
+      lineHeight: 1.4,
+    },
   });
 
   const formatCurrency = (amount: number, currency: string = 'TRY') => {
@@ -211,7 +220,8 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
       name: customer.name,
       company: customer.company,
       email: customer.email,
-      phone: customer.mobile_phone || customer.office_phone,
+      mobile_phone: customer.mobile_phone,
+      office_phone: customer.office_phone,
       address: customer.address,
       tax_number: customer.tax_number,
       tax_office: customer.tax_office,
@@ -224,7 +234,8 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
       name: 'Ad Soyad',
       company: 'Şirket',
       email: 'E-posta',
-      phone: 'Telefon',
+      mobile_phone: 'Cep Telefonu',
+      office_phone: 'Sabit Telefon',
       address: 'Adres',
       tax_number: 'Vergi No',
       tax_office: 'Vergi Dairesi',
@@ -243,13 +254,13 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            {schema.header.showLogo && data.company?.logo_url && (
-              <Image style={styles.logo} src={data.company.logo_url} />
+            {schema.header.showLogo && ((schema.header as any).logoUrl || data.company?.logo_url) && (
+              <Image style={styles.logo} src={(schema.header as any).logoUrl || data.company?.logo_url} />
             )}
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <Text style={styles.title}>{safeText(schema.header.title)}</Text>
-            <Text style={styles.subtitle}>#{safeText(data.number)}</Text>
+            <Text style={styles.subtitle}>#{safeText(data.number || '')}</Text>
             {schema.header.showValidity && data.valid_until && (
               <Text style={styles.subtitle}>
                 {safeText(`Geçerlilik: ${formatDate(data.valid_until)}`)}
@@ -257,6 +268,22 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
             )}
           </View>
         </View>
+
+        {/* Custom Header Fields */}
+        {(schema.notes as any).customFields?.filter((field: any) => field.position === 'header').map((field: any) => (
+          <View key={field.id} style={[styles.customField, { textAlign: field.style?.align || 'left' }]}>
+            <Text style={[
+              styles.customFieldText,
+              {
+                fontSize: field.style?.fontSize || 12,
+                fontWeight: field.style?.bold ? 'bold' : 'normal',
+                color: field.style?.color || '#000000',
+              }
+            ]}>
+              {safeText(field.text)}
+            </Text>
+          </View>
+        ))}
 
         {/* Customer Information */}
         {schema.customerBlock.show && data.customer && (
@@ -267,6 +294,22 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
             )}
           </View>
         )}
+
+        {/* Custom Before-Table Fields */}
+        {(schema.notes as any).customFields?.filter((field: any) => field.position === 'before-table').map((field: any) => (
+          <View key={field.id} style={[styles.customField, { textAlign: field.style?.align || 'left' }]}>
+            <Text style={[
+              styles.customFieldText,
+              {
+                fontSize: field.style?.fontSize || 12,
+                fontWeight: field.style?.bold ? 'bold' : 'normal',
+                color: field.style?.color || '#000000',
+              }
+            ]}>
+              {safeText(field.text)}
+            </Text>
+          </View>
+        ))}
 
         {/* Items Table */}
         <View style={styles.table}>
@@ -343,6 +386,22 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
           )}
         </View>
 
+        {/* Custom After-Table Fields */}
+        {(schema.notes as any).customFields?.filter((field: any) => field.position === 'after-table').map((field: any) => (
+          <View key={field.id} style={[styles.customField, { textAlign: field.style?.align || 'left' }]}>
+            <Text style={[
+              styles.customFieldText,
+              {
+                fontSize: field.style?.fontSize || 12,
+                fontWeight: field.style?.bold ? 'bold' : 'normal',
+                color: field.style?.color || '#000000',
+              }
+            ]}>
+              {safeText(field.text)}
+            </Text>
+          </View>
+        ))}
+
         {/* Notes */}
         <View style={styles.notesSection}>
           {schema.notes.intro && (
@@ -368,6 +427,22 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
             <Text>{safeText(schema.notes.footer)}</Text>
           </View>
         )}
+
+        {/* Custom Footer Fields */}
+        {(schema.notes as any).customFields?.filter((field: any) => field.position === 'footer').map((field: any) => (
+          <View key={field.id} style={[styles.footer, { textAlign: field.style?.align || 'left' }]}>
+            <Text style={[
+              styles.notesText,
+              {
+                fontSize: field.style?.fontSize || 12,
+                fontWeight: field.style?.bold ? 'bold' : 'normal',
+                color: field.style?.color || '#000000',
+              }
+            ]}>
+              {safeText(field.text)}
+            </Text>
+          </View>
+        ))}
       </Page>
     </Document>
   );

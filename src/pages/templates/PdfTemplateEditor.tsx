@@ -13,9 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { PDFViewer } from '@react-pdf/renderer';
 import { Download, Upload, Save, Star, Eye, EyeOff } from 'lucide-react';
-import { TemplateSchema, PdfTemplate, QuoteData } from '@/types/pdf-template';
+import { TemplateSchema, PdfTemplate, QuoteData, CustomTextField } from '@/types/pdf-template';
 import PdfRenderer from '@/components/pdf/PdfRenderer';
 import { PdfExportService } from '@/services/pdf/pdfExportService';
+import { LogoUploadField } from '@/components/templates/LogoUploadField';
+import { CustomTextFields } from '@/components/templates/CustomTextFields';
 import { toast } from 'sonner';
 
 const PdfTemplateEditor: React.FC = () => {
@@ -39,6 +41,7 @@ const PdfTemplateEditor: React.FC = () => {
       header: z.object({
         title: z.string().min(1),
         showLogo: z.boolean(),
+        logoUrl: z.string().optional(),
         showValidity: z.boolean(),
       }),
       customerBlock: z.object({
@@ -62,6 +65,18 @@ const PdfTemplateEditor: React.FC = () => {
       notes: z.object({
         intro: z.string(),
         footer: z.string(),
+        customFields: z.array(z.object({
+          id: z.string(),
+          label: z.string(),
+          text: z.string(),
+          position: z.enum(['header', 'footer', 'before-table', 'after-table']),
+          style: z.object({
+            fontSize: z.number().optional(),
+            align: z.enum(['left', 'center', 'right']).optional(),
+            bold: z.boolean().optional(),
+            color: z.string().optional(),
+          }).optional(),
+        })).optional(),
       }),
     })),
     defaultValues: {
@@ -73,11 +88,12 @@ const PdfTemplateEditor: React.FC = () => {
       header: {
         title: 'TEKLİF',
         showLogo: true,
+        logoUrl: undefined,
         showValidity: true,
       },
       customerBlock: {
         show: true,
-        fields: ['name', 'company', 'email', 'phone', 'address'],
+        fields: ['name', 'company', 'email', 'mobile_phone', 'address'],
       },
       lineTable: {
         columns: [
@@ -96,6 +112,7 @@ const PdfTemplateEditor: React.FC = () => {
       notes: {
         intro: 'Bu teklif 30 gün geçerlidir.',
         footer: 'İyi çalışmalar dileriz.',
+        customFields: [],
       },
     },
   });
@@ -134,12 +151,12 @@ const PdfTemplateEditor: React.FC = () => {
           name: 'Örnek Müşteri',
           company: 'Örnek Şirket A.Ş.',
           email: 'info@ornek.com',
-          phone: '+90 212 555 0123',
+          mobile_phone: '+90 212 555 0123',
           address: 'İstanbul, Türkiye',
         },
         items: [
           {
-            id: 1,
+            id: '1',
             description: 'Ürün/Hizmet 1',
             quantity: 2,
             unit: 'adet',
@@ -147,7 +164,7 @@ const PdfTemplateEditor: React.FC = () => {
             total: 200.00,
           },
           {
-            id: 2,
+            id: '2',
             description: 'Ürün/Hizmet 2',
             quantity: 1,
             unit: 'paket',
@@ -164,6 +181,8 @@ const PdfTemplateEditor: React.FC = () => {
         payment_terms: '30 gün vadeli',
         delivery_terms: '1 hafta içinde',
         warranty_terms: '1 yıl garanti',
+        id: 'sample-1',
+        created_at: new Date().toISOString(),
       };
       setPreviewData(sampleData);
     } catch (error) {
@@ -177,9 +196,13 @@ const PdfTemplateEditor: React.FC = () => {
     setIsLoading(true);
     try {
       const updatedTemplate: Omit<PdfTemplate, 'id' | 'created_at' | 'updated_at'> = {
-        ...selectedTemplate,
+        name: selectedTemplate.name,
+        type: selectedTemplate.type,
+        locale: selectedTemplate.locale,
         schema_json: data,
         version: selectedTemplate.version + 1,
+        is_default: selectedTemplate.is_default,
+        created_by: selectedTemplate.created_by,
       };
       
       await PdfExportService.saveTemplate(updatedTemplate);
@@ -214,7 +237,7 @@ const PdfTemplateEditor: React.FC = () => {
     
     setIsLoading(true);
     try {
-      await PdfExportService.downloadPdf(previewData, { template: selectedTemplate });
+      await PdfExportService.downloadPdf(previewData, { templateId: selectedTemplate.id });
       toast.success('PDF başarıyla indirildi');
     } catch (error) {
       console.error('Error downloading PDF:', error);
@@ -229,9 +252,10 @@ const PdfTemplateEditor: React.FC = () => {
     
     setIsLoading(true);
     try {
-      const pdfBlob = await PdfExportService.generatePdf(previewData, selectedTemplate);
-      const filename = `quotes/${previewData.number}.pdf`;
-      const url = await PdfExportService.uploadPdfToStorage(pdfBlob, filename);
+      const url = await PdfExportService.uploadPdfToStorage(previewData, { 
+        templateId: selectedTemplate.id, 
+        filename: `quotes/${previewData.number}.pdf` 
+      });
       toast.success('PDF başarıyla yüklendi');
       console.log('PDF URL:', url);
     } catch (error) {
@@ -384,6 +408,13 @@ const PdfTemplateEditor: React.FC = () => {
                         <Label htmlFor="show-logo">Logo Göster</Label>
                       </div>
                       
+                      {watchedValues.header?.showLogo && (
+                        <LogoUploadField
+                          logoUrl={watchedValues.header?.logoUrl}
+                          onLogoChange={(url) => form.setValue('header.logoUrl', url || undefined)}
+                        />
+                      )}
+                      
                       <div className="flex items-center space-x-2">
                         <Switch
                           id="show-validity"
@@ -413,15 +444,15 @@ const PdfTemplateEditor: React.FC = () => {
                       {watchedValues.customerBlock?.show && (
                         <div className="space-y-2">
                           <Label>Gösterilecek Alanlar</Label>
-                          {['name', 'company', 'email', 'phone', 'address'].map((field) => (
+                          {['name', 'company', 'email', 'mobile_phone', 'office_phone', 'address'].map((field) => (
                             <div key={field} className="flex items-center space-x-2">
                               <Switch
                                 id={`show-${field}`}
-                                checked={watchedValues.customerBlock?.fields?.includes(field)}
+                                checked={watchedValues.customerBlock?.fields?.includes(field as any)}
                                 onCheckedChange={(checked) => {
                                   const currentFields = watchedValues.customerBlock?.fields || [];
                                   if (checked) {
-                                    form.setValue('customerBlock.fields', [...currentFields, field]);
+                                    form.setValue('customerBlock.fields', [...currentFields, field as any]);
                                   } else {
                                     form.setValue('customerBlock.fields', currentFields.filter(f => f !== field));
                                   }
@@ -431,7 +462,8 @@ const PdfTemplateEditor: React.FC = () => {
                                 {field === 'name' ? 'Ad Soyad' : 
                                  field === 'company' ? 'Şirket' : 
                                  field === 'email' ? 'E-posta' : 
-                                 field === 'phone' ? 'Telefon' : 'Adres'}
+                                 field === 'mobile_phone' ? 'Cep Telefonu' :
+                                 field === 'office_phone' ? 'Sabit Telefon' : 'Adres'}
                               </Label>
                             </div>
                           ))}
@@ -563,6 +595,13 @@ const PdfTemplateEditor: React.FC = () => {
                       <div>
                         <Label>Alt Bilgi</Label>
                         <Textarea {...form.register('notes.footer')} rows={3} />
+                      </div>
+                      
+                      <div className="border-t pt-4">
+                        <CustomTextFields
+                          fields={watchedValues.notes?.customFields || []}
+                          onFieldsChange={(fields) => form.setValue('notes.customFields', fields)}
+                        />
                       </div>
                     </AccordionContent>
                   </AccordionItem>

@@ -11,13 +11,14 @@ export interface PageSettings {
 
 export interface HeaderSettings {
   showLogo: boolean;
+  logoUrl?: string;
   title: string;
   showValidity: boolean;
 }
 
 export interface CustomerBlockSettings {
   show: boolean;
-  fields: Array<"name" | "company" | "email" | "phone" | "address" | "tax_number" | "tax_office">;
+  fields: Array<"name" | "company" | "email" | "mobile_phone" | "office_phone" | "address" | "tax_number" | "tax_office">;
 }
 
 export interface ColumnSettings {
@@ -38,9 +39,23 @@ export interface TotalsSettings {
   showNet: boolean;
 }
 
+export interface CustomTextField {
+  id: string;
+  label: string;
+  text: string;
+  position: "header" | "footer" | "before-table" | "after-table";
+  style?: {
+    fontSize?: number;
+    align?: "left" | "center" | "right";
+    bold?: boolean;
+    color?: string;
+  };
+}
+
 export interface NotesSettings {
   intro?: string;
   footer?: string;
+  customFields?: CustomTextField[];
 }
 
 export interface TemplateSchema {
@@ -66,7 +81,7 @@ export interface PdfTemplate {
 }
 
 export interface QuoteData extends Record<string, unknown> {
-  id: string;
+  id?: string;
   number: string;
   title: string;
   description?: string;
