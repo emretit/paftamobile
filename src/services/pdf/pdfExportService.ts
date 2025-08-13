@@ -257,7 +257,8 @@ export class PdfExportService {
     };
 
     // Transform proposal lines
-    const lines = (proposal.proposal_items || proposal.items || []).map((item: any) => ({
+    const proposalItems = proposal.proposal_items || proposal.items || [];
+    const lines = proposalItems.length > 0 ? proposalItems.map((item: any) => ({
       id: item.id || '',
       description: item.product_name || item.description || '',
       quantity: Number(item.quantity) || 0,
@@ -266,7 +267,19 @@ export class PdfExportService {
       tax_rate: Number(item.tax_rate || item.tax_percentage) || 18,
       discount_rate: Number(item.discount_percentage) || 0,
       total: Number(item.total_amount) || (Number(item.quantity) * Number(item.unit_price))
-    }));
+    })) : [
+      // Default empty item if no items exist
+      {
+        id: '1',
+        description: 'Henüz kalem eklenmemiş',
+        quantity: 0,
+        unit_price: 0,
+        unit: 'adet',
+        tax_rate: 18,
+        discount_rate: 0,
+        total: 0
+      }
+    ];
 
     return {
       id: proposal.id || '',

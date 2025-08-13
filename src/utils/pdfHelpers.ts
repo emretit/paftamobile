@@ -105,7 +105,7 @@ export const validatePdfData = (data: any): { isValid: boolean; missingFields: s
   
   if (!data.company?.name) missingFields.push('Şirket adı');
   if (!data.customer?.name) missingFields.push('Müşteri adı');  
-  if (!data.items || !Array.isArray(data.items) || data.items.length === 0) missingFields.push('Teklif kalemleri');
+  // Items can be empty for proposals, so we don't validate them as required
   
   return {
     isValid: missingFields.length === 0,
