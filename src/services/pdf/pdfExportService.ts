@@ -162,7 +162,7 @@ export class PdfExportService {
         ? await this.getTemplate(options.templateId)
         : await this.getDefaultTemplate('quote');
 
-      const blob = await this.generatePdf(quoteData, { template });
+      const blob = await this.generatePdf(quoteData, template);
       
       // Create download link
       const url = URL.createObjectURL(blob);
@@ -193,7 +193,7 @@ export class PdfExportService {
         ? await this.getTemplate(options.templateId)
         : await this.getDefaultTemplate('quote');
 
-      const blob = await this.generatePdf(quoteData, { template });
+      const blob = await this.generatePdf(quoteData, template);
       
       // Generate file path
       const fileName = options.filename || `teklif-${quoteData.number}.pdf`;
