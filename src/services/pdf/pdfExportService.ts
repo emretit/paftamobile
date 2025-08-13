@@ -281,6 +281,41 @@ export class PdfExportService {
       }
     ];
 
+    // Calculate totals from items if not provided in proposal
+    let subtotal = Number(proposal.subtotal) || 0;
+    let total_discount = Number(proposal.total_discount) || 0;
+    let total_tax = Number(proposal.total_tax) || 0;
+    let total_amount = Number(proposal.total_amount) || 0;
+
+    // If totals are not available, calculate them from items
+    if (subtotal === 0 && lines.length > 0) {
+      subtotal = lines.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+    }
+
+    if (total_discount === 0 && lines.length > 0) {
+      // Calculate total discount from items if available
+      total_discount = lines.reduce((sum, item) => {
+        const itemTotal = item.quantity * item.unit_price;
+        const itemDiscount = (itemTotal * item.discount_rate) / 100;
+        return sum + itemDiscount;
+      }, 0);
+    }
+
+    if (total_tax === 0 && lines.length > 0) {
+      // Calculate total tax from items
+      total_tax = lines.reduce((sum, item) => {
+        const itemTotal = item.quantity * item.unit_price;
+        const itemDiscount = (itemTotal * item.discount_rate) / 100;
+        const netAmount = itemTotal - itemDiscount;
+        const itemTax = (netAmount * item.tax_rate) / 100;
+        return sum + itemTax;
+      }, 0);
+    }
+
+    if (total_amount === 0) {
+      total_amount = subtotal - total_discount + total_tax;
+    }
+
     return {
       id: proposal.id || '',
       number: proposal.proposal_number || proposal.number || '',
@@ -289,10 +324,10 @@ export class PdfExportService {
       customer,
       company: defaultCompany,
       items: lines,
-      subtotal: Number(proposal.subtotal) || 0,
-      total_discount: Number(proposal.total_discount) || 0,
-      total_tax: Number(proposal.total_tax) || 0,
-      total_amount: Number(proposal.total_amount) || 0,
+      subtotal,
+      total_discount,
+      total_tax,
+      total_amount,
       currency: proposal.currency || 'TRY',
       valid_until: proposal.valid_until || '',
       payment_terms: proposal.payment_terms || '',

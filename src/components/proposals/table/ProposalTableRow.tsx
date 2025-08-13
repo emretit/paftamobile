@@ -4,7 +4,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Proposal, ProposalStatus } from "@/types/proposal";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Eye, PenLine, MoreHorizontal, Trash2 } from "lucide-react";
+import { Eye, PenLine, MoreHorizontal, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProposalStatusCell } from "./ProposalStatusCell";
@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useProposalCalculations } from "@/hooks/proposals/useProposalCalculations";
 import { formatProposalAmount } from "@/services/workflow/proposalWorkflow";
 import { useToast } from "@/hooks/use-toast";
+import { PdfExportService } from "@/services/pdf/pdfExportService";
 
 // import { ProposalPdfExporter } from "../ProposalPdfExporter";
 
@@ -57,6 +58,65 @@ export const ProposalTableRow = ({
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/proposal/${proposal.id}`);
+  };
+
+  const handlePdfPrint = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    try {
+      // Get company settings
+      const companySettings = await PdfExportService.getCompanySettings();
+      
+      // Transform proposal to QuoteData format
+      const quoteData = PdfExportService.transformProposalToQuoteData(
+        proposal, 
+        companySettings
+      );
+      
+      // Get default template
+      const template = await PdfExportService.getDefaultTemplate('quote');
+      
+      // Generate PDF blob
+      const pdfBlob = await PdfExportService.generatePdf(quoteData, { template });
+      
+      // Create blob URL and open in new tab
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      const newWindow = window.open(blobUrl, '_blank');
+      
+      if (newWindow) {
+        // Clean up blob URL after a delay
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+        }, 1000);
+        
+        toast({
+          title: "PDF Açıldı",
+          description: "PDF yeni sekmede açıldı",
+        });
+      } else {
+        // Fallback to download if popup blocked
+        const downloadUrl = document.createElement('a');
+        downloadUrl.href = blobUrl;
+        downloadUrl.download = `teklif-${proposal.number}.pdf`;
+        downloadUrl.click();
+        
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+        }, 1000);
+        
+        toast({
+          title: "PDF İndirildi",
+          description: "Popup engellendi, PDF indirildi",
+        });
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Hata",
+        description: "PDF oluşturulamadı: " + (error as Error).message,
+        variant: "destructive",
+      });
+    }
   };
 
 
@@ -157,6 +217,11 @@ export const ProposalTableRow = ({
               <DropdownMenuItem onClick={() => navigate(`/proposal/${proposal.id}/edit`)}>
                 <PenLine className="h-4 w-4 mr-2" />
                 Düzenle
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={handlePdfPrint}>
+                <Download className="h-4 w-4 mr-2" />
+                PDF Yazdır
               </DropdownMenuItem>
 
               <DropdownMenuItem 

@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Edit, ArrowLeft, Calculator, Check, ChevronsUpDown, Clock, Send, ShoppingCart, FileText } from "lucide-react";
+import { Plus, Trash2, Edit, ArrowLeft, Calculator, Check, ChevronsUpDown, Clock, Send, ShoppingCart, FileText, Download } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/utils/formatters";
 import { useProposalEdit } from "@/hooks/useProposalEdit";
@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { proposalStatusColors, proposalStatusLabels, ProposalStatus } from "@/types/proposal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { handleProposalStatusChange } from "@/services/workflow/proposalWorkflow";
+import { PdfExportService } from "@/services/pdf/pdfExportService";
 import ProposalFormTerms from "@/components/proposals/form/ProposalFormTerms";
 import EmployeeSelector from "@/components/proposals/form/EmployeeSelector";
 import ContactPersonInput from "@/components/proposals/form/ContactPersonInput";
@@ -392,7 +393,11 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         other_terms: formData.other_terms,
         notes: formData.notes,
         status: status,
-        total_amount: primaryTotals.grand, // Save the calculated grand total from the financial summary
+        // Financial totals for PDF generation
+        subtotal: primaryTotals.gross,
+        total_discount: primaryTotals.discount,
+        total_tax: primaryTotals.vat,
+        total_amount: primaryTotals.grand,
         currency: formData.currency,
         items: items.map(item => ({
           ...item,
@@ -473,6 +478,59 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
   const handleDelete = () => {
     toast.success("Teklif silindi");
     navigate("/proposals");
+  };
+
+  const handlePdfPrint = async () => {
+    try {
+      // If there are unsaved changes, save them first to get updated totals
+      if (hasChanges) {
+        toast.info('PDF oluşturulmadan önce değişiklikler kaydediliyor...');
+        await handleSaveChanges(proposal.status);
+      }
+
+      // Get company settings
+      const companySettings = await PdfExportService.getCompanySettings();
+      
+      // Transform proposal to QuoteData format
+      const quoteData = PdfExportService.transformProposalToQuoteData(
+        proposal, 
+        companySettings
+      );
+      
+      // Get default template
+      const template = await PdfExportService.getDefaultTemplate('quote');
+      
+      // Generate PDF blob
+      const pdfBlob = await PdfExportService.generatePdf(quoteData, { template });
+      
+      // Create blob URL and open in new tab
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      const newWindow = window.open(blobUrl, '_blank');
+      
+      if (newWindow) {
+        // Clean up blob URL after a delay
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+        }, 1000);
+        
+        toast.success('PDF yeni sekmede açıldı');
+      } else {
+        // Fallback to download if popup blocked
+        const downloadUrl = document.createElement('a');
+        downloadUrl.href = blobUrl;
+        downloadUrl.download = `teklif-${proposal.number}.pdf`;
+        downloadUrl.click();
+        
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+        }, 1000);
+        
+        toast.success('Popup engellendi, PDF indirildi');
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('PDF oluşturulamadı: ' + (error as Error).message);
+    }
   };
 
 
@@ -592,6 +650,15 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
             size="sm"
           >
             {hasChanges ? "Değişiklikleri Kaydet" : "Kaydedildi"}
+          </Button>
+
+          <Button 
+            variant="outline" 
+            onClick={handlePdfPrint}
+            size="sm"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            PDF Yazdır
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -987,13 +1054,40 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
                           <span className="font-medium">{formatCurrency(totals.gross, currency)}</span>
                         </div>
                         
+                        {/* VAT Percentage Control */}
+                        <div className="border-t pt-2 space-y-2">
+                          <div className="font-medium text-xs text-center text-muted-foreground">
+                            KDV Oranı
+                          </div>
+                          <div className="flex gap-2">
+                            <Input
+                              type="number"
+                              value={formData.vat_percentage}
+                              onChange={(e) => {
+                                handleFieldChange('vat_percentage', Number(e.target.value));
+                              }}
+                              placeholder="20"
+                              min="0"
+                              max="100"
+                              step="0.1"
+                              className="flex-1 h-8 text-xs"
+                            />
+                            <div className="px-2 py-1 bg-muted text-xs flex items-center">
+                              %
+                            </div>
+                          </div>
+                        </div>
+
                         {/* Global Discount Controls */}
                         <div className="border-t pt-2 space-y-2">
                           <div className="font-medium text-xs text-center text-muted-foreground">
                             Genel İndirim
                           </div>
                           <div className="flex gap-2">
-                            <Select value={globalDiscountType} onValueChange={(value: 'percentage' | 'amount') => setGlobalDiscountType(value)}>
+                            <Select value={globalDiscountType} onValueChange={(value: 'percentage' | 'amount') => {
+                              setGlobalDiscountType(value);
+                              setHasChanges(true);
+                            }}>
                               <SelectTrigger className="w-20 h-8 text-xs">
                                 <SelectValue />
                               </SelectTrigger>
@@ -1006,7 +1100,10 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
                             <Input
                               type="number"
                               value={globalDiscountValue}
-                              onChange={(e) => setGlobalDiscountValue(Number(e.target.value))}
+                              onChange={(e) => {
+                                setGlobalDiscountValue(Number(e.target.value));
+                                setHasChanges(true);
+                              }}
                               placeholder="0"
                               min="0"
                               step={globalDiscountType === 'percentage' ? '0.1' : '0.01'}

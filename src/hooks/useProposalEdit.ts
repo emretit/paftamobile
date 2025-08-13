@@ -62,6 +62,10 @@ export const useProposalEdit = () => {
         items: formData.items,
         customer_id: formData.customer_id,
         employee_id: formData.employee_id,
+        // Financial totals for PDF generation
+        subtotal: formData.subtotal || proposal.subtotal,
+        total_discount: formData.total_discount || proposal.total_discount,
+        total_tax: formData.total_tax || proposal.total_tax,
         total_amount: formData.total_amount || proposal.total_amount,
         // Şartlar ve koşullar kaydet
         payment_terms: formData.payment_terms,
