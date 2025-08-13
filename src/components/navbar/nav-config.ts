@@ -51,6 +51,11 @@ export const navItems = [
         label: "Teklifler",
       },
       {
+        path: "/proposals/wizard",
+        icon: FileText,
+        label: "Yeni Teklif (Wizard)",
+      },
+      {
         path: "/orders/list",
         icon: ShoppingCart,
         label: "Siparişler",
