@@ -312,8 +312,16 @@ const PdfTemplateEditor: React.FC = () => {
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* Settings Panel */}
           <ResizablePanel defaultSize={35} minSize={30}>
-            <div className="h-full overflow-y-auto p-4 space-y-4">
-              <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+            <div className="h-full overflow-y-auto bg-gradient-to-b from-background to-background/95 border-r border-border/10">
+              <div className="p-6 space-y-6">
+                <div className="bg-card/50 rounded-lg p-4 border border-border/20 backdrop-blur-sm">
+                  <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-primary rounded-full"></div>
+                    Şablon Ayarları
+                  </h3>
+                  <p className="text-sm text-muted-foreground">PDF şablonunuzu özelleştirin ve önizlemesini gerçek zamanlı olarak görün.</p>
+                </div>
+              <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">{/*  */}
                 {/* Page Settings */}
                 <Accordion type="single" collapsible defaultValue="page">
                   <AccordionItem value="page">
@@ -647,7 +655,8 @@ const PdfTemplateEditor: React.FC = () => {
                     Storage'a Yükle
                   </Button>
                 </div>
-              </form>
+                </form>
+              </div>
             </div>
           </ResizablePanel>
 

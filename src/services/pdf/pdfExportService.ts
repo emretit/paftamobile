@@ -1,8 +1,8 @@
-import { pdf } from '@react-pdf/renderer';
+import React from 'react';
+import { Document, pdf } from '@react-pdf/renderer';
 import { supabase } from '@/integrations/supabase/client';
 import { QuoteData, PdfTemplate, PdfExportOptions, TemplateSchema } from '@/types/pdf-template';
 import PdfRenderer from '@/components/pdf/PdfRenderer';
-import { createElement } from 'react';
 import { validatePdfData } from '@/utils/pdfHelpers';
 
 export class PdfExportService {
@@ -132,10 +132,12 @@ export class PdfExportService {
 
       // Create React element for PDF
       try {
-        const pdfElement = createElement(PdfRenderer, {
-          data: quoteData,
-          schema: activeTemplate.schema_json,
-        });
+        const pdfElement = React.createElement(Document, {}, 
+          React.createElement(PdfRenderer, {
+            data: quoteData,
+            schema: activeTemplate.schema_json
+          })
+        );
 
         // Generate PDF blob
         const blob = await pdf(pdfElement).toBlob();
@@ -162,7 +164,7 @@ export class PdfExportService {
         ? await this.getTemplate(options.templateId)
         : await this.getDefaultTemplate('quote');
 
-      const blob = await this.generatePdf(quoteData, template);
+      const blob = await this.generatePdf(quoteData, { template });
       
       // Create download link
       const url = URL.createObjectURL(blob);
@@ -193,7 +195,7 @@ export class PdfExportService {
         ? await this.getTemplate(options.templateId)
         : await this.getDefaultTemplate('quote');
 
-      const blob = await this.generatePdf(quoteData, template);
+      const blob = await this.generatePdf(quoteData, { template });
       
       // Generate file path
       const fileName = options.filename || `teklif-${quoteData.number}.pdf`;
