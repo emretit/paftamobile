@@ -12,7 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { PDFViewer } from '@react-pdf/renderer';
-import { Download, Upload, Save, Star, Eye, EyeOff } from 'lucide-react';
+import { Download, Save, Star, Eye, EyeOff } from 'lucide-react';
 import { TemplateSchema, PdfTemplate, QuoteData, CustomTextField } from '@/types/pdf-template';
 import PdfRenderer from '@/components/pdf/PdfRenderer';
 import { PdfExportService } from '@/services/pdf/pdfExportService';
@@ -247,24 +247,6 @@ const PdfTemplateEditor: React.FC = () => {
     }
   };
 
-  const handleUploadToStorage = async () => {
-    if (!previewData || !selectedTemplate) return;
-    
-    setIsLoading(true);
-    try {
-      const url = await PdfExportService.uploadPdfToStorage(previewData, { 
-        templateId: selectedTemplate.id, 
-        filename: `quotes/${previewData.number}.pdf` 
-      });
-      toast.success('PDF başarıyla yüklendi');
-      console.log('PDF URL:', url);
-    } catch (error) {
-      console.error('Error uploading PDF:', error);
-      toast.error('PDF yüklenirken hata oluştu');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleTemplateChange = (templateId: string) => {
     const template = templates.find(t => t.id === templateId);
@@ -644,16 +626,6 @@ const PdfTemplateEditor: React.FC = () => {
                     PDF İndir
                   </Button>
                   
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleUploadToStorage}
-                    disabled={isLoading || !previewData || !selectedTemplate}
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Storage'a Yükle
-                  </Button>
                 </div>
                 </form>
               </div>
