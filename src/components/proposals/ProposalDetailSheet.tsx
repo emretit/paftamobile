@@ -96,16 +96,38 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
         companySettings
       );
       
-      // Download PDF
-      await PdfExportService.downloadPdf(quoteData, {
+      // Generate PDF blob
+      const pdfBlob = await PdfExportService.generatePdf(quoteData, {
         templateId: selectedTemplateId,
-        filename: `teklif-${proposal.number || proposal.proposal_number}.pdf`,
       });
       
-      toast.success('PDF başarıyla indirildi');
+      // Create blob URL and open in new tab
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      const newWindow = window.open(blobUrl, '_blank');
+      
+      if (newWindow) {
+        // Clean up blob URL after a delay
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+        }, 1000);
+        
+        toast.success('PDF yeni sekmede açıldı');
+      } else {
+        // Fallback to download if popup blocked
+        const downloadUrl = document.createElement('a');
+        downloadUrl.href = blobUrl;
+        downloadUrl.download = `teklif-${proposal.number || proposal.proposal_number}.pdf`;
+        downloadUrl.click();
+        
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+        }, 1000);
+        
+        toast.success('PDF indirildi (popup engellendi)');
+      }
     } catch (error) {
-      console.error('Error downloading PDF:', error);
-      toast.error('PDF indirilemedi: ' + (error as Error).message);
+      console.error('Error generating PDF:', error);
+      toast.error('PDF oluşturulamadı: ' + (error as Error).message);
     } finally {
       setIsLoading(false);
     }
@@ -203,7 +225,7 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
                 variant="outline"
               >
                 <Download className="mr-2 h-4 w-4" />
-                PDF İndir
+                PDF Yazdır
               </Button>
               
               <Button 

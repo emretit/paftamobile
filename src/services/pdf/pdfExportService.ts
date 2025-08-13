@@ -109,7 +109,7 @@ export class PdfExportService {
   /**
    * Generate PDF blob from quote data and template
    */
-  static async generatePdf(quoteData: QuoteData, template?: PdfTemplate) {
+  static async generatePdf(quoteData: QuoteData, options?: { templateId?: string; template?: PdfTemplate }) {
     try {
       // Validate data before PDF generation
       const validation = validatePdfData(quoteData);
@@ -118,7 +118,10 @@ export class PdfExportService {
       }
 
       // Get template if not provided
-      let activeTemplate = template;
+      let activeTemplate = options?.template;
+      if (!activeTemplate && options?.templateId) {
+        activeTemplate = await this.getTemplate(options.templateId);
+      }
       if (!activeTemplate) {
         activeTemplate = await this.getDefaultTemplate('quote');
       }
@@ -127,15 +130,15 @@ export class PdfExportService {
         throw new Error('Varsayılan şablon bulunamadı. Lütfen önce bir şablon oluşturun.');
       }
 
-      // Create React element for PDF - temporarily disabled
+      // Create React element for PDF
       try {
-        // const pdfElement = createElement(PdfRenderer, {
-        //   data: quoteData,
-        //   schema: activeTemplate.schema_json,
-        // });
+        const pdfElement = createElement(PdfRenderer, {
+          data: quoteData,
+          schema: activeTemplate.schema_json,
+        });
 
-        // Generate PDF blob - returning mock blob for now
-        const blob = new Blob(['PDF Generation temporarily disabled'], { type: 'application/pdf' });
+        // Generate PDF blob
+        const blob = await pdf(pdfElement).toBlob();
         return blob;
       } catch (pdfError) {
         console.error('PDF generation error:', pdfError);
