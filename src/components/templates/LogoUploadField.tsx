@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +13,11 @@ interface LogoUploadFieldProps {
 export const LogoUploadField: React.FC<LogoUploadFieldProps> = ({ logoUrl, onLogoChange }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(logoUrl || null);
+
+  // Update previewUrl when logoUrl prop changes
+  React.useEffect(() => {
+    setPreviewUrl(logoUrl || null);
+  }, [logoUrl]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -32,18 +36,36 @@ export const LogoUploadField: React.FC<LogoUploadFieldProps> = ({ logoUrl, onLog
 
     setIsUploading(true);
     try {
-      const fileName = `logos/${Date.now()}_${file.name}`;
+      // Check authentication first
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Logo yüklemek için giriş yapmanız gerekiyor');
+        return;
+      }
+
+      // Create unique filename with timestamp
+      const fileExt = file.name.split('.').pop();
+      const fileName = `template-logos/${Date.now()}.${fileExt}`;
+      
       const { data, error } = await supabase.storage
-        .from('documents')
+        .from('logos')
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Storage upload error:', error);
+        if (error.message.includes('JWT')) {
+          toast.error('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+        } else {
+          toast.error(`Logo yüklenirken hata: ${error.message}`);
+        }
+        return;
+      }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('documents')
+        .from('logos')
         .getPublicUrl(fileName);
 
       setPreviewUrl(publicUrl);
@@ -62,60 +84,43 @@ export const LogoUploadField: React.FC<LogoUploadFieldProps> = ({ logoUrl, onLog
     onLogoChange(null);
   };
 
-  const handleUrlInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const url = event.target.value;
-    setPreviewUrl(url || null);
-    onLogoChange(url || null);
-  };
-
   return (
     <div className="space-y-3">
-      <Label>Logo URL veya Dosya Yükle</Label>
+      <Label>Logo Yükle</Label>
       
-      {/* URL Input */}
-      <div className="space-y-2">
-        <Input
-          placeholder="Logo URL'si girin veya dosya yükleyin"
-          value={previewUrl || ''}
-          onChange={handleUrlInput}
-        />
-      </div>
-
-      {/* File Upload */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
+      {/* File Upload Button */}
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => document.getElementById('logo-upload')?.click()}
+          disabled={isUploading}
+        >
+          <Upload className="h-4 w-4 mr-2" />
+          {isUploading ? 'Yükleniyor...' : 'Logo Seç'}
+        </Button>
+        
+        {previewUrl && (
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => document.getElementById('logo-upload')?.click()}
-            disabled={isUploading}
+            onClick={handleRemoveLogo}
           >
-            <Upload className="h-4 w-4 mr-2" />
-            {isUploading ? 'Yükleniyor...' : 'Dosya Seç'}
+            <X className="h-4 w-4 mr-2" />
+            Kaldır
           </Button>
-          
-          {previewUrl && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleRemoveLogo}
-            >
-              <X className="h-4 w-4 mr-2" />
-              Kaldır
-            </Button>
-          )}
-        </div>
-        
-        <input
-          id="logo-upload"
-          type="file"
-          accept="image/*"
-          onChange={handleFileUpload}
-          className="hidden"
-        />
+        )}
       </div>
+      
+      <input
+        id="logo-upload"
+        type="file"
+        accept="image/*"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
 
       {/* Preview */}
       {previewUrl && (

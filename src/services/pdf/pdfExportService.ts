@@ -107,6 +107,23 @@ export class PdfExportService {
   }
 
   /**
+   * Delete a template
+   */
+  static async deleteTemplate(templateId: string) {
+    const { error } = await supabase
+      .from('pdf_templates')
+      .delete()
+      .eq('id', templateId);
+
+    if (error) {
+      console.error('Error deleting template:', error);
+      throw new Error('Şablon silinirken hata oluştu: ' + error.message);
+    }
+
+    return true;
+  }
+
+  /**
    * Generate PDF blob from quote data and template
    */
   static async generatePdf(quoteData: QuoteData, options?: { templateId?: string; template?: PdfTemplate }) {

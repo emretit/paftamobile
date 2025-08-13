@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,19 +13,33 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { PDFViewer } from '@react-pdf/renderer';
-import { Download, Save, Star, Eye, EyeOff } from 'lucide-react';
+import { Download, Save, Eye, EyeOff, Plus, ArrowLeft } from 'lucide-react';
 import { TemplateSchema, PdfTemplate, QuoteData, CustomTextField } from '@/types/pdf-template';
 import PdfRenderer from '@/components/pdf/PdfRenderer';
 import { PdfExportService } from '@/services/pdf/pdfExportService';
 import { LogoUploadField } from '@/components/templates/LogoUploadField';
 import { CustomTextFields } from '@/components/templates/CustomTextFields';
 import { toast } from 'sonner';
+import Navbar from '@/components/Navbar';
 
-const PdfTemplateEditor: React.FC = () => {
+interface PdfTemplateEditorProps {
+  isCollapsed?: boolean;
+  setIsCollapsed?: (value: boolean) => void;
+}
+
+const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({ 
+  isCollapsed = false, 
+  setIsCollapsed = () => {} 
+}) => {
+  const { templateId } = useParams<{ templateId: string }>();
+  const navigate = useNavigate();
   const [templates, setTemplates] = useState<PdfTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<PdfTemplate | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [previewData, setPreviewData] = useState<QuoteData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
+  const [isNewTemplate, setIsNewTemplate] = useState(false);
+  const [templateName, setTemplateName] = useState('');
 
   const form = useForm<TemplateSchema>({
     resolver: zodResolver(z.object({
@@ -122,7 +137,29 @@ const PdfTemplateEditor: React.FC = () => {
     loadSampleData();
   }, []);
 
+  useEffect(() => {
+    if (templateId === 'new') {
+      setIsNewTemplate(true);
+      setSelectedTemplate(null);
+      setTemplateName('Yeni Şablon');
+      // Form'u varsayılan değerlerle doldur
+      form.reset();
+    } else if (templateId && templates.length > 0) {
+      const template = templates.find(t => t.id === templateId);
+      if (template) {
+        setSelectedTemplate(template);
+        setIsNewTemplate(false);
+        setTemplateName(template.name);
+        form.reset(template.schema_json);
+      } else {
+        toast.error('Şablon bulunamadı');
+        navigate('/settings');
+      }
+    }
+  }, [templateId, templates, form, navigate]);
+
   const loadTemplates = async () => {
+    setIsLoadingTemplates(true);
     try {
       const templates = await PdfExportService.getTemplates();
       setTemplates(templates);
@@ -136,6 +173,8 @@ const PdfTemplateEditor: React.FC = () => {
     } catch (error) {
       console.error('Error loading templates:', error);
       toast.error('Şablonlar yüklenirken hata oluştu');
+    } finally {
+      setIsLoadingTemplates(false);
     }
   };
 
@@ -191,23 +230,58 @@ const PdfTemplateEditor: React.FC = () => {
   };
 
   const handleSave = async (data: TemplateSchema) => {
-    if (!selectedTemplate) return;
-    
     setIsLoading(true);
     try {
-      const updatedTemplate: Omit<PdfTemplate, 'id' | 'created_at' | 'updated_at'> = {
-        name: selectedTemplate.name,
-        type: selectedTemplate.type,
-        locale: selectedTemplate.locale,
-        schema_json: data,
-        version: selectedTemplate.version + 1,
-        is_default: selectedTemplate.is_default,
-        created_by: selectedTemplate.created_by,
-      };
+      // Get current form values to ensure logo URL is included
+      const currentFormData = form.getValues();
+      const currentLogoUrl = currentFormData.header?.logoUrl;
       
-      await PdfExportService.saveTemplate(updatedTemplate);
-      toast.success('Şablon başarıyla kaydedildi');
-      await loadTemplates();
+      // Merge current form data with submitted data to ensure logo URL is preserved
+      const mergedData = {
+        ...data,
+        header: {
+          ...data.header,
+          logoUrl: currentLogoUrl || data.header?.logoUrl
+        }
+      };
+
+      if (isNewTemplate) {
+        // Create new template
+        const newTemplate: Omit<PdfTemplate, 'id' | 'created_at' | 'updated_at'> = {
+          name: templateName || 'Yeni Şablon',
+          type: 'quote',
+          locale: 'tr',
+          schema_json: mergedData,
+          version: 1,
+          is_default: false,
+          created_by: null, // Will be set by Supabase
+        };
+        
+        const savedTemplate = await PdfExportService.saveTemplate(newTemplate);
+        toast.success('Şablon başarıyla oluşturuldu');
+        
+        // Navigate to edit mode
+        navigate(`/pdf-templates/edit/${savedTemplate.id}`);
+      } else if (selectedTemplate) {
+        // Update existing template
+        const updatedTemplate: Omit<PdfTemplate, 'id' | 'created_at' | 'updated_at'> = {
+          name: templateName || selectedTemplate.name,
+          type: selectedTemplate.type,
+          locale: selectedTemplate.locale,
+          schema_json: mergedData,
+          version: selectedTemplate.version + 1,
+          is_default: selectedTemplate.is_default,
+          created_by: selectedTemplate.created_by,
+        };
+        
+        await PdfExportService.saveTemplate(updatedTemplate);
+        toast.success('Şablon başarıyla kaydedildi');
+        
+        // Update the selected template with the new schema to prevent reload issues
+        setSelectedTemplate(prev => prev ? { ...prev, schema_json: mergedData, version: prev.version + 1 } : null);
+        
+        await loadTemplates();
+      }
     } catch (error) {
       console.error('Error saving template:', error);
       toast.error('Şablon kaydedilirken hata oluştu');
@@ -216,21 +290,7 @@ const PdfTemplateEditor: React.FC = () => {
     }
   };
 
-  const handleSetDefault = async () => {
-    if (!selectedTemplate) return;
-    
-    setIsLoading(true);
-    try {
-      await PdfExportService.setAsDefault(selectedTemplate.id, selectedTemplate.type);
-      toast.success('Varsayılan şablon olarak ayarlandı');
-      await loadTemplates();
-    } catch (error) {
-      console.error('Error setting default template:', error);
-      toast.error('Varsayılan şablon ayarlanırken hata oluştu');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
 
   const handleDownloadPdf = async () => {
     if (!previewData || !selectedTemplate) return;
@@ -248,42 +308,34 @@ const PdfTemplateEditor: React.FC = () => {
   };
 
 
-  const handleTemplateChange = (templateId: string) => {
-    const template = templates.find(t => t.id === templateId);
-    if (template) {
-      setSelectedTemplate(template);
-      form.reset(template.schema_json);
-    }
-  };
+
 
   const watchedValues = form.watch();
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="min-h-screen bg-background">
+      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'} h-screen flex flex-col`}>
       {/* Header */}
       <div className="border-b bg-background p-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">PDF Şablon Editörü</h1>
-            <p className="text-muted-foreground">PDF şablonlarını özelleştirin ve önizleyin</p>
-          </div>
-          
-          {/* Template Selection */}
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="template-select">Şablon:</Label>
-              <Select value={selectedTemplate?.id} onValueChange={handleTemplateChange}>
-                <SelectTrigger className="w-64">
-                  <SelectValue placeholder="Şablon seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  {templates.map((template) => (
-                    <SelectItem key={template.id} value={template.id}>
-                      {template.name} {template.is_default && '(Varsayılan)'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/settings')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Geri
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">
+                {isNewTemplate ? 'Yeni PDF Şablonu' : 'PDF Şablon Editörü'}
+              </h1>
+              <p className="text-muted-foreground">
+                {isNewTemplate ? 'Yeni bir PDF şablonu oluşturun' : `${selectedTemplate?.name || 'Şablon'} düzenleniyor`}
+              </p>
             </div>
           </div>
         </div>
@@ -303,25 +355,29 @@ const PdfTemplateEditor: React.FC = () => {
                   </h3>
                   <p className="text-sm text-muted-foreground">PDF şablonunuzu özelleştirin ve önizlemesini gerçek zamanlı olarak görün.</p>
                 </div>
-              <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">{/*  */}
-                {/* Page Settings */}
-                <Accordion type="single" collapsible defaultValue="page">
-                  <AccordionItem value="page">
-                    <AccordionTrigger>Sayfa Ayarları</AccordionTrigger>
+              <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
+                {/* Template Name */}
+                <div className="bg-card/50 rounded-lg p-4 border border-border/20 backdrop-blur-sm">
+                  <Label htmlFor="template-name">Şablon Adı</Label>
+                  <Input
+                    id="template-name"
+                    type="text"
+                    value={templateName}
+                    onChange={(e) => setTemplateName(e.target.value)}
+                    placeholder="Şablon adını girin"
+                    className="mt-2"
+                  />
+                </div>
+
+                {/* Header Settings */}
+                <Accordion type="single" collapsible defaultValue="header">
+                  <AccordionItem value="header">
+                    <AccordionTrigger>Başlık Ayarları</AccordionTrigger>
                     <AccordionContent className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label>Sayfa Boyutu</Label>
-                          <Select value={watchedValues.page?.size} onValueChange={(value) => form.setValue('page.size', value as any)}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="A4">A4</SelectItem>
-                              <SelectItem value="A3">A3</SelectItem>
-                              <SelectItem value="Letter">Letter</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <Label>Başlık Metni</Label>
+                          <Input {...form.register('header.title')} />
                         </div>
                         <div>
                           <Label>Font Boyutu</Label>
@@ -330,63 +386,9 @@ const PdfTemplateEditor: React.FC = () => {
                             {...form.register('page.fontSize', { valueAsNumber: true })}
                             min="8"
                             max="20"
+                            placeholder="12"
                           />
                         </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Üst Boşluk</Label>
-                          <Input
-                            type="number"
-                            {...form.register('page.padding.top', { valueAsNumber: true })}
-                            min="10"
-                            max="100"
-                          />
-                        </div>
-                        <div>
-                          <Label>Sağ Boşluk</Label>
-                          <Input
-                            type="number"
-                            {...form.register('page.padding.right', { valueAsNumber: true })}
-                            min="10"
-                            max="100"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Alt Boşluk</Label>
-                          <Input
-                            type="number"
-                            {...form.register('page.padding.bottom', { valueAsNumber: true })}
-                            min="10"
-                            max="100"
-                          />
-                        </div>
-                        <div>
-                          <Label>Sol Boşluk</Label>
-                          <Input
-                            type="number"
-                            {...form.register('page.padding.left', { valueAsNumber: true })}
-                            min="10"
-                            max="100"
-                          />
-                        </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-
-                {/* Header Settings */}
-                <Accordion type="single" collapsible defaultValue="header">
-                  <AccordionItem value="header">
-                    <AccordionTrigger>Başlık Ayarları</AccordionTrigger>
-                    <AccordionContent className="space-y-4">
-                      <div>
-                        <Label>Başlık Metni</Label>
-                        <Input {...form.register('header.title')} />
                       </div>
                       
                       <div className="flex items-center space-x-2">
@@ -598,8 +600,8 @@ const PdfTemplateEditor: React.FC = () => {
                 </Accordion>
 
                 {/* Action Buttons */}
-                <div className="space-y-2 pt-4 border-t">
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                <div className="grid grid-cols-2 gap-2 pt-4 border-t">
+                  <Button type="submit" disabled={isLoading}>
                     <Save className="mr-2 h-4 w-4" />
                     {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
                   </Button>
@@ -607,25 +609,12 @@ const PdfTemplateEditor: React.FC = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full"
-                    onClick={handleSetDefault}
-                    disabled={isLoading || !selectedTemplate?.is_default}
+                    onClick={() => navigate('/settings')}
+                    disabled={isLoading}
                   >
-                    <Star className="mr-2 h-4 w-4" />
-                    Varsayılan Yap
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Çık
                   </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleDownloadPdf}
-                    disabled={isLoading || !previewData || !selectedTemplate}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    PDF İndir
-                  </Button>
-                  
                 </div>
                 </form>
               </div>
@@ -662,6 +651,7 @@ const PdfTemplateEditor: React.FC = () => {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
+      </main>
     </div>
   );
 };

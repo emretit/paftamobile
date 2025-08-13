@@ -11,8 +11,7 @@ import { UserManagement } from "@/components/settings/UserManagement";
 import { RoleManagement } from "@/components/settings/RoleManagement";
 import { SystemSettings } from "@/components/settings/SystemSettings";
 import { NilveraSettings } from "@/components/settings/NilveraSettings";
-// import { TemplateManagement } from "@/components/settings/TemplateManagement";
-import PdfTemplateEditor from "@/pages/templates/PdfTemplateEditor";
+import PdfTemplates from "@/pages/PdfTemplates";
 
 
 interface SettingsProps {
@@ -62,7 +61,7 @@ const Settings = ({ isCollapsed, setIsCollapsed }: SettingsProps) => {
             </CustomTabsContent>
 
             <CustomTabsContent value="pdf-templates">
-              <PdfTemplateEditor />
+              <PdfTemplates />
             </CustomTabsContent>
           </CustomTabs>
         </div>

@@ -254,8 +254,8 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            {schema.header.showLogo && ((schema.header as any).logoUrl || data.company?.logo_url) && (
-              <Image style={styles.logo} src={(schema.header as any).logoUrl || data.company?.logo_url} />
+            {schema.header.showLogo && (schema.header as any).logoUrl && (
+              <Image style={styles.logo} src={(schema.header as any).logoUrl} />
             )}
           </View>
           <View style={{ alignItems: 'flex-end' }}>
