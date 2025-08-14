@@ -436,49 +436,51 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                 <Accordion type="single" collapsible defaultValue="header">
                   <AccordionItem value="header">
                     <AccordionTrigger>Başlık Ayarları</AccordionTrigger>
-                    <AccordionContent className="space-y-3 pt-3">
-                      <div className="grid grid-cols-2 gap-3">
+                    <AccordionContent className="space-y-2 pt-2">
+                      <div className="grid grid-cols-3 gap-2">
                         <div className="space-y-1">
-                          <Label className="text-xs font-medium">Başlık Metni</Label>
-                          <Input {...form.register('header.title')} className="h-8 text-sm" />
+                          <Label className="text-xs">Başlık Metni</Label>
+                          <Input {...form.register('header.title')} className="h-7 text-sm" />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs font-medium">Font Boyutu</Label>
+                          <Label className="text-xs">Font Boyutu</Label>
                           <Input
                             type="number"
                             {...form.register('header.titleFontSize', { valueAsNumber: true })}
                             min="8"
                             max="32"
                             placeholder="16"
-                            className="h-8 text-sm"
+                            className="h-7 text-sm"
                           />
+                        </div>
+                        <div className="flex items-end">
+                          <div className="flex items-center space-x-1">
+                            <Switch
+                              id="show-logo"
+                              checked={watchedValues.header?.showLogo}
+                              onCheckedChange={(checked) => form.setValue('header.showLogo', checked)}
+                              className="scale-75"
+                            />
+                            <Label htmlFor="show-logo" className="text-xs">Logo</Label>
+                          </div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center justify-between py-1">
-                        <Label htmlFor="show-logo" className="text-xs font-medium">Logo Göster</Label>
-                        <Switch
-                          id="show-logo"
-                          checked={watchedValues.header?.showLogo}
-                          onCheckedChange={(checked) => form.setValue('header.showLogo', checked)}
-                        />
-                      </div>
-                      
                       {watchedValues.header?.showLogo && (
-                        <div className="space-y-3 bg-muted/20 rounded-lg p-3 border border-border/20">
+                        <div className="space-y-2 bg-muted/10 rounded-md p-2 border border-border/10">
                           <LogoUploadField
                             logoUrl={watchedValues.header?.logoUrl}
                             onLogoChange={(url) => form.setValue('header.logoUrl', url || undefined)}
                           />
                           
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
-                              <Label className="text-xs font-medium">Pozisyon</Label>
+                              <Label className="text-xs">Pozisyon</Label>
                               <Select
                                 value={watchedValues.header?.logoPosition || 'left'}
                                 onValueChange={(value) => form.setValue('header.logoPosition', value as 'left' | 'center' | 'right')}
                               >
-                                <SelectTrigger className="h-8">
+                                <SelectTrigger className="h-7">
                                   <SelectValue placeholder="Pozisyon" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -490,82 +492,76 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                             </div>
                             
                             <div className="space-y-1">
-                              <Label className="text-xs font-medium">Boyut</Label>
+                              <Label className="text-xs">Boyut</Label>
                               <Input
                                 type="number"
                                 {...form.register('header.logoSize', { valueAsNumber: true })}
                                 min="20"
                                 max="200"
                                 placeholder="80"
-                                className="h-8 text-sm"
+                                className="h-7 text-sm"
                               />
                             </div>
                           </div>
                         </div>
                       )}
                       
-                      <div className="flex items-center justify-between py-1">
-                        <Label htmlFor="show-validity" className="text-xs font-medium">Geçerlilik Tarihi</Label>
-                        <Switch
-                          id="show-validity"
-                          checked={watchedValues.header?.showValidity}
-                          onCheckedChange={(checked) => form.setValue('header.showValidity', checked)}
-                        />
-                      </div>
-                      
-                      <div className="flex items-center justify-between py-1">
-                        <Label htmlFor="show-company-info" className="text-xs font-medium">Şirket Bilgileri</Label>
-                        <Switch
-                          id="show-company-info"
-                          checked={watchedValues.header?.showCompanyInfo}
-                          onCheckedChange={(checked) => form.setValue('header.showCompanyInfo', checked)}
-                        />
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center space-x-1">
+                          <Switch
+                            id="show-company-info"
+                            checked={watchedValues.header?.showCompanyInfo}
+                            onCheckedChange={(checked) => form.setValue('header.showCompanyInfo', checked)}
+                            className="scale-75"
+                          />
+                          <Label htmlFor="show-company-info" className="text-xs">Şirket Bilgileri</Label>
+                        </div>
                       </div>
                       
                       {watchedValues.header?.showCompanyInfo && (
-                        <div className="space-y-3 bg-muted/20 rounded-lg p-3 border border-border/20">
-                          <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2 bg-muted/10 rounded-md p-2 border border-border/10">
+                          <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
-                              <Label className="text-xs font-medium">Şirket Adı</Label>
-                              <Input {...form.register('header.companyName')} placeholder="NGS TEKNOLOJİ" className="h-8 text-sm" />
+                              <Label className="text-xs">Şirket Adı</Label>
+                              <Input {...form.register('header.companyName')} placeholder="NGS TEKNOLOJİ" className="h-7 text-sm" />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-xs font-medium">Font Boyutu</Label>
+                              <Label className="text-xs">Font Boyutu</Label>
                               <Input
                                 type="number"
                                 {...form.register('header.companyInfoFontSize', { valueAsNumber: true })}
                                 min="8"
                                 max="32"
                                 placeholder="10"
-                                className="h-8 text-sm"
+                                className="h-7 text-sm"
                               />
                             </div>
                           </div>
                           
                           <div className="space-y-1">
-                            <Label className="text-xs font-medium">Şirket Adresi</Label>
-                            <Input {...form.register('header.companyAddress')} placeholder="İstanbul, Türkiye" className="h-8 text-sm" />
+                            <Label className="text-xs">Şirket Adresi</Label>
+                            <Input {...form.register('header.companyAddress')} placeholder="İstanbul, Türkiye" className="h-7 text-sm" />
                           </div>
                           
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
-                              <Label className="text-xs font-medium">Telefon</Label>
-                              <Input {...form.register('header.companyPhone')} placeholder="+90 212 555 0123" className="h-8 text-sm" />
+                              <Label className="text-xs">Telefon</Label>
+                              <Input {...form.register('header.companyPhone')} placeholder="+90 212 555 0123" className="h-7 text-sm" />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-xs font-medium">E-posta</Label>
-                              <Input {...form.register('header.companyEmail')} placeholder="info@ngsteknoloji.com" className="h-8 text-sm" />
+                              <Label className="text-xs">E-posta</Label>
+                              <Input {...form.register('header.companyEmail')} placeholder="info@ngsteknoloji.com" className="h-7 text-sm" />
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
-                              <Label className="text-xs font-medium">Website</Label>
-                              <Input {...form.register('header.companyWebsite')} placeholder="www.ngsteknoloji.com" className="h-8 text-sm" />
+                              <Label className="text-xs">Website</Label>
+                              <Input {...form.register('header.companyWebsite')} placeholder="www.ngsteknoloji.com" className="h-7 text-sm" />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-xs font-medium">Vergi No</Label>
-                              <Input {...form.register('header.companyTaxNumber')} placeholder="1234567890" className="h-8 text-sm" />
+                              <Label className="text-xs">Vergi No</Label>
+                              <Input {...form.register('header.companyTaxNumber')} placeholder="1234567890" className="h-7 text-sm" />
                             </div>
                           </div>
                         </div>
