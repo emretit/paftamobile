@@ -337,6 +337,12 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
 
     setSaving(true);
     try {
+      // Find the currency with the highest total amount for main proposal currency
+      const currencyTotals = Object.entries(calculationsByCurrency);
+      const [mainCurrency, mainTotals] = currencyTotals.reduce((max, current) => {
+        return current[1].grand > max[1].grand ? current : max;
+      }, currencyTotals[0] || ['TRY', { grand: 0 }]);
+
       // Prepare data for backend
       const proposalData = {
         title: `${formData.customer_company} - Teklif`,
@@ -353,8 +359,8 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         other_terms: formData.other_terms,
         notes: formData.notes,
         status: status,
-        total_amount: calculations.grand_total,
-        currency: formData.currency,
+        total_amount: mainTotals.grand,
+        currency: mainCurrency,
         items: validItems.map(item => ({
           ...item,
           total_price: item.quantity * item.unit_price
@@ -443,7 +449,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                         )}
                         disabled={isLoadingCustomers}
                       >
-                        {formData.customer_company || "Müşteri ara..."}
+                        <span className="truncate text-left flex-1">{formData.customer_company || "Müşteri ara..."}</span>
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>

@@ -715,25 +715,27 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
                   <Label htmlFor="customer_company" className="text-sm">Firma Adı *</Label>
                   <Popover open={customerSearchOpen} onOpenChange={setCustomerSearchOpen}>
                     <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={customerSearchOpen}
-                        className={cn(
-                          "w-full justify-between",
-                          !formData.customer_company && "text-muted-foreground"
-                        )}
-                        disabled={isLoadingCustomers}
-                       >
-                         {formData.customer_id ? (
-                           (() => {
-                             const customer = customers?.find(c => c.id === formData.customer_id);
-                             if (customer) {
-                               return customer.company || customer.name;
-                             }
-                             return formData.customer_company || "Müşteri bulunamadı";
-                           })()
-                         ) : (formData.customer_company || "Müşteri ara...")}
+                                             <Button
+                         variant="outline"
+                         role="combobox"
+                         aria-expanded={customerSearchOpen}
+                         className={cn(
+                           "w-full justify-between",
+                           !formData.customer_company && "text-muted-foreground"
+                         )}
+                         disabled={isLoadingCustomers}
+                        >
+                         <span className="truncate text-left flex-1">
+                           {formData.customer_id ? (
+                             (() => {
+                               const customer = customers?.find(c => c.id === formData.customer_id);
+                               if (customer) {
+                                 return customer.company || customer.name;
+                               }
+                               return formData.customer_company || "Müşteri bulunamadı";
+                             })()
+                           ) : (formData.customer_company || "Müşteri ara...")}
+                         </span>
                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                        </Button>
                     </PopoverTrigger>

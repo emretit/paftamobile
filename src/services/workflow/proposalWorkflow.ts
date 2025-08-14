@@ -57,12 +57,36 @@ export const getProposalFileIcon = (file: File | { name: string, type: string })
  * Format proposal amounts with proper currency
  */
 export const formatProposalAmount = (amount: number, currency: string = 'TRY') => {
-  return new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency,
+  if (!amount && amount !== 0) return `${getCurrencySymbol(currency)}0`;
+  
+  // Para birimi sembolünü ve formatını doğrudan kullan
+  const symbols: Record<string, string> = {
+    'TRY': '₺',
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£'
+  };
+  
+  const symbol = symbols[currency] || currency;
+  
+  // Sayıyı formatla (binlik ayracı ile)
+  const formattedNumber = new Intl.NumberFormat('tr-TR', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount);
+  
+  // Para birimi sembolünü başa koy
+  return `${symbol}${formattedNumber}`;
+};
+
+const getCurrencySymbol = (currency: string) => {
+  const symbols: Record<string, string> = {
+    'TRY': '₺',
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£'
+  };
+  return symbols[currency] || currency;
 };
 
 /**

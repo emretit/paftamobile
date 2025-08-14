@@ -131,15 +131,25 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
     }
   };
 
-  const formatMoney = (amount: number) => {
-    if (!amount && amount !== 0) return "₺0";
+  const formatMoney = (amount: number, currency: string = 'TRY') => {
+    if (!amount && amount !== 0) return `${getCurrencySymbol(currency)}0`;
     
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
-      currency: 'TRY',
+      currency: currency,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  const getCurrencySymbol = (currency: string) => {
+    const symbols: Record<string, string> = {
+      'TRY': '₺',
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£'
+    };
+    return symbols[currency] || currency;
   };
 
   if (isLoading) {
