@@ -471,38 +471,11 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                           <LogoUploadField
                             logoUrl={watchedValues.header?.logoUrl}
                             onLogoChange={(url) => form.setValue('header.logoUrl', url || undefined)}
+                            logoPosition={watchedValues.header?.logoPosition || 'left'}
+                            onPositionChange={(value) => form.setValue('header.logoPosition', value)}
+                            logoSize={watchedValues.header?.logoSize || 80}
+                            onSizeChange={(value) => form.setValue('header.logoSize', value)}
                           />
-                          
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-1">
-                              <Label className="text-xs">Pozisyon</Label>
-                              <Select
-                                value={watchedValues.header?.logoPosition || 'left'}
-                                onValueChange={(value) => form.setValue('header.logoPosition', value as 'left' | 'center' | 'right')}
-                              >
-                                <SelectTrigger className="h-7">
-                                  <SelectValue placeholder="Pozisyon" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="left">Sol</SelectItem>
-                                  <SelectItem value="center">Orta</SelectItem>
-                                  <SelectItem value="right">Sağ</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            <div className="space-y-1">
-                              <Label className="text-xs">Boyut</Label>
-                              <Input
-                                type="number"
-                                {...form.register('header.logoSize', { valueAsNumber: true })}
-                                min="20"
-                                max="200"
-                                placeholder="80"
-                                className="h-7 text-sm"
-                              />
-                            </div>
-                          </div>
                         </div>
                       )}
                       
