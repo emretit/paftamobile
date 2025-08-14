@@ -20,11 +20,6 @@ interface ProposalTemplateFormProps {
 
 const ProposalTemplateForm: React.FC<ProposalTemplateFormProps> = ({ template, onSaveDraft }) => {
   const [items, setItems] = useState<ProposalItem[]>([]);
-  const [validUntil, setValidUntil] = useState<Date | undefined>(
-    template.prefilledFields?.validityDays 
-      ? new Date(Date.now() + template.prefilledFields.validityDays * 24 * 60 * 60 * 1000) 
-      : undefined
-  );
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<ProposalFormData>({
     defaultValues: {
@@ -53,7 +48,6 @@ const ProposalTemplateForm: React.FC<ProposalTemplateFormProps> = ({ template, o
     const formData = {
       ...data,
       items,
-      valid_until: validUntil ? validUntil.toISOString() : undefined,
     };
     console.log("Form data to be submitted:", formData);
     onSaveDraft();
@@ -70,8 +64,6 @@ const ProposalTemplateForm: React.FC<ProposalTemplateFormProps> = ({ template, o
       <ProposalTemplateFormDetails 
         register={register}
         errors={errors}
-        validUntil={validUntil}
-        setValidUntil={setValidUntil}
       />
       
       <ProposalTemplateCustomerSelect 
