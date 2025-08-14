@@ -51,14 +51,18 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
       paddingBottom: 15,
       borderBottomWidth: 1,
       borderBottomColor: '#E5E7EB',
+      borderWidth: 2,
+      borderColor: '#0000FF',
+      borderStyle: 'solid',
     },
     logo: {
-      width: 120,
-      height: 60,
+      width: schema.header.logoSize || 60,
+      height: 'auto', // Let height adjust automatically
       objectFit: 'contain',
+      margin: 2,
     },
     title: {
-      fontSize: 24,
+      fontSize: schema.header.titleFontSize || 24,
       fontWeight: 'bold',
       color: '#1F2937',
     },
@@ -69,6 +73,10 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
     },
     customerSection: {
       marginBottom: 30,
+      borderWidth: 2,
+      borderColor: '#00FF00',
+      borderStyle: 'solid',
+      padding: 5,
     },
     customerTitle: {
       fontSize: 14,
@@ -83,6 +91,10 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
     },
     table: {
       marginBottom: 30,
+      borderWidth: 2,
+      borderColor: '#FF00FF',
+      borderStyle: 'solid',
+      padding: 5,
     },
     tableHeader: {
       flexDirection: 'row',
@@ -119,6 +131,10 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
       marginLeft: 'auto',
       width: 200,
       marginBottom: 30,
+      borderWidth: 2,
+      borderColor: '#FFFF00',
+      borderStyle: 'solid',
+      padding: 5,
     },
     totalRow: {
       flexDirection: 'row',
@@ -155,6 +171,10 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
     },
     notesSection: {
       marginTop: 'auto',
+      borderWidth: 2,
+      borderColor: '#FFA500',
+      borderStyle: 'solid',
+      padding: 5,
     },
     notesText: {
       fontSize: 9,
@@ -174,6 +194,10 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
     customField: {
       marginVertical: 8,
       paddingHorizontal: 0,
+      borderWidth: 1,
+      borderColor: '#800080',
+      borderStyle: 'solid',
+      padding: 3,
     },
     customFieldText: {
       fontSize: 12,
@@ -252,13 +276,230 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
     <Document>
       <Page size={schema.page.size === "LETTER" ? "LETTER" : schema.page.size} style={styles.page}>
         {/* Header */}
-        <View style={styles.header}>
-          <View>
-            {schema.header.showLogo && (schema.header as any).logoUrl && (
-              <Image style={styles.logo} src={(schema.header as any).logoUrl} />
+        <View style={[
+          styles.header, 
+          {
+            justifyContent: 
+              schema.header.logoPosition === 'center' ? 'center' :
+              schema.header.logoPosition === 'right' ? 'flex-end' : 
+              'space-between',
+            flexDirection: schema.header.logoPosition === 'center' ? 'column' : 'row',
+            alignItems: schema.header.logoPosition === 'center' ? 'center' : 'flex-start'
+          }
+        ]}>
+          {/* Left Position Layout */}
+          {schema.header.logoPosition === 'left' && (
+            <>
+              {/* Left Section - Logo and Company Info */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, borderWidth: 1, borderColor: '#008080', borderStyle: 'solid', padding: 2 }}>
+                {/* Logo */}
+                {schema.header.showLogo && (schema.header as any).logoUrl && (
+                  <View style={{ 
+                    marginRight: 8, 
+                    padding: 0, 
+                    borderWidth: 1, 
+                    borderColor: '#FF0000', 
+                    borderStyle: 'solid',
+                    alignSelf: 'flex-start',
+                    flexShrink: 0
+                  }}>
+                    <Image
+                      style={styles.logo}
+                      src={(schema.header as any).logoUrl}
+                    />
+                  </View>
+                )}
+                
+                {/* Company Info */}
+                {schema.header.showCompanyInfo && (
+                  <View style={{ flex: 1, marginLeft: 0, paddingLeft: 0, borderWidth: 1, borderColor: '#FF4500', borderStyle: 'solid', padding: 2 }}>
+                    {schema.header.companyName && (
+                      <Text style={{
+                        fontSize: schema.header.companyInfoFontSize || 12,
+                        fontWeight: 'bold',
+                        color: '#1F2937',
+                        marginBottom: 3,
+                        marginLeft: 0,
+                        paddingLeft: 0
+                      }}>
+                        {safeText(schema.header.companyName)}
+                      </Text>
+                    )}
+                    {schema.header.companyAddress && (
+                      <Text style={{
+                        fontSize: (schema.header.companyInfoFontSize || 12) - 1,
+                        color: '#4B5563',
+                        marginBottom: 2,
+                        marginLeft: 0,
+                        paddingLeft: 0
+                      }}>
+                        {safeText(schema.header.companyAddress)}
+                      </Text>
+                    )}
+                    {schema.header.companyPhone && (
+                      <Text style={{
+                        fontSize: (schema.header.companyInfoFontSize || 12) - 1,
+                        color: '#4B5563',
+                        marginBottom: 2,
+                        marginLeft: 0,
+                        paddingLeft: 0
+                      }}>
+                        Tel: {safeText(schema.header.companyPhone)}
+                      </Text>
+                    )}
+                    {schema.header.companyEmail && (
+                      <Text style={{
+                        fontSize: (schema.header.companyInfoFontSize || 12) - 1,
+                        color: '#4B5563',
+                        marginBottom: 2,
+                        marginLeft: 0,
+                        paddingLeft: 0
+                      }}>
+                        E-posta: {safeText(schema.header.companyEmail)}
+                      </Text>
+                    )}
+                    {schema.header.companyWebsite && (
+                      <Text style={{
+                        fontSize: (schema.header.companyInfoFontSize || 12) - 1,
+                        color: '#4B5563',
+                        marginBottom: 2,
+                        marginLeft: 0,
+                        paddingLeft: 0
+                      }}>
+                        Web: {safeText(schema.header.companyWebsite)}
+                      </Text>
+                    )}
+                    {schema.header.companyTaxNumber && (
+                      <Text style={{
+                        fontSize: (schema.header.companyInfoFontSize || 12) - 1,
+                        color: '#4B5563'
+                      }}>
+                        Vergi No: {safeText(schema.header.companyTaxNumber)}
+                      </Text>
+                    )}
+                  </View>
+                )}
+              </View>
+              
+              {/* Right Section - Title */}
+              <View style={{ textAlign: 'right', alignItems: 'flex-end', borderWidth: 1, borderColor: '#8B4513', borderStyle: 'solid', padding: 2 }}>
+                <Text style={styles.title}>{safeText(schema.header.title)}</Text>
+                <Text style={styles.subtitle}>#{safeText(data.number || '')}</Text>
+                {schema.header.showValidity && data.valid_until && (
+                  <Text style={styles.subtitle}>
+                    {safeText(`Geçerlilik: ${formatDate(data.valid_until)}`)}
+                  </Text>
+                )}
+              </View>
+            </>
+          )}
+
+          {/* Center Position Layout */}
+          {schema.header.logoPosition === 'center' && (
+            <>
+              {/* Logo */}
+              {schema.header.showLogo && (schema.header as any).logoUrl && (
+                <View style={{ 
+                  marginBottom: 15, 
+                  alignItems: 'center', 
+                  padding: 0, 
+                  borderWidth: 1, 
+                  borderColor: '#FF0000', 
+                  borderStyle: 'solid',
+                  alignSelf: 'center',
+                  flexShrink: 0
+                }}>
+                  <Image
+                    style={styles.logo}
+                    src={(schema.header as any).logoUrl}
+                  />
+                </View>
+              )}
+              
+              {/* Company Info */}
+              {schema.header.showCompanyInfo && (
+                <View style={{ alignItems: 'center', marginBottom: 15 }}>
+                  {schema.header.companyName && (
+                    <Text style={{
+                      fontSize: schema.header.companyInfoFontSize || 12,
+                      fontWeight: 'bold',
+                      color: '#1F2937',
+                      marginBottom: 3,
+                      textAlign: 'center'
+                    }}>
+                      {safeText(schema.header.companyName)}
+                    </Text>
+                  )}
+                  {schema.header.companyAddress && (
+                    <Text style={{
+                      fontSize: (schema.header.companyInfoFontSize || 12) - 1,
+                      color: '#4B5563',
+                      marginBottom: 2,
+                      textAlign: 'center'
+                    }}>
+                      {safeText(schema.header.companyAddress)}
+                    </Text>
+                  )}
+                  {schema.header.companyPhone && (
+                    <Text style={{
+                      fontSize: (schema.header.companyInfoFontSize || 12) - 1,
+                      color: '#4B5563',
+                      marginBottom: 2,
+                      textAlign: 'center'
+                    }}>
+                      Tel: {safeText(schema.header.companyPhone)}
+                    </Text>
+                  )}
+                  {schema.header.companyEmail && (
+                    <Text style={{
+                      fontSize: (schema.header.companyInfoFontSize || 12) - 1,
+                      color: '#4B5563',
+                      marginBottom: 2,
+                      textAlign: 'center'
+                    }}>
+                      E-posta: {safeText(schema.header.companyEmail)}
+                    </Text>
+                  )}
+                  {schema.header.companyWebsite && (
+                    <Text style={{
+                      fontSize: (schema.header.companyInfoFontSize || 12) - 1,
+                      color: '#4B5563',
+                      marginBottom: 2,
+                      textAlign: 'center'
+                    }}>
+                      Web: {safeText(schema.header.companyWebsite)}
+                    </Text>
+                  )}
+                  {schema.header.companyTaxNumber && (
+                    <Text style={{
+                      fontSize: (schema.header.companyInfoFontSize || 12) - 1,
+                      color: '#4B5563',
+                      textAlign: 'center'
+                    }}>
+                      Vergi No: {safeText(schema.header.companyTaxNumber)}
+                    </Text>
+                  )}
+                </View>
+              )}
+              
+              {/* Title */}
+              <View style={{ alignItems: 'center' }}>
+                <Text style={styles.title}>{safeText(schema.header.title)}</Text>
+                <Text style={styles.subtitle}>#{safeText(data.number || '')}</Text>
+                {schema.header.showValidity && data.valid_until && (
+                  <Text style={styles.subtitle}>
+                    {safeText(`Geçerlilik: ${formatDate(data.valid_until)}`)}
+                  </Text>
             )}
           </View>
-          <View style={{ alignItems: 'flex-end' }}>
+            </>
+          )}
+
+          {/* Right Position Layout */}
+          {schema.header.logoPosition === 'right' && (
+            <>
+              {/* Left Section - Title */}
+              <View style={{ textAlign: 'left', alignItems: 'flex-start' }}>
             <Text style={styles.title}>{safeText(schema.header.title)}</Text>
             <Text style={styles.subtitle}>#{safeText(data.number || '')}</Text>
             {schema.header.showValidity && data.valid_until && (
@@ -267,6 +508,102 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
               </Text>
             )}
           </View>
+              
+              {/* Right Section - Company Info and Logo */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
+                {/* Company Info */}
+                {schema.header.showCompanyInfo && (
+                  <View style={{ flex: 1, alignItems: 'flex-end', marginRight: 3 }}>
+                    {schema.header.companyName && (
+                      <Text style={{
+                        fontSize: schema.header.companyInfoFontSize || 12,
+                        fontWeight: 'bold',
+                        color: '#1F2937',
+                        marginBottom: 3,
+                        textAlign: 'right'
+                      }}>
+                        {safeText(schema.header.companyName)}
+                      </Text>
+                    )}
+                    {schema.header.companyAddress && (
+                      <Text style={{
+                        fontSize: (schema.header.companyInfoFontSize || 12) - 1,
+                        color: '#4B5563',
+                        marginBottom: 2,
+                        marginLeft: 0,
+                        paddingLeft: 0,
+                        textAlign: 'right'
+                      }}>
+                        {safeText(schema.header.companyAddress)}
+                      </Text>
+                    )}
+                    {schema.header.companyPhone && (
+                      <Text style={{
+                        fontSize: (schema.header.companyInfoFontSize || 12) - 1,
+                        color: '#4B5563',
+                        marginBottom: 2,
+                        marginLeft: 0,
+                        paddingLeft: 0,
+                        textAlign: 'right'
+                      }}>
+                        Tel: {safeText(schema.header.companyPhone)}
+                      </Text>
+                    )}
+                    {schema.header.companyEmail && (
+                      <Text style={{
+                        fontSize: (schema.header.companyInfoFontSize || 12) - 1,
+                        color: '#4B5563',
+                        marginBottom: 2,
+                        marginLeft: 0,
+                        paddingLeft: 0,
+                        textAlign: 'right'
+                      }}>
+                        E-posta: {safeText(schema.header.companyEmail)}
+                      </Text>
+                    )}
+                    {schema.header.companyWebsite && (
+                      <Text style={{
+                        fontSize: (schema.header.companyInfoFontSize || 12) - 1,
+                        color: '#4B5563',
+                        marginBottom: 2,
+                        marginLeft: 0,
+                        paddingLeft: 0,
+                        textAlign: 'right'
+                      }}>
+                        Web: {safeText(schema.header.companyWebsite)}
+                      </Text>
+                    )}
+                    {schema.header.companyTaxNumber && (
+                      <Text style={{
+                        fontSize: (schema.header.companyInfoFontSize || 12) - 1,
+                        color: '#4B5563',
+                        textAlign: 'right'
+                      }}>
+                        Vergi No: {safeText(schema.header.companyTaxNumber)}
+                      </Text>
+                    )}
+                  </View>
+                )}
+                
+                {/* Logo */}
+                {schema.header.showLogo && (schema.header as any).logoUrl && (
+                  <View style={{ 
+                    padding: 0, 
+                    borderWidth: 1, 
+                    borderColor: '#FF0000', 
+                    borderStyle: 'solid',
+                    alignSelf: 'flex-start',
+                    flexShrink: 0
+                  }}>
+                    <Image
+                      style={styles.logo}
+                      src={(schema.header as any).logoUrl}
+                    />
+                  </View>
+                )}
+              </View>
+            </>
+          )}
         </View>
 
         {/* Custom Header Fields */}
@@ -405,7 +742,9 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
         {/* Notes */}
         <View style={styles.notesSection}>
           {schema.notes.intro && (
-            <Text style={styles.notesText}>{safeText(schema.notes.intro)}</Text>
+            <Text style={[styles.notesText, { fontSize: schema.notes.introFontSize || 12 }]}>
+              {safeText(schema.notes.intro)}
+            </Text>
           )}
           {data.notes && (
             <Text style={styles.notesText}>{safeText(data.notes)}</Text>
@@ -424,7 +763,9 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
         {/* Footer */}
         {schema.notes.footer && (
           <View style={styles.footer}>
-            <Text>{safeText(schema.notes.footer)}</Text>
+            <Text style={{ fontSize: schema.notes.footerFontSize || 12 }}>
+              {safeText(schema.notes.footer)}
+            </Text>
           </View>
         )}
 
