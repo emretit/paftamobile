@@ -1,4 +1,3 @@
-import React from 'react';
 import { Document, pdf } from '@react-pdf/renderer';
 import { supabase } from '@/integrations/supabase/client';
 import { QuoteData, PdfTemplate, PdfExportOptions, TemplateSchema } from '@/types/pdf-template';
@@ -162,11 +161,13 @@ export class PdfExportService {
 
       // Create React element for PDF
       try {
-        const pdfElement = React.createElement(Document, {}, 
-          React.createElement(PdfRenderer, {
-            data: quoteData,
-            schema: activeTemplate.schema_json
-          })
+        const pdfElement = (
+          <Document>
+            <PdfRenderer
+              data={quoteData}
+              schema={activeTemplate.schema_json}
+            />
+          </Document>
         );
 
         // Generate PDF blob
@@ -276,12 +277,12 @@ export class PdfExportService {
       website: companySettings?.website || ''
     };
 
-    // Transform customer data
+    // Transform customer data with null safety
     const customer = {
       name: proposal.customer?.name || proposal.customer_name || 'Müşteri',
-      company: proposal.customer?.company_name || '',
+      company: proposal.customer?.company_name || proposal.customer?.company || '',
       email: proposal.customer?.email || '',
-      mobile_phone: proposal.customer?.phone || '',
+      mobile_phone: proposal.customer?.phone || proposal.customer?.mobile_phone || '',
       office_phone: proposal.customer?.office_phone || '',
       address: proposal.customer?.address || '',
       tax_number: proposal.customer?.tax_number || '',
@@ -366,7 +367,8 @@ export class PdfExportService {
       delivery_terms: proposal.delivery_terms || '',
       warranty_terms: proposal.warranty_terms || '',
       notes: proposal.notes || '',
-      created_at: proposal.created_at || new Date().toISOString()
+      created_at: proposal.created_at || new Date().toISOString(),
+      prepared_by: proposal.prepared_by || proposal.created_by || proposal.employee?.name || companySettings?.default_prepared_by || 'Sistem'
     };
   }
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -122,23 +122,11 @@ export const LogoUploadField: React.FC<LogoUploadFieldProps> = ({ logoUrl, onLog
         className="hidden"
       />
 
-      {/* Preview */}
+      {/* Logo Status Indicator */}
       {previewUrl && (
-        <div className="border rounded-lg p-3 bg-gray-50">
-          <div className="flex items-center gap-2 mb-2">
-            <ImageIcon className="h-4 w-4 text-gray-500" />
-            <span className="text-sm font-medium">Logo Önizleme</span>
-          </div>
-          <img
-            src={previewUrl}
-            alt="Logo preview"
-            className="max-w-full h-20 object-contain border rounded"
-            onError={() => {
-              toast.error('Logo yüklenemedi');
-              setPreviewUrl(null);
-              onLogoChange(null);
-            }}
-          />
+        <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-2 rounded-md border border-green-200">
+          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          <span>Logo yüklendi</span>
         </div>
       )}
     </div>

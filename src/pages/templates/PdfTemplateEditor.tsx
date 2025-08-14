@@ -55,9 +55,20 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
       }),
       header: z.object({
         title: z.string().min(1),
+        titleFontSize: z.number().min(8).max(32),
         showLogo: z.boolean(),
         logoUrl: z.string().optional(),
+        logoPosition: z.enum(['left', 'center', 'right']),
+        logoSize: z.number().min(20).max(200),
         showValidity: z.boolean(),
+        showCompanyInfo: z.boolean(),
+        companyName: z.string(),
+        companyAddress: z.string(),
+        companyPhone: z.string(),
+        companyEmail: z.string(),
+        companyWebsite: z.string(),
+        companyTaxNumber: z.string(),
+        companyInfoFontSize: z.number().min(8).max(32),
       }),
       customerBlock: z.object({
         show: z.boolean(),
@@ -79,7 +90,9 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
       }),
       notes: z.object({
         intro: z.string(),
+        introFontSize: z.number().min(8).max(32),
         footer: z.string(),
+        footerFontSize: z.number().min(8).max(32),
         customFields: z.array(z.object({
           id: z.string(),
           label: z.string(),
@@ -102,9 +115,20 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
       },
       header: {
         title: 'TEKLİF',
+        titleFontSize: 16,
         showLogo: true,
         logoUrl: undefined,
+        logoPosition: 'left',
+        logoSize: 80,
         showValidity: true,
+        showCompanyInfo: true,
+        companyName: 'NGS TEKNOLOJİ',
+        companyAddress: 'İstanbul, Türkiye',
+        companyPhone: '+90 212 555 0123',
+        companyEmail: 'info@ngsteknoloji.com',
+        companyWebsite: 'www.ngsteknoloji.com',
+        companyTaxNumber: '1234567890',
+        companyInfoFontSize: 10,
       },
       customerBlock: {
         show: true,
@@ -126,7 +150,9 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
       },
       notes: {
         intro: 'Bu teklif 30 gün geçerlidir.',
+        introFontSize: 12,
         footer: 'İyi çalışmalar dileriz.',
+        footerFontSize: 12,
         customFields: [],
       },
     },
@@ -150,7 +176,32 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
         setSelectedTemplate(template);
         setIsNewTemplate(false);
         setTemplateName(template.name);
-        form.reset(template.schema_json);
+        
+        // Ensure all required fields exist with defaults
+        const schemaWithDefaults = {
+          ...template.schema_json,
+          header: {
+            ...template.schema_json.header,
+            logoPosition: template.schema_json.header.logoPosition || 'left',
+            logoSize: template.schema_json.header.logoSize || 80,
+            titleFontSize: template.schema_json.header.titleFontSize || 16,
+            showCompanyInfo: template.schema_json.header.showCompanyInfo ?? true,
+            companyName: template.schema_json.header.companyName || 'NGS TEKNOLOJİ',
+            companyAddress: template.schema_json.header.companyAddress || 'İstanbul, Türkiye',
+            companyPhone: template.schema_json.header.companyPhone || '+90 212 555 0123',
+            companyEmail: template.schema_json.header.companyEmail || 'info@ngsteknoloji.com',
+            companyWebsite: template.schema_json.header.companyWebsite || 'www.ngsteknoloji.com',
+            companyTaxNumber: template.schema_json.header.companyTaxNumber || '1234567890',
+            companyInfoFontSize: template.schema_json.header.companyInfoFontSize || 10,
+          },
+          notes: {
+            ...template.schema_json.notes,
+            introFontSize: template.schema_json.notes.introFontSize || 12,
+            footerFontSize: template.schema_json.notes.footerFontSize || 12,
+          }
+        };
+        
+        form.reset(schemaWithDefaults);
       } else {
         toast.error('Şablon bulunamadı');
         navigate('/settings');
@@ -163,13 +214,6 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
     try {
       const templates = await PdfExportService.getTemplates();
       setTemplates(templates);
-      
-      // Set default template if available
-      const defaultTemplate = templates.find(t => t.is_default);
-      if (defaultTemplate) {
-        setSelectedTemplate(defaultTemplate);
-        form.reset(defaultTemplate.schema_json);
-      }
     } catch (error) {
       console.error('Error loading templates:', error);
       toast.error('Şablonlar yüklenirken hata oluştu');
@@ -274,13 +318,19 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
           created_by: selectedTemplate.created_by,
         };
         
-        await PdfExportService.saveTemplate(updatedTemplate);
+        // Pass the template ID for update
+        await PdfExportService.saveTemplate(updatedTemplate, selectedTemplate.id);
         toast.success('Şablon başarıyla kaydedildi');
         
         // Update the selected template with the new schema to prevent reload issues
-        setSelectedTemplate(prev => prev ? { ...prev, schema_json: mergedData, version: prev.version + 1 } : null);
+        setSelectedTemplate(prev => prev ? { 
+          ...prev, 
+          name: templateName || prev.name,
+          schema_json: mergedData, 
+          version: prev.version + 1 
+        } : null);
         
-        await loadTemplates();
+        // Reload templates to refresh the list, but don't reset the form
       }
     } catch (error) {
       console.error('Error saving template:', error);
@@ -380,13 +430,13 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                           <Input {...form.register('header.title')} />
                         </div>
                         <div>
-                          <Label>Font Boyutu</Label>
+                          <Label>Başlık Font Boyutu</Label>
                           <Input
                             type="number"
-                            {...form.register('page.fontSize', { valueAsNumber: true })}
+                            {...form.register('header.titleFontSize', { valueAsNumber: true })}
                             min="8"
-                            max="20"
-                            placeholder="12"
+                            max="32"
+                            placeholder="16"
                           />
                         </div>
                       </div>
@@ -401,10 +451,43 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                       </div>
                       
                       {watchedValues.header?.showLogo && (
-                        <LogoUploadField
-                          logoUrl={watchedValues.header?.logoUrl}
-                          onLogoChange={(url) => form.setValue('header.logoUrl', url || undefined)}
-                        />
+                        <div className="space-y-4">
+                          <LogoUploadField
+                            logoUrl={watchedValues.header?.logoUrl}
+                            onLogoChange={(url) => form.setValue('header.logoUrl', url || undefined)}
+                          />
+                          
+                          {/* Logo Position and Size */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label>Logo Pozisyonu</Label>
+                              <Select
+                                value={watchedValues.header?.logoPosition || 'left'}
+                                onValueChange={(value) => form.setValue('header.logoPosition', value as 'left' | 'center' | 'right')}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Pozisyon seçin" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="left">Sol</SelectItem>
+                                  <SelectItem value="center">Orta</SelectItem>
+                                  <SelectItem value="right">Sağ</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div>
+                              <Label>Logo Boyutu</Label>
+                              <Input
+                                type="number"
+                                {...form.register('header.logoSize', { valueAsNumber: true })}
+                                min="20"
+                                max="200"
+                                placeholder="80"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       )}
                       
                       <div className="flex items-center space-x-2">
@@ -415,6 +498,64 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                         />
                         <Label htmlFor="show-validity">Geçerlilik Tarihi Göster</Label>
                       </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="show-company-info"
+                          checked={watchedValues.header?.showCompanyInfo}
+                          onCheckedChange={(checked) => form.setValue('header.showCompanyInfo', checked)}
+                        />
+                        <Label htmlFor="show-company-info">Şirket Bilgilerini Göster</Label>
+                      </div>
+                      
+                      {watchedValues.header?.showCompanyInfo && (
+                        <div className="space-y-4 border-t pt-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label>Şirket Adı</Label>
+                              <Input {...form.register('header.companyName')} placeholder="NGS TEKNOLOJİ" />
+                            </div>
+                            <div>
+                              <Label>Font Boyutu</Label>
+                              <Input
+                                type="number"
+                                {...form.register('header.companyInfoFontSize', { valueAsNumber: true })}
+                                min="8"
+                                max="32"
+                                placeholder="10"
+                                className="w-20"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <Label>Şirket Adresi</Label>
+                            <Input {...form.register('header.companyAddress')} placeholder="İstanbul, Türkiye" />
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label>Telefon</Label>
+                              <Input {...form.register('header.companyPhone')} placeholder="+90 212 555 0123" />
+                            </div>
+                            <div>
+                              <Label>E-posta</Label>
+                              <Input {...form.register('header.companyEmail')} placeholder="info@ngsteknoloji.com" />
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label>Website</Label>
+                              <Input {...form.register('header.companyWebsite')} placeholder="www.ngsteknoloji.com" />
+                            </div>
+                            <div>
+                              <Label>Vergi No</Label>
+                              <Input {...form.register('header.companyTaxNumber')} placeholder="1234567890" />
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
@@ -579,14 +720,36 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                   <AccordionItem value="notes">
                     <AccordionTrigger>Not Ayarları</AccordionTrigger>
                     <AccordionContent className="space-y-4">
-                      <div>
+                      <div className="space-y-2">
                         <Label>Giriş Notu</Label>
                         <Textarea {...form.register('notes.intro')} rows={3} />
+                        <div className="flex items-center gap-2">
+                          <Label className="text-sm">Font Boyutu:</Label>
+                          <Input
+                            type="number"
+                            {...form.register('notes.introFontSize', { valueAsNumber: true })}
+                            min="8"
+                            max="32"
+                            placeholder="12"
+                            className="w-20"
+                          />
+                        </div>
                       </div>
                       
-                      <div>
+                      <div className="space-y-2">
                         <Label>Alt Bilgi</Label>
                         <Textarea {...form.register('notes.footer')} rows={3} />
+                        <div className="flex items-center gap-2">
+                          <Label className="text-sm">Font Boyutu:</Label>
+                          <Input
+                            type="number"
+                            {...form.register('notes.footerFontSize', { valueAsNumber: true })}
+                            min="8"
+                            max="32"
+                            placeholder="12"
+                            className="w-20"
+                          />
+                        </div>
                       </div>
                       
                       <div className="border-t pt-4">

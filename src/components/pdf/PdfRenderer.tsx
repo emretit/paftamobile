@@ -51,9 +51,6 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
       paddingBottom: 15,
       borderBottomWidth: 1,
       borderBottomColor: '#E5E7EB',
-      borderWidth: 2,
-      borderColor: '#0000FF',
-      borderStyle: 'solid',
     },
     logo: {
       width: schema.header.logoSize || 60,
@@ -73,10 +70,6 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
     },
     customerSection: {
       marginBottom: 30,
-      borderWidth: 2,
-      borderColor: '#00FF00',
-      borderStyle: 'solid',
-      padding: 5,
     },
     customerTitle: {
       fontSize: 14,
@@ -91,10 +84,6 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
     },
     table: {
       marginBottom: 30,
-      borderWidth: 2,
-      borderColor: '#FF00FF',
-      borderStyle: 'solid',
-      padding: 5,
     },
     tableHeader: {
       flexDirection: 'row',
@@ -131,10 +120,6 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
       marginLeft: 'auto',
       width: 200,
       marginBottom: 30,
-      borderWidth: 2,
-      borderColor: '#FFFF00',
-      borderStyle: 'solid',
-      padding: 5,
     },
     totalRow: {
       flexDirection: 'row',
@@ -171,10 +156,6 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
     },
     notesSection: {
       marginTop: 'auto',
-      borderWidth: 2,
-      borderColor: '#FFA500',
-      borderStyle: 'solid',
-      padding: 5,
     },
     notesText: {
       fontSize: 9,
@@ -194,10 +175,6 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
     customField: {
       marginVertical: 8,
       paddingHorizontal: 0,
-      borderWidth: 1,
-      borderColor: '#800080',
-      borderStyle: 'solid',
-      padding: 3,
     },
     customFieldText: {
       fontSize: 12,
@@ -254,20 +231,9 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
     const value = fieldMap[fieldKey];
     if (!value) return null;
 
-    const labelMap: Record<string, string> = {
-      name: 'Ad Soyad',
-      company: 'Şirket',
-      email: 'E-posta',
-      mobile_phone: 'Cep Telefonu',
-      office_phone: 'Sabit Telefon',
-      address: 'Adres',
-      tax_number: 'Vergi No',
-      tax_office: 'Vergi Dairesi',
-    };
-
     return (
-      <Text key={fieldKey} style={styles.customerInfo}>
-        {safeText(`${labelMap[fieldKey]}: ${value}`)}
+      <Text key={fieldKey} style={[styles.customerInfo, { marginBottom: 3, textAlign: 'left' }]}>
+        {safeText(value)}
       </Text>
     );
   };
@@ -291,15 +257,12 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
           {schema.header.logoPosition === 'left' && (
             <>
               {/* Left Section - Logo and Company Info */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, borderWidth: 1, borderColor: '#008080', borderStyle: 'solid', padding: 2 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                 {/* Logo */}
                 {schema.header.showLogo && (schema.header as any).logoUrl && (
                   <View style={{ 
                     marginRight: 8, 
                     padding: 0, 
-                    borderWidth: 1, 
-                    borderColor: '#FF0000', 
-                    borderStyle: 'solid',
                     alignSelf: 'flex-start',
                     flexShrink: 0
                   }}>
@@ -312,7 +275,7 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
                 
                 {/* Company Info */}
                 {schema.header.showCompanyInfo && (
-                  <View style={{ flex: 1, marginLeft: 0, paddingLeft: 0, borderWidth: 1, borderColor: '#FF4500', borderStyle: 'solid', padding: 2 }}>
+                  <View style={{ flex: 1, marginLeft: 0, paddingLeft: 0 }}>
                     {schema.header.companyName && (
                       <Text style={{
                         fontSize: schema.header.companyInfoFontSize || 12,
@@ -382,14 +345,8 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
               </View>
               
               {/* Right Section - Title */}
-              <View style={{ textAlign: 'right', alignItems: 'flex-end', borderWidth: 1, borderColor: '#8B4513', borderStyle: 'solid', padding: 2 }}>
+              <View style={{ textAlign: 'right', alignItems: 'flex-end' }}>
                 <Text style={styles.title}>{safeText(schema.header.title)}</Text>
-                <Text style={styles.subtitle}>#{safeText(data.number || '')}</Text>
-                {schema.header.showValidity && data.valid_until && (
-                  <Text style={styles.subtitle}>
-                    {safeText(`Geçerlilik: ${formatDate(data.valid_until)}`)}
-                  </Text>
-                )}
               </View>
             </>
           )}
@@ -403,9 +360,6 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
                   marginBottom: 15, 
                   alignItems: 'center', 
                   padding: 0, 
-                  borderWidth: 1, 
-                  borderColor: '#FF0000', 
-                  borderStyle: 'solid',
                   alignSelf: 'center',
                   flexShrink: 0
                 }}>
@@ -482,32 +436,20 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
                 </View>
               )}
               
-              {/* Title */}
+                            {/* Title */}
               <View style={{ alignItems: 'center' }}>
                 <Text style={styles.title}>{safeText(schema.header.title)}</Text>
-                <Text style={styles.subtitle}>#{safeText(data.number || '')}</Text>
-                {schema.header.showValidity && data.valid_until && (
-                  <Text style={styles.subtitle}>
-                    {safeText(`Geçerlilik: ${formatDate(data.valid_until)}`)}
-                  </Text>
-            )}
-          </View>
+              </View>
             </>
           )}
 
           {/* Right Position Layout */}
           {schema.header.logoPosition === 'right' && (
             <>
-              {/* Left Section - Title */}
+                            {/* Left Section - Title */}
               <View style={{ textAlign: 'left', alignItems: 'flex-start' }}>
-            <Text style={styles.title}>{safeText(schema.header.title)}</Text>
-            <Text style={styles.subtitle}>#{safeText(data.number || '')}</Text>
-            {schema.header.showValidity && data.valid_until && (
-              <Text style={styles.subtitle}>
-                {safeText(`Geçerlilik: ${formatDate(data.valid_until)}`)}
-              </Text>
-            )}
-          </View>
+                <Text style={styles.title}>{safeText(schema.header.title)}</Text>
+              </View>
               
               {/* Right Section - Company Info and Logo */}
               <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
@@ -589,9 +531,6 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
                 {schema.header.showLogo && (schema.header as any).logoUrl && (
                   <View style={{ 
                     padding: 0, 
-                    borderWidth: 1, 
-                    borderColor: '#FF0000', 
-                    borderStyle: 'solid',
                     alignSelf: 'flex-start',
                     flexShrink: 0
                   }}>
@@ -622,15 +561,98 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
           </View>
         ))}
 
-        {/* Customer Information */}
-        {schema.customerBlock.show && data.customer && (
-          <View style={styles.customerSection}>
-            <Text style={styles.customerTitle}>{safeText('Müşteri Bilgileri')}</Text>
-            {schema.customerBlock.fields.map(fieldKey => 
-              renderCustomerField(fieldKey, data.customer)
-            )}
+        {/* Customer and Quote Information Container */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 30 }}>
+          {/* Müşteri Bilgileri Container */}
+          {schema.customerBlock.show && data.customer && (
+            <View style={[styles.customerSection, { flex: 2, marginRight: 20, marginBottom: 0, alignItems: 'flex-start' }]}>
+              {/* Firma İsmi */}
+              {data.customer?.company && (
+                <Text style={[styles.customerTitle, { textAlign: 'left', marginBottom: 10, fontSize: 16, fontWeight: 'bold' }]}>
+                  {safeText(String(data.customer.company).toUpperCase())}
+                </Text>
+              )}
+              
+              <View style={{ alignItems: 'flex-start' }}>
+                {/* Sayın Yetkili */}
+                <Text style={[styles.customerInfo, { marginBottom: 8, fontSize: 11 }]}>
+                  {safeText('Sayın')}
+                </Text>
+                
+                {/* Müşteri Yetkilisi */}
+                {data.customer?.name && (
+                  <Text style={[styles.customerInfo, { marginBottom: 12, fontSize: 12, fontWeight: 'bold' }]}>
+                    {safeText(`${String(data.customer.name)},`)}
+                  </Text>
+                )}
+                
+                {/* Açıklama Metni */}
+                <Text style={[styles.customerInfo, { lineHeight: 1.4, fontSize: 10 }]}>
+                  {safeText('Yapmış olduğumuz görüşmeler sonrasında hazırlamış olduğumuz fiyat teklifimizi değerlendirmenize sunarız.')}
+                </Text>
+              </View>
+            </View>
+          )}
+          
+          {/* Teklif Bilgileri Container */}
+          <View style={[styles.customerSection, { flex: 1, marginLeft: 20, marginBottom: 0, alignItems: 'center' }]}>
+            <Text style={[styles.customerTitle, { textAlign: 'center', marginBottom: 10 }]}>
+              {safeText('Teklif Bilgileri')}
+            </Text>
+            
+            <View style={{ alignItems: 'center' }}>
+              {/* Teklif No */}
+              {data.number && (
+                <View style={{ flexDirection: 'row', marginBottom: 5, alignItems: 'center', justifyContent: 'space-between', width: 160 }}>
+                  <Text style={[styles.customerInfo, { fontWeight: 'bold', width: 60 }]}>
+                    {safeText('Teklif No')}
+                  </Text>
+                  <Text style={[styles.customerInfo, { fontWeight: 'bold', marginHorizontal: 4 }]}>:</Text>
+                  <Text style={[styles.customerInfo, { flex: 1 }]}>
+                    {safeText(String(data.number || ''))}
+                  </Text>
+                </View>
+              )}
+              
+              {/* Tarih */}
+              <View style={{ flexDirection: 'row', marginBottom: 5, alignItems: 'center', justifyContent: 'space-between', width: 160 }}>
+                <Text style={[styles.customerInfo, { fontWeight: 'bold', width: 60 }]}>
+                  {safeText('Tarih')}
+                </Text>
+                <Text style={[styles.customerInfo, { fontWeight: 'bold', marginHorizontal: 4 }]}>:</Text>
+                <Text style={[styles.customerInfo, { flex: 1 }]}>
+                  {safeText(formatDate(data.created_at || new Date().toISOString()))}
+                </Text>
+              </View>
+              
+              {/* Geçerlilik */}
+              {schema.header.showValidity && data.valid_until && (
+                <View style={{ flexDirection: 'row', marginBottom: 5, alignItems: 'center', justifyContent: 'space-between', width: 160 }}>
+                  <Text style={[styles.customerInfo, { fontWeight: 'bold', width: 60 }]}>
+                    {safeText('Geçerlilik')}
+                  </Text>
+                  <Text style={[styles.customerInfo, { fontWeight: 'bold', marginHorizontal: 4 }]}>:</Text>
+                  <Text style={[styles.customerInfo, { flex: 1 }]}>
+                    {safeText(formatDate(data.valid_until))}
+                  </Text>
+                </View>
+              )}
+              
+              {/* Hazırlayan */}
+              {data.prepared_by && (
+                <View style={{ flexDirection: 'row', marginBottom: 5, alignItems: 'center', justifyContent: 'space-between', width: 160 }}>
+                  <Text style={[styles.customerInfo, { fontWeight: 'bold', width: 60 }]}>
+                    {safeText('Hazırlayan')}
+                  </Text>
+                  <Text style={[styles.customerInfo, { fontWeight: 'bold', marginHorizontal: 4 }]}>:</Text>
+                  <Text style={[styles.customerInfo, { flex: 1 }]}>
+                    {safeText(String(data.prepared_by || ''))}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
-        )}
+        </View>
 
         {/* Custom Before-Table Fields */}
         {(schema.notes as any).customFields?.filter((field: any) => field.position === 'before-table').map((field: any) => (

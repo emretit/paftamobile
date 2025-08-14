@@ -12,8 +12,19 @@ export interface PageSettings {
 export interface HeaderSettings {
   showLogo: boolean;
   logoUrl?: string;
+  logoPosition: "left" | "center" | "right";
+  logoSize: number;
   title: string;
+  titleFontSize: number;
   showValidity: boolean;
+  showCompanyInfo: boolean;
+  companyName: string;
+  companyAddress: string;
+  companyPhone: string;
+  companyEmail: string;
+  companyWebsite: string;
+  companyTaxNumber: string;
+  companyInfoFontSize: number;
 }
 
 export interface CustomerBlockSettings {
@@ -54,7 +65,9 @@ export interface CustomTextField {
 
 export interface NotesSettings {
   intro?: string;
+  introFontSize: number;
   footer?: string;
+  footerFontSize: number;
   customFields?: CustomTextField[];
 }
 
