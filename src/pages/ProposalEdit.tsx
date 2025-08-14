@@ -259,8 +259,14 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
 
   const calculationsByCurrency = calculateTotalsByCurrency();
   
-  // Legacy calculations for backward compatibility (using primary currency)
-  const primaryCurrency = formData.currency;
+  // Auto-detect primary currency from items (use the currency with highest total)
+  const currencyTotals = Object.entries(calculationsByCurrency);
+  const [detectedCurrency] = currencyTotals.length > 0 
+    ? currencyTotals.reduce((max, current) => current[1].grand > max[1].grand ? current : max)
+    : ['TRY', { grand: 0 }];
+  
+  // Use detected currency or fallback to form currency
+  const primaryCurrency = detectedCurrency || formData.currency;
   const primaryTotals = calculationsByCurrency[primaryCurrency] || {
     gross: 0,
     discount: 0,
@@ -421,7 +427,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         total_discount: primaryTotals.discount,
         total_tax: primaryTotals.vat,
         total_amount: primaryTotals.grand,
-        currency: formData.currency,
+        currency: primaryCurrency,
         items: items.map(item => ({
           ...item,
           total_price: item.quantity * item.unit_price
