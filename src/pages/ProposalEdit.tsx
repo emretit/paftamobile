@@ -24,7 +24,7 @@ import { proposalStatusColors, proposalStatusLabels, ProposalStatus } from "@/ty
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { handleProposalStatusChange } from "@/services/workflow/proposalWorkflow";
-import { SimplePdfExportService, PdfTemplate } from "@/services/pdf/simplePdfExport";
+import { PdfExportService } from "@/services/pdf/pdfExportService";
 import ProposalFormTerms from "@/components/proposals/form/ProposalFormTerms";
 import EmployeeSelector from "@/components/proposals/form/EmployeeSelector";
 import ContactPersonInput from "@/components/proposals/form/ContactPersonInput";
@@ -115,7 +115,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
   
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [templates, setTemplates] = useState<PdfTemplate[]>([]);
+  const [templates, setTemplates] = useState<any[]>([]);
 
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
 
@@ -127,7 +127,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
   const loadTemplates = async () => {
     try {
       setIsLoadingTemplates(true);
-      const data = await SimplePdfExportService.getTemplates('quote');
+      const data = await PdfExportService.getTemplates('quote');
       setTemplates(data);
     } catch (error) {
       console.error('Error loading templates:', error);
@@ -510,9 +510,34 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         await handleSaveChanges(proposal.status);
       }
 
-      // Use simple PDF export service with selected template
-      await SimplePdfExportService.openPdf(proposal, templateId);
-      toast.success('PDF yeni sekmede açıldı');
+      // Transform proposal data to the format expected by PdfExportService
+      const companySettings = await PdfExportService.getCompanySettings();
+      const quoteData = PdfExportService.transformProposalToQuoteData(proposal, companySettings);
+      
+      // Generate PDF with the selected template
+      const blob = await PdfExportService.generatePdf(quoteData, { templateId });
+      
+      // Open in new tab
+      const blobUrl = URL.createObjectURL(blob);
+      const newWindow = window.open(blobUrl, '_blank');
+      
+      if (newWindow) {
+        // Clean up blob URL after a delay
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+        }, 1000);
+        toast.success('PDF yeni sekmede açıldı');
+      } else {
+        // Fallback to download if popup blocked
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `teklif-${proposal.number || proposal.proposal_number || proposal.id}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+        toast.success('PDF indirildi');
+      }
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('PDF oluşturulamadı: ' + (error as Error).message);

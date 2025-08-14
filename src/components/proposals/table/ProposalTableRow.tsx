@@ -14,7 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useProposalCalculations } from "@/hooks/proposals/useProposalCalculations";
 import { formatProposalAmount } from "@/services/workflow/proposalWorkflow";
 import { useToast } from "@/hooks/use-toast";
-import { SimplePdfExportService } from "@/services/pdf/simplePdfExport";
+import { PdfExportService } from "@/services/pdf/pdfExportService";
 
 // import { ProposalPdfExporter } from "../ProposalPdfExporter";
 
