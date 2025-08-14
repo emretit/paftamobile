@@ -436,50 +436,50 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                 <Accordion type="single" collapsible defaultValue="header">
                   <AccordionItem value="header">
                     <AccordionTrigger>Başlık Ayarları</AccordionTrigger>
-                    <AccordionContent className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Başlık Metni</Label>
-                          <Input {...form.register('header.title')} />
+                    <AccordionContent className="space-y-3 pt-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs font-medium">Başlık Metni</Label>
+                          <Input {...form.register('header.title')} className="h-8 text-sm" />
                         </div>
-                        <div>
-                          <Label>Başlık Font Boyutu</Label>
+                        <div className="space-y-1">
+                          <Label className="text-xs font-medium">Font Boyutu</Label>
                           <Input
                             type="number"
                             {...form.register('header.titleFontSize', { valueAsNumber: true })}
                             min="8"
                             max="32"
                             placeholder="16"
+                            className="h-8 text-sm"
                           />
                         </div>
                       </div>
                       
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-between py-1">
+                        <Label htmlFor="show-logo" className="text-xs font-medium">Logo Göster</Label>
                         <Switch
                           id="show-logo"
                           checked={watchedValues.header?.showLogo}
                           onCheckedChange={(checked) => form.setValue('header.showLogo', checked)}
                         />
-                        <Label htmlFor="show-logo">Logo Göster</Label>
                       </div>
                       
                       {watchedValues.header?.showLogo && (
-                        <div className="space-y-4">
+                        <div className="space-y-3 bg-muted/20 rounded-lg p-3 border border-border/20">
                           <LogoUploadField
                             logoUrl={watchedValues.header?.logoUrl}
                             onLogoChange={(url) => form.setValue('header.logoUrl', url || undefined)}
                           />
                           
-                          {/* Logo Position and Size */}
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label>Logo Pozisyonu</Label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs font-medium">Pozisyon</Label>
                               <Select
                                 value={watchedValues.header?.logoPosition || 'left'}
                                 onValueChange={(value) => form.setValue('header.logoPosition', value as 'left' | 'center' | 'right')}
                               >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Pozisyon seçin" />
+                                <SelectTrigger className="h-8">
+                                  <SelectValue placeholder="Pozisyon" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="left">Sol</SelectItem>
@@ -489,82 +489,83 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                               </Select>
                             </div>
                             
-                            <div>
-                              <Label>Logo Boyutu</Label>
+                            <div className="space-y-1">
+                              <Label className="text-xs font-medium">Boyut</Label>
                               <Input
                                 type="number"
                                 {...form.register('header.logoSize', { valueAsNumber: true })}
                                 min="20"
                                 max="200"
                                 placeholder="80"
+                                className="h-8 text-sm"
                               />
                             </div>
                           </div>
                         </div>
                       )}
                       
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-between py-1">
+                        <Label htmlFor="show-validity" className="text-xs font-medium">Geçerlilik Tarihi</Label>
                         <Switch
                           id="show-validity"
                           checked={watchedValues.header?.showValidity}
                           onCheckedChange={(checked) => form.setValue('header.showValidity', checked)}
                         />
-                        <Label htmlFor="show-validity">Geçerlilik Tarihi Göster</Label>
                       </div>
                       
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-between py-1">
+                        <Label htmlFor="show-company-info" className="text-xs font-medium">Şirket Bilgileri</Label>
                         <Switch
                           id="show-company-info"
                           checked={watchedValues.header?.showCompanyInfo}
                           onCheckedChange={(checked) => form.setValue('header.showCompanyInfo', checked)}
                         />
-                        <Label htmlFor="show-company-info">Şirket Bilgilerini Göster</Label>
                       </div>
                       
                       {watchedValues.header?.showCompanyInfo && (
-                        <div className="space-y-4 border-t pt-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label>Şirket Adı</Label>
-                              <Input {...form.register('header.companyName')} placeholder="NGS TEKNOLOJİ" />
+                        <div className="space-y-3 bg-muted/20 rounded-lg p-3 border border-border/20">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs font-medium">Şirket Adı</Label>
+                              <Input {...form.register('header.companyName')} placeholder="NGS TEKNOLOJİ" className="h-8 text-sm" />
                             </div>
-                            <div>
-                              <Label>Font Boyutu</Label>
+                            <div className="space-y-1">
+                              <Label className="text-xs font-medium">Font Boyutu</Label>
                               <Input
                                 type="number"
                                 {...form.register('header.companyInfoFontSize', { valueAsNumber: true })}
                                 min="8"
                                 max="32"
                                 placeholder="10"
-                                className="w-20"
+                                className="h-8 text-sm"
                               />
                             </div>
                           </div>
                           
-                          <div>
-                            <Label>Şirket Adresi</Label>
-                            <Input {...form.register('header.companyAddress')} placeholder="İstanbul, Türkiye" />
+                          <div className="space-y-1">
+                            <Label className="text-xs font-medium">Şirket Adresi</Label>
+                            <Input {...form.register('header.companyAddress')} placeholder="İstanbul, Türkiye" className="h-8 text-sm" />
                           </div>
                           
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label>Telefon</Label>
-                              <Input {...form.register('header.companyPhone')} placeholder="+90 212 555 0123" />
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs font-medium">Telefon</Label>
+                              <Input {...form.register('header.companyPhone')} placeholder="+90 212 555 0123" className="h-8 text-sm" />
                             </div>
-                            <div>
-                              <Label>E-posta</Label>
-                              <Input {...form.register('header.companyEmail')} placeholder="info@ngsteknoloji.com" />
+                            <div className="space-y-1">
+                              <Label className="text-xs font-medium">E-posta</Label>
+                              <Input {...form.register('header.companyEmail')} placeholder="info@ngsteknoloji.com" className="h-8 text-sm" />
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label>Website</Label>
-                              <Input {...form.register('header.companyWebsite')} placeholder="www.ngsteknoloji.com" />
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs font-medium">Website</Label>
+                              <Input {...form.register('header.companyWebsite')} placeholder="www.ngsteknoloji.com" className="h-8 text-sm" />
                             </div>
-                            <div>
-                              <Label>Vergi No</Label>
-                              <Input {...form.register('header.companyTaxNumber')} placeholder="1234567890" />
+                            <div className="space-y-1">
+                              <Label className="text-xs font-medium">Vergi No</Label>
+                              <Input {...form.register('header.companyTaxNumber')} placeholder="1234567890" className="h-8 text-sm" />
                             </div>
                           </div>
                         </div>
