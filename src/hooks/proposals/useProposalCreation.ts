@@ -33,7 +33,7 @@ export const useProposalCreation = () => {
         status: formData.status,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        total_amount: totals.total || 0,
+        total_amount: formData.computed_total_amount || totals.total || 0,
         currency: formData.currency || "TRY",
         items: formData.items?.map(item => ({
           ...item,

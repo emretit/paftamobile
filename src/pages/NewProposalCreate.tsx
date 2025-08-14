@@ -337,11 +337,23 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
 
     setSaving(true);
     try {
-      // Find the currency with the highest total amount for main proposal currency
+      // Auto-detect primary currency from items (use the currency with highest total) - Same logic as ProposalEdit
       const currencyTotals = Object.entries(calculationsByCurrency);
-      const [mainCurrency, mainTotals] = currencyTotals.reduce((max, current) => {
-        return current[1].grand > max[1].grand ? current : max;
-      }, currencyTotals[0] || ['TRY', { grand: 0 }]);
+      const [detectedCurrency] = currencyTotals.length > 0 
+        ? currencyTotals.reduce((max, current) => current[1].grand > max[1].grand ? current : max)
+        : ['TRY', { grand: 0 }];
+      
+      // Use detected currency or fallback to form currency
+      const primaryCurrency = detectedCurrency || formData.currency;
+      const primaryTotals = calculationsByCurrency[primaryCurrency] || {
+        gross: 0,
+        discount: 0,
+        net: 0,
+        vat: 0,
+        grand: 0
+      };
+
+
 
       // Prepare data for backend
       const proposalData = {
@@ -359,8 +371,10 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
         other_terms: formData.other_terms,
         notes: formData.notes,
         status: status,
-        total_amount: mainTotals.grand,
-        currency: mainCurrency,
+        total_amount: primaryTotals.grand,
+        currency: primaryCurrency,
+        // Override hook's calculation with our computed total
+        computed_total_amount: primaryTotals.grand,
         items: validItems.map(item => ({
           ...item,
           total_price: item.quantity * item.unit_price
