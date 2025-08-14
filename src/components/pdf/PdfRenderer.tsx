@@ -239,15 +239,12 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
   };
 
   const renderProposalField = (fieldKey: string) => {
+    // Sadece 4 temel teklif bilgisi gösterilecek
     const fieldMap: Record<string, { label: string; value: string | undefined }> = {
       number: { label: 'Teklif No', value: data.number },
-      title: { label: 'Başlık', value: data.title },
-      description: { label: 'Açıklama', value: data.description },
-      valid_until: { label: 'Geçerlilik', value: data.valid_until ? formatDate(data.valid_until) : undefined },
-      payment_terms: { label: 'Ödeme Koşulları', value: data.payment_terms },
-      delivery_terms: { label: 'Teslimat Koşulları', value: data.delivery_terms },
-      warranty_terms: { label: 'Garanti Koşulları', value: data.warranty_terms },
       created_at: { label: 'Tarih', value: data.created_at ? formatDate(data.created_at) : undefined },
+      valid_until: { label: 'Geçerlilik', value: data.valid_until ? formatDate(data.valid_until) : undefined },
+      prepared_by: { label: 'Hazırlayan', value: data.prepared_by || 'Belirtilmemiş' },
     };
 
     const field = fieldMap[fieldKey];
@@ -630,7 +627,11 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
               </Text>
               
               <View style={{ alignItems: 'center' }}>
-                {(schema as any).proposalBlock?.fields?.map((fieldKey: string) => renderProposalField(fieldKey))}
+                {/* Sabit 4 teklif bilgisi göster */}
+                {renderProposalField('number')}
+                {renderProposalField('created_at')}
+                {renderProposalField('valid_until')}
+                {renderProposalField('prepared_by')}
               </View>
             </View>
           )}

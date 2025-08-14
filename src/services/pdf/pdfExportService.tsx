@@ -39,6 +39,26 @@ export class PdfExportService {
         };
       }
 
+      // Çalışan verilerini çek (Hazırlayan bilgisi için)
+      let employee = null;
+      let preparedBy = 'Belirtilmemiş';
+      if (proposal.employee) {
+        employee = proposal.employee;
+        preparedBy = `${employee.first_name} ${employee.last_name}`;
+      } else if (proposal.employee_id) {
+        const { data: employeeData } = await supabase
+          .from('employees')
+          .select('first_name, last_name, email, phone, position')
+          .eq('id', proposal.employee_id)
+          .single();
+        if (employeeData) {
+          employee = employeeData;
+          preparedBy = `${employeeData.first_name} ${employeeData.last_name}`;
+        }
+      } else if (proposal.employee_name) {
+        preparedBy = proposal.employee_name;
+      }
+
       // Teklif kalemlerini al (JSON formatında saklı)
       const items = proposal.items || [];
 
@@ -81,6 +101,7 @@ export class PdfExportService {
           tax_number: customer?.tax_number || '',
           tax_office: customer?.tax_office || '',
         } : undefined,
+        prepared_by: preparedBy,
         items: (items || []).map((item: any) => ({
           id: item?.id || item?.product_id || Math.random().toString(),
           description: item?.description || item?.name || '',

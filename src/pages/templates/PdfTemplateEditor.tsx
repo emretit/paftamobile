@@ -678,32 +678,18 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                         
                         {watchedValues.proposalBlock?.show && (
                           <div className="space-y-2 ml-6">
-                            <Label className="text-sm text-muted-foreground">Gösterilecek Teklif Alanları</Label>
-                            {['number', 'title', 'description', 'valid_until', 'payment_terms', 'delivery_terms', 'warranty_terms', 'created_at'].map((field) => (
-                              <div key={field} className="flex items-center space-x-2">
-                                <Switch
-                                  id={`show-proposal-${field}`}
-                                  checked={watchedValues.proposalBlock?.fields?.includes(field as any)}
-                                  onCheckedChange={(checked) => {
-                                    const currentFields = watchedValues.proposalBlock?.fields || [];
-                                    if (checked) {
-                                      form.setValue('proposalBlock.fields', [...currentFields, field as any]);
-                                    } else {
-                                      form.setValue('proposalBlock.fields', currentFields.filter(f => f !== field));
-                                    }
-                                  }}
-                                />
-                                <Label htmlFor={`show-proposal-${field}`} className="text-sm">
-                                  {field === 'number' ? 'Teklif Numarası' : 
-                                   field === 'title' ? 'Başlık' : 
-                                   field === 'description' ? 'Açıklama' : 
-                                   field === 'valid_until' ? 'Geçerlilik Tarihi' :
-                                   field === 'payment_terms' ? 'Ödeme Koşulları' : 
-                                   field === 'delivery_terms' ? 'Teslimat Koşulları' :
-                                   field === 'warranty_terms' ? 'Garanti Koşulları' : 'Oluşturma Tarihi'}
-                                </Label>
+                            <Label className="text-sm text-muted-foreground">Teklif Bilgileri (Tümü Gösterilecek)</Label>
+                            <div className="text-sm text-muted-foreground bg-gray-50 p-3 rounded-lg">
+                              <div className="space-y-1">
+                                <div>• Teklif Numarası</div>
+                                <div>• Oluşturma Tarihi</div>
+                                <div>• Geçerlilik Tarihi</div>
+                                <div>• Hazırlayan Kişi</div>
                               </div>
-                            ))}
+                              <div className="text-xs text-gray-500 mt-2">
+                                Bu alanlar otomatik olarak gösterilir.
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>

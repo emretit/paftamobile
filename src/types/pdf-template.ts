@@ -120,6 +120,7 @@ export interface QuoteData extends Record<string, unknown> {
     email: string;
     phone?: string;
   };
+  prepared_by?: string;
   company?: {
     name: string;
     address?: string;
