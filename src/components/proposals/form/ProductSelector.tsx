@@ -69,7 +69,7 @@ const ProductSelector = ({ value, onChange, onProductSelect, placeholder = "ÃœrÃ
           )}
           disabled={isLoading}
         >
-          {value || placeholder}
+          <span className="truncate text-left flex-1">{value || placeholder}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>

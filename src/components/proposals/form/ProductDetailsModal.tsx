@@ -96,9 +96,21 @@ const ProductDetailsModal = ({
         setDiscountRate(0);
         setQuantity(1);
         setIsManualPriceEdit(false);
+      } else {
+        // Reset to defaults when no product and no existing data
+        setQuantity(1);
+        setUnitPrice(0);
+        setVatRate(20);
+        setDiscountRate(0);
+        setDescription("");
+        setUnit("adet");
+        setSelectedCurrency(currency);
+        setOriginalPrice(0);
+        setOriginalCurrency(currency);
+        setIsManualPriceEdit(false);
       }
     }
-  }, [product, open, existingData]);
+  }, [product, open, existingData, currency]);
 
   // Store previous currency to convert from current price instead of original price
   const [previousCurrency, setPreviousCurrency] = useState(selectedCurrency);
@@ -132,10 +144,11 @@ const ProductDetailsModal = ({
   const { subtotal, discountAmount, netAmount, vatAmount, total } = calculateTotals();
 
   const handleAddToProposal = () => {
-    if (!product) return;
+    // Get product name from either product or existingData
+    const productName = product ? product.name : (existingData ? existingData.name : description);
 
     onAddToProposal({
-      name: product.name,
+      name: productName,
       description,
       quantity,
       unit,
@@ -159,15 +172,16 @@ const ProductDetailsModal = ({
   const showStockWarning = product && quantity > product.stock_quantity;
   const showCurrencyWarning = product && product.currency !== selectedCurrency;
 
-  if (!product) return null;
+  // Don't render if neither product nor existingData is provided
+  if (!product && !existingData) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="bg-primary/10 -m-6 mb-4 p-4 rounded-t-lg">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg font-semibold text-primary">
-              {product.name}
+            <DialogTitle className="text-lg font-semibold text-primary truncate">
+              {product ? product.name : (existingData ? existingData.name : "Ürün Detayları")}
             </DialogTitle>
             <Button
               variant="ghost"
@@ -178,21 +192,21 @@ const ProductDetailsModal = ({
               <X className="h-4 w-4" />
             </Button>
           </div>
-          {product.sku && (
+          {product?.sku && (
             <p className="text-sm text-muted-foreground">Ürün Kodu: {product.sku}</p>
           )}
         </DialogHeader>
 
         <div className="space-y-4">
-          {showStockWarning && (
+          {product && showStockWarning && (
             <Alert variant="destructive">
               <AlertDescription>
-                <strong>Stok Uyarısı!</strong> Seçilen miktar ({quantity}) mevcut stoktan ({product?.stock_quantity}) fazla.
+                <strong>Stok Uyarısı!</strong> Seçilen miktar ({quantity}) mevcut stoktan ({product.stock_quantity}) fazla.
               </AlertDescription>
             </Alert>
           )}
 
-          {showCurrencyWarning && (
+          {product && showCurrencyWarning && (
             <Alert>
               <AlertDescription>
                 <strong>Para Birimi Uyarısı!</strong> Bu ürün kartındaki fiyat ({originalCurrency}) ile seçilen para birimi ({selectedCurrency}) farklı.
