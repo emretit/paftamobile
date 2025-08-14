@@ -77,40 +77,25 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
   const handleDownloadPdf = async (templateId?: string) => {
     if (!proposal) return;
     
+    setIsLoading(true);
     try {
-      setIsLoading(true);
+      // Teklif detaylarını çek
+      const proposalData = await PdfExportService.transformProposalForPdf(proposal);
       
-      // Transform proposal data to the format expected by PdfExportService
-      const companySettings = await PdfExportService.getCompanySettings();
-      const quoteData = PdfExportService.transformProposalToQuoteData(proposal, companySettings);
+      // PDF'i oluştur ve indir
+      await PdfExportService.downloadPdf(proposalData, { templateId });
       
-      // Generate PDF with the selected template
-      const blob = await PdfExportService.generatePdf(quoteData, { templateId });
-      
-      // Open in new tab
-      const blobUrl = URL.createObjectURL(blob);
-      const newWindow = window.open(blobUrl, '_blank');
-      
-      if (newWindow) {
-        // Clean up blob URL after a delay
-        setTimeout(() => {
-          URL.revokeObjectURL(blobUrl);
-        }, 1000);
-        toast.success('PDF yeni sekmede açıldı');
-      } else {
-        // Fallback to download if popup blocked
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `teklif-${proposal.number || proposal.proposal_number || proposal.id}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
-        toast.success('PDF indirildi');
-      }
+      toast({
+        title: "Başarılı", 
+        description: "PDF başarıyla oluşturuldu"
+      });
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast.error('PDF oluşturulamadı: ' + (error as Error).message);
+      console.error('PDF generation error:', error);
+      toast({
+        title: "Hata",
+        description: "PDF oluşturulurken hata oluştu: " + (error as Error).message,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }

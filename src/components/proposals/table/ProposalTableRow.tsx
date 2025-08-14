@@ -66,9 +66,27 @@ export const ProposalTableRow: React.FC<ProposalTableRowProps> = ({
     navigate(`/proposal/${proposal.id}`);
   };
 
-  const handlePdfPrintClick = (e: React.MouseEvent, templateId: string) => {
+  const handlePdfPrintClick = async (e: React.MouseEvent, templateId: string) => {
     e.stopPropagation();
-    onPdfPrint(proposal, templateId);
+    try {
+      // Teklif detaylarını çek
+      const proposalData = await PdfExportService.transformProposalForPdf(proposal);
+      
+      // PDF'i oluştur ve indir
+      await PdfExportService.downloadPdf(proposalData, { templateId });
+      
+      toast({
+        title: "Başarılı",
+        description: "PDF başarıyla oluşturuldu",
+      });
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast({
+        title: "Hata",
+        description: "PDF oluşturulurken hata oluştu: " + (error as Error).message,
+        variant: "destructive"
+      });
+    }
   };
 
 

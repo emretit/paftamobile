@@ -6,6 +6,112 @@ import { validatePdfData } from '@/utils/pdfHelpers';
 
 export class PdfExportService {
   /**
+   * Transform Proposal to QuoteData format for PDF generation
+   */
+  static async transformProposalForPdf(proposal: any): Promise<QuoteData> {
+    try {
+      // Null kontrolü
+      if (!proposal) {
+        throw new Error('Teklif verisi bulunamadı');
+      }
+      // Müşteri verilerini çek
+      let customer = null;
+      if (proposal.customer) {
+        customer = proposal.customer;
+      } else if (proposal.customer_id) {
+        const { data: customerData } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('id', proposal.customer_id)
+          .single();
+        customer = customerData;
+      } else {
+        // Proposal'da direkt müşteri bilgileri varsa onları kullan
+        customer = {
+          name: proposal.customer_name || '',
+          company: proposal.customer_company || '',
+          email: proposal.customer_email || '',
+          mobile_phone: proposal.mobile_phone || '',
+          office_phone: proposal.office_phone || '',
+          address: proposal.address || '',
+          tax_number: proposal.tax_number || '',
+          tax_office: proposal.tax_office || '',
+        };
+      }
+
+      // Teklif kalemlerini al (JSON formatında saklı)
+      const items = proposal.items || [];
+
+      // Totalleri hesapla - null güvenliği ile
+      const subtotal = (items || []).reduce((sum: number, item: any) => {
+        if (!item) return sum;
+        const total = Number(item.total) || (Number(item.quantity || 0) * Number(item.unit_price || 0));
+        return sum + (Number(total) || 0);
+      }, 0);
+
+      const totalTax = (items || []).reduce((sum: number, item: any) => {
+        if (!item) return sum;
+        const itemTotal = Number(item.total) || (Number(item.quantity || 0) * Number(item.unit_price || 0));
+        const taxRate = Number(item.tax_rate) || 0;
+        return sum + ((Number(itemTotal) || 0) * taxRate / 100);
+      }, 0);
+
+      const totalDiscount = (items || []).reduce((sum: number, item: any) => {
+        if (!item) return sum;
+        const itemTotal = Number(item.total) || (Number(item.quantity || 0) * Number(item.unit_price || 0));
+        const discountRate = Number(item.discount_rate) || 0;
+        return sum + ((Number(itemTotal) || 0) * discountRate / 100);
+      }, 0);
+
+      const totalAmount = subtotal + totalTax - totalDiscount;
+
+      // QuoteData formatına dönüştür
+      const quoteData: QuoteData = {
+        id: proposal?.id || '',
+        number: proposal?.number || proposal?.proposal_number || '',
+        title: proposal?.title || '',
+        description: proposal?.description || '',
+        customer: customer ? {
+          name: customer?.name || '',
+          company: customer?.company || '',
+          email: customer?.email || '',
+          mobile_phone: customer?.mobile_phone || '',
+          office_phone: customer?.office_phone || '',
+          address: customer?.address || '',
+          tax_number: customer?.tax_number || '',
+          tax_office: customer?.tax_office || '',
+        } : undefined,
+        items: (items || []).map((item: any) => ({
+          id: item?.id || item?.product_id || Math.random().toString(),
+          description: item?.description || item?.name || '',
+          quantity: Number(item?.quantity) || 1,
+          unit_price: Number(item?.unit_price) || 0,
+          unit: item?.unit || 'adet',
+          tax_rate: Number(item?.tax_rate) || 0,
+          discount_rate: Number(item?.discount_rate) || 0,
+          total: Number(item?.total) || (Number(item?.quantity || 1) * Number(item?.unit_price || 0)) || 0,
+        })),
+        subtotal: Number(subtotal) || 0,
+        total_discount: Number(totalDiscount) || 0,
+        total_tax: Number(totalTax) || 0,
+        total_amount: Number(totalAmount) || 0,
+        currency: proposal?.currency || 'TRY',
+        valid_until: proposal?.valid_until || undefined,
+        payment_terms: proposal?.payment_terms || undefined,
+        delivery_terms: proposal?.delivery_terms || undefined,
+        warranty_terms: proposal?.warranty_terms || undefined,
+        notes: proposal?.notes || undefined,
+        created_at: proposal?.created_at || new Date().toISOString(),
+      };
+
+      return quoteData;
+    } catch (error) {
+      console.error('Error transforming proposal for PDF:', error);
+      throw new Error('Teklif PDF formatına dönüştürülürken hata oluştu: ' + (error as Error).message);
+    }
+  }
+
+  /**
    * Get all PDF templates
    */
   static async getTemplates(type: 'quote' | 'invoice' | 'proposal' = 'quote') {
@@ -185,12 +291,10 @@ export class PdfExportService {
         });
 
         const pdfElement = (
-          <Document>
-            <PdfRenderer
-              data={quoteData}
-              schema={schema}
-            />
-          </Document>
+          <PdfRenderer
+            data={quoteData}
+            schema={schema}
+          />
         );
 
         // Generate PDF blob

@@ -503,45 +503,8 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
   };
 
   const handlePdfPrint = async (templateId?: string) => {
-    try {
-      // If there are unsaved changes, save them first to get updated totals
-      if (hasChanges) {
-        toast.info('PDF oluşturulmadan önce değişiklikler kaydediliyor...');
-        await handleSaveChanges(proposal.status);
-      }
-
-      // Transform proposal data to the format expected by PdfExportService
-      const companySettings = await PdfExportService.getCompanySettings();
-      const quoteData = PdfExportService.transformProposalToQuoteData(proposal, companySettings);
-      
-      // Generate PDF with the selected template
-      const blob = await PdfExportService.generatePdf(quoteData, { templateId });
-      
-      // Open in new tab
-      const blobUrl = URL.createObjectURL(blob);
-      const newWindow = window.open(blobUrl, '_blank');
-      
-      if (newWindow) {
-        // Clean up blob URL after a delay
-        setTimeout(() => {
-          URL.revokeObjectURL(blobUrl);
-        }, 1000);
-        toast.success('PDF yeni sekmede açıldı');
-      } else {
-        // Fallback to download if popup blocked
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `teklif-${proposal.number || proposal.proposal_number || proposal.id}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
-        toast.success('PDF indirildi');
-      }
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast.error('PDF oluşturulamadı: ' + (error as Error).message);
-    }
+    // PDF yazdırma fonksiyonu devre dışı bırakıldı
+    toast.info('PDF yazdırma özelliği geçici olarak devre dışı');
   };
 
 

@@ -58,46 +58,21 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
 
   const handlePdfPrint = async (proposal: Proposal, templateId: string) => {
     try {
-      // Transform proposal data to the format expected by PdfExportService
-      const companySettings = await PdfExportService.getCompanySettings();
-      const quoteData = PdfExportService.transformProposalToQuoteData(proposal, companySettings);
+      // Teklif detaylarını çek
+      const proposalData = await PdfExportService.transformProposalForPdf(proposal);
       
-      // Generate PDF with the selected template
-      const blob = await PdfExportService.generatePdf(quoteData, { templateId });
+      // PDF'i oluştur ve indir
+      await PdfExportService.downloadPdf(proposalData, { templateId });
       
-      // Open in new tab
-      const blobUrl = URL.createObjectURL(blob);
-      const newWindow = window.open(blobUrl, '_blank');
-      
-      if (newWindow) {
-        // Clean up blob URL after a delay
-        setTimeout(() => {
-          URL.revokeObjectURL(blobUrl);
-        }, 1000);
-        toast({
-          title: "PDF Açıldı",
-          description: "PDF yeni sekmede açıldı",
-        });
-      } else {
-        // Fallback to download if popup blocked
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `teklif-${proposal.number || proposal.proposal_number || proposal.id}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
-        toast({
-          title: "PDF İndirildi",
-          description: "PDF başarıyla indirildi",
-        });
-      }
+      toast({
+        title: "Başarılı",
+        description: "PDF başarıyla oluşturuldu",
+      });
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error('PDF generation error:', error);
       toast({
         title: "Hata",
-        description: "PDF oluşturulamadı: " + (error as Error).message,
-        variant: "destructive",
+        description: "PDF oluşturulurken hata oluştu: " + (error as Error).message,
       });
     }
   };
