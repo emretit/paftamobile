@@ -259,8 +259,9 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
     }
   };
 
-  const handleProductModalSelect = (product: any) => {
+  const handleProductModalSelect = (product: any, itemIndex?: number) => {
     setSelectedProduct(product);
+    setEditingItemIndex(itemIndex);
     setProductModalOpen(true);
   };
 
@@ -713,7 +714,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                             onChange={(productName) => {
                               handleItemChange(index, 'description', productName);
                             }}
-                            onProductSelect={handleProductModalSelect}
+                            onProductSelect={(product) => handleProductModalSelect(product, index)}
                             placeholder="Ürün seçin..."
                             className="mt-1"
                           />

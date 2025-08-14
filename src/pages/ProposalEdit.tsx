@@ -312,8 +312,9 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
     setHasChanges(true);
   };
 
-  const handleProductModalSelect = (product: any) => {
+  const handleProductModalSelect = (product: any, itemIndex?: number) => {
     setSelectedProduct(product);
+    setEditingItemIndex(itemIndex);
     setProductModalOpen(true);
   };
 
@@ -1003,7 +1004,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
                             onChange={(productName) => {
                               handleItemChange(index, 'description', productName);
                             }}
-                            onProductSelect={handleProductModalSelect}
+                            onProductSelect={(product) => handleProductModalSelect(product, index)}
                             placeholder="Ürün seçin..."
                             className="mt-1"
                           />
