@@ -28,8 +28,6 @@ import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { SimplePdfExportService } from "@/services/pdf/simplePdfExport";
-import { PdfTemplate } from "@/types/pdf-template";
 
 interface ProposalDetailSheetProps {
   proposal: Proposal | null;
@@ -43,7 +41,7 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
   onOpenChange,
 }) => {
   const navigate = useNavigate();
-  const [templates, setTemplates] = useState<PdfTemplate[]>([]);
+  const [templates, setTemplates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Load templates when component mounts
@@ -82,9 +80,34 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
     try {
       setIsLoading(true);
       
-      // Use simple PDF export service with selected template
-      await SimplePdfExportService.openPdf(proposal, templateId);
-      toast.success('PDF yeni sekmede açıldı');
+      // Transform proposal data to the format expected by PdfExportService
+      const companySettings = await PdfExportService.getCompanySettings();
+      const quoteData = PdfExportService.transformProposalToQuoteData(proposal, companySettings);
+      
+      // Generate PDF with the selected template
+      const blob = await PdfExportService.generatePdf(quoteData, { templateId });
+      
+      // Open in new tab
+      const blobUrl = URL.createObjectURL(blob);
+      const newWindow = window.open(blobUrl, '_blank');
+      
+      if (newWindow) {
+        // Clean up blob URL after a delay
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+        }, 1000);
+        toast.success('PDF yeni sekmede açıldı');
+      } else {
+        // Fallback to download if popup blocked
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `teklif-${proposal.number || proposal.proposal_number || proposal.id}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+        toast.success('PDF indirildi');
+      }
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('PDF oluşturulamadı: ' + (error as Error).message);
