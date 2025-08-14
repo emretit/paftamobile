@@ -17,6 +17,17 @@ Font.register({
   ]
 });
 
+// Template types
+export interface PdfTemplate {
+  id: string;
+  name: string;
+  type: string;
+  is_default: boolean;
+  schema_json: any;
+  created_at: string;
+  updated_at: string;
+}
+
 // Simple styles
 const styles = StyleSheet.create({
   page: {
@@ -203,34 +214,108 @@ const SimplePdfDocument: React.FC<{ proposal: any }> = ({ proposal }) => (
 // Simple PDF Export Service
 export class SimplePdfExportService {
   /**
-   * Generate PDF from proposal data
+   * Get all PDF templates
    */
-  static async generatePdf(proposal: any): Promise<Blob> {
+  static async getTemplates(type: string = 'quote'): Promise<PdfTemplate[]> {
     try {
-      console.log('Generating simple PDF for proposal:', {
+      const { data, error } = await supabase
+        .from('pdf_templates')
+        .select('*')
+        .eq('type', type)
+        .order('is_default', { ascending: false })
+        .order('name');
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get default template
+   */
+  static async getDefaultTemplate(type: string = 'quote'): Promise<PdfTemplate | null> {
+    try {
+      const { data, error } = await supabase
+        .from('pdf_templates')
+        .select('*')
+        .eq('type', type)
+        .eq('is_default', true)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching default template:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Generate PDF from proposal data with template
+   */
+  static async generatePdf(proposal: any, templateId?: string): Promise<Blob> {
+    try {
+      console.log('Generating PDF for proposal:', {
         id: proposal.id,
         number: proposal.number || proposal.proposal_number,
         customerName: proposal.customer?.name,
-        itemsCount: proposal.items?.length || 0
+        templateId
       });
 
-      const pdfElement = <SimplePdfDocument proposal={proposal} />;
+      // Get template if specified
+      let template: PdfTemplate | null = null;
+      if (templateId) {
+        const { data, error } = await supabase
+          .from('pdf_templates')
+          .select('*')
+          .eq('id', templateId)
+          .single();
+        
+        if (!error && data) {
+          template = data;
+        }
+      }
+
+      // If no template specified or found, use default
+      if (!template) {
+        template = await this.getDefaultTemplate('quote');
+      }
+
+      // Use template if available, otherwise use simple layout
+      let pdfElement;
+      if (template && template.schema_json) {
+        pdfElement = this.renderWithTemplate(proposal, template);
+      } else {
+        pdfElement = <SimplePdfDocument proposal={proposal} />;
+      }
+
       const blob = await pdf(pdfElement).toBlob();
-      
       console.log('PDF generated successfully');
       return blob;
     } catch (error) {
-      console.error('Error generating simple PDF:', error);
+      console.error('Error generating PDF:', error);
       throw new Error('PDF oluşturulamadı: ' + (error as Error).message);
     }
   }
 
   /**
+   * Render PDF with custom template
+   */
+  private static renderWithTemplate(proposal: any, template: PdfTemplate): React.ReactElement {
+    // For now, fallback to simple layout
+    // TODO: Implement template-based rendering
+    return <SimplePdfDocument proposal={proposal} />;
+  }
+
+  /**
    * Download PDF
    */
-  static async downloadPdf(proposal: any, filename?: string): Promise<void> {
+  static async downloadPdf(proposal: any, filename?: string, templateId?: string): Promise<void> {
     try {
-      const blob = await this.generatePdf(proposal);
+      const blob = await this.generatePdf(proposal, templateId);
       
       // Create download link
       const url = URL.createObjectURL(blob);
@@ -250,9 +335,9 @@ export class SimplePdfExportService {
   /**
    * Open PDF in new tab
    */
-  static async openPdf(proposal: any): Promise<void> {
+  static async openPdf(proposal: any, templateId?: string): Promise<void> {
     try {
-      const blob = await this.generatePdf(proposal);
+      const blob = await this.generatePdf(proposal, templateId);
       
       // Create blob URL and open in new tab
       const blobUrl = URL.createObjectURL(blob);
@@ -265,7 +350,7 @@ export class SimplePdfExportService {
         }, 1000);
       } else {
         // Fallback to download if popup blocked
-        await this.downloadPdf(proposal);
+        await this.downloadPdf(proposal, undefined, templateId);
       }
     } catch (error) {
       console.error('Error opening PDF:', error);

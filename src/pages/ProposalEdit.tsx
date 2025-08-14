@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { proposalStatusColors, proposalStatusLabels, ProposalStatus } from "@/types/proposal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { handleProposalStatusChange } from "@/services/workflow/proposalWorkflow";
-import { SimplePdfExportService } from "@/services/pdf/simplePdfExport";
+import { SimplePdfExportService, PdfTemplate } from "@/services/pdf/simplePdfExport";
 import ProposalFormTerms from "@/components/proposals/form/ProposalFormTerms";
 import EmployeeSelector from "@/components/proposals/form/EmployeeSelector";
 import ContactPersonInput from "@/components/proposals/form/ContactPersonInput";
@@ -40,6 +40,7 @@ interface ProposalEditProps {
 }
 
 const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { proposal, loading, saving, handleBack, handleSave } = useProposalEdit();
   const { customers, isLoading: isLoadingCustomers } = useCustomerSelect();
@@ -113,6 +114,32 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
   
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [templates, setTemplates] = useState<PdfTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+
+  // Load templates when component mounts
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const loadTemplates = async () => {
+    try {
+      setIsLoadingTemplates(true);
+      const data = await SimplePdfExportService.getTemplates('quote');
+      setTemplates(data);
+      
+      // Set default template as selected
+      const defaultTemplate = data.find(t => t.is_default) || data[0];
+      if (defaultTemplate) {
+        setSelectedTemplateId(defaultTemplate.id);
+      }
+    } catch (error) {
+      console.error('Error loading templates:', error);
+    } finally {
+      setIsLoadingTemplates(false);
+    }
+  };
 
   // Initialize form data when proposal loads
   useEffect(() => {
@@ -488,8 +515,8 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         await handleSaveChanges(proposal.status);
       }
 
-      // Use simple PDF export service
-      await SimplePdfExportService.openPdf(proposal);
+      // Use simple PDF export service with selected template
+      await SimplePdfExportService.openPdf(proposal, selectedTemplateId);
       toast.success('PDF yeni sekmede açıldı');
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -624,6 +651,20 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
             <Download className="h-4 w-4 mr-2" />
             PDF Yazdır
           </Button>
+
+          {/* Template Selection */}
+          <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+            <SelectTrigger className="w-32 h-9">
+              <SelectValue placeholder="Şablon" />
+            </SelectTrigger>
+            <SelectContent>
+              {templates.map(template => (
+                <SelectItem key={template.id} value={template.id}>
+                  {template.name} {template.is_default && '(Varsayılan)'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="bg-red-600 hover:bg-red-700 text-white" size="sm">

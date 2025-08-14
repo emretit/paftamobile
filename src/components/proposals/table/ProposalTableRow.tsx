@@ -1,19 +1,20 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Proposal, ProposalStatus } from "@/types/proposal";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Eye, PenLine, MoreHorizontal, Trash2, Download } from "lucide-react";
+import { Eye, PenLine, MoreHorizontal, Trash2, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProposalStatusCell } from "./ProposalStatusCell";
 import { useNavigate } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProposalCalculations } from "@/hooks/proposals/useProposalCalculations";
 import { formatProposalAmount } from "@/services/workflow/proposalWorkflow";
 import { useToast } from "@/hooks/use-toast";
-import { SimplePdfExportService } from "@/services/pdf/simplePdfExport";
+import { SimplePdfExportService, PdfTemplate } from "@/services/pdf/simplePdfExport";
 
 // import { ProposalPdfExporter } from "../ProposalPdfExporter";
 
@@ -27,18 +28,43 @@ interface ProposalTableRowProps {
   onDelete: (proposalId: string) => void;
 }
 
-export const ProposalTableRow = ({ 
+export const ProposalTableRow: React.FC<ProposalTableRowProps> = ({ 
   proposal, 
   index, 
   formatMoney, 
   onSelect,
   onStatusChange,
   onDelete
-}: ProposalTableRowProps) => {
+}) => {
   const navigate = useNavigate();
   const { calculateTotals } = useProposalCalculations();
   const { toast } = useToast();
+  const [templates, setTemplates] = useState<PdfTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
 
+  // Load templates when component mounts
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const loadTemplates = async () => {
+    try {
+      setIsLoadingTemplates(true);
+      const data = await SimplePdfExportService.getTemplates('quote');
+      setTemplates(data);
+      
+      // Set default template as selected
+      const defaultTemplate = data.find(t => t.is_default) || data[0];
+      if (defaultTemplate) {
+        setSelectedTemplateId(defaultTemplate.id);
+      }
+    } catch (error) {
+      console.error('Error loading templates:', error);
+    } finally {
+      setIsLoadingTemplates(false);
+    }
+  };
   
   // Use the stored total_amount from database (calculated and saved correctly)
   const getGrandTotal = () => {
@@ -64,8 +90,8 @@ export const ProposalTableRow = ({
     e.stopPropagation();
     
     try {
-      // Use simple PDF export service
-      await SimplePdfExportService.openPdf(proposal);
+      // Use simple PDF export service with selected template
+      await SimplePdfExportService.openPdf(proposal, selectedTemplateId);
       
       toast({
         title: "PDF Açıldı",
@@ -182,8 +208,33 @@ export const ProposalTableRow = ({
               </DropdownMenuItem>
 
               <DropdownMenuItem onClick={handlePdfPrint}>
-                <Download className="h-4 w-4 mr-2" />
+                <FileText className="mr-2 h-4 w-4" />
                 PDF Yazdır
+              </DropdownMenuItem>
+
+              <DropdownMenuItem 
+                onClick={(e) => e.preventDefault()}
+                className="cursor-default"
+              >
+                <div className="flex flex-col space-y-2 w-full">
+                  <span className="text-xs text-muted-foreground">Şablon Seç:</span>
+                  <Select 
+                    value={selectedTemplateId} 
+                    onValueChange={setSelectedTemplateId}
+                    onOpenChange={(e) => e.preventDefault()}
+                  >
+                    <SelectTrigger className="w-full h-8 text-xs">
+                      <SelectValue placeholder="Şablon seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templates.map(template => (
+                        <SelectItem key={template.id} value={template.id}>
+                          {template.name} {template.is_default && '(Varsayılan)'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </DropdownMenuItem>
 
               <DropdownMenuItem 
