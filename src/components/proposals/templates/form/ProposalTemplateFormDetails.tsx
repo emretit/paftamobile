@@ -14,11 +14,15 @@ import { ProposalFormData } from "@/types/proposal-form";
 interface ProposalTemplateFormDetailsProps {
   register: UseFormRegister<ProposalFormData>;
   errors: FieldErrors<ProposalFormData>;
+  validUntil: Date | undefined;
+  setValidUntil: (date: Date | undefined) => void;
 }
 
 const ProposalTemplateFormDetails: React.FC<ProposalTemplateFormDetailsProps> = ({
   register,
   errors,
+  validUntil,
+  setValidUntil,
 }) => {
   const generateProposalNumber = () => {
     const today = new Date();
@@ -30,36 +34,69 @@ const ProposalTemplateFormDetails: React.FC<ProposalTemplateFormDetailsProps> = 
   };
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-      <div>
-        <Label htmlFor="proposal_number" className="text-sm">Teklif Numarası</Label>
-        <Input 
-          id="proposal_number"
-          defaultValue={generateProposalNumber()}
-          readOnly
-          className="bg-muted h-9"
-        />
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="proposal_number">Teklif Numarası</Label>
+          <Input 
+            id="proposal_number"
+            defaultValue={generateProposalNumber()}
+            readOnly
+            className="bg-muted"
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="title">Teklif Başlığı</Label>
+          <Input 
+            id="title" 
+            {...register("title", { required: "Teklif başlığı gereklidir" })} 
+            placeholder="Teklif başlığını girin"
+            className={errors.title ? "border-red-500" : ""}
+          />
+          {errors.title && <span className="text-red-500 text-xs">{errors.title.message}</span>}
+        </div>
       </div>
       
-      <div>
-        <Label htmlFor="title" className="text-sm">Teklif Başlığı</Label>
-        <Input 
-          id="title" 
-          {...register("title", { required: "Teklif başlığı gereklidir" })} 
-          placeholder="Teklif başlığını girin"
-          className={`h-9 ${errors.title ? "border-red-500" : ""}`}
-        />
-        {errors.title && <span className="text-red-500 text-xs">{errors.title.message}</span>}
-      </div>
-      
-      <div>
-        <Label htmlFor="proposal_date" className="text-sm">Teklif Tarihi</Label>
-        <Input 
-          id="proposal_date"
-          value={format(new Date(), "dd.MM.yyyy", { locale: tr })}
-          readOnly
-          className="bg-muted h-9"
-        />
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="proposal_date">Teklif Tarihi</Label>
+          <Input 
+            id="proposal_date"
+            value={format(new Date(), "dd.MM.yyyy", { locale: tr })}
+            readOnly
+            className="bg-muted"
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="valid_until">Geçerlilik Tarihi</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-between text-left font-normal"
+              >
+                {validUntil ? (
+                  format(validUntil, "dd.MM.yyyy", { locale: tr })
+                ) : (
+                  <span className="text-gray-500">Tarih seçin</span>
+                )}
+                <CalendarIcon className="h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={validUntil}
+                onSelect={(date) => setValidUntil(date)}
+                disabled={(date) => date < new Date()}
+                initialFocus
+                locale={tr}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
     </div>
   );
