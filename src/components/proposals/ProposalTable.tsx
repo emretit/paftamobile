@@ -61,12 +61,12 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
       // Teklif detaylarını çek
       const proposalData = await PdfExportService.transformProposalForPdf(proposal);
       
-      // PDF'i oluştur ve indir
-      await PdfExportService.downloadPdf(proposalData, { templateId });
+      // PDF'i yeni sekmede aç
+      await PdfExportService.openPdfInNewTab(proposalData, { templateId });
       
       toast({
         title: "Başarılı",
-        description: "PDF başarıyla oluşturuldu",
+        description: "PDF yeni sekmede açıldı",
       });
     } catch (error) {
       console.error('PDF generation error:', error);

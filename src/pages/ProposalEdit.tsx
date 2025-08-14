@@ -503,8 +503,27 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
   };
 
   const handlePdfPrint = async (templateId?: string) => {
-    // PDF yazdırma fonksiyonu devre dışı bırakıldı
-    toast.info('PDF yazdırma özelliği geçici olarak devre dışı');
+    if (!proposal) return;
+    
+    try {
+      // Teklif detaylarını çek
+      const proposalData = await PdfExportService.transformProposalForPdf(proposal);
+      
+      // PDF'i yeni sekmede aç
+      await PdfExportService.openPdfInNewTab(proposalData, { templateId });
+      
+      toast({
+        title: "Başarılı",
+        description: "PDF yeni sekmede açıldı",
+      });
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast({
+        title: "Hata",
+        description: "PDF oluşturulurken hata oluştu: " + (error as Error).message,
+        variant: "destructive"
+      });
+    }
   };
 
 

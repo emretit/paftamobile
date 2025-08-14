@@ -311,6 +311,44 @@ export class PdfExportService {
   }
 
   /**
+   * Open PDF in new tab
+   */
+  static async openPdfInNewTab(
+    quoteData: QuoteData,
+    options: PdfExportOptions = {}
+  ) {
+    try {
+      const template = options.templateId 
+        ? await this.getTemplate(options.templateId)
+        : await this.getDefaultTemplate('quote');
+
+      const blob = await this.generatePdf(quoteData, { template });
+      
+      // Create blob URL and open in new tab
+      const url = URL.createObjectURL(blob);
+      const newWindow = window.open(url, '_blank');
+      
+      if (!newWindow) {
+        // Fallback to download if popup blocked
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = options.filename || `teklif-${quoteData.number}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      
+      // Clean up blob URL after a delay to allow the new tab to load
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 1000);
+    } catch (error) {
+      console.error('Error opening PDF:', error);
+      throw new Error('PDF açılırken hata oluştu: ' + (error as Error).message);
+    }
+  }
+
+  /**
    * Download PDF file
    */
   static async downloadPdf(
