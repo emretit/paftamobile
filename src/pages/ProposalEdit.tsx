@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { proposalStatusColors, proposalStatusLabels, ProposalStatus } from "@/types/proposal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { handleProposalStatusChange } from "@/services/workflow/proposalWorkflow";
 import { SimplePdfExportService, PdfTemplate } from "@/services/pdf/simplePdfExport";
 import ProposalFormTerms from "@/components/proposals/form/ProposalFormTerms";
@@ -115,7 +116,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [templates, setTemplates] = useState<PdfTemplate[]>([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
 
   // Load templates when component mounts
@@ -128,12 +129,6 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
       setIsLoadingTemplates(true);
       const data = await SimplePdfExportService.getTemplates('quote');
       setTemplates(data);
-      
-      // Set default template as selected
-      const defaultTemplate = data.find(t => t.is_default) || data[0];
-      if (defaultTemplate) {
-        setSelectedTemplateId(defaultTemplate.id);
-      }
     } catch (error) {
       console.error('Error loading templates:', error);
     } finally {
@@ -507,7 +502,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
     navigate("/proposals");
   };
 
-  const handlePdfPrint = async () => {
+  const handlePdfPrint = async (templateId?: string) => {
     try {
       // If there are unsaved changes, save them first to get updated totals
       if (hasChanges) {
@@ -516,7 +511,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
       }
 
       // Use simple PDF export service with selected template
-      await SimplePdfExportService.openPdf(proposal, selectedTemplateId);
+      await SimplePdfExportService.openPdf(proposal, templateId);
       toast.success('PDF yeni sekmede açıldı');
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -643,28 +638,34 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
             {hasChanges ? "Değişiklikleri Kaydet" : "Kaydedildi"}
           </Button>
 
-          <Button 
-            variant="outline" 
-            onClick={handlePdfPrint}
-            size="sm"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            PDF Yazdır
-          </Button>
-
-          {/* Template Selection */}
-          <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
-            <SelectTrigger className="w-32 h-9">
-              <SelectValue placeholder="Şablon" />
-            </SelectTrigger>
-            <SelectContent>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                PDF Yazdır
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
               {templates.map(template => (
-                <SelectItem key={template.id} value={template.id}>
+                <DropdownMenuItem 
+                  key={template.id} 
+                  onClick={() => handlePdfPrint(template.id)}
+                  className="cursor-pointer"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
                   {template.name} {template.is_default && '(Varsayılan)'}
-                </SelectItem>
+                </DropdownMenuItem>
               ))}
-            </SelectContent>
-          </Select>
+              {templates.length === 0 && (
+                <DropdownMenuItem disabled>
+                  Şablon bulunamadı
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="bg-red-600 hover:bg-red-700 text-white" size="sm">

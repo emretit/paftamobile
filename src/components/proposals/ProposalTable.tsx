@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Table, TableBody } from "@/components/ui/table";
 import { useProposals } from "@/hooks/useProposals";
 import { useToast } from "@/components/ui/use-toast";
@@ -11,6 +11,12 @@ import { Column } from "./types";
 import { ProposalTableHeader } from "./table/ProposalTableHeader";
 import { ProposalTableRow } from "./table/ProposalTableRow";
 import { ProposalTableSkeleton } from "./table/ProposalTableSkeleton";
+import { PdfExportService } from "@/services/pdf/pdfExportService";
+import { PdfTemplate } from "@/types/pdf-template";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Download, FileText } from "lucide-react";
+import { SimplePdfExportService } from "@/services/pdf/simplePdfExport";
 
 interface ProposalTableProps {
   filters: ProposalFilters;
@@ -24,6 +30,7 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
   const queryClient = useQueryClient();
   const [sortField, setSortField] = useState<string>("created_at");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [templates, setTemplates] = useState<PdfTemplate[]>([]);
   
   const [columns] = useState<Column[]>([
     { id: "number", label: "Teklif No", visible: true, sortable: true },
@@ -35,6 +42,37 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
     { id: "valid_until", label: "Geçerlilik", visible: true, sortable: true },
     { id: "actions", label: "İşlemler", visible: true },
   ]);
+
+  // Load templates when component mounts
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const loadTemplates = async () => {
+    try {
+      const data = await PdfExportService.getTemplates('quote');
+      setTemplates(data);
+    } catch (error) {
+      console.error('Error loading templates:', error);
+    }
+  };
+
+  const handlePdfPrint = async (proposal: Proposal, templateId: string) => {
+    try {
+      await SimplePdfExportService.openPdf(proposal, templateId);
+      toast({
+        title: "PDF Açıldı",
+        description: "PDF yeni sekmede açıldı",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Hata",
+        description: "PDF oluşturulamadı: " + (error as Error).message,
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSort = (field: string) => {
     if (field === sortField) {
@@ -175,6 +213,8 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
                 onSelect={onProposalSelect}
                 onStatusChange={handleStatusUpdate}
                 onDelete={handleDeleteProposal}
+                templates={templates}
+                onPdfPrint={handlePdfPrint}
               />
             ))}
           </TableBody>

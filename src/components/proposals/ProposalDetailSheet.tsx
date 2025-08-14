@@ -21,13 +21,13 @@ import {
   Target,
   Paperclip,
   Download,
-  Upload,
   Settings
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SimplePdfExportService } from "@/services/pdf/simplePdfExport";
 import { PdfTemplate } from "@/types/pdf-template";
 
@@ -44,7 +44,6 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
 }) => {
   const navigate = useNavigate();
   const [templates, setTemplates] = useState<PdfTemplate[]>([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
   // Load templates when component mounts
@@ -56,11 +55,6 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
     try {
       const data = await PdfExportService.getTemplates('quote');
       setTemplates(data);
-      // Set default template as selected
-      const defaultTemplate = data.find(t => t.is_default) || data[0];
-      if (defaultTemplate) {
-        setSelectedTemplateId(defaultTemplate.id);
-      }
     } catch (error) {
       console.error('Error loading templates:', error);
     }
@@ -82,14 +76,14 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
     navigate(`/proposal/${proposal.id}/edit?focus=items`);
   };
 
-  const handleDownloadPdf = async () => {
+  const handleDownloadPdf = async (templateId?: string) => {
     if (!proposal) return;
     
     try {
       setIsLoading(true);
       
-      // Use simple PDF export service
-      await SimplePdfExportService.openPdf(proposal);
+      // Use simple PDF export service with selected template
+      await SimplePdfExportService.openPdf(proposal, templateId);
       toast.success('PDF yeni sekmede açıldı');
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -99,44 +93,7 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
     }
   };
 
-  const handleUploadToStorage = async () => {
-    if (!proposal) return;
-    
-    try {
-      setIsLoading(true);
-      
-      // Get company settings
-      const companySettings = await PdfExportService.getCompanySettings();
-      
-      // Transform proposal to QuoteData format
-      const quoteData = PdfExportService.transformProposalToQuoteData(
-        proposal, 
-        companySettings
-      );
-      
-      // Upload to storage
-      const result = await PdfExportService.uploadPdfToStorage(quoteData, {
-        templateId: selectedTemplateId,
-        filename: `teklif-${proposal.number || proposal.proposal_number}.pdf`,
-        storagePath: `quotes/teklif-${proposal.number || proposal.proposal_number}.pdf`,
-      });
-      
-      toast.success('PDF başarıyla Storage\'a yüklendi', {
-        action: {
-          label: 'Linkti Kopyala',
-          onClick: () => {
-            navigator.clipboard.writeText(result.url);
-            toast.success('Link kopyalandı');
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Error uploading PDF:', error);
-      toast.error('PDF yüklenemedi: ' + (error as Error).message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
 
 
 
@@ -162,48 +119,37 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
               <Edit3 className="mr-2 h-4 w-4" />
               Teklifi Düzenle
             </Button>
-            
-            {/* Template Selection */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">
-                PDF Şablonu
-              </label>
-              <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Şablon seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  {templates.map(template => (
-                    <SelectItem key={template.id} value={template.id}>
-                      {template.name} {template.is_default && '(Varsayılan)'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
             {/* PDF Export Actions */}
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleDownloadPdf} 
-                disabled={isLoading || !selectedTemplateId}
-                className="flex-1"
-                variant="outline"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                PDF Yazdır
-              </Button>
-              
-              <Button 
-                onClick={handleUploadToStorage} 
-                disabled={isLoading || !selectedTemplateId}
-                className="flex-1"
-                variant="outline"
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                Storage'a Yükle
-              </Button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  disabled={isLoading}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  PDF Yazdır
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                {templates.map(template => (
+                  <DropdownMenuItem 
+                    key={template.id} 
+                    onClick={() => handleDownloadPdf(template.id)}
+                    className="cursor-pointer"
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    {template.name} {template.is_default && '(Varsayılan)'}
+                  </DropdownMenuItem>
+                ))}
+                {templates.length === 0 && (
+                  <DropdownMenuItem disabled>
+                    Şablon bulunamadı
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
           </div>
         </SheetHeader>

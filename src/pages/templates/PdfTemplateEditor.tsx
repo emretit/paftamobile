@@ -67,7 +67,7 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
         companyPhone: z.string(),
         companyEmail: z.string(),
         companyWebsite: z.string(),
-        companyTaxNumber: z.string(),
+        companyTaxNumber: z.string().optional(),
         companyInfoFontSize: z.number().min(8).max(32),
       }),
       customerBlock: z.object({
@@ -131,7 +131,7 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
         companyPhone: '+90 212 555 0123',
         companyEmail: 'info@ngsteknoloji.com',
         companyWebsite: 'www.ngsteknoloji.com',
-        companyTaxNumber: '1234567890',
+        companyTaxNumber: '',
         companyInfoFontSize: 10,
       },
       customerBlock: {
@@ -199,7 +199,7 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
             companyPhone: template.schema_json.header.companyPhone || '+90 212 555 0123',
             companyEmail: template.schema_json.header.companyEmail || 'info@ngsteknoloji.com',
             companyWebsite: template.schema_json.header.companyWebsite || 'www.ngsteknoloji.com',
-            companyTaxNumber: template.schema_json.header.companyTaxNumber || '1234567890',
+            companyTaxNumber: template.schema_json.header.companyTaxNumber || '',
             companyInfoFontSize: template.schema_json.header.companyInfoFontSize || 10,
           },
           // Migration: Add proposalBlock if it doesn't exist
@@ -411,63 +411,91 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
           <ResizablePanel defaultSize={35} minSize={30}>
             <div className="h-full overflow-y-auto bg-gradient-to-b from-background via-background/98 to-muted/20 border-r border-border/20">
               <div className="p-6 space-y-8">
-                <div className="bg-card/50 rounded-lg p-4 border border-border/20 backdrop-blur-sm">
-                  <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    Şablon Ayarları
-                  </h3>
-                  <p className="text-sm text-muted-foreground">PDF şablonunuzu özelleştirin ve önizlemesini gerçek zamanlı olarak görün.</p>
+                <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-xl p-6 border border-blue-200/50 shadow-lg">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-md">
+                      <span className="text-2xl">⚙️</span>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800 mb-1">Şablon Ayarları</h3>
+                      <p className="text-sm text-gray-600">PDF şablonunuzu özelleştirin ve önizlemesini gerçek zamanlı olarak görün</p>
+                    </div>
+                  </div>
                 </div>
               <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
                 {/* Template Name */}
-                <div className="bg-card/50 rounded-lg p-4 border border-border/20 backdrop-blur-sm">
-                  <Label htmlFor="template-name">Şablon Adı</Label>
+                <div className="bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 rounded-xl p-5 border border-emerald-200/50 shadow-md">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-sm">
+                      <span className="text-lg">✏️</span>
+                    </div>
+                    <Label htmlFor="template-name" className="text-lg font-semibold text-gray-800">Şablon Adı</Label>
+                  </div>
                   <Input
                     id="template-name"
                     type="text"
                     value={templateName}
                     onChange={(e) => setTemplateName(e.target.value)}
                     placeholder="Şablon adını girin"
-                    className="mt-2"
+                    className="h-10 text-base border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500/20"
                   />
                 </div>
 
                 {/* Header Settings */}
                 <Accordion type="single" collapsible defaultValue="header">
-                  <AccordionItem value="header">
-                    <AccordionTrigger>Başlık Ayarları</AccordionTrigger>
+                  <AccordionItem value="header" className="border border-gray-200 rounded-lg">
+                    <AccordionTrigger className="bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 px-4 py-3 rounded-t-lg border-b border-gray-200 font-semibold text-gray-800">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 flex items-center justify-center bg-blue-100 rounded-md">
+                          <span className="text-sm font-bold text-blue-700">📄</span>
+                        </div>
+                        <span>Başlık Ayarları</span>
+                      </div>
+                    </AccordionTrigger>
                     <AccordionContent className="space-y-2 pt-2">
-                      <div className="grid grid-cols-3 gap-2">
-                        <div className="space-y-1">
-                          <Label className="text-xs">Başlık Metni</Label>
-                          <Input {...form.register('header.title')} className="h-7 text-sm" />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Font Boyutu</Label>
-                          <Input
-                            type="number"
-                            {...form.register('header.titleFontSize', { valueAsNumber: true })}
-                            min="8"
-                            max="32"
-                            placeholder="16"
-                            className="h-7 text-sm"
-                          />
-                        </div>
-                        <div className="flex items-end">
-                          <div className="flex items-center space-x-1">
-                            <Switch
-                              id="show-logo"
-                              checked={watchedValues.header?.showLogo}
-                              onCheckedChange={(checked) => form.setValue('header.showLogo', checked)}
-                              className="scale-75"
-                            />
-                            <Label htmlFor="show-logo" className="text-xs">Logo</Label>
+                      {/* Title and Logo Settings - Side by Side */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Title Settings */}
+                        <div className="space-y-3">
+                          {/* Title Section Header */}
+                          <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 flex items-center justify-center bg-blue-100 rounded">
+                              <span className="text-xs font-bold text-blue-700">T</span>
+                            </div>
+                            <Label className="text-sm font-semibold text-gray-800">Başlık</Label>
+                          </div>
+
+                          {/* Title Controls */}
+                          <div className="bg-gray-50/80 border border-gray-200 rounded-lg p-3 space-y-3">
+                            {/* Title Text Input */}
+                            <div>
+                              <Label className="text-xs text-gray-600 mb-1 block">Başlık Metni</Label>
+                              <Input 
+                                {...form.register('header.title')} 
+                                className="h-8 text-sm placeholder:text-gray-400 placeholder:italic" 
+                                placeholder="Başlık metnini girin"
+                              />
+                            </div>
+
+                            {/* Font Size - Simplified */}
+                            <div className="pt-2 border-t border-gray-200">
+                              <div className="flex items-center gap-2">
+                                <Label className="text-xs text-gray-600 min-w-fit">Font Boyutu</Label>
+                                <Input
+                                  type="number"
+                                  {...form.register('header.titleFontSize', { valueAsNumber: true })}
+                                  min="8"
+                                  max="32"
+                                  placeholder="16"
+                                  className="h-8 w-16 text-center text-xs"
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      
-                      {watchedValues.header?.showLogo && (
-                        <div className="space-y-2 bg-muted/10 rounded-md p-2 border border-border/10">
+                        
+                        {/* Logo Settings */}
+                        <div className="space-y-3">
                           <LogoUploadField
                             logoUrl={watchedValues.header?.logoUrl}
                             onLogoChange={(url) => form.setValue('header.logoUrl', url || undefined)}
@@ -475,78 +503,126 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                             onPositionChange={(value) => form.setValue('header.logoPosition', value)}
                             logoSize={watchedValues.header?.logoSize || 80}
                             onSizeChange={(value) => form.setValue('header.logoSize', value)}
+                            showLogo={watchedValues.header?.showLogo}
+                            onShowLogoChange={(value) => form.setValue('header.showLogo', value)}
                           />
-                        </div>
-                      )}
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex items-center space-x-1">
-                          <Switch
-                            id="show-company-info"
-                            checked={watchedValues.header?.showCompanyInfo}
-                            onCheckedChange={(checked) => form.setValue('header.showCompanyInfo', checked)}
-                            className="scale-75"
-                          />
-                          <Label htmlFor="show-company-info" className="text-xs">Şirket Bilgileri</Label>
                         </div>
                       </div>
                       
-                      {watchedValues.header?.showCompanyInfo && (
-                        <div className="space-y-2 bg-muted/10 rounded-md p-2 border border-border/10">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-1">
-                              <Label className="text-xs">Şirket Adı</Label>
-                              <Input {...form.register('header.companyName')} placeholder="NGS TEKNOLOJİ" className="h-7 text-sm" />
+                      {/* Company Info Settings */}
+                      <div className="space-y-3">
+                        {/* Company Section Header */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-md">
+                              <span className="text-sm font-bold text-gray-700">🏢</span>
                             </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">Font Boyutu</Label>
-                              <Input
-                                type="number"
-                                {...form.register('header.companyInfoFontSize', { valueAsNumber: true })}
-                                min="8"
-                                max="32"
-                                placeholder="10"
-                                className="h-7 text-sm"
-                              />
-                            </div>
+                            <Label className="text-base font-semibold text-gray-800">Şirket Bilgileri</Label>
                           </div>
-                          
-                          <div className="space-y-1">
-                            <Label className="text-xs">Şirket Adresi</Label>
-                            <Input {...form.register('header.companyAddress')} placeholder="İstanbul, Türkiye" className="h-7 text-sm" />
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-1">
-                              <Label className="text-xs">Telefon</Label>
-                              <Input {...form.register('header.companyPhone')} placeholder="+90 212 555 0123" className="h-7 text-sm" />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">E-posta</Label>
-                              <Input {...form.register('header.companyEmail')} placeholder="info@ngsteknoloji.com" className="h-7 text-sm" />
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-1">
-                              <Label className="text-xs">Website</Label>
-                              <Input {...form.register('header.companyWebsite')} placeholder="www.ngsteknoloji.com" className="h-7 text-sm" />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">Vergi No</Label>
-                              <Input {...form.register('header.companyTaxNumber')} placeholder="1234567890" className="h-7 text-sm" />
-                            </div>
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              id="show-company-info"
+                              checked={watchedValues.header?.showCompanyInfo}
+                              onCheckedChange={(checked) => form.setValue('header.showCompanyInfo', checked)}
+                              className="scale-75"
+                            />
+                            <Label htmlFor="show-company-info" className="text-xs text-gray-600">Göster</Label>
                           </div>
                         </div>
-                      )}
+
+                        {/* Company Controls - Only show when enabled */}
+                        {watchedValues.header?.showCompanyInfo && (
+                          <div className="bg-gray-50/80 border border-gray-200 rounded-lg p-3 space-y-3">
+                            {/* Company Name & Font Size */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-xs text-gray-600 mb-1 block">Şirket Adı</Label>
+                                <Input 
+                                  {...form.register('header.companyName')} 
+                                  placeholder="Şirket adını girin" 
+                                  className="h-8 text-sm placeholder:text-gray-400 placeholder:italic" 
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs text-gray-600 mb-1 block">Font Boyutu</Label>
+                                <Input
+                                  type="number"
+                                  {...form.register('header.companyInfoFontSize', { valueAsNumber: true })}
+                                  min="8"
+                                  max="32"
+                                  placeholder="10"
+                                  className="h-8 w-16 text-center text-xs"
+                                />
+                              </div>
+                            </div>
+                            
+                            {/* Company Address */}
+                            <div>
+                              <Label className="text-xs text-gray-600 mb-1 block">Şirket Adresi</Label>
+                              <Input 
+                                {...form.register('header.companyAddress')} 
+                                placeholder="Şirket adresini girin" 
+                                className="h-8 text-sm placeholder:text-gray-400 placeholder:italic" 
+                              />
+                            </div>
+                            
+                            {/* Contact Info */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-xs text-gray-600 mb-1 block">Telefon</Label>
+                                <Input 
+                                  {...form.register('header.companyPhone')} 
+                                  placeholder="Telefon numarasını girin" 
+                                  className="h-8 text-sm placeholder:text-gray-400 placeholder:italic" 
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs text-gray-600 mb-1 block">E-posta</Label>
+                                <Input 
+                                  {...form.register('header.companyEmail')} 
+                                  placeholder="E-posta adresini girin" 
+                                  className="h-8 text-sm placeholder:text-gray-400 placeholder:italic" 
+                                />
+                              </div>
+                            </div>
+                            
+                            {/* Website & Tax Number */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-xs text-gray-600 mb-1 block">Website</Label>
+                                <Input 
+                                  {...form.register('header.companyWebsite')} 
+                                  placeholder="Website adresini girin" 
+                                  className="h-8 text-sm placeholder:text-gray-400 placeholder:italic" 
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs text-gray-600 mb-1 block">Vergi No</Label>
+                                <Input 
+                                  {...form.register('header.companyTaxNumber')} 
+                                  placeholder="Vergi numarasını girin" 
+                                  className="h-8 text-sm placeholder:text-gray-400 placeholder:italic" 
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
 
                 {/* Customer and Proposal Block Settings */}
                 <Accordion type="single" collapsible defaultValue="customer">
-                  <AccordionItem value="customer">
-                    <AccordionTrigger>Müşteri ve Teklif Bilgileri</AccordionTrigger>
+                  <AccordionItem value="customer" className="border border-gray-200 rounded-lg">
+                    <AccordionTrigger className="bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 px-4 py-3 rounded-t-lg border-b border-gray-200 font-semibold text-gray-800">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 flex items-center justify-center bg-green-100 rounded-md">
+                          <span className="text-sm font-bold text-green-700">👥</span>
+                        </div>
+                        <span>Müşteri ve Teklif Bilgileri</span>
+                      </div>
+                    </AccordionTrigger>
                     <AccordionContent className="space-y-6">
                       {/* Customer Information */}
                       <div className="space-y-4">
@@ -637,8 +713,15 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
 
                 {/* Line Table Settings */}
                 <Accordion type="single" collapsible defaultValue="table">
-                  <AccordionItem value="table">
-                    <AccordionTrigger>Tablo Ayarları</AccordionTrigger>
+                  <AccordionItem value="table" className="border border-gray-200 rounded-lg">
+                    <AccordionTrigger className="bg-gradient-to-r from-purple-50 to-violet-50 hover:from-purple-100 hover:to-violet-100 px-4 py-3 rounded-t-lg border-b border-gray-200 font-semibold text-gray-800">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 flex items-center justify-center bg-purple-100 rounded-md">
+                          <span className="text-sm font-bold text-purple-700">📊</span>
+                        </div>
+                        <span>Tablo Ayarları</span>
+                      </div>
+                    </AccordionTrigger>
                     <AccordionContent className="space-y-4">
                       {watchedValues.lineTable?.columns?.map((column, index) => (
                         <div key={column.key} className="border rounded-lg p-3 space-y-3">
@@ -702,8 +785,15 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
 
                 {/* Totals Settings */}
                 <Accordion type="single" collapsible defaultValue="totals">
-                  <AccordionItem value="totals">
-                    <AccordionTrigger>Toplam Ayarları</AccordionTrigger>
+                  <AccordionItem value="totals" className="border border-gray-200 rounded-lg">
+                    <AccordionTrigger className="bg-gradient-to-r from-orange-50 to-amber-50 hover:from-orange-100 hover:to-amber-100 px-4 py-3 rounded-t-lg border-b border-gray-200 font-semibold text-gray-800">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 flex items-center justify-center bg-orange-100 rounded-md">
+                          <span className="text-sm font-bold text-orange-700">💰</span>
+                        </div>
+                        <span>Toplam Ayarları</span>
+                      </div>
+                    </AccordionTrigger>
                     <AccordionContent className="space-y-4">
                       <div className="flex items-center space-x-2">
                         <Switch
@@ -746,8 +836,15 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
 
                 {/* Notes Settings */}
                 <Accordion type="single" collapsible defaultValue="notes">
-                  <AccordionItem value="notes">
-                    <AccordionTrigger>Not Ayarları</AccordionTrigger>
+                  <AccordionItem value="notes" className="border border-gray-200 rounded-lg">
+                    <AccordionTrigger className="bg-gradient-to-r from-pink-50 to-rose-50 hover:from-pink-100 hover:to-rose-100 px-4 py-3 rounded-t-lg border-b border-gray-200 font-semibold text-gray-800">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 flex items-center justify-center bg-pink-100 rounded-md">
+                          <span className="text-sm font-bold text-pink-700">📝</span>
+                        </div>
+                        <span>Not Ayarları</span>
+                      </div>
+                    </AccordionTrigger>
                     <AccordionContent className="space-y-4">
                       <div className="space-y-2">
                         <Label>Giriş Notu</Label>

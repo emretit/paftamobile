@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Proposal, ProposalStatus } from "@/types/proposal";
 import { format } from "date-fns";
@@ -10,11 +10,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProposalStatusCell } from "./ProposalStatusCell";
 import { useNavigate } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { useProposalCalculations } from "@/hooks/proposals/useProposalCalculations";
 import { formatProposalAmount } from "@/services/workflow/proposalWorkflow";
 import { useToast } from "@/hooks/use-toast";
-import { SimplePdfExportService, PdfTemplate } from "@/services/pdf/simplePdfExport";
+import { SimplePdfExportService } from "@/services/pdf/simplePdfExport";
 
 // import { ProposalPdfExporter } from "../ProposalPdfExporter";
 
@@ -26,6 +26,8 @@ interface ProposalTableRowProps {
   onSelect: (proposal: Proposal) => void;
   onStatusChange: (proposalId: string, newStatus: ProposalStatus) => void;
   onDelete: (proposalId: string) => void;
+  templates: any[];
+  onPdfPrint: (proposal: Proposal, templateId: string) => void;
 }
 
 export const ProposalTableRow: React.FC<ProposalTableRowProps> = ({ 
@@ -34,37 +36,15 @@ export const ProposalTableRow: React.FC<ProposalTableRowProps> = ({
   formatMoney, 
   onSelect,
   onStatusChange,
-  onDelete
+  onDelete,
+  templates,
+  onPdfPrint
 }) => {
   const navigate = useNavigate();
   const { calculateTotals } = useProposalCalculations();
   const { toast } = useToast();
-  const [templates, setTemplates] = useState<PdfTemplate[]>([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
-  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
 
-  // Load templates when component mounts
-  useEffect(() => {
-    loadTemplates();
-  }, []);
 
-  const loadTemplates = async () => {
-    try {
-      setIsLoadingTemplates(true);
-      const data = await SimplePdfExportService.getTemplates('quote');
-      setTemplates(data);
-      
-      // Set default template as selected
-      const defaultTemplate = data.find(t => t.is_default) || data[0];
-      if (defaultTemplate) {
-        setSelectedTemplateId(defaultTemplate.id);
-      }
-    } catch (error) {
-      console.error('Error loading templates:', error);
-    } finally {
-      setIsLoadingTemplates(false);
-    }
-  };
   
   // Use the stored total_amount from database (calculated and saved correctly)
   const getGrandTotal = () => {
@@ -86,25 +66,9 @@ export const ProposalTableRow: React.FC<ProposalTableRowProps> = ({
     navigate(`/proposal/${proposal.id}`);
   };
 
-  const handlePdfPrint = async (e: React.MouseEvent) => {
+  const handlePdfPrintClick = (e: React.MouseEvent, templateId: string) => {
     e.stopPropagation();
-    
-    try {
-      // Use simple PDF export service with selected template
-      await SimplePdfExportService.openPdf(proposal, selectedTemplateId);
-      
-      toast({
-        title: "PDF Açıldı",
-        description: "PDF yeni sekmede açıldı",
-      });
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast({
-        title: "Hata",
-        description: "PDF oluşturulamadı: " + (error as Error).message,
-        variant: "destructive",
-      });
-    }
+    onPdfPrint(proposal, templateId);
   };
 
 
@@ -207,38 +171,38 @@ export const ProposalTableRow: React.FC<ProposalTableRowProps> = ({
                 Düzenle
               </DropdownMenuItem>
 
-              <DropdownMenuItem onClick={handlePdfPrint}>
-                <FileText className="mr-2 h-4 w-4" />
-                PDF Yazdır
-              </DropdownMenuItem>
-
               <DropdownMenuItem 
                 onClick={(e) => e.preventDefault()}
-                className="cursor-default"
+                className="cursor-default p-0"
               >
-                <div className="flex flex-col space-y-2 w-full">
-                  <span className="text-xs text-muted-foreground">Şablon Seç:</span>
-                  <Select 
-                    value={selectedTemplateId} 
-                    onValueChange={setSelectedTemplateId}
-                   onOpenChange={(open) => {
-                     if (!open) {
-                       // Handle close logic if needed
-                     }
-                   }}
-                  >
-                    <SelectTrigger className="w-full h-8 text-xs">
-                      <SelectValue placeholder="Şablon seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {templates.map(template => (
-                        <SelectItem key={template.id} value={template.id}>
-                          {template.name} {template.is_default && '(Varsayılan)'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start h-auto p-2"
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      PDF Yazdır
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent side="left" align="start" className="w-56">
+                    {templates.map(template => (
+                      <DropdownMenuItem 
+                        key={template.id} 
+                        onClick={(e) => handlePdfPrintClick(e, template.id)}
+                        className="cursor-pointer"
+                      >
+                        <FileText className="mr-2 h-4 w-4" />
+                        {template.name} {template.is_default && '(Varsayılan)'}
+                      </DropdownMenuItem>
+                    ))}
+                    {templates.length === 0 && (
+                      <DropdownMenuItem disabled>
+                        Şablon bulunamadı
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </DropdownMenuItem>
 
               <DropdownMenuItem 
