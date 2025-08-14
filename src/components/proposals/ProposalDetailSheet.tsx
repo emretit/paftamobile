@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Proposal } from "@/types/proposal";
+import { PdfExportService } from "@/services/pdf/pdfExportService";
 import StatusBadge from "./detail/StatusBadge";
 
 import { 

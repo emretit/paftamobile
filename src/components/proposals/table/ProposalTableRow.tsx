@@ -221,7 +221,11 @@ export const ProposalTableRow: React.FC<ProposalTableRowProps> = ({
                   <Select 
                     value={selectedTemplateId} 
                     onValueChange={setSelectedTemplateId}
-                    onOpenChange={(e) => e.preventDefault()}
+                   onOpenChange={(open) => {
+                     if (!open) {
+                       // Handle close logic if needed
+                     }
+                   }}
                   >
                     <SelectTrigger className="w-full h-8 text-xs">
                       <SelectValue placeholder="Şablon seçin" />

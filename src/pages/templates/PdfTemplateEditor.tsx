@@ -409,8 +409,8 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* Settings Panel */}
           <ResizablePanel defaultSize={35} minSize={30}>
-            <div className="h-full overflow-y-auto bg-gradient-to-b from-background to-background/95 border-r border-border/10">
-              <div className="p-6 space-y-6">
+            <div className="h-full overflow-y-auto bg-gradient-to-b from-background via-background/98 to-muted/20 border-r border-border/20">
+              <div className="p-6 space-y-8">
                 <div className="bg-card/50 rounded-lg p-4 border border-border/20 backdrop-blur-sm">
                   <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
                     <div className="w-2 h-2 bg-primary rounded-full"></div>
