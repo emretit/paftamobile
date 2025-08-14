@@ -103,9 +103,19 @@ export const truncateText = (text: string | null | undefined, maxLength: number)
 export const validatePdfData = (data: any): { isValid: boolean; missingFields: string[] } => {
   const missingFields: string[] = [];
   
-  if (!data.company?.name) missingFields.push('Şirket adı');
-  if (!data.customer?.name) missingFields.push('Müşteri adı');  
-  // Items can be empty for proposals, so we don't validate them as required
+  // Validate minimum required fields for PDF generation
+  if (!data.id && !data.number) missingFields.push('Teklif numarası');
+  if (!data.customer) missingFields.push('Müşteri bilgileri');
+  
+  // Customer validation
+  if (data.customer && !data.customer.name && !data.customer.company) {
+    missingFields.push('Müşteri adı veya şirket adı');
+  }
+  
+  // Items validation (at least one item or allow empty for draft proposals)
+  if (!data.items || !Array.isArray(data.items)) {
+    missingFields.push('Ürün listesi');
+  }
   
   return {
     isValid: missingFields.length === 0,

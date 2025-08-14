@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { proposalStatusColors, proposalStatusLabels, ProposalStatus } from "@/types/proposal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { handleProposalStatusChange } from "@/services/workflow/proposalWorkflow";
-import { PdfExportService } from "@/services/pdf/pdfExportService";
+import { SimplePdfExportService } from "@/services/pdf/simplePdfExport";
 import ProposalFormTerms from "@/components/proposals/form/ProposalFormTerms";
 import EmployeeSelector from "@/components/proposals/form/EmployeeSelector";
 import ContactPersonInput from "@/components/proposals/form/ContactPersonInput";
@@ -488,45 +488,9 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
         await handleSaveChanges(proposal.status);
       }
 
-      // Get company settings
-      const companySettings = await PdfExportService.getCompanySettings();
-      
-      // Transform proposal to QuoteData format
-      const quoteData = PdfExportService.transformProposalToQuoteData(
-        proposal, 
-        companySettings
-      );
-      
-      // Get default template
-      const template = await PdfExportService.getDefaultTemplate('quote');
-      
-      // Generate PDF blob
-      const pdfBlob = await PdfExportService.generatePdf(quoteData, { template });
-      
-      // Create blob URL and open in new tab
-      const blobUrl = URL.createObjectURL(pdfBlob);
-      const newWindow = window.open(blobUrl, '_blank');
-      
-      if (newWindow) {
-        // Clean up blob URL after a delay
-        setTimeout(() => {
-          URL.revokeObjectURL(blobUrl);
-        }, 1000);
-        
-        toast.success('PDF yeni sekmede açıldı');
-      } else {
-        // Fallback to download if popup blocked
-        const downloadUrl = document.createElement('a');
-        downloadUrl.href = blobUrl;
-        downloadUrl.download = `teklif-${proposal.number}.pdf`;
-        downloadUrl.click();
-        
-        setTimeout(() => {
-          URL.revokeObjectURL(blobUrl);
-        }, 1000);
-        
-        toast.success('Popup engellendi, PDF indirildi');
-      }
+      // Use simple PDF export service
+      await SimplePdfExportService.openPdf(proposal);
+      toast.success('PDF yeni sekmede açıldı');
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('PDF oluşturulamadı: ' + (error as Error).message);

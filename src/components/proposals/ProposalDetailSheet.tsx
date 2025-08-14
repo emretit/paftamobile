@@ -27,7 +27,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PdfExportService } from "@/services/pdf/pdfExportService";
+import { SimplePdfExportService } from "@/services/pdf/simplePdfExport";
 import { PdfTemplate } from "@/types/pdf-template";
 
 interface ProposalDetailSheetProps {
@@ -87,44 +87,9 @@ const ProposalDetailSheet: React.FC<ProposalDetailSheetProps> = ({
     try {
       setIsLoading(true);
       
-      // Get company settings
-      const companySettings = await PdfExportService.getCompanySettings();
-      
-      // Transform proposal to QuoteData format
-      const quoteData = PdfExportService.transformProposalToQuoteData(
-        proposal, 
-        companySettings
-      );
-      
-      // Generate PDF blob
-      const pdfBlob = await PdfExportService.generatePdf(quoteData, {
-        templateId: selectedTemplateId,
-      });
-      
-      // Create blob URL and open in new tab
-      const blobUrl = URL.createObjectURL(pdfBlob);
-      const newWindow = window.open(blobUrl, '_blank');
-      
-      if (newWindow) {
-        // Clean up blob URL after a delay
-        setTimeout(() => {
-          URL.revokeObjectURL(blobUrl);
-        }, 1000);
-        
-        toast.success('PDF yeni sekmede açıldı');
-      } else {
-        // Fallback to download if popup blocked
-        const downloadUrl = document.createElement('a');
-        downloadUrl.href = blobUrl;
-        downloadUrl.download = `teklif-${proposal.number || proposal.proposal_number}.pdf`;
-        downloadUrl.click();
-        
-        setTimeout(() => {
-          URL.revokeObjectURL(blobUrl);
-        }, 1000);
-        
-        toast.success('PDF indirildi (popup engellendi)');
-      }
+      // Use simple PDF export service
+      await SimplePdfExportService.openPdf(proposal);
+      toast.success('PDF yeni sekmede açıldı');
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('PDF oluşturulamadı: ' + (error as Error).message);

@@ -161,11 +161,34 @@ export class PdfExportService {
 
       // Create React element for PDF
       try {
+        // Validate schema_json
+        if (!activeTemplate.schema_json) {
+          throw new Error('Template şeması bulunamadı');
+        }
+
+        // Ensure schema is parsed object if it's a string
+        let schema = activeTemplate.schema_json;
+        if (typeof schema === 'string') {
+          try {
+            schema = JSON.parse(schema);
+          } catch (parseError) {
+            throw new Error('Template şeması geçersiz JSON formatında');
+          }
+        }
+
+        console.log('Generating PDF with data:', {
+          dataKeys: Object.keys(quoteData),
+          customerName: quoteData.customer?.name,
+          customerCompany: quoteData.customer?.company,
+          itemsCount: quoteData.items?.length,
+          schemaKeys: Object.keys(schema)
+        });
+
         const pdfElement = (
           <Document>
             <PdfRenderer
               data={quoteData}
-              schema={activeTemplate.schema_json}
+              schema={schema}
             />
           </Document>
         );
@@ -265,6 +288,14 @@ export class PdfExportService {
    * Transform proposal data to QuoteData format
    */
   static transformProposalToQuoteData(proposal: any, companySettings?: any): QuoteData {
+    console.log('Transforming proposal to QuoteData:', {
+      proposalKeys: Object.keys(proposal),
+      proposalId: proposal.id,
+      proposalNumber: proposal.number || proposal.proposal_number,
+      customerExists: !!proposal.customer,
+      customerKeys: proposal.customer ? Object.keys(proposal.customer) : [],
+      itemsCount: proposal.items?.length || proposal.proposal_items?.length || 0
+    });
     // Default company settings if not provided
     const defaultCompany = {
       name: companySettings?.company_name || 'Şirket Adı',
