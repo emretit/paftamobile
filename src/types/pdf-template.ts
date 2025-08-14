@@ -32,6 +32,11 @@ export interface CustomerBlockSettings {
   fields: Array<"name" | "company" | "email" | "mobile_phone" | "office_phone" | "address" | "tax_number" | "tax_office">;
 }
 
+export interface ProposalBlockSettings {
+  show: boolean;
+  fields: Array<"number" | "title" | "description" | "valid_until" | "payment_terms" | "delivery_terms" | "warranty_terms" | "created_at">;
+}
+
 export interface ColumnSettings {
   key: string;
   label: string;
@@ -75,6 +80,7 @@ export interface TemplateSchema {
   page: PageSettings;
   header: HeaderSettings;
   customerBlock: CustomerBlockSettings;
+  proposalBlock: ProposalBlockSettings;
   lineTable: LineTableSettings;
   totals: TotalsSettings;
   notes: NotesSettings;

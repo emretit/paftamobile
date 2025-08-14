@@ -238,6 +238,34 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
     );
   };
 
+  const renderProposalField = (fieldKey: string) => {
+    const fieldMap: Record<string, { label: string; value: string | undefined }> = {
+      number: { label: 'Teklif No', value: data.number },
+      title: { label: 'Başlık', value: data.title },
+      description: { label: 'Açıklama', value: data.description },
+      valid_until: { label: 'Geçerlilik', value: data.valid_until ? formatDate(data.valid_until) : undefined },
+      payment_terms: { label: 'Ödeme Koşulları', value: data.payment_terms },
+      delivery_terms: { label: 'Teslimat Koşulları', value: data.delivery_terms },
+      warranty_terms: { label: 'Garanti Koşulları', value: data.warranty_terms },
+      created_at: { label: 'Tarih', value: data.created_at ? formatDate(data.created_at) : undefined },
+    };
+
+    const field = fieldMap[fieldKey];
+    if (!field || !field.value) return null;
+
+    return (
+      <View key={fieldKey} style={{ flexDirection: 'row', marginBottom: 5, alignItems: 'center', justifyContent: 'space-between', width: 160 }}>
+        <Text style={[styles.customerInfo, { fontWeight: 'bold', width: 60 }]}>
+          {safeText(field.label)}
+        </Text>
+        <Text style={[styles.customerInfo, { fontWeight: 'bold', marginHorizontal: 4 }]}>:</Text>
+        <Text style={[styles.customerInfo, { flex: 1 }]}>
+          {safeText(field.value)}
+        </Text>
+      </View>
+    );
+  };
+
   return (
     <Document>
       <Page size={schema.page.size === "LETTER" ? "LETTER" : schema.page.size} style={styles.page}>
@@ -595,63 +623,17 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
           )}
           
           {/* Teklif Bilgileri Container */}
-          <View style={[styles.customerSection, { flex: 1, marginLeft: 20, marginBottom: 0, alignItems: 'center' }]}>
-            <Text style={[styles.customerTitle, { textAlign: 'center', marginBottom: 10 }]}>
-              {safeText('Teklif Bilgileri')}
-            </Text>
-            
-            <View style={{ alignItems: 'center' }}>
-              {/* Teklif No */}
-              {data.number && (
-                <View style={{ flexDirection: 'row', marginBottom: 5, alignItems: 'center', justifyContent: 'space-between', width: 160 }}>
-                  <Text style={[styles.customerInfo, { fontWeight: 'bold', width: 60 }]}>
-                    {safeText('Teklif No')}
-                  </Text>
-                  <Text style={[styles.customerInfo, { fontWeight: 'bold', marginHorizontal: 4 }]}>:</Text>
-                  <Text style={[styles.customerInfo, { flex: 1 }]}>
-                    {safeText(String(data.number || ''))}
-                  </Text>
-                </View>
-              )}
+          {(schema as any).proposalBlock?.show && (
+            <View style={[styles.customerSection, { flex: 1, marginLeft: 20, marginBottom: 0, alignItems: 'center' }]}>
+              <Text style={[styles.customerTitle, { textAlign: 'center', marginBottom: 10 }]}>
+                {safeText('Teklif Bilgileri')}
+              </Text>
               
-              {/* Tarih */}
-              <View style={{ flexDirection: 'row', marginBottom: 5, alignItems: 'center', justifyContent: 'space-between', width: 160 }}>
-                <Text style={[styles.customerInfo, { fontWeight: 'bold', width: 60 }]}>
-                  {safeText('Tarih')}
-                </Text>
-                <Text style={[styles.customerInfo, { fontWeight: 'bold', marginHorizontal: 4 }]}>:</Text>
-                <Text style={[styles.customerInfo, { flex: 1 }]}>
-                  {safeText(formatDate(data.created_at || new Date().toISOString()))}
-                </Text>
+              <View style={{ alignItems: 'center' }}>
+                {(schema as any).proposalBlock?.fields?.map((fieldKey: string) => renderProposalField(fieldKey))}
               </View>
-              
-              {/* Geçerlilik */}
-              {schema.header.showValidity && data.valid_until && (
-                <View style={{ flexDirection: 'row', marginBottom: 5, alignItems: 'center', justifyContent: 'space-between', width: 160 }}>
-                  <Text style={[styles.customerInfo, { fontWeight: 'bold', width: 60 }]}>
-                    {safeText('Geçerlilik')}
-                  </Text>
-                  <Text style={[styles.customerInfo, { fontWeight: 'bold', marginHorizontal: 4 }]}>:</Text>
-                  <Text style={[styles.customerInfo, { flex: 1 }]}>
-                    {safeText(formatDate(data.valid_until))}
-                  </Text>
-                </View>
-              )}
-              
-              {/* Hazırlayan */}
-              {data.prepared_by && (
-                <View style={{ flexDirection: 'row', marginBottom: 5, alignItems: 'center', justifyContent: 'space-between', width: 160 }}>
-                  <Text style={[styles.customerInfo, { fontWeight: 'bold', width: 60 }]}>
-                    {safeText('Hazırlayan')}
-                  </Text>
-                  <Text style={[styles.customerInfo, { fontWeight: 'bold', marginHorizontal: 4 }]}>:</Text>
-                  <Text style={[styles.customerInfo, { flex: 1 }]}>
-                    {safeText(String(data.prepared_by || ''))}
-                  </Text>
-                </View>
-              )}
             </View>
-          </View>
+          )}
         </View>
 
         {/* Custom Before-Table Fields */}

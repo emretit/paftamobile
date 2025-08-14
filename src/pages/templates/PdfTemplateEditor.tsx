@@ -74,6 +74,10 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
         show: z.boolean(),
         fields: z.array(z.string()),
       }),
+      proposalBlock: z.object({
+        show: z.boolean(),
+        fields: z.array(z.string()),
+      }),
       lineTable: z.object({
         columns: z.array(z.object({
           key: z.string(),
@@ -134,6 +138,10 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
         show: true,
         fields: ['name', 'company', 'email', 'mobile_phone', 'address'],
       },
+      proposalBlock: {
+        show: true,
+        fields: ['number', 'title', 'valid_until', 'payment_terms'],
+      },
       lineTable: {
         columns: [
           { key: 'description', show: true, label: 'Açıklama', align: 'left' },
@@ -177,7 +185,7 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
         setIsNewTemplate(false);
         setTemplateName(template.name);
         
-        // Ensure all required fields exist with defaults
+        // Ensure all required fields exist with defaults (including migration for proposalBlock)
         const schemaWithDefaults = {
           ...template.schema_json,
           header: {
@@ -193,6 +201,11 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
             companyWebsite: template.schema_json.header.companyWebsite || 'www.ngsteknoloji.com',
             companyTaxNumber: template.schema_json.header.companyTaxNumber || '1234567890',
             companyInfoFontSize: template.schema_json.header.companyInfoFontSize || 10,
+          },
+          // Migration: Add proposalBlock if it doesn't exist
+          proposalBlock: (template.schema_json as any).proposalBlock || {
+            show: true,
+            fields: ['number', 'title', 'valid_until', 'payment_terms'],
           },
           notes: {
             ...template.schema_json.notes,
@@ -560,48 +573,94 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                   </AccordionItem>
                 </Accordion>
 
-                {/* Customer Block Settings */}
+                {/* Customer and Proposal Block Settings */}
                 <Accordion type="single" collapsible defaultValue="customer">
                   <AccordionItem value="customer">
-                    <AccordionTrigger>Müşteri Bilgileri</AccordionTrigger>
-                    <AccordionContent className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="show-customer"
-                          checked={watchedValues.customerBlock?.show}
-                          onCheckedChange={(checked) => form.setValue('customerBlock.show', checked)}
-                        />
-                        <Label htmlFor="show-customer">Müşteri Bilgilerini Göster</Label>
-                      </div>
-                      
-                      {watchedValues.customerBlock?.show && (
-                        <div className="space-y-2">
-                          <Label>Gösterilecek Alanlar</Label>
-                          {['name', 'company', 'email', 'mobile_phone', 'office_phone', 'address'].map((field) => (
-                            <div key={field} className="flex items-center space-x-2">
-                              <Switch
-                                id={`show-${field}`}
-                                checked={watchedValues.customerBlock?.fields?.includes(field as any)}
-                                onCheckedChange={(checked) => {
-                                  const currentFields = watchedValues.customerBlock?.fields || [];
-                                  if (checked) {
-                                    form.setValue('customerBlock.fields', [...currentFields, field as any]);
-                                  } else {
-                                    form.setValue('customerBlock.fields', currentFields.filter(f => f !== field));
-                                  }
-                                }}
-                              />
-                              <Label htmlFor={`show-${field}`} className="capitalize">
-                                {field === 'name' ? 'Ad Soyad' : 
-                                 field === 'company' ? 'Şirket' : 
-                                 field === 'email' ? 'E-posta' : 
-                                 field === 'mobile_phone' ? 'Cep Telefonu' :
-                                 field === 'office_phone' ? 'Sabit Telefon' : 'Adres'}
-                              </Label>
-                            </div>
-                          ))}
+                    <AccordionTrigger>Müşteri ve Teklif Bilgileri</AccordionTrigger>
+                    <AccordionContent className="space-y-6">
+                      {/* Customer Information */}
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="show-customer"
+                            checked={watchedValues.customerBlock?.show}
+                            onCheckedChange={(checked) => form.setValue('customerBlock.show', checked)}
+                          />
+                          <Label htmlFor="show-customer" className="font-medium">Müşteri Bilgilerini Göster</Label>
                         </div>
-                      )}
+                        
+                        {watchedValues.customerBlock?.show && (
+                          <div className="space-y-2 ml-6">
+                            <Label className="text-sm text-muted-foreground">Gösterilecek Müşteri Alanları</Label>
+                            {['name', 'company', 'email', 'mobile_phone', 'office_phone', 'address'].map((field) => (
+                              <div key={field} className="flex items-center space-x-2">
+                                <Switch
+                                  id={`show-${field}`}
+                                  checked={watchedValues.customerBlock?.fields?.includes(field as any)}
+                                  onCheckedChange={(checked) => {
+                                    const currentFields = watchedValues.customerBlock?.fields || [];
+                                    if (checked) {
+                                      form.setValue('customerBlock.fields', [...currentFields, field as any]);
+                                    } else {
+                                      form.setValue('customerBlock.fields', currentFields.filter(f => f !== field));
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor={`show-${field}`} className="text-sm">
+                                  {field === 'name' ? 'Ad Soyad' : 
+                                   field === 'company' ? 'Şirket' : 
+                                   field === 'email' ? 'E-posta' : 
+                                   field === 'mobile_phone' ? 'Cep Telefonu' :
+                                   field === 'office_phone' ? 'Sabit Telefon' : 'Adres'}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Proposal Information */}
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="show-proposal"
+                            checked={watchedValues.proposalBlock?.show}
+                            onCheckedChange={(checked) => form.setValue('proposalBlock.show', checked)}
+                          />
+                          <Label htmlFor="show-proposal" className="font-medium">Teklif Bilgilerini Göster</Label>
+                        </div>
+                        
+                        {watchedValues.proposalBlock?.show && (
+                          <div className="space-y-2 ml-6">
+                            <Label className="text-sm text-muted-foreground">Gösterilecek Teklif Alanları</Label>
+                            {['number', 'title', 'description', 'valid_until', 'payment_terms', 'delivery_terms', 'warranty_terms', 'created_at'].map((field) => (
+                              <div key={field} className="flex items-center space-x-2">
+                                <Switch
+                                  id={`show-proposal-${field}`}
+                                  checked={watchedValues.proposalBlock?.fields?.includes(field as any)}
+                                  onCheckedChange={(checked) => {
+                                    const currentFields = watchedValues.proposalBlock?.fields || [];
+                                    if (checked) {
+                                      form.setValue('proposalBlock.fields', [...currentFields, field as any]);
+                                    } else {
+                                      form.setValue('proposalBlock.fields', currentFields.filter(f => f !== field));
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor={`show-proposal-${field}`} className="text-sm">
+                                  {field === 'number' ? 'Teklif Numarası' : 
+                                   field === 'title' ? 'Başlık' : 
+                                   field === 'description' ? 'Açıklama' : 
+                                   field === 'valid_until' ? 'Geçerlilik Tarihi' :
+                                   field === 'payment_terms' ? 'Ödeme Koşulları' : 
+                                   field === 'delivery_terms' ? 'Teslimat Koşulları' :
+                                   field === 'warranty_terms' ? 'Garanti Koşulları' : 'Oluşturma Tarihi'}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
