@@ -70,14 +70,7 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
         companyTaxNumber: z.string().optional(),
         companyInfoFontSize: z.number().min(8).max(32),
       }),
-      customerBlock: z.object({
-        show: z.boolean(),
-        fields: z.array(z.string()),
-      }),
-      proposalBlock: z.object({
-        show: z.boolean(),
-        fields: z.array(z.string()),
-      }),
+
       lineTable: z.object({
         columns: z.array(z.object({
           key: z.string(),
@@ -134,20 +127,14 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
         companyTaxNumber: '',
         companyInfoFontSize: 10,
       },
-      customerBlock: {
-        show: true,
-        fields: ['name', 'company', 'email', 'mobile_phone', 'address'],
-      },
-      proposalBlock: {
-        show: true,
-        fields: ['number', 'title', 'valid_until', 'payment_terms'],
-      },
+
       lineTable: {
         columns: [
-          { key: 'description', show: true, label: 'Açıklama', align: 'left' },
-          { key: 'quantity', show: true, label: 'Miktar', align: 'center' },
-          { key: 'unit_price', show: true, label: 'Birim Fiyat', align: 'right' },
-          { key: 'total', show: true, label: 'Toplam', align: 'right' },
+          { key: 'description', show: true, label: 'Açıklama' },
+          { key: 'quantity', show: true, label: 'Miktar' },
+          { key: 'unit_price', show: true, label: 'Birim Fiyat' },
+          { key: 'discount', show: true, label: 'İndirim' },
+          { key: 'total', show: true, label: 'Toplam' },
         ],
       },
       totals: {
@@ -202,11 +189,38 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
             companyTaxNumber: template.schema_json.header.companyTaxNumber || '',
             companyInfoFontSize: template.schema_json.header.companyInfoFontSize || 10,
           },
-          // Migration: Add proposalBlock if it doesn't exist
-          proposalBlock: (template.schema_json as any).proposalBlock || {
-            show: true,
-            fields: ['number', 'title', 'valid_until', 'payment_terms'],
+          
+          // Migration: Add discount column if it doesn't exist
+          lineTable: {
+            ...template.schema_json.lineTable,
+            columns: (() => {
+              const existingColumns = template.schema_json.lineTable?.columns || [];
+              const hasDiscountColumn = existingColumns.some(col => col.key === 'discount');
+              
+              if (!hasDiscountColumn) {
+                // Insert discount column before total column
+                const newColumns = [...existingColumns];
+                const totalIndex = newColumns.findIndex(col => col.key === 'total');
+                if (totalIndex !== -1) {
+                  newColumns.splice(totalIndex, 0, {
+                    key: 'discount',
+                    show: true,
+                    label: 'İndirim'
+                  });
+                } else {
+                  // If no total column, add at the end
+                  newColumns.push({
+                    key: 'discount',
+                    show: true,
+                    label: 'İndirim'
+                  });
+                }
+                return newColumns;
+              }
+              return existingColumns;
+            })()
           },
+
           notes: {
             ...template.schema_json.notes,
             introFontSize: template.schema_json.notes.introFontSize || 12,
@@ -257,7 +271,8 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
             quantity: 2,
             unit: 'adet',
             unit_price: 100.00,
-            total: 200.00,
+            discount_rate: 10,
+            total: 180.00,
           },
           {
             id: '2',
@@ -265,6 +280,7 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
             quantity: 1,
             unit: 'paket',
             unit_price: 150.00,
+            discount_rate: 0,
             total: 150.00,
           },
         ],
@@ -624,74 +640,18 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="space-y-6">
-                      {/* Customer Information */}
+                      {/* Customer and Proposal Information - Always Visible */}
                       <div className="space-y-4">
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="show-customer"
-                            checked={watchedValues.customerBlock?.show}
-                            onCheckedChange={(checked) => form.setValue('customerBlock.show', checked)}
-                          />
-                          <Label htmlFor="show-customer" className="font-medium">Müşteri Bilgilerini Göster</Label>
-                        </div>
-                        
-                        {watchedValues.customerBlock?.show && (
-                          <div className="space-y-2 ml-6">
-                            <Label className="text-sm text-muted-foreground">Gösterilecek Müşteri Alanları</Label>
-                            {['name', 'company', 'email', 'mobile_phone', 'office_phone', 'address'].map((field) => (
-                              <div key={field} className="flex items-center space-x-2">
-                                <Switch
-                                  id={`show-${field}`}
-                                  checked={watchedValues.customerBlock?.fields?.includes(field as any)}
-                                  onCheckedChange={(checked) => {
-                                    const currentFields = watchedValues.customerBlock?.fields || [];
-                                    if (checked) {
-                                      form.setValue('customerBlock.fields', [...currentFields, field as any]);
-                                    } else {
-                                      form.setValue('customerBlock.fields', currentFields.filter(f => f !== field));
-                                    }
-                                  }}
-                                />
-                                <Label htmlFor={`show-${field}`} className="text-sm">
-                                  {field === 'name' ? 'Ad Soyad' : 
-                                   field === 'company' ? 'Şirket' : 
-                                   field === 'email' ? 'E-posta' : 
-                                   field === 'mobile_phone' ? 'Cep Telefonu' :
-                                   field === 'office_phone' ? 'Sabit Telefon' : 'Adres'}
-                                </Label>
-                              </div>
-                            ))}
+                        <div className="text-sm text-muted-foreground bg-blue-50 p-3 rounded-lg">
+                          <div className="font-medium text-blue-800 mb-2">Müşteri ve Teklif Bilgileri</div>
+                          <div className="space-y-1 text-blue-700">
+                            <div>• Müşteri bilgileri otomatik olarak gösterilir</div>
+                            <div>• Teklif bilgileri (numara, tarih, geçerlilik, hazırlayan) otomatik olarak gösterilir</div>
                           </div>
-                        )}
-                      </div>
-
-                      {/* Proposal Information */}
-                      <div className="space-y-4">
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="show-proposal"
-                            checked={watchedValues.proposalBlock?.show}
-                            onCheckedChange={(checked) => form.setValue('proposalBlock.show', checked)}
-                          />
-                          <Label htmlFor="show-proposal" className="font-medium">Teklif Bilgilerini Göster</Label>
-                        </div>
-                        
-                        {watchedValues.proposalBlock?.show && (
-                          <div className="space-y-2 ml-6">
-                            <Label className="text-sm text-muted-foreground">Teklif Bilgileri (Tümü Gösterilecek)</Label>
-                            <div className="text-sm text-muted-foreground bg-gray-50 p-3 rounded-lg">
-                              <div className="space-y-1">
-                                <div>• Teklif Numarası</div>
-                                <div>• Oluşturma Tarihi</div>
-                                <div>• Geçerlilik Tarihi</div>
-                                <div>• Hazırlayan Kişi</div>
-                              </div>
-                              <div className="text-xs text-gray-500 mt-2">
-                                Bu alanlar otomatik olarak gösterilir.
-                              </div>
-                            </div>
+                          <div className="text-xs text-blue-600 mt-2">
+                            Bu alanlar artık her zaman görünür ve düzenlenemez.
                           </div>
-                        )}
+                        </div>
                       </div>
                     </AccordionContent>
                   </AccordionItem>
@@ -709,11 +669,19 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="space-y-4">
-                      {watchedValues.lineTable?.columns?.map((column, index) => (
-                        <div key={column.key} className="border rounded-lg p-3 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <Label className="font-medium">{column.label}</Label>
-                            <div className="flex items-center space-x-2">
+                      <div className="grid grid-cols-2 gap-3">
+                        {watchedValues.lineTable?.columns?.map((column, index) => (
+                          <div key={column.key} className="border rounded-lg p-3 bg-gray-50">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 flex items-center justify-center bg-purple-100 rounded-full">
+                                  <span className="text-xs font-bold text-purple-700">
+                                    {index + 1}
+                                  </span>
+                                </div>
+                                <Label className="text-sm font-medium text-gray-700">{column.label}</Label>
+                              </div>
+                              
                               <Switch
                                 id={`show-${column.key}`}
                                 checked={column.show}
@@ -723,48 +691,10 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                                   form.setValue('lineTable.columns', newColumns);
                                 }}
                               />
-                              {column.show ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                             </div>
                           </div>
-                          
-                          {column.show && (
-                            <>
-                              <div>
-                                <Label>Etiket</Label>
-                                <Input
-                                  value={column.label}
-                                  onChange={(e) => {
-                                    const newColumns = [...(watchedValues.lineTable?.columns || [])];
-                                    newColumns[index].label = e.target.value;
-                                    form.setValue('lineTable.columns', newColumns);
-                                  }}
-                                />
-                              </div>
-                              
-                              <div>
-                                <Label>Hizalama</Label>
-                                <Select
-                                  value={column.align}
-                                  onValueChange={(value) => {
-                                    const newColumns = [...(watchedValues.lineTable?.columns || [])];
-                                    newColumns[index].align = value as any;
-                                    form.setValue('lineTable.columns', newColumns);
-                                  }}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="left">Sol</SelectItem>
-                                    <SelectItem value="center">Orta</SelectItem>
-                                    <SelectItem value="right">Sağ</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
@@ -780,41 +710,87 @@ const PdfTemplateEditor: React.FC<PdfTemplateEditorProps> = ({
                         <span>Toplam Ayarları</span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="show-gross"
-                          checked={watchedValues.totals?.showGross}
-                          onCheckedChange={(checked) => form.setValue('totals.showGross', checked)}
-                        />
-                        <Label htmlFor="show-gross">Ara Toplam Göster</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="show-discount"
-                          checked={watchedValues.totals?.showDiscount}
-                          onCheckedChange={(checked) => form.setValue('totals.showDiscount', checked)}
-                        />
-                        <Label htmlFor="show-discount">İndirim Göster</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="show-tax"
-                          checked={watchedValues.totals?.showTax}
-                          onCheckedChange={(checked) => form.setValue('totals.showTax', checked)}
-                        />
-                        <Label htmlFor="show-tax">KDV Göster</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="show-net"
-                          checked={watchedValues.totals?.showNet}
-                          onCheckedChange={(checked) => form.setValue('totals.showNet', checked)}
-                        />
-                        <Label htmlFor="show-net">Genel Toplam Göster</Label>
+                    <AccordionContent className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Ara Toplam */}
+                        <div className="border rounded-lg p-3 bg-orange-50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 flex items-center justify-center bg-orange-100 rounded-full">
+                                <span className="text-xs font-bold text-orange-700">1</span>
+                              </div>
+                              <div>
+                                <Label className="text-sm font-medium text-gray-700">Ara Toplam</Label>
+                                <div className="text-xs text-gray-500">Sipariş tutarı</div>
+                              </div>
+                            </div>
+                            <Switch
+                              id="show-gross"
+                              checked={watchedValues.totals?.showGross}
+                              onCheckedChange={(checked) => form.setValue('totals.showGross', checked)}
+                            />
+                          </div>
+                        </div>
+
+                        {/* İndirim */}
+                        <div className="border rounded-lg p-3 bg-red-50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 flex items-center justify-center bg-red-100 rounded-full">
+                                <span className="text-xs font-bold text-red-700">2</span>
+                              </div>
+                              <div>
+                                <Label className="text-sm font-medium text-gray-700">İndirim</Label>
+                                <div className="text-xs text-gray-500">Toplam indirim tutarı</div>
+                              </div>
+                            </div>
+                            <Switch
+                              id="show-discount"
+                              checked={watchedValues.totals?.showDiscount}
+                              onCheckedChange={(checked) => form.setValue('totals.showDiscount', checked)}
+                            />
+                          </div>
+                        </div>
+
+                        {/* KDV */}
+                        <div className="border rounded-lg p-3 bg-blue-50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 flex items-center justify-center bg-blue-100 rounded-full">
+                                <span className="text-xs font-bold text-blue-700">3</span>
+                              </div>
+                              <div>
+                                <Label className="text-sm font-medium text-gray-700">KDV</Label>
+                                <div className="text-xs text-gray-500">Vergi tutarı</div>
+                              </div>
+                            </div>
+                            <Switch
+                              id="show-tax"
+                              checked={watchedValues.totals?.showTax}
+                              onCheckedChange={(checked) => form.setValue('totals.showTax', checked)}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Genel Toplam */}
+                        <div className="border rounded-lg p-3 bg-green-50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 flex items-center justify-center bg-green-100 rounded-full">
+                                <span className="text-xs font-bold text-green-700">4</span>
+                              </div>
+                              <div>
+                                <Label className="text-sm font-medium text-gray-700">Genel Toplam</Label>
+                                <div className="text-xs text-gray-500">Son ödenecek tutar</div>
+                              </div>
+                            </div>
+                            <Switch
+                              id="show-net"
+                              checked={watchedValues.totals?.showNet}
+                              onCheckedChange={(checked) => form.setValue('totals.showNet', checked)}
+                            />
+                          </div>
+                        </div>
                       </div>
                     </AccordionContent>
                   </AccordionItem>

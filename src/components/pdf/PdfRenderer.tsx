@@ -203,16 +203,7 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
     }
   };
 
-  const getColumnStyle = (align: string) => {
-    switch (align) {
-      case 'center':
-        return styles.tableCellCenter;
-      case 'right':
-        return styles.tableCellRight;
-      default:
-        return styles.tableCellLeft;
-    }
-  };
+
 
   const renderCustomerField = (fieldKey: string, customer: QuoteData['customer']) => {
     if (!customer) return null;
@@ -588,8 +579,8 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
 
         {/* Customer and Quote Information Container */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 30 }}>
-          {/* Müşteri Bilgileri Container */}
-          {schema.customerBlock.show && data.customer && (
+          {/* Müşteri Bilgileri Container - Her zaman göster */}
+          {data.customer && (
             <View style={[styles.customerSection, { flex: 2, marginRight: 20, marginBottom: 0, alignItems: 'flex-start' }]}>
               {/* Firma İsmi */}
               {data.customer?.company && (
@@ -619,22 +610,20 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
             </View>
           )}
           
-          {/* Teklif Bilgileri Container */}
-          {(schema as any).proposalBlock?.show && (
-            <View style={[styles.customerSection, { flex: 1, marginLeft: 20, marginBottom: 0, alignItems: 'center' }]}>
-              <Text style={[styles.customerTitle, { textAlign: 'center', marginBottom: 10 }]}>
-                {safeText('Teklif Bilgileri')}
-              </Text>
-              
-              <View style={{ alignItems: 'center' }}>
-                {/* Sabit 4 teklif bilgisi göster */}
-                {renderProposalField('number')}
-                {renderProposalField('created_at')}
-                {renderProposalField('valid_until')}
-                {renderProposalField('prepared_by')}
-              </View>
+          {/* Teklif Bilgileri Container - Her zaman göster */}
+          <View style={[styles.customerSection, { flex: 1, marginLeft: 20, marginBottom: 0, alignItems: 'center' }]}>
+            <Text style={[styles.customerTitle, { textAlign: 'center', marginBottom: 10 }]}>
+              {safeText('Teklif Bilgileri')}
+            </Text>
+            
+            <View style={{ alignItems: 'center' }}>
+              {/* Sabit 4 teklif bilgisi göster */}
+              {renderProposalField('number')}
+              {renderProposalField('created_at')}
+              {renderProposalField('valid_until')}
+              {renderProposalField('prepared_by')}
             </View>
-          )}
+          </View>
         </View>
 
         {/* Custom Before-Table Fields */}
@@ -660,11 +649,11 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
             {schema.lineTable.columns
               .filter(col => col.show)
               .map(col => (
-                <View key={col.key} style={[styles.tableCell, { flex: col.key === 'description' ? 3 : 1 }]}>
-                  <Text style={[styles.tableCellHeader, getColumnStyle(col.align)]}>
-                    {safeText(col.label)}
-                  </Text>
-                </View>
+                                  <View key={col.key} style={[styles.tableCell, { flex: col.key === 'description' ? 3 : 1 }]}>
+                    <Text style={[styles.tableCellHeader, { textAlign: col.key === 'total' ? 'right' : 'center' }]}>
+                      {safeText(col.label)}
+                    </Text>
+                  </View>
               ))
             }
           </View>
@@ -676,10 +665,11 @@ const PdfRenderer: React.FC<PdfRendererProps> = ({ data, schema }) => {
                 .filter(col => col.show)
                 .map(col => (
                   <View key={col.key} style={[styles.tableCell, { flex: col.key === 'description' ? 3 : 1 }]}>
-                    <Text style={[styles.tableCell, getColumnStyle(col.align)]}>
+                    <Text style={[styles.tableCell, { textAlign: col.key === 'description' ? 'left' : col.key === 'total' ? 'right' : 'center' }]}>
                       {col.key === 'description' && safeText(item.description)}
                       {col.key === 'quantity' && safeText(`${item.quantity} ${item.unit || ''}`)}
                       {col.key === 'unit_price' && safeText(formatCurrency(item.unit_price, data.currency))}
+                      {col.key === 'discount' && (item.discount_rate && item.discount_rate > 0 ? safeText(`%${item.discount_rate}`) : safeText('-'))}
                       {col.key === 'total' && safeText(formatCurrency(item.total, data.currency))}
                     </Text>
                   </View>
