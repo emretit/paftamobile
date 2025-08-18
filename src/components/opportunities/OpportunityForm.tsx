@@ -64,8 +64,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
 
   const selectedCustomer = customers?.find(customer => customer.id === formData.customer_id);
 
-  const handleNewCustomerSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleNewCustomerSubmit = async () => {
     
     if (!newCustomerData.company.trim() || !newCustomerData.name.trim()) {
       toast({
@@ -272,7 +271,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
                           </Button>
                         </div>
                         
-                        <form onSubmit={handleNewCustomerSubmit} className="space-y-2">
+                        <div className="space-y-2">
                           <div className="grid grid-cols-2 gap-2">
                             <div>
                               <Label htmlFor="company" className="text-xs">Şirket Adı *</Label>
@@ -353,10 +352,11 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
                           
                           <div className="flex gap-2 pt-2">
                             <Button
-                              type="submit"
+                              type="button"
                               size="sm"
                               disabled={isCreatingCustomer}
                               className="flex-1 h-8 text-xs"
+                              onClick={handleNewCustomerSubmit}
                             >
                               {isCreatingCustomer ? "Ekleniyor..." : "Kaydet"}
                             </Button>
@@ -370,7 +370,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
                               İptal
                             </Button>
                           </div>
-                        </form>
+                        </div>
                       </div>
                     )}
                   </div>
