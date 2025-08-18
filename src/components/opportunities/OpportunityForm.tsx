@@ -80,15 +80,17 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
     try {
       const { data: newCustomer, error } = await supabase
         .from("customers")
-        .insert({
-          company: newCustomerData.company,
-          name: newCustomerData.name,
-          email: newCustomerData.email || null,
-          mobile_phone: newCustomerData.phone || null,
-          city: newCustomerData.city || null,
-          address: newCustomerData.address || null,
-          status: "potential" // Potansiyel müşteri olarak ekle
-        })
+                     .insert({
+               company: newCustomerData.company,
+               name: newCustomerData.name,
+               email: newCustomerData.email || null,
+               mobile_phone: newCustomerData.phone || null,
+               city: newCustomerData.city || null,
+               address: newCustomerData.address || null,
+               type: "kurumsal",
+               status: "potansiyel", // Potansiyel müşteri olarak ekle
+               balance: 0
+             })
         .select()
         .single();
 
