@@ -26,6 +26,7 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
     error,
     handleDragEnd,
     handleUpdateOpportunity,
+    handleUpdateOpportunityStatus,
     selectedOpportunity,
     setSelectedOpportunity,
     isDetailOpen,
@@ -155,6 +156,7 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
                 onOpportunityClick={handleOpportunityClick}
                 onOpportunitySelect={handleOpportunitySelect}
                 selectedOpportunities={selectedOpportunities}
+                onUpdateOpportunityStatus={handleUpdateOpportunityStatus}
               />
             </TabsContent>
             <TabsContent value="list" className="mt-0">

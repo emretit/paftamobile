@@ -66,24 +66,26 @@ export const useOpportunities = () => {
     }
   });
 
-  // Group opportunities by status
-  const opportunities: OpportunitiesState = {
-    new: [],
-    first_contact: [],
-    site_visit: [],
-    preparing_proposal: [],
-    proposal_sent: [],
-    accepted: [],
-    lost: [],
-  };
+  // Group opportunities by status (dynamic grouping)
+  const opportunities: { [key: string]: Opportunity[] } = {};
 
   if (opportunitiesData) {
     opportunitiesData.forEach((opportunity) => {
-      if (opportunity.status in opportunities) {
-        opportunities[opportunity.status as OpportunityStatus].push(opportunity);
+      const status = opportunity.status || 'new';
+      if (!opportunities[status]) {
+        opportunities[status] = [];
       }
+      opportunities[status].push(opportunity);
     });
   }
+
+  // Ensure default columns exist even if empty
+  const defaultStatuses = ['new', 'first_contact', 'site_visit', 'preparing_proposal', 'proposal_sent', 'accepted', 'lost'];
+  defaultStatuses.forEach(status => {
+    if (!opportunities[status]) {
+      opportunities[status] = [];
+    }
+  });
 
   // Handle drag and drop updates
   const updateOpportunityMutation = useMutation({
@@ -126,6 +128,24 @@ export const useOpportunities = () => {
       id: draggableId,
       status: destination.droppableId as OpportunityStatus,
     });
+  };
+
+  // Function for updating opportunity status (for custom columns)
+  const handleUpdateOpportunityStatus = async (id: string, status: string) => {
+    try {
+      const { error } = await supabase
+        .from("opportunities")
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (error) throw error;
+      
+      queryClient.invalidateQueries({ queryKey: ["opportunities"] });
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Error updating opportunity status:", error);
+      throw error;
+    }
   };
 
   // Handle other opportunity updates
@@ -173,6 +193,7 @@ export const useOpportunities = () => {
     error,
     handleDragEnd,
     handleUpdateOpportunity,
+    handleUpdateOpportunityStatus,
     selectedOpportunity,
     setSelectedOpportunity,
     isDetailOpen,

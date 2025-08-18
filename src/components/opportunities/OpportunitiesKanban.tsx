@@ -19,6 +19,7 @@ interface OpportunitiesKanbanProps {
   onOpportunityClick: (opportunity: Opportunity) => void;
   onOpportunitySelect?: (opportunity: Opportunity) => void;
   selectedOpportunities?: Opportunity[];
+  onUpdateOpportunityStatus: (id: string, status: string) => Promise<void>;
 }
 
 const columns = [
@@ -37,6 +38,7 @@ const OpportunitiesKanban = ({
   onOpportunityClick,
   onOpportunitySelect,
   selectedOpportunities = [],
+  onUpdateOpportunityStatus,
 }: OpportunitiesKanbanProps) => {
   return (
     <DragDropContext onDragEnd={onDragEnd}>

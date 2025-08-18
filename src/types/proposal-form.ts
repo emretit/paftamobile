@@ -23,6 +23,7 @@ export interface ProposalFormData {
   description?: string;
   status: ProposalStatus; // Changed from optional to required
   currency?: string; // Proposal currency
+  computed_total_amount?: number; // Computed total for display purposes
 }
 
 // Export the ProposalItem type (using export type for isolatedModules)
