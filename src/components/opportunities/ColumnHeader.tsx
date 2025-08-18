@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Trash2, Edit2, Check, X } from "lucide-react";
+import { Trash2, Edit2, Check, X, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LucideIcon } from "lucide-react";
@@ -44,7 +44,10 @@ const ColumnHeader: React.FC<ColumnHeaderProps> = ({
   return (
     <div className="flex items-center justify-between mb-3">
       <div className="flex items-center gap-2 flex-1">
-        <div className={`h-3 w-3 rounded-full ${color}`}></div>
+        <div className="flex items-center gap-2">
+          <GripVertical className="h-4 w-4 text-gray-400 cursor-grab hover:text-gray-600" />
+          <Icon className={`h-4 w-4 ${color.replace('bg-', 'text-')}`} />
+        </div>
         {isEditing ? (
           <div className="flex items-center gap-2 flex-1">
             <Input
@@ -75,8 +78,11 @@ const ColumnHeader: React.FC<ColumnHeaderProps> = ({
             </Button>
           </div>
         ) : (
-          <h2 className="font-semibold text-gray-900">
-            {title} ({opportunityCount})
+          <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${color.replace('bg-', 'bg-')} text-white`}>
+              {opportunityCount}
+            </span>
+            {title}
           </h2>
         )}
       </div>

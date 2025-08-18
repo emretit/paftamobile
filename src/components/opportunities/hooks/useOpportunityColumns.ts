@@ -140,6 +140,14 @@ export const useOpportunityColumns = (
     toast.success("Kolon adı güncellendi");
   };
 
+  const handleReorderColumns = (startIndex: number, endIndex: number) => {
+    const result = Array.from(columns);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+    setColumns(result);
+    toast.success("Kolon sırası güncellendi");
+  };
+
   return {
     columns,
     setColumns,
@@ -153,6 +161,7 @@ export const useOpportunityColumns = (
     handleDeleteColumn,
     confirmDeleteColumn,
     isDefaultColumn,
-    handleUpdateColumnTitle
+    handleUpdateColumnTitle,
+    handleReorderColumns
   };
 };
