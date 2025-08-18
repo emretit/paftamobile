@@ -5,7 +5,7 @@ import { Opportunity, OpportunityStatus } from "@/types/crm";
 import { useOpportunities } from "@/hooks/useOpportunities";
 import { useToast } from "@/components/ui/use-toast";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
-import OpportunitiesKanban from "@/components/opportunities/OpportunitiesKanban";
+import OpportunityKanbanBoard from "@/components/opportunities/OpportunityKanbanBoard";
 import OpportunitiesHeader from "@/components/opportunities/OpportunitiesHeader";
 import OpportunityFilterBar from "@/components/opportunities/OpportunityFilterBar";
 import OpportunityDetailSheet from "@/components/opportunities/OpportunityDetailSheet";
@@ -150,8 +150,8 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
         ) : (
           <Tabs value={activeView} className="w-full">
             <TabsContent value="kanban" className="mt-0">
-              <OpportunitiesKanban
-                opportunities={groupedOpportunities}
+              <OpportunityKanbanBoard
+                opportunities={opportunities}
                 onDragEnd={handleDragEnd}
                 onOpportunityClick={handleOpportunityClick}
                 onOpportunitySelect={handleOpportunitySelect}
