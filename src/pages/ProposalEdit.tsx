@@ -519,17 +519,10 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
       // PDF'i yeni sekmede aç
       await PdfExportService.openPdfInNewTab(proposalData, { templateId });
       
-      toast({
-        title: "Başarılı",
-        description: "PDF yeni sekmede açıldı",
-      });
+      toast("PDF yeni sekmede açıldı");
     } catch (error) {
       console.error('PDF generation error:', error);
-      toast({
-        title: "Hata",
-        description: "PDF oluşturulurken hata oluştu: " + (error as Error).message,
-        variant: "destructive"
-      });
+      toast.error("PDF oluşturulurken hata oluştu: " + (error as Error).message);
     }
   };
 

@@ -154,18 +154,18 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-full p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Müşteri ara..." />
-                  <CommandList>
-                    <CommandEmpty>Müşteri bulunamadı.</CommandEmpty>
-                    <CommandGroup>
+              <PopoverContent className="w-full p-0 bg-background border shadow-lg z-50" align="start">
+                <Command className="bg-background">
+                  <CommandInput placeholder="Müşteri ara..." className="bg-background" />
+                  <CommandList className="bg-background max-h-[300px]">
+                    <CommandEmpty className="py-6 text-center text-sm bg-background">Müşteri bulunamadı.</CommandEmpty>
+                    <CommandGroup className="bg-background">
                       {customers?.map((customer) => (
                         <CommandItem
                           key={customer.id}
                           value={`${customer.name} ${customer.company || ''}`}
                           onSelect={() => handleCustomerSelect(customer.id)}
-                          className="hover:bg-muted/50 transition-colors cursor-pointer"
+                          className="bg-background hover:bg-muted/50 transition-colors cursor-pointer px-3 py-2"
                         >
                           <Check
                             className={cn(

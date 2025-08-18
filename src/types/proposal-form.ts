@@ -20,6 +20,7 @@ export interface ProposalFormData {
   discounts?: number;
   additionalCharges?: number;
   total_amount?: number;
+  computed_total_amount?: number;
   description?: string;
   status: ProposalStatus; // Changed from optional to required
   currency?: string; // Proposal currency
