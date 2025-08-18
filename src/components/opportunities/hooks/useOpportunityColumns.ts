@@ -36,13 +36,23 @@ export const useOpportunityColumns = (
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [columnToDelete, setColumnToDelete] = useState<string | null>(null);
 
+  // Icon map for reconstruction from localStorage
+  const iconMap: { [key: string]: any } = {
+    Circle, Square, Triangle, Star, Hexagon, Zap, Target, Check, Clock, ChevronRight, CheckCircle2, XCircle
+  };
+
   // Load custom columns from localStorage on mount
   useEffect(() => {
     const savedColumns = localStorage.getItem('opportunity-columns');
     if (savedColumns) {
       try {
         const parsed = JSON.parse(savedColumns);
-        setColumns(parsed);
+        // Reconstruct icons from stored icon names
+        const reconstructedColumns = parsed.map((col: any) => ({
+          ...col,
+          icon: iconMap[col.iconName] || Circle // fallback to Circle if icon not found
+        }));
+        setColumns(reconstructedColumns);
       } catch (error) {
         console.error('Error loading saved columns:', error);
         setColumns(defaultColumns);
@@ -52,7 +62,13 @@ export const useOpportunityColumns = (
 
   // Save columns to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('opportunity-columns', JSON.stringify(columns));
+    // Convert columns to serializable format
+    const serializableColumns = columns.map(col => ({
+      ...col,
+      iconName: col.icon.name || 'Circle', // store icon name instead of function
+      icon: undefined // remove the function reference
+    }));
+    localStorage.setItem('opportunity-columns', JSON.stringify(serializableColumns));
   }, [columns]);
 
   const handleAddColumn = () => {
