@@ -12,7 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCustomerSelect } from "@/hooks/useCustomerSelect";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Building, User, Mail, Phone } from "lucide-react";
+import { Check, ChevronsUpDown, Building, User, Mail, Phone, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface OpportunityFormProps {
@@ -37,6 +37,17 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
     description: ""
   });
 
+  const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
+  const [newCustomerData, setNewCustomerData] = useState({
+    company: "",
+    name: "",
+    email: "",
+    phone: "",
+    city: "",
+    address: ""
+  });
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -49,9 +60,80 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
   const handleCustomerSelect = (customerId: string) => {
     setFormData(prev => ({ ...prev, customer_id: customerId }));
     setCustomerPopoverOpen(false);
+    setShowNewCustomerForm(false);
   };
 
   const selectedCustomer = customers?.find(customer => customer.id === formData.customer_id);
+
+  const handleNewCustomerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newCustomerData.company.trim() || !newCustomerData.name.trim()) {
+      toast({
+        title: "Hata",
+        description: "Şirket adı ve iletişim kişisi zorunludur",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCreatingCustomer(true);
+    
+    try {
+      const { data: newCustomer, error } = await supabase
+        .from("customers")
+        .insert({
+          company: newCustomerData.company,
+          name: newCustomerData.name,
+          email: newCustomerData.email || null,
+          mobile_phone: newCustomerData.phone || null,
+          city: newCustomerData.city || null,
+          address: newCustomerData.address || null,
+          status: "potential" // Potansiyel müşteri olarak ekle
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Yeni müşteriyi seç
+      setFormData(prev => ({ ...prev, customer_id: newCustomer.id }));
+      setShowNewCustomerForm(false);
+      setCustomerPopoverOpen(false);
+      
+      // Form'u temizle
+      setNewCustomerData({
+        company: "",
+        name: "",
+        email: "",
+        phone: "",
+        city: "",
+        address: ""
+      });
+
+      // Customers listesini yenile
+      queryClient.invalidateQueries({ queryKey: ["customers-select"] });
+      
+      toast({
+        title: "Başarılı",
+        description: "Yeni müşteri eklendi ve seçildi",
+      });
+    } catch (error) {
+      console.error("Error creating customer:", error);
+      toast({
+        title: "Hata",
+        description: "Müşteri oluşturulurken bir hata oluştu",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingCustomer(false);
+    }
+  };
+
+  const handleNewCustomerChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewCustomerData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,6 +183,15 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
         description: ""
       });
       setCustomerPopoverOpen(false);
+      setShowNewCustomerForm(false);
+      setNewCustomerData({
+        company: "",
+        name: "",
+        email: "",
+        phone: "",
+        city: "",
+        address: ""
+      });
       onClose();
     } catch (error) {
       console.error("Error creating opportunity:", error);
@@ -165,7 +256,8 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
                           key={customer.id}
                           value={`${customer.name} ${customer.company || ''}`}
                           onSelect={() => handleCustomerSelect(customer.id)}
-                          className="hover:bg-muted/50 transition-colors cursor-pointer"
+                          data-selected={formData.customer_id === customer.id}
+                          className="hover:bg-muted/50 data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent-foreground transition-colors cursor-pointer"
                         >
                           <Check
                             className={cn(
@@ -185,6 +277,133 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
                         </CommandItem>
                       ))}
                     </CommandGroup>
+                    
+                    {/* Yeni Müşteri Ekle Bölümü */}
+                    <div className="border-t pt-2">
+                      {!showNewCustomerForm ? (
+                        <CommandItem
+                          onSelect={() => setShowNewCustomerForm(true)}
+                          className="hover:bg-muted/50 transition-colors cursor-pointer text-primary"
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          <span className="font-medium">Yeni Müşteri Ekle</span>
+                        </CommandItem>
+                      ) : (
+                        <div className="p-3 bg-muted/30 rounded-md space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-medium">Yeni Müşteri Bilgileri</h4>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowNewCustomerForm(false)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          
+                          <form onSubmit={handleNewCustomerSubmit} className="space-y-2">
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <Label htmlFor="company" className="text-xs">Şirket Adı *</Label>
+                                <Input
+                                  id="company"
+                                  name="company"
+                                  value={newCustomerData.company}
+                                  onChange={handleNewCustomerChange}
+                                  placeholder="Şirket adı"
+                                  className="h-8 text-xs"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="name" className="text-xs">İletişim Kişisi *</Label>
+                                <Input
+                                  id="name"
+                                  name="name"
+                                  value={newCustomerData.name}
+                                  onChange={handleNewCustomerChange}
+                                  placeholder="Ad soyad"
+                                  className="h-8 text-xs"
+                                  required
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <Label htmlFor="email" className="text-xs">Email</Label>
+                                <Input
+                                  id="email"
+                                  name="email"
+                                  type="email"
+                                  value={newCustomerData.email}
+                                  onChange={handleNewCustomerChange}
+                                  placeholder="email@example.com"
+                                  className="h-8 text-xs"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="phone" className="text-xs">Telefon</Label>
+                                <Input
+                                  id="phone"
+                                  name="phone"
+                                  value={newCustomerData.phone}
+                                  onChange={handleNewCustomerChange}
+                                  placeholder="05xx xxx xx xx"
+                                  className="h-8 text-xs"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <Label htmlFor="city" className="text-xs">Şehir</Label>
+                                <Input
+                                  id="city"
+                                  name="city"
+                                  value={newCustomerData.city}
+                                  onChange={handleNewCustomerChange}
+                                  placeholder="İstanbul"
+                                  className="h-8 text-xs"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="address" className="text-xs">Adres</Label>
+                                <Input
+                                  id="address"
+                                  name="address"
+                                  value={newCustomerData.address}
+                                  onChange={handleNewCustomerChange}
+                                  placeholder="Kısa adres"
+                                  className="h-8 text-xs"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="flex gap-2 pt-2">
+                              <Button
+                                type="submit"
+                                size="sm"
+                                disabled={isCreatingCustomer}
+                                className="flex-1 h-8 text-xs"
+                              >
+                                {isCreatingCustomer ? "Ekleniyor..." : "Kaydet"}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setShowNewCustomerForm(false)}
+                                className="h-8 text-xs"
+                              >
+                                İptal
+                              </Button>
+                            </div>
+                          </form>
+                        </div>
+                      )}
+                    </div>
                   </CommandList>
                 </Command>
               </PopoverContent>
