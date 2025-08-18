@@ -18,7 +18,7 @@ interface ColumnHeaderProps {
 const ColumnHeader: React.FC<ColumnHeaderProps> = ({
   id,
   title,
-  icon: Icon,
+  icon: IconComponent,
   color,
   opportunityCount,
   onDeleteColumn,
@@ -46,7 +46,7 @@ const ColumnHeader: React.FC<ColumnHeaderProps> = ({
       <div className="flex items-center gap-2 flex-1">
         <div className="flex items-center gap-2">
           <GripVertical className="h-4 w-4 text-gray-400 cursor-grab hover:text-gray-600" />
-          <Icon className={`h-4 w-4 ${color.replace('bg-', 'text-')}`} />
+          <IconComponent className={`h-4 w-4 ${color.replace('bg-', 'text-')}`} />
         </div>
         {isEditing ? (
           <div className="flex items-center gap-2 flex-1">
