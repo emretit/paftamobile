@@ -440,7 +440,7 @@ export const seedOpportunities = async () => {
 export const seedAllData = async () => {
   try {
     // Seed customers if needed
-    let { data: customerCount } = await supabase
+    const { data: customerCount } = await supabase
       .from('customers')
       .select('id', { count: 'exact', head: true });
     
@@ -479,7 +479,7 @@ export const seedAllData = async () => {
     }
     
     // Seed employees if needed
-    let { data: employeeCount } = await supabase
+    const { data: employeeCount } = await supabase
       .from('employees')
       .select('id', { count: 'exact', head: true });
     

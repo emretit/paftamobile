@@ -727,7 +727,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
-                        <div className="md:col-span-7">
+                        <div className="md:col-span-6">
                           <Label className="text-sm">Ürün/Hizmet *</Label>
                           <ProductSelector
                             value={item.description || ''}
@@ -751,7 +751,7 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                         </div>
                         <div className="md:col-span-1">
                           <Label className="text-sm">Birim</Label>
-                          <div className="mt-1 p-2 bg-gray-100 rounded text-left font-medium text-sm">
+                          <div className="mt-1 p-2 bg-gray-100 rounded text-center font-medium text-sm">
                             {item.unit || 'adet'}
                           </div>
                         </div>
@@ -759,6 +759,12 @@ const NewProposalCreate = ({ isCollapsed, setIsCollapsed }: NewProposalCreatePro
                           <Label className="text-sm">Birim Fiyat</Label>
                            <div className="mt-1 p-2 bg-gray-100 rounded text-right font-medium text-sm">
                              {formatCurrency(item.unit_price, item.currency || 'TRY')}
+                           </div>
+                         </div>
+                         <div className="md:col-span-1">
+                           <Label className="text-sm">İndirim</Label>
+                           <div className="mt-1 p-2 bg-gray-100 rounded text-center font-medium text-sm">
+                             {item.discount_rate && item.discount_rate > 0 ? `%${item.discount_rate}` : '-'}
                            </div>
                          </div>
                          <div className="md:col-span-1">
