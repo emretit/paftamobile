@@ -34,6 +34,15 @@
     --ring: 0 65% 51%; /* #D32F2F */
  
     --radius: 0.75rem;
+
+    /* Kanban column pastel backgrounds */
+    --kanban-new: 235 79% 96%; /* Very light blue */
+    --kanban-contacted: 140 84% 96%; /* Very light green */
+    --kanban-qualified: 48 100% 96%; /* Very light yellow */
+    --kanban-proposal: 260 100% 96%; /* Very light purple */
+    --kanban-negotiation: 25 95% 96%; /* Very light orange */
+    --kanban-closed: 142 76% 96%; /* Very light emerald */
+    --kanban-lost: 0 84% 96%; /* Very light red */
   }
 
   /* Line clamp utilities */
@@ -117,6 +126,15 @@
   .ngs-hover-effect {
     @apply hover:bg-[#FCE4EC] transition-colors duration-200;
   }
+
+  /* Kanban pastel background utilities */
+  .kanban-bg-new { @apply bg-[hsl(var(--kanban-new))]; }
+  .kanban-bg-contacted { @apply bg-[hsl(var(--kanban-contacted))]; }
+  .kanban-bg-qualified { @apply bg-[hsl(var(--kanban-qualified))]; }
+  .kanban-bg-proposal { @apply bg-[hsl(var(--kanban-proposal))]; }
+  .kanban-bg-negotiation { @apply bg-[hsl(var(--kanban-negotiation))]; }
+  .kanban-bg-closed { @apply bg-[hsl(var(--kanban-closed))]; }
+  .kanban-bg-lost { @apply bg-[hsl(var(--kanban-lost))]; }
 }
 
 @layer base {

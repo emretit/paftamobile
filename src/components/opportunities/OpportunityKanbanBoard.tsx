@@ -68,26 +68,23 @@ const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
         <Droppable droppableId="columns" direction="horizontal" type="COLUMN">
           {(provided) => (
             <div 
-              className="flex overflow-x-auto gap-4 pb-4"
+              className="flex overflow-x-auto gap-3 pb-4"
               ref={provided.innerRef}
               {...provided.droppableProps}
             >
               {columns.map((column, index) => (
                 <Draggable key={column.id} draggableId={column.id} index={index}>
                   {(provided, snapshot) => (
-                    <div 
+                     <div 
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className={`flex-none min-w-[320px] ${snapshot.isDragging ? 'opacity-80' : ''}`}
+                      className={`flex-none min-w-[280px] ${snapshot.isDragging ? 'opacity-80' : ''}`}
                     >
                       <div 
-                        className={`bg-white border-2 border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 ${snapshot.isDragging ? 'shadow-lg border-primary' : ''}`}
-                        style={{
-                          background: `linear-gradient(135deg, ${column.color.replace('bg-', 'hsl(var(--')}40% 0%, ${column.color.replace('bg-', 'hsl(var(--')}20% 100%))`,
-                        }}
+                        className={`bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 ${snapshot.isDragging ? 'shadow-lg border-primary' : ''}`}
                       >
                         <div 
-                          className="p-4 bg-white/95 backdrop-blur-sm rounded-t-lg border-b border-gray-100 cursor-grab"
+                          className="p-3 bg-white/95 backdrop-blur-sm rounded-t-lg border-b border-gray-100 cursor-grab"
                           {...provided.dragHandleProps}
                         >
                           <ColumnHeader

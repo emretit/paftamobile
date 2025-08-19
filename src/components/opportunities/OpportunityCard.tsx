@@ -23,26 +23,26 @@ const OpportunityCard = ({ opportunity, index, onClick, onSelect, isSelected = f
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`mb-3 ${snapshot.isDragging ? "opacity-75" : ""}`}
+          className={`mb-2 ${snapshot.isDragging ? "opacity-75" : ""}`}
         >
           <Card 
-            className={`${isSelected ? "border-red-500 border-2" : ""} 
-                      hover:border-red-300 hover:shadow-md transition-all duration-200 cursor-pointer`}
+            className={`${isSelected ? "border-primary border" : "border-gray-200"} 
+                      hover:border-primary/50 hover:shadow-sm transition-all duration-200 cursor-pointer bg-white/80 backdrop-blur-sm`}
             onClick={onClick}
           >
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex justify-between items-start">
-                <h3 className="font-medium text-gray-900 line-clamp-2">{opportunity.title}</h3>
-                <Badge className="ml-2 flex-shrink-0" variant="outline">
+                <h3 className="font-medium text-gray-900 line-clamp-2 text-sm">{opportunity.title}</h3>
+                <Badge className="ml-2 flex-shrink-0 text-xs" variant="outline">
                   {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(opportunity.value)}
                 </Badge>
               </div>
               
               {opportunity.description && (
-                <p className="text-sm text-gray-500 mt-2 line-clamp-2">{opportunity.description}</p>
+                <p className="text-xs text-gray-500 mt-2 line-clamp-2">{opportunity.description}</p>
               )}
               
-              <div className="flex items-center mt-3 text-xs text-gray-500">
+              <div className="flex items-center mt-2 text-xs text-gray-500">
                 {opportunity.expected_close_date && (
                   <div className="flex items-center mr-3">
                     <CalendarIcon className="h-3 w-3 mr-1" />
@@ -58,8 +58,8 @@ const OpportunityCard = ({ opportunity, index, onClick, onSelect, isSelected = f
                 )}
               </div>
               
-              <div className="flex justify-between items-center mt-3">
-                <Badge className={opportunityStatusColors[opportunity.priority]} variant="secondary">
+              <div className="flex justify-between items-center mt-2">
+                <Badge className={`${opportunityStatusColors[opportunity.priority]} text-xs`} variant="secondary">
                   {opportunity.priority === 'high' ? 'Yüksek' : 
                    opportunity.priority === 'medium' ? 'Orta' : 'Düşük'}
                 </Badge>
