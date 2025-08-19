@@ -12,11 +12,9 @@ export interface OpportunityColumn {
 
 const defaultColumns: OpportunityColumn[] = [
   { id: "new", title: "Yeni", icon: Circle, color: "bg-blue-600" },
-  { id: "first_contact", title: "İlk Görüşme", icon: Square, color: "bg-purple-600" },
-  { id: "site_visit", title: "Ziyaret Yapıldı", icon: Triangle, color: "bg-indigo-600" },
-  { id: "preparing_proposal", title: "Teklif Hazırlanıyor", icon: Star, color: "bg-amber-600" },
-  { id: "proposal_sent", title: "Teklif Gönderildi", icon: Hexagon, color: "bg-yellow-600" },
-  { id: "accepted", title: "Kabul Edildi", icon: CheckCircle2, color: "bg-green-600" },
+  { id: "meeting_visit", title: "Görüşme ve Ziyaret", icon: Square, color: "bg-purple-600" },
+  { id: "proposal", title: "Teklif", icon: Star, color: "bg-orange-600" },
+  { id: "won", title: "Kazanıldı", icon: CheckCircle2, color: "bg-green-600" },
   { id: "lost", title: "Kaybedildi", icon: XCircle, color: "bg-red-600" }
 ];
 
@@ -31,7 +29,7 @@ export const useOpportunityColumns = (
   opportunities: Opportunity[],
   onUpdateOpportunityStatus: (id: string, status: string) => Promise<void>
 ) => {
-  const [columns, setColumns] = useState<OpportunityColumn[]>(defaultColumns);
+  const [columns, setColumns] = useState<OpportunityColumn[]>([]);
   const [isAddColumnOpen, setIsAddColumnOpen] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [columnToDelete, setColumnToDelete] = useState<string | null>(null);
@@ -43,7 +41,18 @@ export const useOpportunityColumns = (
 
   // Load custom columns from localStorage on mount
   useEffect(() => {
+    // Force reset to new 4-stage system by clearing old data
     const savedColumns = localStorage.getItem('opportunity-columns');
+    const savedVersion = localStorage.getItem('opportunity-columns-version');
+    
+    // If no version or old version, reset to new system
+    if (!savedVersion || savedVersion !== '4-stage') {
+      localStorage.removeItem('opportunity-columns');
+      localStorage.setItem('opportunity-columns-version', '4-stage');
+      setColumns(defaultColumns);
+      return;
+    }
+    
     if (savedColumns) {
       try {
         const parsed = JSON.parse(savedColumns);
@@ -57,6 +66,8 @@ export const useOpportunityColumns = (
         console.error('Error loading saved columns:', error);
         setColumns(defaultColumns);
       }
+    } else {
+      setColumns(defaultColumns);
     }
   }, []);
 

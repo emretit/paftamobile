@@ -3,7 +3,9 @@ import React from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { CalendarIcon, MoreHorizontal, Edit, Trash2, FileText, User } from "lucide-react";
 import { format } from "date-fns";
 import { Opportunity } from "@/types/crm";
 
@@ -13,9 +15,21 @@ interface OpportunityCardProps {
   onClick: () => void;
   onSelect?: () => void;
   isSelected?: boolean;
+  onEdit?: (opportunity: Opportunity) => void;
+  onDelete?: (opportunity: Opportunity) => void;
+  onConvertToProposal?: (opportunity: Opportunity) => void;
 }
 
-const OpportunityCard = ({ opportunity, index, onClick, onSelect, isSelected = false }: OpportunityCardProps) => {
+const OpportunityCard = ({ 
+  opportunity, 
+  index, 
+  onClick, 
+  onSelect, 
+  isSelected = false,
+  onEdit,
+  onDelete,
+  onConvertToProposal
+}: OpportunityCardProps) => {
   // Metinleri kısalt
   const shortenText = (text: string, maxLength: number = 25) => {
     if (!text) return "";
@@ -25,10 +39,7 @@ const OpportunityCard = ({ opportunity, index, onClick, onSelect, isSelected = f
     return text.substring(0, maxLength - 3) + "...";
   };
 
-  // Firma ismini kısalt
-  const getShortenedCompanyName = (companyName: string) => {
-    return shortenText(companyName, 18);
-  };
+
 
   return (
     <Draggable draggableId={opportunity.id} index={index}>
@@ -37,7 +48,7 @@ const OpportunityCard = ({ opportunity, index, onClick, onSelect, isSelected = f
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`mb-2 ${snapshot.isDragging ? "opacity-75" : ""}`}
+          className={`mb-3 ${snapshot.isDragging ? "opacity-75" : ""}`}
         >
           <Card 
             className={`${isSelected ? "border-primary border" : "border-gray-200"} 
@@ -46,33 +57,70 @@ const OpportunityCard = ({ opportunity, index, onClick, onSelect, isSelected = f
           >
             <CardContent className="p-3">
               <div className="flex justify-between items-start">
-                <h3 className="font-medium text-gray-900 line-clamp-2 text-sm">{shortenText(opportunity.title, 30)}</h3>
-                <Badge className="ml-2 flex-shrink-0 text-xs" variant="outline">
-                  {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(opportunity.value)}
-                </Badge>
+                <h3 className="font-medium text-gray-900 line-clamp-2 text-sm flex-1 mr-2">{shortenText(opportunity.title, 30)}</h3>
+                <div className="flex items-center gap-2">
+                  <Badge className="flex-shrink-0 text-xs" variant="outline">
+                    {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(opportunity.value)}
+                  </Badge>
+                  
+                  {/* 3 Nokta Menü */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 hover:bg-gray-100"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreHorizontal className="h-3 w-3 text-gray-500" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      {onEdit && (
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit(opportunity);
+                        }}>
+                          <Edit className="mr-2 h-3 w-3" />
+                          Düzenle
+                        </DropdownMenuItem>
+                      )}
+                      {onConvertToProposal && (
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          onConvertToProposal(opportunity);
+                        }}>
+                          <FileText className="mr-2 h-3 w-3" />
+                          Teklife Çevir
+                        </DropdownMenuItem>
+                      )}
+                      {onDelete && (
+                        <DropdownMenuItem 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(opportunity);
+                          }}
+                          className="text-red-600 focus:text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-3 w-3" />
+                          Sil
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
               
               {opportunity.description && (
                 <p className="text-xs text-gray-500 mt-2 line-clamp-2">{shortenText(opportunity.description, 40)}</p>
               )}
               
-              <div className="flex items-center mt-2 text-xs text-gray-500">
-                {opportunity.expected_close_date && (
-                  <div className="flex items-center mr-3">
-                    <CalendarIcon className="h-3 w-3 mr-1" />
-                    <span>{format(new Date(opportunity.expected_close_date), 'dd MMM yyyy')}</span>
-                  </div>
-                )}
-                
-                {opportunity.customer && (
-                  <div className="flex items-center overflow-hidden">
-                    <User className="h-3 w-3 mr-1 flex-shrink-0" />
-                    <span className="truncate" title={opportunity.customer.name}>
-                      {getShortenedCompanyName(opportunity.customer.name)}
-                    </span>
-                  </div>
-                )}
-              </div>
+                             {opportunity.expected_close_date && (
+                 <div className="flex items-center mt-2 text-xs text-gray-500">
+                   <CalendarIcon className="h-3 w-3 mr-1" />
+                   <span>{format(new Date(opportunity.expected_close_date), 'dd MMM yyyy')}</span>
+                 </div>
+               )}
               
               <div className="flex items-center justify-between mt-2">
                 <Badge 
@@ -90,28 +138,15 @@ const OpportunityCard = ({ opportunity, index, onClick, onSelect, isSelected = f
                   {!opportunity.priority && '-'}
                 </Badge>
                 
-                <Badge 
-                  variant="outline" 
-                  className="bg-blue-100 text-blue-800"
-                >
-                  {opportunity.status === 'new' && 'Yeni'}
-                  {opportunity.status === 'first_contact' && 'İlk Görüşme'}
-                  {opportunity.status === 'site_visit' && 'Ziyaret Yapıldı'}
-                  {opportunity.status === 'preparing_proposal' && 'Teklif Hazırlanıyor'}
-                  {opportunity.status === 'proposal_sent' && 'Teklif Gönderildi'}
-                  {opportunity.status === 'accepted' && 'Kabul Edildi'}
-                  {opportunity.status === 'lost' && 'Kaybedildi'}
-                </Badge>
+                {opportunity.employee && (
+                  <div className="flex items-center text-xs text-gray-500">
+                    <User className="h-3 w-3 mr-1 flex-shrink-0" />
+                    <span className="truncate">
+                      {opportunity.employee.first_name} {opportunity.employee.last_name}
+                    </span>
+                  </div>
+                )}
               </div>
-              
-              {opportunity.employee && (
-                <div className="flex items-center mt-2 text-xs text-gray-500">
-                  <User className="h-3 w-3 mr-1 flex-shrink-0" />
-                  <span className="truncate">
-                    {opportunity.employee.first_name} {opportunity.employee.last_name}
-                  </span>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>

@@ -79,8 +79,8 @@ export const useOpportunities = () => {
     });
   }
 
-  // Ensure default columns exist even if empty
-  const defaultStatuses = ['new', 'first_contact', 'site_visit', 'preparing_proposal', 'proposal_sent', 'accepted', 'lost'];
+  // Ensure default columns exist even if empty (new 4-stage system)
+  const defaultStatuses = ['new', 'meeting_visit', 'proposal', 'won', 'lost'];
   defaultStatuses.forEach(status => {
     if (!opportunities[status]) {
       opportunities[status] = [];

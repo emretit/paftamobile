@@ -19,6 +19,8 @@ import {
   Opportunity, 
   opportunityStatusColors 
 } from "@/types/crm";
+import { OpportunityStatusCell } from "./table/OpportunityStatusCell";
+import { useOpportunityStatusUpdate } from "./hooks/useOpportunityStatusUpdate";
 
 interface OpportunitiesTableProps {
   opportunities: Opportunity[];
@@ -37,6 +39,8 @@ const OpportunitiesTable = ({
   statusFilter = "all",
   priorityFilter = null
 }: OpportunitiesTableProps) => {
+  const { updateOpportunityStatus } = useOpportunityStatusUpdate();
+
   // Metinleri kısalt
   const shortenText = (text: string, maxLength: number = 25) => {
     if (!text) return "";
@@ -48,12 +52,12 @@ const OpportunitiesTable = ({
 
   // Firma ismini kısalt
   const getShortenedCompanyName = (companyName: string) => {
-    return shortenText(companyName, 20);
+    return shortenText(companyName, 35);
   };
 
   // Firma şirket bilgisini kısalt
   const getShortenedCompanyInfo = (companyInfo: string) => {
-    return shortenText(companyInfo, 18);
+    return shortenText(companyInfo, 30);
   };
 
   // Filter opportunities based on criteria
@@ -113,14 +117,14 @@ const OpportunitiesTable = ({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Başlık</TableHead>
-          <TableHead>Müşteri</TableHead>
-          <TableHead>Durum</TableHead>
-          <TableHead>Değer</TableHead>
-          <TableHead>Öncelik</TableHead>
-          <TableHead>Sorumlu</TableHead>
-          <TableHead>Beklenen Kapanış</TableHead>
-          <TableHead className="w-[50px]"></TableHead>
+          <TableHead className="w-[20%]">Başlık</TableHead>
+          <TableHead className="w-[28%]">Müşteri</TableHead>
+          <TableHead className="w-[8%]">Durum</TableHead>
+          <TableHead className="w-[8%]">Değer</TableHead>
+          <TableHead className="w-[8%]">Öncelik</TableHead>
+          <TableHead className="w-[12%]">Sorumlu</TableHead>
+          <TableHead className="w-[9%]">Beklenen Kapanış</TableHead>
+          <TableHead className="w-[6%]"></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -150,24 +154,17 @@ const OpportunitiesTable = ({
                   <span className="text-gray-500">-</span>
                 )}
               </TableCell>
-              <TableCell>
-                <Badge 
-                  variant="outline" 
-                  className={`${opportunityStatusColors[opportunity.status] || 'bg-gray-100 text-gray-800'}`}
-                >
-                  {opportunity.status === 'new' && 'Yeni'}
-                  {opportunity.status === 'first_contact' && 'İlk Görüşme'}
-                  {opportunity.status === 'site_visit' && 'Ziyaret Yapıldı'}
-                  {opportunity.status === 'preparing_proposal' && 'Teklif Hazırlanıyor'}
-                  {opportunity.status === 'proposal_sent' && 'Teklif Gönderildi'}
-                  {opportunity.status === 'accepted' && 'Kabul Edildi'}
-                  {opportunity.status === 'lost' && 'Kaybedildi'}
-                </Badge>
+              <TableCell className="text-center">
+                <OpportunityStatusCell 
+                  status={opportunity.status}
+                  opportunityId={opportunity.id}
+                  onStatusChange={updateOpportunityStatus}
+                />
               </TableCell>
-              <TableCell>
+              <TableCell className="text-center">
                 {opportunity.value ? formatCurrency(opportunity.value, opportunity.currency || 'TRY') : '-'}
               </TableCell>
-              <TableCell>
+              <TableCell className="text-center">
                 <Badge 
                   variant="outline" 
                   className={
@@ -200,7 +197,7 @@ const OpportunitiesTable = ({
                   <span className="text-muted-foreground text-sm">Atanmamış</span>
                 )}
               </TableCell>
-              <TableCell>
+              <TableCell className="text-center">
                 {opportunity.expected_close_date ? (
                   format(new Date(opportunity.expected_close_date), "dd MMM yyyy", { locale: tr })
                 ) : (

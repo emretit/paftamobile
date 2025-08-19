@@ -33,7 +33,10 @@ interface OpportunityColumnProps {
   onOpportunityClick: (opportunity: Opportunity) => void;
   onOpportunitySelect?: (opportunity: Opportunity) => void;
   selectedOpportunities?: Opportunity[];
-  color?: string; // Add color prop
+  color?: string;
+  onEdit?: (opportunity: Opportunity) => void;
+  onDelete?: (opportunity: Opportunity) => void;
+  onConvertToProposal?: (opportunity: Opportunity) => void;
 }
 
 const OpportunityColumn = ({
@@ -43,28 +46,36 @@ const OpportunityColumn = ({
   onOpportunityClick,
   onOpportunitySelect,
   selectedOpportunities = [],
-  color = 'bg-gray-500'
+  color = 'bg-gray-500',
+  onEdit,
+  onDelete,
+  onConvertToProposal
 }: OpportunityColumnProps) => {
   return (
     <Droppable droppableId={id}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
-          className={`min-h-[400px] w-full p-2 rounded-md transition-colors duration-200 ${
+          className={`min-h-[400px] w-full p-3 rounded-md transition-colors duration-200 h-full flex flex-col ${
             snapshot.isDraggingOver ? 'bg-red-50' : getColumnBackground(color)
           }`}
           {...provided.droppableProps}
         >
-          {opportunities.map((opportunity, index) => (
-            <OpportunityCard
+          <div className="flex-1">
+            {opportunities.map((opportunity, index) => (
+                          <OpportunityCard
               key={opportunity.id}
               opportunity={opportunity}
               index={index}
               onClick={() => onOpportunityClick(opportunity)}
               onSelect={onOpportunitySelect ? () => onOpportunitySelect(opportunity) : undefined}
               isSelected={selectedOpportunities.some(o => o.id === opportunity.id)}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onConvertToProposal={onConvertToProposal}
             />
-          ))}
+            ))}
+          </div>
           {opportunities.length === 0 && (
             <div className="flex flex-col items-center justify-center h-24 border border-dashed border-gray-300 rounded-md mt-1">
               <p className="text-gray-400 text-xs">Bu durumda fırsat yok</p>

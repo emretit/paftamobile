@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, User } from "lucide-react";
 import { format } from "date-fns";
-import { Opportunity } from "@/types/crm";
+import { Opportunity, opportunityStatusColors, opportunityStatusLabels } from "@/types/crm";
 
 interface OpportunityCardProps {
   opportunity: Opportunity;
@@ -91,15 +91,9 @@ const OpportunityCard = ({ opportunity, index, onClick, isSelected = false }: Op
                 
                 <Badge 
                   variant="outline" 
-                  className="bg-blue-100 text-blue-800"
+                  className={opportunityStatusColors[opportunity.status] || 'bg-gray-100 text-gray-800'}
                 >
-                  {opportunity.status === 'new' && 'Yeni'}
-                  {opportunity.status === 'first_contact' && 'İlk Görüşme'}
-                  {opportunity.status === 'site_visit' && 'Ziyaret Yapıldı'}
-                  {opportunity.status === 'preparing_proposal' && 'Teklif Hazırlanıyor'}
-                  {opportunity.status === 'proposal_sent' && 'Teklif Gönderildi'}
-                  {opportunity.status === 'accepted' && 'Kabul Edildi'}
-                  {opportunity.status === 'lost' && 'Kaybedildi'}
+                  {opportunityStatusLabels[opportunity.status]}
                 </Badge>
               </div>
               

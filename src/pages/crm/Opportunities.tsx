@@ -39,24 +39,18 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
   const [activeView, setActiveView] = useState("kanban");
   
-  // Group opportunities by status
+  // Group opportunities by status (new 4-stage system)
   const groupedOpportunities = {
     new: (opportunities.new || [])
       .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    first_contact: (opportunities.first_contact || [])
+    meeting_visit: (opportunities.meeting_visit || [])
       .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    site_visit: (opportunities.site_visit || [])
+    proposal: (opportunities.proposal || [])
       .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    preparing_proposal: (opportunities.preparing_proposal || [])
-      .filter(opp => filterOpportunity(opp))
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    proposal_sent: (opportunities.proposal_sent || [])
-      .filter(opp => filterOpportunity(opp))
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
-    accepted: (opportunities.accepted || [])
+    won: (opportunities.won || [])
       .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
     lost: (opportunities.lost || [])
@@ -96,6 +90,30 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
   
   const handleClearSelection = () => {
     setSelectedOpportunities([]);
+  };
+
+  // 3 Nokta Menü Fonksiyonları
+  const handleEditOpportunity = (opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity);
+    setIsDetailOpen(true);
+  };
+
+  const handleDeleteOpportunity = async (opportunity: Opportunity) => {
+    if (confirm(`${opportunity.title} fırsatını silmek istediğinizden emin misiniz?`)) {
+      try {
+        // Burada silme işlemi yapılacak
+        console.log('Deleting opportunity:', opportunity.id);
+        // TODO: Implement delete functionality
+      } catch (error) {
+        console.error('Error deleting opportunity:', error);
+      }
+    }
+  };
+
+  const handleConvertToProposal = (opportunity: Opportunity) => {
+    // Teklif sayfasına yönlendir
+    console.log('Converting to proposal:', opportunity.id);
+    // TODO: Navigate to new proposal page with opportunity data
   };
 
   // Convert grouped opportunities to flat array for list view
@@ -157,6 +175,9 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
                 onOpportunitySelect={handleOpportunitySelect}
                 selectedOpportunities={selectedOpportunities}
                 onUpdateOpportunityStatus={handleUpdateOpportunityStatus}
+                onEdit={handleEditOpportunity}
+                onDelete={handleDeleteOpportunity}
+                onConvertToProposal={handleConvertToProposal}
               />
             </TabsContent>
             <TabsContent value="list" className="mt-0">

@@ -19,6 +19,9 @@ interface OpportunityKanbanBoardProps {
   onOpportunitySelect?: (opportunity: Opportunity) => void;
   selectedOpportunities?: Opportunity[];
   onUpdateOpportunityStatus: (id: string, status: string) => Promise<void>;
+  onEdit?: (opportunity: Opportunity) => void;
+  onDelete?: (opportunity: Opportunity) => void;
+  onConvertToProposal?: (opportunity: Opportunity) => void;
 }
 
 const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
@@ -27,7 +30,10 @@ const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
   onOpportunityClick,
   onOpportunitySelect,
   selectedOpportunities = [],
-  onUpdateOpportunityStatus
+  onUpdateOpportunityStatus,
+  onEdit,
+  onDelete,
+  onConvertToProposal
 }) => {
   const {
     columns,
@@ -68,7 +74,7 @@ const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
         <Droppable droppableId="columns" direction="horizontal" type="COLUMN">
           {(provided) => (
             <div 
-              className="flex overflow-x-auto gap-3 pb-4"
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 pb-4 auto-rows-fr"
               ref={provided.innerRef}
               {...provided.droppableProps}
             >
@@ -78,10 +84,10 @@ const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
                      <div 
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className={`flex-none min-w-[280px] ${snapshot.isDragging ? 'opacity-80' : ''}`}
+                      className={`w-full min-w-0 ${snapshot.isDragging ? 'opacity-80' : ''}`}
                     >
                       <div 
-                        className={`bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 ${snapshot.isDragging ? 'shadow-lg border-primary' : ''}`}
+                        className={`bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 h-full ${snapshot.isDragging ? 'shadow-lg border-primary' : ''}`}
                       >
                         <div 
                           className="p-3 bg-white/95 backdrop-blur-sm rounded-t-lg border-b border-gray-100 cursor-grab"
@@ -98,16 +104,19 @@ const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
                             isDefaultColumn={isDefaultColumn(column.id)}
                           />
                         </div>
-                        <div className="p-2 bg-white/90 rounded-b-lg">
-                          <OpportunityColumn
-                            id={column.id as any}
-                            title={column.title}
-                            opportunities={opportunities[column.id] || []}
-                            onOpportunityClick={onOpportunityClick}
-                            onOpportunitySelect={onOpportunitySelect}
-                            selectedOpportunities={selectedOpportunities}
-                            color={column.color}
-                          />
+                        <div className="p-2 bg-white/90 rounded-b-lg h-full">
+                                                  <OpportunityColumn
+                          id={column.id as any}
+                          title={column.title}
+                          opportunities={opportunities[column.id] || []}
+                          onOpportunityClick={onOpportunityClick}
+                          onOpportunitySelect={onOpportunitySelect}
+                          selectedOpportunities={selectedOpportunities}
+                          color={column.color}
+                          onEdit={onEdit}
+                          onDelete={onDelete}
+                          onConvertToProposal={onConvertToProposal}
+                        />
                         </div>
                       </div>
                     </div>

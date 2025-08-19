@@ -2,11 +2,9 @@
 // CRM Types: Opportunities
 export type OpportunityStatus = 
   | 'new'               // Yeni
-  | 'first_contact'     // İlk Görüşme 
-  | 'site_visit'        // Ziyaret Yapıldı
-  | 'preparing_proposal' // Teklif Hazırlanıyor
-  | 'proposal_sent'     // Teklif Gönderildi
-  | 'accepted'          // Kabul Edildi
+  | 'meeting_visit'     // Görüşme ve Ziyaret
+  | 'proposal'          // Teklif
+  | 'won'               // Kazanıldı
   | 'lost';             // Kaybedildi
 
 export type OpportunityPriority = 'low' | 'medium' | 'high';
@@ -14,11 +12,9 @@ export type OpportunityPriority = 'low' | 'medium' | 'high';
 // Map opportunity status to user-friendly labels
 export const opportunityStatusLabels: Record<OpportunityStatus, string> = {
   new: "Yeni",
-  first_contact: "İlk Görüşme",
-  site_visit: "Ziyaret Yapıldı",
-  preparing_proposal: "Teklif Hazırlanıyor",
-  proposal_sent: "Teklif Gönderildi",
-  accepted: "Kabul Edildi",
+  meeting_visit: "Görüşme ve Ziyaret",
+  proposal: "Teklif",
+  won: "Kazanıldı",
   lost: "Kaybedildi"
 };
 
@@ -32,11 +28,9 @@ export const opportunityPriorityLabels: Record<OpportunityPriority, string> = {
 // Map opportunity status to colors for UI
 export const opportunityStatusColors: Record<OpportunityStatus, string> = {
   new: "bg-blue-100 text-blue-800",
-  first_contact: "bg-purple-100 text-purple-800",
-  site_visit: "bg-yellow-100 text-yellow-800",
-  preparing_proposal: "bg-orange-100 text-orange-800",
-  proposal_sent: "bg-indigo-100 text-indigo-800",
-  accepted: "bg-green-100 text-green-800",
+  meeting_visit: "bg-purple-100 text-purple-800",
+  proposal: "bg-orange-100 text-orange-800",
+  won: "bg-green-100 text-green-800",
   lost: "bg-red-100 text-red-800"
 };
 
@@ -92,10 +86,8 @@ export interface Opportunity {
 // Opportunities state type for Kanban view
 export interface OpportunitiesState {
   new: Opportunity[];
-  first_contact: Opportunity[];
-  site_visit: Opportunity[];
-  preparing_proposal: Opportunity[];
-  proposal_sent: Opportunity[];
-  accepted: Opportunity[];
+  meeting_visit: Opportunity[];
+  proposal: Opportunity[];
+  won: Opportunity[];
   lost: Opportunity[];
 }
