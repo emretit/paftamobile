@@ -25,10 +25,10 @@ const TasksContent = ({
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const { data: tasks = [], isLoading } = useQuery({
-    queryKey: ["tasks"],
+    queryKey: ["activities"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("tasks")
+        .from("activities")
         .select(`
           *,
           assignee:assignee_id(

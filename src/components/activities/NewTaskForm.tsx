@@ -72,11 +72,11 @@ const NewTaskForm = ({
 
       if (error) throw error;
       
-      toast.success('Görev başarıyla oluşturuldu');
+      toast.success('Aktivite başarıyla oluşturuldu');
       onSuccess();
     } catch (error) {
       console.error('Error creating task:', error);
-      toast.error('Görev oluşturulurken bir hata oluştu');
+      toast.error('Aktivite oluşturulurken bir hata oluştu');
     } finally {
       setIsSubmitting(false);
     }
@@ -86,11 +86,11 @@ const NewTaskForm = ({
     <Card className="p-4 border border-blue-100 bg-blue-50">
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <Label htmlFor="title">Görev Başlığı</Label>
+          <Label htmlFor="title">Aktivite Başlığı</Label>
           <Input
             id="title"
             name="title"
-            placeholder="Görev başlığı..."
+            placeholder="Aktivite başlığı..."
             value={formData.title}
             onChange={handleInputChange}
             required
@@ -102,7 +102,7 @@ const NewTaskForm = ({
           <Textarea
             id="description"
             name="description"
-            placeholder="Görev açıklaması..."
+            placeholder="Aktivite açıklaması..."
             value={formData.description}
             onChange={handleInputChange}
             rows={3}

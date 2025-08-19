@@ -8,7 +8,7 @@ import DefaultLayout from "@/components/layouts/DefaultLayout";
 import OpportunityKanbanBoard from "@/components/opportunities/OpportunityKanbanBoard";
 import OpportunitiesHeader from "@/components/opportunities/OpportunitiesHeader";
 import OpportunityFilterBar from "@/components/opportunities/OpportunityFilterBar";
-import OpportunityDetailSheet from "@/components/opportunities/OpportunityDetailSheet";
+import { OpportunityDetailSheet } from "@/components/crm/OpportunityDetailSheet";
 import OpportunityBulkActions from "@/components/opportunities/OpportunityBulkActions";
 import OpportunitiesContent from "@/components/opportunities/OpportunitiesContent";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -182,7 +182,6 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
             setIsDetailOpen(false);
             setTimeout(() => setSelectedOpportunity(null), 300);
           }}
-          onUpdate={handleUpdateOpportunity}
         />
       )}
     </DefaultLayout>

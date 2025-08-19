@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { SubtaskHeader, SubtaskInput, SubtaskItem, EmptySubtasks } from "@/components/tasks/detail/subtasks";
+import { SubtaskHeader, SubtaskInput, SubtaskItem, EmptySubtasks } from "@/components/activities/detail/subtasks";
 import type { SubTask } from "@/types/task";
 
 interface TaskSubtaskListProps {

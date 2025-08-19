@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { ServiceRequest } from "@/hooks/useServiceRequests";
-import type { SortField, SortDirection } from "@/components/tasks/table/types";
+import type { SortField, SortDirection } from "@/components/activities/table/types";
 
 interface UseServiceTableStateParams {
   serviceRequests: ServiceRequest[] | undefined;

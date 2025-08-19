@@ -12,7 +12,7 @@ export const useTaskMutations = () => {
       if (!data.id) throw new Error("Task ID is required");
 
       const { data: updatedTask, error } = await supabase
-        .from("tasks")
+        .from("activities")
         .update(data)
         .eq("id", data.id)
         .select()
@@ -22,7 +22,7 @@ export const useTaskMutations = () => {
       return updatedTask;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
       showSuccess("Task updated successfully");
     },
     onError: (error) => {
@@ -34,7 +34,7 @@ export const useTaskMutations = () => {
   const deleteTask = useMutation({
     mutationFn: async (taskId: string) => {
       const { error } = await supabase
-        .from("tasks")
+        .from("activities")
         .delete()
         .eq("id", taskId);
 
@@ -42,7 +42,7 @@ export const useTaskMutations = () => {
       return taskId;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
       showSuccess("Task deleted successfully");
     },
     onError: (error) => {

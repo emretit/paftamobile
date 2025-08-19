@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCustomerSelect } from "@/hooks/useCustomerSelect";
+import { useEmployeeNames } from "@/hooks/useEmployeeNames";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown, Building, User, Mail, Phone, Plus, X } from "lucide-react";
@@ -23,12 +24,14 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { customers, isLoading: customersLoading } = useCustomerSelect();
+  const { employees, isLoading: employeesLoading } = useEmployeeNames();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     title: "",
     customer_id: "",
+    employee_id: "",
     value: "",
     currency: "TRY",
     status: "new",
@@ -54,6 +57,10 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
 
   const handleStatusChange = (value: string) => {
     setFormData(prev => ({ ...prev, status: value }));
+  };
+
+  const handleEmployeeChange = (value: string) => {
+    setFormData(prev => ({ ...prev, employee_id: value }));
   };
 
   const handleCustomerSelect = (customerId: string) => {
@@ -160,6 +167,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
           value: formData.value ? parseFloat(formData.value) : 0,
           currency: formData.currency,
           customer_id: formData.customer_id || null,
+          employee_id: formData.employee_id || null,
         });
 
       if (error) throw error;
@@ -176,6 +184,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
       setFormData({
         title: "",
         customer_id: "",
+        employee_id: "",
         value: "",
         currency: "TRY",
         status: "new",
@@ -482,6 +491,26 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="employee">Sorumlu Kişi</Label>
+            <Select value={formData.employee_id} onValueChange={handleEmployeeChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sorumlu kişi seçin" />
+              </SelectTrigger>
+              <SelectContent>
+                {employeesLoading ? (
+                  <SelectItem value="" disabled>Yükleniyor...</SelectItem>
+                ) : (
+                  employees?.map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.first_name} {employee.last_name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
           </div>
           
           <div>

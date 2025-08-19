@@ -13,8 +13,8 @@ const TasksPageHeader = ({ onCreateTask, activeView, setActiveView }: TasksPageH
   return (
     <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
       <div>
-        <h1 className="text-2xl font-semibold">Görevler</h1>
-        <p className="text-muted-foreground">Tüm görevleri görüntüleyin ve yönetin</p>
+        <h1 className="text-2xl font-semibold">Aktiviteler</h1>
+        <p className="text-muted-foreground">Tüm aktiviteleri görüntüleyin ve yönetin</p>
       </div>
       <div className="flex space-x-2 w-full sm:w-auto justify-end">
         <TasksViewToggle 
@@ -22,7 +22,7 @@ const TasksPageHeader = ({ onCreateTask, activeView, setActiveView }: TasksPageH
           setActiveView={setActiveView} 
         />
         <Button onClick={onCreateTask} className="whitespace-nowrap">
-          <Plus className="mr-2 h-4 w-4" /> Görev Ekle
+          <Plus className="mr-2 h-4 w-4" /> Aktivite Ekle
         </Button>
       </div>
     </div>

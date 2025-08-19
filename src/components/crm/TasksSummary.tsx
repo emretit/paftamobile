@@ -13,11 +13,11 @@ const TasksSummary = () => {
       today.setHours(0, 0, 0, 0);
       
       const { data: totalTasks, error: totalError } = await supabase
-        .from("tasks")
+        .from("activities")
         .select("status", { count: "exact" });
         
       const { data: overdueTasks, error: overdueError } = await supabase
-        .from("tasks")
+        .from("activities")
         .select("id")
         .lt("due_date", today.toISOString())
         .neq("status", "completed");

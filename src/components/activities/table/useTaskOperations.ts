@@ -10,7 +10,7 @@ export const useTaskOperations = () => {
   const updateTaskStatus = useMutation({
     mutationFn: async (data: { taskId: string; status: Task['status'] }) => {
       const { data: updatedTask, error } = await supabase
-        .from("tasks")
+        .from("activities")
         .update({ status: data.status })
         .eq("id", data.taskId)
         .select()
@@ -20,7 +20,7 @@ export const useTaskOperations = () => {
       return updatedTask;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
       toast.success("Görev durumu güncellendi");
     },
     onError: (error) => {
@@ -32,7 +32,7 @@ export const useTaskOperations = () => {
   const deleteTask = useMutation({
     mutationFn: async (taskId: string) => {
       const { error } = await supabase
-        .from("tasks")
+        .from("activities")
         .delete()
         .eq("id", taskId);
 
@@ -40,7 +40,7 @@ export const useTaskOperations = () => {
       return taskId;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
       toast.success("Görev silindi");
     },
     onError: (error) => {

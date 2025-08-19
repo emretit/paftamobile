@@ -35,7 +35,7 @@ export const useKanbanTasks = ({
     queryKey: ["tasks"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("tasks")
+        .from("activities")
         .select(`
           *,
           assignee:assignee_id(

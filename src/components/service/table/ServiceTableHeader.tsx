@@ -2,7 +2,7 @@
 import React from "react";
 import { TableHeader, TableRow, TableHead } from "@/components/ui/table";
 import { ChevronUp, ChevronDown } from "lucide-react";
-import type { SortField, SortDirection } from "@/components/tasks/table/types";
+import type { SortField, SortDirection } from "@/components/activities/table/types";
 import { cn } from "@/lib/utils";
 
 interface ServiceTableHeaderProps {

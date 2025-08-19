@@ -187,17 +187,17 @@ const OpportunitiesTable = ({
                 {opportunity.employee ? (
                   <div className="flex items-center space-x-2">
                     <Avatar className="h-6 w-6">
-                      <AvatarFallback>
+                      <AvatarFallback className="bg-primary/10 text-primary">
                         {opportunity.employee.first_name?.[0]}
                         {opportunity.employee.last_name?.[0]}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm">
+                    <span className="text-sm font-medium">
                       {opportunity.employee.first_name} {opportunity.employee.last_name}
                     </span>
                   </div>
                 ) : (
-                  <span className="text-muted-foreground">-</span>
+                  <span className="text-muted-foreground text-sm">Atanmamış</span>
                 )}
               </TableCell>
               <TableCell>

@@ -56,7 +56,7 @@ const TaskMainInfo = ({ formData, handleInputChange }: TaskMainInfoProps) => {
           value={formData.description || ''}
           onChange={(e) => handleInputChange('description', e.target.value)}
           className="w-full min-h-[100px]"
-          placeholder="Görev açıklaması"
+          placeholder="Aktivite açıklaması"
         />
       </div>
     </div>

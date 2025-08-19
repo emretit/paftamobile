@@ -24,7 +24,7 @@ export const useTaskFormMutations = (onClose: () => void, taskId?: string) => {
       };
 
       const { data: newTask, error } = await supabase
-        .from("tasks")
+        .from("activities")
         .insert(taskData)
         .select()
         .single();
@@ -33,13 +33,13 @@ export const useTaskFormMutations = (onClose: () => void, taskId?: string) => {
       return newTask;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      showSuccess("Görev başarıyla oluşturuldu");
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+      showSuccess("Aktivite başarıyla oluşturuldu");
       onClose();
     },
     onError: (error) => {
       console.error("Error creating task:", error);
-      showError("Görev oluşturulurken bir hata oluştu");
+      showError("Aktivite oluşturulurken bir hata oluştu");
     },
   });
 
@@ -62,7 +62,7 @@ export const useTaskFormMutations = (onClose: () => void, taskId?: string) => {
       };
 
       const { data: updatedTask, error } = await supabase
-        .from("tasks")
+        .from("activities")
         .update(taskData)
         .eq("id", taskId)
         .select()
@@ -72,13 +72,13 @@ export const useTaskFormMutations = (onClose: () => void, taskId?: string) => {
       return updatedTask;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      showSuccess("Görev başarıyla güncellendi");
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+      showSuccess("Aktivite başarıyla güncellendi");
       onClose();
     },
     onError: (error) => {
       console.error("Error updating task:", error);
-      showError("Görev güncellenirken bir hata oluştu");
+      showError("Aktivite güncellenirken bir hata oluştu");
     },
   });
 

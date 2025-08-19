@@ -47,7 +47,7 @@ export default function TaskForm({ task, onClose }: TaskFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold mb-4">
-          {task ? "Görevi Düzenle" : "Yeni Görev"}
+          {task ? "Aktiviteyi Düzenle" : "Yeni Aktivite"}
         </h2>
       </div>
       

@@ -20,7 +20,7 @@ const TaskBasicInfo = ({ register, errors, watch, setValue }: TaskBasicInfoProps
         <Label htmlFor="title">Başlık <span className="text-red-500">*</span></Label>
         <Input
           id="title"
-          placeholder="Görev başlığı"
+          placeholder="Aktivite başlığı"
           {...register("title", { required: "Başlık zorunludur" })}
         />
         {errors.title && (
@@ -32,7 +32,7 @@ const TaskBasicInfo = ({ register, errors, watch, setValue }: TaskBasicInfoProps
         <Label htmlFor="description">Açıklama</Label>
         <Textarea
           id="description"
-          placeholder="Görev açıklaması"
+          placeholder="Aktivite açıklaması"
           rows={3}
           {...register("description")}
         />

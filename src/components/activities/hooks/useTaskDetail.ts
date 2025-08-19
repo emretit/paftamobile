@@ -28,7 +28,7 @@ export const useTaskDetail = () => {
       };
       
       const { data, error } = await supabase
-        .from("tasks")
+        .from("activities")
         .update(taskForUpdate)
         .eq("id", updatedTask.id)
         .select()
@@ -43,7 +43,7 @@ export const useTaskDetail = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['activities'] });
       showSuccess('Görev başarıyla güncellendi');
     },
     onError: (error) => {

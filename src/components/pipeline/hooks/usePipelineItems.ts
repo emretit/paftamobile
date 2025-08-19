@@ -11,10 +11,10 @@ export const usePipelineItems = () => {
 
   // Fetch tasks
   const { data: tasks, isLoading: tasksLoading, error: tasksError } = useQuery({
-    queryKey: ["tasks"],
+    queryKey: ["activities"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("tasks")
+        .from("activities")
         .select(`
           *,
           assignee:assignee_id(id, name:first_name, avatar_url)

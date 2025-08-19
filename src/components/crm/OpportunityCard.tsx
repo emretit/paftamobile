@@ -102,6 +102,15 @@ const OpportunityCard = ({ opportunity, index, onClick, isSelected = false }: Op
                   {opportunity.status === 'lost' && 'Kaybedildi'}
                 </Badge>
               </div>
+              
+              {opportunity.employee && (
+                <div className="flex items-center mt-2 text-xs text-gray-500">
+                  <User className="h-3 w-3 mr-1 flex-shrink-0" />
+                  <span className="truncate">
+                    {opportunity.employee.first_name} {opportunity.employee.last_name}
+                  </span>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

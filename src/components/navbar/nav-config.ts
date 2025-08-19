@@ -51,6 +51,11 @@ export const navItems = [
         label: "Teklifler",
       },
       {
+        path: "/activities",
+        icon: ListTodo,
+        label: "Aktiviteler",
+      },
+      {
         path: "/orders/list",
         icon: ShoppingCart,
         label: "Siparişler",
@@ -133,15 +138,10 @@ export const navItems = [
     label: "Nakit Akış",
   },
   {
-    category: "Görevler & Servis",
+    category: "Servis",
     icon: Wrench,
-    path: "/tasks",
+    path: "/service",
     items: [
-      {
-        path: "/tasks",
-        icon: ListTodo,
-        label: "Görevler",
-      },
       {
         path: "/service",
         icon: Wrench,

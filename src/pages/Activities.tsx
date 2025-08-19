@@ -1,32 +1,29 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DefaultLayout from "@/components/layouts/DefaultLayout";
-import TasksContent from "@/components/tasks/TasksContent";
-import { useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import TasksPageHeader from "@/components/tasks/header/TasksPageHeader";
-import TaskForm from "@/components/tasks/form/TaskForm";
-import TasksFilterBar from "@/components/tasks/filters/TasksFilterBar";
+import TasksContent from "@/components/activities/TasksContent";
+import TasksPageHeader from "@/components/activities/header/TasksPageHeader";
+import TasksFilterBar from "@/components/activities/filters/TasksFilterBar";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Task, TaskStatus } from "@/types/task";
-import { ViewType } from "@/components/tasks/header/TasksViewToggle";
-import TasksKanban from "@/components/tasks/TasksKanban";
+import { ViewType } from "@/components/activities/header/TasksViewToggle";
+import TasksKanban from "@/components/activities/TasksKanban";
 
-interface TasksPageProps {
+interface ActivitiesPageProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
 }
 
-const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+const Activities = ({ isCollapsed, setIsCollapsed }: ActivitiesPageProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAssignee, setSelectedAssignee] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
   const [activeView, setActiveView] = useState<ViewType>("table");
   
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: employees = [] } = useQuery({
     queryKey: ["employees-for-filter"],
@@ -42,21 +39,15 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
   });
 
   const handleAddTask = () => {
-    setIsDialogOpen(true);
-  };
-
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    // Refresh tasks data
-    queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    navigate("/activities/new");
   };
 
   return (
     <DefaultLayout 
       isCollapsed={isCollapsed} 
       setIsCollapsed={setIsCollapsed}
-      title="Görevler" 
-      subtitle="Tüm görevleri yönetin"
+      title="Aktiviteler" 
+      subtitle="Tüm aktiviteleri yönetin"
     >
       <div className="space-y-6">
         <TasksPageHeader 
@@ -95,18 +86,8 @@ const Tasks = ({ isCollapsed, setIsCollapsed }: TasksPageProps) => {
           />
         )}
       </div>
-
-      {/* Dialog for creating/editing tasks */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <TaskForm 
-            task={undefined} 
-            onClose={handleDialogClose} 
-          />
-        </DialogContent>
-      </Dialog>
     </DefaultLayout>
   );
 };
 
-export default Tasks;
+export default Activities;

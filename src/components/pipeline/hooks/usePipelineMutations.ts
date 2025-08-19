@@ -12,14 +12,14 @@ export const usePipelineMutations = () => {
   const updateTaskStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: Task['status'] }) => {
       const { error } = await supabase
-        .from('tasks')
+        .from('activities')
         .update({ status })
         .eq('id', id);
       
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['activities'] });
       showSuccess('Task status updated successfully');
     },
     onError: (error) => {

@@ -25,7 +25,7 @@ const TaskDetails = ({ task, onClose }: TaskDetailsProps) => {
     mutationFn: async (updatedTask: Omit<Task, "subtasks">) => {
       setIsUpdating(true);
       const { data, error } = await supabase
-        .from("tasks")
+        .from("activities")
         .update(updatedTask)
         .eq("id", task.id)
         .select()
@@ -35,7 +35,7 @@ const TaskDetails = ({ task, onClose }: TaskDetailsProps) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
       toast.success("Görev başarıyla güncellendi");
       if (onClose) onClose();
     },
