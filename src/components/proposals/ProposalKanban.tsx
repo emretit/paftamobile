@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import { DropResult } from "@hello-pangea/dnd";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import ProposalColumn from "./kanban/ProposalColumn";
+import ProposalKanbanBoard from "./kanban/ProposalKanbanBoard";
 import type { Proposal, ProposalStatus } from "@/types/proposal";
 import { proposalStatusLabels, proposalStatusIcons } from "@/types/proposal";
 import { changeProposalStatus } from "@/services/crmService";
@@ -72,35 +72,12 @@ export const ProposalKanban = ({ proposals, onProposalSelect }: ProposalKanbanPr
     }
   };
 
-  const filterProposalsByStatus = (status: string) => {
-    return localProposals.filter(proposal => proposal.status === status);
-  };
-
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex overflow-x-auto gap-3 pb-4">
-        {columns.map(column => {
-          const Icon = column.icon;
-          return (
-            <div key={column.id} className="flex-none min-w-[280px]">
-              <div className="flex items-center gap-2 mb-3">
-                <div className={`h-3 w-3 rounded-full ${column.color}`}></div>
-                <h2 className="font-semibold text-gray-900">
-                  {column.title} ({filterProposalsByStatus(column.id).length})
-                </h2>
-              </div>
-              <ProposalColumn
-                id={column.id}
-                title={column.title}
-                icon={column.icon}
-                proposals={filterProposalsByStatus(column.id)}
-                onSelect={onProposalSelect}
-                color={column.color}
-              />
-            </div>
-          );
-        })}
-      </div>
-    </DragDropContext>
+    <ProposalKanbanBoard
+      proposals={localProposals}
+      onDragEnd={handleDragEnd}
+      onProposalSelect={onProposalSelect}
+      columns={columns}
+    />
   );
 };
