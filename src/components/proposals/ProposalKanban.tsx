@@ -14,12 +14,12 @@ interface ProposalKanbanProps {
 }
 
 const columns = [
-  { id: "draft", title: proposalStatusLabels.draft, icon: proposalStatusIcons.draft },
-  { id: "pending_approval", title: proposalStatusLabels.pending_approval, icon: proposalStatusIcons.pending_approval },
-  { id: "sent", title: proposalStatusLabels.sent, icon: proposalStatusIcons.sent },
-  { id: "accepted", title: proposalStatusLabels.accepted, icon: proposalStatusIcons.accepted },
-  { id: "rejected", title: proposalStatusLabels.rejected, icon: proposalStatusIcons.rejected },
-  { id: "expired", title: proposalStatusLabels.expired, icon: proposalStatusIcons.expired }
+  { id: "draft", title: proposalStatusLabels.draft, icon: proposalStatusIcons.draft, color: "bg-gray-600" },
+  { id: "pending_approval", title: proposalStatusLabels.pending_approval, icon: proposalStatusIcons.pending_approval, color: "bg-yellow-600" },
+  { id: "sent", title: proposalStatusLabels.sent, icon: proposalStatusIcons.sent, color: "bg-blue-600" },
+  { id: "accepted", title: proposalStatusLabels.accepted, icon: proposalStatusIcons.accepted, color: "bg-green-600" },
+  { id: "rejected", title: proposalStatusLabels.rejected, icon: proposalStatusIcons.rejected, color: "bg-red-600" },
+  { id: "expired", title: proposalStatusLabels.expired, icon: proposalStatusIcons.expired, color: "bg-orange-600" }
 ];
 
 export const ProposalKanban = ({ proposals, onProposalSelect }: ProposalKanbanProps) => {
@@ -78,13 +78,13 @@ export const ProposalKanban = ({ proposals, onProposalSelect }: ProposalKanbanPr
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex overflow-x-auto gap-6 pb-4">
+      <div className="flex overflow-x-auto gap-3 pb-4">
         {columns.map(column => {
           const Icon = column.icon;
           return (
-            <div key={column.id} className="flex-none min-w-[320px]">
-              <div className="flex items-center gap-2 mb-4">
-                <Icon className="h-4 w-4 text-muted-foreground" />
+            <div key={column.id} className="flex-none min-w-[280px]">
+              <div className="flex items-center gap-2 mb-3">
+                <div className={`h-3 w-3 rounded-full ${column.color}`}></div>
                 <h2 className="font-semibold text-gray-900">
                   {column.title} ({filterProposalsByStatus(column.id).length})
                 </h2>
@@ -95,6 +95,7 @@ export const ProposalKanban = ({ proposals, onProposalSelect }: ProposalKanbanPr
                 icon={column.icon}
                 proposals={filterProposalsByStatus(column.id)}
                 onSelect={onProposalSelect}
+                color={column.color}
               />
             </div>
           );

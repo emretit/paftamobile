@@ -33,13 +33,13 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, index, onClick })
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`mb-3 ${snapshot.isDragging ? 'opacity-75' : ''}`}
+          className={`mb-2 ${snapshot.isDragging ? 'opacity-75' : ''}`}
         >
           <Card 
             className="cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => onClick(proposal)}
           >
-            <CardHeader className="p-4 pb-2">
+            <CardHeader className="p-3 pb-2">
               <CardTitle className="text-sm font-medium flex justify-between items-start">
                 <span className="truncate">
                   {proposal.title || `Teklif #${proposal.number || proposal.proposal_number}`}
@@ -47,20 +47,20 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, index, onClick })
                 <StatusBadge status={proposal.status} size="sm" />
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-0 text-xs space-y-2">
+            <CardContent className="p-3 pt-0 text-xs space-y-2">
               <div className="flex items-center text-gray-600">
-                <User2Icon className="h-3.5 w-3.5 mr-2" />
+                <User2Icon className="h-3 w-3 mr-1.5" />
                 {proposal.customer?.name || proposal.customer_name || "İsimsiz Müşteri"}
               </div>
               {(proposal.total_amount || proposal.total_value) && (
                 <div className="flex items-center text-gray-600">
-                  <CreditCardIcon className="h-3.5 w-3.5 mr-2" />
+                  <CreditCardIcon className="h-3 w-3 mr-1.5" />
                   {formatMoney(proposal.total_amount || proposal.total_value || 0)}
                 </div>
               )}
               {proposal.valid_until && (
                 <div className="flex items-center text-gray-600">
-                  <CalendarIcon className="h-3.5 w-3.5 mr-2" />
+                  <CalendarIcon className="h-3 w-3 mr-1.5" />
                   {format(new Date(proposal.valid_until), "dd.MM.yyyy")}
                 </div>
               )}
