@@ -4,18 +4,26 @@ import { Droppable } from '@hello-pangea/dnd';
 import { Opportunity, OpportunityStatus } from '@/types/crm';
 import OpportunityCard from './OpportunityCard';
 
-// Get appropriate background color for each column
-const getColumnBackground = (status: string) => {
-  switch (status) {
-    case 'new': return 'kanban-bg-new';
-    case 'contacted': return 'kanban-bg-contacted';
-    case 'qualified': return 'kanban-bg-qualified';
-    case 'proposal': return 'kanban-bg-proposal';
-    case 'negotiation': return 'kanban-bg-negotiation';
-    case 'closed': return 'kanban-bg-closed';
-    case 'lost': return 'kanban-bg-lost';
-    default: return 'bg-gray-50';
-  }
+// Get appropriate background color for each column based on header color
+const getColumnBackground = (color: string) => {
+  // Convert header color to light pastel background
+  const colorMap: { [key: string]: string } = {
+    'bg-blue-600': 'bg-blue-50',
+    'bg-purple-600': 'bg-purple-50',
+    'bg-indigo-600': 'bg-indigo-50', 
+    'bg-amber-600': 'bg-amber-50',
+    'bg-yellow-600': 'bg-yellow-50',
+    'bg-green-600': 'bg-green-50',
+    'bg-red-600': 'bg-red-50',
+    'bg-pink-600': 'bg-pink-50',
+    'bg-cyan-600': 'bg-cyan-50',
+    'bg-teal-600': 'bg-teal-50',
+    'bg-lime-600': 'bg-lime-50',
+    'bg-orange-600': 'bg-orange-50',
+    'bg-emerald-600': 'bg-emerald-50'
+  };
+  
+  return colorMap[color] || 'bg-gray-50';
 };
 
 interface OpportunityColumnProps {
@@ -25,6 +33,7 @@ interface OpportunityColumnProps {
   onOpportunityClick: (opportunity: Opportunity) => void;
   onOpportunitySelect?: (opportunity: Opportunity) => void;
   selectedOpportunities?: Opportunity[];
+  color?: string; // Add color prop
 }
 
 const OpportunityColumn = ({
@@ -33,7 +42,8 @@ const OpportunityColumn = ({
   opportunities,
   onOpportunityClick,
   onOpportunitySelect,
-  selectedOpportunities = []
+  selectedOpportunities = [],
+  color = 'bg-gray-500'
 }: OpportunityColumnProps) => {
   return (
     <Droppable droppableId={id}>
@@ -41,7 +51,7 @@ const OpportunityColumn = ({
         <div
           ref={provided.innerRef}
           className={`min-h-[400px] w-full p-2 rounded-md transition-colors duration-200 ${
-            snapshot.isDraggingOver ? 'bg-red-50' : getColumnBackground(id)
+            snapshot.isDraggingOver ? 'bg-red-50' : getColumnBackground(color)
           }`}
           {...provided.droppableProps}
         >

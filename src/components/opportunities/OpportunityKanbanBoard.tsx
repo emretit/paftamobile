@@ -106,6 +106,7 @@ const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
                             onOpportunityClick={onOpportunityClick}
                             onOpportunitySelect={onOpportunitySelect}
                             selectedOpportunities={selectedOpportunities}
+                            color={column.color}
                           />
                         </div>
                       </div>
