@@ -30,7 +30,7 @@ interface ProposalTableRowProps {
   onPdfPrint: (proposal: Proposal, templateId: string) => void;
 }
 
-export const ProposalTableRow: React.FC<ProposalTableRowProps> = ({ 
+export const ProposalTableRow: React.FC<ProposalTableRowProps> = ({
   proposal, 
   index, 
   formatMoney, 
@@ -44,7 +44,26 @@ export const ProposalTableRow: React.FC<ProposalTableRowProps> = ({
   const { calculateTotals } = useProposalCalculations();
   const { toast } = useToast();
 
+  // Metinleri kısalt
+  const shortenText = (text: string, maxLength: number = 25) => {
+    if (!text) return "";
+    
+    if (text.length <= maxLength) return text;
+    
+    return text.substring(0, maxLength - 3) + "...";
+  };
 
+  // Firma ismini kısalt
+  const getShortenedCompanyName = () => {
+    const companyName = proposal.customer?.name || proposal.customer_name || "Müşteri yok";
+    return shortenText(companyName, 20);
+  };
+
+  // Firma şirket bilgisini kısalt
+  const getShortenedCompanyInfo = () => {
+    if (!proposal.customer?.company) return null;
+    return shortenText(proposal.customer.company, 18);
+  };
   
   // Use the stored total_amount from database (calculated and saved correctly)
   const getGrandTotal = () => {
@@ -93,7 +112,7 @@ export const ProposalTableRow: React.FC<ProposalTableRowProps> = ({
   
   return (
     <TableRow 
-      className="cursor-pointer transition-colors hover:bg-gray-50 h-16"
+      className="cursor-pointer hover:bg-gray-50"
       onClick={() => onSelect(proposal)}
     >
       <TableCell className="font-medium p-4">#{proposal.number}</TableCell>
@@ -106,9 +125,13 @@ export const ProposalTableRow: React.FC<ProposalTableRowProps> = ({
               </AvatarFallback>
             </Avatar>
             <div>
-              <div className="font-medium">{proposal.customer.name}</div>
+              <div className="font-medium" title={proposal.customer.name}>
+                {getShortenedCompanyName()}
+              </div>
               {proposal.customer.company && (
-                <div className="text-xs text-muted-foreground">{proposal.customer.company}</div>
+                <div className="text-xs text-muted-foreground" title={proposal.customer.company}>
+                  {getShortenedCompanyInfo()}
+                </div>
               )}
             </div>
           </div>
@@ -144,96 +167,53 @@ export const ProposalTableRow: React.FC<ProposalTableRowProps> = ({
       <TableCell className="p-4">{formatDate(proposal.created_at)}</TableCell>
       <TableCell className="p-4">{formatDate(proposal.valid_until)}</TableCell>
       <TableCell className="p-4">
-        <div className="flex justify-end">
+        <div className="flex items-center justify-end space-x-1">
           <Button
             variant="ghost"
             size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect(proposal);
-            }}
+            onClick={handleEdit}
             className="h-8 w-8"
-            title="Detayları Görüntüle"
           >
             <Eye className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            onClick={handleEdit}
-            title="Düzenle"
-          >
-            <PenLine className="h-4 w-4" />
-          </Button>
-
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={(e) => e.stopPropagation()}
-                title="Diğer İşlemler"
-              >
+              <Button variant="ghost" size="icon" className="h-8 w-8">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-              <DropdownMenuItem onClick={() => navigate(`/proposal/${proposal.id}`)}>
-                <Eye className="h-4 w-4 mr-2" />
-                Detayları Görüntüle
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate(`/proposal/${proposal.id}/edit`)}>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleEdit}>
                 <PenLine className="h-4 w-4 mr-2" />
                 Düzenle
               </DropdownMenuItem>
-
-              <DropdownMenuItem 
-                onClick={(e) => e.preventDefault()}
-                className="cursor-default p-0"
-              >
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-start h-auto p-2"
-                    >
-                      <FileText className="mr-2 h-4 w-4" />
-                      PDF Yazdır
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent side="left" align="start" className="w-56">
-                    {templates.map(template => (
-                      <DropdownMenuItem 
-                        key={template.id} 
-                        onClick={(e) => handlePdfPrintClick(e, template.id)}
-                        className="cursor-pointer"
-                      >
-                        <FileText className="mr-2 h-4 w-4" />
-                        {template.name} {template.is_default && '(Varsayılan)'}
-                      </DropdownMenuItem>
-                    ))}
-                    {templates.length === 0 && (
-                      <DropdownMenuItem disabled>
-                        Şablon bulunamadı
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem 
-                onClick={() => {
-                  const newStatus: ProposalStatus = proposal.status === 'draft' ? 'sent' : 'draft';
-                  onStatusChange(proposal.id, newStatus);
+              
+              {templates.length > 0 && (
+                <DropdownMenuItem>
+                  <FileText className="h-4 w-4 mr-2" />
+                  PDF İndir
+                  <DropdownMenu>
+                    <DropdownMenuContent>
+                      {templates.map((template) => (
+                        <DropdownMenuItem
+                          key={template.id}
+                          onClick={(e) => handlePdfPrintClick(e, template.id)}
+                        >
+                          {template.name}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </DropdownMenuItem>
+              )}
+              
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(proposal.id);
                 }}
-              >
-                {proposal.status === 'draft' ? 'Gönderildi Olarak İşaretle' : 'Taslak Olarak İşaretle'}
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => onDelete(proposal.id)}
-                className="text-red-600 focus:text-red-700"
+                className="text-red-600"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Sil
@@ -242,8 +222,6 @@ export const ProposalTableRow: React.FC<ProposalTableRowProps> = ({
           </DropdownMenu>
         </div>
       </TableCell>
-      
-
     </TableRow>
   );
 };

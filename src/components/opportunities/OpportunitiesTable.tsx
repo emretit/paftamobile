@@ -37,6 +37,25 @@ const OpportunitiesTable = ({
   statusFilter = "all",
   priorityFilter = null
 }: OpportunitiesTableProps) => {
+  // Metinleri kısalt
+  const shortenText = (text: string, maxLength: number = 25) => {
+    if (!text) return "";
+    
+    if (text.length <= maxLength) return text;
+    
+    return text.substring(0, maxLength - 3) + "...";
+  };
+
+  // Firma ismini kısalt
+  const getShortenedCompanyName = (companyName: string) => {
+    return shortenText(companyName, 20);
+  };
+
+  // Firma şirket bilgisini kısalt
+  const getShortenedCompanyInfo = (companyInfo: string) => {
+    return shortenText(companyInfo, 18);
+  };
+
   // Filter opportunities based on criteria
   const filteredOpportunities = opportunities.filter(opportunity => {
     const matchesSearch = !searchQuery || 
@@ -73,16 +92,16 @@ const OpportunitiesTable = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {[1, 2, 3, 4, 5].map((index) => (
+          {Array.from({ length: 5 }).map((_, index) => (
             <TableRow key={index}>
-              <TableCell><Skeleton className="h-4 w-48" /></TableCell>
               <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-              <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-              <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-              <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-              <TableCell><Skeleton className="h-8 w-8 rounded-full" /></TableCell>
               <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-              <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+              <TableCell><Skeleton className="h-8 w-8" /></TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -114,13 +133,17 @@ const OpportunitiesTable = ({
         ) : (
           filteredOpportunities.map((opportunity) => (
             <TableRow key={opportunity.id} onClick={() => onSelectOpportunity(opportunity)} className="cursor-pointer hover:bg-gray-50">
-              <TableCell className="font-medium">{opportunity.title}</TableCell>
+              <TableCell className="font-medium">{shortenText(opportunity.title, 30)}</TableCell>
               <TableCell>
                 {opportunity.customer ? (
                   <div className="flex flex-col">
-                    <span>{opportunity.customer.name}</span>
+                    <span title={opportunity.customer.name}>
+                      {getShortenedCompanyName(opportunity.customer.name)}
+                    </span>
                     {opportunity.customer.company && (
-                      <span className="text-xs text-gray-500">{opportunity.customer.company}</span>
+                      <span className="text-xs text-gray-500" title={opportunity.customer.company}>
+                        {getShortenedCompanyInfo(opportunity.customer.company)}
+                      </span>
                     )}
                   </div>
                 ) : (
@@ -128,34 +151,42 @@ const OpportunitiesTable = ({
                 )}
               </TableCell>
               <TableCell>
-                <Badge className={opportunityStatusColors[opportunity.status]}>
-                  {opportunity.status === 'new' ? 'Yeni' : 
-                   opportunity.status === 'first_contact' ? 'İlk Görüşme' : 
-                   opportunity.status === 'site_visit' ? 'Ziyaret Yapıldı' : 
-                   opportunity.status === 'preparing_proposal' ? 'Teklif Hazırlanıyor' : 
-                   opportunity.status === 'proposal_sent' ? 'Teklif Gönderildi' : 
-                   opportunity.status === 'accepted' ? 'Kabul Edildi' : 
-                   opportunity.status === 'lost' ? 'Kaybedildi' : opportunity.status}
+                <Badge 
+                  variant="outline" 
+                  className={`${opportunityStatusColors[opportunity.status] || 'bg-gray-100 text-gray-800'}`}
+                >
+                  {opportunity.status === 'new' && 'Yeni'}
+                  {opportunity.status === 'first_contact' && 'İlk Görüşme'}
+                  {opportunity.status === 'site_visit' && 'Ziyaret Yapıldı'}
+                  {opportunity.status === 'preparing_proposal' && 'Teklif Hazırlanıyor'}
+                  {opportunity.status === 'proposal_sent' && 'Teklif Gönderildi'}
+                  {opportunity.status === 'accepted' && 'Kabul Edildi'}
+                  {opportunity.status === 'lost' && 'Kaybedildi'}
                 </Badge>
               </TableCell>
-              <TableCell>{formatCurrency(opportunity.value)}</TableCell>
               <TableCell>
-                <Badge variant="outline" className={
-                  opportunity.priority === 'high' ? 'border-red-500 text-red-500' : 
-                  opportunity.priority === 'medium' ? 'border-yellow-500 text-yellow-500' : 
-                  'border-green-500 text-green-500'
-                }>
-                  {opportunity.priority === 'high' ? 'Yüksek' : 
-                   opportunity.priority === 'medium' ? 'Orta' : 'Düşük'}
+                {opportunity.value ? formatCurrency(opportunity.value, opportunity.currency || 'TRY') : '-'}
+              </TableCell>
+              <TableCell>
+                <Badge 
+                  variant="outline" 
+                  className={
+                    opportunity.priority === 'high' ? 'bg-red-100 text-red-800' :
+                    opportunity.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                    opportunity.priority === 'low' ? 'bg-green-100 text-green-800' :
+                    'bg-gray-100 text-gray-800'
+                  }
+                >
+                  {opportunity.priority === 'high' && 'Yüksek'}
+                  {opportunity.priority === 'medium' && 'Orta'}
+                  {opportunity.priority === 'low' && 'Düşük'}
+                  {!opportunity.priority && '-'}
                 </Badge>
               </TableCell>
               <TableCell>
                 {opportunity.employee ? (
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                      {opportunity.employee.avatar_url && (
-                        <AvatarImage src={opportunity.employee.avatar_url} alt={`${opportunity.employee.first_name} ${opportunity.employee.last_name}`} />
-                      )}
+                  <div className="flex items-center space-x-2">
+                    <Avatar className="h-6 w-6">
                       <AvatarFallback>
                         {opportunity.employee.first_name?.[0]}
                         {opportunity.employee.last_name?.[0]}
@@ -166,14 +197,15 @@ const OpportunitiesTable = ({
                     </span>
                   </div>
                 ) : (
-                  <span className="text-gray-500">-</span>
+                  <span className="text-muted-foreground">-</span>
                 )}
               </TableCell>
               <TableCell>
-                {opportunity.expected_close_date ? 
-                  format(new Date(opportunity.expected_close_date), "dd MMM yyyy", { locale: tr }) : 
-                  <span className="text-gray-500">-</span>
-                }
+                {opportunity.expected_close_date ? (
+                  format(new Date(opportunity.expected_close_date), "dd MMM yyyy", { locale: tr })
+                ) : (
+                  <span className="text-muted-foreground">-</span>
+                )}
               </TableCell>
               <TableCell>
                 <div className="flex justify-end">

@@ -31,7 +31,7 @@ const ProposalKanbanBoard: React.FC<ProposalKanbanBoardProps> = ({
       <Droppable droppableId="columns" direction="horizontal" type="COLUMN">
         {(provided) => (
           <div 
-            className="flex overflow-x-auto gap-3 pb-4"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 pb-4 auto-rows-fr"
             ref={provided.innerRef}
             {...provided.droppableProps}
           >
@@ -41,10 +41,10 @@ const ProposalKanbanBoard: React.FC<ProposalKanbanBoardProps> = ({
                    <div 
                     ref={provided.innerRef}
                     {...provided.draggableProps}
-                    className={`flex-none min-w-[280px] ${snapshot.isDragging ? 'opacity-80' : ''}`}
+                    className={`w-full min-w-0 ${snapshot.isDragging ? 'opacity-80' : ''}`}
                   >
                     <div 
-                      className={`bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 ${snapshot.isDragging ? 'shadow-lg border-primary' : ''}`}
+                      className={`bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 h-full ${snapshot.isDragging ? 'shadow-lg border-primary' : ''}`}
                     >
                       <div 
                         className="p-3 bg-white/95 backdrop-blur-sm rounded-t-lg border-b border-gray-100 cursor-grab"
@@ -61,7 +61,7 @@ const ProposalKanbanBoard: React.FC<ProposalKanbanBoardProps> = ({
                           isDefaultColumn={true} // All proposal columns are default
                         />
                       </div>
-                      <div className="p-2 bg-white/90 rounded-b-lg">
+                      <div className="p-2 bg-white/90 rounded-b-lg h-full">
                         <ProposalColumn
                           id={column.id}
                           title={column.title}

@@ -50,23 +50,25 @@ const ProposalColumn = ({
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
-          className={`min-h-[400px] w-full p-2 rounded-md transition-colors duration-200 ${
+          className={`min-h-[500px] w-full p-2 rounded-md transition-colors duration-200 h-full flex flex-col ${
             snapshot.isDraggingOver ? 'bg-red-50' : getColumnBackground(color)
           }`}
           {...provided.droppableProps}
         >
-          {proposals.map((proposal, index) => (
-            <ProposalCard
-              key={proposal.id}
-              proposal={proposal}
-              index={index}
-              onClick={() => onSelect && onSelect(proposal)}
-            />
-          ))}
+          <div className="flex-1">
+            {proposals.map((proposal, index) => (
+              <ProposalCard
+                key={proposal.id}
+                proposal={proposal}
+                index={index}
+                onClick={() => onSelect && onSelect(proposal)}
+              />
+            ))}
+          </div>
           {proposals.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-24 border border-dashed border-gray-200 rounded-md mt-2">
+            <div className="flex flex-col items-center justify-center h-32 border border-dashed border-gray-200 rounded-md mt-2">
               {Icon && <Icon className="h-4 w-4 text-gray-400 mb-1" />}
-              <p className="text-gray-500 text-xs">Bu durumda teklif yok</p>
+              <p className="text-gray-500 text-xs text-center">Bu durumda teklif yok</p>
             </div>
           )}
           {provided.placeholder}
