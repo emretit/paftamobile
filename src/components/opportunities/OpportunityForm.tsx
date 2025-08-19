@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -12,8 +12,10 @@ import { useCustomerSelect } from "@/hooks/useCustomerSelect";
 import { useEmployeeNames } from "@/hooks/useEmployeeNames";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Building, User, Mail, Phone, Plus, X } from "lucide-react";
+import { Check, ChevronsUpDown, Building, User, Mail, Phone, Plus, X, Edit, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface OpportunityFormProps {
   isOpen: boolean;
@@ -36,6 +38,8 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
     currency: "TRY",
     status: "new",
     priority: "medium",
+    opportunity_type: "general",
+    expected_close_date: "",
     description: ""
   });
 
@@ -49,18 +53,142 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
     address: ""
   });
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
+  const [opportunityTypes, setOpportunityTypes] = useState<Array<{id: number, name: string, display_name: string}>>([]);
+  const [editingType, setEditingType] = useState<{id: number, name: string, display_name: string} | null>(null);
+  const [newTypeName, setNewTypeName] = useState("");
+  const [isAddingType, setIsAddingType] = useState(false);
+
+  // Fırsat tiplerini yükle
+  useEffect(() => {
+    const fetchOpportunityTypes = async () => {
+      const { data, error } = await supabase
+        .from('opportunity_types')
+        .select('*')
+        .order('display_name');
+      
+      if (data) {
+        setOpportunityTypes(data);
+        // İlk fırsat tipini varsayılan olarak seç
+        if (data.length > 0 && !formData.opportunity_type) {
+          setFormData(prev => ({ ...prev, opportunity_type: data[0].name }));
+        }
+      }
+    };
+    
+    fetchOpportunityTypes();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleStatusChange = (value: string) => {
-    setFormData(prev => ({ ...prev, status: value }));
-  };
+
 
   const handleEmployeeChange = (value: string) => {
     setFormData(prev => ({ ...prev, employee_id: value }));
+  };
+
+  // Fırsat tipi yönetimi
+  const handleAddType = async () => {
+    if (!newTypeName.trim()) return;
+    
+    setIsAddingType(true);
+    try {
+      const { data, error } = await supabase
+        .from('opportunity_types')
+        .insert({
+          name: newTypeName.toLowerCase().replace(/\s+/g, '_'),
+          display_name: newTypeName.trim()
+        })
+        .select()
+        .single();
+      
+      if (data) {
+        setOpportunityTypes(prev => [...prev, data]);
+        setNewTypeName("");
+        // Yeni eklenen tipi otomatik olarak seç
+        setFormData(prev => ({ ...prev, opportunity_type: data.name }));
+        toast({
+          title: "Başarılı",
+          description: "Fırsat tipi eklendi ve seçildi",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Fırsat tipi eklenirken hata oluştu",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingType(false);
+    }
+  };
+
+  const handleEditType = async (id: number, newDisplayName: string) => {
+    if (!newDisplayName.trim()) {
+      toast({
+        title: "Hata",
+        description: "Fırsat tipi adı boş olamaz",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('opportunity_types')
+        .update({ display_name: newDisplayName.trim() })
+        .eq('id', id);
+      
+      if (!error) {
+        setOpportunityTypes(prev => 
+          prev.map(type => 
+            type.id === id ? { ...type, display_name: newDisplayName.trim() } : type
+          )
+        );
+        setEditingType(null);
+        toast({
+          title: "Başarılı",
+          description: "Fırsat tipi güncellendi",
+        });
+      } else {
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error updating opportunity type:', error);
+      toast({
+        title: "Hata",
+        description: "Fırsat tipi güncellenirken hata oluştu",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteType = async (id: number) => {
+    try {
+      const { error } = await supabase
+        .from('opportunity_types')
+        .delete()
+        .eq('id', id);
+      
+      if (!error) {
+        setOpportunityTypes(prev => prev.filter(type => type.id !== id));
+        toast({
+          title: "Başarılı",
+          description: "Fırsat tipi silindi",
+        });
+      } else {
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error deleting opportunity type:', error);
+      toast({
+        title: "Hata",
+        description: "Fırsat tipi silinirken hata oluştu",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCustomerSelect = (customerId: string) => {
@@ -164,8 +292,10 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
           description: formData.description || null,
           status: formData.status,
           priority: formData.priority,
+          opportunity_type: formData.opportunity_type,
           value: formData.value ? parseFloat(formData.value) : 0,
           currency: formData.currency,
+          expected_close_date: formData.expected_close_date || null,
           customer_id: formData.customer_id || null,
           employee_id: formData.employee_id || null,
         });
@@ -181,16 +311,18 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
       });
 
       // Reset form and close
-      setFormData({
-        title: "",
-        customer_id: "",
-        employee_id: "",
-        value: "",
-        currency: "TRY",
-        status: "new",
-        priority: "medium",
-        description: ""
-      });
+              setFormData({
+          title: "",
+          customer_id: "",
+          employee_id: "",
+          value: "",
+          currency: "TRY",
+          status: "new",
+          priority: "medium",
+          opportunity_type: opportunityTypes.length > 0 ? opportunityTypes[0].name : "general",
+          expected_close_date: "",
+          description: ""
+        });
       setCustomerPopoverOpen(false);
       setShowNewCustomerForm(false);
       setNewCustomerData({
@@ -455,26 +587,6 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
           
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label htmlFor="status">Durum</Label>
-              <Select 
-                value={formData.status} 
-                onValueChange={handleStatusChange}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Durum seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="new">Yeni</SelectItem>
-                  <SelectItem value="first_contact">İlk İletişim</SelectItem>
-                  <SelectItem value="site_visit">Saha Ziyareti</SelectItem>
-                  <SelectItem value="preparing_proposal">Teklif Hazırlanıyor</SelectItem>
-                  <SelectItem value="proposal_sent">Teklif Gönderildi</SelectItem>
-                  <SelectItem value="accepted">Kabul Edildi</SelectItem>
-                  <SelectItem value="lost">Kaybedildi</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
               <Label htmlFor="priority">Öncelik</Label>
               <Select 
                 value={formData.priority} 
@@ -491,26 +603,234 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label htmlFor="opportunity_type">Fırsat Tipi</Label>
+              
+              <Select 
+                value={formData.opportunity_type} 
+                onValueChange={(value) => {
+                  if (value === "add_custom") {
+                    setNewTypeName("");
+                  } else {
+                    setFormData(prev => ({ ...prev, opportunity_type: value }));
+                  }
+                }}
+              >
+                <SelectTrigger id="opportunity_type" className="w-full bg-background border-border hover:border-primary transition-colors">
+                  <SelectValue placeholder="Fırsat tipi seçin" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border border-border shadow-xl z-[100] max-h-[300px] overflow-y-auto">
+                  {opportunityTypes.map((type) => (
+                    <div key={type.id} className="group relative">
+                      {editingType?.id === type.id ? (
+                        // Inline editing mode
+                        <div className="p-2 space-y-2">
+                          <Input
+                            placeholder="Fırsat tipi adı"
+                            value={editingType.display_name}
+                            onChange={(e) => setEditingType({...editingType, display_name: e.target.value})}
+                            className="text-sm h-8"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleEditType(editingType.id, editingType.display_name);
+                              } else if (e.key === 'Escape') {
+                                e.preventDefault();
+                                setEditingType(null);
+                              }
+                            }}
+                          />
+                          <div className="flex gap-1 justify-end">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setEditingType(null);
+                              }}
+                              className="h-6 px-2 text-xs"
+                            >
+                              İptal
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleEditType(editingType.id, editingType.display_name);
+                              }}
+                              className="h-6 px-2 text-xs"
+                            >
+                              Kaydet
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        // Normal display mode
+                        <SelectItem 
+                          value={type.name} 
+                          className="cursor-pointer hover:bg-muted/50 focus:bg-muted/50 data-[highlighted]:bg-muted/50 pr-10 transition-colors"
+                        >
+                          <div className="flex flex-col gap-1 w-full">
+                            <span className="font-medium text-sm text-foreground">{type.display_name}</span>
+                          </div>
+                        </SelectItem>
+                      )}
+                      
+                      {/* Edit button positioned outside SelectItem */}
+                      <div className="absolute top-2 right-2 z-10">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-muted/50"
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setEditingType(type);
+                          }}
+                        >
+                          <Edit size={12} />
+                        </Button>
+                      </div>
+                      
+                      {/* Delete button positioned outside SelectItem */}
+                      <div className="absolute top-2 right-8 z-10">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="opacity-100 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-destructive/20 hover:text-destructive"
+                              type="button"
+                            >
+                              <Trash2 size={12} />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Fırsat Tipini Sil</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                "{type.display_name}" fırsat tipini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>İptal</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleDeleteType(type.id);
+                                }}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Sil
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Add custom option */}
+                  <SelectItem value="add_custom" className="cursor-pointer hover:bg-primary/10 focus:bg-primary/10 data-[highlighted]:bg-primary/10 p-3 border-t border-border mt-1">
+                    <div className="flex items-center gap-2">
+                      <Plus size={16} className="text-primary" />
+                      <span className="text-sm font-medium text-primary">Yeni fırsat tipi ekle</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {/* Custom type input card - rendered outside dropdown */}
+              {newTypeName !== "" && (
+                <Card className="p-4 border-2 border-dashed border-primary/50 bg-primary/5 mt-2">
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-foreground">Yeni Fırsat Tipi</h4>
+                    <div className="space-y-2">
+                      <Input
+                        placeholder="Fırsat tipi adı giriniz..."
+                        value={newTypeName}
+                        onChange={(e) => setNewTypeName(e.target.value)}
+                        className="text-sm"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddType();
+                          } else if (e.key === 'Escape') {
+                            e.preventDefault();
+                            setNewTypeName("");
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setNewTypeName("")}
+                        className="h-8 px-3 text-xs"
+                      >
+                        İptal
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        onClick={handleAddType}
+                        disabled={isAddingType || !newTypeName.trim()}
+                        className="h-8 px-3 text-xs"
+                      >
+                        <Plus size={14} className="mr-1" />
+                        {isAddingType ? "Ekleniyor..." : "Ekle"}
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+            </div>
           </div>
           
           <div>
             <Label htmlFor="employee">Sorumlu Kişi</Label>
+            
             <Select value={formData.employee_id} onValueChange={handleEmployeeChange}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full bg-background border-border hover:border-primary transition-colors">
                 <SelectValue placeholder="Sorumlu kişi seçin" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background border border-border shadow-xl z-[100] max-h-[300px] overflow-y-auto">
                 {employeesLoading ? (
                   <SelectItem value="" disabled>Yükleniyor...</SelectItem>
                 ) : (
                   employees?.map((employee) => (
-                    <SelectItem key={employee.id} value={employee.id}>
-                      {employee.first_name} {employee.last_name}
+                    <SelectItem 
+                      key={employee.id} 
+                      value={employee.id}
+                      className="cursor-pointer hover:bg-muted/50 focus:bg-muted/50 data-[highlighted]:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex flex-col gap-1 w-full">
+                        <span className="font-medium text-sm text-foreground">{employee.first_name} {employee.last_name}</span>
+                      </div>
                     </SelectItem>
                   ))
                 )}
               </SelectContent>
             </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="expected_close_date">Beklenen Kapanış Tarihi</Label>
+            <Input 
+              id="expected_close_date" 
+              name="expected_close_date" 
+              type="date" 
+              value={formData.expected_close_date} 
+              onChange={handleChange} 
+              min={new Date().toISOString().split('T')[0]}
+            />
           </div>
           
           <div>

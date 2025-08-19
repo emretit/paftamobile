@@ -116,6 +116,15 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
     // TODO: Navigate to new proposal page with opportunity data
   };
 
+  const handlePlanMeeting = (opportunity: Opportunity) => {
+    // Yeni aktivite ekranına geçiş
+    console.log('Planning meeting for opportunity:', opportunity.id);
+    // TODO: Navigate to new activity page with opportunity data
+    // window.location.href = `/activities/new?opportunity_id=${opportunity.id}&type=meeting`;
+  };
+
+
+
   // Convert grouped opportunities to flat array for list view
   const flattenedOpportunities = Object.values(groupedOpportunities).flat();
 
@@ -178,6 +187,7 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
                 onEdit={handleEditOpportunity}
                 onDelete={handleDeleteOpportunity}
                 onConvertToProposal={handleConvertToProposal}
+                onPlanMeeting={handlePlanMeeting}
               />
             </TabsContent>
             <TabsContent value="list" className="mt-0">

@@ -22,6 +22,7 @@ interface OpportunityKanbanBoardProps {
   onEdit?: (opportunity: Opportunity) => void;
   onDelete?: (opportunity: Opportunity) => void;
   onConvertToProposal?: (opportunity: Opportunity) => void;
+  onPlanMeeting?: (opportunity: Opportunity) => void;
 }
 
 const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
@@ -33,7 +34,8 @@ const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
   onUpdateOpportunityStatus,
   onEdit,
   onDelete,
-  onConvertToProposal
+  onConvertToProposal,
+  onPlanMeeting
 }) => {
   const {
     columns,
@@ -116,6 +118,7 @@ const OpportunityKanbanBoard: React.FC<OpportunityKanbanBoardProps> = ({
                           onEdit={onEdit}
                           onDelete={onDelete}
                           onConvertToProposal={onConvertToProposal}
+                          onPlanMeeting={onPlanMeeting}
                         />
                         </div>
                       </div>

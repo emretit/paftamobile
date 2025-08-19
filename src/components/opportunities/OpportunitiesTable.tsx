@@ -89,6 +89,7 @@ const OpportunitiesTable = ({
             <TableHead>Müşteri</TableHead>
             <TableHead>Durum</TableHead>
             <TableHead>Değer</TableHead>
+            <TableHead>Para Birimi</TableHead>
             <TableHead>Öncelik</TableHead>
             <TableHead>Sorumlu</TableHead>
             <TableHead>Beklenen Kapanış</TableHead>
@@ -101,6 +102,7 @@ const OpportunitiesTable = ({
               <TableCell><Skeleton className="h-4 w-32" /></TableCell>
               <TableCell><Skeleton className="h-4 w-24" /></TableCell>
               <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-16" /></TableCell>
               <TableCell><Skeleton className="h-4 w-16" /></TableCell>
               <TableCell><Skeleton className="h-4 w-16" /></TableCell>
               <TableCell><Skeleton className="h-4 w-24" /></TableCell>
@@ -117,10 +119,11 @@ const OpportunitiesTable = ({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[20%]">Başlık</TableHead>
-          <TableHead className="w-[28%]">Müşteri</TableHead>
+          <TableHead className="w-[18%]">Başlık</TableHead>
+          <TableHead className="w-[25%]">Müşteri</TableHead>
           <TableHead className="w-[8%]">Durum</TableHead>
           <TableHead className="w-[8%]">Değer</TableHead>
+          <TableHead className="w-[6%]">Para Birimi</TableHead>
           <TableHead className="w-[8%]">Öncelik</TableHead>
           <TableHead className="w-[12%]">Sorumlu</TableHead>
           <TableHead className="w-[9%]">Beklenen Kapanış</TableHead>
@@ -129,11 +132,11 @@ const OpportunitiesTable = ({
       </TableHeader>
       <TableBody>
         {filteredOpportunities.length === 0 ? (
-          <TableRow>
-            <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-              Bu kriterlere uygun fırsat bulunamadı
-            </TableCell>
-          </TableRow>
+                      <TableRow>
+              <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                Bu kriterlere uygun fırsat bulunamadı
+              </TableCell>
+            </TableRow>
         ) : (
           filteredOpportunities.map((opportunity) => (
             <TableRow key={opportunity.id} onClick={() => onSelectOpportunity(opportunity)} className="cursor-pointer hover:bg-gray-50">
@@ -163,6 +166,19 @@ const OpportunitiesTable = ({
               </TableCell>
               <TableCell className="text-center">
                 {opportunity.value ? formatCurrency(opportunity.value, opportunity.currency || 'TRY') : '-'}
+              </TableCell>
+              <TableCell className="text-center">
+                {opportunity.currency ? (
+                  <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                    {opportunity.currency === 'TRY' ? '₺' : 
+                     opportunity.currency === 'USD' ? '$' : 
+                     opportunity.currency === 'EUR' ? '€' : 
+                     opportunity.currency === 'GBP' ? '£' : 
+                     opportunity.currency}
+                  </Badge>
+                ) : (
+                  <span className="text-gray-500">-</span>
+                )}
               </TableCell>
               <TableCell className="text-center">
                 <Badge 

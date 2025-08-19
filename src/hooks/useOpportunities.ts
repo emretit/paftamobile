@@ -52,6 +52,8 @@ export const useOpportunities = () => {
           status: item.status,
           priority: item.priority,
           value: item.value,
+          currency: item.currency,
+          opportunity_type: item.opportunity_type,
           customer_id: item.customer_id,
           employee_id: item.employee_id,
           created_at: item.created_at,

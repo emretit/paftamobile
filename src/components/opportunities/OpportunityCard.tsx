@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { CalendarIcon, MoreHorizontal, Edit, Trash2, FileText, User } from "lucide-react";
+import { CalendarIcon, MoreHorizontal, Edit, Trash2, FileText, User, Calendar, Target } from "lucide-react";
 import { format } from "date-fns";
 import { Opportunity } from "@/types/crm";
 
@@ -18,6 +18,7 @@ interface OpportunityCardProps {
   onEdit?: (opportunity: Opportunity) => void;
   onDelete?: (opportunity: Opportunity) => void;
   onConvertToProposal?: (opportunity: Opportunity) => void;
+  onPlanMeeting?: (opportunity: Opportunity) => void;
 }
 
 const OpportunityCard = ({ 
@@ -28,7 +29,8 @@ const OpportunityCard = ({
   isSelected = false,
   onEdit,
   onDelete,
-  onConvertToProposal
+  onConvertToProposal,
+  onPlanMeeting
 }: OpportunityCardProps) => {
   // Metinleri kısalt
   const shortenText = (text: string, maxLength: number = 25) => {
@@ -60,7 +62,10 @@ const OpportunityCard = ({
                 <h3 className="font-medium text-gray-900 line-clamp-2 text-sm flex-1 mr-2">{shortenText(opportunity.title, 30)}</h3>
                 <div className="flex items-center gap-2">
                   <Badge className="flex-shrink-0 text-xs" variant="outline">
-                    {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(opportunity.value)}
+                    {opportunity.currency && opportunity.currency !== 'TRY' 
+                      ? new Intl.NumberFormat('tr-TR', { style: 'currency', currency: opportunity.currency }).format(opportunity.value)
+                      : new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(opportunity.value)
+                    }
                   </Badge>
                   
                   {/* 3 Nokta Menü */}
@@ -85,15 +90,25 @@ const OpportunityCard = ({
                           Düzenle
                         </DropdownMenuItem>
                       )}
+                      {onPlanMeeting && (
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          onPlanMeeting(opportunity);
+                        }}>
+                          <Calendar className="mr-2 h-3 w-3" />
+                          Görüşme Planla
+                        </DropdownMenuItem>
+                      )}
                       {onConvertToProposal && (
                         <DropdownMenuItem onClick={(e) => {
                           e.stopPropagation();
                           onConvertToProposal(opportunity);
                         }}>
-                          <FileText className="mr-2 h-3 w-3" />
-                          Teklife Çevir
+                          <Target className="mr-2 h-3 w-3" />
+                          Teklif Hazırla
                         </DropdownMenuItem>
                       )}
+
                       {onDelete && (
                         <DropdownMenuItem 
                           onClick={(e) => {

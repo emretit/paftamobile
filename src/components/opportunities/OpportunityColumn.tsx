@@ -37,6 +37,7 @@ interface OpportunityColumnProps {
   onEdit?: (opportunity: Opportunity) => void;
   onDelete?: (opportunity: Opportunity) => void;
   onConvertToProposal?: (opportunity: Opportunity) => void;
+  onPlanMeeting?: (opportunity: Opportunity) => void;
 }
 
 const OpportunityColumn = ({
@@ -49,7 +50,8 @@ const OpportunityColumn = ({
   color = 'bg-gray-500',
   onEdit,
   onDelete,
-  onConvertToProposal
+  onConvertToProposal,
+  onPlanMeeting
 }: OpportunityColumnProps) => {
   return (
     <Droppable droppableId={id}>
@@ -73,6 +75,7 @@ const OpportunityColumn = ({
               onEdit={onEdit}
               onDelete={onDelete}
               onConvertToProposal={onConvertToProposal}
+              onPlanMeeting={onPlanMeeting}
             />
             ))}
           </div>

@@ -284,14 +284,33 @@ export const OpportunityDetailSheet = ({
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label className="text-red-800">Tahmini Değer</Label>
-                  <Input 
-                    type="number" 
-                    value={editingValues.value ?? opportunity.value}
-                    onChange={(e) => handleInputChange("value", parseFloat(e.target.value))}
-                    className="border-red-200 focus:border-red-300 focus:ring-red-100" 
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-red-800">Tahmini Değer</Label>
+                    <Input 
+                      type="number" 
+                      value={editingValues.value ?? opportunity.value}
+                      onChange={(e) => handleInputChange("value", parseFloat(e.target.value))}
+                      className="border-red-200 focus:border-red-300 focus:ring-red-100" 
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-red-800">Para Birimi</Label>
+                    <Select 
+                      value={editingValues.currency || opportunity.currency || "TRY"}
+                      onValueChange={(val) => handleInputChange("currency", val)}
+                    >
+                      <SelectTrigger className="border-red-200 focus:ring-red-100">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="TRY">TRY (₺)</SelectItem>
+                        <SelectItem value="USD">USD ($)</SelectItem>
+                        <SelectItem value="EUR">EUR (€)</SelectItem>
+                        <SelectItem value="GBP">GBP (£)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
               
