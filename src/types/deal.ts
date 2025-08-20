@@ -29,9 +29,9 @@ export interface Deal {
 // Add mapping to make DealStatus compatible with OpportunityStatus
 export const dealToOpportunityStatus = (dealStatus: DealStatus): OpportunityStatus => {
   switch (dealStatus) {
-    case "negotiation": return "preparing_proposal";
-    case "follow_up": return "proposal_sent";
-    case "won": return "accepted";
+    case "negotiation": return "proposal";
+    case "follow_up": return "meeting_visit";
+    case "won": return "won";
     default: return dealStatus as OpportunityStatus;
   }
 };

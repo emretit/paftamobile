@@ -121,9 +121,7 @@ const TaskCard = ({ task, index, onEdit, onSelect, onDelete }: TaskCardProps) =>
                     ? "Yüksek" 
                     : task.priority === "medium" 
                       ? "Orta" 
-                      : task.priority === "urgent"
-                        ? "Acil"
-                        : "Düşük"}
+                      : "Düşük"}
                 </Badge>
                 
                 <Badge className={`${getStatusColor(task.status)} text-xs font-medium`} variant="outline">

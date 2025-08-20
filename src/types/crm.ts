@@ -70,6 +70,7 @@ export interface Opportunity {
   status: OpportunityStatus;
   priority: OpportunityPriority;
   value: number;
+  currency?: string;
   customer_id?: string;
   employee_id?: string;
   created_at: string;
