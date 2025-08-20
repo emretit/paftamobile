@@ -151,7 +151,7 @@ const Auth = () => {
           <div className="text-center">
             <div className="flex justify-center mb-6">
               <img 
-                src="/lovable-uploads/041398c6-f1b0-407a-8a75-436cefa9fb60.png" 
+                src="/logo.svg" 
                 alt="PAFTA Logo" 
                 className="h-12 w-auto"
               />

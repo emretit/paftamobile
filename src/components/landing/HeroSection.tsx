@@ -6,6 +6,14 @@ const HeroSection = () => {
   return (
     <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-red-50 to-red-100">
       <div className="mx-auto max-w-7xl text-center">
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <img 
+            src="/logo-large.svg" 
+            alt="PAFTA Logo" 
+            className="h-20 w-auto"
+          />
+        </div>
         <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl md:text-6xl font-sans">
           <span className="block">CRM & ERP Çözümünüzle</span>
           <span className="block text-primary">İşinizi Daha Verimli Yönetin</span>

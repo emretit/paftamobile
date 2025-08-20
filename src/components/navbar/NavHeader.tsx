@@ -17,15 +17,26 @@ const NavHeader = ({ isCollapsed, setIsCollapsed }: NavHeaderProps) => {
       <div className="flex items-center space-x-3">
         {!isCollapsed && (
           <>
-            <div className="flex flex-col items-start">
-              <span className="text-lg font-bold text-white tracking-tight">PAFTA</span>
-              <span className="text-[10px] text-gray-300 -mt-1 tracking-widest">İş Yönetim Sistemi</span>
+            <div className="flex items-center space-x-3">
+              <img 
+                src="/logo.svg" 
+                alt="PAFTA Logo" 
+                className="h-8 w-auto"
+              />
+              <div className="flex flex-col items-start">
+                <span className="text-lg font-bold text-white tracking-tight">PAFTA</span>
+                <span className="text-[10px] text-gray-300 -mt-1 tracking-widest">İş Yönetim Sistemi</span>
+              </div>
             </div>
           </>
         )}
         {isCollapsed && (
           <div className="flex flex-col items-center">
-            <span className="text-sm font-bold text-white tracking-tight">PAFTA</span>
+            <img 
+              src="/logo.svg" 
+              alt="PAFTA Logo" 
+              className="h-6 w-auto"
+            />
             <span className="text-[8px] text-gray-300 -mt-1 tracking-wider">İş</span>
           </div>
         )}

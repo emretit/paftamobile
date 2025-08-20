@@ -70,7 +70,7 @@ const Index = () => {
         <div className="container mx-auto p-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <img 
-              src="/lovable-uploads/041398c6-f1b0-407a-8a75-436cefa9fb60.png" 
+              src="/logo.svg" 
               alt="PAFTA Logo" 
               className="h-8 w-auto"
             />

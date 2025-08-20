@@ -5,10 +5,12 @@ const FooterSection = () => {
       <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-                <span className="text-white font-bold text-sm">PAFTA</span>
-              </div>
+            <div className="flex items-center space-x-3 mb-4">
+              <img 
+                src="/logo.svg" 
+                alt="PAFTA Logo" 
+                className="h-10 w-auto"
+              />
               <span className="text-xl font-bold">PAFTA Platform</span>
             </div>
             <p className="text-gray-400 text-sm">

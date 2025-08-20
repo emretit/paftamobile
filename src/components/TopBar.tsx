@@ -24,7 +24,12 @@ export const TopBar = () => {
 
   return (
     <div className="h-16 border-b bg-white flex items-center justify-between px-6">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        <img 
+          src="/logo.svg" 
+          alt="PAFTA Logo" 
+          className="h-8 w-auto"
+        />
         <h1 className="text-xl font-semibold">PAFTA Platform</h1>
       </div>
       <div className="flex items-center gap-4">
