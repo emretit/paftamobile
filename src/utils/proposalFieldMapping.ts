@@ -106,7 +106,7 @@ export const STANDARD_FIELD_MAPPING: Record<keyof StandardProposalFields, {
   companyName: {
     templateKeys: ['companyName', 'company_name', 'sirketAd', 'sirket', 'company'],
     dataPath: 'static',
-    formatter: () => 'NGS TEKNOLOJİ'
+    formatter: () => 'PAFTA TEKNOLOJİ'
   },
   companyLogo: {
     templateKeys: ['companyLogo', 'company_logo', 'sirketLogo', 'logo'],
@@ -126,7 +126,7 @@ export const STANDARD_FIELD_MAPPING: Record<keyof StandardProposalFields, {
   companyEmail: {
     templateKeys: ['companyEmail', 'company_email', 'sirketEmail', 'email'],
     dataPath: 'static',
-    formatter: () => 'info@ngsteknoloji.com'
+    formatter: () => 'info@pafta.app'
   },
 
   // 3. MÜŞTERİ BİLGİLERİ

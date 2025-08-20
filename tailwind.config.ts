@@ -29,9 +29,9 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#D32F2F", // NGS Bright Red
+          DEFAULT: "#D32F2F", // PAFTA Bright Red
           foreground: "#ffffff",
-          dark: "#B71C1C", // NGS Dark Red (accent)
+          dark: "#B71C1C", // PAFTA Dark Red (accent)
         },
         secondary: {
           DEFAULT: "#FFFFFF", // White
@@ -46,7 +46,7 @@ export default {
           foreground: "#4A4A4A", // Dark Grey
         },
         accent: {
-          DEFAULT: "#B71C1C", // NGS Dark Red
+          DEFAULT: "#B71C1C", // PAFTA Dark Red
           foreground: "#ffffff",
         },
         popover: {

@@ -18,7 +18,7 @@ const Index = () => {
           <div className="flex items-center space-x-2">
             <img 
               src="/lovable-uploads/041398c6-f1b0-407a-8a75-436cefa9fb60.png" 
-              alt="NGS-One Logo" 
+              alt="PAFTA Logo" 
               className="h-8 w-auto"
             />
           </div>

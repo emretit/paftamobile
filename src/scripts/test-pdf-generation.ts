@@ -1,4 +1,4 @@
-// Test script for PDF generation with NGS template
+// Test script for PDF generation with PAFTA template
 import { PdfExportService } from '@/services/pdf/pdfExportService';
 
 // Mock proposal data to test PDF generation
@@ -87,25 +87,26 @@ export async function testPdfGeneration() {
       currency: quoteData.currency
     });
     
-    // 2. Get NGS template
-    console.log('🎨 NGS şablonu getiriliyor...');
+    // 2. Get PAFTA template
+    console.log('🎨 PAFTA şablonu getiriliyor...');
     const templates = await PdfExportService.getTemplates('quote');
-    const ngsTemplate = templates.find(t => t.name === 'ngs');
     
-    if (!ngsTemplate) {
-      throw new Error('NGS şablonu bulunamadı');
+    const paftaTemplate = templates.find(t => t.name === 'pafta');
+    
+    if (!paftaTemplate) {
+      throw new Error('PAFTA şablonu bulunamadı');
     }
     
-    console.log('✅ NGS şablonu bulundu:', {
-      id: ngsTemplate.id,
-      name: ngsTemplate.name,
-      isDefault: ngsTemplate.is_default
+    console.log('✅ PAFTA şablonu bulundu:', {
+      id: paftaTemplate.id,
+      name: paftaTemplate.name,
+      isDefault: paftaTemplate.is_default
     });
     
     // 3. Generate PDF
     console.log('🔄 PDF oluşturuluyor...');
     const pdfBlob = await PdfExportService.generatePdf(quoteData, { 
-      templateId: ngsTemplate.id 
+      templateId: paftaTemplate.id 
     });
     
     console.log('✅ PDF başarıyla oluşturuldu!');
@@ -118,7 +119,7 @@ export async function testPdfGeneration() {
       success: true,
       message: 'PDF test başarıyla tamamlandı',
       pdfSize: pdfBlob.size,
-      templateUsed: ngsTemplate.name
+      templateUsed: paftaTemplate.name
     };
     
   } catch (error) {

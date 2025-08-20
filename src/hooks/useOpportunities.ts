@@ -6,24 +6,49 @@ import { Opportunity, OpportunityStatus, OpportunitiesState } from "@/types/crm"
 import { DropResult } from "@hello-pangea/dnd";
 import { useToast } from "@/components/ui/use-toast";
 
-export const useOpportunities = () => {
+interface UseOpportunitiesFilters {
+  search?: string;
+  status?: OpportunityStatus | "all";
+  priority?: string | null;
+  employeeId?: string | null;
+}
+
+export const useOpportunities = (filters: UseOpportunitiesFilters = {}) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  // Fetch all opportunities
+  // Fetch all opportunities with filters
   const { data: opportunitiesData, isLoading, error } = useQuery({
-    queryKey: ["opportunities"],
+    queryKey: ["opportunities", filters],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("opportunities")
         .select(`
           *,
           customer:customer_id (*),
           employee:employee_id (*)
-        `)
-        .order("updated_at", { ascending: false });
+        `);
+
+      // Apply filters
+      if (filters.search) {
+        query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%,customer.name.ilike.%${filters.search}%`);
+      }
+
+      if (filters.status && filters.status !== "all") {
+        query = query.eq("status", filters.status);
+      }
+
+      if (filters.priority) {
+        query = query.eq("priority", filters.priority);
+      }
+
+      if (filters.employeeId) {
+        query = query.eq("employee_id", filters.employeeId);
+      }
+
+      const { data, error } = await query.order("updated_at", { ascending: false });
 
       if (error) {
         console.error("Error fetching opportunities:", error);

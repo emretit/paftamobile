@@ -23,7 +23,7 @@ export const TopBar = () => {
   return (
     <div className="h-16 border-b bg-white flex items-center justify-between px-6">
       <div className="flex items-center gap-2">
-        <h1 className="text-xl font-semibold">NGS Platform</h1>
+        <h1 className="text-xl font-semibold">PAFTA Platform</h1>
       </div>
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon">

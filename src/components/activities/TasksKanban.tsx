@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { Task, TaskStatus, TaskType } from "@/types/task";
 import { useKanbanTasks } from "./hooks/useKanbanTasks";
 import { useTaskMutations } from "./hooks/useTaskMutations";
@@ -8,6 +8,7 @@ import KanbanColumn from "./KanbanColumn";
 import TaskForm from "./TaskForm";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ListTodo, Clock, CheckCircle2, Hourglass } from "lucide-react";
+import ColumnHeader from "../opportunities/ColumnHeader";
 
 interface TasksKanbanProps {
   searchQuery?: string;
@@ -129,25 +130,58 @@ export const TasksKanban = ({
   return (
     <div className="h-full">
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex overflow-x-auto gap-4 pb-4">
-          {columns.map((column) => (
-            <div key={column.id} className="flex-none min-w-[300px]">
-              <div className="flex items-center gap-2 mb-3">
-                <div className={`h-3 w-3 rounded-full ${column.color}`}></div>
-                <h2 className="font-semibold text-gray-900">
-                  {column.title} ({tasks[column.id as keyof typeof tasks]?.length || 0})
-                </h2>
-              </div>
-              <KanbanColumn
-                id={column.id}
-                title={column.title}
-                tasks={addIsOverdueProp(tasks[column.id as keyof typeof tasks])}
-                onTaskEdit={handleTaskEdit}
-                onTaskSelect={onSelectTask}
-              />
+        <Droppable droppableId="columns" direction="horizontal" type="COLUMN">
+          {(provided) => (
+            <div 
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 pb-4 auto-rows-fr"
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            >
+              {columns.map((column, index) => (
+                <Draggable key={column.id} draggableId={column.id} index={index}>
+                  {(provided, snapshot) => (
+                     <div 
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      className={`w-full min-w-0 ${snapshot.isDragging ? 'opacity-80' : ''}`}
+                    >
+                      <div 
+                        className={`bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 h-full ${snapshot.isDragging ? 'shadow-lg border-primary' : ''}`}
+                      >
+                        <div 
+                          className="p-3 bg-white/95 backdrop-blur-sm rounded-t-lg border-b border-gray-100 cursor-grab"
+                          {...provided.dragHandleProps}
+                        >
+                          <ColumnHeader
+                            id={column.id}
+                            title={column.title}
+                            icon={column.icon}
+                            color={column.color}
+                            opportunityCount={tasks[column.id as keyof typeof tasks]?.length || 0}
+                            onDeleteColumn={() => {}} // Disabled for activities
+                            onUpdateTitle={() => {}} // Disabled for activities
+                            isDefaultColumn={true} // All activity columns are default
+                          />
+                        </div>
+                        <div className="p-2 bg-white/90 rounded-b-lg h-full">
+                          <KanbanColumn
+                            id={column.id}
+                            title={column.title}
+                            tasks={addIsOverdueProp(tasks[column.id as keyof typeof tasks])}
+                            onTaskEdit={handleTaskEdit}
+                            onTaskSelect={onSelectTask}
+                            color={column.color}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
             </div>
-          ))}
-        </div>
+          )}
+        </Droppable>
       </DragDropContext>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

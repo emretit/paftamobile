@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { DropResult } from "@hello-pangea/dnd";
 import { Opportunity, OpportunityStatus } from "@/types/crm";
 import { useOpportunities } from "@/hooks/useOpportunities";
@@ -12,6 +12,8 @@ import { OpportunityDetailSheet } from "@/components/crm/OpportunityDetailSheet"
 import OpportunityBulkActions from "@/components/opportunities/OpportunityBulkActions";
 import OpportunitiesContent from "@/components/opportunities/OpportunitiesContent";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OpportunitiesProps {
   isCollapsed: boolean;
@@ -20,6 +22,29 @@ interface OpportunitiesProps {
 
 const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
   const { toast } = useToast();
+  const [selectedOpportunities, setSelectedOpportunities] = useState<Opportunity[]>([]);
+  const [filterKeyword, setFilterKeyword] = useState("");
+  const [statusFilter, setStatusFilter] = useState<OpportunityStatus | "all">("all");
+  const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<string>('all');
+  const [activeView, setActiveView] = useState("kanban");
+
+  // Fetch employees data
+  const { data: employees = [] } = useQuery({
+    queryKey: ['employees'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('id, first_name, last_name')
+        .eq('status', 'aktif')
+        .order('first_name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Use opportunities with filters
   const { 
     opportunities,
     isLoading, 
@@ -31,48 +56,26 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
     setSelectedOpportunity,
     isDetailOpen,
     setIsDetailOpen
-  } = useOpportunities();
-  
-  const [selectedOpportunities, setSelectedOpportunities] = useState<Opportunity[]>([]);
-  const [filterKeyword, setFilterKeyword] = useState("");
-  const [statusFilter, setStatusFilter] = useState<OpportunityStatus | "all">("all");
-  const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState("kanban");
+  } = useOpportunities({
+    search: filterKeyword,
+    status: statusFilter,
+    priority: priorityFilter,
+    employeeId: selectedEmployee === 'all' ? null : selectedEmployee
+  });
   
   // Group opportunities by status (new 4-stage system)
   const groupedOpportunities = {
     new: (opportunities.new || [])
-      .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
     meeting_visit: (opportunities.meeting_visit || [])
-      .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
     proposal: (opportunities.proposal || [])
-      .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
     won: (opportunities.won || [])
-      .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
     lost: (opportunities.lost || [])
-      .filter(opp => filterOpportunity(opp))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()),
   };
-  
-  function filterOpportunity(opportunity: Opportunity): boolean {
-    // Filter by keyword
-    const keywordMatch = !filterKeyword || 
-      opportunity.title.toLowerCase().includes(filterKeyword.toLowerCase()) ||
-      (opportunity.description?.toLowerCase() || "").includes(filterKeyword.toLowerCase()) ||
-      (opportunity.customer?.name?.toLowerCase() || "").includes(filterKeyword.toLowerCase());
-    
-    // Filter by status
-    const statusMatch = statusFilter === "all" || opportunity.status === statusFilter;
-    
-    // Filter by priority
-    const priorityMatch = !priorityFilter || opportunity.priority === priorityFilter;
-    
-    return keywordMatch && statusMatch && priorityMatch;
-  }
 
   const handleOpportunityClick = (opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity);
@@ -123,8 +126,6 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
     // window.location.href = `/activities/new?opportunity_id=${opportunity.id}&type=meeting`;
   };
 
-
-
   // Convert grouped opportunities to flat array for list view
   const flattenedOpportunities = Object.values(groupedOpportunities).flat();
 
@@ -146,6 +147,9 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
             setStatusFilter={setStatusFilter}
             priorityFilter={priorityFilter}
             setPriorityFilter={setPriorityFilter}
+            selectedEmployee={selectedEmployee}
+            setSelectedEmployee={setSelectedEmployee}
+            employees={employees}
           />
           <Tabs
             value={activeView}
@@ -167,8 +171,11 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
         )}
         
         {isLoading ? (
-          <div className="h-96 flex items-center justify-center">
-            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+          <div className="flex items-center justify-center h-[400px]">
+            <div className="text-center space-y-4">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <p className="text-muted-foreground">Fırsatlar yükleniyor...</p>
+            </div>
           </div>
         ) : error ? (
           <div className="h-96 flex items-center justify-center">
@@ -178,7 +185,7 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
           <Tabs value={activeView} className="w-full">
             <TabsContent value="kanban" className="mt-0">
               <OpportunityKanbanBoard
-                opportunities={opportunities}
+                opportunities={groupedOpportunities}
                 onDragEnd={handleDragEnd}
                 onOpportunityClick={handleOpportunityClick}
                 onOpportunitySelect={handleOpportunitySelect}

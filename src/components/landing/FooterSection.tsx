@@ -7,9 +7,9 @@ const FooterSection = () => {
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-                <span className="text-white font-bold text-sm">NGS</span>
+                <span className="text-white font-bold text-sm">PAFTA</span>
               </div>
-              <span className="text-xl font-bold">NGS Platform</span>
+              <span className="text-xl font-bold">PAFTA Platform</span>
             </div>
             <p className="text-gray-400 text-sm">
               İş süreçlerinizi modernize eden güvenilir çözüm ortağınız.
@@ -49,7 +49,7 @@ const FooterSection = () => {
           </div>
         </div>
         <div className="mt-12 border-t border-gray-800 pt-8">
-          <p className="text-sm text-gray-400 text-center">&copy; 2024 NGS Platform. Tüm hakları saklıdır.</p>
+          <p className="text-sm text-gray-400 text-center">&copy; 2024 PAFTA Platform. Tüm hakları saklıdır.</p>
         </div>
       </div>
     </footer>

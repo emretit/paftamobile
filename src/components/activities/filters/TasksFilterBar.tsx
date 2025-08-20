@@ -43,12 +43,14 @@ const TasksFilterBar = ({
   return (
     <Card className="p-4 mb-6">
       <div className="flex flex-col sm:flex-row gap-4">
-        <Input
-          placeholder="Görev ara..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="flex-1"
-        />
+        <div className="relative min-w-[400px] flex-1">
+          <Input
+            placeholder="Görev ara..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full"
+          />
+        </div>
         <Select
           value={selectedEmployee || "all"}
           onValueChange={(value) => setSelectedEmployee(value === "all" ? null : value)}

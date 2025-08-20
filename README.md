@@ -1,4 +1,4 @@
-# NGS - İş Yönetim Sistemi
+# PAFTA - İş Yönetim Sistemi
 
 Vite + React + TypeScript + Tailwind + shadcn/ui + Supabase ile geliştirilmiş kapsamlı iş yönetim sistemi.
 
@@ -45,9 +45,9 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 ### Project info
 
-**URL**: https://run.gptengineer.app/projects/7e753aa5-e867-4890-ab18-f97d53f001e8/improve
+**URL**: https://pafta.app
 
-## How can I edit this code?
+## How can you edit this code?
 
 There are several ways of editing your application.
 

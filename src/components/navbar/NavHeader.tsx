@@ -18,15 +18,15 @@ const NavHeader = ({ isCollapsed, setIsCollapsed }: NavHeaderProps) => {
         {!isCollapsed && (
           <>
             <div className="flex flex-col items-start">
-              <span className="text-lg font-bold text-white tracking-tight">NGS-One</span>
-              <span className="text-[10px] text-gray-300 -mt-1 tracking-widest">All-In One</span>
+              <span className="text-lg font-bold text-white tracking-tight">PAFTA</span>
+              <span className="text-[10px] text-gray-300 -mt-1 tracking-widest">İş Yönetim Sistemi</span>
             </div>
           </>
         )}
         {isCollapsed && (
           <div className="flex flex-col items-center">
-            <span className="text-sm font-bold text-white tracking-tight">NGS</span>
-            <span className="text-[8px] text-gray-300 -mt-1 tracking-wider">One</span>
+            <span className="text-sm font-bold text-white tracking-tight">PAFTA</span>
+            <span className="text-[8px] text-gray-300 -mt-1 tracking-wider">İş</span>
           </div>
         )}
       </div>
