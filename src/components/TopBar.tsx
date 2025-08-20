@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { Bell, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthState } from "@/components/navbar/useAuthState";
+import { useLogout } from "@/components/navbar/useLogout";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +16,7 @@ import {
 export const TopBar = () => {
   const navigate = useNavigate();
   const { user, userInitials } = useAuthState();
+  const { handleLogout } = useLogout();
   
   const handleProfileClick = () => {
     navigate("/profile");
@@ -48,7 +50,7 @@ export const TopBar = () => {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem onClick={handleProfileClick}>Profilim</DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate("/settings")}>Ayarlar</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600" onClick={() => navigate("/auth")}>Çıkış Yap</DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600" onClick={handleLogout}>Çıkış Yap</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

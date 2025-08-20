@@ -22,9 +22,9 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // If user logs out, redirect to auth page
+        // If user logs out, redirect to landing page
         if (event === 'SIGNED_OUT') {
-          navigate('/auth');
+          navigate('/');
         }
       }
     );

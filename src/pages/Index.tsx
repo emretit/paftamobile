@@ -40,7 +40,11 @@ const Index = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_IN' && session) {
+          // Giriş yapıldığında dashboard'a yönlendir
           navigate("/dashboard");
+        } else if (event === 'SIGNED_OUT') {
+          // Çıkış yapıldığında landing page'de kal
+          setLoading(false);
         }
       }
     );
