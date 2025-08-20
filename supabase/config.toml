@@ -49,10 +49,14 @@ site_url = "http://127.0.0.1:5173"
 additional_redirect_urls = ["https://127.0.0.1:5173"]
 jwt_expiry = 3600
 enable_signup = true
-enable_email_confirmations = false
+enable_email_confirmations = true
 enable_anonymous_sign_ins = false
 enable_phone_confirmations = false
 enable_phone_signup = false
+
+[auth.hook.send_email]
+enabled = true
+uri = "http://host.docker.internal:54321/functions/v1/auth-emails"
 
 [auth.external.google]
 enabled = false
@@ -70,4 +74,7 @@ enabled = false
 port = 54327
 vector_port = 54328
 backend = "postgres"
+
+[functions.auth-emails]
+verify_jwt = false
 
