@@ -1,7 +1,7 @@
 
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search } from "lucide-react";
 import { TaskStatus } from "@/types/task";
 import { getStatusDisplay } from "../utils/taskDisplayUtils";
 
@@ -41,63 +41,62 @@ const TasksFilterBar = ({
   employees
 }: TasksFilterBarProps) => {
   return (
-    <Card className="p-4 mb-6">
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative min-w-[400px] flex-1">
-          <Input
-            placeholder="Görev ara..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-          />
-        </div>
-        <Select
-          value={selectedEmployee || "all"}
-          onValueChange={(value) => setSelectedEmployee(value === "all" ? null : value)}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Atanan seç" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tümü</SelectItem>
-            {employees?.map((employee) => (
-              <SelectItem key={employee.id} value={employee.id}>
-                {employee.first_name} {employee.last_name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={selectedType || "all"}
-          onValueChange={(value) => setSelectedType(value === "all" ? null : value)}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Görev tipi" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tümü</SelectItem>
-            <SelectItem value="opportunity">Fırsat</SelectItem>
-            <SelectItem value="proposal">Teklif</SelectItem>
-            <SelectItem value="general">Genel</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select
-          value={selectedStatus || "all"}
-          onValueChange={(value) => setSelectedStatus(value === "all" ? null : value as TaskStatus)}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Durum" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tümü</SelectItem>
-            <SelectItem value="todo">{getStatusDisplay("todo")}</SelectItem>
-            <SelectItem value="in_progress">{getStatusDisplay("in_progress")}</SelectItem>
-            <SelectItem value="completed">{getStatusDisplay("completed")}</SelectItem>
-            <SelectItem value="postponed">{getStatusDisplay("postponed")}</SelectItem>
-          </SelectContent>
-        </Select>
+    <div className="flex flex-col sm:flex-row gap-4 p-4 bg-muted/30 rounded-lg">
+      <div className="relative w-[400px]">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <Input
+          placeholder="Görev ara..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
       </div>
-    </Card>
+      <Select
+        value={selectedEmployee || "all"}
+        onValueChange={(value) => setSelectedEmployee(value === "all" ? null : value)}
+      >
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Atanan seç" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Tümü</SelectItem>
+          {employees?.map((employee) => (
+            <SelectItem key={employee.id} value={employee.id}>
+              {employee.first_name} {employee.last_name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={selectedType || "all"}
+        onValueChange={(value) => setSelectedType(value === "all" ? null : value)}
+      >
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Görev tipi" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Tümü</SelectItem>
+          <SelectItem value="opportunity">Fırsat</SelectItem>
+          <SelectItem value="proposal">Teklif</SelectItem>
+          <SelectItem value="general">Genel</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select
+        value={selectedStatus || "all"}
+        onValueChange={(value) => setSelectedStatus(value === "all" ? null : value as TaskStatus)}
+      >
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Durum" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Tümü</SelectItem>
+          <SelectItem value="todo">{getStatusDisplay("todo")}</SelectItem>
+          <SelectItem value="in_progress">{getStatusDisplay("in_progress")}</SelectItem>
+          <SelectItem value="completed">{getStatusDisplay("completed")}</SelectItem>
+          <SelectItem value="postponed">{getStatusDisplay("postponed")}</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
   );
 };
 

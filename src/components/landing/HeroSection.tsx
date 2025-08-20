@@ -13,14 +13,9 @@ const HeroSection = () => {
         <p className="mt-6 max-w-lg mx-auto text-lg text-muted-foreground md:text-xl md:max-w-3xl">
           Tüm iş süreçlerinizi tek bir platformda yönetin ve büyümeye odaklanın.
         </p>
-        <div className="mt-10 flex justify-center gap-4 flex-col sm:flex-row">
+        <div className="mt-10 flex justify-center">
           <Link to="/auth">
             <Button size="lg" className="px-8 shadow-lg hover:shadow-xl transition-all">
-              Hemen Başlayın
-            </Button>
-          </Link>
-          <Link to="/auth">
-            <Button variant="outline" size="lg" className="px-8 border-primary/20 hover:bg-primary/5">
               Ücretsiz Deneyin
             </Button>
           </Link>

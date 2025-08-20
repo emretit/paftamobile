@@ -9,11 +9,12 @@ import { useToast } from "@/components/ui/use-toast";
 interface SignInFormProps {
   onViewChange: (view: "signup" | "forgotten_password") => void;
   onError: (error: string | null) => void;
+  initialEmail?: string;
 }
 
-export const SignInForm = ({ onViewChange, onError }: SignInFormProps) => {
+export const SignInForm = ({ onViewChange, onError, initialEmail = "" }: SignInFormProps) => {
   const { toast } = useToast();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
