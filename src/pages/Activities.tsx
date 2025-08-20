@@ -5,6 +5,7 @@ import DefaultLayout from "@/components/layouts/DefaultLayout";
 import TasksContent from "@/components/activities/TasksContent";
 import TasksPageHeader from "@/components/activities/header/TasksPageHeader";
 import TasksFilterBar from "@/components/activities/filters/TasksFilterBar";
+import NewActivityDialog from "@/components/activities/NewActivityDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Task, TaskStatus } from "@/types/task";
@@ -22,6 +23,7 @@ const Activities = ({ isCollapsed, setIsCollapsed }: ActivitiesPageProps) => {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
   const [activeView, setActiveView] = useState<ViewType>("table");
+  const [isNewActivityDialogOpen, setIsNewActivityDialogOpen] = useState(false);
   
   const navigate = useNavigate();
 
@@ -39,7 +41,12 @@ const Activities = ({ isCollapsed, setIsCollapsed }: ActivitiesPageProps) => {
   });
 
   const handleAddTask = () => {
-    navigate("/activities/new");
+    setIsNewActivityDialogOpen(true);
+  };
+
+  const handleActivitySuccess = () => {
+    // Aktivite başarıyla eklendiğinde yapılacak işlemler
+    // Örneğin: sayfayı yenile, toast göster, vs.
   };
 
   return (
@@ -86,6 +93,12 @@ const Activities = ({ isCollapsed, setIsCollapsed }: ActivitiesPageProps) => {
           />
         )}
       </div>
+
+      <NewActivityDialog
+        isOpen={isNewActivityDialogOpen}
+        onClose={() => setIsNewActivityDialogOpen(false)}
+        onSuccess={handleActivitySuccess}
+      />
     </DefaultLayout>
   );
 };

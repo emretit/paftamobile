@@ -3,12 +3,19 @@ import { BarChart, Activity, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import AnalyticsCard from "./AnalyticsCard";
 import DealAnalytics from "../DealAnalytics";
 import ProposalAnalytics from "../ProposalAnalytics";
+import NewActivityDialog from "@/components/activities/NewActivityDialog";
 
 const AnalyticsSection = () => {
   const navigate = useNavigate();
+  const [isNewActivityDialogOpen, setIsNewActivityDialogOpen] = useState(false);
+
+  const handleActivitySuccess = () => {
+    // Aktivite başarıyla eklendiğinde yapılacak işlemler
+  };
 
   return (
     <div className="space-y-6">
@@ -65,7 +72,7 @@ const AnalyticsSection = () => {
             <Button 
               size="lg" 
               className="w-full h-16 text-lg"
-              onClick={() => navigate("/tasks/new")}
+              onClick={() => setIsNewActivityDialogOpen(true)}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
               Yeni Görev Oluştur
@@ -73,6 +80,12 @@ const AnalyticsSection = () => {
           </div>
         </CardContent>
       </Card>
+
+      <NewActivityDialog
+        isOpen={isNewActivityDialogOpen}
+        onClose={() => setIsNewActivityDialogOpen(false)}
+        onSuccess={handleActivitySuccess}
+      />
     </div>
   );
 };
