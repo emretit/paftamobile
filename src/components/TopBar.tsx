@@ -6,6 +6,7 @@ import { Bell, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthState } from "@/components/navbar/useAuthState";
 import { useLogout } from "@/components/navbar/useLogout";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,7 @@ export const TopBar = () => {
   const navigate = useNavigate();
   const { user, userInitials } = useAuthState();
   const { handleLogout } = useLogout();
+  const { settings } = useCompanySettings();
   
   const handleProfileClick = () => {
     navigate("/profile");
@@ -25,12 +27,14 @@ export const TopBar = () => {
   return (
     <div className="h-16 border-b bg-white flex items-center justify-between px-6">
       <div className="flex items-center gap-3">
-        <img 
-          src="/logo.svg" 
-          alt="PAFTA Logo" 
-          className="h-8 w-auto"
-        />
-        <h1 className="text-xl font-semibold">PAFTA Platform</h1>
+        <div className="flex flex-col">
+          <h1 className="text-lg font-semibold text-gray-900">
+            {settings?.company_name || "Firma Adı"}
+          </h1>
+          <p className="text-sm text-gray-600">
+            {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Kullanıcı"}
+          </p>
+        </div>
       </div>
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon">
