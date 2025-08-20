@@ -30,8 +30,8 @@ const LoginButton = () => {
       // User is logged in, go to dashboard
       navigate("/dashboard");
     } else {
-      // User is not logged in, go to auth page
-      navigate("/auth");
+      // User is not logged in, go to signin page
+      navigate("/signin");
     }
   };
 

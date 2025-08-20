@@ -9,7 +9,7 @@ const CtaSection = () => {
   const [email, setEmail] = useState("");
 
   const handleSignUp = () => {
-    navigate("/auth");
+    navigate("/signup");
   };
 
   const handleDemoRequest = (e: React.FormEvent) => {

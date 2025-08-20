@@ -48,9 +48,9 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
     );
   }
 
-  // If no user, redirect to auth page
+  // If no user, redirect to signin page
   if (!user || !session) {
-    navigate('/auth');
+    navigate('/signin');
     return null;
   }
 
