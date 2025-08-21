@@ -108,6 +108,81 @@ export const exportProductsToExcel = (products: Product[], fileName = 'products.
   }
 };
 
+// Export customer template to Excel
+export const exportCustomerTemplateToExcel = (fileName = 'musteri_sablonu.xlsx') => {
+  try {
+    // Create a sample data array with the required columns
+    const templateData = [
+      {
+        name: 'Örnek Müşteri 1',
+        type: 'customer',
+        status: 'active',
+        email: 'ornek@musteri.com',
+        mobile_phone: '0532 123 45 67',
+        office_phone: '0212 123 45 67',
+        company: 'Örnek Şirket A.Ş.',
+        representative: 'Ahmet Yılmaz',
+        balance: 0.00,
+        address: 'Örnek Mahallesi, Örnek Sokak No:1, İstanbul',
+        tax_number: '1234567890',
+        tax_office: 'Kadıköy'
+      },
+      {
+        name: 'Örnek Tedarikçi 1',
+        type: 'supplier',
+        status: 'active',
+        email: 'ornek@tedarikci.com',
+        mobile_phone: '0533 987 65 43',
+        office_phone: '0216 987 65 43',
+        company: 'Örnek Tedarikçi Ltd. Şti.',
+        representative: 'Mehmet Demir',
+        balance: 0.00,
+        address: 'Tedarikçi Mahallesi, Tedarikçi Sokak No:5, Ankara',
+        tax_number: '9876543210',
+        tax_office: 'Çankaya'
+      }
+    ];
+    
+    // Convert data to worksheet
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Müşteri Şablonu');
+    
+    // Add instructions sheet
+    const instructionsData = [
+      { Alan: 'name', Açıklama: 'Müşteri/Tedarikçi adı (zorunlu)', 'Örnek Değer': 'ABC Şirketi' },
+      { Alan: 'type', Açıklama: 'Tip (zorunlu)', 'Örnek Değer': 'customer, supplier' },
+      { Alan: 'status', Açıklama: 'Durum (zorunlu)', 'Örnek Değer': 'active, inactive' },
+      { Alan: 'email', Açıklama: 'E-posta adresi (isteğe bağlı)', 'Örnek Değer': 'info@abc.com' },
+      { Alan: 'mobile_phone', Açıklama: 'Cep telefonu (isteğe bağlı)', 'Örnek Değer': '0532 123 45 67' },
+      { Alan: 'office_phone', Açıklama: 'Ofis telefonu (isteğe bağlı)', 'Örnek Değer': '0212 123 45 67' },
+      { Alan: 'company', Açıklama: 'Şirket adı (isteğe bağlı)', 'Örnek Değer': 'ABC Şirketi A.Ş.' },
+      { Alan: 'representative', Açıklama: 'Temsilci adı (isteğe bağlı)', 'Örnek Değer': 'Ali Veli' },
+      { Alan: 'balance', Açıklama: 'Bakiye (isteğe bağlı)', 'Örnek Değer': '0.00' },
+      { Alan: 'address', Açıklama: 'Adres (isteğe bağlı)', 'Örnek Değer': 'Mahalle, Sokak No:1, Şehir' },
+      { Alan: 'tax_number', Açıklama: 'Vergi numarası (isteğe bağlı)', 'Örnek Değer': '1234567890' },
+      { Alan: 'tax_office', Açıklama: 'Vergi dairesi (isteğe bağlı)', 'Örnek Değer': 'Kadıköy' }
+    ];
+    
+    const instructionsSheet = XLSX.utils.json_to_sheet(instructionsData);
+    XLSX.utils.book_append_sheet(workbook, instructionsSheet, 'Kullanım Kılavuzu');
+    
+    // Generate Excel file
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    
+    // Save file
+    const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(data, fileName);
+    
+    return true;
+  } catch (error) {
+    console.error('Error exporting customer template to Excel:', error);
+    return false;
+  }
+};
+
 // Export product template to Excel
 export const exportProductTemplateToExcel = (fileName = 'urun_sablonu.xlsx') => {
   try {
