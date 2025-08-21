@@ -54,9 +54,9 @@ enable_anonymous_sign_ins = false
 enable_phone_confirmations = false
 enable_phone_signup = false
 
-# [auth.hook.send_email]
-# enabled = true
-# uri = "http://host.docker.internal:54321/functions/v1/auth-emails"
+[auth.hook.send_email]
+enabled = true
+uri = "http://host.docker.internal:54321/functions/v1/auth-emails"
 
 [auth.external.google]
 enabled = false
@@ -75,6 +75,6 @@ port = 54327
 vector_port = 54328
 backend = "postgres"
 
-# [functions.auth-emails]
-# verify_jwt = false
+[functions.auth-emails]
+verify_jwt = false
 
