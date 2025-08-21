@@ -64,7 +64,13 @@ serve(async (req) => {
         site_url: string;
       };
     };
-    console.log("Auth email webhook received:", { email_action_type, user: user.email });
+    
+    console.log("Auth email webhook received:", { 
+      email_action_type, 
+      user: user.email,
+      user_metadata: user.user_metadata,
+      redirect_to: redirect_to || site_url 
+    });
 
     let html = "";
     let subject = "";
