@@ -15,6 +15,23 @@ const ExchangeRateCard: React.FC = () => {
     return rate.toFixed(4);
   };
 
+  // Format date consistently
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Güncelleme bilgisi alınamadı';
+    
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('tr-TR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Date parsing error:', error);
+      return 'Geçersiz tarih';
+    }
+  };
+
   // Filter rates to only show USD, EUR, and GBP
   const filteredRates = exchangeRates.filter(rate => 
     ["USD", "EUR", "GBP"].includes(rate.currency_code)
@@ -26,9 +43,7 @@ const ExchangeRateCard: React.FC = () => {
         <div>
           <CardTitle className="text-xl font-bold">Döviz Kurları</CardTitle>
           <CardDescription>
-            {lastUpdate 
-              ? `Son güncelleme: ${lastUpdate.split('-').reverse().join('.')}`
-              : 'Güncelleme bilgisi alınamadı'}
+            {formatDate(lastUpdate)}
           </CardDescription>
         </div>
         <TooltipProvider>

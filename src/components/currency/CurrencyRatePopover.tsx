@@ -26,8 +26,18 @@ export function CurrencyRatePopover({
   
   const getLastUpdateText = () => {
     if (!lastUpdate) return "Güncelleme bilgisi yok";
-    const date = new Date(lastUpdate);
-    return date.toLocaleDateString('tr-TR');
+    
+    try {
+      const date = new Date(lastUpdate);
+      return date.toLocaleDateString('tr-TR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Date parsing error:', error);
+      return 'Geçersiz tarih';
+    }
   };
   
   const formatRate = (currency: string) => {

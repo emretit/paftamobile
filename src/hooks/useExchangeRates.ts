@@ -147,8 +147,39 @@ export const useExchangeRates = () => {
     loadExchangeRates();
   }, []);
 
+  // Auto-refresh every day at 15:35
+  useEffect(() => {
+    const scheduleNextUpdate = () => {
+      const now = new Date();
+      const targetTime = new Date();
+      targetTime.setHours(15, 35, 0, 0); // 15:35
+      
+      // If today's 15:35 has passed, schedule for tomorrow
+      if (now > targetTime) {
+        targetTime.setDate(targetTime.getDate() + 1);
+      }
+      
+      const timeUntilUpdate = targetTime.getTime() - now.getTime();
+      
+      console.log(`Next exchange rate update scheduled for: ${targetTime.toLocaleString('tr-TR')} (in ${Math.round(timeUntilUpdate / 1000 / 60)} minutes)`);
+      
+      const timer = setTimeout(() => {
+        console.log('Auto-refreshing exchange rates at 15:35');
+        refreshExchangeRates();
+        // Schedule next update for tomorrow
+        scheduleNextUpdate();
+      }, timeUntilUpdate);
+      
+      return timer;
+    };
+
+    const timer = scheduleNextUpdate();
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   // Function to manually refresh exchange rates
-  const refreshExchangeRates = async () => {
+  const refreshExchangeRates = useCallback(async () => {
     try {
       setLoading(true);
       toast.info('Döviz kurları güncelleniyor...', {
@@ -161,6 +192,13 @@ export const useExchangeRates = () => {
         const { list, latestDate } = normalizeLatestRates(freshRates);
         setExchangeRates(list);
         setLastUpdate(latestDate);
+        
+        // Format date consistently for toast message
+        const formattedDate = latestDate ? new Date(latestDate).toLocaleDateString('tr-TR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }) : '-';
         
         toast.success('Döviz kurları başarıyla güncellendi', {
           description: `${list.length} adet kur bilgisi alındı.`,
@@ -176,8 +214,15 @@ export const useExchangeRates = () => {
         setExchangeRates(list);
         setLastUpdate(latestDate);
         
+        // Format date consistently for toast message
+        const formattedDate = latestDate ? new Date(latestDate).toLocaleDateString('tr-TR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }) : '-';
+        
         toast.info('Mevcut kur bilgileri yüklendi', {
-          description: `Son güncelleme tarihi: ${latestDate ? latestDate.split('-').reverse().join('.') : '-'}`,
+          description: `Son güncelleme tarihi: ${formattedDate}`,
         });
         return;
       }
@@ -203,7 +248,7 @@ export const useExchangeRates = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Get a simple map of currency codes to rates (for easier use in calculations)
   const getRatesMap = useCallback(() => {
