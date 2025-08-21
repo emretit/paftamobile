@@ -76,42 +76,56 @@ serve(async (req) => {
     let subject = "";
 
     // Generate appropriate email based on action type
-    switch (email_action_type) {
-      case "signup":
-        html = await renderAsync(
-          React.createElement(SignUpEmail, {
-            supabase_url: Deno.env.get("SUPABASE_URL") ?? "",
-            token,
-            token_hash,
-            redirect_to: redirect_to || site_url,
-            user_name: user.user_metadata?.full_name || "",
-            company_name: user.user_metadata?.company_name || "",
-          })
-        );
-        subject = "PAFTA hesabınızı onaylayın";
-        break;
+    try {
+      switch (email_action_type) {
+        case "signup":
+        case "confirmation":
+          console.log("Rendering signup email template...");
+          html = await renderAsync(
+            React.createElement(SignUpEmail, {
+              supabase_url: Deno.env.get("SUPABASE_URL") ?? "",
+              token,
+              token_hash,
+              redirect_to: redirect_to || site_url,
+              user_name: user.user_metadata?.full_name || "",
+              company_name: user.user_metadata?.company_name || "",
+            })
+          );
+          subject = "PAFTA hesabınızı onaylayın";
+          console.log("Signup email template rendered successfully");
+          break;
 
-      case "recovery":
-        html = await renderAsync(
-          React.createElement(ResetPasswordEmail, {
-            supabase_url: Deno.env.get("SUPABASE_URL") ?? "",
-            token,
-            token_hash,
-            redirect_to: redirect_to || site_url,
-            user_name: user.user_metadata?.full_name || "",
-          })
-        );
-        subject = "PAFTA şifre sıfırlama";
-        break;
+        case "recovery":
+          console.log("Rendering recovery email template...");
+          html = await renderAsync(
+            React.createElement(ResetPasswordEmail, {
+              supabase_url: Deno.env.get("SUPABASE_URL") ?? "",
+              token,
+              token_hash,
+              redirect_to: redirect_to || site_url,
+              user_name: user.user_metadata?.full_name || "",
+            })
+          );
+          subject = "PAFTA şifre sıfırlama";
+          console.log("Recovery email template rendered successfully");
+          break;
 
-      case "email_change":
-        // You can add more email types here
-        subject = "PAFTA e-posta adresinizi onaylayın";
-        html = `<p>E-posta adresinizi onaylamak için <a href="${Deno.env.get("SUPABASE_URL")}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}">buraya tıklayın</a></p>`;
-        break;
+        case "email_change":
+          // You can add more email types here
+          subject = "PAFTA e-posta adresinizi onaylayın";
+          html = `<p>E-posta adresinizi onaylamak için <a href="${Deno.env.get("SUPABASE_URL")}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}">buraya tıklayın</a></p>`;
+          break;
 
-      default:
-        throw new Error(`Unsupported email action type: ${email_action_type}`);
+        default:
+          console.warn(`Unsupported email action type: ${email_action_type}, using fallback`);
+          subject = "PAFTA hesabınızı onaylayın";
+          html = `<p>Hesabınızı onaylamak için <a href="${Deno.env.get("SUPABASE_URL")}/auth/v1/verify?token=${token_hash}&type=signup&redirect_to=${redirect_to}">buraya tıklayın</a></p>`;
+      }
+    } catch (renderError) {
+      console.error("Email template rendering failed:", renderError);
+      // Fallback to simple HTML if React Email fails
+      subject = "PAFTA hesabınızı onaylayın";
+      html = `<p>Hesabınızı onaylamak için <a href="${Deno.env.get("SUPABASE_URL")}/auth/v1/verify?token=${token_hash}&type=signup&redirect_to=${redirect_to}">buraya tıklayın</a></p>`;
     }
 
     // Send email via Resend
