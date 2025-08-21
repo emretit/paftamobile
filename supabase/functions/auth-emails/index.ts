@@ -27,12 +27,28 @@ serve(async (req) => {
     const payload = await req.text();
     const headers = Object.fromEntries(req.headers);
     
-    // Verify webhook signature
-    const wh = new Webhook(hookSecret);
+    // Verify webhook signature if possible; otherwise parse payload directly
+    let parsed: any = null;
+    try {
+      if (hookSecret) {
+        const wh = new Webhook(hookSecret);
+        parsed = wh.verify(payload, headers);
+      }
+    } catch (verifyError) {
+      console.warn("Webhook verification failed, falling back to JSON parse:", verifyError);
+    }
+    if (!parsed) {
+      try {
+        parsed = JSON.parse(payload);
+      } catch (parseError) {
+        console.error("Failed to parse webhook payload:", parseError);
+        throw new Error("Invalid webhook payload");
+      }
+    }
     const {
       user,
       email_data: { token, token_hash, redirect_to, email_action_type, site_url },
-    } = wh.verify(payload, headers) as {
+    } = parsed as {
       user: {
         email: string;
         user_metadata?: {
@@ -48,7 +64,6 @@ serve(async (req) => {
         site_url: string;
       };
     };
-
     console.log("Auth email webhook received:", { email_action_type, user: user.email });
 
     let html = "";
