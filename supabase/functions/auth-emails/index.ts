@@ -27,23 +27,17 @@ serve(async (req) => {
     const payload = await req.text();
     const headers = Object.fromEntries(req.headers);
     
-    // Verify webhook signature if possible; otherwise parse payload directly
+    console.log("Received payload:", payload);
+    console.log("Headers:", headers);
+    
+    // Parse the webhook payload directly as JSON
     let parsed: any = null;
     try {
-      if (hookSecret) {
-        const wh = new Webhook(hookSecret);
-        parsed = wh.verify(payload, headers);
-      }
-    } catch (verifyError) {
-      console.warn("Webhook verification failed, falling back to JSON parse:", verifyError);
-    }
-    if (!parsed) {
-      try {
-        parsed = JSON.parse(payload);
-      } catch (parseError) {
-        console.error("Failed to parse webhook payload:", parseError);
-        throw new Error("Invalid webhook payload");
-      }
+      parsed = JSON.parse(payload);
+      console.log("Parsed webhook payload:", parsed);
+    } catch (parseError) {
+      console.error("Failed to parse webhook payload:", parseError);
+      throw new Error("Invalid webhook payload");
     }
     const {
       user,
