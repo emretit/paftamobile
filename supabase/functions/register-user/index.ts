@@ -134,7 +134,7 @@ serve(async (req) => {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>PAFTA - Hesap Onayı</title>
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Geist+Sans:wght@400;500;600;700&display=swap');
             
             * {
               margin: 0;
@@ -143,29 +143,64 @@ serve(async (req) => {
             }
             
             body {
-              font-family: 'Inter', Arial, sans-serif;
+              font-family: 'Geist Sans', Arial, sans-serif;
               line-height: 1.6;
-              color: #1f2937;
-              background-color: #f9fafb;
+              color: #4A4A4A;
+              background-color: #F5F5F5;
             }
             
             .email-container {
               max-width: 600px;
-              margin: 0 auto;
+              margin: 40px auto;
               background-color: #ffffff;
-              box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
               border-radius: 12px;
               overflow: hidden;
             }
             
             .header {
-              background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+              background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
               padding: 40px 30px;
               text-align: center;
+              position: relative;
+            }
+            
+            .header::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+              opacity: 0.3;
+            }
+            
+            .logo-container {
+              position: relative;
+              z-index: 2;
+              margin-bottom: 20px;
             }
             
             .logo {
+              width: 80px;
+              height: 80px;
+              background: #ffffff;
+              border-radius: 16px;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
               font-size: 32px;
+              font-weight: 700;
+              color: #D32F2F;
+              letter-spacing: -1px;
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            }
+            
+            .brand-name {
+              position: relative;
+              z-index: 2;
+              font-size: 28px;
               font-weight: 700;
               color: #ffffff;
               letter-spacing: -0.5px;
@@ -173,9 +208,11 @@ serve(async (req) => {
             }
             
             .tagline {
-              color: #e0e7ff;
+              position: relative;
+              z-index: 2;
+              color: rgba(255, 255, 255, 0.9);
               font-size: 14px;
-              font-weight: 400;
+              font-weight: 500;
             }
             
             .content {
@@ -185,27 +222,34 @@ serve(async (req) => {
             .greeting {
               font-size: 24px;
               font-weight: 600;
-              color: #1f2937;
+              color: #4A4A4A;
               margin-bottom: 16px;
+              text-align: center;
             }
             
             .message {
               font-size: 16px;
-              color: #6b7280;
+              color: #666666;
               margin-bottom: 32px;
               line-height: 1.6;
+              text-align: center;
+            }
+            
+            .cta-container {
+              text-align: center;
+              margin: 32px 0;
             }
             
             .cta-button {
               display: inline-block;
-              background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+              background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
               color: #ffffff;
               padding: 16px 32px;
               border-radius: 8px;
               text-decoration: none;
               font-weight: 600;
               font-size: 16px;
-              box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+              box-shadow: 0 4px 14px rgba(211, 47, 47, 0.3);
               transition: all 0.3s ease;
               border: none;
               cursor: pointer;
@@ -213,61 +257,86 @@ serve(async (req) => {
             
             .cta-button:hover {
               transform: translateY(-2px);
-              box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+              box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
             }
             
             .backup-link {
-              margin-top: 24px;
+              margin-top: 32px;
               padding: 20px;
-              background-color: #f3f4f6;
+              background-color: #F5F5F5;
               border-radius: 8px;
-              border-left: 4px solid #4f46e5;
+              border-left: 4px solid #D32F2F;
             }
             
             .backup-text {
               font-size: 14px;
-              color: #6b7280;
+              color: #666666;
               margin-bottom: 8px;
             }
             
             .backup-url {
               font-size: 12px;
-              color: #4f46e5;
+              color: #D32F2F;
               word-break: break-all;
               text-decoration: none;
-            }
-            
-            .footer {
-              background-color: #f9fafb;
-              padding: 30px;
-              text-align: center;
-              border-top: 1px solid #e5e7eb;
-            }
-            
-            .footer-text {
-              font-size: 12px;
-              color: #9ca3af;
-              margin-bottom: 8px;
-            }
-            
-            .company-info {
-              font-size: 14px;
-              font-weight: 500;
-              color: #4f46e5;
             }
             
             .security-note {
               margin-top: 24px;
               padding: 16px;
-              background-color: #fef3c7;
+              background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
               border-radius: 8px;
-              border-left: 4px solid #f59e0b;
+              border-left: 4px solid #F39C12;
+              text-align: center;
             }
             
             .security-text {
               font-size: 13px;
-              color: #92400e;
+              color: #E65100;
               font-weight: 500;
+            }
+            
+            .footer {
+              background: linear-gradient(135deg, #4A4A4A 0%, #2C2C2C 100%);
+              padding: 30px;
+              text-align: center;
+              color: #ffffff;
+            }
+            
+            .footer-text {
+              font-size: 12px;
+              color: rgba(255, 255, 255, 0.7);
+              margin-bottom: 8px;
+            }
+            
+            .company-info {
+              font-size: 14px;
+              font-weight: 600;
+              color: #ffffff;
+              margin-bottom: 16px;
+            }
+            
+            .social-links {
+              margin-top: 20px;
+            }
+            
+            .social-link {
+              display: inline-block;
+              margin: 0 8px;
+              width: 32px;
+              height: 32px;
+              background: rgba(255, 255, 255, 0.1);
+              border-radius: 6px;
+              text-decoration: none;
+              color: #ffffff;
+              font-size: 14px;
+              line-height: 32px;
+              transition: all 0.3s ease;
+            }
+            
+            .social-link:hover {
+              background: #D32F2F;
+              transform: translateY(-2px);
             }
             
             @media (max-width: 600px) {
@@ -288,13 +357,28 @@ serve(async (req) => {
                 padding: 14px 28px;
                 font-size: 15px;
               }
+              
+              .logo {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+              }
+              
+              .brand-name {
+                font-size: 24px;
+              }
             }
           </style>
         </head>
         <body>
           <div class="email-container">
             <div class="header">
-              <div class="logo">PAFTA</div>
+              <div class="logo-container">
+                <div class="logo">
+                  PAFTA
+                </div>
+              </div>
+              <div class="brand-name">PAFTA</div>
               <div class="tagline">İş Süreçlerinizi Kolaylaştırın</div>
             </div>
             
@@ -305,7 +389,7 @@ serve(async (req) => {
                 PAFTA ailesine katıldığınız için teşekkür ederiz! Hesabınızı aktifleştirmek ve platformumuzun tüm özelliklerinden yararlanmaya başlamak için aşağıdaki butona tıklayın.
               </p>
               
-              <div style="text-align: center; margin: 32px 0;">
+              <div class="cta-container">
                 <a href="${confirmLink}" class="cta-button">
                   ✨ Hesabımı Aktifleştir
                 </a>
@@ -324,8 +408,9 @@ serve(async (req) => {
             </div>
             
             <div class="footer">
+              <p class="company-info">PAFTA</p>
+              <p class="footer-text">İş Süreçleri Yönetim Platformu</p>
               <p class="footer-text">Bu e-posta, PAFTA hesap onay sistemi tarafından otomatik olarak gönderilmiştir.</p>
-              <p class="company-info">PAFTA - İş Süreçleri Yönetim Platformu</p>
               <p class="footer-text" style="margin-top: 16px;">
                 Eğer bu hesabı siz oluşturmadıysanız, bu e-postayı güvenle yok sayabilirsiniz.
               </p>
