@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { ErrorDisplay } from "@/components/auth/ErrorDisplay";
-import { ArrowRight, Mail, Lock, User, Building, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Mail, Lock, User, Building, Eye, EyeOff, Home } from "lucide-react";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -92,6 +92,14 @@ const SignUp = () => {
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Ana sayfa ikonu - Sol üst */}
+      <button 
+        onClick={() => navigate("/")}
+        className="fixed top-6 left-6 z-50 p-3 bg-white rounded-full shadow-lg hover:shadow-xl border border-gray-200 hover:border-primary/20 transition-all duration-200 hover:scale-105 group"
+      >
+        <Home className="h-6 w-6 text-gray-600 group-hover:text-primary transition-colors" />
+      </button>
+
       {/* Sol taraf - Form */}
       <div className="flex-1 flex items-center justify-center px-8 py-12">
         <div className="w-full max-w-md space-y-8">
@@ -207,18 +215,7 @@ const SignUp = () => {
           {/* Hata gösterimi */}
           <ErrorDisplay error={error} />
 
-          {/* Ana sayfa tuşu */}
-          <div className="text-center mb-4">
-            <button 
-              onClick={() => navigate("/")}
-              className="inline-flex items-center px-6 py-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              Ana Sayfaya Dön
-            </button>
-          </div>
+
 
           {/* Giriş yap linki */}
           <div className="text-center">
