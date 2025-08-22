@@ -72,25 +72,41 @@ export const safeSignOut = async () => {
 };
 
 /**
- * Session durumunu kontrol et
+ * Session durumunu kontrol et (custom auth system)
  */
 export const checkSessionStatus = async () => {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
+    if (typeof window === 'undefined') {
+      return { hasSession: false, user: null, error: null };
+    }
+
+    const sessionToken = localStorage.getItem('session_token');
+    const userStr = localStorage.getItem('user');
     
-    if (error) {
+    if (!sessionToken || !userStr) {
       return { 
         hasSession: false, 
         user: null, 
-        error: error.message 
+        error: null 
       };
     }
-    
-    return { 
-      hasSession: !!session, 
-      user: session?.user || null, 
-      error: null 
-    };
+
+    try {
+      const user = JSON.parse(userStr);
+      return { 
+        hasSession: true, 
+        user: user, 
+        error: null 
+      };
+    } catch (parseError) {
+      // Corrupted data, clear it
+      clearAuthTokens();
+      return { 
+        hasSession: false, 
+        user: null, 
+        error: 'Invalid session data' 
+      };
+    }
   } catch (error: any) {
     return { 
       hasSession: false, 
@@ -105,12 +121,17 @@ export const checkSessionStatus = async () => {
  */
 export const clearAuthTokens = () => {
   if (typeof window !== 'undefined') {
-    localStorage.clear();
-    sessionStorage.clear();
+    // Custom auth tokens
+    localStorage.removeItem('session_token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('project_ids');
     
     // Supabase specific cleanup
     localStorage.removeItem('supabase.auth.token');
     localStorage.removeItem('supabase.auth.refreshToken');
+    
+    // Clear session storage
+    sessionStorage.clear();
     
     // Diğer potansiyel auth verilerini temizle
     const authKeys = [
@@ -118,8 +139,7 @@ export const clearAuthTokens = () => {
       'supabase.auth.refreshToken',
       'supabase.auth.expiresAt',
       'supabase.auth.expiresIn',
-      'supabase.auth.accessToken',
-      'supabase.auth.refreshToken'
+      'supabase.auth.accessToken'
     ];
     
     authKeys.forEach(key => {

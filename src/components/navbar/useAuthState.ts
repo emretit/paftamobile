@@ -9,39 +9,32 @@ export const useAuthState = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
-        
-        // Session'ı güncelle
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        
-        // Session yoksa local storage'ı temizle
-        if (!session) {
-          clearAuthTokens();
-        }
-      }
-    );
-
-    // Then check for existing session
+useEffect(() => {
+    // Check for existing session using custom auth
     const checkSession = async () => {
       try {
         const result = await checkSessionStatus();
         
         if (result.error) {
           console.error('Session check error:', result.error);
-          // Hata durumunda session'ı temizle
           setSession(null);
           setUser(null);
           clearAuthTokens();
         } else {
           console.log('Initial session check:', result.user?.email);
-          setSession(result.hasSession ? await supabase.auth.getSession().then(r => r.data.session) : null);
-          setUser(result.user);
+          
+          if (result.hasSession && result.user) {
+            // Create a mock session object for compatibility
+            const mockSession = {
+              access_token: localStorage.getItem('session_token') || '',
+              user: result.user
+            };
+            setSession(mockSession as any);
+            setUser(result.user as any);
+          } else {
+            setSession(null);
+            setUser(null);
+          }
         }
       } catch (error) {
         console.error('Unexpected session check error:', error);
@@ -54,8 +47,6 @@ export const useAuthState = () => {
     };
 
     checkSession();
-
-    return () => subscription.unsubscribe();
   }, []);
 
   // Calculate user initials from name or email
@@ -81,25 +72,14 @@ export const useAuthState = () => {
 
   const signOut = async () => {
     try {
-      // Önce session kontrolü yap
-      const result = await checkSessionStatus();
-      
-      if (!result.hasSession) {
-        console.log('No active session to sign out from');
-        return;
-      }
-
-      const { error } = await supabase.auth.signOut({
-        scope: 'global'
-      });
-      
-      if (error) {
-        console.error('Sign out error:', error);
-        throw error;
-      }
-      
-      // Local storage'ı temizle
+      // Custom auth sign out - just clear local storage
       clearAuthTokens();
+      
+      // Update state
+      setSession(null);
+      setUser(null);
+      
+      console.log('Successfully signed out');
       
     } catch (error) {
       console.error('Error signing out:', error);

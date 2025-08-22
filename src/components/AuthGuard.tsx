@@ -15,31 +15,7 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('AuthGuard: Auth state changed:', event, session?.user?.email);
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        
-        // If user logs out, redirect to landing page
-        if (event === 'SIGNED_OUT') {
-          // Local storage'ı temizle
-          clearAuthTokens();
-          navigate('/');
-        }
-        
-        // Session yoksa giriş sayfasına yönlendir
-        if (!session && !loading) {
-          navigate('/signin');
-        }
-      }
-    );
-
-    // THEN check for existing session
+useEffect(() => {
     const checkSession = async () => {
       try {
         const result = await checkSessionStatus();
@@ -53,10 +29,14 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
         } else {
           console.log('AuthGuard: Initial session check:', result.user?.email);
           
-          if (result.hasSession) {
-            const { data: { session: currentSession } } = await supabase.auth.getSession();
-            setSession(currentSession);
-            setUser(currentSession?.user ?? null);
+          if (result.hasSession && result.user) {
+            // Create a mock session object for compatibility
+            const mockSession = {
+              access_token: localStorage.getItem('session_token') || '',
+              user: result.user
+            };
+            setSession(mockSession as any);
+            setUser(result.user as any);
           } else {
             setSession(null);
             setUser(null);
@@ -75,9 +55,7 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
     };
 
     checkSession();
-
-    return () => subscription.unsubscribe();
-  }, [navigate, loading]);
+  }, [navigate]);
 
   // Show loading spinner while checking auth
   if (loading) {
