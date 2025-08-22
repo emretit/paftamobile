@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
@@ -32,11 +31,17 @@ const SignIn = () => {
     setError(null);
     
     try {
-      const { data, error } = await supabase.functions.invoke('custom-login', {
-        body: { email, password }
+      const response = await fetch('https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/custom-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password })
       });
 
-      if (error || !data.success) {
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
         setError(data?.error || 'Giriş hatası');
         toast({
           variant: "destructive",

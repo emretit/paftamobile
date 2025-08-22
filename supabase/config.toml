@@ -2,3 +2,12 @@ project_id = "vwhwufnckpqirxptwncw"
 
 [functions.auth-emails]
 verify_jwt = false
+
+[functions.custom-login]
+verify_jwt = false
+
+[functions.register-user]
+verify_jwt = false
+
+[functions.confirm-email]
+verify_jwt = false
