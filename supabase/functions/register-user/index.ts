@@ -36,7 +36,7 @@ serve(async (req) => {
       .from('users')
       .select('id')
       .eq('email', email)
-      .single();
+      .maybeSingle();
 
     if (existingUser) {
       return new Response(
@@ -86,7 +86,7 @@ serve(async (req) => {
 
     // Email onay kaydı ekle
     const { error: confirmationError } = await supabase
-      .from('email_confirmations')
+      .from('user_email_confirmations')
       .insert({
         user_id: newUser.id,
         email,

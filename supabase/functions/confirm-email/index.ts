@@ -31,13 +31,13 @@ serve(async (req) => {
 
     // Token kontrolü
     const { data: confirmation, error } = await supabase
-      .from('email_confirmations')
+      .from('user_email_confirmations')
       .select('*')
       .eq('token', token)
       .eq('type', 'signup')
       .is('used_at', null)
       .gt('expires_at', new Date().toISOString())
-      .single();
+      .maybeSingle();
 
     if (error || !confirmation) {
       return new Response(
@@ -68,7 +68,7 @@ serve(async (req) => {
 
     // Token'ı kullanılmış olarak işaretle
     await supabase
-      .from('email_confirmations')
+      .from('user_email_confirmations')
       .update({ used_at: new Date().toISOString() })
       .eq('id', confirmation.id);
 
