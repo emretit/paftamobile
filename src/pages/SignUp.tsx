@@ -21,24 +21,12 @@ const SignUp = () => {
 
   // Check if user is already logged in
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/dashboard");
-      }
-    };
+    const sessionToken = localStorage.getItem('session_token');
+    const user = localStorage.getItem('user');
     
-    checkSession();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          navigate("/dashboard");
-        }
-      }
-    );
-    
-    return () => subscription.unsubscribe();
+    if (sessionToken && user) {
+      navigate("/dashboard");
+    }
   }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -57,38 +45,40 @@ const SignUp = () => {
       return;
     }
     
-    const { error, data } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-        data: {
-          full_name: name,
-          company_name: companyName,
-          is_primary_account: true
+    try {
+      const { data, error } = await supabase.functions.invoke('register-user', {
+        body: { 
+          email, 
+          password, 
+          full_name: name, 
+          company_name: companyName 
         }
-      }
-    });
+      });
 
-    if (error) {
-      setError(error.message);
-      toast({
-        variant: "destructive",
-        title: "Kayıt Hatası",
-        description: error.message,
-      });
-    } else {
-      setEmailSent(!!data?.user?.confirmation_sent_at);
-      
-      toast({
-        title: "Başarılı",
-        description: "Hesabınız oluşturuldu." + (data?.user?.confirmation_sent_at ? " Lütfen e-posta onayınızı tamamlayın." : " Giriş yapabilirsiniz."),
-      });
-      
-      if (!data?.user?.confirmation_sent_at) {
+      if (error || !data.success) {
+        setError(data?.error || 'Kayıt hatası');
+        toast({
+          variant: "destructive",
+          title: "Kayıt Hatası",
+          description: data?.error || 'Kayıt hatası',
+        });
+      } else {
+        toast({
+          title: "Kayıt Başarılı",
+          description: "Hesabınız oluşturuldu, giriş yapabilirsiniz.",
+        });
         navigate("/signin");
       }
+    } catch (err) {
+      console.error("Signup error:", err);
+      setError("Beklenmeyen bir hata oluştu.");
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Beklenmeyen bir hata oluştu.",
+      });
     }
+    
     setLoading(false);
   };
 

@@ -18,24 +18,12 @@ const SignIn = () => {
 
   // Check if user is already logged in
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/dashboard");
-      }
-    };
+    const sessionToken = localStorage.getItem('session_token');
+    const user = localStorage.getItem('user');
     
-    checkSession();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          navigate("/dashboard");
-        }
-      }
-    );
-    
-    return () => subscription.unsubscribe();
+    if (sessionToken && user) {
+      navigate("/dashboard");
+    }
   }, [navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -43,17 +31,37 @@ const SignIn = () => {
     setLoading(true);
     setError(null);
     
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('custom-login', {
+        body: { email, password }
+      });
 
-    if (error) {
-      setError(error.message);
+      if (error || !data.success) {
+        setError(data?.error || 'Giriş hatası');
+        toast({
+          variant: "destructive",
+          title: "Giriş Hatası",
+          description: data?.error || 'Giriş hatası',
+        });
+      } else {
+        // Session token'ı localStorage'a kaydet
+        localStorage.setItem('session_token', data.session_token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        toast({
+          title: "Başarılı",
+          description: "Giriş yapıldı",
+        });
+        
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Beklenmeyen bir hata oluştu');
       toast({
         variant: "destructive",
-        title: "Giriş Hatası",
-        description: error.message,
+        title: "Hata",
+        description: "Beklenmeyen bir hata oluştu",
       });
     }
     
