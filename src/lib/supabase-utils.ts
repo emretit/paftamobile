@@ -5,43 +5,33 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const safeSignOut = async () => {
   try {
-    // Önce mevcut session'ı kontrol et
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError) {
-      console.error('Session check error during logout:', sessionError);
-      throw sessionError;
-    }
-    
-    if (!session) {
-      console.log('No active session to sign out from');
-      return { success: true, message: 'No active session' };
-    }
-
-    // Logout işlemini gerçekleştir
-    const { error } = await supabase.auth.signOut({
-      scope: 'global'
-    });
-    
-    if (error) {
-      console.error('Sign out error:', error);
-      throw error;
-    }
-    
-    // Local storage'ı temizle
+    // Custom auth sistemini kullan - localStorage'ı temizle
     if (typeof window !== 'undefined') {
+      // Custom auth tokens
+      localStorage.removeItem('session_token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('project_ids');
+      
+      // Supabase specific cleanup
       localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('supabase.auth.refreshToken');
+      
+      // Clear session storage
       sessionStorage.clear();
       
-      // Diğer potansiyel auth token'ları da temizle
-      const keysToRemove = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && (key.includes('supabase') || key.includes('auth') || key.includes('token'))) {
-          keysToRemove.push(key);
-        }
-      }
-      keysToRemove.forEach(key => localStorage.removeItem(key));
+      // Diğer potansiyel auth verilerini temizle
+      const authKeys = [
+        'supabase.auth.token',
+        'supabase.auth.refreshToken',
+        'supabase.auth.expiresAt',
+        'supabase.auth.expiresIn',
+        'supabase.auth.accessToken'
+      ];
+      
+      authKeys.forEach(key => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      });
     }
     
     return { success: true, message: 'Successfully signed out' };

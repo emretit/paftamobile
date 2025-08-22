@@ -23,8 +23,8 @@ export const useLogout = () => {
           description: "Başarıyla çıkış yapıldı.",
         });
         
-        // Ana sayfaya yönlendir
-        navigate("/");
+        // Sign-in sayfasına yönlendir
+        navigate("/signin");
       } else {
         // Hata durumunda
         if (result.error?.includes('403') || result.error?.includes('403')) {

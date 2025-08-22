@@ -36,8 +36,14 @@ const LoginButton = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
+    // Custom auth sistemini kullan
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('session_token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('project_ids');
+      sessionStorage.clear();
+    }
+    navigate("/signin");
   };
 
   if (user) {
