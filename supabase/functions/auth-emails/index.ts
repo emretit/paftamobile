@@ -118,7 +118,7 @@ async function sendAuthEmail(payload: WebhookPayload) {
           supabase_url: Deno.env.get('SUPABASE_URL') ?? '',
           token,
           token_hash,
-          redirect_to: redirect_to || `${Deno.env.get('SUPABASE_URL')}/dashboard`,
+          redirect_to: redirect_to || 'https://pafta.app/dashboard',
           email_action_type,
           user_email: user.email,
         })
@@ -132,7 +132,7 @@ async function sendAuthEmail(payload: WebhookPayload) {
           supabase_url: Deno.env.get('SUPABASE_URL') ?? '',
           token,
           token_hash,
-          redirect_to: redirect_to || `${Deno.env.get('SUPABASE_URL')}/auth`,
+          redirect_to: redirect_to || 'https://pafta.app/auth',
           email_action_type,
           user_email: user.email,
         })
@@ -147,7 +147,7 @@ async function sendAuthEmail(payload: WebhookPayload) {
           supabase_url: Deno.env.get('SUPABASE_URL') ?? '',
           token,
           token_hash,
-          redirect_to: redirect_to || `${Deno.env.get('SUPABASE_URL')}/dashboard`,
+          redirect_to: redirect_to || 'https://pafta.app/dashboard',
           email_action_type,
           user_email: user.email,
         })

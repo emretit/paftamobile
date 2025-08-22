@@ -53,7 +53,7 @@ export const useAuth = () => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: 'https://pafta.app/dashboard',
         data: {
           full_name: fullName,
         },
@@ -69,7 +69,7 @@ export const useAuth = () => {
 
   const resetPassword = async (email: string) => {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: 'https://pafta.app/auth',
     });
     return { data, error };
   };
