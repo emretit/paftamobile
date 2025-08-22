@@ -16,9 +16,9 @@ serve(async (req) => {
   try {
     const { email, password, full_name, company_name } = await req.json();
 
-    if (!email || !password) {
+    if (!email || !password || !company_name) {
       return new Response(
-        JSON.stringify({ error: 'Email ve şifre gereklidir' }),
+        JSON.stringify({ error: 'Email, şifre ve şirket adı gereklidir' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -61,39 +61,56 @@ serve(async (req) => {
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24); // 24 saat geçerli
 
-    // Default project oluştur veya var olanı bul
-    const { data: existingProject } = await supabase
+    // Benzersiz proje adı oluştur (sequential numbering ile)
+    let projectName = company_name;
+    let projectCounter = 1;
+    
+    // Aynı isimde proje var mı kontrol et
+    const { data: existingProjects } = await supabase
       .from('projects')
-      .select('id')
-      .eq('name', company_name || 'Default Project')
-      .maybeSingle();
+      .select('name')
+      .like('name', `${company_name}%`)
+      .order('name');
 
-    let projectId;
-    if (existingProject) {
-      projectId = existingProject.id;
-    } else {
-      // Yeni proje oluştur
-      const { data: newProject, error: projectError } = await supabase
-        .from('projects')
-        .insert({
-          name: company_name || 'Default Project',
-          description: `${company_name || 'Şirket'} için proje`
-        })
-        .select('id')
-        .single();
-
-      if (projectError) {
-        console.error('Proje oluşturma hatası:', projectError);
-        return new Response(
-          JSON.stringify({ error: 'Kayıt işlemi başarısız' }),
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
+    if (existingProjects && existingProjects.length > 0) {
+      // En büyük numarayı bul
+      const maxNumber = existingProjects.reduce((max, project) => {
+        const match = project.name.match(new RegExp(`^${company_name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?: #(\\d+))?$`));
+        if (match) {
+          const num = match[1] ? parseInt(match[1]) : 1;
+          return Math.max(max, num);
+        }
+        return max;
+      }, 0);
+      
+      if (maxNumber > 0) {
+        projectCounter = maxNumber + 1;
+        projectName = `${company_name} #${projectCounter}`;
       }
-      projectId = newProject.id;
     }
+
+    // Yeni proje oluştur
+    const { data: newProject, error: projectError } = await supabase
+      .from('projects')
+      .insert({
+        name: projectName,
+        description: `${company_name} şirketi için otomatik oluşturulmuş proje`
+      })
+      .select('id')
+      .single();
+
+    if (projectError) {
+      console.error('Proje oluşturma hatası:', projectError);
+      return new Response(
+        JSON.stringify({ error: 'Proje oluşturulurken hata oluştu' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    const projectId = newProject.id;
 
     // Kullanıcıyı ekle (admin rolü ile ama aktif değil)
     const { data: newUser, error } = await supabase
@@ -129,7 +146,8 @@ serve(async (req) => {
         email,
         token: confirmationToken,
         type: 'signup',
-        expires_at: expiresAt.toISOString()
+        expires_at: expiresAt.toISOString(),
+        project_id: projectId
       });
 
     if (confirmationError) {
