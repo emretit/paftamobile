@@ -74,11 +74,22 @@ export const useAuth = () => {
     return { data, error };
   };
 
+  const resendConfirmation = async (email: string) => {
+    // Resend confirmation email via Supabase
+    // @ts-ignore - types may lag behind SDK
+    const { data, error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+    } as any);
+    return { data, error };
+  };
+
   return {
     ...authState,
     signIn,
     signUp,
     signOut,
     resetPassword,
+    resendConfirmation,
   };
 };

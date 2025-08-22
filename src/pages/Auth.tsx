@@ -11,7 +11,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { signIn, signUp, resetPassword, loading: authLoading } = useAuth();
+  const { signIn, signUp, resetPassword, resendConfirmation, loading: authLoading } = useAuth();
 
   const [isSignUp, setIsSignUp] = useState(false);
   const [isResetPassword, setIsResetPassword] = useState(false);
@@ -47,20 +47,22 @@ const Auth = () => {
       } else if (isSignUp) {
         const { error } = await signUp(formData.email, formData.password, formData.fullName);
         if (error) {
-          toast({
-            variant: 'destructive',
-            title: 'Kayıt Hatası',
-            description: error.message,
-          });
+          const msg = (error?.message || '').toLowerCase();
+          if (msg.includes('error sending confirmation email') || msg.includes('unexpected_failure') || msg.includes('535') || msg.includes('450')) {
+            try {
+              const { error: resendErr } = await resendConfirmation(formData.email);
+              if (!resendErr) {
+                toast({ title: 'Hesap oluşturuldu', description: 'Onay e-postası yeniden gönderildi. Lütfen e-posta kutunuzu kontrol edin.' });
+                return;
+              }
+            } catch {}
+          }
+          toast({ variant: 'destructive', title: 'Kayıt Hatası', description: error.message });
         } else {
-          toast({
-            title: 'Başarılı',
-            description: 'Hesabınız oluşturuldu. E-posta onayınızı kontrol edin.',
-          });
-          // Redirect to dashboard after successful signup
-          const from = location.state?.from?.pathname || '/dashboard';
-          navigate(from, { replace: true });
+          toast({ title: 'Hesap oluşturuldu', description: 'Onay e-postası gönderildi. Lütfen e-posta kutunuzu kontrol edin.' });
+          return;
         }
+
       } else {
         const { error } = await signIn(formData.email, formData.password);
         if (error) {
