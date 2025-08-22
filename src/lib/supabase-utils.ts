@@ -5,61 +5,39 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const safeSignOut = async () => {
   try {
-    // Custom auth sistemini kullan - localStorage'ı temizle
-    if (typeof window !== 'undefined') {
-      // Custom auth tokens
-      localStorage.removeItem('session_token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('project_ids');
-      
-      // Supabase specific cleanup
-      localStorage.removeItem('supabase.auth.token');
-      localStorage.removeItem('supabase.auth.refreshToken');
-      
-      // Clear session storage
-      sessionStorage.clear();
-      
-      // Diğer potansiyel auth verilerini temizle
-      const authKeys = [
-        'supabase.auth.token',
-        'supabase.auth.refreshToken',
-        'supabase.auth.expiresAt',
-        'supabase.auth.expiresIn',
-        'supabase.auth.accessToken'
-      ];
-      
-      authKeys.forEach(key => {
-        localStorage.removeItem(key);
-        sessionStorage.removeItem(key);
-      });
+    // Supabase oturumunu da kapat (best-effort)
+    try {
+      await supabase.auth.signOut({ scope: 'global' });
+    } catch (e) {
+      console.warn('Supabase signOut failed (ignored):', e);
     }
-    
+
+    // Kapsamlı temizlik
+    if (typeof window !== 'undefined') {
+      // Bilinen tokenları temizle
+      clearAuthTokens();
+
+      // Her ihtimale karşı supabase/auth/token içeren tüm anahtarları temizle
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('supabase') || key.includes('auth') || key.includes('token'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+
+      // Oturum depolamasını da temizle
+      sessionStorage.clear();
+    }
+
     return { success: true, message: 'Successfully signed out' };
-    
   } catch (error: any) {
     console.error('Error during safe sign out:', error);
-    
-    // 403 hatası durumunda özel işlem
-    if (error.message?.includes('403') || error.status === 403) {
-      // Force cleanup
-      if (typeof window !== 'undefined') {
-        localStorage.clear();
-        sessionStorage.clear();
-      }
-      return { 
-        success: false, 
-        message: 'Authorization error, forced cleanup performed',
-        error: error.message 
-      };
-    }
-    
-    return { 
-      success: false, 
-      message: 'Error during sign out',
-      error: error.message 
-    };
+    return { success: false, message: 'Error during sign out', error: error.message };
   }
 };
+    
 
 /**
  * Session durumunu kontrol et (custom auth system)
@@ -111,31 +89,31 @@ export const checkSessionStatus = async () => {
  */
 export const clearAuthTokens = () => {
   if (typeof window !== 'undefined') {
-    // Custom auth tokens
-    localStorage.removeItem('session_token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('project_ids');
-    
-    // Supabase specific cleanup
-    localStorage.removeItem('supabase.auth.token');
-    localStorage.removeItem('supabase.auth.refreshToken');
-    
-    // Clear session storage
-    sessionStorage.clear();
-    
-    // Diğer potansiyel auth verilerini temizle
-    const authKeys = [
-      'supabase.auth.token',
-      'supabase.auth.refreshToken',
-      'supabase.auth.expiresAt',
-      'supabase.auth.expiresIn',
-      'supabase.auth.accessToken'
-    ];
-    
-    authKeys.forEach(key => {
-      localStorage.removeItem(key);
-      sessionStorage.removeItem(key);
-    });
+    try {
+      // Custom auth tokens
+      localStorage.removeItem('session_token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('project_ids');
+      
+      // Supabase specific cleanup
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('supabase.auth.refreshToken');
+      
+      // Diğer potansiyel auth verilerini temizle (geniş tarama)
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('supabase') || key.includes('auth') || key.includes('token'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+      
+      // Session storage temizliği
+      sessionStorage.clear();
+    } catch (e) {
+      console.warn('clearAuthTokens encountered an issue:', e);
+    }
   }
 };
 

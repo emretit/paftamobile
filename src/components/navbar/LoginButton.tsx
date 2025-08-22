@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { clearAuthTokens } from "@/lib/supabase-utils";
 
 const LoginButton = () => {
   const navigate = useNavigate();
@@ -36,14 +37,14 @@ const LoginButton = () => {
   };
 
   const handleLogout = async () => {
-    // Custom auth sistemini kullan
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('session_token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('project_ids');
-      sessionStorage.clear();
+    try {
+      await supabase.auth.signOut({ scope: 'global' });
+    } catch (e) {
+      console.warn('Supabase signOut failed (ignored):', e);
     }
-    navigate("/signin");
+    clearAuthTokens();
+    setUser(null);
+    window.location.replace("/signin");
   };
 
   if (user) {
