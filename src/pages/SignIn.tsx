@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { ErrorDisplay } from "@/components/auth/ErrorDisplay";
 import { ArrowRight, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -31,45 +32,108 @@ const SignIn = () => {
     setError(null);
     
     try {
-      const response = await fetch('https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/custom-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password })
-      });
+      // Kullanıcıyı veritabanında ara
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .ilike('email', email)
+        .maybeSingle();
 
-      const data = await response.json();
+      if (userError) {
+        console.error('Database error:', userError);
+        setError('Veritabanı hatası');
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Veritabanı hatası",
+        });
+        return;
+      }
 
-      if (!response.ok || !data.success) {
-        setError(data?.error || 'Giriş hatası');
+      if (!user) {
+        setError('Geçersiz email veya şifre');
         toast({
           variant: "destructive",
           title: "Giriş Hatası",
-          description: data?.error || 'Giriş hatası',
+          description: "Geçersiz email veya şifre",
         });
-      } else {
-        // Session token ve kullanıcı bilgilerini kaydet
-        localStorage.setItem('session_token', data.session_token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        if (data.project_ids) {
-          localStorage.setItem('project_ids', JSON.stringify(data.project_ids));
-        }
-        if (data.default_project_id) {
-          localStorage.setItem('default_project_id', data.default_project_id);
-        }
-        
-        toast({
-          title: "Başarılı",
-          description: "Giriş yapıldı",
-        });
-        
-        if (data.default_project_id) {
-          navigate(`/dashboard?project=${data.default_project_id}`);
-        } else {
-          navigate("/dashboard");
-        }
+        return;
       }
+
+      // Şifre kontrolü (SHA-256)
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashedPassword = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+      if (hashedPassword.toLowerCase() !== (user.password_hash || '').toLowerCase()) {
+        setError('Geçersiz email veya şifre');
+        toast({
+          variant: "destructive",
+          title: "Giriş Hatası",
+          description: "Geçersiz email veya şifre",
+        });
+        return;
+      }
+
+      // Hesap aktif mi kontrol et
+      if (!user.is_active) {
+        setError('Hesabınızı onaylamanız gerekiyor');
+        toast({
+          variant: "destructive",
+          title: "Hesap Onayı",
+          description: "Hesabınızı onaylamanız gerekiyor",
+        });
+        return;
+      }
+
+      // Session token oluştur
+      const sessionToken = crypto.randomUUID();
+
+      // Son giriş zamanını güncelle
+      await supabase
+        .from('users')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', user.id);
+
+      // Kullanıcının projelerini getir
+      const { data: userProjects } = await supabase
+        .from('user_projects')
+        .select('project_id')
+        .eq('user_id', user.id);
+
+      const projectIds = userProjects?.map((p: any) => p.project_id) ?? [];
+      const defaultProjectId = projectIds[0] ?? null;
+
+      // Session token ve kullanıcı bilgilerini kaydet
+      localStorage.setItem('session_token', sessionToken);
+      localStorage.setItem('user', JSON.stringify({
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role
+      }));
+      
+      if (projectIds.length > 0) {
+        localStorage.setItem('project_ids', JSON.stringify(projectIds));
+      }
+      
+      if (defaultProjectId) {
+        localStorage.setItem('default_project_id', defaultProjectId);
+      }
+      
+      toast({
+        title: "Başarılı",
+        description: "Giriş yapıldı",
+      });
+      
+      if (defaultProjectId) {
+        navigate(`/dashboard?project=${defaultProjectId}`);
+      } else {
+        navigate("/dashboard");
+      }
+
     } catch (err) {
       console.error('Login error:', err);
       setError('Beklenmeyen bir hata oluştu');
