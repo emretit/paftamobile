@@ -1,8 +1,4 @@
 project_id = "vwhwufnckpqirxptwncw"
 
-[auth]
-hook_send_email_url = "https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/auth-emails"
-hook_send_email_secrets = "AUTH_HOOK_SECRET"
-
 [functions.auth-emails]
 verify_jwt = false
