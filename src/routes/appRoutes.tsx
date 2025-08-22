@@ -17,7 +17,7 @@ import { proposalRoutes } from "./proposalRoutes";
 import Deliveries from "@/pages/Deliveries";
 import Returns from "@/pages/Returns";
 import InvoiceManagement from "@/pages/InvoiceManagement";
-import TestLogout from "@/pages/TestLogout";
+
 
 
 export const appRoutes: RouteConfig[] = [
@@ -40,5 +40,5 @@ export const appRoutes: RouteConfig[] = [
   { path: "/deliveries", component: Deliveries, protected: true },
   { path: "/returns", component: Returns, protected: true },
   { path: "/invoices", component: InvoiceManagement, protected: true },
-  { path: "/test-logout", component: TestLogout, protected: true },
+  
 ];

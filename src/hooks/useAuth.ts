@@ -1,0 +1,84 @@
+import { useState, useEffect } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+
+export interface AuthState {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+}
+
+export const useAuth = () => {
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    session: null,
+    loading: true,
+  });
+
+  useEffect(() => {
+    // Auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        setAuthState({
+          user: session?.user ?? null,
+          session,
+          loading: false,
+        });
+      }
+    );
+
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setAuthState({
+        user: session?.user ?? null,
+        session,
+        loading: false,
+      });
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    return { data, error };
+  };
+
+  const signUp = async (email: string, password: string, fullName?: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+        data: {
+          full_name: fullName,
+        },
+      },
+    });
+    return { data, error };
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    return { error };
+  };
+
+  const resetPassword = async (email: string) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    return { data, error };
+  };
+
+  return {
+    ...authState,
+    signIn,
+    signUp,
+    signOut,
+    resetPassword,
+  };
+};

@@ -10,7 +10,7 @@ const PricingSection = () => {
   const navigate = useNavigate();
 
   const handleSignUp = () => {
-    navigate("/signup");
+    navigate("/auth");
   };
 
   return (
