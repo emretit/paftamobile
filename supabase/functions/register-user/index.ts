@@ -145,24 +145,26 @@ serve(async (req) => {
             body {
               font-family: 'Geist Sans', Arial, sans-serif;
               line-height: 1.6;
-              color: #4A4A4A;
-              background-color: #F5F5F5;
+              color: #1F2937;
+              background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+              min-height: 100vh;
             }
             
             .email-container {
               max-width: 600px;
               margin: 40px auto;
               background-color: #ffffff;
-              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-              border-radius: 12px;
+              box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+              border-radius: 20px;
               overflow: hidden;
             }
             
             .header {
-              background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
-              padding: 40px 30px;
+              background: linear-gradient(135deg, #667EEA 0%, #764BA2 50%, #F093FB 100%);
+              padding: 50px 30px 40px;
               text-align: center;
               position: relative;
+              overflow: hidden;
             }
             
             .header::before {
@@ -172,200 +174,368 @@ serve(async (req) => {
               left: 0;
               right: 0;
               bottom: 0;
-              background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-              opacity: 0.3;
+              background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+              animation: float 20s ease-in-out infinite;
+            }
+            
+            .header::after {
+              content: '';
+              position: absolute;
+              top: -50%;
+              left: -50%;
+              width: 200%;
+              height: 200%;
+              background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+              animation: pulse 4s ease-in-out infinite;
+            }
+            
+            @keyframes float {
+              0%, 100% { transform: translateY(0px) rotate(0deg); }
+              50% { transform: translateY(-10px) rotate(5deg); }
+            }
+            
+            @keyframes pulse {
+              0%, 100% { opacity: 0.3; transform: scale(1); }
+              50% { opacity: 0.1; transform: scale(1.1); }
             }
             
             .logo-container {
               position: relative;
-              z-index: 2;
-              margin-bottom: 20px;
+              z-index: 3;
+              margin-bottom: 24px;
             }
             
             .logo {
-              width: 80px;
-              height: 80px;
-              background: #ffffff;
-              border-radius: 16px;
+              width: 100px;
+              height: 100px;
+              background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+              border-radius: 24px;
               display: inline-flex;
               align-items: center;
               justify-content: center;
-              font-size: 32px;
-              font-weight: 700;
-              color: #D32F2F;
-              letter-spacing: -1px;
-              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+              font-size: 36px;
+              font-weight: 800;
+              color: transparent;
+              background-clip: text;
+              -webkit-background-clip: text;
+              background-image: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+              letter-spacing: -2px;
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(255, 255, 255, 0.3);
+              position: relative;
+            }
+            
+            .logo::before {
+              content: 'PAFTA';
+              position: absolute;
+              background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+              background-clip: text;
+              -webkit-background-clip: text;
+              color: transparent;
             }
             
             .brand-name {
               position: relative;
-              z-index: 2;
-              font-size: 28px;
-              font-weight: 700;
+              z-index: 3;
+              font-size: 32px;
+              font-weight: 800;
               color: #ffffff;
-              letter-spacing: -0.5px;
-              margin-bottom: 8px;
+              letter-spacing: -1px;
+              margin-bottom: 12px;
+              text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
             }
             
             .tagline {
               position: relative;
-              z-index: 2;
-              color: rgba(255, 255, 255, 0.9);
-              font-size: 14px;
-              font-weight: 500;
+              z-index: 3;
+              color: rgba(255, 255, 255, 0.95);
+              font-size: 16px;
+              font-weight: 600;
+              letter-spacing: 0.5px;
             }
             
             .content {
-              padding: 40px 30px;
+              padding: 50px 40px;
+              background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
             }
             
             .greeting {
-              font-size: 24px;
-              font-weight: 600;
-              color: #4A4A4A;
-              margin-bottom: 16px;
+              font-size: 28px;
+              font-weight: 700;
+              background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+              background-clip: text;
+              -webkit-background-clip: text;
+              color: transparent;
+              margin-bottom: 20px;
+              text-align: center;
+              line-height: 1.2;
+            }
+            
+            .welcome-message {
+              font-size: 18px;
+              color: #4B5563;
+              margin-bottom: 24px;
+              line-height: 1.7;
               text-align: center;
             }
             
-            .message {
+            .company-message {
               font-size: 16px;
-              color: #666666;
-              margin-bottom: 32px;
+              color: #6B7280;
+              margin-bottom: 40px;
               line-height: 1.6;
               text-align: center;
+              padding: 20px;
+              background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
+              border-radius: 12px;
+              border-left: 4px solid #667EEA;
             }
             
             .cta-container {
               text-align: center;
-              margin: 32px 0;
+              margin: 40px 0;
             }
             
             .cta-button {
               display: inline-block;
-              background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
+              background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
               color: #ffffff;
-              padding: 16px 32px;
-              border-radius: 8px;
+              padding: 18px 40px;
+              border-radius: 12px;
               text-decoration: none;
-              font-weight: 600;
-              font-size: 16px;
-              box-shadow: 0 4px 14px rgba(211, 47, 47, 0.3);
-              transition: all 0.3s ease;
+              font-weight: 700;
+              font-size: 18px;
+              box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
               border: none;
               cursor: pointer;
+              letter-spacing: 0.5px;
+              position: relative;
+              overflow: hidden;
+            }
+            
+            .cta-button::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: -100%;
+              width: 100%;
+              height: 100%;
+              background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+              transition: left 0.5s;
             }
             
             .cta-button:hover {
-              transform: translateY(-2px);
-              box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+              transform: translateY(-3px) scale(1.02);
+              box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
             }
             
-            .backup-link {
-              margin-top: 32px;
+            .cta-button:hover::before {
+              left: 100%;
+            }
+            
+            .features-section {
+              margin: 50px 0;
+              padding: 30px;
+              background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+              border-radius: 16px;
+              border: 1px solid #E5E7EB;
+            }
+            
+            .features-title {
+              font-size: 22px;
+              font-weight: 700;
+              color: #1F2937;
+              text-align: center;
+              margin-bottom: 30px;
+            }
+            
+            .features-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 20px;
+            }
+            
+            .feature-item {
+              background: #ffffff;
               padding: 20px;
-              background-color: #F5F5F5;
-              border-radius: 8px;
-              border-left: 4px solid #D32F2F;
+              border-radius: 12px;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+              border: 1px solid #F3F4F6;
+              transition: all 0.3s ease;
             }
             
-            .backup-text {
-              font-size: 14px;
-              color: #666666;
+            .feature-item:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            }
+            
+            .feature-icon {
+              font-size: 24px;
+              margin-bottom: 10px;
+            }
+            
+            .feature-title {
+              font-size: 16px;
+              font-weight: 600;
+              color: #1F2937;
               margin-bottom: 8px;
             }
             
+            .feature-desc {
+              font-size: 14px;
+              color: #6B7280;
+              line-height: 1.5;
+            }
+            
+            .backup-link {
+              margin-top: 40px;
+              padding: 25px;
+              background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+              border-radius: 12px;
+              border-left: 5px solid #F59E0B;
+            }
+            
+            .backup-text {
+              font-size: 15px;
+              color: #92400E;
+              margin-bottom: 12px;
+              font-weight: 600;
+            }
+            
             .backup-url {
-              font-size: 12px;
-              color: #D32F2F;
+              font-size: 13px;
+              color: #D97706;
               word-break: break-all;
               text-decoration: none;
+              background: rgba(255, 255, 255, 0.7);
+              padding: 10px;
+              border-radius: 6px;
+              display: block;
             }
             
             .security-note {
-              margin-top: 24px;
-              padding: 16px;
-              background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
-              border-radius: 8px;
-              border-left: 4px solid #F39C12;
+              margin-top: 30px;
+              padding: 20px;
+              background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+              border-radius: 12px;
+              border-left: 5px solid #3B82F6;
               text-align: center;
             }
             
             .security-text {
-              font-size: 13px;
-              color: #E65100;
-              font-weight: 500;
+              font-size: 14px;
+              color: #1E40AF;
+              font-weight: 600;
             }
             
             .footer {
-              background: linear-gradient(135deg, #4A4A4A 0%, #2C2C2C 100%);
-              padding: 30px;
+              background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+              padding: 40px 30px;
               text-align: center;
               color: #ffffff;
+              position: relative;
+            }
+            
+            .footer::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              height: 1px;
+              background: linear-gradient(90deg, transparent, #667EEA, transparent);
+            }
+            
+            .footer-brand {
+              font-size: 24px;
+              font-weight: 700;
+              color: #ffffff;
+              margin-bottom: 12px;
+              background: linear-gradient(135deg, #667EEA 0%, #F093FB 100%);
+              background-clip: text;
+              -webkit-background-clip: text;
+              color: transparent;
             }
             
             .footer-text {
-              font-size: 12px;
+              font-size: 14px;
               color: rgba(255, 255, 255, 0.7);
               margin-bottom: 8px;
+              line-height: 1.6;
             }
             
-            .company-info {
-              font-size: 14px;
+            .footer-highlight {
+              font-size: 16px;
               font-weight: 600;
-              color: #ffffff;
-              margin-bottom: 16px;
+              color: #F3F4F6;
+              margin: 20px 0 16px;
             }
             
-            .social-links {
-              margin-top: 20px;
+            .contact-info {
+              margin-top: 24px;
+              padding-top: 24px;
+              border-top: 1px solid rgba(255, 255, 255, 0.1);
             }
             
-            .social-link {
-              display: inline-block;
-              margin: 0 8px;
-              width: 32px;
-              height: 32px;
-              background: rgba(255, 255, 255, 0.1);
-              border-radius: 6px;
+            .contact-link {
+              color: #667EEA;
               text-decoration: none;
-              color: #ffffff;
-              font-size: 14px;
-              line-height: 32px;
-              transition: all 0.3s ease;
+              font-weight: 600;
             }
             
-            .social-link:hover {
-              background: #D32F2F;
-              transform: translateY(-2px);
+            .contact-link:hover {
+              color: #F093FB;
             }
             
             @media (max-width: 600px) {
               .email-container {
                 margin: 20px;
-                border-radius: 8px;
+                border-radius: 16px;
               }
               
-              .header, .content, .footer {
-                padding: 24px 20px;
+              .header {
+                padding: 40px 24px 30px;
+              }
+              
+              .content {
+                padding: 40px 24px;
+              }
+              
+              .footer {
+                padding: 30px 24px;
               }
               
               .greeting {
-                font-size: 20px;
+                font-size: 24px;
+              }
+              
+              .welcome-message {
+                font-size: 16px;
               }
               
               .cta-button {
-                padding: 14px 28px;
-                font-size: 15px;
+                padding: 16px 32px;
+                font-size: 16px;
               }
               
               .logo {
-                width: 60px;
-                height: 60px;
-                font-size: 24px;
+                width: 80px;
+                height: 80px;
+                font-size: 28px;
               }
               
               .brand-name {
-                font-size: 24px;
+                font-size: 28px;
+              }
+              
+              .features-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+              }
+              
+              .features-section {
+                margin: 30px 0;
+                padding: 20px;
               }
             }
           </style>
@@ -374,25 +544,55 @@ serve(async (req) => {
           <div class="email-container">
             <div class="header">
               <div class="logo-container">
-                <div class="logo">
-                  PAFTA
-                </div>
+                <div class="logo"></div>
               </div>
               <div class="brand-name">PAFTA</div>
-              <div class="tagline">İş Süreçlerinizi Kolaylaştırın</div>
+              <div class="tagline">İş Yönetim Sistemi</div>
             </div>
             
             <div class="content">
-              <h1 class="greeting">Hoş geldiniz${full_name ? `, ${full_name}` : ''}! 🎉</h1>
+              <h1 class="greeting">Hoş Geldiniz${full_name ? `, ${full_name}` : ''}! 🎉</h1>
               
-              <p class="message">
+              <p class="welcome-message">
                 PAFTA ailesine katıldığınız için teşekkür ederiz! Hesabınızı aktifleştirmek ve platformumuzun tüm özelliklerinden yararlanmaya başlamak için aşağıdaki butona tıklayın.
               </p>
+
+              ${company_name ? `
+                <div class="company-message">
+                  <strong>${company_name}</strong> şirketi adına PAFTA İş Yönetim Sistemi'ne kayıt olduğunuz için teşekkür ederiz!
+                </div>
+              ` : ''}
               
               <div class="cta-container">
                 <a href="${confirmLink}" class="cta-button">
-                  ✨ Hesabımı Aktifleştir
+                  🚀 Hesabımı Aktifleştir
                 </a>
+              </div>
+
+              <div class="features-section">
+                <h2 class="features-title">PAFTA ile neler yapabilirsiniz?</h2>
+                <div class="features-grid">
+                  <div class="feature-item">
+                    <div class="feature-icon">👥</div>
+                    <div class="feature-title">CRM & Müşteri Yönetimi</div>
+                    <div class="feature-desc">Müşterilerinizi organize edin, satış fırsatlarını takip edin</div>
+                  </div>
+                  <div class="feature-item">
+                    <div class="feature-icon">💰</div>
+                    <div class="feature-title">Finansal Yönetim</div>
+                    <div class="feature-desc">Gelir-gider takibi, faturalandırma ve raporlama</div>
+                  </div>
+                  <div class="feature-item">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">Satış & Pazarlama</div>
+                    <div class="feature-desc">Satış süreçlerinizi optimize edin, performansınızı artırın</div>
+                  </div>
+                  <div class="feature-item">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-title">Proje Yönetimi</div>
+                    <div class="feature-desc">Projelerinizi planlayın, takip edin ve teslim edin</div>
+                  </div>
+                </div>
               </div>
               
               <div class="backup-link">
@@ -408,12 +608,19 @@ serve(async (req) => {
             </div>
             
             <div class="footer">
-              <p class="company-info">PAFTA</p>
-              <p class="footer-text">İş Süreçleri Yönetim Platformu</p>
+              <div class="footer-brand">PAFTA</div>
+              <p class="footer-highlight">İş Süreçlerinizi Dijitalleştirin</p>
+              <p class="footer-text">Modern işletmeler için kapsamlı iş yönetim çözümü</p>
               <p class="footer-text">Bu e-posta, PAFTA hesap onay sistemi tarafından otomatik olarak gönderilmiştir.</p>
-              <p class="footer-text" style="margin-top: 16px;">
-                Eğer bu hesabı siz oluşturmadıysanız, bu e-postayı güvenle yok sayabilirsiniz.
-              </p>
+              
+              <div class="contact-info">
+                <p class="footer-text">
+                  Sorularınız için: <a href="mailto:destek@pafta.app" class="contact-link">destek@pafta.app</a>
+                </p>
+                <p class="footer-text" style="margin-top: 16px;">
+                  Eğer bu hesabı siz oluşturmadıysanız, bu e-postayı güvenle yok sayabilirsiniz.
+                </p>
+              </div>
             </div>
           </div>
         </body>
