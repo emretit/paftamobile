@@ -143,10 +143,10 @@ serve(async (req) => {
             }
             
             body {
-              font-family: 'Geist Sans', Arial, sans-serif;
+              font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
               line-height: 1.6;
-              color: #1F2937;
-              background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+              color: #4A4A4A;
+              background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
               min-height: 100vh;
             }
             
@@ -154,13 +154,13 @@ serve(async (req) => {
               max-width: 600px;
               margin: 40px auto;
               background-color: #ffffff;
-              box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+              box-shadow: 0 20px 40px rgba(211, 47, 47, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.05);
               border-radius: 20px;
               overflow: hidden;
             }
             
             .header {
-              background: linear-gradient(135deg, #667EEA 0%, #764BA2 50%, #F093FB 100%);
+              background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
               padding: 50px 30px 40px;
               text-align: center;
               position: relative;
@@ -174,29 +174,24 @@ serve(async (req) => {
               left: 0;
               right: 0;
               bottom: 0;
-              background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-              animation: float 20s ease-in-out infinite;
+              background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+              opacity: 0.6;
             }
             
             .header::after {
               content: '';
               position: absolute;
               top: -50%;
-              left: -50%;
+              right: -50%;
               width: 200%;
               height: 200%;
-              background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-              animation: pulse 4s ease-in-out infinite;
-            }
-            
-            @keyframes float {
-              0%, 100% { transform: translateY(0px) rotate(0deg); }
-              50% { transform: translateY(-10px) rotate(5deg); }
+              background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+              animation: pulse 6s ease-in-out infinite;
             }
             
             @keyframes pulse {
-              0%, 100% { opacity: 0.3; transform: scale(1); }
-              50% { opacity: 0.1; transform: scale(1.1); }
+              0%, 100% { opacity: 0.3; transform: scale(1) rotate(0deg); }
+              50% { opacity: 0.1; transform: scale(1.1) rotate(10deg); }
             }
             
             .logo-container {
@@ -215,22 +210,10 @@ serve(async (req) => {
               justify-content: center;
               font-size: 36px;
               font-weight: 800;
-              color: transparent;
-              background-clip: text;
-              -webkit-background-clip: text;
-              background-image: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+              color: #D32F2F;
               letter-spacing: -2px;
-              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(255, 255, 255, 0.3);
-              position: relative;
-            }
-            
-            .logo::before {
-              content: 'PAFTA';
-              position: absolute;
-              background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
-              background-clip: text;
-              -webkit-background-clip: text;
-              color: transparent;
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(255, 255, 255, 0.8);
+              border: 2px solid rgba(255, 255, 255, 0.9);
             }
             
             .brand-name {
@@ -241,7 +224,7 @@ serve(async (req) => {
               color: #ffffff;
               letter-spacing: -1px;
               margin-bottom: 12px;
-              text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+              text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
             }
             
             .tagline {
@@ -255,16 +238,13 @@ serve(async (req) => {
             
             .content {
               padding: 50px 40px;
-              background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+              background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
             }
             
             .greeting {
               font-size: 28px;
               font-weight: 700;
-              background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
-              background-clip: text;
-              -webkit-background-clip: text;
-              color: transparent;
+              color: #1F2937;
               margin-bottom: 20px;
               text-align: center;
               line-height: 1.2;
@@ -285,9 +265,9 @@ serve(async (req) => {
               line-height: 1.6;
               text-align: center;
               padding: 20px;
-              background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
+              background: linear-gradient(135deg, #FEF2F2 0%, #FECACA 100%);
               border-radius: 12px;
-              border-left: 4px solid #667EEA;
+              border-left: 4px solid #D32F2F;
             }
             
             .cta-container {
@@ -297,14 +277,14 @@ serve(async (req) => {
             
             .cta-button {
               display: inline-block;
-              background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+              background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
               color: #ffffff;
               padding: 18px 40px;
               border-radius: 12px;
               text-decoration: none;
               font-weight: 700;
               font-size: 18px;
-              box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+              box-shadow: 0 8px 25px rgba(211, 47, 47, 0.4);
               transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
               border: none;
               cursor: pointer;
@@ -326,7 +306,7 @@ serve(async (req) => {
             
             .cta-button:hover {
               transform: translateY(-3px) scale(1.02);
-              box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+              box-shadow: 0 12px 35px rgba(211, 47, 47, 0.5);
             }
             
             .cta-button:hover::before {
@@ -336,7 +316,7 @@ serve(async (req) => {
             .features-section {
               margin: 50px 0;
               padding: 30px;
-              background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+              background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
               border-radius: 16px;
               border: 1px solid #E5E7EB;
             }
@@ -366,7 +346,8 @@ serve(async (req) => {
             
             .feature-item:hover {
               transform: translateY(-2px);
-              box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+              box-shadow: 0 8px 20px rgba(211, 47, 47, 0.1);
+              border-color: rgba(211, 47, 47, 0.2);
             }
             
             .feature-icon {
@@ -416,15 +397,15 @@ serve(async (req) => {
             .security-note {
               margin-top: 30px;
               padding: 20px;
-              background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+              background: linear-gradient(135deg, #FEF2F2 0%, #FDE8E8 100%);
               border-radius: 12px;
-              border-left: 5px solid #3B82F6;
+              border-left: 5px solid #D32F2F;
               text-align: center;
             }
             
             .security-text {
               font-size: 14px;
-              color: #1E40AF;
+              color: #991B1B;
               font-weight: 600;
             }
             
@@ -443,7 +424,7 @@ serve(async (req) => {
               left: 0;
               right: 0;
               height: 1px;
-              background: linear-gradient(90deg, transparent, #667EEA, transparent);
+              background: linear-gradient(90deg, transparent, #D32F2F, transparent);
             }
             
             .footer-brand {
@@ -451,10 +432,6 @@ serve(async (req) => {
               font-weight: 700;
               color: #ffffff;
               margin-bottom: 12px;
-              background: linear-gradient(135deg, #667EEA 0%, #F093FB 100%);
-              background-clip: text;
-              -webkit-background-clip: text;
-              color: transparent;
             }
             
             .footer-text {
@@ -478,13 +455,13 @@ serve(async (req) => {
             }
             
             .contact-link {
-              color: #667EEA;
+              color: #EF4444;
               text-decoration: none;
               font-weight: 600;
             }
             
             .contact-link:hover {
-              color: #F093FB;
+              color: #DC2626;
             }
             
             @media (max-width: 600px) {
@@ -544,7 +521,7 @@ serve(async (req) => {
           <div class="email-container">
             <div class="header">
               <div class="logo-container">
-                <div class="logo"></div>
+                <div class="logo">PAFTA</div>
               </div>
               <div class="brand-name">PAFTA</div>
               <div class="tagline">İş Yönetim Sistemi</div>
