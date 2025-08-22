@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from '@supabase/supabase-js';
+import { checkSessionStatus, clearAuthTokens } from "@/lib/supabase-utils";
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -13,19 +14,46 @@ export const useAuthState = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
+        
+        // Session'ı güncelle
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Session yoksa local storage'ı temizle
+        if (!session) {
+          clearAuthTokens();
+        }
       }
     );
 
     // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.email);
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const checkSession = async () => {
+      try {
+        const result = await checkSessionStatus();
+        
+        if (result.error) {
+          console.error('Session check error:', result.error);
+          // Hata durumunda session'ı temizle
+          setSession(null);
+          setUser(null);
+          clearAuthTokens();
+        } else {
+          console.log('Initial session check:', result.user?.email);
+          setSession(result.hasSession ? await supabase.auth.getSession().then(r => r.data.session) : null);
+          setUser(result.user);
+        }
+      } catch (error) {
+        console.error('Unexpected session check error:', error);
+        setSession(null);
+        setUser(null);
+        clearAuthTokens();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSession();
 
     return () => subscription.unsubscribe();
   }, []);
@@ -53,11 +81,26 @@ export const useAuthState = () => {
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      // Önce session kontrolü yap
+      const result = await checkSessionStatus();
+      
+      if (!result.hasSession) {
+        console.log('No active session to sign out from');
+        return;
+      }
+
+      const { error } = await supabase.auth.signOut({
+        scope: 'global'
+      });
+      
       if (error) {
         console.error('Sign out error:', error);
         throw error;
       }
+      
+      // Local storage'ı temizle
+      clearAuthTokens();
+      
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;

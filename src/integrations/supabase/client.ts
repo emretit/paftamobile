@@ -9,4 +9,25 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    flowType: 'pkce',
+    debug: process.env.NODE_ENV === 'development',
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    storageKey: 'supabase.auth.token',
+    onAuthStateChange: (event, session) => {
+      // Auth state değişikliklerini logla
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Supabase auth state changed:', event, session?.user?.email);
+      }
+    }
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'ngs-app'
+    }
+  }
+});
