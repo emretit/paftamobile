@@ -27,7 +27,32 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   },
   global: {
     headers: {
-      'X-Client-Info': 'ngs-app'
+      'X-Client-Info': 'ngs-app',
+      // Custom auth için header ekle
+      'X-User-ID': typeof window !== 'undefined' ? localStorage.getItem('user_id') || '' : '',
+      'X-Project-ID': typeof window !== 'undefined' ? localStorage.getItem('project_id') || '' : ''
     }
   }
 });
+
+// Custom auth için header'ları güncelle
+export const updateSupabaseHeaders = (userId?: string, projectId?: string) => {
+  if (typeof window !== 'undefined') {
+    const headers: Record<string, string> = {
+      'X-Client-Info': 'ngs-app'
+    };
+    
+    if (userId) {
+      headers['X-User-ID'] = userId;
+      localStorage.setItem('user_id', userId);
+    }
+    
+    if (projectId) {
+      headers['X-Project-ID'] = projectId;
+      localStorage.setItem('project_id', projectId);
+    }
+    
+    // Supabase client'ın global header'larını güncelle
+    Object.assign(supabase.supabaseKey, headers);
+  }
+};

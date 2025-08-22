@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, updateSupabaseHeaders } from "@/integrations/supabase/client";
 import type { User, Session } from '@supabase/supabase-js';
 import { checkSessionStatus, clearAuthTokens } from "@/lib/supabase-utils";
 
@@ -20,6 +20,8 @@ useEffect(() => {
           setSession(null);
           setUser(null);
           clearAuthTokens();
+          // Supabase header'larını temizle
+          updateSupabaseHeaders();
         } else {
           console.log('Initial session check:', result.user?.email);
           
@@ -31,9 +33,16 @@ useEffect(() => {
             };
             setSession(mockSession as any);
             setUser(result.user as any);
+            
+            // Supabase header'larını güncelle
+            if (result.user.id) {
+              updateSupabaseHeaders(result.user.id, '00000000-0000-0000-0000-000000000001');
+            }
           } else {
             setSession(null);
             setUser(null);
+            // Supabase header'larını temizle
+            updateSupabaseHeaders();
           }
         }
       } catch (error) {
@@ -41,6 +50,8 @@ useEffect(() => {
         setSession(null);
         setUser(null);
         clearAuthTokens();
+        // Supabase header'larını temizle
+        updateSupabaseHeaders();
       } finally {
         setLoading(false);
       }

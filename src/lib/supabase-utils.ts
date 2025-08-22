@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, updateSupabaseHeaders } from '@/integrations/supabase/client';
 
 /**
  * Güvenli logout işlemi
@@ -94,6 +94,8 @@ export const clearAuthTokens = () => {
       localStorage.removeItem('session_token');
       localStorage.removeItem('user');
       localStorage.removeItem('project_ids');
+      localStorage.removeItem('user_id');
+      localStorage.removeItem('project_id');
       
       // Supabase specific cleanup
       localStorage.removeItem('supabase.auth.token');
@@ -111,6 +113,9 @@ export const clearAuthTokens = () => {
       
       // Session storage temizliği
       sessionStorage.clear();
+      
+      // Supabase header'larını temizle
+      updateSupabaseHeaders();
     } catch (e) {
       console.warn('clearAuthTokens encountered an issue:', e);
     }
