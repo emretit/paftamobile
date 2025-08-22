@@ -35,8 +35,11 @@ serve(async (req) => {
       .from('users')
       .select('*')
       .eq('email', email)
-      .eq('is_active', true)
       .maybeSingle();
+
+    if (error) {
+      console.error('Kullanıcı sorgu hatası:', error);
+    }
 
     if (error || !user) {
       return new Response(
@@ -55,7 +58,7 @@ serve(async (req) => {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashedPassword = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     
-    if (hashedPassword !== user.password_hash) {
+    if (hashedPassword.toLowerCase() !== (user.password_hash || '').toLowerCase()) {
       return new Response(
         JSON.stringify({ error: 'Geçersiz email veya şifre' }),
         { 
@@ -70,7 +73,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Hesabınızı email ile onaylamanız gerekiyor' }),
         { 
-          status: 401, 
+          status: 403, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
