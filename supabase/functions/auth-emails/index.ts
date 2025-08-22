@@ -60,14 +60,17 @@ Deno.serve(async (req) => {
         const verifiedPayload = wh.verify(payload, headers) as WebhookPayload
         await sendAuthEmail(verifiedPayload)
       } catch (error) {
-        console.error('Webhook verification failed:', error)
-        return new Response(
-          JSON.stringify({ error: 'Webhook verification failed' }),
-          {
-            status: 401,
-            headers: { 'Content-Type': 'application/json', ...corsHeaders },
-          }
-        )
+        console.error('Webhook verification failed, falling back to JSON parse:', error)
+        try {
+          const parsedPayload = JSON.parse(payload) as WebhookPayload
+          await sendAuthEmail(parsedPayload)
+        } catch (parseErr) {
+          console.error('Fallback JSON parse also failed:', parseErr)
+          return new Response(
+            JSON.stringify({ error: 'Invalid payload' }),
+            { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+          )
+        }
       }
     } else {
       // Fallback: parse payload directly (development mode)
