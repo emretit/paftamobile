@@ -68,19 +68,14 @@ const SignUp = () => {
           description: data?.error || 'Kayıt hatası',
         });
       } else {
-        if (data.requiresConfirmation) {
-          setEmailSent(true);
-          toast({
-            title: "Kayıt Başarılı",
-            description: "Email adresinizi kontrol ederek hesabınızı onaylayın.",
-          });
-        } else {
-          toast({
-            title: "Kayıt Başarılı",
-            description: "Hesabınız oluşturuldu, giriş yapabilirsiniz.",
-          });
+        toast({
+          title: "Kayıt Başarılı",
+          description: "Email adresinizi kontrol ederek hesabınızı onaylayın.",
+        });
+        // Hesap oluşturulduktan sonra giriş sayfasına yönlendir
+        setTimeout(() => {
           navigate("/signin");
-        }
+        }, 2000);
       }
     } catch (err) {
       console.error("Signup error:", err);
@@ -203,13 +198,6 @@ const SignUp = () => {
             <a href="#" className="text-primary hover:text-primary/80 font-medium">Gizlilik Politikası</a>
           </p>
 
-          {/* Email onay mesajı */}
-          {emailSent && (
-            <div className="text-sm text-primary bg-primary/10 p-4 rounded-lg text-center border border-primary/20">
-              <div className="font-medium mb-1">Onay E-postası Gönderildi</div>
-              Lütfen e-posta kutunuzu kontrol edin ve hesabınızı onaylayın.
-            </div>
-          )}
 
           {/* Hata gösterimi */}
           <ErrorDisplay error={error} />
