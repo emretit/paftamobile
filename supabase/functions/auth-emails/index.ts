@@ -2,12 +2,10 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import React from "npm:react@18.3.1";
 import { renderAsync } from "npm:@react-email/components@0.0.22";
-import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 import { SignUpEmail } from "./_templates/signup-email.tsx";
 import { ResetPasswordEmail } from "./_templates/reset-password-email.tsx";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-const hookSecret = Deno.env.get("AUTH_HOOK_SECRET") || "your-webhook-secret";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,6 +13,10 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("Auth email function triggered");
+  console.log("Method:", req.method);
+  console.log("Headers:", Object.fromEntries(req.headers));
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -25,20 +27,17 @@ serve(async (req) => {
 
   try {
     const payload = await req.text();
-    const headers = Object.fromEntries(req.headers);
+    console.log("Raw payload:", payload);
     
-    console.log("Received payload:", payload);
-    console.log("Headers:", headers);
-    
-    // Parse the webhook payload directly as JSON
     let parsed: any = null;
     try {
       parsed = JSON.parse(payload);
-      console.log("Parsed webhook payload:", parsed);
+      console.log("Parsed payload:", JSON.stringify(parsed, null, 2));
     } catch (parseError) {
       console.error("Failed to parse webhook payload:", parseError);
       throw new Error("Invalid webhook payload");
     }
+
     const {
       user,
       email_data: { token, token_hash, redirect_to, email_action_type, site_url },
@@ -69,7 +68,6 @@ serve(async (req) => {
     let html = "";
     let subject = "";
 
-    // Generate appropriate email based on action type
     try {
       switch (email_action_type) {
         case "signup":
@@ -105,7 +103,6 @@ serve(async (req) => {
           break;
 
         case "email_change":
-          // You can add more email types here
           subject = "PAFTA e-posta adresinizi onaylayın";
           html = `<p>E-posta adresinizi onaylamak için <a href="${Deno.env.get("SUPABASE_URL")}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}">buraya tıklayın</a></p>`;
           break;
@@ -117,12 +114,11 @@ serve(async (req) => {
       }
     } catch (renderError) {
       console.error("Email template rendering failed:", renderError);
-      // Fallback to simple HTML if React Email fails
       subject = "PAFTA hesabınızı onaylayın";
       html = `<p>Hesabınızı onaylamak için <a href="${Deno.env.get("SUPABASE_URL")}/auth/v1/verify?token=${token_hash}&type=signup&redirect_to=${redirect_to}">buraya tıklayın</a></p>`;
     }
 
-    // Send email via Resend
+    console.log("Sending email via Resend...");
     const { error } = await resend.emails.send({
       from: "PAFTA <noreply@pafta.app>",
       to: [user.email],
