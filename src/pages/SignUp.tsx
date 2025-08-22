@@ -98,11 +98,16 @@ const SignUp = () => {
           {/* Logo ve başlık */}
           <div className="text-center">
             <div className="flex justify-center mb-6">
-              <img 
-                src="/logo.svg" 
-                alt="PAFTA Logo" 
-                className="h-16 w-auto"
-              />
+              <button 
+                onClick={() => navigate("/")}
+                className="hover:scale-105 transition-transform duration-200"
+              >
+                <img 
+                  src="/logo.svg" 
+                  alt="PAFTA Logo" 
+                  className="h-16 w-auto cursor-pointer"
+                />
+              </button>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-3">
               PAFTA'a Hoş Geldiniz
@@ -201,6 +206,19 @@ const SignUp = () => {
 
           {/* Hata gösterimi */}
           <ErrorDisplay error={error} />
+
+          {/* Ana sayfa tuşu */}
+          <div className="text-center mb-4">
+            <button 
+              onClick={() => navigate("/")}
+              className="inline-flex items-center px-6 py-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              Ana Sayfaya Dön
+            </button>
+          </div>
 
           {/* Giriş yap linki */}
           <div className="text-center">
