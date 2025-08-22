@@ -1,6 +1,6 @@
 
 import React from "react";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import AuthGuard from "@/components/AuthGuard";
 
 type RouteGuardProps = {
   children: React.ReactNode;
@@ -9,6 +9,6 @@ type RouteGuardProps = {
 export const PublicRoute: React.FC<RouteGuardProps> = ({ children }) => children;
 
 // Protected routes now require authentication
-export const AuthenticatedRoute: React.FC<RouteGuardProps> = ({ children }) => (
-  <ProtectedRoute>{children}</ProtectedRoute>
+export const ProtectedRoute: React.FC<RouteGuardProps> = ({ children }) => (
+  <AuthGuard>{children}</AuthGuard>
 );

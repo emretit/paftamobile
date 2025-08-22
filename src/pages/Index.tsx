@@ -10,7 +10,7 @@ import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import FaqSection from "@/components/landing/FaqSection";
 import CtaSection from "@/components/landing/CtaSection";
 import FooterSection from "@/components/landing/FooterSection";
-import UserButton from "@/components/UserButton";
+import LoginButton from "@/components/navbar/LoginButton";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -75,7 +75,7 @@ const Index = () => {
               className="h-8 w-auto"
             />
           </div>
-          <UserButton />
+          <LoginButton />
         </div>
       </header>
       

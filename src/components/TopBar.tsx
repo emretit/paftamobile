@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Bell, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthState } from "@/components/navbar/useAuthState";
+import { useLogout } from "@/components/navbar/useLogout";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import {
   DropdownMenu,
@@ -15,23 +16,8 @@ import {
 
 export const TopBar = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/');
-  };
-
-  const getUserInitials = () => {
-    if (user?.user_metadata?.full_name) {
-      return user.user_metadata.full_name
-        .split(' ')
-        .map((n: string) => n[0])
-        .join('')
-        .toUpperCase();
-    }
-    return user?.email?.substring(0, 2).toUpperCase() || 'U';
-  };
+  const { user, userInitials } = useAuthState();
+  const { handleLogout } = useLogout();
   const { settings } = useCompanySettings();
   
   const handleProfileClick = () => {
@@ -60,7 +46,7 @@ export const TopBar = () => {
             <div className="flex items-center gap-2 cursor-pointer">
               <Avatar>
                 <AvatarImage src={user?.user_metadata?.avatar_url} />
-                <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                <AvatarFallback>{userInitials}</AvatarFallback>
               </Avatar>
               <div className="hidden sm:block">
                 <p className="text-sm font-medium">

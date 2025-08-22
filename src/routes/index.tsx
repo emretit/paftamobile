@@ -1,7 +1,7 @@
 
 import React, { Suspense } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { PublicRoute, AuthenticatedRoute } from "./RouteGuards";
+import { PublicRoute, ProtectedRoute } from "./RouteGuards";
 import { appRoutes } from "./appRoutes";
 
 interface AppRoutesProps {
@@ -21,9 +21,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ isCollapsed, setIsCollapse
           {appRoutes.map((route) => {
             // Create route element with props for protected routes
             const RouteElement = route.protected ? (
-              <AuthenticatedRoute>
+              <ProtectedRoute>
                 <route.component isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-              </AuthenticatedRoute>
+              </ProtectedRoute>
             ) : (
               <PublicRoute>
                 <route.component />

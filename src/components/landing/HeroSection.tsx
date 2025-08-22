@@ -22,7 +22,7 @@ const HeroSection = () => {
           Tüm iş süreçlerinizi tek bir platformda yönetin ve büyümeye odaklanın.
         </p>
         <div className="mt-10 flex justify-center">
-          <Link to="/auth">
+          <Link to="/signup">
             <Button size="lg" className="px-8 shadow-lg hover:shadow-xl transition-all">
               Ücretsiz Deneyin
             </Button>

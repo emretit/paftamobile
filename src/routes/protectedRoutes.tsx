@@ -1,5 +1,5 @@
 import { lazy } from "react";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { RouteConfig } from "./types";
 
 // Lazy load dashboard and other protected pages
