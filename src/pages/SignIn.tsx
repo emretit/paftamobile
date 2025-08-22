@@ -60,14 +60,8 @@ const SignIn = () => {
         return;
       }
 
-      // Şifre kontrolü (SHA-256)
-      const encoder = new TextEncoder();
-      const data = encoder.encode(password);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashedPassword = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-      if (hashedPassword.toLowerCase() !== (user.password_hash || '').toLowerCase()) {
+      // Şifre kontrolü (düz metin - geçici)
+      if (password !== user.password_hash) {
         setError('Geçersiz email veya şifre');
         toast({
           variant: "destructive",
