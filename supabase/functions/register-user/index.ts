@@ -123,7 +123,7 @@ serve(async (req) => {
     const confirmLink = `${Deno.env.get('SUPABASE_URL')}/functions/v1/confirm-email?token=${confirmationToken}`;
 
     const { error: sendError } = await resend.emails.send({
-      from: 'PAFTA <onboarding@resend.dev>',
+      from: 'PAFTA <noreply@pafta.app>',
       to: [email],
       subject: 'PAFTA hesabınızı onaylayın 🚀',
       html: `
