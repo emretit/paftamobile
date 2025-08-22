@@ -1,1 +1,13 @@
 project_id = "vwhwufnckpqirxptwncw"
+
+[auth]
+enable_signup = true
+enable_confirmations = true
+enable_anonymous_sign_ins = false
+
+[auth.hook.send_email]
+enabled = true
+uri = "https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/auth-emails"
+
+[functions.auth-emails]
+verify_jwt = false

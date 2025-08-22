@@ -2504,8 +2504,10 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          company_name: string | null
           created_at: string | null
           first_name: string | null
+          full_name: string | null
           id: string
           is_active: boolean | null
           last_name: string | null
@@ -2513,8 +2515,10 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          company_name?: string | null
           created_at?: string | null
           first_name?: string | null
+          full_name?: string | null
           id: string
           is_active?: boolean | null
           last_name?: string | null
@@ -2522,8 +2526,10 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          company_name?: string | null
           created_at?: string | null
           first_name?: string | null
+          full_name?: string | null
           id?: string
           is_active?: boolean | null
           last_name?: string | null
@@ -3525,7 +3531,9 @@ export type Database = {
         Returns: unknown
       }
       has_role: {
-        Args: { required_role: Database["public"]["Enums"]["user_role"] }
+        Args:
+          | { required_role: Database["public"]["Enums"]["user_role"] }
+          | { required_role: string }
         Returns: boolean
       }
       record_audit_log: {
