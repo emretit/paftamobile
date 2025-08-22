@@ -49,16 +49,26 @@ const SignIn = () => {
           description: data?.error || 'Giriş hatası',
         });
       } else {
-        // Session token'ı localStorage'a kaydet
+        // Session token ve kullanıcı bilgilerini kaydet
         localStorage.setItem('session_token', data.session_token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        if (data.project_ids) {
+          localStorage.setItem('project_ids', JSON.stringify(data.project_ids));
+        }
+        if (data.default_project_id) {
+          localStorage.setItem('default_project_id', data.default_project_id);
+        }
         
         toast({
           title: "Başarılı",
           description: "Giriş yapıldı",
         });
         
-        navigate("/dashboard");
+        if (data.default_project_id) {
+          navigate(`/dashboard?project=${data.default_project_id}`);
+        } else {
+          navigate("/dashboard");
+        }
       }
     } catch (err) {
       console.error('Login error:', err);

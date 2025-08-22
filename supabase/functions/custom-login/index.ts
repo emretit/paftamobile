@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { crypto } from "https://deno.land/std@0.208.0/crypto/mod.ts";
+import bcrypt from 'npm:bcryptjs@2.4.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,7 +35,7 @@ serve(async (req) => {
     const { data: user, error } = await supabase
       .from('users')
       .select('*')
-      .eq('email', email)
+      .ilike('email', email)
       .maybeSingle();
 
     if (error) {
@@ -51,14 +52,29 @@ serve(async (req) => {
       );
     }
 
-    // Şifre kontrolü (crypto API ile)
+    // Şifre kontrolü (SHA-256 veya bcrypt)
     const encoder = new TextEncoder();
     const data = encoder.encode(password);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashedPassword = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const sha256Hex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    const storedHash = (user.password_hash || '').trim();
+    let passwordValid = false;
+
+    if (storedHash.startsWith('$2')) {
+      // bcrypt formatı
+      try {
+        passwordValid = await bcrypt.compare(password, storedHash);
+      } catch (e) {
+        console.error('bcrypt karşılaştırma hatası:', e);
+      }
+    } else {
+      // sha256 karşılaştırma
+      passwordValid = sha256Hex.toLowerCase() === storedHash.toLowerCase();
+    }
     
-    if (hashedPassword.toLowerCase() !== (user.password_hash || '').toLowerCase()) {
+    if (!passwordValid) {
       return new Response(
         JSON.stringify({ error: 'Geçersiz email veya şifre' }),
         { 
@@ -110,6 +126,20 @@ serve(async (req) => {
       .update({ last_login: new Date().toISOString() })
       .eq('id', user.id);
 
+    // Kullanıcının projelerini getir
+    let defaultProjectId: string | null = null;
+    let projectIds: string[] = [];
+    try {
+      const { data: userProjects } = await supabase
+        .from('user_projects')
+        .select('project_id')
+        .eq('user_id', user.id);
+      projectIds = userProjects?.map((p: any) => p.project_id) ?? [];
+      defaultProjectId = projectIds[0] ?? null;
+    } catch (e) {
+      console.error('user_projects sorgu hatası:', e);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true,
@@ -119,7 +149,9 @@ serve(async (req) => {
           full_name: user.full_name,
           role: user.role
         },
-        session_token: sessionToken
+        session_token: sessionToken,
+        project_ids: projectIds,
+        default_project_id: defaultProjectId
       }),
       { 
         status: 200, 
