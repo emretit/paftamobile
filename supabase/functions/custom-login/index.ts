@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
-import { compare } from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
+import { crypto } from "https://deno.land/std@0.208.0/crypto/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -48,12 +48,27 @@ serve(async (req) => {
       );
     }
 
-    // Şifre kontrolü
-    const passwordMatch = await compare(password, user.password_hash);
+    // Şifre kontrolü (crypto API ile)
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashedPassword = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     
-    if (!passwordMatch) {
+    if (hashedPassword !== user.password_hash) {
       return new Response(
         JSON.stringify({ error: 'Geçersiz email veya şifre' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Hesap aktif mi kontrol et
+    if (!user.is_active) {
+      return new Response(
+        JSON.stringify({ error: 'Hesabınızı email ile onaylamanız gerekiyor' }),
         { 
           status: 401, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

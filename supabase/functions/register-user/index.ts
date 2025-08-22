@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
-import { hash } from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
+import { crypto } from "https://deno.land/std@0.208.0/crypto/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -48,18 +48,27 @@ serve(async (req) => {
       );
     }
 
-    // Şifreyi hashle
-    const hashedPassword = await hash(password);
+    // Şifreyi hashle (crypto API kullanarak)
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashedPassword = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-    // Kullanıcıyı ekle
+    // Email onay token'ı oluştur
+    const confirmationToken = crypto.randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24); // 24 saat geçerli
+
+    // Kullanıcıyı ekle (admin rolü ile ama aktif değil)
     const { data: newUser, error } = await supabase
       .from('users')
       .insert({
         email,
         password_hash: hashedPassword,
         full_name,
-        role: 'user',
-        is_active: true
+        role: 'admin', // Admin olarak ekle
+        is_active: false // Mail onayı bekliyor
       })
       .select()
       .single();
@@ -75,17 +84,42 @@ serve(async (req) => {
       );
     }
 
+    // Email onay kaydı ekle
+    const { error: confirmationError } = await supabase
+      .from('email_confirmations')
+      .insert({
+        user_id: newUser.id,
+        email,
+        token: confirmationToken,
+        type: 'signup',
+        expires_at: expiresAt.toISOString()
+      });
+
+    if (confirmationError) {
+      console.error('Email onay kaydı hatası:', confirmationError);
+      // Kullanıcıyı sil
+      await supabase.from('users').delete().eq('id', newUser.id);
+      return new Response(
+        JSON.stringify({ error: 'Kayıt işlemi başarısız' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     // Başarılı yanıt
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Kayıt başarılı',
+        message: 'Kayıt başarılı. Email adresinizi kontrol ederek hesabınızı onaylayın.',
         user: {
           id: newUser.id,
           email: newUser.email,
           full_name: newUser.full_name,
           role: newUser.role
-        }
+        },
+        requiresConfirmation: true
       }),
       { 
         status: 200, 

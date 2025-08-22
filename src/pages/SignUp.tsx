@@ -63,11 +63,19 @@ const SignUp = () => {
           description: data?.error || 'Kayıt hatası',
         });
       } else {
-        toast({
-          title: "Kayıt Başarılı",
-          description: "Hesabınız oluşturuldu, giriş yapabilirsiniz.",
-        });
-        navigate("/signin");
+        if (data.requiresConfirmation) {
+          setEmailSent(true);
+          toast({
+            title: "Kayıt Başarılı",
+            description: "Email adresinizi kontrol ederek hesabınızı onaylayın.",
+          });
+        } else {
+          toast({
+            title: "Kayıt Başarılı",
+            description: "Hesabınız oluşturuldu, giriş yapabilirsiniz.",
+          });
+          navigate("/signin");
+        }
       }
     } catch (err) {
       console.error("Signup error:", err);
