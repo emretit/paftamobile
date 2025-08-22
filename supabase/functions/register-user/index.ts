@@ -120,7 +120,7 @@ serve(async (req) => {
     }
 
     const resend = new Resend(resendApiKey);
-    const confirmLink = `${Deno.env.get('SUPABASE_URL')}/functions/v1/confirm-email?token=${confirmationToken}`;
+    const confirmLink = `https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/confirm-email?token=${confirmationToken}`;
 
     const { error: sendError } = await resend.emails.send({
       from: 'PAFTA <noreply@pafta.app>',
