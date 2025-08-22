@@ -12,15 +12,21 @@ serve(async (req) => {
   }
 
   try {
-    const { token } = await req.json();
+    const url = new URL(req.url);
+    const method = req.method.toUpperCase();
+
+    let token = '';
+    if (method === 'GET') {
+      token = url.searchParams.get('token') || '';
+    } else if (method === 'POST') {
+      const body = await req.json().catch(() => ({}));
+      token = body.token || '';
+    }
 
     if (!token) {
       return new Response(
         JSON.stringify({ error: 'Token gereklidir' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -71,6 +77,11 @@ serve(async (req) => {
       .from('user_email_confirmations')
       .update({ used_at: new Date().toISOString() })
       .eq('id', confirmation.id);
+
+    if (method === 'GET') {
+      const html = `<!doctype html><html lang="tr"><head><meta charset="utf-8" /><title>PAFTA - Onaylandı</title></head><body style="font-family:Arial,sans-serif;padding:24px;text-align:center"><h2>Hesabınız onaylandı 🎉</h2><p>Artık uygulamaya giriş yapabilirsiniz.</p><p><a href="/signin" style="display:inline-block;margin-top:16px;background:#4f46e5;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none">Giriş Yap</a></p></body></html>`;
+      return new Response(html, { status: 200, headers: { ...corsHeaders, 'Content-Type': 'text/html' } });
+    }
 
     return new Response(
       JSON.stringify({ 

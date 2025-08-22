@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { crypto } from "https://deno.land/std@0.208.0/crypto/mod.ts";
+import { Resend } from 'npm:resend@4.0.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -108,6 +109,45 @@ serve(async (req) => {
       );
     }
 
+    // Email gönderimi (Resend)
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      console.error('RESEND_API_KEY eksik');
+      return new Response(
+        JSON.stringify({ error: 'Email servisi yapılandırılmamış' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const resend = new Resend(resendApiKey);
+    const confirmLink = `${Deno.env.get('SUPABASE_URL')}/functions/v1/confirm-email?token=${confirmationToken}`;
+
+    const { error: sendError } = await resend.emails.send({
+      from: 'PAFTA <onboarding@resend.dev>',
+      to: [email],
+      subject: 'PAFTA hesabınızı onaylayın 🚀',
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height:1.6">
+          <h2>Merhaba${full_name ? `, ${full_name}` : ''}!</h2>
+          <p>PAFTA hesabınızı tamamlamak için aşağıdaki butona tıklayın.</p>
+          <p style="margin:24px 0">
+            <a href="${confirmLink}" style="background:#4f46e5;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;display:inline-block">Hesabımı Onayla</a>
+          </p>
+          <p>Buton çalışmazsa bu bağlantıyı kopyalayın:</p>
+          <p><a href="${confirmLink}">${confirmLink}</a></p>
+          <p style="color:#6b7280;font-size:12px">Bu bağlantı 24 saat sonra geçerliliğini yitirir.</p>
+        </div>
+      `,
+    });
+
+    if (sendError) {
+      console.error('Resend email gönderim hatası:', sendError);
+      return new Response(
+        JSON.stringify({ error: 'Onay e-postası gönderilemedi' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Başarılı yanıt
     return new Response(
       JSON.stringify({ 
@@ -121,10 +161,7 @@ serve(async (req) => {
         },
         requiresConfirmation: true
       }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
