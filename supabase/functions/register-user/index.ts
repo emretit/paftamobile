@@ -255,17 +255,18 @@ serve(async (req) => {
             }
             
             .logo {
-              width: 100px;
+              width: 120px;
               height: 100px;
               background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
               border-radius: 24px;
               display: inline-flex;
               align-items: center;
               justify-content: center;
-              font-size: 36px;
+              font-size: 32px;
               font-weight: 800;
               color: #D32F2F;
-              letter-spacing: -2px;
+              letter-spacing: -1px;
+              white-space: nowrap;
               box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(255, 255, 255, 0.8);
               border: 2px solid rgba(255, 255, 255, 0.9);
             }
@@ -550,9 +551,9 @@ serve(async (req) => {
               }
               
               .logo {
-                width: 80px;
+                width: 100px;
                 height: 80px;
-                font-size: 28px;
+                font-size: 24px;
               }
               
               .brand-name {
