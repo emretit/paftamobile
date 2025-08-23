@@ -26,6 +26,23 @@ const SignIn = () => {
     }
   }, [navigate]);
 
+  // Check if email confirmation was successful
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const confirmed = urlParams.get('confirmed');
+    
+    if (confirmed === 'true') {
+      toast({
+        title: "Hesap Onaylandı! 🎉",
+        description: "Hesabınız başarıyla onaylandı. Artık giriş yapabilirsiniz.",
+        variant: "default",
+      });
+      
+      // URL'den parametreyi temizle
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [toast]);
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
