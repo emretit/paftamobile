@@ -98,7 +98,7 @@ serve(async (req) => {
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24); // 24 saat
 
-    // Session kaydet
+    // Session kaydet (hata olsa bile login'i engellemeyelim, detayları loglayalım)
     const { error: sessionError } = await supabase
       .from('user_sessions')
       .insert({
@@ -109,13 +109,7 @@ serve(async (req) => {
 
     if (sessionError) {
       console.error('Session oluşturma hatası:', sessionError);
-      return new Response(
-        JSON.stringify({ error: 'Giriş işlemi başarısız' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      // Not: Burada 500 dönmek yerine devam edeceğiz ve client-side token kullanacağız
     }
 
     // Last login güncelle
