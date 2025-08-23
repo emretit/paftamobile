@@ -48,11 +48,12 @@ const SignIn = () => {
 
       if (error) {
         console.error("Login function error:", error);
-        setError("Giriş sırasında bir hata oluştu.");
+        console.error("Error details:", JSON.stringify(error, null, 2));
+        setError("Giriş sırasında bir hata oluştu: " + (error.message || JSON.stringify(error)));
         toast({
           variant: "destructive",
           title: "Hata",
-          description: "Giriş sırasında bir hata oluştu.",
+          description: "Giriş sırasında bir hata oluştu: " + (error.message || JSON.stringify(error)),
         });
         setLoading(false);
         return;
