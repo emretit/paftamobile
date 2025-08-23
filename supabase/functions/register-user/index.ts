@@ -585,7 +585,6 @@ serve(async (req) => {
               <div class="logo-container">
                 <div class="logo">PAFTA</div>
               </div>
-              <div class="brand-name">PAFTA</div>
               <div class="tagline">İş Yönetim Sistemi</div>
             </div>
             
