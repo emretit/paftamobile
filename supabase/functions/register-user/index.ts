@@ -280,15 +280,21 @@ serve(async (req) => {
               letter-spacing: -1px;
               margin-bottom: 12px;
               text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+              display: none;
             }
             
             .tagline {
               position: relative;
               z-index: 3;
-              color: rgba(255, 255, 255, 0.95);
-              font-size: 16px;
-              font-weight: 600;
+              color: #ffffff;
+              font-size: 18px;
+              font-weight: 700;
               letter-spacing: 0.5px;
+              text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+              background: rgba(0, 0, 0, 0.2);
+              padding: 8px 16px;
+              border-radius: 20px;
+              backdrop-filter: blur(10px);
             }
             
             .content {
@@ -558,6 +564,7 @@ serve(async (req) => {
               
               .brand-name {
                 font-size: 28px;
+                display: none;
               }
               
               .features-grid {
