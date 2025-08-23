@@ -26,12 +26,16 @@ const SignIn = () => {
     }
   }, [navigate]);
 
-  // Check if email confirmation was successful
+  // Check for email confirmation token and handle account activation
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
     const confirmed = urlParams.get('confirmed');
     
-    if (confirmed === 'true') {
+    if (token) {
+      // Token varsa confirm-email edge function'ını çağır
+      handleEmailConfirmation(token);
+    } else if (confirmed === 'true') {
       toast({
         title: "Hesap Onaylandı! 🎉",
         description: "Hesabınız başarıyla onaylandı. Artık giriş yapabilirsiniz.",
@@ -42,6 +46,38 @@ const SignIn = () => {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [toast]);
+
+  const handleEmailConfirmation = async (token: string) => {
+    try {
+      const response = await supabase.functions.invoke('confirm-email', {
+        body: { token }
+      });
+
+      if (response.data?.success) {
+        toast({
+          title: "Hesap Onaylandı! 🎉",
+          description: "Hesabınız başarıyla onaylandı. Artık giriş yapabilirsiniz.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Onay Hatası",
+          description: response.data?.error || "Hesap onaylanırken bir hata oluştu.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Email onay hatası:', error);
+      toast({
+        title: "Onay Hatası",
+        description: "Hesap onaylanırken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
+    
+    // URL'den token parametresini temizle
+    window.history.replaceState({}, document.title, window.location.pathname);
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();

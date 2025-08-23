@@ -174,7 +174,7 @@ serve(async (req) => {
     }
 
     const resend = new Resend(resendApiKey);
-    const confirmLink = `https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/confirm-email?token=${confirmationToken}`;
+    const confirmLink = `https://pafta.app/signin?token=${confirmationToken}`;
 
     const { error: sendError } = await resend.emails.send({
       from: 'PAFTA <noreply@pafta.app>',
