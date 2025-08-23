@@ -34,109 +34,90 @@ export const SignUpEmail = ({
 }: SignUpEmailProps) => (
   <Html>
     <Head />
-    <Preview>PAFTA hesabınızı onaylayın ve işletmenizi dijital dönüşüme hazırlayın</Preview>
+    <Preview>PAFTA hesabınızı onaylayın 🚀</Preview>
     <Body style={main}>
       <Container style={container}>
-        {/* Header with logo and branding */}
+        {/* Clean Header with Logo */}
         <Section style={header}>
-          <Row>
-            <Column>
-              <Img
-                src="https://preview--ngs-crm-erp.lovable.app/logo.svg"
-                width="150"
-                height="60"
-                alt="PAFTA Logo"
-                style={logo}
-              />
-            </Column>
-          </Row>
-          <Text style={tagline}>İş Yönetim Sistemi</Text>
+          <Img
+            src={`${supabase_url.replace('/v1', '')}/logo.svg`}
+            width="120"
+            height="48"
+            alt="PAFTA Logo"
+            style={logo}
+          />
         </Section>
         
-        {/* Main content */}
-        <Section style={content}>
-          <Heading style={h1}>Hoş Geldiniz! 🎉</Heading>
-          
+        {/* Welcome Section */}
+        <Section style={welcomeSection}>
+          <Heading style={h1}>Hesabınızı Onaylayın</Heading>
           <Text style={greeting}>
             Merhaba <strong>{user_name || "Değerli Kullanıcı"}</strong>,
           </Text>
-          
-          <Text style={text}>
-            {company_name && (
+          <Text style={welcomeText}>
+            {company_name ? (
               <>
-                <strong>{company_name}</strong> şirketi adına PAFTA İş Yönetim Sistemi{"'"}ne kayıt olduğunuz için teşekkür ederiz! 
+                <strong>{company_name}</strong> için PAFTA İş Yönetim Sistemi hesabınızı oluşturdunuz.
               </>
+            ) : (
+              "PAFTA İş Yönetim Sistemi hesabınızı oluşturdunuz."
             )}
-            {!company_name && "PAFTA İş Yönetim Sistemi'ne kayıt olduğunuz için teşekkür ederiz!"}
           </Text>
+        </Section>
 
-          <Text style={text}>
-            Hesabınızı aktifleştirmek ve PAFTA{"'"}nın tüm özelliklerinden yararlanmaya başlamak için aşağıdaki butona tıklayın:
+        {/* CTA Section */}
+        <Section style={ctaSection}>
+          <Text style={ctaText}>
+            Hesabınızı aktifleştirmek için aşağıdaki butona tıklayın:
           </Text>
+          <Link
+            href={`${supabase_url}/auth/v1/verify?token=${token_hash}&type=signup&redirect_to=${redirect_to}`}
+            style={button}
+          >
+            Hesabımı Aktifleştir
+          </Link>
+        </Section>
 
-          {/* CTA Button */}
-          <Section style={buttonContainer}>
-            <Link
-              href={`${supabase_url}/auth/v1/verify?token=${token_hash}&type=signup&redirect_to=${redirect_to}`}
-              style={button}
-            >
-              🚀 Hesabımı Aktifleştir
-            </Link>
+        {/* Features Grid */}
+        <Section style={featuresSection}>
+          <Text style={featuresTitle}>PAFTA'nın Özellikleri</Text>
+          <Section style={featuresGrid}>
+            <Section style={featureItem}>
+              <Text style={featureIcon}>📊</Text>
+              <Text style={featureLabel}>Müşteri Yönetimi</Text>
+            </Section>
+            <Section style={featureItem}>
+              <Text style={featureIcon}>💰</Text>
+              <Text style={featureLabel}>Finansal Takip</Text>
+            </Section>
+            <Section style={featureItem}>
+              <Text style={featureIcon}>📈</Text>
+              <Text style={featureLabel}>Satış Fırsatları</Text>
+            </Section>
+            <Section style={featureItem}>
+              <Text style={featureIcon}>🔧</Text>
+              <Text style={featureLabel}>Servis Yönetimi</Text>
+            </Section>
           </Section>
+        </Section>
 
-          <Hr style={hr} />
-
-          {/* Features highlight */}
-          <Section style={featuresSection}>
-            <Text style={featuresTitle}>PAFTA ile neler yapabilirsiniz?</Text>
-            
-            <Row style={featureRow}>
-              <Column style={featureColumn}>
-                <Text style={featureText}>📊 <strong>Müşteri Yönetimi</strong></Text>
-                <Text style={featureDescription}>Müşterilerinizi organize edin ve takip edin</Text>
-              </Column>
-              <Column style={featureColumn}>
-                <Text style={featureText}>💰 <strong>Finansal Takip</strong></Text>
-                <Text style={featureDescription}>Gelir-gider ve nakit akışınızı kontrol edin</Text>
-              </Column>
-            </Row>
-            
-            <Row style={featureRow}>
-              <Column style={featureColumn}>
-                <Text style={featureText}>📈 <strong>Satış Fırsatları</strong></Text>
-                <Text style={featureDescription}>Satış süreçlerinizi yönetin ve artırın</Text>
-              </Column>
-              <Column style={featureColumn}>
-                <Text style={featureText}>🔧 <strong>Servis Yönetimi</strong></Text>
-                <Text style={featureDescription}>Teknik destek süreçlerinizi optimize edin</Text>
-              </Column>
-            </Row>
-          </Section>
-
-          <Hr style={hr} />
-
-          {/* Alternative link */}
-          <Text style={alternativeText}>
-            Buton çalışmıyorsa, aşağıdaki bağlantıyı kopyalayıp tarayıcınıza yapıştırabilirsiniz:
+        {/* Help Section */}
+        <Section style={helpSection}>
+          <Text style={helpText}>
+            Buton çalışmıyorsa bu bağlantıyı tarayıcınıza kopyalayın:
           </Text>
-          
           <Text style={linkText}>
             {`${supabase_url}/auth/v1/verify?token=${token_hash}&type=signup&redirect_to=${redirect_to}`}
-          </Text>
-
-          <Text style={securityNote}>
-            🔒 <strong>Güvenlik:</strong> Bu e-postayı sadece siz talep ettiyseniz linke tıklayın. 
-            Eğer bu hesabı oluşturmadıysanız, bu e-postayı güvenle yok sayabilirsiniz.
           </Text>
         </Section>
 
         {/* Footer */}
         <Section style={footer}>
           <Text style={footerText}>
-            Sorularınız için: <Link href="mailto:destek@pafta.app" style={footerLink}>destek@pafta.app</Link>
+            Destek için: <Link href="mailto:destek@pafta.app" style={footerLink}>destek@pafta.app</Link>
           </Text>
-          <Text style={footerText}>
-            <strong>PAFTA Ekibi</strong> ile başarılı bir iş yönetimi deneyimi 🎯
+          <Text style={footerNote}>
+            Bu e-postayı sadece siz talep ettiyseniz linke tıklayın.
           </Text>
         </Section>
       </Container>
@@ -146,176 +127,181 @@ export const SignUpEmail = ({
 
 export default SignUpEmail
 
-// Styles
+// Clean, modern styles
 const main = {
   backgroundColor: '#f8fafc',
   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, sans-serif',
+  margin: '0',
+  padding: '40px 20px',
 }
 
 const container = {
   backgroundColor: '#ffffff',
   margin: '0 auto',
-  padding: '0',
-  maxWidth: '600px',
-  borderRadius: '8px',
-  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+  maxWidth: '580px',
+  borderRadius: '16px',
+  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
   overflow: 'hidden',
 }
 
 const header = {
-  backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  padding: '40px 30px 30px',
+  backgroundColor: '#ffffff',
+  padding: '40px 40px 30px',
   textAlign: 'center' as const,
-  background: '#4F46E5',
+  borderBottom: '1px solid #f1f5f9',
 }
 
 const logo = {
   margin: '0 auto',
-  filter: 'brightness(0) invert(1)',
+  display: 'block',
 }
 
-const tagline = {
-  color: '#ffffff',
-  fontSize: '16px',
-  fontWeight: '500',
-  margin: '10px 0 0',
+const welcomeSection = {
+  padding: '40px 40px 20px',
   textAlign: 'center' as const,
 }
 
-const content = {
-  padding: '40px 30px',
-}
-
 const h1 = {
-  color: '#1a202c',
-  fontSize: '28px',
-  fontWeight: 'bold',
-  lineHeight: '36px',
-  margin: '0 0 30px',
+  color: '#1e293b',
+  fontSize: '32px',
+  fontWeight: '700',
+  lineHeight: '40px',
+  margin: '0 0 20px',
   textAlign: 'center' as const,
 }
 
 const greeting = {
-  color: '#2d3748',
+  color: '#475569',
   fontSize: '18px',
   lineHeight: '28px',
-  margin: '0 0 20px',
-}
-
-const text = {
-  color: '#4a5568',
-  fontSize: '16px',
-  lineHeight: '26px',
-  margin: '0 0 20px',
-}
-
-const buttonContainer = {
+  margin: '0 0 16px',
   textAlign: 'center' as const,
-  margin: '40px 0',
+}
+
+const welcomeText = {
+  color: '#64748b',
+  fontSize: '16px',
+  lineHeight: '24px',
+  margin: '0',
+  textAlign: 'center' as const,
+}
+
+const ctaSection = {
+  padding: '30px 40px',
+  textAlign: 'center' as const,
+}
+
+const ctaText = {
+  color: '#475569',
+  fontSize: '16px',
+  lineHeight: '24px',
+  margin: '0 0 30px',
 }
 
 const button = {
-  backgroundColor: '#4F46E5',
-  borderRadius: '8px',
+  backgroundColor: '#4f46e5',
+  borderRadius: '12px',
   color: '#ffffff',
   display: 'inline-block',
-  fontSize: '18px',
-  fontWeight: 'bold',
-  lineHeight: '50px',
+  fontSize: '16px',
+  fontWeight: '600',
+  lineHeight: '1',
+  padding: '16px 32px',
   textAlign: 'center' as const,
   textDecoration: 'none',
-  width: '280px',
-  border: 'none',
-  boxShadow: '0 4px 14px 0 rgba(79, 70, 229, 0.3)',
+  boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
   transition: 'all 0.2s ease',
 }
 
-const hr = {
-  borderColor: '#e2e8f0',
-  margin: '30px 0',
-}
-
 const featuresSection = {
-  margin: '30px 0',
+  padding: '30px 40px',
+  backgroundColor: '#f8fafc',
 }
 
 const featuresTitle = {
-  color: '#2d3748',
-  fontSize: '20px',
-  fontWeight: 'bold',
+  color: '#1e293b',
+  fontSize: '18px',
+  fontWeight: '600',
   textAlign: 'center' as const,
-  margin: '0 0 25px',
+  margin: '0 0 24px',
 }
 
-const featureRow = {
-  marginBottom: '20px',
+const featuresGrid = {
+  display: 'flex',
+  flexWrap: 'wrap' as const,
+  gap: '16px',
+  justifyContent: 'center',
 }
 
-const featureColumn = {
-  width: '48%',
-  paddingRight: '2%',
+const featureItem = {
+  textAlign: 'center' as const,
+  width: '120px',
+  margin: '0 8px 16px',
 }
 
-const featureText = {
-  color: '#4a5568',
-  fontSize: '14px',
-  fontWeight: 'bold',
+const featureIcon = {
+  fontSize: '24px',
   margin: '0 0 8px',
+  textAlign: 'center' as const,
 }
 
-const featureDescription = {
-  color: '#718096',
-  fontSize: '13px',
-  lineHeight: '18px',
-  margin: '0 0 15px',
-}
-
-const alternativeText = {
-  color: '#718096',
+const featureLabel = {
+  color: '#475569',
   fontSize: '14px',
-  lineHeight: '22px',
-  margin: '30px 0 15px',
+  fontWeight: '500',
+  margin: '0',
+  textAlign: 'center' as const,
+}
+
+const helpSection = {
+  padding: '30px 40px',
+  backgroundColor: '#f1f5f9',
+}
+
+const helpText = {
+  color: '#64748b',
+  fontSize: '14px',
+  lineHeight: '20px',
+  margin: '0 0 12px',
   textAlign: 'center' as const,
 }
 
 const linkText = {
-  backgroundColor: '#f7fafc',
+  backgroundColor: '#ffffff',
   border: '1px solid #e2e8f0',
-  borderRadius: '6px',
-  color: '#4a5568',
+  borderRadius: '8px',
+  color: '#64748b',
   fontSize: '12px',
-  lineHeight: '20px',
-  padding: '15px',
+  lineHeight: '16px',
+  padding: '12px',
   wordBreak: 'break-all' as const,
-  margin: '0 0 25px',
-}
-
-const securityNote = {
-  backgroundColor: '#fef5e7',
-  border: '1px solid #f6e05e',
-  borderRadius: '6px',
-  color: '#744210',
-  fontSize: '14px',
-  lineHeight: '22px',
-  padding: '15px',
-  margin: '25px 0',
+  margin: '0',
+  textAlign: 'center' as const,
 }
 
 const footer = {
   backgroundColor: '#f8fafc',
-  padding: '30px',
+  padding: '24px 40px',
   textAlign: 'center' as const,
   borderTop: '1px solid #e2e8f0',
 }
 
 const footerText = {
-  color: '#718096',
+  color: '#64748b',
   fontSize: '14px',
-  lineHeight: '22px',
-  margin: '0 0 10px',
+  lineHeight: '20px',
+  margin: '0 0 8px',
 }
 
 const footerLink = {
-  color: '#4F46E5',
+  color: '#4f46e5',
   textDecoration: 'none',
+  fontWeight: '500',
+}
+
+const footerNote = {
+  color: '#94a3b8',
+  fontSize: '12px',
+  lineHeight: '16px',
+  margin: '0',
 }
