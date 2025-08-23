@@ -55,11 +55,13 @@ export const LogoUploadField: React.FC<LogoUploadFieldProps> = ({
     setIsUploading(true);
     try {
       // Check authentication first
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const userData = localStorage.getItem('user');
+      if (!userData) {
         toast.error('Logo yüklemek için giriş yapmanız gerekiyor');
         return;
       }
+      
+      const user = JSON.parse(userData);
 
       // Create unique filename with timestamp
       const fileExt = file.name.split('.').pop();

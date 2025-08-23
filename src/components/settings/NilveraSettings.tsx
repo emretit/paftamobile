@@ -23,13 +23,15 @@ export const NilveraSettings = () => {
 
   const checkNilveraStatus = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      const userData = localStorage.getItem('user');
+      if (!userData) return;
+
+      const user = JSON.parse(userData);
 
       const { data, error } = await supabase
         .from('nilvera_auth')
         .select('*')
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .single();
 
       if (data && !error) {
@@ -57,14 +59,22 @@ export const NilveraSettings = () => {
     setLoading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      // Kendi session sistemini kullan
+      const userData = localStorage.getItem('user');
+      if (!userData) {
+        throw new Error("Oturum bulunamadı");
+      }
+      
+      const user = JSON.parse(userData);
+      const sessionToken = localStorage.getItem('session_token');
+      
+      if (!sessionToken) {
         throw new Error("Oturum bulunamadı");
       }
 
       const { data, error } = await supabase.functions.invoke('nilvera-auth', {
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${sessionToken}`,
         },
         body: {
           action: 'authenticate',
@@ -103,13 +113,16 @@ export const NilveraSettings = () => {
 
   const handleDisconnect = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      // Kendi session sistemini kullan
+      const userData = localStorage.getItem('user');
+      if (!userData) return;
+      
+      const user = JSON.parse(userData);
 
       const { error } = await supabase
         .from('nilvera_auth')
         .delete()
-        .eq('user_id', session.user.id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 

@@ -68,8 +68,10 @@ export const useActiveProject = () => {
 
   const createProject = async (name: string, description?: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const userData = localStorage.getItem('user');
+      if (!userData) throw new Error('Not authenticated');
+      
+      const user = JSON.parse(userData);
 
       // Create project
       const { data: project, error: projectError } = await supabase
@@ -118,7 +120,7 @@ export const useActiveProject = () => {
         .from('project_members')
         .select('role')
         .eq('project_id', projectId)
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('user_id', JSON.parse(localStorage.getItem('user') || '{}').id)
         .single();
       
       setUserRole(member?.role || 'member');
