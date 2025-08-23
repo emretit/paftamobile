@@ -49,11 +49,23 @@ const SignIn = () => {
       if (error) {
         console.error("Login function error:", error);
         console.error("Error details:", JSON.stringify(error, null, 2));
-        setError("Giriş sırasında bir hata oluştu: " + (error.message || JSON.stringify(error)));
+        
+        // Eğer error.context varsa onu da göster
+        let errorMessage = "Giriş sırasında bir hata oluştu";
+        if (error.context?.body) {
+          try {
+            const errorBody = JSON.parse(error.context.body);
+            errorMessage = errorBody.error || errorMessage;
+          } catch (e) {
+            console.log("Could not parse error body:", error.context.body);
+          }
+        }
+        
+        setError(errorMessage);
         toast({
           variant: "destructive",
           title: "Hata",
-          description: "Giriş sırasında bir hata oluştu: " + (error.message || JSON.stringify(error)),
+          description: errorMessage,
         });
         setLoading(false);
         return;
