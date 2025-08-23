@@ -23,6 +23,7 @@ export type Database = {
           id: string
           opportunity_id: string | null
           priority: string
+          project_id: string
           related_item_id: string | null
           related_item_title: string | null
           related_item_type: string | null
@@ -39,6 +40,7 @@ export type Database = {
           id?: string
           opportunity_id?: string | null
           priority?: string
+          project_id: string
           related_item_id?: string | null
           related_item_title?: string | null
           related_item_type?: string | null
@@ -55,6 +57,7 @@ export type Database = {
           id?: string
           opportunity_id?: string | null
           priority?: string
+          project_id?: string
           related_item_id?: string | null
           related_item_title?: string | null
           related_item_type?: string | null
@@ -88,6 +91,7 @@ export type Database = {
           entity_id: string | null
           entity_type: string
           id: string
+          project_id: string
           user_id: string | null
         }
         Insert: {
@@ -97,6 +101,7 @@ export type Database = {
           entity_id?: string | null
           entity_type: string
           id?: string
+          project_id: string
           user_id?: string | null
         }
         Update: {
@@ -106,6 +111,7 @@ export type Database = {
           entity_id?: string | null
           entity_type?: string
           id?: string
+          project_id?: string
           user_id?: string | null
         }
         Relationships: []
@@ -130,6 +136,7 @@ export type Database = {
           is_active: boolean | null
           last_transaction_date: string | null
           notes: string | null
+          project_id: string
           start_date: string
           swift_code: string | null
           updated_at: string | null
@@ -153,6 +160,7 @@ export type Database = {
           is_active?: boolean | null
           last_transaction_date?: string | null
           notes?: string | null
+          project_id: string
           start_date?: string
           swift_code?: string | null
           updated_at?: string | null
@@ -176,6 +184,7 @@ export type Database = {
           is_active?: boolean | null
           last_transaction_date?: string | null
           notes?: string | null
+          project_id?: string
           start_date?: string
           swift_code?: string | null
           updated_at?: string | null
@@ -193,6 +202,7 @@ export type Database = {
           exchange_rate: number | null
           id: string
           metadata: Json | null
+          project_id: string | null
           reference_number: string | null
           related_transaction_id: string | null
           status: string | null
@@ -211,6 +221,7 @@ export type Database = {
           exchange_rate?: number | null
           id?: string
           metadata?: Json | null
+          project_id?: string | null
           reference_number?: string | null
           related_transaction_id?: string | null
           status?: string | null
@@ -229,6 +240,7 @@ export type Database = {
           exchange_rate?: number | null
           id?: string
           metadata?: Json | null
+          project_id?: string | null
           reference_number?: string | null
           related_transaction_id?: string | null
           status?: string | null
@@ -258,6 +270,7 @@ export type Database = {
           installment_count: number | null
           merchant_category: string | null
           merchant_name: string | null
+          project_id: string
           reference_number: string | null
           transaction_date: string
           updated_at: string | null
@@ -272,6 +285,7 @@ export type Database = {
           installment_count?: number | null
           merchant_category?: string | null
           merchant_name?: string | null
+          project_id: string
           reference_number?: string | null
           transaction_date?: string
           updated_at?: string | null
@@ -286,6 +300,7 @@ export type Database = {
           installment_count?: number | null
           merchant_category?: string | null
           merchant_name?: string | null
+          project_id?: string
           reference_number?: string | null
           transaction_date?: string
           updated_at?: string | null
@@ -313,6 +328,7 @@ export type Database = {
           is_recurring: boolean | null
           next_occurrence_date: string | null
           probability: number | null
+          project_id: string
           recurrence_pattern: string | null
           updated_at: string | null
         }
@@ -328,6 +344,7 @@ export type Database = {
           is_recurring?: boolean | null
           next_occurrence_date?: string | null
           probability?: number | null
+          project_id: string
           recurrence_pattern?: string | null
           updated_at?: string | null
         }
@@ -343,6 +360,7 @@ export type Database = {
           is_recurring?: boolean | null
           next_occurrence_date?: string | null
           probability?: number | null
+          project_id?: string
           recurrence_pattern?: string | null
           updated_at?: string | null
         }
@@ -353,6 +371,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          project_id: string
           type: string
           updated_at: string
           user_id: string | null
@@ -361,6 +380,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          project_id: string
           type: string
           updated_at?: string
           user_id?: string | null
@@ -369,6 +389,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          project_id?: string
           type?: string
           updated_at?: string
           user_id?: string | null
@@ -382,6 +403,7 @@ export type Database = {
           id: string
           main_category: string
           month: number
+          project_id: string
           subcategory: string
           updated_at: string
           user_id: string
@@ -394,6 +416,7 @@ export type Database = {
           id?: string
           main_category: string
           month: number
+          project_id: string
           subcategory: string
           updated_at?: string
           user_id: string
@@ -406,6 +429,7 @@ export type Database = {
           id?: string
           main_category?: string
           month?: number
+          project_id?: string
           subcategory?: string
           updated_at?: string
           user_id?: string
@@ -423,6 +447,7 @@ export type Database = {
           date: string
           description: string | null
           id: string
+          project_id: string
           type: string
           updated_at: string
           user_id: string
@@ -435,6 +460,7 @@ export type Database = {
           date: string
           description?: string | null
           id?: string
+          project_id: string
           type: string
           updated_at?: string
           user_id: string
@@ -447,6 +473,7 @@ export type Database = {
           date?: string
           description?: string | null
           id?: string
+          project_id?: string
           type?: string
           updated_at?: string
           user_id?: string
@@ -472,6 +499,7 @@ export type Database = {
           issue_date: string
           notes: string | null
           payee: string
+          project_id: string
           status: string
           updated_at: string
           user_id: string
@@ -486,6 +514,7 @@ export type Database = {
           issue_date: string
           notes?: string | null
           payee: string
+          project_id: string
           status?: string
           updated_at?: string
           user_id: string
@@ -500,6 +529,7 @@ export type Database = {
           issue_date?: string
           notes?: string | null
           payee?: string
+          project_id?: string
           status?: string
           updated_at?: string
           user_id?: string
@@ -516,6 +546,7 @@ export type Database = {
           id: string
           logo_url: string | null
           phone: string | null
+          project_id: string | null
           tax_number: string | null
           tax_office: string | null
           updated_at: string | null
@@ -531,6 +562,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           phone?: string | null
+          project_id?: string | null
           tax_number?: string | null
           tax_office?: string | null
           updated_at?: string | null
@@ -546,6 +578,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           phone?: string | null
+          project_id?: string | null
           tax_number?: string | null
           tax_office?: string | null
           updated_at?: string | null
@@ -570,6 +603,7 @@ export type Database = {
           last_payment_date: string | null
           minimum_payment: number | null
           payment_due_date: string | null
+          project_id: string
           status: Database["public"]["Enums"]["card_status"] | null
           updated_at: string | null
         }
@@ -588,6 +622,7 @@ export type Database = {
           last_payment_date?: string | null
           minimum_payment?: number | null
           payment_due_date?: string | null
+          project_id: string
           status?: Database["public"]["Enums"]["card_status"] | null
           updated_at?: string | null
         }
@@ -606,6 +641,7 @@ export type Database = {
           last_payment_date?: string | null
           minimum_payment?: number | null
           payment_due_date?: string | null
+          project_id?: string
           status?: Database["public"]["Enums"]["card_status"] | null
           updated_at?: string | null
         }
@@ -625,6 +661,7 @@ export type Database = {
           company_name: string | null
           created_at: string | null
           id: string
+          project_id: string
           updated_at: string | null
           user_id: string | null
           vkn: string
@@ -634,6 +671,7 @@ export type Database = {
           company_name?: string | null
           created_at?: string | null
           id?: string
+          project_id: string
           updated_at?: string | null
           user_id?: string | null
           vkn: string
@@ -643,6 +681,7 @@ export type Database = {
           company_name?: string | null
           created_at?: string | null
           id?: string
+          project_id?: string
           updated_at?: string | null
           user_id?: string | null
           vkn?: string
@@ -662,6 +701,7 @@ export type Database = {
           mobile_phone: string | null
           name: string
           office_phone: string | null
+          project_id: string
           representative: string | null
           status: Database["public"]["Enums"]["customer_status"]
           tax_number: string | null
@@ -681,6 +721,7 @@ export type Database = {
           mobile_phone?: string | null
           name: string
           office_phone?: string | null
+          project_id: string
           representative?: string | null
           status?: Database["public"]["Enums"]["customer_status"]
           tax_number?: string | null
@@ -700,6 +741,7 @@ export type Database = {
           mobile_phone?: string | null
           name?: string
           office_phone?: string | null
+          project_id?: string
           representative?: string | null
           status?: Database["public"]["Enums"]["customer_status"]
           tax_number?: string | null
@@ -723,6 +765,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          project_id: string
           updated_at: string | null
         }
         Insert: {
@@ -730,6 +773,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          project_id: string
           updated_at?: string | null
         }
         Update: {
@@ -737,6 +781,7 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          project_id?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -764,6 +809,7 @@ export type Database = {
           matched_stock_code: string | null
           matched_stock_id: string | null
           matched_stock_name: string | null
+          project_id: string
           updated_at: string
           updated_by: string | null
         }
@@ -789,6 +835,7 @@ export type Database = {
           matched_stock_code?: string | null
           matched_stock_id?: string | null
           matched_stock_name?: string | null
+          project_id: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -814,6 +861,7 @@ export type Database = {
           matched_stock_code?: string | null
           matched_stock_id?: string | null
           matched_stock_name?: string | null
+          project_id?: string
           updated_at?: string
           updated_by?: string | null
         }
@@ -843,6 +891,7 @@ export type Database = {
           line_total: number
           product_code: string | null
           product_name: string
+          project_id: string
           quantity: number
           received_invoice_id: string | null
           sent_invoice_id: string | null
@@ -858,6 +907,7 @@ export type Database = {
           line_total: number
           product_code?: string | null
           product_name: string
+          project_id: string
           quantity: number
           received_invoice_id?: string | null
           sent_invoice_id?: string | null
@@ -873,6 +923,7 @@ export type Database = {
           line_total?: number
           product_code?: string | null
           product_name?: string
+          project_id?: string
           quantity?: number
           received_invoice_id?: string | null
           sent_invoice_id?: string | null
@@ -904,6 +955,7 @@ export type Database = {
           id: string
           operation: string
           operation_type: string
+          project_id: string
           request_data: Json | null
           response_data: Json | null
           response_time_ms: number | null
@@ -916,6 +968,7 @@ export type Database = {
           id?: string
           operation: string
           operation_type: string
+          project_id: string
           request_data?: Json | null
           response_data?: Json | null
           response_time_ms?: number | null
@@ -928,6 +981,7 @@ export type Database = {
           id?: string
           operation?: string
           operation_type?: string
+          project_id?: string
           request_data?: Json | null
           response_data?: Json | null
           response_time_ms?: number | null
@@ -948,6 +1002,7 @@ export type Database = {
           nilvera_id: string | null
           paid_amount: number
           pdf_url: string | null
+          project_id: string
           remaining_amount: number
           status: string
           supplier_name: string
@@ -968,6 +1023,7 @@ export type Database = {
           nilvera_id?: string | null
           paid_amount?: number
           pdf_url?: string | null
+          project_id: string
           remaining_amount?: number
           status: string
           supplier_name: string
@@ -988,6 +1044,7 @@ export type Database = {
           nilvera_id?: string | null
           paid_amount?: number
           pdf_url?: string | null
+          project_id?: string
           remaining_amount?: number
           status?: string
           supplier_name?: string
@@ -1010,6 +1067,7 @@ export type Database = {
           invoice_state: number | null
           invoice_uuid: string
           notes: string | null
+          project_id: string
           response_sent: boolean | null
           response_xml: string | null
           subtotal: number | null
@@ -1031,6 +1089,7 @@ export type Database = {
           invoice_state?: number | null
           invoice_uuid: string
           notes?: string | null
+          project_id: string
           response_sent?: boolean | null
           response_xml?: string | null
           subtotal?: number | null
@@ -1052,6 +1111,7 @@ export type Database = {
           invoice_state?: number | null
           invoice_uuid?: string
           notes?: string | null
+          project_id?: string
           response_sent?: boolean | null
           response_xml?: string | null
           subtotal?: number | null
@@ -1078,6 +1138,7 @@ export type Database = {
           invoice_state: number | null
           invoice_uuid: string
           notes: string | null
+          project_id: string
           response_xml: string | null
           subtotal: number | null
           tax_amount: number | null
@@ -1101,6 +1162,7 @@ export type Database = {
           invoice_state?: number | null
           invoice_uuid: string
           notes?: string | null
+          project_id: string
           response_xml?: string | null
           subtotal?: number | null
           tax_amount?: number | null
@@ -1124,6 +1186,7 @@ export type Database = {
           invoice_state?: number | null
           invoice_uuid?: string
           notes?: string | null
+          project_id?: string
           response_xml?: string | null
           subtotal?: number | null
           tax_amount?: number | null
@@ -1143,6 +1206,7 @@ export type Database = {
           email: string
           expires_at: string
           id: string
+          project_id: string
           token: string
           type: string
           updated_at: string
@@ -1154,6 +1218,7 @@ export type Database = {
           email: string
           expires_at: string
           id?: string
+          project_id: string
           token: string
           type: string
           updated_at?: string
@@ -1165,6 +1230,7 @@ export type Database = {
           email?: string
           expires_at?: string
           id?: string
+          project_id?: string
           token?: string
           type?: string
           updated_at?: string
@@ -1182,6 +1248,7 @@ export type Database = {
           is_active: boolean | null
           last_login: string | null
           password_hash: string
+          project_id: string
           updated_at: string | null
         }
         Insert: {
@@ -1192,6 +1259,7 @@ export type Database = {
           is_active?: boolean | null
           last_login?: string | null
           password_hash: string
+          project_id: string
           updated_at?: string | null
         }
         Update: {
@@ -1202,6 +1270,7 @@ export type Database = {
           is_active?: boolean | null
           last_login?: string | null
           password_hash?: string
+          project_id?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -1222,6 +1291,7 @@ export type Database = {
           file_name: string
           file_url: string
           id: string
+          project_id: string
           updated_at: string | null
           upload_date: string | null
         }
@@ -1232,6 +1302,7 @@ export type Database = {
           file_name: string
           file_url: string
           id?: string
+          project_id: string
           updated_at?: string | null
           upload_date?: string | null
         }
@@ -1242,6 +1313,7 @@ export type Database = {
           file_name?: string
           file_url?: string
           id?: string
+          project_id?: string
           updated_at?: string | null
           upload_date?: string | null
         }
@@ -1262,6 +1334,7 @@ export type Database = {
           end_date: string
           id: string
           leave_type: string
+          project_id: string
           reason: string | null
           start_date: string
           status: string
@@ -1273,6 +1346,7 @@ export type Database = {
           end_date: string
           id?: string
           leave_type: string
+          project_id: string
           reason?: string | null
           start_date: string
           status?: string
@@ -1284,6 +1358,7 @@ export type Database = {
           end_date?: string
           id?: string
           leave_type?: string
+          project_id?: string
           reason?: string | null
           start_date?: string
           status?: string
@@ -1306,6 +1381,7 @@ export type Database = {
           feedback: string | null
           id: string
           metrics: Json
+          project_id: string
           rating: number | null
           review_date: string
           review_type: string
@@ -1317,6 +1393,7 @@ export type Database = {
           feedback?: string | null
           id?: string
           metrics?: Json
+          project_id: string
           rating?: number | null
           review_date: string
           review_type: string
@@ -1328,6 +1405,7 @@ export type Database = {
           feedback?: string | null
           id?: string
           metrics?: Json
+          project_id?: string
           rating?: number | null
           review_date?: string
           review_type?: string
@@ -1362,6 +1440,7 @@ export type Database = {
           meal_allowance: number | null
           net_salary: number
           notes: string | null
+          project_id: string
           salary_input_type: string | null
           severance_provision: number | null
           sgk_employee_amount: number | null
@@ -1399,6 +1478,7 @@ export type Database = {
           meal_allowance?: number | null
           net_salary: number
           notes?: string | null
+          project_id: string
           salary_input_type?: string | null
           severance_provision?: number | null
           sgk_employee_amount?: number | null
@@ -1436,6 +1516,7 @@ export type Database = {
           meal_allowance?: number | null
           net_salary?: number
           notes?: string | null
+          project_id?: string
           salary_input_type?: string | null
           severance_provision?: number | null
           sgk_employee_amount?: number | null
@@ -1491,6 +1572,7 @@ export type Database = {
           phone: string | null
           position: string
           postal_code: string | null
+          project_id: string
           status: Database["public"]["Enums"]["employee_status"]
           updated_at: string | null
         }
@@ -1519,6 +1601,7 @@ export type Database = {
           phone?: string | null
           position: string
           postal_code?: string | null
+          project_id: string
           status?: Database["public"]["Enums"]["employee_status"]
           updated_at?: string | null
         }
@@ -1547,6 +1630,7 @@ export type Database = {
           phone?: string | null
           position?: string
           postal_code?: string | null
+          project_id?: string
           status?: Database["public"]["Enums"]["employee_status"]
           updated_at?: string | null
         }
@@ -1561,6 +1645,7 @@ export type Database = {
           maintenance_schedule: Json | null
           model: string | null
           name: string
+          project_id: string
           serial_number: string | null
           specifications: Json | null
           status: string | null
@@ -1576,6 +1661,7 @@ export type Database = {
           maintenance_schedule?: Json | null
           model?: string | null
           name: string
+          project_id: string
           serial_number?: string | null
           specifications?: Json | null
           status?: string | null
@@ -1591,6 +1677,7 @@ export type Database = {
           maintenance_schedule?: Json | null
           model?: string | null
           name?: string
+          project_id?: string
           serial_number?: string | null
           specifications?: Json | null
           status?: string | null
@@ -1617,6 +1704,7 @@ export type Database = {
           end_time: string
           event_type: Database["public"]["Enums"]["event_type"]
           id: string
+          project_id: string
           start_time: string
           title: string
           updated_at: string | null
@@ -1629,6 +1717,7 @@ export type Database = {
           end_time: string
           event_type: Database["public"]["Enums"]["event_type"]
           id?: string
+          project_id: string
           start_time: string
           title: string
           updated_at?: string | null
@@ -1641,6 +1730,7 @@ export type Database = {
           end_time?: string
           event_type?: Database["public"]["Enums"]["event_type"]
           id?: string
+          project_id?: string
           start_time?: string
           title?: string
           updated_at?: string | null
@@ -1653,6 +1743,7 @@ export type Database = {
           created_at: string | null
           id: string
           message: string | null
+          project_id: string
           status: string
           updated_at: string
         }
@@ -1661,6 +1752,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           message?: string | null
+          project_id: string
           status: string
           updated_at: string
         }
@@ -1669,6 +1761,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           message?: string | null
+          project_id?: string
           status?: string
           updated_at?: string
         }
@@ -1684,6 +1777,7 @@ export type Database = {
           forex_buying: number | null
           forex_selling: number | null
           id: string
+          project_id: string
           update_date: string
           updated_at: string | null
         }
@@ -1696,6 +1790,7 @@ export type Database = {
           forex_buying?: number | null
           forex_selling?: number | null
           id?: string
+          project_id: string
           update_date?: string
           updated_at?: string | null
         }
@@ -1708,6 +1803,7 @@ export type Database = {
           forex_buying?: number | null
           forex_selling?: number | null
           id?: string
+          project_id?: string
           update_date?: string
           updated_at?: string | null
         }
@@ -1729,6 +1825,7 @@ export type Database = {
           issue_date: string
           issuer_name: string
           notes: string | null
+          project_id: string
           recipient_name: string
           status: Database["public"]["Enums"]["financial_instrument_status"]
           updated_at: string | null
@@ -1748,6 +1845,7 @@ export type Database = {
           issue_date?: string
           issuer_name: string
           notes?: string | null
+          project_id: string
           recipient_name: string
           status?: Database["public"]["Enums"]["financial_instrument_status"]
           updated_at?: string | null
@@ -1767,6 +1865,7 @@ export type Database = {
           issue_date?: string
           issuer_name?: string
           notes?: string | null
+          project_id?: string
           recipient_name?: string
           status?: Database["public"]["Enums"]["financial_instrument_status"]
           updated_at?: string | null
@@ -1793,6 +1892,7 @@ export type Database = {
           month: number
           notes: string | null
           position_name: string
+          project_id: string
           total_cost: number | null
           updated_at: string | null
           user_id: string
@@ -1809,6 +1909,7 @@ export type Database = {
           month: number
           notes?: string | null
           position_name: string
+          project_id: string
           total_cost?: number | null
           updated_at?: string | null
           user_id: string
@@ -1825,6 +1926,7 @@ export type Database = {
           month?: number
           notes?: string | null
           position_name?: string
+          project_id?: string
           total_cost?: number | null
           updated_at?: string | null
           user_id?: string
@@ -1838,6 +1940,7 @@ export type Database = {
           id: string
           month: number
           profit_loss: number
+          project_id: string
           purchase_invoice: number
           purchase_vat: number
           returns_given: number
@@ -1854,6 +1957,7 @@ export type Database = {
           id?: string
           month: number
           profit_loss?: number
+          project_id: string
           purchase_invoice?: number
           purchase_vat?: number
           returns_given?: number
@@ -1870,6 +1974,7 @@ export type Database = {
           id?: string
           month?: number
           profit_loss?: number
+          project_id?: string
           purchase_invoice?: number
           purchase_vat?: number
           returns_given?: number
@@ -1894,6 +1999,7 @@ export type Database = {
           interest_rate: number
           loan_name: string
           notes: string | null
+          project_id: string
           remaining_debt: number
           start_date: string
           status: string
@@ -1910,6 +2016,7 @@ export type Database = {
           interest_rate: number
           loan_name: string
           notes?: string | null
+          project_id: string
           remaining_debt?: number
           start_date: string
           status?: string
@@ -1926,6 +2033,7 @@ export type Database = {
           interest_rate?: number
           loan_name?: string
           notes?: string | null
+          project_id?: string
           remaining_debt?: number
           start_date?: string
           status?: string
@@ -1942,6 +2050,7 @@ export type Database = {
           id: string
           month: number
           notes: string | null
+          project_id: string
           subcategory: string | null
           target_amount: number | null
           updated_at: string | null
@@ -1955,6 +2064,7 @@ export type Database = {
           id?: string
           month: number
           notes?: string | null
+          project_id: string
           subcategory?: string | null
           target_amount?: number | null
           updated_at?: string | null
@@ -1968,6 +2078,7 @@ export type Database = {
           id?: string
           month?: number
           notes?: string | null
+          project_id?: string
           subcategory?: string | null
           target_amount?: number | null
           updated_at?: string | null
@@ -1983,6 +2094,7 @@ export type Database = {
           execution_id: string | null
           execution_time_ms: number | null
           id: string
+          project_id: string
           result_data: Json | null
           status: string
           trigger_data: Json | null
@@ -1996,6 +2108,7 @@ export type Database = {
           execution_id?: string | null
           execution_time_ms?: number | null
           id?: string
+          project_id: string
           result_data?: Json | null
           status: string
           trigger_data?: Json | null
@@ -2009,6 +2122,7 @@ export type Database = {
           execution_id?: string | null
           execution_time_ms?: number | null
           id?: string
+          project_id?: string
           result_data?: Json | null
           status?: string
           trigger_data?: Json | null
@@ -2024,6 +2138,7 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
+          project_id: string
           refresh_token: string | null
           updated_at: string
           user_id: string | null
@@ -2033,6 +2148,7 @@ export type Database = {
           created_at?: string
           expires_at: string
           id?: string
+          project_id: string
           refresh_token?: string | null
           updated_at?: string
           user_id?: string | null
@@ -2042,6 +2158,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          project_id?: string
           refresh_token?: string | null
           updated_at?: string
           user_id?: string | null
@@ -2057,6 +2174,7 @@ export type Database = {
           description: string | null
           id: string
           month: number
+          project_id: string
           subcategory: string | null
           updated_at: string | null
           user_id: string
@@ -2070,6 +2188,7 @@ export type Database = {
           description?: string | null
           id?: string
           month: number
+          project_id: string
           subcategory?: string | null
           updated_at?: string | null
           user_id: string
@@ -2083,6 +2202,7 @@ export type Database = {
           description?: string | null
           id?: string
           month?: number
+          project_id?: string
           subcategory?: string | null
           updated_at?: string | null
           user_id?: string
@@ -2104,6 +2224,7 @@ export type Database = {
           opportunity_type: string | null
           priority: string
           products: Json | null
+          project_id: string
           proposal_id: string | null
           status: string
           tags: string[] | null
@@ -2124,6 +2245,7 @@ export type Database = {
           opportunity_type?: string | null
           priority?: string
           products?: Json | null
+          project_id: string
           proposal_id?: string | null
           status?: string
           tags?: string[] | null
@@ -2144,6 +2266,7 @@ export type Database = {
           opportunity_type?: string | null
           priority?: string
           products?: Json | null
+          project_id?: string
           proposal_id?: string | null
           status?: string
           tags?: string[] | null
@@ -2183,6 +2306,7 @@ export type Database = {
           id: string
           is_default: boolean
           order_index: number
+          project_id: string
           title: string
           updated_at: string | null
           user_id: string | null
@@ -2194,6 +2318,7 @@ export type Database = {
           id?: string
           is_default?: boolean
           order_index?: number
+          project_id: string
           title: string
           updated_at?: string | null
           user_id?: string | null
@@ -2205,6 +2330,7 @@ export type Database = {
           id?: string
           is_default?: boolean
           order_index?: number
+          project_id?: string
           title?: string
           updated_at?: string | null
           user_id?: string | null
@@ -2217,6 +2343,7 @@ export type Database = {
           display_name: string
           id: number
           name: string
+          project_id: string
           updated_at: string | null
         }
         Insert: {
@@ -2224,6 +2351,7 @@ export type Database = {
           display_name: string
           id?: number
           name: string
+          project_id: string
           updated_at?: string | null
         }
         Update: {
@@ -2231,6 +2359,7 @@ export type Database = {
           display_name?: string
           id?: number
           name?: string
+          project_id?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -2241,6 +2370,7 @@ export type Database = {
           id: string
           notification_type: string
           payment_id: string | null
+          project_id: string
           recipient_email: string
           sent_at: string | null
           status: string | null
@@ -2250,6 +2380,7 @@ export type Database = {
           id?: string
           notification_type: string
           payment_id?: string | null
+          project_id: string
           recipient_email: string
           sent_at?: string | null
           status?: string | null
@@ -2259,6 +2390,7 @@ export type Database = {
           id?: string
           notification_type?: string
           payment_id?: string | null
+          project_id?: string
           recipient_email?: string
           sent_at?: string | null
           status?: string | null
@@ -2286,6 +2418,7 @@ export type Database = {
           payment_date: string
           payment_direction: string | null
           payment_type: string | null
+          project_id: string
           recipient_name: string
           reference_note: string | null
           status: Database["public"]["Enums"]["payment_status"]
@@ -2304,6 +2437,7 @@ export type Database = {
           payment_date?: string
           payment_direction?: string | null
           payment_type?: string | null
+          project_id: string
           recipient_name: string
           reference_note?: string | null
           status?: Database["public"]["Enums"]["payment_status"]
@@ -2322,6 +2456,7 @@ export type Database = {
           payment_date?: string
           payment_direction?: string | null
           payment_type?: string | null
+          project_id?: string
           recipient_name?: string
           reference_note?: string | null
           status?: Database["public"]["Enums"]["payment_status"]
@@ -2360,6 +2495,7 @@ export type Database = {
           is_default: boolean | null
           locale: string
           name: string
+          project_id: string
           schema_json: Json
           type: string
           updated_at: string | null
@@ -2372,6 +2508,7 @@ export type Database = {
           is_default?: boolean | null
           locale?: string
           name: string
+          project_id: string
           schema_json: Json
           type?: string
           updated_at?: string | null
@@ -2384,6 +2521,7 @@ export type Database = {
           is_default?: boolean | null
           locale?: string
           name?: string
+          project_id?: string
           schema_json?: Json
           type?: string
           updated_at?: string | null
@@ -2397,6 +2535,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          project_id: string
           updated_at: string | null
         }
         Insert: {
@@ -2404,6 +2543,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          project_id: string
           updated_at?: string | null
         }
         Update: {
@@ -2411,6 +2551,7 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          project_id?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -2432,6 +2573,7 @@ export type Database = {
           name: string
           price: number
           product_type: string
+          project_id: string
           sku: string | null
           status: string
           stock_quantity: number | null
@@ -2457,6 +2599,7 @@ export type Database = {
           name: string
           price?: number
           product_type?: string
+          project_id: string
           sku?: string | null
           status?: string
           stock_quantity?: number | null
@@ -2482,6 +2625,7 @@ export type Database = {
           name?: string
           price?: number
           product_type?: string
+          project_id?: string
           sku?: string | null
           status?: string
           stock_quantity?: number | null
@@ -2511,6 +2655,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           last_name: string | null
+          project_id: string
           updated_at: string | null
         }
         Insert: {
@@ -2522,6 +2667,7 @@ export type Database = {
           id: string
           is_active?: boolean | null
           last_name?: string | null
+          project_id: string
           updated_at?: string | null
         }
         Update: {
@@ -2533,6 +2679,37 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           last_name?: string | null
+          project_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -2546,6 +2723,7 @@ export type Database = {
           is_active: boolean | null
           is_default: boolean | null
           label: string
+          project_id: string
           sort_order: number | null
           text: string
           updated_at: string | null
@@ -2558,6 +2736,7 @@ export type Database = {
           is_active?: boolean | null
           is_default?: boolean | null
           label: string
+          project_id: string
           sort_order?: number | null
           text: string
           updated_at?: string | null
@@ -2570,6 +2749,7 @@ export type Database = {
           is_active?: boolean | null
           is_default?: boolean | null
           label?: string
+          project_id?: string
           sort_order?: number | null
           text?: string
           updated_at?: string | null
@@ -2593,6 +2773,7 @@ export type Database = {
           other_terms: string | null
           payment_terms: string | null
           price_terms: string | null
+          project_id: string
           status: string
           terms: string | null
           title: string
@@ -2617,6 +2798,7 @@ export type Database = {
           other_terms?: string | null
           payment_terms?: string | null
           price_terms?: string | null
+          project_id: string
           status?: string
           terms?: string | null
           title: string
@@ -2641,6 +2823,7 @@ export type Database = {
           other_terms?: string | null
           payment_terms?: string | null
           price_terms?: string | null
+          project_id?: string
           status?: string
           terms?: string | null
           title?: string
@@ -2684,6 +2867,7 @@ export type Database = {
           notes: string | null
           paid_amount: number | null
           po_id: string | null
+          project_id: string
           status: Database["public"]["Enums"]["invoice_status"] | null
           subtotal: number
           supplier_id: string
@@ -2701,6 +2885,7 @@ export type Database = {
           notes?: string | null
           paid_amount?: number | null
           po_id?: string | null
+          project_id: string
           status?: Database["public"]["Enums"]["invoice_status"] | null
           subtotal?: number
           supplier_id: string
@@ -2718,6 +2903,7 @@ export type Database = {
           notes?: string | null
           paid_amount?: number | null
           po_id?: string | null
+          project_id?: string
           status?: Database["public"]["Enums"]["invoice_status"] | null
           subtotal?: number
           supplier_id?: string
@@ -2750,6 +2936,7 @@ export type Database = {
           id: string
           po_id: string
           product_id: string | null
+          project_id: string
           quantity: number
           received_quantity: number | null
           tax_rate: number
@@ -2765,6 +2952,7 @@ export type Database = {
           id?: string
           po_id: string
           product_id?: string | null
+          project_id: string
           quantity: number
           received_quantity?: number | null
           tax_rate?: number
@@ -2780,6 +2968,7 @@ export type Database = {
           id?: string
           po_id?: string
           product_id?: string | null
+          project_id?: string
           quantity?: number
           received_quantity?: number | null
           tax_rate?: number
@@ -2818,6 +3007,7 @@ export type Database = {
           notes: string | null
           payment_terms: string | null
           po_number: string
+          project_id: string
           request_id: string | null
           status: Database["public"]["Enums"]["purchase_order_status"] | null
           subtotal: number
@@ -2838,6 +3028,7 @@ export type Database = {
           notes?: string | null
           payment_terms?: string | null
           po_number?: string
+          project_id: string
           request_id?: string | null
           status?: Database["public"]["Enums"]["purchase_order_status"] | null
           subtotal?: number
@@ -2858,6 +3049,7 @@ export type Database = {
           notes?: string | null
           payment_terms?: string | null
           po_number?: string
+          project_id?: string
           request_id?: string | null
           status?: Database["public"]["Enums"]["purchase_order_status"] | null
           subtotal?: number
@@ -2892,6 +3084,7 @@ export type Database = {
           id: string
           notes: string | null
           product_id: string | null
+          project_id: string
           quantity: number
           request_id: string
           unit: string
@@ -2905,6 +3098,7 @@ export type Database = {
           id?: string
           notes?: string | null
           product_id?: string | null
+          project_id: string
           quantity: number
           request_id: string
           unit: string
@@ -2918,6 +3112,7 @@ export type Database = {
           id?: string
           notes?: string | null
           product_id?: string | null
+          project_id?: string
           quantity?: number
           request_id?: string
           unit?: string
@@ -2951,6 +3146,7 @@ export type Database = {
           needed_by_date: string | null
           notes: string | null
           preferred_supplier_id: string | null
+          project_id: string
           request_number: string
           requested_date: string | null
           requester_id: string
@@ -2969,6 +3165,7 @@ export type Database = {
           needed_by_date?: string | null
           notes?: string | null
           preferred_supplier_id?: string | null
+          project_id: string
           request_number?: string
           requested_date?: string | null
           requester_id: string
@@ -2987,6 +3184,7 @@ export type Database = {
           needed_by_date?: string | null
           notes?: string | null
           preferred_supplier_id?: string | null
+          project_id?: string
           request_number?: string
           requested_date?: string | null
           requester_id?: string
@@ -3013,6 +3211,7 @@ export type Database = {
           month: number
           notes: string | null
           product_name: string
+          project_id: string
           sales_channel: string
           target_amount: number
           unit_price: number | null
@@ -3028,6 +3227,7 @@ export type Database = {
           month: number
           notes?: string | null
           product_name: string
+          project_id: string
           sales_channel: string
           target_amount?: number
           unit_price?: number | null
@@ -3043,6 +3243,7 @@ export type Database = {
           month?: number
           notes?: string | null
           product_name?: string
+          project_id?: string
           sales_channel?: string
           target_amount?: number
           unit_price?: number | null
@@ -3064,6 +3265,7 @@ export type Database = {
           location: string | null
           materials_used: Json | null
           performed_by: string | null
+          project_id: string
           service_request_id: string | null
           start_time: string | null
           status: Database["public"]["Enums"]["service_status"] | null
@@ -3079,6 +3281,7 @@ export type Database = {
           location?: string | null
           materials_used?: Json | null
           performed_by?: string | null
+          project_id: string
           service_request_id?: string | null
           start_time?: string | null
           status?: Database["public"]["Enums"]["service_status"] | null
@@ -3094,6 +3297,7 @@ export type Database = {
           location?: string | null
           materials_used?: Json | null
           performed_by?: string | null
+          project_id?: string
           service_request_id?: string | null
           start_time?: string | null
           status?: Database["public"]["Enums"]["service_status"] | null
@@ -3122,6 +3326,7 @@ export type Database = {
           location: string | null
           notes: string[] | null
           priority: Database["public"]["Enums"]["service_priority"] | null
+          project_id: string
           service_type: string | null
           status: Database["public"]["Enums"]["service_status"] | null
           title: string
@@ -3140,6 +3345,7 @@ export type Database = {
           location?: string | null
           notes?: string[] | null
           priority?: Database["public"]["Enums"]["service_priority"] | null
+          project_id: string
           service_type?: string | null
           status?: Database["public"]["Enums"]["service_status"] | null
           title: string
@@ -3158,6 +3364,7 @@ export type Database = {
           location?: string | null
           notes?: string[] | null
           priority?: Database["public"]["Enums"]["service_priority"] | null
+          project_id?: string
           service_type?: string | null
           status?: Database["public"]["Enums"]["service_status"] | null
           title?: string
@@ -3185,6 +3392,7 @@ export type Database = {
           mobile_phone: string | null
           name: string
           office_phone: string | null
+          project_id: string
           representative: string | null
           status: Database["public"]["Enums"]["supplier_status"]
           tax_number: string | null
@@ -3202,6 +3410,7 @@ export type Database = {
           mobile_phone?: string | null
           name: string
           office_phone?: string | null
+          project_id: string
           representative?: string | null
           status?: Database["public"]["Enums"]["supplier_status"]
           tax_number?: string | null
@@ -3219,6 +3428,7 @@ export type Database = {
           mobile_phone?: string | null
           name?: string
           office_phone?: string | null
+          project_id?: string
           representative?: string | null
           status?: Database["public"]["Enums"]["supplier_status"]
           tax_number?: string | null
@@ -3234,6 +3444,7 @@ export type Database = {
           email: string
           expires_at: string
           id: string
+          project_id: string
           token: string
           type: string
           updated_at: string
@@ -3245,6 +3456,7 @@ export type Database = {
           email: string
           expires_at: string
           id?: string
+          project_id: string
           token: string
           type?: string
           updated_at?: string
@@ -3256,6 +3468,7 @@ export type Database = {
           email?: string
           expires_at?: string
           id?: string
+          project_id?: string
           token?: string
           type?: string
           updated_at?: string
@@ -3272,22 +3485,60 @@ export type Database = {
           },
         ]
       }
+      user_projects: {
+        Row: {
+          created_at: string | null
+          id: string
+          project_id: string
+          role: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          project_id: string
+          role?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          project_id?: string
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_projects_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
           id: string
+          project_id: string
           role: Database["public"]["Enums"]["user_role"]
           user_id: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
+          project_id: string
           role: Database["public"]["Enums"]["user_role"]
           user_id?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
+          project_id?: string
           role?: Database["public"]["Enums"]["user_role"]
           user_id?: string | null
         }
@@ -3299,6 +3550,7 @@ export type Database = {
           expires_at: string
           id: string
           last_activity: string
+          project_id: string
           session_token: string
           user_id: string
         }
@@ -3307,6 +3559,7 @@ export type Database = {
           expires_at: string
           id?: string
           last_activity?: string
+          project_id: string
           session_token: string
           user_id: string
         }
@@ -3315,6 +3568,7 @@ export type Database = {
           expires_at?: string
           id?: string
           last_activity?: string
+          project_id?: string
           session_token?: string
           user_id?: string
         }
@@ -3330,6 +3584,7 @@ export type Database = {
       }
       users: {
         Row: {
+          company_name: string
           created_at: string | null
           email: string
           full_name: string | null
@@ -3337,10 +3592,12 @@ export type Database = {
           is_active: boolean | null
           last_login: string | null
           password_hash: string
+          project_id: string
           role: string
           updated_at: string | null
         }
         Insert: {
+          company_name: string
           created_at?: string | null
           email: string
           full_name?: string | null
@@ -3348,10 +3605,12 @@ export type Database = {
           is_active?: boolean | null
           last_login?: string | null
           password_hash: string
+          project_id: string
           role?: string
           updated_at?: string | null
         }
         Update: {
+          company_name?: string
           created_at?: string | null
           email?: string
           full_name?: string | null
@@ -3359,6 +3618,7 @@ export type Database = {
           is_active?: boolean | null
           last_login?: string | null
           password_hash?: string
+          project_id?: string
           role?: string
           updated_at?: string | null
         }
@@ -3386,6 +3646,7 @@ export type Database = {
           line_extension_amount: number | null
           payable_amount: number | null
           processed_at: string | null
+          project_id: string
           raw_xml_content: string | null
           tax_exclusive_amount: number | null
           tax_total_amount: number | null
@@ -3413,6 +3674,7 @@ export type Database = {
           line_extension_amount?: number | null
           payable_amount?: number | null
           processed_at?: string | null
+          project_id: string
           raw_xml_content?: string | null
           tax_exclusive_amount?: number | null
           tax_total_amount?: number | null
@@ -3440,6 +3702,7 @@ export type Database = {
           line_extension_amount?: number | null
           payable_amount?: number | null
           processed_at?: string | null
+          project_id?: string
           raw_xml_content?: string | null
           tax_exclusive_amount?: number | null
           tax_total_amount?: number | null
@@ -3457,6 +3720,7 @@ export type Database = {
           item_name: string | null
           line_number: number | null
           line_total: number | null
+          project_id: string
           quantity: number | null
           tax_amount: number | null
           tax_rate: number | null
@@ -3471,6 +3735,7 @@ export type Database = {
           item_name?: string | null
           line_number?: number | null
           line_total?: number | null
+          project_id: string
           quantity?: number | null
           tax_amount?: number | null
           tax_rate?: number | null
@@ -3485,6 +3750,7 @@ export type Database = {
           item_name?: string | null
           line_number?: number | null
           line_total?: number | null
+          project_id?: string
           quantity?: number | null
           tax_amount?: number | null
           tax_rate?: number | null
@@ -3509,6 +3775,7 @@ export type Database = {
           ip_address: unknown | null
           is_successful: boolean | null
           operation_type: string
+          project_id: string
           request_data: Json | null
           response_data: Json | null
           response_time_ms: number | null
@@ -3522,6 +3789,7 @@ export type Database = {
           ip_address?: unknown | null
           is_successful?: boolean | null
           operation_type: string
+          project_id: string
           request_data?: Json | null
           response_data?: Json | null
           response_time_ms?: number | null
@@ -3535,6 +3803,7 @@ export type Database = {
           ip_address?: unknown | null
           is_successful?: boolean | null
           operation_type?: string
+          project_id?: string
           request_data?: Json | null
           response_data?: Json | null
           response_time_ms?: number | null
@@ -3550,6 +3819,7 @@ export type Database = {
           is_active: boolean | null
           mode: string
           password: string
+          project_id: string
           updated_at: string | null
           user_id: string | null
           username: string
@@ -3561,6 +3831,7 @@ export type Database = {
           is_active?: boolean | null
           mode?: string
           password: string
+          project_id: string
           updated_at?: string | null
           user_id?: string | null
           username: string
@@ -3572,6 +3843,7 @@ export type Database = {
           is_active?: boolean | null
           mode?: string
           password?: string
+          project_id?: string
           updated_at?: string | null
           user_id?: string | null
           username?: string
@@ -3610,6 +3882,14 @@ export type Database = {
       clean_expired_email_confirmations: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      current_project_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_current_user_project_ids: {
+        Args: Record<PropertyKey, never>
+        Returns: string[]
       }
       get_deal_counts_by_status: {
         Args: Record<PropertyKey, never>
