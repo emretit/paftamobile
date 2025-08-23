@@ -155,7 +155,7 @@ serve(async (req) => {
 
     if (method === 'GET') {
       // Frontend'e yönlendir
-      const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovableproject.com') || 'http://localhost:5173'}/signup?confirmed=true`;
+      const frontendUrl = `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovableproject.com') || 'http://localhost:5173'}/signin?confirmed=true`;
       return new Response(null, { 
         status: 302, 
         headers: { 
