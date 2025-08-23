@@ -93,13 +93,12 @@ export const usePurchaseOrders = () => {
     supplierId: string, 
     items: any[] 
   }) => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    const { data, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !data.user) {
       toast.error("Kullanıcı kimliği alınamadı");
       throw new Error("User not authenticated");
     }
-    
-    const user = JSON.parse(userData);
 
     const { data: order, error: orderError } = await supabase
       .from("purchase_orders")
@@ -107,7 +106,7 @@ export const usePurchaseOrders = () => {
         request_id: requestId,
         supplier_id: supplierId,
         status: 'draft' as PurchaseOrderStatus,
-        issued_by: user.id,
+        issued_by: data.user.id,
       }])
       .select()
       .single();

@@ -101,21 +101,26 @@ export const createPurchaseRequest = async (requestData: PurchaseRequestFormData
   try {
     const { items, ...requestDetails } = requestData;
     
-    // Get current user from localStorage
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    // Get current user from Supabase - Updated to use the correct method
+    const { data, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+      console.error("Error getting user:", userError);
+      toast.error("Kullanıcı kimliği alınamadı");
+      throw userError;
+    }
+    
+    if (!data.user) {
       console.error("User not authenticated");
       toast.error("Kullanıcı kimliği alınamadı");
       throw new Error("User not authenticated");
     }
     
-    const user = JSON.parse(userData);
-    
     // Create the request first
     const { data: request, error: requestError } = await supabase
       .from("purchase_requests")
       .insert([
-        { ...requestDetails, requester_id: user.id }
+        { ...requestDetails, requester_id: data.user.id }
       ])
       .select()
       .single();

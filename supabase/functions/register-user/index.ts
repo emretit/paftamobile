@@ -205,17 +205,17 @@ serve(async (req) => {
             }
             
             .email-container {
-              max-width: 500px;
-              margin: 20px auto;
+              max-width: 600px;
+              margin: 40px auto;
               background-color: #ffffff;
-              box-shadow: 0 15px 30px rgba(211, 47, 47, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.05);
-              border-radius: 16px;
+              box-shadow: 0 20px 40px rgba(211, 47, 47, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.05);
+              border-radius: 20px;
               overflow: hidden;
             }
             
             .header {
               background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
-              padding: 35px 25px 30px;
+              padding: 50px 30px 40px;
               text-align: center;
               position: relative;
               overflow: hidden;
@@ -291,7 +291,7 @@ serve(async (req) => {
             }
             
             .content {
-              padding: 35px 30px;
+              padding: 50px 40px;
               background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
             }
             
@@ -326,7 +326,7 @@ serve(async (req) => {
             
             .cta-container {
               text-align: center;
-              margin: 30px 0;
+              margin: 40px 0;
             }
             
             .cta-button {
@@ -368,8 +368,8 @@ serve(async (req) => {
             }
             
             .features-section {
-              margin: 35px 0;
-              padding: 25px;
+              margin: 50px 0;
+              padding: 30px;
               background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
               border-radius: 16px;
               border: 1px solid #E5E7EB;
@@ -423,8 +423,8 @@ serve(async (req) => {
             }
             
             .backup-link {
-              margin-top: 30px;
-              padding: 20px;
+              margin-top: 40px;
+              padding: 25px;
               background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
               border-radius: 12px;
               border-left: 5px solid #F59E0B;
@@ -465,7 +465,7 @@ serve(async (req) => {
             
             .footer {
               background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
-              padding: 30px 25px;
+              padding: 40px 30px;
               text-align: center;
               color: #ffffff;
               position: relative;
@@ -585,12 +585,12 @@ serve(async (req) => {
               <h1 class="greeting">Hoş Geldiniz${full_name ? `, ${full_name}` : ''}! 🎉</h1>
               
               <p class="welcome-message">
-                PAFTA ailesine katıldığınız için teşekkür ederiz! Hesabınızı aktifleştirmek için aşağıdaki butona tıklayın.
+                PAFTA ailesine katıldığınız için teşekkür ederiz! Hesabınızı aktifleştirmek ve platformumuzun tüm özelliklerinden yararlanmaya başlamak için aşağıdaki butona tıklayın.
               </p>
 
               ${company_name ? `
                 <div class="company-message">
-                  <strong>${company_name}</strong> şirketi adına PAFTA'ya kayıt oldunuz.
+                  <strong>${company_name}</strong> şirketi adına PAFTA İş Yönetim Sistemi'ne kayıt olduğunuz için teşekkür ederiz!
                 </div>
               ` : ''}
               
@@ -642,7 +642,7 @@ serve(async (req) => {
               <div class="footer-brand">PAFTA</div>
               <p class="footer-highlight">İş Süreçlerinizi Dijitalleştirin</p>
               <p class="footer-text">Modern işletmeler için kapsamlı iş yönetim çözümü</p>
-              <p class="footer-text">Bu e-posta otomatik olarak gönderilmiştir.</p>
+              <p class="footer-text">Bu e-posta, PAFTA hesap onay sistemi tarafından otomatik olarak gönderilmiştir.</p>
               
               <div class="contact-info">
                 <p class="footer-text">
