@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { ErrorDisplay } from "@/components/auth/ErrorDisplay";
 import { ArrowRight, Mail, Lock, Eye, EyeOff, Home } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, updateSupabaseHeaders } from "@/integrations/supabase/client";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -30,115 +30,80 @@ const SignIn = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
-    try {
-      // Kullanıcıyı veritabanında ara
-      const { data: user, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .ilike('email', email)
-        .maybeSingle();
 
-      if (userError) {
-        console.error('Database error:', userError);
-        setError('Veritabanı hatası');
+    if (!email || !password) {
+      setError("Lütfen email ve şifre alanlarını doldurun.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Custom login edge function'ını kullan
+      const { data, error } = await supabase.functions.invoke('custom-login', {
+        body: {
+          email: email.toLowerCase().trim(),
+          password: password
+        }
+      });
+
+      if (error) {
+        console.error("Login function error:", error);
+        setError("Giriş sırasında bir hata oluştu.");
         toast({
           variant: "destructive",
           title: "Hata",
-          description: "Veritabanı hatası",
+          description: "Giriş sırasında bir hata oluştu.",
         });
+        setLoading(false);
         return;
       }
 
-      if (!user) {
-        setError('Geçersiz email veya şifre');
+      if (!data.success) {
+        setError(data.error || "Geçersiz email veya şifre.");
         toast({
           variant: "destructive",
           title: "Giriş Hatası",
-          description: "Geçersiz email veya şifre",
+          description: data.error || "Geçersiz email veya şifre.",
         });
+        setLoading(false);
         return;
       }
 
-      // Şifre kontrolü (düz metin - geçici)
-      if (password !== user.password_hash) {
-        setError('Geçersiz email veya şifre');
-        toast({
-          variant: "destructive",
-          title: "Giriş Hatası",
-          description: "Geçersiz email veya şifre",
-        });
-        return;
-      }
-
-      // Hesap aktif mi kontrol et
-      if (!user.is_active) {
-        setError('Hesabınızı onaylamanız gerekiyor');
-        toast({
-          variant: "destructive",
-          title: "Hesap Onayı",
-          description: "Hesabınızı onaylamanız gerekiyor",
-        });
-        return;
-      }
-
-      // Session token oluştur
-      const sessionToken = crypto.randomUUID();
-
-      // Son giriş zamanını güncelle
-      await supabase
-        .from('users')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', user.id);
-
-      // Kullanıcının projelerini getir
-      const { data: userProjects } = await supabase
-        .from('user_projects')
-        .select('project_id')
-        .eq('user_id', user.id);
-
-      const projectIds = userProjects?.map((p: any) => p.project_id) ?? [];
-      const defaultProjectId = projectIds[0] ?? null;
-
-      // Session token ve kullanıcı bilgilerini kaydet
-      localStorage.setItem('session_token', sessionToken);
-      localStorage.setItem('user', JSON.stringify({
-        id: user.id,
-        email: user.email,
-        full_name: user.full_name,
-        role: user.role
-      }));
+      // Başarılı giriş - verileri localStorage'a kaydet
+      localStorage.setItem("session_token", data.session_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
       
-      if (projectIds.length > 0) {
-        localStorage.setItem('project_ids', JSON.stringify(projectIds));
+      if (data.project_ids && data.project_ids.length > 0) {
+        localStorage.setItem("project_ids", JSON.stringify(data.project_ids));
+        localStorage.setItem("current_project_id", data.project_ids[0]);
+        
+        // Supabase headers'ı güncelle
+        updateSupabaseHeaders(data.user.id, data.project_ids[0]);
+      } else {
+        updateSupabaseHeaders(data.user.id, null);
       }
-      
-      if (defaultProjectId) {
-        localStorage.setItem('default_project_id', defaultProjectId);
-      }
-      
+
       toast({
         title: "Başarılı",
-        description: "Giriş yapıldı",
+        description: "Giriş yapıldı. Dashboard'a yönlendiriliyorsunuz...",
       });
-      
-      if (defaultProjectId) {
-        navigate(`/dashboard?project=${defaultProjectId}`);
-      } else {
-        navigate("/dashboard");
-      }
 
-    } catch (err) {
-      console.error('Login error:', err);
-      setError('Beklenmeyen bir hata oluştu');
+      // Dashboard'a yönlendir
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1000);
+
+    } catch (error: any) {
+      console.error("Giriş hatası:", error);
+      setError("Giriş sırasında bir hata oluştu: " + error.message);
       toast({
         variant: "destructive",
         title: "Hata",
-        description: "Beklenmeyen bir hata oluştu",
+        description: "Giriş sırasında bir hata oluştu: " + error.message,
       });
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
