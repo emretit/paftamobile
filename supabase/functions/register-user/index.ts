@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { Resend } from "npm:resend@4.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -124,15 +126,55 @@ serve(async (req) => {
       );
     }
 
-    // Email gönder (simüle)
+    // Email gönder
     const confirmationUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/confirm-email?token=${token}`;
     console.log('📧 Confirmation URL:', confirmationUrl);
+
+    let emailSent = false;
+    let emailError: string | null = null;
+
+    try {
+      const resend = new Resend(Deno.env.get('RESEND_API_KEY') as string);
+      const { data: emailResp, error: resendError } = await resend.emails.send({
+        from: 'PAFTA <onboarding@resend.dev>',
+        to: [email],
+        subject: 'PAFTA Hesabınızı Doğrulayın',
+        html: `
+          <div style="font-family:Arial,sans-serif;line-height:1.6">
+            <h2>Merhaba ${full_name},</h2>
+            <p>PAFTA hesabınızı aktifleştirmek için aşağıdaki butona tıklayın:</p>
+            <p>
+              <a href="${confirmationUrl}"
+                 style="display:inline-block;padding:12px 20px;background:#D32F2F;color:#fff;text-decoration:none;border-radius:8px">
+                Hesabımı Doğrula
+              </a>
+            </p>
+            <p>Buton çalışmazsa bu bağlantıyı tarayıcınızda açın:</p>
+            <p><a href="${confirmationUrl}">${confirmationUrl}</a></p>
+          </div>
+        `,
+      });
+      if (resendError) {
+        console.error('❌ Email gönderim hatası:', resendError);
+        emailError = resendError.message || 'Resend error';
+      } else {
+        console.log('✅ Email gönderildi:', emailResp);
+        emailSent = true;
+      }
+    } catch (e: any) {
+      console.error('❌ Email gönderimi sırasında beklenmeyen hata:', e);
+      emailError = e?.message || 'unknown';
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Hesap oluşturuldu. Email adresinizi kontrol ederek hesabınızı onaylayın.',
-        confirmationUrl // Geliştirme için - production'da kaldırılacak
+        message: emailSent
+          ? 'Hesap oluşturuldu. Email adresinizi kontrol ederek hesabınızı onaylayın.'
+          : 'Hesap oluşturuldu ancak email gönderimi başarısız oldu. Aşağıdaki bağlantıyı kullanabilirsiniz.',
+        confirmationUrl,
+        emailSent,
+        emailError
       }),
       { 
         status: 200, 
