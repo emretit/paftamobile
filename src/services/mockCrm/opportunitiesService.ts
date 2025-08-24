@@ -8,7 +8,7 @@ type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
 export const mockCrmOpportunitiesService = {
   getOpportunities: async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('opportunities')
         .select(`
           *,
@@ -16,6 +16,16 @@ export const mockCrmOpportunitiesService = {
           employee:employee_id (*)
         `)
         .order('created_at', { ascending: false });
+
+      // Project scope filter (client-side addition besides RLS)
+      const projectId = typeof window !== 'undefined'
+        ? (localStorage.getItem('project_id') || localStorage.getItem('current_project_id') || '')
+        : '';
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       

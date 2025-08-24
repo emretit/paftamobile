@@ -16,6 +16,14 @@ export const useProposals = (filters?: ProposalFilters) => {
           employee:employee_id (*)
         `)
         .order('created_at', { ascending: false });
+
+      // Project scope: ensure only current project data is fetched (in addition to RLS)
+      const projectId = typeof window !== 'undefined' 
+        ? (localStorage.getItem('project_id') || localStorage.getItem('current_project_id') || '')
+        : '';
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
       
       // Apply status filter if specified
       if (filters?.status && filters.status !== 'all') {
