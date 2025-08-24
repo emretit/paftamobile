@@ -108,7 +108,9 @@ serve(async (req) => {
         user_id: user.id,
         email: email,
         token: token,
-        expires_at: expiresAt.toISOString()
+        type: 'email_confirmation',
+        expires_at: expiresAt.toISOString(),
+        project_id: projectId
       });
 
     if (confirmationError) {
