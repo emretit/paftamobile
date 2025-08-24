@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-project-id, x-user-id',
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
@@ -37,6 +37,9 @@ serve(async (req) => {
         }
       );
     }
+
+    const projectId = req.headers.get('x-project-id') || '00000000-0000-0000-0000-000000000001';
+    console.log('🏷️ Project ID:', projectId);
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -77,7 +80,8 @@ serve(async (req) => {
         password_hash: passwordHash,
         full_name,
         company_name,
-        is_active: false
+        is_active: false,
+        project_id: projectId
       })
       .select()
       .single();
