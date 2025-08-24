@@ -229,7 +229,7 @@ serve(async (req) => {
               font-family: 'Arial Black', 'Helvetica Bold', 'Impact', sans-serif;
               font-size: 20px;
               font-weight: 900;
-              color: #ffffff;
+              color: #D32F2F;
               margin-bottom: 16px;
               box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
               border: 3px solid #D32F2F;
@@ -353,7 +353,6 @@ serve(async (req) => {
               <h2 class="greeting">Hoş Geldiniz${full_name ? `, ${full_name}` : ''}! 🎉</h2>
               
               <div class="company-message">
-                <strong>${full_name || 'Kullanıcı'}</strong> adına ailemize katıldığınız için teşekkür ederiz! 
                 ${company_name ? `<strong>${company_name}</strong> şirketi adına PAFTA İş Yönetim Sistemi'ne kayıt olduğunuz için teşekkür ederiz!` : ''}
               </div>
               
