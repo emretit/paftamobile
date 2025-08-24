@@ -19,11 +19,28 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const token = url.searchParams.get('token');
+    let token = url.searchParams.get('token');
+    
+    // Eğer POST ile çağrıldıysa ve URL'de token yoksa, body'den almayı dene
+    if (!token && req.method === 'POST') {
+      try {
+        const body = await req.json();
+        token = body?.token;
+        console.log('📦 Body üzerinden alınan token:', token);
+      } catch (e) {
+        console.log('⚠️ Body parse edilemedi veya yok:', e?.message);
+      }
+    }
     console.log('🔍 Token parametresi:', token);
 
     if (!token) {
       console.log('❌ Token bulunamadı');
+      if (req.method === 'POST') {
+        return new Response(JSON.stringify({ success: false, error: "Token bulunamadı" }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
       return new Response(`<!DOCTYPE html>
         <html>
         <head>
@@ -69,6 +86,12 @@ serve(async (req) => {
 
     if (confirmError || !confirmation) {
       console.error('❌ Token bulunamadı veya geçersiz:', confirmError);
+      if (req.method === 'POST') {
+        return new Response(JSON.stringify({ success: false, error: 'Token bulunamadı, kullanılmış veya süresi dolmuş.' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
       return new Response(`<!DOCTYPE html>
         <html>
         <head>
@@ -107,6 +130,12 @@ serve(async (req) => {
 
     if (userUpdateError) {
       console.error('❌ Kullanıcı güncelleme hatası:', userUpdateError);
+      if (req.method === 'POST') {
+        return new Response(JSON.stringify({ success: false, error: `Kullanıcı aktifleştirilemedi: ${userUpdateError.message}` }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
       return new Response(`<!DOCTYPE html>
         <html>
         <head>
@@ -141,7 +170,15 @@ serve(async (req) => {
 
     console.log('✅ Token kullanılmış olarak işaretlendi');
 
-    // Başarı sayfası
+    // Başarı yanıtı
+    if (req.method === 'POST') {
+      return new Response(JSON.stringify({ success: true, message: 'Hesabınız başarıyla aktifleştirildi.' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Başarı sayfası (GET istekleri için)
     return new Response(`<!DOCTYPE html>
       <html>
       <head>
@@ -209,8 +246,14 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'text/html' }
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Beklenmeyen hata:', error);
+    if (req.method === 'POST') {
+      return new Response(JSON.stringify({ success: false, error: error?.message || 'Bilinmeyen hata' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
     return new Response(`<!DOCTYPE html>
       <html>
       <head>
