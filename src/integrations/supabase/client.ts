@@ -27,23 +27,10 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   },
   global: {
     headers: {
-      'X-Client-Info': 'ngs-app'
-    },
-    // Inject latest custom headers on every request
-    fetch: (url, options) => {
-      try {
-        const headers = new Headers(options?.headers || {});
-        headers.set('X-Client-Info', 'ngs-app');
-        if (typeof window !== 'undefined') {
-          const uid = localStorage.getItem('user_id') || '';
-          const pid = localStorage.getItem('project_id') || '';
-          if (uid) headers.set('X-User-ID', uid);
-          if (pid) headers.set('X-Project-ID', pid);
-        }
-        return fetch(url, { ...options, headers });
-      } catch (e) {
-        return fetch(url, options as any);
-      }
+      'X-Client-Info': 'ngs-app',
+      // Custom auth için header ekle
+      'X-User-ID': typeof window !== 'undefined' ? localStorage.getItem('user_id') || '' : '',
+      'X-Project-ID': typeof window !== 'undefined' ? localStorage.getItem('project_id') || '' : ''
     }
   }
 });
@@ -51,19 +38,21 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 // Custom auth için header'ları güncelle
 export const updateSupabaseHeaders = (userId?: string, projectId?: string) => {
   if (typeof window !== 'undefined') {
+    const headers: Record<string, string> = {
+      'X-Client-Info': 'ngs-app'
+    };
+    
     if (userId) {
+      headers['X-User-ID'] = userId;
       localStorage.setItem('user_id', userId);
-    } else {
-      localStorage.removeItem('user_id');
     }
-
+    
     if (projectId) {
+      headers['X-Project-ID'] = projectId;
       localStorage.setItem('project_id', projectId);
-    } else {
-      localStorage.removeItem('project_id');
     }
-
-    // Notify listeners that headers changed; fetch interceptor will pick up latest values
-    try { window.dispatchEvent(new CustomEvent('supabase-headers-updated')); } catch {}
+    
+    // Supabase client'ın global header'larını güncelle
+    Object.assign(supabase.supabaseKey, headers);
   }
 };
