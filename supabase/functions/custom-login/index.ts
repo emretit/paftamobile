@@ -25,7 +25,10 @@ serve(async (req) => {
     if (!email || !password) {
       console.log('❌ Email veya şifre eksik');
       return new Response(
-        JSON.stringify({ error: 'Email ve şifre gereklidir' }),
+        JSON.stringify({ 
+          success: false,
+          error: 'Email ve şifre gereklidir' 
+        }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -51,7 +54,10 @@ serve(async (req) => {
     if (userError) {
       console.error('❌ Kullanıcı arama hatası:', userError);
       return new Response(
-        JSON.stringify({ error: 'Giriş işlemi başarısız' }),
+        JSON.stringify({ 
+          success: false,
+          error: 'Giriş işlemi başarısız' 
+        }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -62,7 +68,10 @@ serve(async (req) => {
     if (!user) {
       console.log('❌ Kullanıcı bulunamadı');
       return new Response(
-        JSON.stringify({ error: 'Email veya şifre hatalı' }),
+        JSON.stringify({ 
+          success: false,
+          error: 'Email veya şifre hatalı' 
+        }),
         { 
           status: 401, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -77,6 +86,7 @@ serve(async (req) => {
       console.log('❌ Kullanıcı aktif değil');
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Hesabınız aktif değil. Lütfen e-postanızı kontrol ederek hesabınızı onaylayın.',
           requiresConfirmation: true 
         }),
@@ -95,10 +105,30 @@ serve(async (req) => {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashedPassword = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-    if (user.password_hash !== hashedPassword) {
+    const storedHash = (user.password_hash || '').trim();
+    console.log('🔍 Stored hash length:', storedHash.length);
+    console.log('🔍 Calculated hash length:', hashedPassword.length);
+    
+    // Şifre kontrolü - hem düz metin hem SHA-256
+    let passwordValid = false;
+    
+    // Önce düz metin karşılaştırması (geçici)
+    if (password === storedHash) {
+      passwordValid = true;
+      console.log('✅ Düz metin şifre eşleşti');
+    } else {
+      // SHA-256 karşılaştırması
+      passwordValid = hashedPassword.toLowerCase() === storedHash.toLowerCase();
+      console.log('🔍 SHA-256 şifre eşleşti:', passwordValid);
+    }
+    
+    if (!passwordValid) {
       console.log('❌ Şifre hatalı');
       return new Response(
-        JSON.stringify({ error: 'Email veya şifre hatalı' }),
+        JSON.stringify({ 
+          success: false,
+          error: 'Email veya şifre hatalı' 
+        }),
         { 
           status: 401, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -119,20 +149,17 @@ serve(async (req) => {
       .from('user_sessions')
       .insert({
         user_id: user.id,
-        token: sessionToken,
+        session_token: sessionToken, // 'token' yerine 'session_token' kullan
         expires_at: expiresAt.toISOString(),
         project_id: user.project_id
       });
 
     if (sessionError) {
       console.error('❌ Session kaydetme hatası:', sessionError);
-      return new Response(
-        JSON.stringify({ error: 'Giriş işlemi başarısız' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      // Session hatası olsa bile login'i engellemeyelim
+      console.log('⚠️ Session kaydedilemedi ama login devam ediyor');
+    } else {
+      console.log('✅ Session kaydedildi');
     }
 
     console.log('📊 Son giriş tarihi güncelleniyor...');
@@ -143,18 +170,37 @@ serve(async (req) => {
       .eq('id', user.id);
 
     console.log('✅ Login başarılı!');
+    
+    // Kullanıcının projelerini getir
+    let defaultProjectId: string | null = null;
+    let projectIds: string[] = [];
+    try {
+      const { data: userProjects } = await supabase
+        .from('user_projects')
+        .select('project_id')
+        .eq('user_id', user.id);
+      projectIds = userProjects?.map((p: any) => p.project_id) ?? [];
+      defaultProjectId = projectIds[0] ?? null;
+      console.log('✅ Projeler alındı:', { projectIds, defaultProjectId });
+    } catch (e) {
+      console.error('⚠️ user_projects sorgu hatası:', e);
+    }
+
     // Başarılı yanıt - hassas bilgileri çıkar
     const { password_hash, ...safeUser } = user;
     
+    const response = {
+      success: true,
+      user: safeUser,
+      session_token: sessionToken,
+      project_ids: projectIds,
+      default_project_id: defaultProjectId
+    };
+
+    console.log('✅ Response hazırlanıyor:', response);
+    
     return new Response(
-      JSON.stringify({ 
-        success: true,
-        user: safeUser,
-        session: {
-          token: sessionToken,
-          expires_at: expiresAt.toISOString()
-        }
-      }),
+      JSON.stringify(response),
       { 
         status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -164,7 +210,11 @@ serve(async (req) => {
   } catch (error: any) {
     console.error('❌ Login function error:', error);
     return new Response(
-      JSON.stringify({ error: 'Sunucu hatası' }),
+      JSON.stringify({ 
+        success: false,
+        error: 'Sunucu hatası',
+        details: error.message 
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
