@@ -77,8 +77,7 @@ serve(async (req) => {
         password_hash: passwordHash,
         full_name,
         company_name,
-        is_active: false,
-        is_primary_account: true
+        is_active: false
       })
       .select()
       .single();
