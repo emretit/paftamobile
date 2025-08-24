@@ -44,7 +44,7 @@ export const useActiveProject = () => {
         .from('projects')
         .select(`
           *,
-          project_members!inner(role)
+          user_projects!inner(role)
         `)
         .order('updated_at', { ascending: false });
 
@@ -56,7 +56,7 @@ export const useActiveProject = () => {
       if (userProjects && userProjects.length > 0) {
         const firstProject = userProjects[0];
         setActiveProject(firstProject);
-        setUserRole(firstProject.project_members?.[0]?.role || 'member');
+        setUserRole(firstProject.user_projects?.[0]?.role || 'member');
       }
     } catch (error: any) {
       console.error('Error loading projects:', error);
@@ -86,7 +86,7 @@ export const useActiveProject = () => {
 
       // Add user as owner
       const { error: memberError } = await supabase
-        .from('project_members')
+        .from('user_projects')
         .insert({
           project_id: project.id,
           user_id: user.id,
@@ -115,7 +115,7 @@ export const useActiveProject = () => {
       
       // Get user role in this project
       const { data: member } = await supabase
-        .from('project_members')
+        .from('user_projects')
         .select('role')
         .eq('project_id', projectId)
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
