@@ -4121,7 +4121,7 @@ export type Database = {
         | "service_call"
         | "support_ticket"
       transaction_type: "giris" | "cikis" | "havale" | "eft" | "swift" | "pos"
-      user_role: "admin" | "sales" | "manager" | "viewer"
+      user_role: "admin" | "sales" | "manager" | "viewer" | "owner" | "member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4319,7 +4319,7 @@ export const Constants = {
         "support_ticket",
       ],
       transaction_type: ["giris", "cikis", "havale", "eft", "swift", "pos"],
-      user_role: ["admin", "sales", "manager", "viewer"],
+      user_role: ["admin", "sales", "manager", "viewer", "owner", "member"],
     },
   },
 } as const
