@@ -1,4 +1,4 @@
-import { supabase, updateSupabaseHeaders } from '@/integrations/supabase/client';
+import { supabase, clearCurrentUserId } from '@/integrations/supabase/client';
 
 /**
  * Güvenli logout işlemi
@@ -114,8 +114,8 @@ export const clearAuthTokens = () => {
       // Session storage temizliği
       sessionStorage.clear();
       
-      // Supabase header'larını temizle
-      updateSupabaseHeaders();
+      // User ID'yi temizle
+      clearCurrentUserId();
     } catch (e) {
       console.warn('clearAuthTokens encountered an issue:', e);
     }

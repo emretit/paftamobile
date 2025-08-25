@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { ErrorDisplay } from "@/components/auth/ErrorDisplay";
 import { ArrowRight, Mail, Lock, Eye, EyeOff, Home } from "lucide-react";
-import { supabase, updateSupabaseHeaders } from "@/integrations/supabase/client";
+import { supabase, setCurrentUserId } from "@/integrations/supabase/client";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -139,15 +139,8 @@ const SignIn = () => {
       localStorage.setItem("session_token", data.session_token);
       localStorage.setItem("user", JSON.stringify(data.user));
       
-      if (data.project_ids && data.project_ids.length > 0) {
-        localStorage.setItem("project_ids", JSON.stringify(data.project_ids));
-        localStorage.setItem("current_project_id", data.project_ids[0]);
-        
-        // Supabase headers'ı güncelle
-        updateSupabaseHeaders(data.user.id, data.project_ids[0]);
-      } else {
-        updateSupabaseHeaders(data.user.id, null);
-      }
+      // User ID'yi set et (RLS için gerekli)
+      setCurrentUserId(data.user.id);
 
       toast({
         title: "Başarılı",

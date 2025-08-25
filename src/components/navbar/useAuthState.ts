@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { supabase, updateSupabaseHeaders } from "@/integrations/supabase/client";
+import { supabase, setCurrentUserId, clearCurrentUserId } from "@/integrations/supabase/client";
 import type { User, Session } from '@supabase/supabase-js';
 import { checkSessionStatus, clearAuthTokens } from "@/lib/supabase-utils";
 
@@ -20,8 +20,8 @@ useEffect(() => {
           setSession(null);
           setUser(null);
           clearAuthTokens();
-          // Supabase header'larını temizle
-          updateSupabaseHeaders();
+          // User ID'yi temizle
+          clearCurrentUserId();
         } else {
           console.log('Initial session check:', result.user?.email);
           
@@ -49,35 +49,20 @@ useEffect(() => {
                 // Project ID'yi de güncelle
                 const storedProjectId = localStorage.getItem('project_id') || '00000000-0000-0000-0000-000000000001';
                 
-                // Supabase client'a custom header'ları set et
-                // Bu header'lar RLS politikalarında kullanılacak
-                if (typeof window !== 'undefined') {
-                  // localStorage'a kaydet (Supabase client bunları okuyacak)
-                  localStorage.setItem('user_id', result.user.id);
-                  localStorage.setItem('project_id', storedProjectId);
-                  
-                  // Supabase client'ın global header'larını güncelle
-                  // Not: Bu runtime'da değiştirilemez, ama localStorage'dan okunacak
-                  console.log('Supabase headers set:', { 
-                    'X-User-ID': result.user.id, 
-                    'X-Project-ID': storedProjectId 
-                  });
-                }
-                
-                updateSupabaseHeaders(result.user.id, storedProjectId);
+                // User ID'yi localStorage'a set et (RLS için gerekli)
+                setCurrentUserId(result.user.id);
                 
               } catch (error) {
                 console.error('Error setting Supabase auth context:', error);
-                // Fallback olarak eski yöntemi kullan
-                const storedProjectId = localStorage.getItem('project_id') || '00000000-0000-0000-0000-000000000001';
-                updateSupabaseHeaders(result.user.id, storedProjectId);
+                // Fallback olarak user ID'yi set et
+                setCurrentUserId(result.user.id);
               }
             }
           } else {
             setSession(null);
             setUser(null);
-            // Supabase header'larını temizle
-            updateSupabaseHeaders();
+            // User ID'yi temizle
+            clearCurrentUserId();
           }
         }
       } catch (error) {
@@ -85,8 +70,8 @@ useEffect(() => {
         setSession(null);
         setUser(null);
         clearAuthTokens();
-        // Supabase header'ları temizle
-        updateSupabaseHeaders();
+        // User ID'yi temizle
+        clearCurrentUserId();
       } finally {
         setLoading(false);
       }

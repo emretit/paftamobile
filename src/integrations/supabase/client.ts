@@ -9,65 +9,48 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    flowType: 'pkce',
-    debug: process.env.NODE_ENV === 'development',
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    storageKey: 'supabase.auth.token',
-    onAuthStateChange: (event, session) => {
-      // Auth state değişikliklerini logla
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Supabase auth state changed:', event, session?.user?.email);
+// Create custom supabase client with dynamic headers
+const createCustomSupabaseClient = () => {
+  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      debug: process.env.NODE_ENV === 'development',
+      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+      storageKey: 'supabase.auth.token',
+      onAuthStateChange: (event, session) => {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Supabase auth state changed:', event, session?.user?.email);
+        }
+      }
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'ngs-app',
+        get 'X-User-ID'() {
+          return typeof window !== 'undefined' ? localStorage.getItem('user_id') || '' : '';
+        }
       }
     }
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'ngs-app',
-      // Custom auth için header ekle - runtime'da güncellenecek
-      'X-User-ID': typeof window !== 'undefined' ? localStorage.getItem('user_id') || '' : '',
-      'X-Project-ID': typeof window !== 'undefined' ? localStorage.getItem('project_id') || '' : ''
-    }
-  }
-});
+  });
+};
 
-// Custom auth için header'ları güncelle
-export const updateSupabaseHeaders = (userId?: string, projectId?: string) => {
+export const supabase = createCustomSupabaseClient();
+
+// Custom auth için user_id'yi localStorage'a set et
+export const setCurrentUserId = (userId: string) => {
   if (typeof window !== 'undefined') {
-    if (userId) {
-      localStorage.setItem('user_id', userId);
-    }
-    
-    if (projectId) {
-      localStorage.setItem('project_id', projectId);
-    }
-    
-    // Supabase client'ın global header'larını güncelle
-    // Not: Supabase client'ın global header'ları runtime'da değiştirilemez
-    // Bu yüzden localStorage'dan okunacak
-    console.log('Supabase headers updated:', { userId, projectId });
+    localStorage.setItem('user_id', userId);
+    console.log('Current user ID set:', userId);
   }
 };
 
-// RLS için session variable set et
-export const setSupabaseSessionContext = async (userEmail: string) => {
-  try {
-    // Supabase'de session variable set et
-    const { error } = await supabase.rpc('set_config', { 
-      key: 'app.current_user_email', 
-      value: userEmail 
-    });
-    
-    if (error) {
-      console.warn('set_config RPC failed:', error);
-    } else {
-      console.log('Supabase session context set successfully for:', userEmail);
-    }
-  } catch (error) {
-    console.warn('set_config failed:', error);
+// Current user_id'yi temizle
+export const clearCurrentUserId = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('user_id');
+    console.log('Current user ID cleared');
   }
 };

@@ -3848,6 +3848,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      current_user_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_current_user_project_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_current_user_project_ids: {
         Args: Record<PropertyKey, never>
         Returns: string[]
@@ -3903,6 +3911,10 @@ export type Database = {
       }
       request_password_reset: {
         Args: { email: string }
+        Returns: undefined
+      }
+      set_config: {
+        Args: { key: string; value: string }
         Returns: undefined
       }
       set_limit: {
