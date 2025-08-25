@@ -72,6 +72,24 @@ export async function getProposalById(id: string) {
  */
 export async function createProposal(proposal: Partial<Proposal>) {
   try {
+    // Get current user's project_id from localStorage
+    const currentUserId = localStorage.getItem('user_id');
+    if (!currentUserId) {
+      throw new Error('Kullanıcı oturumu bulunamadı');
+    }
+
+    // Get user's project_id from users table
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('project_id')
+      .eq('id', currentUserId)
+      .single();
+
+    if (userError) throw userError;
+    if (!userData?.project_id) {
+      throw new Error('Kullanıcı proje bilgisi bulunamadı');
+    }
+
     // Generate proposal number
     const proposalNumber = await generateProposalNumber();
     
@@ -96,6 +114,7 @@ export async function createProposal(proposal: Partial<Proposal>) {
       total_amount: number;
       attachments?: Json;
       items?: Json;
+      project_id: string;
       created_at: string;
       updated_at: string;
     } = {
@@ -116,6 +135,7 @@ export async function createProposal(proposal: Partial<Proposal>) {
       terms: proposal.terms,
       currency: proposal.currency || 'TRY',
       total_amount: proposal.total_amount || 0,
+      project_id: userData.project_id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
