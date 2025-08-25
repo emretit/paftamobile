@@ -37,12 +37,33 @@ useEffect(() => {
             // Supabase authentication context'ini doğru şekilde set et
             if (result.user.id) {
               try {
-                // Supabase client'ın auth context'ini güncelle
-                // Bu sayede auth.uid() doğru çalışacak
-                await supabase.auth.setSession({
-                  access_token: localStorage.getItem('session_token') || '',
-                  refresh_token: localStorage.getItem('session_token') || ''
-                });
+                // Önce localStorage'dan Supabase session bilgilerini kontrol et
+                const supabaseSessionStr = localStorage.getItem('supabase_session');
+                let supabaseSession = null;
+                
+                if (supabaseSessionStr) {
+                  try {
+                    supabaseSession = JSON.parse(supabaseSessionStr);
+                  } catch (e) {
+                    console.warn('Supabase session parse edilemedi:', e);
+                  }
+                }
+                
+                if (supabaseSession?.access_token) {
+                  // Gerçek Supabase session'ı restore et
+                  await supabase.auth.setSession({
+                    access_token: supabaseSession.access_token,
+                    refresh_token: supabaseSession.refresh_token || ''
+                  });
+                  console.log('✅ Supabase session restore edildi');
+                } else {
+                  // Fallback: Custom session token'ı kullan
+                  await supabase.auth.setSession({
+                    access_token: localStorage.getItem('session_token') || '',
+                    refresh_token: localStorage.getItem('session_token') || ''
+                  });
+                  console.log('⚠️ Fallback session kullanıldı');
+                }
                 
                 console.log('Supabase auth context set for user:', result.user.id);
                 

@@ -138,25 +138,82 @@ serve(async (req) => {
 
     console.log('✅ Şifre doğru');
 
-    // Session token oluştur
+    // Önce Supabase auth.users tablosunda bu kullanıcı var mı kontrol et
+    console.log('🔍 Supabase auth.users kontrolü...');
+    const { data: authUsers, error: authUsersError } = await supabase.auth.admin.listUsers();
+    
+    let authUser = null;
+    if (!authUsersError && authUsers?.users) {
+      authUser = authUsers.users.find((u: any) => u.email === email);
+    }
+    
+    let supabaseSession = null;
+    
+    if (!authUser) {
+      console.log('🆕 Supabase auth.users\'da kullanıcı yok, oluşturuluyor...');
+      // Supabase auth.users'da kullanıcı yoksa oluştur
+      const { data: newAuthUser, error: createError } = await supabase.auth.admin.createUser({
+        email: email,
+        password: password, // Orijinal şifreyi kullan
+        email_confirm: true, // Email onaylanmış olarak işaretle
+        user_metadata: {
+          full_name: user.full_name || user.company_name,
+          custom_user_id: user.id, // Custom user ID'yi metadata'da sakla
+          project_id: user.project_id
+        }
+      });
+      
+      if (createError) {
+        console.error('❌ Supabase auth user oluşturma hatası:', createError);
+      } else {
+        console.log('✅ Supabase auth user oluşturuldu:', newAuthUser.user?.id);
+        authUser = newAuthUser.user;
+      }
+    }
+    
+    if (authUser) {
+      console.log('🔐 Supabase session oluşturuluyor...');
+      // Supabase session oluştur (RLS için gerekli)
+      try {
+        // signInWithPassword kullanarak gerçek session oluştur
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+        
+        if (authError) {
+          console.error('❌ Supabase auth signIn hatası:', authError);
+        } else if (authData?.session) {
+          console.log('✅ Supabase session oluşturuldu');
+          supabaseSession = {
+            access_token: authData.session.access_token,
+            refresh_token: authData.session.refresh_token,
+            user: authData.user
+          };
+        }
+      } catch (signInError) {
+        console.error('❌ Supabase signIn exception:', signInError);
+      }
+    }
+
+    // Custom session token oluştur (backward compatibility için)
     const sessionToken = crypto.randomUUID();
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24); // 24 saat geçerli
 
-    console.log('🎫 Session token oluşturuluyor...');
+    console.log('🎫 Custom session token oluşturuluyor...');
     // Session kaydet
     const { error: sessionError } = await supabase
       .from('user_sessions')
       .insert({
         user_id: user.id,
-        session_token: sessionToken, // 'token' yerine 'session_token' kullan
+        session_token: sessionToken,
         expires_at: expiresAt.toISOString(),
         project_id: user.project_id
       });
 
     if (sessionError) {
       console.error('❌ Session kaydetme hatası:', sessionError);
-      // Session hatası olsa bile login'i engellemeyelim
       console.log('⚠️ Session kaydedilemedi ama login devam ediyor');
     } else {
       console.log('✅ Session kaydedildi');
@@ -194,7 +251,10 @@ serve(async (req) => {
       user: safeUser,
       session_token: sessionToken,
       project_ids: projectIds,
-      default_project_id: defaultProjectId
+      default_project_id: defaultProjectId,
+      // Supabase session bilgilerini de ekle (RLS için gerekli)
+      supabase_session: supabaseSession,
+      auth_user_id: authUser?.id || null
     };
 
     console.log('✅ Response hazırlanıyor:', response);

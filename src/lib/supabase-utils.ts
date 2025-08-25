@@ -96,6 +96,7 @@ export const clearAuthTokens = () => {
       localStorage.removeItem('project_ids');
       localStorage.removeItem('user_id');
       localStorage.removeItem('project_id');
+      localStorage.removeItem('supabase_session');
       
       // Supabase specific cleanup
       localStorage.removeItem('supabase.auth.token');

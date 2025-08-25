@@ -139,8 +139,26 @@ const SignIn = () => {
       localStorage.setItem("session_token", data.session_token);
       localStorage.setItem("user", JSON.stringify(data.user));
       
+      // Supabase session'ını set et (RLS için kritik)
+      if (data.supabase_session) {
+        console.log('🔐 Supabase session set ediliyor...');
+        try {
+          await supabase.auth.setSession({
+            access_token: data.supabase_session.access_token,
+            refresh_token: data.supabase_session.refresh_token
+          });
+          
+          // Supabase session'ını localStorage'a da kaydet (sayfa yenileme için)
+          localStorage.setItem('supabase_session', JSON.stringify(data.supabase_session));
+          
+          console.log('✅ Supabase session başarıyla set edildi');
+        } catch (sessionError) {
+          console.error('❌ Supabase session set etme hatası:', sessionError);
+        }
+      }
+      
       // User ID'yi set et (RLS için gerekli)
-      setCurrentUserId(data.user.id);
+      setCurrentUserId(data.auth_user_id || data.user.id);
 
       toast({
         title: "Başarılı",
