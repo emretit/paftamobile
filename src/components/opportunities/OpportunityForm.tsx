@@ -285,6 +285,24 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
     setIsSubmitting(true);
     
     try {
+      // Get current user's project_id from localStorage
+      const currentUserId = localStorage.getItem('user_id');
+      if (!currentUserId) {
+        throw new Error('Kullanıcı oturumu bulunamadı');
+      }
+
+      // Get user's project_id from users table
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('project_id')
+        .eq('id', currentUserId)
+        .single();
+
+      if (userError) throw userError;
+      if (!userData?.project_id) {
+        throw new Error('Kullanıcı proje bilgisi bulunamadı');
+      }
+
       const { error } = await supabase
         .from("opportunities")
         .insert({
@@ -298,6 +316,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({ isOpen, onClose }) =>
           expected_close_date: formData.expected_close_date || null,
           customer_id: formData.customer_id || null,
           employee_id: formData.employee_id || null,
+          project_id: userData.project_id
         });
 
       if (error) throw error;
