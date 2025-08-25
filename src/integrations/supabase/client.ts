@@ -52,3 +52,22 @@ export const updateSupabaseHeaders = (userId?: string, projectId?: string) => {
     console.log('Supabase headers updated:', { userId, projectId });
   }
 };
+
+// RLS için session variable set et
+export const setSupabaseSessionContext = async (userEmail: string) => {
+  try {
+    // Supabase'de session variable set et
+    const { error } = await supabase.rpc('set_config', { 
+      key: 'app.current_user_email', 
+      value: userEmail 
+    });
+    
+    if (error) {
+      console.warn('set_config RPC failed:', error);
+    } else {
+      console.log('Supabase session context set successfully for:', userEmail);
+    }
+  } catch (error) {
+    console.warn('set_config failed:', error);
+  }
+};
