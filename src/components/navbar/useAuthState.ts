@@ -39,18 +39,31 @@ useEffect(() => {
               try {
                 // Supabase client'ın auth context'ini güncelle
                 // Bu sayede auth.uid() doğru çalışacak
-                await supabase.auth.setSession({
-                  access_token: localStorage.getItem('session_token') || '',
-                  refresh_token: localStorage.getItem('session_token') || ''
-                });
-                
-                console.log('Supabase auth context set for user:', result.user.id);
-                
-                // Project ID'yi de güncelle
-                const storedProjectId = localStorage.getItem('project_id') || '00000000-0000-0000-0000-000000000001';
-                
-                // User ID'yi localStorage'a set et (RLS için gerekli)
-                setCurrentUserId(result.user.id);
+                  await supabase.auth.setSession({
+                    access_token: localStorage.getItem('session_token') || '',
+                    refresh_token: localStorage.getItem('session_token') || ''
+                  });
+                  
+                  console.log('Supabase auth context set for user:', result.user.id);
+                  
+                  // Kullanıcının project_id bilgisini users tablosundan al ve header için sakla
+                  try {
+                    const { data: userRow } = await supabase
+                      .from('users')
+                      .select('project_id')
+                      .eq('id', result.user.id)
+                      .single();
+                    
+                    if (userRow?.project_id) {
+                      localStorage.setItem('project_id', userRow.project_id);
+                      console.log('Project ID set from users table:', userRow.project_id);
+                    }
+                  } catch (e) {
+                    console.warn('Could not fetch project_id for user:', e);
+                  }
+                  
+                  // User ID'yi localStorage'a set et (RLS için gerekli)
+                  setCurrentUserId(result.user.id);
                 
               } catch (error) {
                 console.error('Error setting Supabase auth context:', error);
@@ -109,6 +122,10 @@ useEffect(() => {
       // Update state
       setSession(null);
       setUser(null);
+      
+      // Temizle: RLS header'ları
+      localStorage.removeItem('project_id');
+      clearCurrentUserId();
       
       console.log('Successfully signed out');
       

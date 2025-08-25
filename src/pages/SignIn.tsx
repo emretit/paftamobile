@@ -139,6 +139,21 @@ const SignIn = () => {
       localStorage.setItem("session_token", data.session_token);
       localStorage.setItem("user", JSON.stringify(data.user));
       
+      // Kullanıcının project_id bilgisini users tablosundan al ve header için sakla
+      try {
+        const { data: userRow } = await supabase
+          .from('users')
+          .select('project_id')
+          .eq('id', data.user.id)
+          .single();
+        if (userRow?.project_id) {
+          localStorage.setItem('project_id', userRow.project_id);
+          console.log('Project ID set after login:', userRow.project_id);
+        }
+      } catch (e) {
+        console.warn('Could not fetch project_id after login:', e);
+      }
+      
       // User ID'yi set et (RLS için gerekli)
       setCurrentUserId(data.user.id);
 
