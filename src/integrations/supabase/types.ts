@@ -2735,6 +2735,11 @@ export type Database = {
           payment_terms: string | null
           price_terms: string | null
           project_id: string
+          selected_delivery_terms: string[] | null
+          selected_other_terms: string[] | null
+          selected_payment_terms: string[] | null
+          selected_pricing_terms: string[] | null
+          selected_warranty_terms: string[] | null
           status: string
           terms: string | null
           title: string
@@ -2760,6 +2765,11 @@ export type Database = {
           payment_terms?: string | null
           price_terms?: string | null
           project_id: string
+          selected_delivery_terms?: string[] | null
+          selected_other_terms?: string[] | null
+          selected_payment_terms?: string[] | null
+          selected_pricing_terms?: string[] | null
+          selected_warranty_terms?: string[] | null
           status?: string
           terms?: string | null
           title: string
@@ -2785,6 +2795,11 @@ export type Database = {
           payment_terms?: string | null
           price_terms?: string | null
           project_id?: string
+          selected_delivery_terms?: string[] | null
+          selected_other_terms?: string[] | null
+          selected_payment_terms?: string[] | null
+          selected_pricing_terms?: string[] | null
+          selected_warranty_terms?: string[] | null
           status?: string
           terms?: string | null
           title?: string
@@ -3827,6 +3842,67 @@ export type Database = {
         }
         Relationships: []
       }
+      proposals_with_terms: {
+        Row: {
+          attachments: Json | null
+          computed_all_terms: string | null
+          computed_delivery_terms: string | null
+          computed_other_terms: string | null
+          computed_payment_terms: string | null
+          computed_pricing_terms: string | null
+          computed_warranty_terms: string | null
+          created_at: string | null
+          currency: string | null
+          customer_id: string | null
+          delivery_terms: string | null
+          description: string | null
+          employee_id: string | null
+          id: string | null
+          items: Json | null
+          notes: string | null
+          number: string | null
+          opportunity_id: string | null
+          other_terms: string | null
+          payment_terms: string | null
+          price_terms: string | null
+          project_id: string | null
+          selected_delivery_terms: string[] | null
+          selected_other_terms: string[] | null
+          selected_payment_terms: string[] | null
+          selected_pricing_terms: string[] | null
+          selected_warranty_terms: string[] | null
+          status: string | null
+          terms: string | null
+          title: string | null
+          total_amount: number | null
+          updated_at: string | null
+          valid_until: string | null
+          warranty_terms: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       assign_role: {
@@ -3836,6 +3912,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      base64_decode_with_padding: {
+        Args: { data: string }
+        Returns: string
+      }
+      base64_encode_no_padding: {
+        Args: { data: string }
+        Returns: string
+      }
       check_stock_status: {
         Args: { current_quantity: number; threshold: number }
         Returns: string
@@ -3844,21 +3928,42 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      clean_token: {
+        Args: { token: string }
+        Returns: string
+      }
+      create_simple_jwt_token: {
+        Args: { project_id: string; user_email: string; user_id: string }
+        Returns: string
+      }
       current_project_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      current_token_payload: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       current_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      get_current_user_project_id: {
+      current_user_id_secure: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      get_current_user_project_ids: {
-        Args: Record<PropertyKey, never>
-        Returns: string[]
+      decode_simple_jwt_token: {
+        Args: { token: string }
+        Returns: Json
+      }
+      generate_jwt_token: {
+        Args: {
+          project_id: string
+          user_email: string
+          user_id: string
+          user_role?: string
+        }
+        Returns: string
       }
       get_deal_counts_by_status: {
         Args: Record<PropertyKey, never>
@@ -3866,6 +3971,10 @@ export type Database = {
           count: number
           status: string
         }[]
+      }
+      get_jwt_secret: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_proposal_counts_by_status: {
         Args: Record<PropertyKey, never>
@@ -3932,6 +4041,19 @@ export type Database = {
       show_trgm: {
         Args: { "": string }
         Returns: string[]
+      }
+      test_rls_with_user: {
+        Args: { test_user_id: string }
+        Returns: {
+          auth_user_id: string
+          current_project_result: string
+          opportunity_count: number
+          user_project_id: string
+        }[]
+      }
+      validate_jwt_token: {
+        Args: { token: string }
+        Returns: Json
       }
     }
     Enums: {

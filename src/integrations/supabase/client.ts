@@ -31,6 +31,12 @@ const createCustomSupabaseClient = () => {
         'X-Client-Info': 'ngs-app',
         get 'X-User-ID'() {
           return typeof window !== 'undefined' ? localStorage.getItem('user_id') || '' : '';
+        },
+        get 'X-Project-ID'() {
+          return typeof window !== 'undefined' ? localStorage.getItem('project_id') || '' : '';
+        },
+        get 'X-Custom-JWT'() {
+          return typeof window !== 'undefined' ? localStorage.getItem('session_token') || '' : '';
         }
       }
     }
