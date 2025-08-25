@@ -60,3 +60,18 @@ export const clearCurrentUserId = () => {
     console.log('Current user ID cleared');
   }
 };
+
+// Project ID için yardımcı fonksiyonlar
+export const setCurrentProjectId = (projectId: string) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('project_id', projectId);
+    console.log('Current project ID set:', projectId);
+  }
+};
+
+export const clearCurrentProjectId = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('project_id');
+    console.log('Current project ID cleared');
+  }
+};
