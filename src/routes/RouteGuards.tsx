@@ -37,14 +37,6 @@ export const ProtectedRoute: React.FC<RouteGuardProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header with OrgSwitcher */}
-      <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="text-lg font-semibold">NGS Business Management</h1>
-          <OrgSwitcher />
-        </div>
-      </header>
-      
       {/* Main content */}
       {children}
     </div>
