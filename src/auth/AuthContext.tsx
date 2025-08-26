@@ -1,16 +1,20 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { supabase } from '@/integrations/supabase/client'
-import { User, Session, AuthError } from '@supabase/supabase-js'
+import { User, Session } from '@supabase/supabase-js'
 
 interface AuthContextType {
   user: User | null
   session: Session | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ user: User | null; error: AuthError | null }>
-  signUp: (email: string, password: string, fullName: string, orgName?: string) => Promise<{ user: User | null; error: AuthError | null }>
+  userId: string | null
+  token: string | null
+  signIn: (email: string, password: string) => Promise<{ user: User | null; error: any }>
+  signInWithPassword: (credentials: { email: string; password: string }) => Promise<{ error: any }>
+  signUp: (email: string, password: string, fullName: string, orgName?: string) => Promise<{ user: User | null; error: any }>
   signOut: () => Promise<void>
-  resetPassword: (email: string) => Promise<{ error: AuthError | null }>
+  resetPassword: (email: string) => Promise<{ error: any }>
   getCustomUserId: () => string | null
+  getClient: () => typeof supabase
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -150,7 +154,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return { user: data.user, error }
     } catch (error) {
       console.error('SignUp error:', error)
-      return { user: null, error: error as AuthError }
+      return { user: null, error: error as any }
     }
   }
 
@@ -167,19 +171,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return { error }
   }
 
+  const signInWithPassword = async (credentials: { email: string; password: string }) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: credentials.email,
+      password: credentials.password,
+    })
+    return { error }
+  }
+
   const getCustomUserId = (): string | null => {
     return user?.user_metadata?.custom_user_id || user?.id || null
+  }
+
+  const getClient = () => {
+    return supabase
   }
 
   const value: AuthContextType = {
     user,
     session,
     loading,
+    userId: user?.id || null,
+    token: session?.access_token || null,
     signIn,
+    signInWithPassword,
     signUp,
     signOut,
     resetPassword,
     getCustomUserId,
+    getClient,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

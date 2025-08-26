@@ -11,13 +11,7 @@ if (!url || !anonKey) {
  * Main Supabase client with authentication context
  * This client automatically handles authentication and RLS policies
  */
-export const supabase = createClient(url, anonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
-  }
-})
+export const supabase = createClient(url, anonKey)
 
 /**
  * Legacy function for backward compatibility
@@ -25,12 +19,7 @@ export const supabase = createClient(url, anonKey, {
  */
 export function createClientWithToken(token: string) {
   console.warn('createClientWithToken is deprecated. Use supabase client directly.')
-  const client = createClient(url, anonKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  })
+  const client = createClient(url, anonKey)
 
   // Override the headers for authenticated requests
   const originalRequest = client.rest.fetch

@@ -50,16 +50,12 @@ const SignUp = () => {
     }
     
     try {
-      const { error: signUpError } = await signUp({
-        email: email.toLowerCase().trim(),
-        password: password,
-        options: {
-          data: {
-            full_name: fullName.trim(),
-            org_name: orgName.trim() || null,
-          }
-        }
-      });
+      const { error: signUpError } = await signUp(
+        email.toLowerCase().trim(),
+        password,
+        fullName.trim(),
+        orgName.trim() || undefined
+      );
 
       if (signUpError) {
         throw signUpError;
