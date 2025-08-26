@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Bell, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/auth/AuthContext";
 import { useLogout } from "@/components/navbar/useLogout";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import {
@@ -16,7 +16,9 @@ import {
 
 export const TopBar = () => {
   const navigate = useNavigate();
-  const { user, userInitials } = useAuth();
+  const { userId } = useAuth();
+  const displayName = userId ? `Kullanıcı ${userId.slice(0, 6)}` : "Kullanıcı";
+  const userInitials = userId ? userId.slice(0, 2).toUpperCase() : "U";
   const { handleLogout } = useLogout();
   const { settings } = useCompanySettings();
   
@@ -32,7 +34,7 @@ export const TopBar = () => {
             {settings?.company_name || "Firma Adı"}
           </h1>
           <p className="text-sm text-gray-600">
-            {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Kullanıcı"}
+            {displayName}
           </p>
         </div>
       </div>
@@ -45,14 +47,13 @@ export const TopBar = () => {
           <DropdownMenuTrigger asChild>
             <div className="flex items-center gap-2 cursor-pointer">
               <Avatar>
-                <AvatarImage src={user?.user_metadata?.avatar_url} />
                 <AvatarFallback>{userInitials}</AvatarFallback>
               </Avatar>
               <div className="hidden sm:block">
                 <p className="text-sm font-medium">
-                  {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Kullanıcı"}
+                  {displayName}
                 </p>
-                <p className="text-xs text-gray-500">{user?.email || ""}</p>
+                <p className="text-xs text-gray-500">{userId || ""}</p>
               </div>
             </div>
           </DropdownMenuTrigger>

@@ -7,7 +7,7 @@ import { useProposalDraft } from "./useProposalDraft";
 import { useProposalCreation } from "./useProposalCreation";
 import { useProposalCalculations } from "./useProposalCalculations";
 import { useTechnicianNames } from "@/components/service/hooks/useTechnicianNames";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/auth/AuthContext";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 
 export const useProposalFormState = (
@@ -38,7 +38,7 @@ export const useProposalFormState = (
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   
-  const { user } = useAuth();
+  const { userId } = useAuth();
   const { employees } = useTechnicianNames();
   const { saveDraft, isLoading: isSavingDraft } = useProposalDraft();
   const { createProposal, isLoading: isCreating } = useProposalCreation();
@@ -66,23 +66,10 @@ export const useProposalFormState = (
       });
       setFormInitialized(true);
     } else if (isNew) {
-      if (user) {
-        const currentUserAsEmployee = employees.find(
-          emp => user && emp.first_name && emp.last_name && 
-          (user.user_metadata?.full_name?.includes(emp.first_name) || 
-          user.user_metadata?.full_name?.includes(emp.last_name))
-        );
-        
-        if (currentUserAsEmployee) {
-          setFormData(prev => ({
-            ...prev,
-            employee_id: currentUserAsEmployee.id
-          }));
-        }
-      }
+      // Optionally, could auto-assign employee based on userId in future
       setFormInitialized(true);
     }
-  }, [initialProposal, isNew, employees, user]);
+  }, [initialProposal, isNew, employees, userId]);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};

@@ -2,20 +2,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/auth/AuthContext";
 
 export const useLogout = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signOut } = useAuth();
+  const { logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
     
     try {
-      // Auth context'ten signOut çağır
-      await signOut();
+      // Auth context'ten logout çağır
+      await logout();
       
       // Başarılı logout
       toast({
