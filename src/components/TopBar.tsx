@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { Bell, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/AuthContext";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useLogout } from "@/components/navbar/useLogout";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import {
@@ -17,8 +18,7 @@ import {
 export const TopBar = () => {
   const navigate = useNavigate();
   const { userId } = useAuth();
-  const displayName = userId ? `Kullanıcı ${userId.slice(0, 6)}` : "Kullanıcı";
-  const userInitials = userId ? userId.slice(0, 2).toUpperCase() : "U";
+  const { displayName, userInitials } = useCurrentUser();
   const { handleLogout } = useLogout();
   const { settings } = useCompanySettings();
   
