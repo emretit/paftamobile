@@ -18,6 +18,8 @@ import Deliveries from "@/pages/Deliveries";
 import Returns from "@/pages/Returns";
 import InvoiceManagement from "@/pages/InvoiceManagement";
 import TestLogout from "@/pages/TestLogout";
+import ExampleItemsList from "@/pages/example-items/index";
+import NewExampleItem from "@/pages/example-items/new";
 
 
 export const appRoutes: RouteConfig[] = [
@@ -41,4 +43,6 @@ export const appRoutes: RouteConfig[] = [
   { path: "/returns", component: Returns, protected: true },
   { path: "/invoices", component: InvoiceManagement, protected: true },
   { path: "/test-logout", component: TestLogout, protected: true },
+  { path: "/example-items", component: ExampleItemsList, protected: true },
+  { path: "/example-items/new", component: NewExampleItem, protected: true },
 ];
