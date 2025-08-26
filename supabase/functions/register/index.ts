@@ -8,6 +8,7 @@ const corsHeaders = {
 interface RegisterRequest {
   email: string;
   password: string;
+  full_name: string;
   org_name?: string;
 }
 
@@ -63,10 +64,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { email, password, org_name } = body;
+    const { email, password, full_name, org_name } = body;
 
     // Validate input
-    if (!email || !password) {
+    if (!email || !password || !full_name) {
       return new Response(
         JSON.stringify({ error: 'missing_fields' }),
         { 
@@ -100,6 +101,7 @@ Deno.serve(async (req) => {
 
     // Sanitize inputs
     const sanitizedEmail = email.trim().toLowerCase();
+    const sanitizedFullName = full_name.trim();
     const sanitizedOrgName = org_name?.trim();
 
     console.log(`Registration attempt for email: ${sanitizedEmail}`);
@@ -194,6 +196,7 @@ Deno.serve(async (req) => {
       .insert([{ 
         email: sanitizedEmail, 
         password_hash: passwordHash,
+        full_name: sanitizedFullName,
         company_id: companyId,
         role: orgId ? 'admin' : 'user'
       }])

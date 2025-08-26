@@ -7,7 +7,7 @@ interface AuthContextType {
   userId: string | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
-  registerAndLogin: (email: string, password: string, orgName?: string) => Promise<void>
+  registerAndLogin: (email: string, password: string, fullName: string, orgName?: string) => Promise<void>
   logout: () => void
   getClient: () => ReturnType<typeof createClientWithToken>
 }
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
-  const registerAndLogin = async (email: string, password: string, orgName?: string): Promise<void> => {
+  const registerAndLogin = async (email: string, password: string, fullName: string, orgName?: string): Promise<void> => {
     try {
       // 1) call /functions/v1/register
       const response = await fetch(
@@ -115,7 +115,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             'Content-Type': 'application/json',
             'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aHd1Zm5ja3BxaXJ4cHR3bmN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkzODI5MjAsImV4cCI6MjA1NDk1ODkyMH0.Wjw8MAnsBrHxB6-J-bNGObgDQ4fl3zPYrgYI5tOrcKo`
           },
-          body: JSON.stringify({ email, password, org_name: orgName || undefined })
+          body: JSON.stringify({ email, password, full_name: fullName, org_name: orgName || undefined })
         }
       )
 

@@ -13,6 +13,7 @@ const SignUp = () => {
   const { registerAndLogin, userId } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [orgName, setOrgName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,8 +31,8 @@ const SignUp = () => {
     setLoading(true);
     setError(null);
     
-    if (!email || !password) {
-      setError("E-posta ve şifre gereklidir.");
+    if (!email || !password || !fullName) {
+      setError("E-posta, şifre ve ad soyad gereklidir.");
       setLoading(false);
       return;
     }
@@ -49,7 +50,7 @@ const SignUp = () => {
     }
     
     try {
-      await registerAndLogin(email.toLowerCase().trim(), password, orgName.trim() || undefined);
+      await registerAndLogin(email.toLowerCase().trim(), password, fullName.trim(), orgName.trim() || undefined);
       
       toast({
         title: "Kayıt Başarılı",
@@ -131,6 +132,18 @@ const SignUp = () => {
           <form onSubmit={handleSignUp} className="space-y-6">
             <div className="space-y-4">
               <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Ad Soyad"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="h-12 pl-10 text-base border-gray-300 focus:border-primary focus:ring-primary"
+                  required
+                />
+              </div>
+
+              <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
                   type="email"
@@ -177,7 +190,7 @@ const SignUp = () => {
             <Button 
               type="submit" 
               className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-              disabled={!email || !password || loading}
+              disabled={!email || !password || !fullName || loading}
             >
               {loading ? (
                 <div className="flex items-center">
