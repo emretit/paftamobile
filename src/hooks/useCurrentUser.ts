@@ -27,7 +27,7 @@ export const useCurrentUser = () => {
           .from('users')
           .select('id, full_name, email, company_id')
           .eq('id', userId)
-          .single();
+          .maybeSingle();
 
         if (error) {
           throw error;

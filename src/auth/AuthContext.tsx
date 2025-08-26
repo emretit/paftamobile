@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-
-import { publicClient, createClientWithToken } from '../lib/supabaseClient'
+import { supabase } from '@/integrations/supabase/client'
 
 interface AuthContextType {
   token: string | null
@@ -9,7 +8,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>
   registerAndLogin: (email: string, password: string, fullName: string, orgName?: string) => Promise<void>
   logout: () => void
-  getClient: () => ReturnType<typeof createClientWithToken>
+  getClient: () => typeof supabase
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -155,10 +154,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const getClient = () => {
-    if (token) {
-      return createClientWithToken(token)
-    }
-    return publicClient
+    return supabase
   }
 
   const value: AuthContextType = {
