@@ -8,15 +8,15 @@ import {
 } from "@/components/ui/custom-tabs";
 import { CompanySettingsTab } from "./CompanySettingsTab";
 import { AuditLogsTab } from "./AuditLogsTab";
-import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useCompanies } from "@/hooks/useCompanies";
 import { useAuditLogs } from "@/hooks/useAuditLogs";
 
 export const SystemSettings = () => {
   const [activeTab, setActiveTab] = useState("settings");
-  const { isLoading: settingsLoading } = useCompanySettings();
+  const { isLoading: companyLoading } = useCompanies();
   const { isLoading: logsLoading } = useAuditLogs();
 
-  if (settingsLoading || logsLoading) {
+  if (companyLoading || logsLoading) {
     return <div>Yükleniyor...</div>;
   }
 
