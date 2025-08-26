@@ -3,19 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Proposal, ProposalStatus } from "@/types/proposal";
 import { ProposalFilters } from "@/components/proposals/types";
-import { useCurrentUser } from "./useCurrentUser";
 
 export const useProposals = (filters?: ProposalFilters) => {
-  const { userData, loading: userLoading } = useCurrentUser();
-  
   const { data, isLoading, error } = useQuery({
-    queryKey: ["proposals", filters, userData?.company_id],
+    queryKey: ["proposals", filters],
     queryFn: async () => {
-      // Kullanıcının company_id'si yoksa hata fırlat
-      if (!userData?.company_id) {
-        throw new Error("Kullanıcının company_id'si bulunamadı");
-      }
-
       let query = supabase
         .from('proposals')
         .select(`
@@ -23,7 +15,6 @@ export const useProposals = (filters?: ProposalFilters) => {
           customer:customer_id (*),
           employee:employee_id (*)
         `)
-        .eq('company_id', userData.company_id) // Kullanıcının company_id'sini kullan
         .order('created_at', { ascending: false });
       
       // Apply status filter if specified
@@ -94,13 +85,8 @@ export const useProposals = (filters?: ProposalFilters) => {
           employee_name: item.employee ? `${item.employee.first_name} ${item.employee.last_name}` : undefined
         };
       });
-    },
-    enabled: !!userData?.company_id, // Sadece company_id varsa query'yi çalıştır
+    }
   });
 
-  return { 
-    data, 
-    isLoading: isLoading || userLoading, // User loading durumunu da dahil et
-    error 
-  };
+  return { data, isLoading, error };
 };

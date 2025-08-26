@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export type CompanySettings = {
   id: string;
-  name: string | null; // company_name yerine name kullanıyoruz
+  company_name: string | null;
   address: string | null;
   phone: string | null;
   email: string | null;
@@ -34,24 +34,24 @@ export const useCompanySettings = () => {
     queryKey: ['company-settings'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('companies')
+        .from('company_settings')
         .select('*')
         .maybeSingle();
 
       if (error) throw error;
 
       if (!data) {
-        // Return empty settings if none exist
+        // Return default settings if none exist
         return {
           id: '',
-          name: null,
-          address: null,
-          phone: null,
-          email: null,
-          tax_number: null,
-          tax_office: null,
-          website: null,
-          logo_url: null,
+          company_name: '',
+          address: '',
+          phone: '',
+          email: '',
+          tax_number: '',
+          tax_office: '',
+          website: '',
+          logo_url: '',
           default_currency: 'TRY',
           email_settings: {
             notifications_enabled: false
@@ -62,7 +62,6 @@ export const useCompanySettings = () => {
       const supabaseData = data as SupabaseCompanySettings;
       const parsedSettings: CompanySettings = {
         ...supabaseData,
-        name: supabaseData.name, // companies tablosundaki name alanını kullan
         email_settings: typeof supabaseData.email_settings === 'object' ? 
           supabaseData.email_settings as { notifications_enabled: boolean } :
           { notifications_enabled: false }
@@ -75,7 +74,7 @@ export const useCompanySettings = () => {
   const updateSettings = useMutation({
     mutationFn: async (newSettings: Partial<CompanySettings>) => {
       const { error } = await supabase
-        .from('companies')
+        .from('company_settings')
         .update(newSettings)
         .eq('id', settings?.id);
 

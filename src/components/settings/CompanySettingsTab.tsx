@@ -6,24 +6,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Save, Building, Settings } from "lucide-react";
-import { useCompanies, Company } from "@/hooks/useCompanies";
+import { useCompanySettings, CompanySettings } from "@/hooks/useCompanySettings";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 
 export const CompanySettingsTab = () => {
-  const { company } = useCompanies();
+  const { settings, updateSettings } = useCompanySettings();
   const [isSaving, setIsSaving] = useState(false);
-  const [formData, setFormData] = useState<Partial<Company>>({});
+  const [formData, setFormData] = useState<Partial<CompanySettings>>({});
   const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
-    if (company) {
-      setFormData(company);
+    if (settings) {
+      setFormData(settings);
     }
-  }, [company]);
+  }, [settings]);
 
-  const handleFieldChange = (field: keyof Company, value: any) => {
+  const handleFieldChange = (field: keyof CompanySettings, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setIsDirty(true);
   };
@@ -37,7 +37,7 @@ export const CompanySettingsTab = () => {
       const timestamp = Date.now();
       const fileExtension = file.name.split('.').pop();
       const uniqueFileName = `logo-${timestamp}.${fileExtension}`;
-      const filePath = `${company?.id}/${uniqueFileName}`;
+      const filePath = `${settings?.id}/${uniqueFileName}`;
 
       // First, try to delete any existing logo for this company
       if (formData?.logo_url) {
@@ -77,19 +77,10 @@ export const CompanySettingsTab = () => {
   };
 
   const handleSave = async () => {
-    if (!company?.id) return;
-    
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('companies')
-        .update(formData)
-        .eq('id', company.id);
-
-      if (error) throw error;
-      
+      await updateSettings(formData);
       setIsDirty(false);
-      toast.success('Ayarlar başarıyla kaydedildi');
     } catch (error) {
       toast.error('Ayarlar kaydedilirken hata oluştu');
     } finally {
@@ -124,25 +115,25 @@ export const CompanySettingsTab = () => {
           
           <div className="grid gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="flex items-center gap-1">
+              <Label htmlFor="company_name" className="flex items-center gap-1">
                 Şirket Adı *
-                {formData?.name !== company?.name && (
+                {formData?.company_name !== settings?.company_name && (
                   <span className="text-xs text-orange-500">●</span>
                 )}
               </Label>
               <Input
-                id="name"
+                id="company_name"
                 placeholder="örn: NGS Teknoloji Ltd. Şti."
-                value={formData?.name || ''}
-                onChange={(e) => handleFieldChange('name', e.target.value)}
-                className={formData?.name !== company?.name ? 'border-orange-300 bg-orange-50' : ''}
+                value={formData?.company_name || ''}
+                onChange={(e) => handleFieldChange('company_name', e.target.value)}
+                className={formData?.company_name !== settings?.company_name ? 'border-orange-300 bg-orange-50' : ''}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="address" className="flex items-center gap-1">
                 Şirket Adresi
-                {formData?.address !== company?.address && (
+                {formData?.address !== settings?.address && (
                   <span className="text-xs text-orange-500">●</span>
                 )}
               </Label>
@@ -152,7 +143,7 @@ export const CompanySettingsTab = () => {
                 rows={3}
                 value={formData?.address || ''}
                 onChange={(e) => handleFieldChange('address', e.target.value)}
-                className={formData?.address !== company?.address ? 'border-orange-300 bg-orange-50' : ''}
+                className={formData?.address !== settings?.address ? 'border-orange-300 bg-orange-50' : ''}
               />
             </div>
 
@@ -160,7 +151,7 @@ export const CompanySettingsTab = () => {
               <div className="space-y-2">
                 <Label htmlFor="phone" className="flex items-center gap-1">
                   Telefon
-                  {formData?.phone !== company?.phone && (
+                  {formData?.phone !== settings?.phone && (
                     <span className="text-xs text-orange-500">●</span>
                   )}
                 </Label>
@@ -169,13 +160,13 @@ export const CompanySettingsTab = () => {
                   placeholder="+90 212 555 0123"
                   value={formData?.phone || ''}
                   onChange={(e) => handleFieldChange('phone', e.target.value)}
-                  className={formData?.phone !== company?.phone ? 'border-orange-300 bg-orange-50' : ''}
+                  className={formData?.phone !== settings?.phone ? 'border-orange-300 bg-orange-50' : ''}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email" className="flex items-center gap-1">
                   E-posta
-                  {formData?.email !== company?.email && (
+                  {formData?.email !== settings?.email && (
                     <span className="text-xs text-orange-500">●</span>
                   )}
                 </Label>
@@ -185,7 +176,7 @@ export const CompanySettingsTab = () => {
                   placeholder="info@sirket.com"
                   value={formData?.email || ''}
                   onChange={(e) => handleFieldChange('email', e.target.value)}
-                  className={formData?.email !== company?.email ? 'border-orange-300 bg-orange-50' : ''}
+                  className={formData?.email !== settings?.email ? 'border-orange-300 bg-orange-50' : ''}
                 />
               </div>
             </div>
@@ -194,7 +185,7 @@ export const CompanySettingsTab = () => {
               <div className="space-y-2">
                 <Label htmlFor="tax_number" className="flex items-center gap-1">
                   Vergi Numarası
-                  {formData?.tax_number !== company?.tax_number && (
+                  {formData?.tax_number !== settings?.tax_number && (
                     <span className="text-xs text-orange-500">●</span>
                   )}
                 </Label>
@@ -203,13 +194,13 @@ export const CompanySettingsTab = () => {
                   placeholder="1234567890"
                   value={formData?.tax_number || ''}
                   onChange={(e) => handleFieldChange('tax_number', e.target.value)}
-                  className={formData?.tax_number !== company?.tax_number ? 'border-orange-300 bg-orange-50' : ''}
+                  className={formData?.tax_number !== settings?.tax_number ? 'border-orange-300 bg-orange-50' : ''}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="tax_office" className="flex items-center gap-1">
                   Vergi Dairesi
-                  {formData?.tax_office !== company?.tax_office && (
+                  {formData?.tax_office !== settings?.tax_office && (
                     <span className="text-xs text-orange-500">●</span>
                   )}
                 </Label>
@@ -218,7 +209,7 @@ export const CompanySettingsTab = () => {
                   placeholder="Beşiktaş Vergi Dairesi"
                   value={formData?.tax_office || ''}
                   onChange={(e) => handleFieldChange('tax_office', e.target.value)}
-                  className={formData?.tax_office !== company?.tax_office ? 'border-orange-300 bg-orange-50' : ''}
+                  className={formData?.tax_office !== settings?.tax_office ? 'border-orange-300 bg-orange-50' : ''}
                 />
               </div>
             </div>
@@ -226,7 +217,7 @@ export const CompanySettingsTab = () => {
             <div className="space-y-2">
               <Label htmlFor="website" className="flex items-center gap-1">
                 Web Sitesi
-                {formData?.website !== company?.website && (
+                {formData?.website !== settings?.website && (
                   <span className="text-xs text-orange-500">●</span>
                 )}
               </Label>
@@ -236,7 +227,7 @@ export const CompanySettingsTab = () => {
                 placeholder="https://www.sirket.com"
                 value={formData?.website || ''}
                 onChange={(e) => handleFieldChange('website', e.target.value)}
-                className={formData?.website !== company?.website ? 'border-orange-300 bg-orange-50' : ''}
+                className={formData?.website !== settings?.website ? 'border-orange-300 bg-orange-50' : ''}
               />
             </div>
 
