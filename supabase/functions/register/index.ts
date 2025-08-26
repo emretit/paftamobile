@@ -129,6 +129,7 @@ Deno.serve(async (req) => {
     }
 
     let orgId: string | null = null;
+    let companyId: string | null = null;
 
     // Create organization if org_name provided
     if (sanitizedOrgName) {
@@ -150,14 +151,37 @@ Deno.serve(async (req) => {
       }
 
       orgId = newOrg.id;
+      companyId = newOrg.id; // Use org as company for now
+    } else {
+      // If no org provided, create a default company for the user
+      const { data: newCompany, error: companyError } = await supabase
+        .from('orgs')
+        .insert([{ name: `${sanitizedEmail} Company` }])
+        .select('id')
+        .single();
+
+      if (companyError) {
+        console.error('Error creating default company:', companyError.message);
+        return new Response(
+          JSON.stringify({ error: 'server_error' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      companyId = newCompany.id;
     }
 
-    // Create user
+    // Create user with required company_id
     const { data: newUser, error: userError } = await supabase
       .from('users')
       .insert([{ 
         email: sanitizedEmail, 
-        password_hash: passwordHash 
+        password_hash: passwordHash,
+        company_id: companyId,
+        role: orgId ? 'admin' : 'user'
       }])
       .select('id')
       .single();

@@ -1,5 +1,4 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import * as bcrypt from 'npm:bcryptjs@3'
 import jwt from 'npm:jsonwebtoken@9'
 
 const corsHeaders = {
@@ -132,8 +131,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Compare password with hash
-    const passwordValid = await bcrypt.compare(password, user.password_hash);
+    // Hash the provided password and compare with stored hash
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const providedPasswordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    const passwordValid = providedPasswordHash === user.password_hash;
 
     if (!passwordValid) {
       console.log(`Login failed: invalid password for ${sanitizedEmail}`);
