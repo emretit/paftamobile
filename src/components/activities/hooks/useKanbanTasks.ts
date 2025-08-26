@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskStatus } from "@/types/task";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useAuth } from "@/hooks/useAuth";
 
 interface UseKanbanTasksProps {
   searchQuery?: string;
@@ -26,6 +26,7 @@ export const useKanbanTasks = ({
   selectedStatus = null
 }: UseKanbanTasksProps) => {
   const { userData } = useCurrentUser();
+  const { getClient } = useAuth();
   const [tasksState, setTasksState] = useState<KanbanTasks>({
     todo: [],
     in_progress: [],
@@ -40,7 +41,8 @@ export const useKanbanTasks = ({
         return [];
       }
 
-      const { data, error } = await supabase
+      const client = getClient();
+      const { data, error } = await client
         .from("activities")
         .select(`
           *,

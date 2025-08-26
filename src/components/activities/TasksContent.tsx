@@ -1,10 +1,11 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { TasksTable } from "./table";
 import TaskDetailPanel from "./TaskDetailPanel";
 import type { Task, TaskStatus } from "@/types/task";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TasksContentProps {
   searchQuery: string;
@@ -23,11 +24,15 @@ const TasksContent = ({
 }: TasksContentProps) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const { userData } = useCurrentUser();
+  const { getClient } = useAuth();
 
   const { data: tasks = [], isLoading } = useQuery({
-    queryKey: ["activities"],
+    queryKey: ["activities", userData?.company_id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (!userData?.company_id) return [];
+      const client = getClient();
+      const { data, error } = await client
         .from("activities")
         .select(`
           *,
@@ -38,6 +43,7 @@ const TasksContent = ({
             avatar_url
           )
         `)
+        .eq("company_id", userData.company_id)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -45,7 +51,6 @@ const TasksContent = ({
         throw error;
       }
 
-      // Transform the data to match the Task type
       return (data || []).map(task => ({
         ...task,
         assignee: task.assignee ? {
@@ -56,6 +61,7 @@ const TasksContent = ({
         } : undefined
       })) as Task[];
     },
+    enabled: !!userData?.company_id
   });
 
   const handleSelectTask = (task: Task) => {
