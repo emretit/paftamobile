@@ -21,3 +21,6 @@ verify_jwt = false
 
 [functions.login]
 verify_jwt = false
+
+[functions.seed]
+verify_jwt = false
