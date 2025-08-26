@@ -32,7 +32,8 @@ serve(async (req) => {
       }
     });
 
-    // Check if demo org already exists (idempotent)
+    // Check if demo org already exists and get/create it (idempotent)
+    let org;
     const { data: existingOrg } = await supabase
       .from('orgs')
       .select('id')
@@ -40,120 +41,134 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existingOrg) {
-      console.log('Demo data already exists, skipping seed');
-      return new Response(
-        JSON.stringify({ ok: true, message: 'Demo data already exists' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.log('Demo org already exists, reusing it');
+      org = existingOrg;
+    } else {
+      console.log('Creating demo organization...');
+      
+      // Create org "Acme"
+      const { data: newOrg, error: orgError } = await supabase
+        .from('orgs')
+        .insert([{ name: 'Acme' }])
+        .select('id')
+        .single();
+
+      if (orgError) {
+        console.error('Error creating org:', orgError);
+        throw new Error('Failed to create organization');
+      }
+
+      org = newOrg;
+      console.log('Organization created:', org.id);
     }
 
-    console.log('Creating demo organization...');
-    
-    // Create org "Acme"
-    const { data: org, error: orgError } = await supabase
-      .from('orgs')
-      .insert([{ name: 'Acme' }])
+    // Hash password for demo users
+    const ownerEmail = 'owner@test.com';
+    const memberEmail = 'member@test.com';
+    const pwHash = await bcrypt.hash('Passw0rd!Strong', 10);
+
+    console.log('Creating/updating demo users...');
+
+    // Upsert users in public.users table (idempotent by email)
+    const { data: ownerRow, error: ownerError } = await supabase
+      .from('users')
+      .upsert({ 
+        email: ownerEmail, 
+        password_hash: pwHash,
+        full_name: 'Demo Owner'
+      }, { onConflict: 'email' })
       .select('id')
       .single();
 
-    if (orgError) {
-      console.error('Error creating org:', orgError);
-      throw new Error('Failed to create organization');
-    }
-
-    console.log('Organization created:', org.id);
-
-    // Hash passwords for demo users
-    const hashedPassword = await bcrypt.hash('Passw0rd!Strong', 10);
-
-    console.log('Creating demo users...');
-
-    // Insert demo users into auth.users (bypassing RLS with service role)
-    const ownerUserId = crypto.randomUUID();
-    const memberUserId = crypto.randomUUID();
-
-    // Insert users into auth.users table
-    const { error: ownerAuthError } = await supabase.auth.admin.createUser({
-      email: 'owner@test.com',
-      password: 'Passw0rd!Strong',
-      email_confirm: true,
-      user_metadata: {
-        full_name: 'Demo Owner'
-      }
-    });
-
-    const { error: memberAuthError } = await supabase.auth.admin.createUser({
-      email: 'member@test.com', 
-      password: 'Passw0rd!Strong',
-      email_confirm: true,
-      user_metadata: {
-        full_name: 'Demo Member'
-      }
-    });
-
-    if (ownerAuthError) {
-      console.error('Error creating owner user:', ownerAuthError);
+    if (ownerError) {
+      console.error('Error creating/updating owner user:', ownerError);
       throw new Error('Failed to create owner user');
     }
 
-    if (memberAuthError) {
-      console.error('Error creating member user:', memberAuthError);
+    const { data: memberRow, error: memberError } = await supabase
+      .from('users')
+      .upsert({ 
+        email: memberEmail, 
+        password_hash: pwHash,
+        full_name: 'Demo Member'
+      }, { onConflict: 'email' })
+      .select('id')
+      .single();
+
+    if (memberError) {
+      console.error('Error creating/updating member user:', memberError);
       throw new Error('Failed to create member user');
     }
 
-    // Get the created user IDs
-    const { data: ownerUser } = await supabase.auth.admin.getUserByEmail('owner@test.com');
-    const { data: memberUser } = await supabase.auth.admin.getUserByEmail('member@test.com');
+    console.log('Users created/updated:', { ownerId: ownerRow.id, memberId: memberRow.id });
 
-    if (!ownerUser.user || !memberUser.user) {
-      throw new Error('Failed to retrieve created users');
+    console.log('Adding org memberships...');
+
+    // Upsert org memberships (idempotent by org_id, user_id)
+    const { error: ownerMembershipError } = await supabase
+      .from('org_members')
+      .upsert({
+        org_id: org.id,
+        user_id: ownerRow.id,
+        role: 'owner'
+      }, { onConflict: 'org_id,user_id' });
+
+    if (ownerMembershipError) {
+      console.error('Error creating owner membership:', ownerMembershipError);
+      throw new Error('Failed to create owner membership');
     }
 
-    console.log('Users created, adding org memberships...');
-
-    // Add org memberships
-    const { error: membershipsError } = await supabase
+    const { error: memberMembershipError } = await supabase
       .from('org_members')
-      .insert([
-        {
-          org_id: org.id,
-          user_id: ownerUser.user.id,
-          role: 'owner'
-        },
-        {
-          org_id: org.id,
-          user_id: memberUser.user.id,
-          role: 'member'
-        }
-      ]);
+      .upsert({
+        org_id: org.id,
+        user_id: memberRow.id,
+        role: 'member'
+      }, { onConflict: 'org_id,user_id' });
 
-    if (membershipsError) {
-      console.error('Error creating memberships:', membershipsError);
-      throw new Error('Failed to create org memberships');
+    if (memberMembershipError) {
+      console.error('Error creating member membership:', memberMembershipError);
+      throw new Error('Failed to create member membership');
     }
 
     console.log('Memberships created, adding example items...');
 
-    // Insert example items for the org
-    const { data: items, error: itemsError } = await supabase
+    // Check if items already exist for this org (idempotent)
+    const { data: existingItems } = await supabase
       .from('example_items')
-      .insert([
-        {
-          org_id: org.id,
-          title: 'Demo Item 1',
-          created_by: ownerUser.user.id
-        },
-        {
-          org_id: org.id,
-          title: 'Demo Item 2', 
-          created_by: ownerUser.user.id
-        }
-      ])
-      .select('id, title');
+      .select('id, title')
+      .eq('org_id', org.id);
 
-    if (itemsError) {
-      console.error('Error creating items:', itemsError);
-      throw new Error('Failed to create example items');
+    let items = existingItems || [];
+
+    if (!existingItems || existingItems.length === 0) {
+      console.log('Creating example items...');
+      
+      // Insert example items for the org
+      const { data: newItems, error: itemsError } = await supabase
+        .from('example_items')
+        .insert([
+          {
+            org_id: org.id,
+            title: 'Demo Item 1',
+            created_by: ownerRow.id
+          },
+          {
+            org_id: org.id,
+            title: 'Demo Item 2', 
+            created_by: ownerRow.id
+          }
+        ])
+        .select('id, title');
+
+      if (itemsError) {
+        console.error('Error creating items:', itemsError);
+        throw new Error('Failed to create example items');
+      }
+
+      items = newItems || [];
+    } else {
+      console.log('Example items already exist, reusing them');
     }
 
     console.log('Seed completed successfully');
@@ -162,8 +177,8 @@ serve(async (req) => {
       JSON.stringify({
         ok: true,
         org_id: org.id,
-        owner_id: ownerUser.user.id,
-        member_id: memberUser.user.id,
+        owner_id: ownerRow.id,
+        member_id: memberRow.id,
         items: items?.map(item => item.id) || []
       }),
       {
