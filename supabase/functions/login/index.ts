@@ -47,7 +47,6 @@ Deno.serve(async (req) => {
     const missing: string[] = [];
     if (!supabaseUrl) missing.push('SUPABASE_URL');
     if (!supabaseServiceKey) missing.push('SUPABASE_SERVICE_ROLE_KEY');
-    if (!jwtSecret) missing.push('SUPABASE_JWT_SECRET');
 
     if (missing.length) {
       console.error('Missing required environment variables:', missing.join(', '));
@@ -66,6 +65,24 @@ Deno.serve(async (req) => {
         persistSession: false
       }
     });
+
+    // Resolve JWT secret (fallback to DB function if env missing)
+    let resolvedJwtSecret = jwtSecret as string | undefined;
+    if (!resolvedJwtSecret) {
+      console.warn('SUPABASE_JWT_SECRET not set, falling back to public.get_jwt_secret()');
+      const { data: secret, error: secretError } = await supabase.rpc('get_jwt_secret');
+      if (secretError || !secret) {
+        console.error('JWT secret missing and fallback failed:', secretError?.message);
+        return new Response(
+          JSON.stringify({ error: 'missing_env', details: ['SUPABASE_JWT_SECRET'] }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      resolvedJwtSecret = secret as string;
+    }
 
     // Parse and validate request body
     let body: LoginRequest;
@@ -166,7 +183,7 @@ Deno.serve(async (req) => {
     };
 
     // Sign JWT token
-    const token = jwt.sign(payload, jwtSecret, {
+    const token = jwt.sign(payload, resolvedJwtSecret as string, {
       algorithm: 'HS256',
       expiresIn: '1d'
     });
