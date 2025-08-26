@@ -122,15 +122,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return
       }
 
-      // Fallback: support previous custom token response shape
-      const { token: newToken } = data
-      const decodedUserId = decodeJwtUserId(newToken)
-      if (!decodedUserId) {
-        throw new Error('Invalid token received')
+      // Fallback: support Supabase-compatible JWT returned by edge function
+      if (data?.supabase_jwt) {
+        const edgeJwt: string = data.supabase_jwt
+        const appUserId: string | null = data?.user?.id ?? decodeJwtUserId(edgeJwt)
+        if (!appUserId) {
+          throw new Error('Invalid token received')
+        }
+        localStorage.setItem(AUTH_TOKEN_KEY, edgeJwt)
+        setToken(edgeJwt)
+        setUserId(appUserId)
+        return
       }
-      localStorage.setItem(AUTH_TOKEN_KEY, newToken)
-      setToken(newToken)
-      setUserId(decodedUserId)
+
+      // As a last resort, if only a session_token UUID is returned, we cannot authorize RLS
+      throw new Error('Login failed: no valid session token')
     } catch (error) {
       console.error('Login error:', error)
       throw error
@@ -188,7 +194,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const getClient = () => {
-    return supabase as unknown as ReturnType<typeof createClientWithToken>
+    if (token) {
+      return createClientWithToken(token)
+    }
+    return publicClient
   }
 
   const value: AuthContextType = {

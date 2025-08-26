@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { crypto } from "https://deno.land/std@0.208.0/crypto/mod.ts";
+import { SignJWT } from "https://esm.sh/jose@4.15.5";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -246,6 +247,35 @@ serve(async (req) => {
     // Başarılı yanıt - hassas bilgileri çıkar
     const { password_hash, ...safeUser } = user;
     
+    // Supabase uyumlu JWT üret (GoTrue başarısızsa RLS için)
+    const supabaseJwtPayload = {
+      sub: user.id,
+      email: user.email,
+      role: 'authenticated',
+      user_metadata: {
+        custom_user_id: user.id,
+        project_id: user.project_id,
+        full_name: user.full_name || user.company_name || ''
+      }
+    };
+
+    let supabaseJwt: string | null = null;
+    try {
+      const secret = new TextEncoder().encode(Deno.env.get('SUPABASE_JWT_SECRET') || Deno.env.get('JWT_SECRET_KEY') || '');
+      if (secret.byteLength > 0) {
+        supabaseJwt = await new SignJWT(supabaseJwtPayload)
+          .setProtectedHeader({ alg: 'HS256' })
+          .setIssuedAt()
+          .setExpirationTime('24h')
+          .setIssuer('supabase')
+          .sign(secret);
+      } else {
+        console.warn('⚠️ Missing SUPABASE_JWT_SECRET - cannot sign JWT');
+      }
+    } catch (e) {
+      console.error('❌ JWT signing error:', e);
+    }
+    
     const response = {
       success: true,
       user: safeUser,
@@ -254,6 +284,7 @@ serve(async (req) => {
       default_project_id: defaultProjectId,
       // Supabase session bilgilerini de ekle (RLS için gerekli)
       supabase_session: supabaseSession,
+      supabase_jwt: supabaseJwt,
       auth_user_id: authUser?.id || null
     };
 
