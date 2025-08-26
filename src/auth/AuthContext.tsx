@@ -20,7 +20,7 @@ const AUTH_TOKEN_KEY = 'auth_token'
  * Decodes JWT token to extract userId from 'sub' claim
  * Simple base64url decoder without external dependencies
  */
-function decodeJwtSub(token: string): string | null {
+function decodeJwtUserId(token: string): string | null {
   try {
     const payload = JSON.parse(
       new TextDecoder().decode(
@@ -30,7 +30,7 @@ function decodeJwtSub(token: string): string | null {
         )
       )
     )
-    return payload?.sub ?? null
+    return payload?.user_metadata?.custom_user_id ?? payload?.sub ?? null
   } catch {
     return null
   }
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const storedToken = localStorage.getItem(AUTH_TOKEN_KEY)
       if (storedToken) {
-        const decodedUserId = decodeJwtSub(storedToken)
+        const decodedUserId = decodeJwtUserId(storedToken)
         if (decodedUserId) {
           setToken(storedToken)
           setUserId(decodedUserId)
@@ -89,25 +89,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       // If edge function returned a Supabase auth session, use it
+      if (data?.supabase_session?.access_token && data?.supabase_session?.refresh_token) {
+        await supabase.auth.setSession({
+          access_token: data.supabase_session.access_token,
+          refresh_token: data.supabase_session.refresh_token
+        })
+        const accessToken: string = data.supabase_session.access_token
+        const appUserId: string | null = data?.user?.id ?? decodeJwtUserId(accessToken)
+        if (!appUserId) {
+          throw new Error('Invalid session token received')
+        }
+        localStorage.setItem(AUTH_TOKEN_KEY, accessToken)
+        setToken(accessToken)
+        setUserId(appUserId)
+        return
+      }
+
+      // Also support { session } shape if used
       if (data?.session?.access_token && data?.session?.refresh_token) {
         await supabase.auth.setSession({
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token
         })
         const accessToken: string = data.session.access_token
-        const decodedUserId = decodeJwtSub(accessToken)
-        if (!decodedUserId) {
+        const appUserId: string | null = data?.user?.id ?? decodeJwtUserId(accessToken)
+        if (!appUserId) {
           throw new Error('Invalid session token received')
         }
         localStorage.setItem(AUTH_TOKEN_KEY, accessToken)
         setToken(accessToken)
-        setUserId(decodedUserId)
+        setUserId(appUserId)
         return
       }
 
       // Fallback: support previous custom token response shape
       const { token: newToken } = data
-      const decodedUserId = decodeJwtSub(newToken)
+      const decodedUserId = decodeJwtUserId(newToken)
       if (!decodedUserId) {
         throw new Error('Invalid token received')
       }
@@ -171,10 +188,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const getClient = () => {
-    if (token) {
-      return createClientWithToken(token)
-    }
-    return publicClient
+    return supabase as unknown as ReturnType<typeof createClientWithToken>
   }
 
   const value: AuthContextType = {
