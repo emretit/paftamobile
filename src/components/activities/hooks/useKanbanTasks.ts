@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskStatus } from "@/types/task";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 interface UseKanbanTasksProps {
   searchQuery?: string;
@@ -24,6 +25,7 @@ export const useKanbanTasks = ({
   selectedType = null,
   selectedStatus = null
 }: UseKanbanTasksProps) => {
+  const { userData } = useCurrentUser();
   const [tasksState, setTasksState] = useState<KanbanTasks>({
     todo: [],
     in_progress: [],
@@ -32,8 +34,12 @@ export const useKanbanTasks = ({
   });
 
   const { data: tasks = [], isLoading, error } = useQuery({
-    queryKey: ["tasks"],
+    queryKey: ["tasks", userData?.company_id],
     queryFn: async () => {
+      if (!userData?.company_id) {
+        return [];
+      }
+
       const { data, error } = await supabase
         .from("activities")
         .select(`
@@ -45,6 +51,7 @@ export const useKanbanTasks = ({
             avatar_url
           )
         `)
+        .eq("company_id", userData.company_id)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -62,6 +69,7 @@ export const useKanbanTasks = ({
         } : undefined
       })) as Task[];
     },
+    enabled: !!userData?.company_id
   });
 
   useEffect(() => {
