@@ -16,7 +16,7 @@ export const ProtectedRoute: React.FC<RouteGuardProps> = ({ children }) => {
 
   React.useEffect(() => {
     if (!loading && !userId) {
-      navigate("/auth");
+      navigate("/signin");
     }
   }, [userId, loading, navigate]);
 
