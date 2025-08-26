@@ -39,7 +39,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event, session?.user?.email)
 
       setSession(session)
@@ -47,17 +47,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(false)
 
       if (event === 'SIGNED_IN' && session?.user) {
-        // Update last login time in custom users table if needed
         const customUserId = session.user.user_metadata?.custom_user_id
         if (customUserId) {
-          try {
-            await supabase
+          setTimeout(() => {
+            supabase
               .from('users')
               .update({ last_login: new Date().toISOString() })
               .eq('id', customUserId)
-          } catch (error) {
-            console.warn('Failed to update last login:', error)
-          }
+              .then(({ error }) => {
+                if (error) console.warn('Failed to update last login:', error)
+              })
+          }, 0)
         }
       }
     })
@@ -164,6 +164,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error('SignOut error:', error)
       throw error
     }
+    setSession(null)
+    setUser(null)
   }
 
   const resetPassword = async (email: string) => {

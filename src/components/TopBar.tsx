@@ -70,7 +70,7 @@ export const TopBar = () => {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem onClick={handleProfileClick}>Profilim</DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate("/settings")}>Ayarlar</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600" onClick={handleLogout}>Çıkış Yap</DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600" onSelect={handleLogout}>Çıkış Yap</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
