@@ -131,8 +131,26 @@ Deno.serve(async (req) => {
     let orgId: string | null = null;
     let companyId: string | null = null;
 
-    // Create organization if org_name provided
+    // Create company and organization if org_name provided
     if (sanitizedOrgName) {
+      // Create company
+      const { data: newCompany, error: companyError } = await supabase
+        .from('companies')
+        .insert([{ name: sanitizedOrgName }])
+        .select('id')
+        .single();
+
+      if (companyError) {
+        console.error('Error creating company:', companyError.message);
+        return new Response(
+          JSON.stringify({ error: 'server_error' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      companyId = newCompany.id;
+
+      // Create organization (optional, for org membership)
       const { data: newOrg, error: orgError } = await supabase
         .from('orgs')
         .insert([{ name: sanitizedOrgName }])
@@ -143,19 +161,15 @@ Deno.serve(async (req) => {
         console.error('Error creating organization:', orgError.message);
         return new Response(
           JSON.stringify({ error: 'server_error' }),
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
       orgId = newOrg.id;
-      companyId = newOrg.id; // Use org as company for now
     } else {
       // If no org provided, create a default company for the user
       const { data: newCompany, error: companyError } = await supabase
-        .from('orgs')
+        .from('companies')
         .insert([{ name: `${sanitizedEmail} Company` }])
         .select('id')
         .single();
