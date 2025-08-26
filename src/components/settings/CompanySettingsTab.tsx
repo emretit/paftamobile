@@ -6,24 +6,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Save, Building, Settings } from "lucide-react";
-import { useCompanySettings, CompanySettings } from "@/hooks/useCompanySettings";
+import { useCompanies, Company } from "@/hooks/useCompanies";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 
 export const CompanySettingsTab = () => {
-  const { settings, updateSettings } = useCompanySettings();
+  const { company } = useCompanies();
   const [isSaving, setIsSaving] = useState(false);
-  const [formData, setFormData] = useState<Partial<CompanySettings>>({});
+  const [formData, setFormData] = useState<Partial<Company>>({});
   const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
-    if (settings) {
-      setFormData(settings);
+    if (company) {
+      setFormData(company);
     }
-  }, [settings]);
+  }, [company]);
 
-  const handleFieldChange = (field: keyof CompanySettings, value: any) => {
+  const handleFieldChange = (field: keyof Company, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setIsDirty(true);
   };
@@ -37,7 +37,7 @@ export const CompanySettingsTab = () => {
       const timestamp = Date.now();
       const fileExtension = file.name.split('.').pop();
       const uniqueFileName = `logo-${timestamp}.${fileExtension}`;
-      const filePath = `${settings?.id}/${uniqueFileName}`;
+      const filePath = `${company?.id}/${uniqueFileName}`;
 
       // First, try to delete any existing logo for this company
       if (formData?.logo_url) {
@@ -77,10 +77,19 @@ export const CompanySettingsTab = () => {
   };
 
   const handleSave = async () => {
+    if (!company?.id) return;
+    
     setIsSaving(true);
     try {
-      await updateSettings(formData);
+      const { error } = await supabase
+        .from('companies')
+        .update(formData)
+        .eq('id', company.id);
+
+      if (error) throw error;
+      
       setIsDirty(false);
+      toast.success('Ayarlar başarıyla kaydedildi');
     } catch (error) {
       toast.error('Ayarlar kaydedilirken hata oluştu');
     } finally {
@@ -115,25 +124,25 @@ export const CompanySettingsTab = () => {
           
           <div className="grid gap-4">
             <div className="space-y-2">
-              <Label htmlFor="company_name" className="flex items-center gap-1">
+              <Label htmlFor="name" className="flex items-center gap-1">
                 Şirket Adı *
-                {formData?.company_name !== settings?.company_name && (
+                {formData?.name !== company?.name && (
                   <span className="text-xs text-orange-500">●</span>
                 )}
               </Label>
               <Input
-                id="company_name"
+                id="name"
                 placeholder="örn: NGS Teknoloji Ltd. Şti."
-                value={formData?.company_name || ''}
-                onChange={(e) => handleFieldChange('company_name', e.target.value)}
-                className={formData?.company_name !== settings?.company_name ? 'border-orange-300 bg-orange-50' : ''}
+                value={formData?.name || ''}
+                onChange={(e) => handleFieldChange('name', e.target.value)}
+                className={formData?.name !== company?.name ? 'border-orange-300 bg-orange-50' : ''}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="address" className="flex items-center gap-1">
                 Şirket Adresi
-                {formData?.address !== settings?.address && (
+                {formData?.address !== company?.address && (
                   <span className="text-xs text-orange-500">●</span>
                 )}
               </Label>
@@ -143,7 +152,7 @@ export const CompanySettingsTab = () => {
                 rows={3}
                 value={formData?.address || ''}
                 onChange={(e) => handleFieldChange('address', e.target.value)}
-                className={formData?.address !== settings?.address ? 'border-orange-300 bg-orange-50' : ''}
+                className={formData?.address !== company?.address ? 'border-orange-300 bg-orange-50' : ''}
               />
             </div>
 

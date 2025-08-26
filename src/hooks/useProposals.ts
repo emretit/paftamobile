@@ -15,6 +15,7 @@ export const useProposals = (filters?: ProposalFilters) => {
           customer:customer_id (*),
           employee:employee_id (*)
         `)
+        .eq('company_id', '64c481ef-2e0d-4fde-aa3c-76b2e83b4c0e') // PAFTA.APP company ID
         .order('created_at', { ascending: false });
       
       // Apply status filter if specified

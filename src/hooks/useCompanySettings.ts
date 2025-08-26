@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export type CompanySettings = {
   id: string;
-  company_name: string | null;
+  name: string | null; // company_name yerine name kullanıyoruz
   address: string | null;
   phone: string | null;
   email: string | null;
@@ -34,7 +34,7 @@ export const useCompanySettings = () => {
     queryKey: ['company-settings'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('company_settings')
+        .from('companies')
         .select('*')
         .maybeSingle();
 
@@ -44,7 +44,7 @@ export const useCompanySettings = () => {
         // Return empty settings if none exist
         return {
           id: '',
-          company_name: null,
+          name: null,
           address: null,
           phone: null,
           email: null,
@@ -52,7 +52,7 @@ export const useCompanySettings = () => {
           tax_office: null,
           website: null,
           logo_url: null,
-          default_currency: '',
+          default_currency: 'TRY',
           email_settings: {
             notifications_enabled: false
           }
@@ -62,6 +62,7 @@ export const useCompanySettings = () => {
       const supabaseData = data as SupabaseCompanySettings;
       const parsedSettings: CompanySettings = {
         ...supabaseData,
+        name: supabaseData.name, // companies tablosundaki name alanını kullan
         email_settings: typeof supabaseData.email_settings === 'object' ? 
           supabaseData.email_settings as { notifications_enabled: boolean } :
           { notifications_enabled: false }
@@ -74,7 +75,7 @@ export const useCompanySettings = () => {
   const updateSettings = useMutation({
     mutationFn: async (newSettings: Partial<CompanySettings>) => {
       const { error } = await supabase
-        .from('company_settings')
+        .from('companies')
         .update(newSettings)
         .eq('id', settings?.id);
 
