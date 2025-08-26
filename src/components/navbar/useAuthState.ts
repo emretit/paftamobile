@@ -67,7 +67,8 @@ useEffect(() => {
                 
               } catch (error) {
                 console.error('Error setting Supabase auth context:', error);
-                // Custom auth system - no need for setCurrentUserId
+                // Fallback olarak user ID'yi set et
+                setCurrentUserId(result.user.id);
               }
             }
           } else {
