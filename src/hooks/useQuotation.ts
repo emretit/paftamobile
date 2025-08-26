@@ -8,7 +8,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useActiveProject } from './useActiveProject';
 
 export interface QuotationItem {
   id: string;
@@ -36,16 +35,13 @@ export interface Quotation {
 }
 
 export const useQuotation = (quotationId?: string) => {
-  const { activeProject } = useActiveProject();
   const [quotation, setQuotation] = useState<Quotation | null>(null);
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (activeProject) {
-      loadQuotations();
-    }
-  }, [activeProject]);
+    loadQuotations();
+  }, []);
 
   useEffect(() => {
     if (quotationId && quotations.length > 0) {
@@ -55,14 +51,12 @@ export const useQuotation = (quotationId?: string) => {
   }, [quotationId, quotations]);
 
   const loadQuotations = async () => {
-    if (!activeProject) return;
-
     try {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('quotations')
         .select('*')
-        .eq('project_id', activeProject.id)
+        .eq('project_id', '00000000-0000-0000-0000-000000000001')
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
@@ -76,13 +70,11 @@ export const useQuotation = (quotationId?: string) => {
   };
 
   const createQuotation = async (quotationData: Partial<Quotation>) => {
-    if (!activeProject) return;
-
     try {
       const { data, error } = await supabase
         .from('quotations')
         .insert({
-          project_id: activeProject.id,
+          project_id: '00000000-0000-0000-0000-000000000001',
           ...quotationData,
         })
         .select()

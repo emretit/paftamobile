@@ -2,51 +2,35 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { safeSignOut } from "@/lib/supabase-utils";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useLogout = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signOut } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
     
     try {
-      // Güvenli logout işlemini gerçekleştir
-      const result = await safeSignOut();
+      // Auth context'ten signOut çağır
+      await signOut();
       
-      if (result.success) {
-        // Başarılı logout
-        toast({
-          title: "Başarılı",
-          description: "Başarıyla çıkış yapıldı.",
-        });
-        
-        // Sign-in sayfasına yönlendir (hard redirect)
-        window.location.replace("/signin");
-      } else {
-        // Hata durumunda
-        if (result.error?.includes('403') || result.error?.includes('403')) {
-          toast({
-            variant: "destructive",
-            title: "Yetki Hatası",
-            description: "Oturum kapatma yetkiniz bulunmuyor. Lütfen sayfayı yenileyin ve tekrar deneyin.",
-          });
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Hata",
-            description: "Çıkış yapılırken bir sorun oluştu: " + (result.error || 'Bilinmeyen hata'),
-          });
-        }
-      }
+      // Başarılı logout
+      toast({
+        title: "Başarılı",
+        description: "Başarıyla çıkış yapıldı.",
+      });
+      
+      // Sign-in sayfasına yönlendir
+      navigate("/signin");
     } catch (error: any) {
-      console.error('Unexpected logout error:', error);
+      console.error('Logout error:', error);
       toast({
         variant: "destructive",
-        title: "Beklenmeyen Hata",
-        description: "Çıkış yapılırken beklenmeyen bir hata oluştu. Lütfen sayfayı yenileyin.",
+        title: "Hata",
+        description: "Çıkış yapılırken bir sorun oluştu.",
       });
     } finally {
       setIsLoggingOut(false);

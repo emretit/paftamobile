@@ -7,7 +7,7 @@ import { useProposalDraft } from "./useProposalDraft";
 import { useProposalCreation } from "./useProposalCreation";
 import { useProposalCalculations } from "./useProposalCalculations";
 import { useTechnicianNames } from "@/components/service/hooks/useTechnicianNames";
-import { useAuthState } from "@/components/navbar/useAuthState";
+import { useAuth } from "@/hooks/useAuth";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 
 export const useProposalFormState = (
@@ -38,7 +38,7 @@ export const useProposalFormState = (
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   
-  const { user } = useAuthState();
+  const { user } = useAuth();
   const { employees } = useTechnicianNames();
   const { saveDraft, isLoading: isSavingDraft } = useProposalDraft();
   const { createProposal, isLoading: isCreating } = useProposalCreation();

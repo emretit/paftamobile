@@ -3,11 +3,11 @@ import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu
 import UserMenuAvatar from "@/components/navbar/UserMenuAvatar";
 import UserMenuContent from "@/components/navbar/UserMenuContent";
 import LoginButton from "@/components/navbar/LoginButton";
-import { useAuthState } from "@/components/navbar/useAuthState";
+import { useAuth } from "@/hooks/useAuth";
 import { useLogout } from "@/components/navbar/useLogout";
 
 const UserMenu = () => {
-  const { user, loading, userInitials } = useAuthState();
+  const { user, loading, userInitials } = useAuth();
   const { handleLogout } = useLogout();
 
   if (loading) {

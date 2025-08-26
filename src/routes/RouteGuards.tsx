@@ -1,6 +1,6 @@
-
 import React from "react";
-import AuthGuard from "@/components/AuthGuard";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 type RouteGuardProps = {
   children: React.ReactNode;
@@ -8,7 +8,31 @@ type RouteGuardProps = {
 
 export const PublicRoute: React.FC<RouteGuardProps> = ({ children }) => children;
 
-// Protected routes now require authentication
-export const ProtectedRoute: React.FC<RouteGuardProps> = ({ children }) => (
-  <AuthGuard>{children}</AuthGuard>
-);
+// Protected routes require authentication
+export const ProtectedRoute: React.FC<RouteGuardProps> = ({ children }) => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (!loading && !user) {
+      navigate("/signin");
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  return <>{children}</>;
+};

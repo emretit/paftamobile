@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Bell, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuthState } from "@/components/navbar/useAuthState";
+import { useAuth } from "@/hooks/useAuth";
 import { useLogout } from "@/components/navbar/useLogout";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import {
@@ -16,7 +16,7 @@ import {
 
 export const TopBar = () => {
   const navigate = useNavigate();
-  const { user, userInitials } = useAuthState();
+  const { user, userInitials } = useAuth();
   const { handleLogout } = useLogout();
   const { settings } = useCompanySettings();
   

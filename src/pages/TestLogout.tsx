@@ -2,12 +2,12 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLogout } from '@/components/navbar/useLogout';
-import { useAuthState } from '@/components/navbar/useAuthState';
+import { useAuth } from '@/hooks/useAuth';
 import { checkSessionStatus, clearAuthTokens } from '@/lib/supabase-utils';
 
 const TestLogout = () => {
   const { handleLogout, isLoggingOut } = useLogout();
-  const { user, session, loading } = useAuthState();
+  const { user, session, loading } = useAuth();
 
   const testSessionStatus = async () => {
     const result = await checkSessionStatus();

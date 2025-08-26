@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { ErrorDisplay } from "@/components/auth/ErrorDisplay";
 import { ArrowRight, Mail, Lock, Eye, EyeOff, Home } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const SignIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,66 +19,12 @@ const SignIn = () => {
 
   // Check if user is already logged in
   useEffect(() => {
-    const sessionToken = localStorage.getItem('session_token');
-    const user = localStorage.getItem('user');
-    
-    if (sessionToken && user) {
+    if (user) {
       navigate("/dashboard");
     }
-  }, [navigate]);
+  }, [user, navigate]);
 
-  // Check for email confirmation token and handle account activation
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    const confirmed = urlParams.get('confirmed');
-    
-    if (token) {
-      // Token varsa confirm-email edge function'ını çağır
-      handleEmailConfirmation(token);
-    } else if (confirmed === 'true') {
-      toast({
-        title: "Hesap Onaylandı! 🎉",
-        description: "Hesabınız başarıyla onaylandı. Artık giriş yapabilirsiniz.",
-        variant: "default",
-      });
-      
-      // URL'den parametreyi temizle
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, [toast]);
 
-  const handleEmailConfirmation = async (token: string) => {
-    try {
-      const response = await supabase.functions.invoke('confirm-email', {
-        body: { token }
-      });
-
-      if (response.data?.success) {
-        toast({
-          title: "Hesap Onaylandı! 🎉",
-          description: "Hesabınız başarıyla onaylandı. Artık giriş yapabilirsiniz.",
-          variant: "default",
-        });
-      } else {
-        toast({
-          title: "Onay Hatası",
-          description: response.data?.error || "Hesap onaylanırken bir hata oluştu.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Email onay hatası:', error);
-      toast({
-        title: "Onay Hatası",
-        description: "Hesap onaylanırken bir hata oluştu.",
-        variant: "destructive",
-      });
-    }
-    
-    // URL'den token parametresini temizle
-    window.history.replaceState({}, document.title, window.location.pathname);
-  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,75 +38,22 @@ const SignIn = () => {
     }
 
     try {
-      // Custom login edge function'ını kullan
-      const { data, error } = await supabase.functions.invoke('custom-login', {
-        body: {
-          email: email.toLowerCase().trim(),
-          password: password
-        }
-      });
+      // Yeni auth sistemi ile giriş yap
+      const { error } = await signIn(email.toLowerCase().trim(), password);
 
       if (error) {
-        console.error("Login function error:", error);
-        console.error("Error details:", JSON.stringify(error, null, 2));
-        
-        // Eğer error.context varsa onu da göster
-        let errorMessage = "Giriş sırasında bir hata oluştu";
-        if (error.context?.body) {
-          try {
-            const errorBody = JSON.parse(error.context.body);
-            errorMessage = errorBody.error || errorMessage;
-          } catch (e) {
-            console.log("Could not parse error body:", error.context.body);
-          }
-        }
-        
-        setError(errorMessage);
-        toast({
-          variant: "destructive",
-          title: "Hata",
-          description: errorMessage,
-        });
-        setLoading(false);
-        return;
-      }
-
-      if (!data.success) {
-        setError(data.error || "Geçersiz email veya şifre.");
+        console.error("Login error:", error);
+        setError("Geçersiz email veya şifre.");
         toast({
           variant: "destructive",
           title: "Giriş Hatası",
-          description: data.error || "Geçersiz email veya şifre.",
+          description: "Geçersiz email veya şifre.",
         });
         setLoading(false);
         return;
       }
 
-      // Başarılı giriş - verileri localStorage'a kaydet
-      localStorage.setItem("session_token", data.session_token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      
-      // Supabase session'ını set et (RLS için kritik)
-      if (data.supabase_session) {
-        console.log('🔐 Supabase session set ediliyor...');
-        try {
-          await supabase.auth.setSession({
-            access_token: data.supabase_session.access_token,
-            refresh_token: data.supabase_session.refresh_token
-          });
-          
-          // Supabase session'ını localStorage'a da kaydet (sayfa yenileme için)
-          localStorage.setItem('supabase_session', JSON.stringify(data.supabase_session));
-          
-          console.log('✅ Supabase session başarıyla set edildi');
-        } catch (sessionError) {
-          console.error('❌ Supabase session set etme hatası:', sessionError);
-        }
-      }
-      
-      // User ID'yi set et (RLS için gerekli)
-      
-
+      // Başarılı giriş
       toast({
         title: "Başarılı",
         description: "Giriş yapıldı. Dashboard'a yönlendiriliyorsunuz...",

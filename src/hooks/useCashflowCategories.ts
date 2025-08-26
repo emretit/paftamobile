@@ -50,7 +50,7 @@ export const useCashflowCategories = () => {
   const createCategory = async (data: CreateCategoryData) => {
     try {
       // Auth disabled - no user check needed
-      const user_id = '00000000-0000-0000-0000-000000000000'; // Dummy user ID
+      const user_id = '00000000-0000-0000-0000-000000000001'; // Default user ID
 
       const insertData = {
         ...data,
