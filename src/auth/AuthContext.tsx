@@ -7,6 +7,7 @@ interface AuthContextType {
   userId: string | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
+  registerAndLogin: (email: string, password: string, orgName?: string) => Promise<void>
   logout: () => void
   getClient: () => ReturnType<typeof createClientWithToken>
 }
@@ -103,6 +104,44 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
+  const registerAndLogin = async (email: string, password: string, orgName?: string): Promise<void> => {
+    try {
+      // 1) call /functions/v1/register
+      const response = await fetch(
+        `https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/register`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aHd1Zm5ja3BxaXJ4cHR3bmN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkzODI5MjAsImV4cCI6MjA1NDk1ODkyMH0.Wjw8MAnsBrHxB6-J-bNGObgDQ4fl3zPYrgYI5tOrcKo`
+          },
+          body: JSON.stringify({ email, password, org_name: orgName || undefined })
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'register_failed')
+      }
+
+      // 2) call login(email,password) to get JWT
+      await login(email, password)
+
+      // 3) If org was created, set user_prefs.current_org_id = org_id
+      if (data?.org_id && userId) {
+        const client = getClient()
+        await client.from('user_prefs').upsert({ 
+          user_id: userId, 
+          current_org_id: data.org_id 
+        })
+      }
+    } catch (error) {
+      console.error('Registration error:', error)
+      throw error
+    }
+  }
+
   const logout = (): void => {
     localStorage.removeItem(AUTH_TOKEN_KEY)
     setToken(null)
@@ -121,6 +160,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     userId,
     loading,
     login,
+    registerAndLogin,
     logout,
     getClient
   }

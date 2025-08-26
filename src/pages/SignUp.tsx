@@ -5,89 +5,81 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { ErrorDisplay } from "@/components/auth/ErrorDisplay";
 import { ArrowRight, Mail, Lock, User, Building, Eye, EyeOff, Home } from "lucide-react";
+import { useAuth } from "@/auth/AuthContext";
 
 const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { registerAndLogin, userId } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [companyName, setCompanyName] = useState("");
+  const [orgName, setOrgName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [emailSent, setEmailSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   // Check if user is already logged in
   useEffect(() => {
-    const sessionToken = localStorage.getItem('session_token');
-    const user = localStorage.getItem('user');
-    
-    if (sessionToken && user) {
+    if (userId) {
       navigate("/dashboard");
     }
-  }, [navigate]);
+  }, [userId, navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     
-    if (!companyName.trim()) {
-      setError("Şirket adı gereklidir.");
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Lütfen şirket adını giriniz.",
-      });
+    if (!email || !password) {
+      setError("E-posta ve şifre gereklidir.");
+      setLoading(false);
+      return;
+    }
+
+    if (password.length < 10) {
+      setError("Şifre en az 10 karakter olmalıdır.");
+      setLoading(false);
+      return;
+    }
+
+    if (orgName && orgName.length < 2) {
+      setError("Organizasyon adı en az 2 karakter olmalıdır.");
       setLoading(false);
       return;
     }
     
     try {
-      const response = await fetch('https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/register-user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email, 
-          password, 
-          full_name: name, 
-          company_name: companyName 
-        })
+      await registerAndLogin(email.toLowerCase().trim(), password, orgName.trim() || undefined);
+      
+      toast({
+        title: "Kayıt Başarılı",
+        description: "Hesabınız oluşturuldu ve giriş yapıldı.",
       });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        setError(data?.error || 'Kayıt hatası');
-        toast({
-          variant: "destructive",
-          title: "Kayıt Hatası",
-          description: data?.error || 'Kayıt hatası',
-        });
-      } else {
-        toast({
-          title: "Kayıt Başarılı",
-          description: "Email adresinizi kontrol ederek hesabınızı onaylayın.",
-        });
-        // Hesap oluşturulduktan sonra giriş sayfasına yönlendir
-        setTimeout(() => {
-          navigate("/signin");
-        }, 2000);
+      
+      // Navigate to home
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
+      
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      let errorMessage = "Kayıt sırasında bir hata oluştu.";
+      
+      if (error.message.includes('23505') || error.message.includes('unique')) {
+        errorMessage = "Bu e-posta adresi zaten kayıtlı.";
+      } else if (error.message.includes('23503')) {
+        errorMessage = "Geçersiz veri girişi.";
       }
-    } catch (err) {
-      console.error("Signup error:", err);
-      setError("Beklenmeyen bir hata oluştu.");
+      
+      setError(errorMessage);
       toast({
         variant: "destructive",
-        title: "Hata",
-        description: "Beklenmeyen bir hata oluştu.",
+        title: "Kayıt Hatası",
+        description: errorMessage,
       });
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
@@ -118,40 +110,16 @@ const SignUp = () => {
               </button>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-3">
-              PAFTA'a Hoş Geldiniz
+              Hesap Oluşturun
             </h1>
             <p className="text-lg text-gray-600">
-              Hemen kullanmaya başlayın - ücretsizdir. Kredi kartı gerekmez.
+              Organizasyon adı girerseniz otomatik olarak sahibi olursunuz.
             </p>
           </div>
 
           {/* Kayıt formu */}
           <form onSubmit={handleSignUp} className="space-y-6">
             <div className="space-y-4">
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Adınız Soyadınız"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="h-12 pl-10 text-base border-gray-300 focus:border-primary focus:ring-primary"
-                  required
-                />
-              </div>
-              
-              <div className="relative">
-                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Şirket Adı"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  className="h-12 pl-10 text-base border-gray-300 focus:border-primary focus:ring-primary"
-                  required
-                />
-              </div>
-              
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
@@ -168,10 +136,11 @@ const SignUp = () => {
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder="Şifre"
+                  placeholder="Şifre (en az 10 karakter)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-12 pl-10 pr-12 text-base border-gray-300 focus:border-primary focus:ring-primary"
+                  minLength={10}
                   required
                 />
                 <button
@@ -182,12 +151,23 @@ const SignUp = () => {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+
+              <div className="relative">
+                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Organizasyon Adı (isteğe bağlı)"
+                  value={orgName}
+                  onChange={(e) => setOrgName(e.target.value)}
+                  className="h-12 pl-10 text-base border-gray-300 focus:border-primary focus:ring-primary"
+                />
+              </div>
             </div>
             
             <Button 
               type="submit" 
               className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-              disabled={!name || !companyName || !email || !password || loading}
+              disabled={!email || !password || loading}
             >
               {loading ? (
                 <div className="flex items-center">

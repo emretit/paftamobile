@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { ErrorDisplay } from "@/components/auth/ErrorDisplay";
 import { ArrowRight, Mail, Lock, Eye, EyeOff, Home } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/auth/AuthContext";
 
 const SignIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, user } = useAuth();
+  const { login, userId } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,10 +19,10 @@ const SignIn = () => {
 
   // Check if user is already logged in
   useEffect(() => {
-    if (user) {
+    if (userId) {
       navigate("/dashboard");
     }
-  }, [user, navigate]);
+  }, [userId, navigate]);
 
 
 
@@ -37,21 +37,14 @@ const SignIn = () => {
       return;
     }
 
-    try {
-      // Yeni auth sistemi ile giriş yap
-      const { error } = await signIn(email.toLowerCase().trim(), password);
+    if (password.length < 10) {
+      setError("Şifre en az 10 karakter olmalıdır.");
+      setLoading(false);
+      return;
+    }
 
-      if (error) {
-        console.error("Login error:", error);
-        setError("Geçersiz email veya şifre.");
-        toast({
-          variant: "destructive",
-          title: "Giriş Hatası",
-          description: "Geçersiz email veya şifre.",
-        });
-        setLoading(false);
-        return;
-      }
+    try {
+      await login(email.toLowerCase().trim(), password);
 
       // Başarılı giriş
       toast({
@@ -66,11 +59,14 @@ const SignIn = () => {
 
     } catch (error: any) {
       console.error("Giriş hatası:", error);
-      setError("Giriş sırasında bir hata oluştu: " + error.message);
+      const errorMessage = error.message.includes('invalid_credentials') 
+        ? "E-posta veya şifre hatalı" 
+        : "Giriş başarısız";
+      setError(errorMessage);
       toast({
         variant: "destructive",
-        title: "Hata",
-        description: "Giriş sırasında bir hata oluştu: " + error.message,
+        title: "Giriş Hatası",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -131,10 +127,11 @@ const SignIn = () => {
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder="Şifreniz"
+                  placeholder="Şifreniz (en az 10 karakter)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-12 pl-10 pr-12 text-base border-gray-300 focus:border-primary focus:ring-primary"
+                  minLength={10}
                   required
                 />
                 <button
