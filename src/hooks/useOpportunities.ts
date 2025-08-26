@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Opportunity, OpportunityStatus, OpportunitiesState } from "@/types/crm";
 import { DropResult } from "@hello-pangea/dnd";
 import { useToast } from "@/components/ui/use-toast";
@@ -16,6 +16,7 @@ interface UseOpportunitiesFilters {
 export const useOpportunities = (filters: UseOpportunitiesFilters = {}) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { getClient } = useAuth();
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
@@ -23,14 +24,14 @@ export const useOpportunities = (filters: UseOpportunitiesFilters = {}) => {
   const { data: opportunitiesData, isLoading, error } = useQuery({
     queryKey: ["opportunities", filters],
     queryFn: async () => {
-      let query = supabase
+      const client = getClient();
+      let query = client
         .from("opportunities")
         .select(`
           *,
           customer:customer_id (*),
           employee:employee_id (*)
         `);
-
       // Apply filters
       if (filters.search) {
         query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%,customer.name.ilike.%${filters.search}%`);
@@ -117,7 +118,8 @@ export const useOpportunities = (filters: UseOpportunitiesFilters = {}) => {
   // Handle drag and drop updates
   const updateOpportunityMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: OpportunityStatus }) => {
-      const { error } = await supabase
+      const client = getClient();
+      const { error } = await client
         .from("opportunities")
         .update({ status, updated_at: new Date().toISOString() })
         .eq("id", id);
@@ -160,11 +162,11 @@ export const useOpportunities = (filters: UseOpportunitiesFilters = {}) => {
   // Function for updating opportunity status (for custom columns)
   const handleUpdateOpportunityStatus = async (id: string, status: string) => {
     try {
-      const { error } = await supabase
+      const client = getClient();
+      const { error } = await client
         .from("opportunities")
         .update({ status, updated_at: new Date().toISOString() })
         .eq("id", id);
-
       if (error) throw error;
       
       queryClient.invalidateQueries({ queryKey: ["opportunities"] });
@@ -189,11 +191,11 @@ export const useOpportunities = (filters: UseOpportunitiesFilters = {}) => {
         updateData.contact_history = JSON.stringify(updateData.contact_history);
       }
 
-      const { error } = await supabase
+      const client = getClient();
+      const { error } = await client
         .from("opportunities")
         .update(updateData)
         .eq("id", opportunity.id);
-
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ["opportunities"] });
