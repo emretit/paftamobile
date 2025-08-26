@@ -176,16 +176,22 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create JWT payload
+    // Create JWT payload with Supabase-compatible format
+    const now = Math.floor(Date.now() / 1000);
     const payload = {
+      aud: 'authenticated',
+      exp: now + 86400, // 24 hours
+      iat: now,
+      iss: 'supabase',
       sub: user.id,
-      role: 'authenticated'
+      email: sanitizedEmail,
+      role: 'authenticated',
+      session_id: crypto.randomUUID()
     };
 
     // Sign JWT token
     const token = jwt.sign(payload, resolvedJwtSecret as string, {
-      algorithm: 'HS256',
-      expiresIn: '1d'
+      algorithm: 'HS256'
     });
 
     console.log(`Login successful for: ${sanitizedEmail}`);
