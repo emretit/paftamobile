@@ -8,24 +8,30 @@ if (!url || !anonKey) {
 }
 
 /**
- * Public Supabase client - used when no authentication token is available
- * This client only has access to public data and RLS policies will restrict access
+ * Main Supabase client with authentication context
+ * This client automatically handles authentication and RLS policies
  */
-export const publicClient = createClient(url, anonKey)
+export const supabase = createClient(url, anonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+})
 
 /**
- * Creates a Supabase client with a custom JWT token
- * This token is sent via Authorization header so RLS policies can use auth.uid()
- * 
- * @param token - Custom JWT token from our login endpoint
- * @returns Supabase client with authentication context
- * 
- * Note: We never use supabase.auth.* methods as we have custom JWT authentication.
- * The JWT is only sent via Authorization header for RLS to read auth.uid() from the 'sub' claim.
+ * Legacy function for backward compatibility
+ * @deprecated Use supabase client directly with Supabase Auth
  */
 export function createClientWithToken(token: string) {
-  const client = createClient(url, anonKey)
-  
+  console.warn('createClientWithToken is deprecated. Use supabase client directly.')
+  const client = createClient(url, anonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  })
+
   // Override the headers for authenticated requests
   const originalRequest = client.rest.fetch
   client.rest.fetch = (url: string, options: any = {}) => {
@@ -37,6 +43,12 @@ export function createClientWithToken(token: string) {
       }
     })
   }
-  
+
   return client
 }
+
+/**
+ * Legacy public client for backward compatibility
+ * @deprecated Use supabase client directly
+ */
+export const publicClient = supabase

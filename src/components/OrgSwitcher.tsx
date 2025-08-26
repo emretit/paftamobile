@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/auth/AuthContext'
 import { useToast } from '../hooks/use-toast'
+import { supabase } from '@/lib/supabaseClient'
 import { Building2, ChevronDown } from 'lucide-react'
 
 interface UserOrg {
@@ -29,7 +30,7 @@ const getRoleBadgeColor = (role: string) => {
 }
 
 export default function OrgSwitcher() {
-  const { userId, getClient, loading } = useAuth()
+  const { user, loading } = useAuth()
   const { toast } = useToast()
   
   const [orgs, setOrgs] = useState<UserOrg[]>([])
@@ -39,20 +40,18 @@ export default function OrgSwitcher() {
 
   // Fetch organizations and current preference
   useEffect(() => {
-    if (!userId || loading) return
+    if (!user?.id || loading) return
 
     const fetchData = async () => {
       setIsLoading(true)
       setError(null)
 
       try {
-        const client = getClient()
-
         // Fetch user's organizations
-        const { data: orgsData, error: orgsError } = await client
+        const { data: orgsData, error: orgsError } = await supabase
           .from('v_user_orgs')
           .select('org_id, org_name, role')
-          .eq('user_id', userId)
+          .eq('user_id', user.id)
           .order('org_name', { ascending: true })
 
         if (orgsError) {
@@ -65,14 +64,14 @@ export default function OrgSwitcher() {
         setOrgs(orgsData || [])
 
         // Fetch current org preference
-        const { data: prefData } = await client
+        const { data: prefData } = await supabase
           .from('user_prefs')
           .select('current_org_id')
-          .eq('user_id', userId)
+          .eq('user_id', user.id)
           .maybeSingle()
 
         const preferredOrgId = prefData?.current_org_id
-        
+
         // Set current org (either from preference or first available org)
         if (preferredOrgId && orgsData?.some(org => org.org_id === preferredOrgId)) {
           setCurrentOrgId(preferredOrgId)
@@ -83,7 +82,7 @@ export default function OrgSwitcher() {
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Beklenmeyen hata oluştu'
         setError(errorMessage)
-        
+
         if (errorMessage === 'RLS engeli') {
           toast({
             title: "Erişim Engeli",
@@ -103,19 +102,17 @@ export default function OrgSwitcher() {
     }
 
     fetchData()
-  }, [userId, loading, getClient, toast])
+  }, [user?.id, loading, toast])
 
   // Handle organization change
   const handleOrgChange = async (newOrgId: string) => {
-    if (!userId || newOrgId === currentOrgId) return
+    if (!user?.id || newOrgId === currentOrgId) return
 
     try {
-      const client = getClient()
-      
-      const { error } = await client
+      const { error } = await supabase
         .from('user_prefs')
         .upsert({
-          user_id: userId,
+          user_id: user.id,
           current_org_id: newOrgId
         })
 
@@ -127,7 +124,7 @@ export default function OrgSwitcher() {
       }
 
       setCurrentOrgId(newOrgId)
-      
+
       const selectedOrg = orgs.find(org => org.org_id === newOrgId)
       toast({
         title: "Organizasyon Değiştirildi",
@@ -136,10 +133,10 @@ export default function OrgSwitcher() {
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Beklenmeyen hata oluştu'
-      
+
       if (errorMessage === 'RLS engeli') {
         toast({
-          title: "Erişim Engeli", 
+          title: "Erişim Engeli",
           description: "RLS engeli - Organizasyon değiştirme izniniz yok",
           variant: "destructive"
         })
@@ -154,11 +151,11 @@ export default function OrgSwitcher() {
   }
 
   // Show disabled select while loading or no user
-  if (loading || !userId) {
+  if (loading || !user?.id) {
     return (
       <div className="relative">
-        <select 
-          disabled 
+        <select
+          disabled
           className="appearance-none bg-muted text-muted-foreground px-3 py-2 pr-8 rounded-md border border-border cursor-not-allowed"
         >
           <option>Yükleniyor...</option>

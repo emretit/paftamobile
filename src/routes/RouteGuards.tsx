@@ -11,14 +11,14 @@ export const PublicRoute: React.FC<RouteGuardProps> = ({ children }) => children
 
 // Protected routes require authentication
 export const ProtectedRoute: React.FC<RouteGuardProps> = ({ children }) => {
-  const { userId, loading } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    if (!loading && !userId) {
+    if (!loading && !user) {
       navigate("/signin");
     }
-  }, [userId, loading, navigate]);
+  }, [user, loading, navigate]);
 
   if (loading) {
     return (
@@ -31,7 +31,7 @@ export const ProtectedRoute: React.FC<RouteGuardProps> = ({ children }) => {
     );
   }
 
-  if (!userId) {
+  if (!user) {
     return null;
   }
 

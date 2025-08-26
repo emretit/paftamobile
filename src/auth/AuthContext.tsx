@@ -1,232 +1,185 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { publicClient, createClientWithToken } from '../lib/supabaseClient'
 import { supabase } from '@/integrations/supabase/client'
+import { User, Session, AuthError } from '@supabase/supabase-js'
 
 interface AuthContextType {
-  token: string | null
-  userId: string | null
+  user: User | null
+  session: Session | null
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
-  registerAndLogin: (email: string, password: string, fullName: string, orgName?: string) => Promise<void>
-  logout: () => void
-  getClient: () => ReturnType<typeof createClientWithToken>
+  signIn: (email: string, password: string) => Promise<{ user: User | null; error: AuthError | null }>
+  signUp: (email: string, password: string, fullName: string, orgName?: string) => Promise<{ user: User | null; error: AuthError | null }>
+  signOut: () => Promise<void>
+  resetPassword: (email: string) => Promise<{ error: AuthError | null }>
+  getCustomUserId: () => string | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-const AUTH_TOKEN_KEY = 'auth_token'
-
-/**
- * Decodes JWT token to extract userId from 'sub' claim
- * Simple base64url decoder without external dependencies
- */
-function decodeJwtUserId(token: string): string | null {
-  try {
-    const payload = JSON.parse(
-      new TextDecoder().decode(
-        Uint8Array.from(
-          atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')),
-          c => c.charCodeAt(0)
-        )
-      )
-    )
-    return payload?.user_metadata?.custom_user_id ?? payload?.sub ?? null
-  } catch {
-    return null
-  }
-}
 
 interface AuthProviderProps {
   children: ReactNode
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [token, setToken] = useState<string | null>(null)
-  const [userId, setUserId] = useState<string | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Load token from localStorage on mount
   useEffect(() => {
-    try {
-      const storedToken = localStorage.getItem(AUTH_TOKEN_KEY)
-      if (storedToken) {
-        const decodedUserId = decodeJwtUserId(storedToken)
-        if (decodedUserId) {
-          setToken(storedToken)
-          setUserId(decodedUserId)
-        } else {
-          // Invalid token, remove it
-          localStorage.removeItem(AUTH_TOKEN_KEY)
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.email)
+
+      setSession(session)
+      setUser(session?.user ?? null)
+      setLoading(false)
+
+      if (event === 'SIGNED_IN' && session?.user) {
+        // Update last login time in custom users table if needed
+        const customUserId = session.user.user_metadata?.custom_user_id
+        if (customUserId) {
+          try {
+            await supabase
+              .from('users')
+              .update({ last_login: new Date().toISOString() })
+              .eq('id', customUserId)
+          } catch (error) {
+            console.warn('Failed to update last login:', error)
+          }
         }
       }
-    } catch (error) {
-      console.error('Error loading auth token:', error)
-      localStorage.removeItem(AUTH_TOKEN_KEY)
-    } finally {
-      setLoading(false)
-    }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  const login = async (email: string, password: string): Promise<void> => {
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    return { user: data.user, error }
+  }
+
+  const signUp = async (email: string, password: string, fullName: string, orgName?: string) => {
     try {
-      // Prefer the edge function that returns a Supabase auth session
-      const response = await fetch(
-        `https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/custom-login`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aHd1Zm5ja3BxaXJ4cHR3bmN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkzODI5MjAsImV4cCI6MjA1NDk1ODkyMH0.Wjw8MAnsBrHxB6-J-bNGObgDQ4fl3zPYrgYI5tOrcKo`
-          },
-          body: JSON.stringify({ email, password })
+      // First, create company if orgName is provided
+      let companyId = null
+      if (orgName) {
+        const { data: company, error: companyError } = await supabase
+          .from('companies')
+          .insert([{ name: orgName }])
+          .select('id')
+          .single()
+
+        if (companyError) {
+          console.error('Company creation error:', companyError)
+          throw companyError
         }
-      )
+        companyId = company.id
+      } else {
+        // Create default company
+        const { data: company, error: companyError } = await supabase
+          .from('companies')
+          .insert([{ name: `${email} Company` }])
+          .select('id')
+          .single()
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed')
+        if (companyError) {
+          console.error('Default company creation error:', companyError)
+          throw companyError
+        }
+        companyId = company.id
       }
 
-      // If edge function returned a Supabase auth session, use it
-      if (data?.supabase_session?.access_token && data?.supabase_session?.refresh_token) {
-        console.log('✅ Setting Supabase session from edge function')
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: data.supabase_session.access_token,
-          refresh_token: data.supabase_session.refresh_token
+      // Sign up user with Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            company_name: orgName || `${email} Company`,
+            company_id: companyId,
+          }
+        }
+      })
+
+      if (error) {
+        throw error
+      }
+
+      if (data.user) {
+        // Create custom user record
+        const { error: customUserError } = await supabase
+          .from('users')
+          .insert([{
+            id: data.user.id,
+            email: email,
+            full_name: fullName,
+            company_id: companyId,
+            is_active: true,
+          }])
+
+        if (customUserError) {
+          console.error('Custom user creation error:', customUserError)
+          // Don't throw here, user is already created in auth.users
+        }
+
+        // Update auth user metadata with custom user ID
+        const { error: updateError } = await supabase.auth.updateUser({
+          data: {
+            custom_user_id: data.user.id,
+            company_id: companyId,
+          }
         })
-        
-        if (sessionError) {
-          console.error('❌ Session setup error:', sessionError)
-          throw sessionError
+
+        if (updateError) {
+          console.warn('Failed to update user metadata:', updateError)
         }
-        
-        const accessToken: string = data.supabase_session.access_token
-        const appUserId: string | null = data?.user?.id ?? decodeJwtUserId(accessToken)
-        if (!appUserId) {
-          throw new Error('Invalid session token received')
-        }
-        localStorage.setItem(AUTH_TOKEN_KEY, accessToken)
-        setToken(accessToken)
-        setUserId(appUserId)
-        return
       }
 
-      // Also support { session } shape if used
-      if (data?.session?.access_token && data?.session?.refresh_token) {
-        await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token
-        })
-        const accessToken: string = data.session.access_token
-        const appUserId: string | null = data?.user?.id ?? decodeJwtUserId(accessToken)
-        if (!appUserId) {
-          throw new Error('Invalid session token received')
-        }
-        localStorage.setItem(AUTH_TOKEN_KEY, accessToken)
-        setToken(accessToken)
-        setUserId(appUserId)
-        return
-      }
-
-      // Fallback: support Supabase-compatible JWT returned by edge function
-      if (data?.supabase_jwt) {
-        console.log('✅ Using fallback JWT from edge function')
-        const edgeJwt: string = data.supabase_jwt
-        const appUserId: string | null = data?.user?.id ?? decodeJwtUserId(edgeJwt)
-        if (!appUserId) {
-          throw new Error('Invalid token received')
-        }
-        
-        // Create a manual session using the JWT
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: edgeJwt,
-          refresh_token: crypto.randomUUID() // Dummy refresh token
-        })
-        
-        if (sessionError) {
-          console.warn('⚠️ Manual session setup failed, using token only:', sessionError)
-        }
-        
-        localStorage.setItem(AUTH_TOKEN_KEY, edgeJwt)
-        setToken(edgeJwt)
-        setUserId(appUserId)
-        return
-      }
-
-      // As a last resort, if only a session_token UUID is returned, we cannot authorize RLS
-      throw new Error('Login failed: no valid session token')
+      return { user: data.user, error }
     } catch (error) {
-      console.error('Login error:', error)
+      console.error('SignUp error:', error)
+      return { user: null, error: error as AuthError }
+    }
+  }
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      console.error('SignOut error:', error)
       throw error
     }
   }
 
-  const registerAndLogin = async (email: string, password: string, fullName: string, orgName?: string): Promise<void> => {
-    try {
-      // 1) call /functions/v1/register
-      const response = await fetch(
-        `https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/register`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aHd1Zm5ja3BxaXJ4cHR3bmN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkzODI5MjAsImV4cCI6MjA1NDk1ODkyMH0.Wjw8MAnsBrHxB6-J-bNGObgDQ4fl3zPYrgYI5tOrcKo`
-          },
-          body: JSON.stringify({ email, password, full_name: fullName, org_name: orgName || undefined })
-        }
-      )
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'register_failed')
-      }
-
-      // 2) call login(email,password) to get JWT
-      try {
-        await login(email, password)
-      } catch (err: any) {
-        // Mark this specific scenario so UI can show correct message
-        const msg = typeof err?.message === 'string' ? err.message : 'login_failed'
-        throw new Error(`login_failed_after_registration:${msg}`)
-      }
-
-      // 3) If org was created, set user_prefs.current_org_id = org_id
-      if (data?.org_id && userId) {
-        const client = getClient()
-        await client.from('user_prefs').upsert({ 
-          user_id: userId, 
-          current_org_id: data.org_id 
-        })
-      }
-    } catch (error) {
-      console.error('Registration error:', error)
-      throw error
-    }
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email)
+    return { error }
   }
 
-  const logout = (): void => {
-    localStorage.removeItem(AUTH_TOKEN_KEY)
-    setToken(null)
-    setUserId(null)
-  }
-
-  const getClient = () => {
-    if (token) {
-      return createClientWithToken(token)
-    }
-    return publicClient
+  const getCustomUserId = (): string | null => {
+    return user?.user_metadata?.custom_user_id || user?.id || null
   }
 
   const value: AuthContextType = {
-    token,
-    userId,
+    user,
+    session,
     loading,
-    login,
-    registerAndLogin,
-    logout,
-    getClient
+    signIn,
+    signUp,
+    signOut,
+    resetPassword,
+    getCustomUserId,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/auth/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
 interface UserData {
   id: string;
@@ -9,24 +10,24 @@ interface UserData {
 }
 
 export const useCurrentUser = () => {
-  const { userId, getClient } = useAuth();
+  const { user } = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!userId) {
+      if (!user?.id) {
         setLoading(false);
+        setUserData(null);
         return;
       }
 
       try {
-        const client = getClient();
-        const { data, error } = await client
+        const { data, error } = await supabase
           .from('users')
           .select('id, full_name, email, company_id')
-          .eq('id', userId)
+          .eq('id', user.id)
           .maybeSingle();
 
         if (error) {
@@ -45,15 +46,15 @@ export const useCurrentUser = () => {
     };
 
     fetchUserData();
-  }, [userId, getClient]);
+  }, [user?.id]);
 
   return {
     userData,
     loading,
     error,
-    displayName: userData?.full_name || 'Kullanıcı',
-    userInitials: userData?.full_name 
+    displayName: userData?.full_name || user?.user_metadata?.full_name || 'Kullanıcı',
+    userInitials: userData?.full_name
       ? userData.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-      : 'U'
+      : user?.email?.slice(0, 2).toUpperCase() || 'U'
   };
 };

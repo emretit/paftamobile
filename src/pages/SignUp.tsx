@@ -10,7 +10,7 @@ import { useAuth } from "@/auth/AuthContext";
 const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { registerAndLogin, userId } = useAuth();
+  const { signUp, signInWithPassword, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -21,10 +21,10 @@ const SignUp = () => {
 
   // Check if user is already logged in
   useEffect(() => {
-    if (userId) {
+    if (user?.id) {
       navigate("/dashboard");
     }
-  }, [userId, navigate]);
+  }, [user?.id, navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,42 +50,70 @@ const SignUp = () => {
     }
     
     try {
-      await registerAndLogin(email.toLowerCase().trim(), password, fullName.trim(), orgName.trim() || undefined);
-      
-      toast({
-        title: "Kayıt Başarılı",
-        description: "Hesabınız oluşturuldu ve giriş yapıldı.",
+      const { error: signUpError } = await signUp({
+        email: email.toLowerCase().trim(),
+        password: password,
+        options: {
+          data: {
+            full_name: fullName.trim(),
+            org_name: orgName.trim() || null,
+          }
+        }
       });
-      
-      // Navigate to home
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
-      
-    } catch (error: any) {
-      console.error("Signup error:", error);
-      const msg = String((error as any)?.message || "");
-      let errorMessage = "Kayıt sırasında bir hata oluştu.";
 
-      if (msg.startsWith('login_failed_after_registration')) {
+      if (signUpError) {
+        throw signUpError;
+      }
+
+      // Try to sign in automatically after successful registration
+      try {
+        const { error: signInError } = await signInWithPassword({
+          email: email.toLowerCase().trim(),
+          password: password,
+        });
+
+        if (signInError) {
+          throw signInError;
+        }
+
+        toast({
+          title: "Kayıt Başarılı",
+          description: "Hesabınız oluşturuldu ve giriş yapıldı.",
+        });
+
+        // Navigate to home
+        setTimeout(() => {
+          navigate("/");
+        }, 1000);
+
+      } catch (signInError: any) {
         // Registration succeeded but auto-login failed
-        errorMessage = "Kayıt başarılı, ancak otomatik girişte bir sorun oluştu. Lütfen giriş yapmayı deneyin.";
+        const errorMessage = "Kayıt başarılı, ancak otomatik girişte bir sorun oluştu. Lütfen giriş yapmayı deneyin.";
         toast({ title: "Kayıt Tamamlandı", description: errorMessage });
         navigate("/signin");
-      } else if (msg.includes('email_taken') || msg.includes('unique')) {
-        errorMessage = "Bu e-posta adresi zaten kayıtlı.";
-      } else if (msg.includes('invalid_email')) {
-        errorMessage = "Geçerli bir e‑posta adresi girin.";
-      } else if (msg.includes('password_too_short')) {
-        errorMessage = "Şifre en az 10 karakter olmalıdır.";
-      } else if (msg.includes('missing_env')) {
-        errorMessage = "Sunucu yapılandırması tamamlanıyor. Lütfen kısa süre sonra tekrar deneyin.";
       }
-      
+
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      const msg = String(error?.message || "");
+      let errorMessage = "Kayıt sırasında bir hata oluştu.";
+
+      if (msg.includes('User already registered')) {
+        errorMessage = "Bu e-posta adresi zaten kayıtlı.";
+      } else if (msg.includes('Invalid email')) {
+        errorMessage = "Geçerli bir e-posta adresi girin.";
+      } else if (msg.includes('Password should be at least')) {
+        errorMessage = "Şifre en az 6 karakter olmalıdır.";
+      } else if (msg.includes('Signup disabled')) {
+        errorMessage = "Kayıt şu anda devre dışı.";
+      } else if (msg) {
+        errorMessage = msg;
+      }
+
       setError(errorMessage);
       toast({
-        variant: msg.startsWith('login_failed_after_registration') ? undefined : "destructive",
-        title: msg.startsWith('login_failed_after_registration') ? "Bilgi" : "Kayıt Hatası",
+        variant: "destructive",
+        title: "Kayıt Hatası",
         description: errorMessage,
       });
     } finally {

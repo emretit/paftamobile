@@ -7,22 +7,22 @@ import { useAuth } from "@/auth/AuthContext";
 export const useLogout = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    
+
     try {
-      // Auth context'ten logout çağır
-      await logout();
-      
+      // Auth context'ten signOut çağır
+      await signOut();
+
       // Başarılı logout
       toast({
         title: "Başarılı",
         description: "Başarıyla çıkış yapıldı.",
       });
-      
+
       // Sign-in sayfasına yönlendir
       navigate("/signin");
     } catch (error: any) {

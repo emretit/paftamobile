@@ -10,7 +10,7 @@ import { useAuth } from "@/auth/AuthContext";
 const SignIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login, userId } = useAuth();
+  const { signInWithPassword, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,10 +19,10 @@ const SignIn = () => {
 
   // Check if user is already logged in
   useEffect(() => {
-    if (userId) {
+    if (user?.id) {
       navigate("/dashboard");
     }
-  }, [userId, navigate]);
+  }, [user?.id, navigate]);
 
 
 
@@ -44,7 +44,14 @@ const SignIn = () => {
     }
 
     try {
-      await login(email.toLowerCase().trim(), password);
+      const { error: signInError } = await signInWithPassword({
+        email: email.toLowerCase().trim(),
+        password: password,
+      });
+
+      if (signInError) {
+        throw signInError;
+      }
 
       // Başarılı giriş
       toast({
@@ -59,9 +66,18 @@ const SignIn = () => {
 
     } catch (error: any) {
       console.error("Giriş hatası:", error);
-      const errorMessage = error.message.includes('invalid_credentials') 
-        ? "E-posta veya şifre hatalı" 
-        : "Giriş başarısız";
+      let errorMessage = "Giriş başarısız";
+
+      if (error.message?.includes('Invalid login credentials')) {
+        errorMessage = "E-posta veya şifre hatalı";
+      } else if (error.message?.includes('Email not confirmed')) {
+        errorMessage = "E-posta adresinizi doğrulamadan giriş yapamazsınız";
+      } else if (error.message?.includes('Too many requests')) {
+        errorMessage = "Çok fazla giriş denemesi yapıldı. Lütfen biraz bekleyin.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       setError(errorMessage);
       toast({
         variant: "destructive",

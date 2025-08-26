@@ -13,14 +13,5 @@ verify_jwt = false
 [functions.register-user]
 verify_jwt = false
 
-[functions.custom-login]
-verify_jwt = false
-
-[functions.register]
-verify_jwt = false
-
-[functions.login]
-verify_jwt = false
-
 [functions.seed]
 verify_jwt = false
