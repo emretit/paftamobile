@@ -9,27 +9,12 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Create custom supabase client with dynamic headers
+// Create basic supabase client without auth
 const createCustomSupabaseClient = () => {
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-      flowType: 'pkce',
-      debug: process.env.NODE_ENV === 'development',
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-      storageKey: 'supabase.auth.token',
-      onAuthStateChange: (event, session) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Supabase auth state changed:', event, session?.user?.email);
-        }
-      }
-    },
     global: {
       headers: {
         'X-Client-Info': 'ngs-app',
-
       }
     }
   });
