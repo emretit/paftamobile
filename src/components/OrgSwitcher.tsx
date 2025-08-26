@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useAuth } from '../auth/AuthContext'
+import { useAuth } from '@/auth/AuthContext'
 import { useToast } from '../hooks/use-toast'
 import { Building2, ChevronDown } from 'lucide-react'
 

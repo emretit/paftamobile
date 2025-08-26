@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useAuth } from '../auth/AuthContext'
+import { useAuth } from '@/auth/AuthContext'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
