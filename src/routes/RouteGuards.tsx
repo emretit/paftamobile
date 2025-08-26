@@ -1,6 +1,7 @@
 import React from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/auth/AuthContext";
 import { useNavigate } from "react-router-dom";
+import OrgSwitcher from "@/components/OrgSwitcher";
 
 type RouteGuardProps = {
   children: React.ReactNode;
@@ -10,14 +11,14 @@ export const PublicRoute: React.FC<RouteGuardProps> = ({ children }) => children
 
 // Protected routes require authentication
 export const ProtectedRoute: React.FC<RouteGuardProps> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { userId, loading } = useAuth();
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    if (!loading && !user) {
-      navigate("/signin");
+    if (!loading && !userId) {
+      navigate("/auth");
     }
-  }, [user, loading, navigate]);
+  }, [userId, loading, navigate]);
 
   if (loading) {
     return (
@@ -30,9 +31,22 @@ export const ProtectedRoute: React.FC<RouteGuardProps> = ({ children }) => {
     );
   }
 
-  if (!user) {
+  if (!userId) {
     return null;
   }
 
-  return <>{children}</>;
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header with OrgSwitcher */}
+      <header className="border-b border-border bg-card sticky top-0 z-50">
+        <div className="flex items-center justify-between px-4 py-3">
+          <h1 className="text-lg font-semibold">NGS Business Management</h1>
+          <OrgSwitcher />
+        </div>
+      </header>
+      
+      {/* Main content */}
+      {children}
+    </div>
+  );
 };
