@@ -7,7 +7,7 @@ import { checkSessionStatus, clearAuthTokens } from '@/lib/supabase-utils';
 
 const TestLogout = () => {
   const { handleLogout, isLoggingOut } = useLogout();
-  const { user, session, loading } = useAuth();
+  const { userId, token, loading } = useAuth();
 
   const testSessionStatus = async () => {
     const result = await checkSessionStatus();
@@ -60,9 +60,8 @@ const TestLogout = () => {
               <div className="space-y-2">
                 <h3 className="font-semibold">Kullanıcı Bilgileri</h3>
                 <div className="text-sm space-y-1">
-                  <p><strong>Email:</strong> {user?.email || 'N/A'}</p>
-                  <p><strong>ID:</strong> {user?.id || 'N/A'}</p>
-                  <p><strong>Session:</strong> {session ? 'Aktif' : 'Yok'}</p>
+                  <p><strong>ID:</strong> {userId || 'N/A'}</p>
+                  <p><strong>Token:</strong> {token ? 'Var' : 'Yok'}</p>
                   <p><strong>Loading:</strong> {loading ? 'Evet' : 'Hayır'}</p>
                 </div>
               </div>
@@ -118,8 +117,8 @@ const TestLogout = () => {
             <div className="border-t pt-4">
               <h3 className="font-semibold mb-3">Debug Bilgileri</h3>
               <div className="bg-gray-100 p-3 rounded text-xs font-mono">
-                <p><strong>User:</strong> {JSON.stringify(user, null, 2)}</p>
-                <p><strong>Session:</strong> {JSON.stringify(session, null, 2)}</p>
+                <p><strong>User ID:</strong> {userId || 'N/A'}</p>
+                <p><strong>Token (first 20):</strong> {token ? token.slice(0,20) + '...' : 'Yok'}</p>
               </div>
             </div>
           </CardContent>
