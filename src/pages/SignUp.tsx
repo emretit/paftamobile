@@ -63,18 +63,28 @@ const SignUp = () => {
       
     } catch (error: any) {
       console.error("Signup error:", error);
+      const msg = String((error as any)?.message || "");
       let errorMessage = "Kayıt sırasında bir hata oluştu.";
-      
-      if (error.message.includes('23505') || error.message.includes('unique')) {
+
+      if (msg.startsWith('login_failed_after_registration')) {
+        // Registration succeeded but auto-login failed
+        errorMessage = "Kayıt başarılı, ancak otomatik girişte bir sorun oluştu. Lütfen giriş yapmayı deneyin.";
+        toast({ title: "Kayıt Tamamlandı", description: errorMessage });
+        navigate("/signin");
+      } else if (msg.includes('email_taken') || msg.includes('unique')) {
         errorMessage = "Bu e-posta adresi zaten kayıtlı.";
-      } else if (error.message.includes('23503')) {
-        errorMessage = "Geçersiz veri girişi.";
+      } else if (msg.includes('invalid_email')) {
+        errorMessage = "Geçerli bir e‑posta adresi girin.";
+      } else if (msg.includes('password_too_short')) {
+        errorMessage = "Şifre en az 10 karakter olmalıdır.";
+      } else if (msg.includes('missing_env')) {
+        errorMessage = "Sunucu yapılandırması tamamlanıyor. Lütfen kısa süre sonra tekrar deneyin.";
       }
       
       setError(errorMessage);
       toast({
-        variant: "destructive",
-        title: "Kayıt Hatası",
+        variant: msg.startsWith('login_failed_after_registration') ? undefined : "destructive",
+        title: msg.startsWith('login_failed_after_registration') ? "Bilgi" : "Kayıt Hatası",
         description: errorMessage,
       });
     } finally {

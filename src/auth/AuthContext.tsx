@@ -126,7 +126,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       // 2) call login(email,password) to get JWT
-      await login(email, password)
+      try {
+        await login(email, password)
+      } catch (err: any) {
+        // Mark this specific scenario so UI can show correct message
+        const msg = typeof err?.message === 'string' ? err.message : 'login_failed'
+        throw new Error(`login_failed_after_registration:${msg}`)
+      }
 
       // 3) If org was created, set user_prefs.current_org_id = org_id
       if (data?.org_id && userId) {
