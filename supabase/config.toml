@@ -15,3 +15,6 @@ verify_jwt = false
 
 [functions.custom-login]
 verify_jwt = false
+
+[functions.register]
+verify_jwt = false
