@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { publicClient, createClientWithToken } from '../lib/supabaseClient'
+import { supabase } from '@/integrations/supabase/client'
 
 interface AuthContextType {
   token: string | null
@@ -68,8 +69,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (email: string, password: string): Promise<void> => {
     try {
+      // Prefer the edge function that returns a Supabase auth session
       const response = await fetch(
-        `https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/login`,
+        `https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/custom-login`,
         {
           method: 'POST',
           headers: {
@@ -86,14 +88,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error(data.error || 'Login failed')
       }
 
+      // If edge function returned a Supabase auth session, use it
+      if (data?.session?.access_token && data?.session?.refresh_token) {
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token
+        })
+        const accessToken: string = data.session.access_token
+        const decodedUserId = decodeJwtSub(accessToken)
+        if (!decodedUserId) {
+          throw new Error('Invalid session token received')
+        }
+        localStorage.setItem(AUTH_TOKEN_KEY, accessToken)
+        setToken(accessToken)
+        setUserId(decodedUserId)
+        return
+      }
+
+      // Fallback: support previous custom token response shape
       const { token: newToken } = data
       const decodedUserId = decodeJwtSub(newToken)
-
       if (!decodedUserId) {
         throw new Error('Invalid token received')
       }
-
-      // Save token and update state
       localStorage.setItem(AUTH_TOKEN_KEY, newToken)
       setToken(newToken)
       setUserId(decodedUserId)
