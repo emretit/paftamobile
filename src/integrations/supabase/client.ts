@@ -29,9 +29,7 @@ const createCustomSupabaseClient = () => {
     global: {
       headers: {
         'X-Client-Info': 'ngs-app',
-        get 'X-User-ID'() {
-          return typeof window !== 'undefined' ? localStorage.getItem('user_id') || '' : '';
-        }
+
       }
     }
   });
@@ -39,18 +37,3 @@ const createCustomSupabaseClient = () => {
 
 export const supabase = createCustomSupabaseClient();
 
-// Custom auth için user_id'yi localStorage'a set et
-export const setCurrentUserId = (userId: string) => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('user_id', userId);
-    console.log('Current user ID set:', userId);
-  }
-};
-
-// Current user_id'yi temizle
-export const clearCurrentUserId = () => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('user_id');
-    console.log('Current user ID cleared');
-  }
-};

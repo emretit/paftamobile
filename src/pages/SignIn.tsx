@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { ErrorDisplay } from "@/components/auth/ErrorDisplay";
 import { ArrowRight, Mail, Lock, Eye, EyeOff, Home } from "lucide-react";
-import { supabase, setCurrentUserId } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -158,7 +158,7 @@ const SignIn = () => {
       }
       
       // User ID'yi set et (RLS için gerekli)
-      setCurrentUserId(data.auth_user_id || data.user.id);
+      
 
       toast({
         title: "Başarılı",

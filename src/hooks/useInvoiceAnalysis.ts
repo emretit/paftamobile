@@ -45,9 +45,9 @@ export const useInvoiceAnalysis = (year?: number) => {
       setError(null);
       
       // Auth disabled - no user check needed
-      const user_id = '00000000-0000-0000-0000-000000000000'; // Dummy user ID
+      const user_id = '00000000-0000-0000-0000-000000000001'; // Default user ID
       
-      // Auth disabled - use dummy query without user filtering
+      // Auth disabled - use default query without user filtering
       let query = supabase
         .from('invoice_analysis')
         .select('*')
@@ -80,9 +80,9 @@ export const useInvoiceAnalysis = (year?: number) => {
   const upsertInvoiceAnalysis = async (input: InvoiceAnalysisInput) => {
     try {
       // Auth disabled - no user check needed
-      const user_id = '00000000-0000-0000-0000-000000000000'; // Dummy user ID
+      const user_id = '00000000-0000-0000-0000-000000000001'; // Default user ID
       
-      // Auth disabled - use dummy user ID
+      // Auth disabled - use default user ID
       const { error } = await supabase
         .from('invoice_analysis')
         .upsert({
@@ -136,9 +136,9 @@ export const useInvoiceAnalysis = (year?: number) => {
   const deleteInvoiceAnalysis = async (year: number, month: number) => {
     try {
       // Auth disabled - no user check needed
-      const user_id = '00000000-0000-0000-0000-000000000000'; // Dummy user ID
+      const user_id = '00000000-0000-0000-0000-000000000001'; // Default user ID
       
-      // Auth disabled - use dummy user ID
+      // Auth disabled - use default user ID
       const { error } = await supabase
         .from('invoice_analysis')
         .delete()

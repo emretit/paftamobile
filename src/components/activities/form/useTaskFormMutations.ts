@@ -9,23 +9,7 @@ export const useTaskFormMutations = (onClose: () => void, taskId?: string) => {
 
   const createTaskMutation = useMutation({
     mutationFn: async (data: FormValues) => {
-      // Get current user's project_id from localStorage
-      const currentUserId = localStorage.getItem('user_id');
-      if (!currentUserId) {
-        throw new Error('Kullanıcı oturumu bulunamadı');
-      }
-
-      // Get user's project_id from users table
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('project_id')
-        .eq('id', currentUserId)
-        .single();
-
-      if (userError) throw userError;
-      if (!userData?.project_id) {
-        throw new Error('Kullanıcı proje bilgisi bulunamadı');
-      }
+      
 
       // Format the data for the API
       const taskData = {
@@ -39,7 +23,7 @@ export const useTaskFormMutations = (onClose: () => void, taskId?: string) => {
         related_item_id: data.related_item_id || null,
         related_item_type: data.related_item_type || null,
         related_item_title: data.related_item_title || null,
-        project_id: userData.project_id
+        project_id: '00000000-0000-0000-0000-0000-000000000001'
       };
 
       const { data: newTask, error } = await supabase

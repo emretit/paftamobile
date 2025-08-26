@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { supabase, setCurrentUserId, clearCurrentUserId } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from '@supabase/supabase-js';
 import { checkSessionStatus, clearAuthTokens } from "@/lib/supabase-utils";
 
@@ -20,8 +20,7 @@ useEffect(() => {
           setSession(null);
           setUser(null);
           clearAuthTokens();
-          // User ID'yi temizle
-          clearCurrentUserId();
+
         } else {
           console.log('Initial session check:', result.user?.email);
           
@@ -49,29 +48,22 @@ useEffect(() => {
                   }
                 }
                 
-                if (supabaseSession?.access_token) {
-                  // Gerçek Supabase session'ı restore et
+                // Basit session yönetimi - sadece gerekli bilgileri set et
+                try {
+                  // Supabase session'ı set et (basit)
                   await supabase.auth.setSession({
-                    access_token: supabaseSession.access_token,
-                    refresh_token: supabaseSession.refresh_token || ''
+                    access_token: 'dummy-token-for-rls',
+                    refresh_token: 'dummy-token-for-rls'
                   });
-                  console.log('✅ Supabase session restore edildi');
-                } else {
-                  // Fallback: Custom session token'ı kullan
-                  await supabase.auth.setSession({
-                    access_token: localStorage.getItem('session_token') || '',
-                    refresh_token: localStorage.getItem('session_token') || ''
-                  });
-                  console.log('⚠️ Fallback session kullanıldı');
+                  console.log('✅ Supabase session set for RLS');
+                } catch (error) {
+                  console.warn('Supabase session set failed, continuing with RLS setup');
                 }
                 
                 console.log('Supabase auth context set for user:', result.user.id);
                 
-                // Project ID'yi de güncelle
-                const storedProjectId = localStorage.getItem('project_id') || '00000000-0000-0000-0000-000000000001';
-                
-                // User ID'yi localStorage'a set et (RLS için gerekli)
-                setCurrentUserId(result.user.id);
+                // User ID'yi localStorage'a set et
+                // setCurrentUserId(result.user.id);
                 
               } catch (error) {
                 console.error('Error setting Supabase auth context:', error);
@@ -82,8 +74,7 @@ useEffect(() => {
           } else {
             setSession(null);
             setUser(null);
-            // User ID'yi temizle
-            clearCurrentUserId();
+
           }
         }
       } catch (error) {
@@ -91,8 +82,7 @@ useEffect(() => {
         setSession(null);
         setUser(null);
         clearAuthTokens();
-        // User ID'yi temizle
-        clearCurrentUserId();
+
       } finally {
         setLoading(false);
       }
