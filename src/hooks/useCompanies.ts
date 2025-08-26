@@ -30,6 +30,8 @@ export const useCompanies = () => {
         .from('companies')
         .select('*')
         .eq('is_active', true)
+        .order('updated_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (error) {
