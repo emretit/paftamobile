@@ -44,10 +44,15 @@ Deno.serve(async (req) => {
       ?? Deno.env.get('LEGACY_JWT_SECRET')
       ?? Deno.env.get('JWT_SIGNING_SECRET');
     
-    if (!supabaseUrl || !supabaseServiceKey || !jwtSecret) {
-      console.error('Missing required environment variables');
+    const missing: string[] = [];
+    if (!supabaseUrl) missing.push('SUPABASE_URL');
+    if (!supabaseServiceKey) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+    if (!jwtSecret) missing.push('SUPABASE_JWT_SECRET');
+
+    if (missing.length) {
+      console.error('Missing required environment variables:', missing.join(', '));
       return new Response(
-        JSON.stringify({ error: 'server_error' }),
+        JSON.stringify({ error: 'missing_env', details: missing }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
