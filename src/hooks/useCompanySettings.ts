@@ -41,18 +41,18 @@ export const useCompanySettings = () => {
       if (error) throw error;
 
       if (!data) {
-        // Return default settings if none exist
+        // Return empty settings if none exist
         return {
           id: '',
-          company_name: '',
-          address: '',
-          phone: '',
-          email: '',
-          tax_number: '',
-          tax_office: '',
-          website: '',
-          logo_url: '',
-          default_currency: 'TRY',
+          company_name: null,
+          address: null,
+          phone: null,
+          email: null,
+          tax_number: null,
+          tax_office: null,
+          website: null,
+          logo_url: null,
+          default_currency: '',
           email_settings: {
             notifications_enabled: false
           }
