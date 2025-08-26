@@ -75,80 +75,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signUp = async (email: string, password: string, fullName: string, orgName?: string) => {
     try {
-      // First, create company if orgName is provided
-      let companyId = null
-      if (orgName) {
-        const { data: company, error: companyError } = await supabase
-          .from('companies')
-          .insert([{ name: orgName }])
-          .select('id')
-          .single()
-
-        if (companyError) {
-          console.error('Company creation error:', companyError)
-          throw companyError
-        }
-        companyId = company.id
-      } else {
-        // Create default company
-        const { data: company, error: companyError } = await supabase
-          .from('companies')
-          .insert([{ name: `${email} Company` }])
-          .select('id')
-          .single()
-
-        if (companyError) {
-          console.error('Default company creation error:', companyError)
-          throw companyError
-        }
-        companyId = company.id
-      }
-
-      // Sign up user with Supabase Auth
+      const _companyName = orgName || `${email} Company`;
+      
+      // Sign up user with Supabase Auth - the trigger will handle company creation and profile setup
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName,
-            company_name: orgName || `${email} Company`,
-            company_id: companyId,
+            company_name: _companyName,
           }
         }
       })
 
       if (error) {
         throw error
-      }
-
-      if (data.user) {
-        // Create custom user record
-        const { error: customUserError } = await supabase
-          .from('users')
-          .insert([{
-            id: data.user.id,
-            email: email,
-            full_name: fullName,
-            company_id: companyId,
-            is_active: true,
-          }])
-
-        if (customUserError) {
-          console.error('Custom user creation error:', customUserError)
-          // Don't throw here, user is already created in auth.users
-        }
-
-        // Update auth user metadata with custom user ID
-        const { error: updateError } = await supabase.auth.updateUser({
-          data: {
-            custom_user_id: data.user.id,
-            company_id: companyId,
-          }
-        })
-
-        if (updateError) {
-          console.warn('Failed to update user metadata:', updateError)
-        }
       }
 
       return { user: data.user, error }

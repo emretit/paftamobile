@@ -6,28 +6,29 @@ export type User = {
   email: string;
   full_name: string | null;
   avatar_url: string | null;
+  company_id: string | null;
   created_at: string;
   updated_at: string;
 };
 
 export const useUsers = (userId?: string) => {
   const { data: user, isLoading } = useQuery({
-    queryKey: ['users', userId],
+    queryKey: ['profiles', userId],
     queryFn: async () => {
       if (!userId) {
         console.log('useUsers: userId is null, returning null.');
         return null;
       }
       
-      // Sadece public.users tablosundan veri çek
+      // profiles tablosundan veri çek
       const { data, error } = await supabase
-        .from('users')
+        .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching user data from public.users:', error);
+        console.error('Error fetching user data from profiles:', error);
         return null;
       }
       

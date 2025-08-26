@@ -3077,11 +3077,13 @@ export type Database = {
           company_id: string | null
           company_name: string | null
           created_at: string | null
+          email: string | null
           first_name: string | null
           full_name: string | null
           id: string
           is_active: boolean | null
           last_name: string | null
+          phone: string | null
           updated_at: string | null
         }
         Insert: {
@@ -3089,11 +3091,13 @@ export type Database = {
           company_id?: string | null
           company_name?: string | null
           created_at?: string | null
+          email?: string | null
           first_name?: string | null
           full_name?: string | null
           id: string
           is_active?: boolean | null
           last_name?: string | null
+          phone?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -3101,11 +3105,13 @@ export type Database = {
           company_id?: string | null
           company_name?: string | null
           created_at?: string | null
+          email?: string | null
           first_name?: string | null
           full_name?: string | null
           id?: string
           is_active?: boolean | null
           last_name?: string | null
+          phone?: string | null
           updated_at?: string | null
         }
         Relationships: [

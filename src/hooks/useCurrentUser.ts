@@ -25,7 +25,7 @@ export const useCurrentUser = () => {
 
       try {
         const { data, error } = await supabase
-          .from('users')
+          .from('profiles')
           .select('id, full_name, email, company_id')
           .eq('id', user.id)
           .maybeSingle();
