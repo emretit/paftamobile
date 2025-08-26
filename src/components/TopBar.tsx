@@ -6,7 +6,7 @@ import { Bell, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/AuthContext";
 import { useLogout } from "@/components/navbar/useLogout";
-import { useCompanyInfo } from "@/hooks/useCompanyInfo";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +20,7 @@ export const TopBar = () => {
   const displayName = userId ? `Kullanıcı ${userId.slice(0, 6)}` : "Kullanıcı";
   const userInitials = userId ? userId.slice(0, 2).toUpperCase() : "U";
   const { handleLogout } = useLogout();
-  const { company } = useCompanyInfo();
+  const { settings } = useCompanySettings();
   
   const handleProfileClick = () => {
     navigate("/profile");
@@ -31,7 +31,7 @@ export const TopBar = () => {
       <div className="flex items-center gap-3">
         <div className="flex flex-col">
           <h1 className="text-lg font-semibold text-gray-900">
-            {company?.name || "Şirket Adı"}
+            {settings?.company_name || "Firma Adı"}
           </h1>
           <p className="text-sm text-gray-600">
             {displayName}
