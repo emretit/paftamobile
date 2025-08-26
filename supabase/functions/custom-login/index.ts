@@ -249,9 +249,11 @@ serve(async (req) => {
     
     // Supabase uyumlu JWT üret (GoTrue başarısızsa RLS için)
     const supabaseJwtPayload = {
-      sub: user.id,
+      sub: authUser?.id || user.id, // Supabase auth user ID'si veya fallback
       email: user.email,
       role: 'authenticated',
+      iss: 'supabase',
+      aud: 'authenticated',
       user_metadata: {
         custom_user_id: user.id,
         project_id: user.project_id,
@@ -268,7 +270,9 @@ serve(async (req) => {
           .setIssuedAt()
           .setExpirationTime('24h')
           .setIssuer('supabase')
+          .setAudience('authenticated')
           .sign(secret);
+        console.log('✅ Supabase uyumlu JWT oluşturuldu');
       } else {
         console.warn('⚠️ Missing SUPABASE_JWT_SECRET - cannot sign JWT');
       }

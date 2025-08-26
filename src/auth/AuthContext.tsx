@@ -90,10 +90,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // If edge function returned a Supabase auth session, use it
       if (data?.supabase_session?.access_token && data?.supabase_session?.refresh_token) {
-        await supabase.auth.setSession({
+        console.log('✅ Setting Supabase session from edge function')
+        const { error: sessionError } = await supabase.auth.setSession({
           access_token: data.supabase_session.access_token,
           refresh_token: data.supabase_session.refresh_token
         })
+        
+        if (sessionError) {
+          console.error('❌ Session setup error:', sessionError)
+          throw sessionError
+        }
+        
         const accessToken: string = data.supabase_session.access_token
         const appUserId: string | null = data?.user?.id ?? decodeJwtUserId(accessToken)
         if (!appUserId) {
@@ -124,11 +131,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Fallback: support Supabase-compatible JWT returned by edge function
       if (data?.supabase_jwt) {
+        console.log('✅ Using fallback JWT from edge function')
         const edgeJwt: string = data.supabase_jwt
         const appUserId: string | null = data?.user?.id ?? decodeJwtUserId(edgeJwt)
         if (!appUserId) {
           throw new Error('Invalid token received')
         }
+        
+        // Create a manual session using the JWT
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: edgeJwt,
+          refresh_token: crypto.randomUUID() // Dummy refresh token
+        })
+        
+        if (sessionError) {
+          console.warn('⚠️ Manual session setup failed, using token only:', sessionError)
+        }
+        
         localStorage.setItem(AUTH_TOKEN_KEY, edgeJwt)
         setToken(edgeJwt)
         setUserId(appUserId)
