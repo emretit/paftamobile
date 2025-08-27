@@ -6,6 +6,7 @@ import { Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/AuthContext";
 import { useLogout } from "@/components/navbar/useLogout";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import HeaderUserInfo from "@/components/HeaderUserInfo";
 import {
   DropdownMenu,
@@ -18,12 +19,7 @@ export const TopBar = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { handleLogout } = useLogout();
-  
-  // Kullanıcı adı ve baş harfleri
-  const displayName = user?.user_metadata?.full_name || user?.email || 'Kullanıcı';
-  const userInitials = user?.user_metadata?.full_name 
-    ? user.user_metadata.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-    : user?.email?.slice(0, 2).toUpperCase() || 'KU';
+  const { userData, displayName, userInitials } = useCurrentUser();
   
   const handleProfileClick = () => {
     navigate("/profile");
