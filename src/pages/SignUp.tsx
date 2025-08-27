@@ -10,7 +10,7 @@ import { useAuth } from "@/auth/AuthContext";
 const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signUp, signInWithPassword, user } = useAuth();
+  const { signUp, signInWithPassword, signOut, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -19,12 +19,15 @@ const SignUp = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Check if user is already logged in
+  // Only redirect if user was already logged in before accessing signup page
+  // Don't redirect during signup process
+  const [skipRedirect, setSkipRedirect] = useState(false);
+
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && !skipRedirect) {
       navigate("/dashboard");
     }
-  }, [user?.id, navigate]);
+  }, [user?.id, navigate, skipRedirect]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +53,9 @@ const SignUp = () => {
     }
     
     try {
+      // Prevent automatic redirect during signup process
+      setSkipRedirect(true);
+      
       const { error: signUpError } = await signUp(
         email.toLowerCase().trim(),
         password,
@@ -60,6 +66,9 @@ const SignUp = () => {
       if (signUpError) {
         throw signUpError;
       }
+
+      // Sign out immediately after successful signup to prevent auto-login
+      await signOut();
 
       // Successful registration - redirect to sign in
       toast({
