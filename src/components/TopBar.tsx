@@ -1,13 +1,12 @@
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Bell, User } from "lucide-react";
+import { Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/AuthContext";
-import { useUsers } from "@/hooks/useUsers";
 import { useLogout } from "@/components/navbar/useLogout";
-import { useCompanies } from "@/hooks/useCompanies";
+import HeaderUserInfo from "@/components/HeaderUserInfo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,37 +16,25 @@ import {
 
 export const TopBar = () => {
   const navigate = useNavigate();
-  const { userId } = useAuth();
-  const { user } = useUsers(userId);
-  
-  // Debug için console.log ekleyelim
-  console.log('TopBar - userId:', userId);
-  console.log('TopBar - user:', user);
+  const { user } = useAuth();
+  const { handleLogout } = useLogout();
   
   // Kullanıcı adı ve baş harfleri
-  const displayName = user?.full_name || 'Kullanıcı';
-  const userInitials = user?.full_name 
-    ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'KU';
-  const { handleLogout } = useLogout();
-  const { company, isLoading } = useCompanies();
+  const displayName = user?.user_metadata?.full_name || user?.email || 'Kullanıcı';
+  const userInitials = user?.user_metadata?.full_name 
+    ? user.user_metadata.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+    : user?.email?.slice(0, 2).toUpperCase() || 'KU';
   
   const handleProfileClick = () => {
     navigate("/profile");
   };
 
   return (
-    <div className="h-16 border-b bg-white flex items-center justify-between px-6">
-      <div className="flex items-center gap-3">
-        <div className="flex flex-col">
-          <h1 className="text-lg font-semibold text-gray-900">
-            {isLoading ? "Yükleniyor..." : company?.name || "Firma Adı"}
-          </h1>
-          <p className="text-sm text-gray-600">
-            {displayName}
-          </p>
-        </div>
-      </div>
+    <div className="h-16 border-b bg-card flex items-center justify-between px-6">
+      {/* Left side - User and Company info */}
+      <HeaderUserInfo />
+      
+      {/* Right side - Actions and User Menu */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon">
           <Bell className="h-5 w-5" />
@@ -63,7 +50,7 @@ export const TopBar = () => {
                 <p className="text-sm font-medium">
                   {displayName}
                 </p>
-                <p className="text-xs text-gray-500">{userId || ""}</p>
+                <p className="text-xs text-muted-foreground">{user?.email || ""}</p>
               </div>
             </div>
           </DropdownMenuTrigger>
