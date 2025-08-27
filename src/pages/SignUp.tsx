@@ -44,7 +44,7 @@ const SignUp = () => {
     }
 
     if (orgName && orgName.length < 2) {
-      setError("Şirket ID en az 2 karakter olmalıdır.");
+      setError("Şirket adı en az 2 karakter olmalıdır.");
       setLoading(false);
       return;
     }
@@ -148,7 +148,7 @@ const SignUp = () => {
               Hesap Oluşturun
             </h1>
             <p className="text-lg text-gray-600">
-              Şirket ID girerseniz otomatik olarak sahibi olursunuz.
+              Şirket adı girerseniz otomatik olarak sahibi olursunuz.
             </p>
           </div>
 
@@ -203,7 +203,7 @@ const SignUp = () => {
                 <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
                   type="text"
-                  placeholder="Şirket ID (isteğe bağlı)"
+                  placeholder="Şirket Adı (isteğe bağlı)"
                   value={orgName}
                   onChange={(e) => setOrgName(e.target.value)}
                   className="h-12 pl-10 text-base border-gray-300 focus:border-primary focus:ring-primary"
