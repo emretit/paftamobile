@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/integrations/supabase/client";
 import { Opportunity, OpportunityStatus, OpportunitiesState } from "@/types/crm";
 import { DropResult } from "@hello-pangea/dnd";
 import { useToast } from "@/components/ui/use-toast";
