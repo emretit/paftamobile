@@ -61,33 +61,13 @@ const SignUp = () => {
         throw signUpError;
       }
 
-      // Try to sign in automatically after successful registration
-      try {
-        const { error: signInError } = await signInWithPassword({
-          email: email.toLowerCase().trim(),
-          password: password,
-        });
+      // Successful registration - redirect to sign in
+      toast({
+        title: "Kayıt Başarılı",
+        description: "Hesabınız oluşturuldu. Şimdi giriş yapabilirsiniz.",
+      });
 
-        if (signInError) {
-          throw signInError;
-        }
-
-        toast({
-          title: "Kayıt Başarılı",
-          description: "Hesabınız oluşturuldu ve giriş yapıldı.",
-        });
-
-        // Navigate to home
-        setTimeout(() => {
-          navigate("/");
-        }, 1000);
-
-      } catch (signInError: any) {
-        // Registration succeeded but auto-login failed
-        const errorMessage = "Kayıt başarılı, ancak otomatik girişte bir sorun oluştu. Lütfen giriş yapmayı deneyin.";
-        toast({ title: "Kayıt Tamamlandı", description: errorMessage });
-        navigate("/signin");
-      }
+      navigate("/signin");
 
     } catch (error: any) {
       console.error("Signup error:", error);
