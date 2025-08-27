@@ -3,9 +3,11 @@ import { Building2, User } from 'lucide-react'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
+import { useAuth } from '@/auth/AuthContext'
 
 export default function HeaderUserInfo() {
   const { userData, loading: userLoading } = useCurrentUser()
+  const { user } = useAuth()
   
   const { data: companyData, isLoading: companyLoading } = useQuery({
     queryKey: ['company', userData?.company_id],
@@ -29,6 +31,9 @@ export default function HeaderUserInfo() {
     enabled: !!userData?.company_id,
   })
 
+  const displayName = userData?.full_name || user?.user_metadata?.full_name || user?.email || 'Kullanıcı'
+  const companyName = companyData?.name || (user?.user_metadata as any)?.company_name || null
+
   if (userLoading || companyLoading) {
     return (
       <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -43,18 +48,18 @@ export default function HeaderUserInfo() {
       <div className="flex items-center gap-2">
         <User className="h-4 w-4 text-muted-foreground" />
         <span className="font-medium">
-          {userData?.full_name || 'Kullanıcı'}
+          {displayName}
         </span>
       </div>
       
       {/* Company Info */}
-      {companyData && (
+      {companyName && (
         <>
           <div className="text-muted-foreground">•</div>
           <div className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">
-              {companyData.name}
+              {companyName}
             </span>
           </div>
         </>
