@@ -2987,7 +2987,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
-          company_id: string | null
+          company_id: string
           company_name: string | null
           created_at: string | null
           email: string | null
@@ -3002,7 +3002,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
-          company_id?: string | null
+          company_id: string
           company_name?: string | null
           created_at?: string | null
           email?: string | null
@@ -3017,7 +3017,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
-          company_id?: string | null
+          company_id?: string
           company_name?: string | null
           created_at?: string | null
           email?: string | null
@@ -3031,6 +3031,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_profiles_company_id"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_company_id_fkey"
             columns: ["company_id"]
