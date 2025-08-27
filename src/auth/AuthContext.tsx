@@ -47,18 +47,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(false)
 
       if (event === 'SIGNED_IN' && session?.user) {
-        const customUserId = session.user.user_metadata?.custom_user_id
-        if (customUserId) {
-          setTimeout(() => {
-            supabase
-              .from('users')
-              .update({ last_login: new Date().toISOString() })
-              .eq('id', customUserId)
-              .then(({ error }) => {
-                if (error) console.warn('Failed to update last login:', error)
-              })
-          }, 0)
-        }
+        // Update last_login in profiles table
+        setTimeout(() => {
+          supabase
+            .from('profiles')
+            .update({ last_login: new Date().toISOString() })
+            .eq('id', session.user.id)
+            .then(({ error }) => {
+              if (error) console.warn('Failed to update last login:', error)
+            })
+        }, 0)
       }
     })
 

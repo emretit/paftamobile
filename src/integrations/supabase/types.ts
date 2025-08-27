@@ -2995,6 +2995,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_active: boolean | null
+          last_login: string | null
           last_name: string | null
           phone: string | null
           updated_at: string | null
@@ -3009,6 +3010,7 @@ export type Database = {
           full_name?: string | null
           id: string
           is_active?: boolean | null
+          last_login?: string | null
           last_name?: string | null
           phone?: string | null
           updated_at?: string | null
@@ -3023,6 +3025,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_active?: boolean | null
+          last_login?: string | null
           last_name?: string | null
           phone?: string | null
           updated_at?: string | null
@@ -3966,13 +3969,6 @@ export type Database = {
             referencedRelation: "companies"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "user_projects_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       user_roles: {
@@ -4047,60 +4043,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "user_sessions_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      users: {
-        Row: {
-          company_id: string
-          created_at: string
-          email: string
-          full_name: string | null
-          id: string
-          is_active: boolean
-          last_login: string | null
-          password_hash: string
-          role: string
-          updated_at: string
-        }
-        Insert: {
-          company_id: string
-          created_at?: string
-          email: string
-          full_name?: string | null
-          id?: string
-          is_active?: boolean
-          last_login?: string | null
-          password_hash: string
-          role?: string
-          updated_at?: string
-        }
-        Update: {
-          company_id?: string
-          created_at?: string
-          email?: string
-          full_name?: string | null
-          id?: string
-          is_active?: boolean
-          last_login?: string | null
-          password_hash?: string
-          role?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "users_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
