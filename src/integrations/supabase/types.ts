@@ -2616,30 +2616,6 @@ export type Database = {
           },
         ]
       }
-      org_members: {
-        Row: {
-          company_id: string | null
-          created_at: string
-          org_id: string
-          role: string
-          user_id: string
-        }
-        Insert: {
-          company_id?: string | null
-          created_at?: string
-          org_id: string
-          role?: string
-          user_id: string
-        }
-        Update: {
-          company_id?: string | null
-          created_at?: string
-          org_id?: string
-          role?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       organization_members: {
         Row: {
           id: string
@@ -2664,47 +2640,6 @@ export type Database = {
           organization_id?: string | null
           role?: string
           user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "organization_members_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      organizations: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: string
-          is_active: boolean | null
-          logo_url: string | null
-          name: string
-          slug: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          logo_url?: string | null
-          name: string
-          slug: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          logo_url?: string | null
-          name?: string
-          slug?: string
-          updated_at?: string | null
         }
         Relationships: []
       }
@@ -3963,38 +3898,6 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_preferences_current_organization_id_fkey"
-            columns: ["current_organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_prefs: {
-        Row: {
-          created_at: string
-          current_org_id: string | null
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          current_org_id?: string | null
-          id?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          current_org_id?: string | null
-          id?: string
-          updated_at?: string
-          user_id?: string
-        }
         Relationships: []
       }
       user_profiles: {
@@ -4472,15 +4375,6 @@ export type Database = {
           proposal_title: string | null
           proposal_total: number | null
           valid_until: string | null
-        }
-        Relationships: []
-      }
-      v_user_orgs: {
-        Row: {
-          org_id: string | null
-          org_name: string | null
-          role: string | null
-          user_id: string | null
         }
         Relationships: []
       }
