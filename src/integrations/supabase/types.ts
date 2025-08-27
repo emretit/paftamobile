@@ -2628,7 +2628,7 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           org_id: string
-          role: string
+          role?: string
           user_id: string
         }
         Update: {
@@ -2638,29 +2638,7 @@ export type Database = {
           role?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "org_members_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "org_members_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "org_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       organization_members: {
         Row: {
@@ -3997,46 +3975,27 @@ export type Database = {
       }
       user_prefs: {
         Row: {
-          company_id: string | null
+          created_at: string
           current_org_id: string | null
+          id: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          company_id?: string | null
+          created_at?: string
           current_org_id?: string | null
+          id?: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          company_id?: string | null
+          created_at?: string
           current_org_id?: string | null
+          id?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_prefs_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_prefs_current_org_id_fkey"
-            columns: ["current_org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_prefs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_profiles: {
         Row: {
@@ -4523,22 +4482,7 @@ export type Database = {
           role: string | null
           user_id: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "org_members_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "orgs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "org_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
