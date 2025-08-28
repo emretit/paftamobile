@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { ProposalItem } from "@/types/proposal";
 import { v4 as uuidv4 } from "uuid";
 import { Product } from "@/types/product";
@@ -127,6 +127,26 @@ export const useProposalItemsManagement = (
     [items, selectedCurrency, exchangeRates]
   );
 
+  // Memoize calculated totals for better performance
+  const totals = useMemo(() => {
+    const subtotal = items.reduce((sum, item) => sum + (item.total_price || 0), 0);
+    const totalTax = items.reduce((sum, item) => {
+      const itemTax = (item.total_price || 0) * ((item.tax_rate || 0) / 100);
+      return sum + itemTax;
+    }, 0);
+    const totalDiscount = items.reduce((sum, item) => {
+      const itemDiscount = (item.unit_price || 0) * (item.quantity || 0) * ((item.discount_rate || 0) / 100);
+      return sum + itemDiscount;
+    }, 0);
+    
+    return {
+      subtotal,
+      totalTax,
+      totalDiscount,
+      grandTotal: subtotal + totalTax - totalDiscount
+    };
+  }, [items]);
+
   return {
     items,
     setItems,
@@ -135,5 +155,6 @@ export const useProposalItemsManagement = (
     handleRemoveItem,
     handleItemChange,
     updateAllItemsCurrency,
+    totals,
   };
 };

@@ -3,6 +3,7 @@ import { useExchangeRates } from "./currency/useExchangeRates";
 import { useCurrencyFormatter } from "./currency/useCurrencyFormatter";
 import { useCurrencyConverter } from "./currency/useCurrencyConverter";
 import { useCurrencyState } from "./currency/useCurrencyState";
+import { useMemo } from "react";
 
 export const useCurrencyManagement = () => {
   const { exchangeRates, isLoadingRates } = useExchangeRates();
@@ -15,7 +16,8 @@ export const useCurrencyManagement = () => {
     handleCurrencyChange 
   } = useCurrencyState();
 
-  return {
+  // Memoize the return object to prevent unnecessary re-renders
+  const currencyManagement = useMemo(() => ({
     selectedCurrency,
     setSelectedCurrency,
     exchangeRates,
@@ -25,5 +27,17 @@ export const useCurrencyManagement = () => {
     handleCurrencyChange,
     convertAmount,
     isLoadingRates
-  };
+  }), [
+    selectedCurrency,
+    setSelectedCurrency,
+    exchangeRates,
+    currencyOptions,
+    formatCurrency,
+    getCurrencySymbol,
+    handleCurrencyChange,
+    convertAmount,
+    isLoadingRates
+  ]);
+
+  return currencyManagement;
 };
