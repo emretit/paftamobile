@@ -3980,35 +3980,32 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          company_id: string
           created_at: string | null
           id: string
-          organization_id: string | null
           role: Database["public"]["Enums"]["user_role"]
-          role_id: string | null
           user_id: string | null
         }
         Insert: {
+          company_id: string
           created_at?: string | null
           id?: string
-          organization_id?: string | null
           role?: Database["public"]["Enums"]["user_role"]
-          role_id?: string | null
           user_id?: string | null
         }
         Update: {
+          company_id?: string
           created_at?: string | null
           id?: string
-          organization_id?: string | null
           role?: Database["public"]["Enums"]["user_role"]
-          role_id?: string | null
           user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "user_roles_role_id_fkey"
-            columns: ["role_id"]
+            foreignKeyName: "user_roles_company_id_fkey"
+            columns: ["company_id"]
             isOneToOne: false
-            referencedRelation: "roles"
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -4336,6 +4333,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      assign_user_role: {
+        Args: {
+          new_role: string
+          target_company_id?: string
+          target_user_id: string
+        }
+        Returns: boolean
+      }
       base64_decode_with_padding: {
         Args: { data: string }
         Returns: string
@@ -4398,6 +4403,10 @@ export type Database = {
           count: number
           status: string
         }[]
+      }
+      get_user_role_in_company: {
+        Args: { target_company_id?: string; target_user_id: string }
+        Returns: string
       }
       gtrgm_compress: {
         Args: { "": unknown }
@@ -4466,6 +4475,10 @@ export type Database = {
           opportunity_count: number
           user_project_id: string
         }[]
+      }
+      user_has_role_or_higher: {
+        Args: { required_role: string; target_company_id?: string }
+        Returns: boolean
       }
       validate_jwt_token: {
         Args: { token: string }
