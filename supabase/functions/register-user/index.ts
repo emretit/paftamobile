@@ -218,7 +218,6 @@ serve(async (req) => {
                     </p>
                     <p class="footer-text" style="margin-top: 15px;">
                       <strong>PAFTA.APP</strong> - Profesyonel İş Yönetimi<br>
-                      <span style="color: #D32F2F;">❤️</span> Türkiye'den sevgilerle
                     </p>
                   </div>
                 </div>
