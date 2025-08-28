@@ -11,8 +11,23 @@ interface UserData {
 
 export const useCurrentUser = () => {
   const { user } = useAuth();
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  // Initialize from cache to avoid flicker on route changes
+  const getInitialCached = () => {
+    if (!user?.id) return null as UserData | null;
+    try {
+      const raw = sessionStorage.getItem(`user_data_${user.id}`);
+      if (!raw) return null;
+      const { data, timestamp } = JSON.parse(raw);
+      const fresh = Date.now() - (5 * 60 * 1000) < timestamp;
+      return fresh ? (data as UserData) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const [userData, setUserData] = useState<UserData | null>(getInitialCached());
+  const [loading, setLoading] = useState(!getInitialCached());
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

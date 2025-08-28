@@ -36,13 +36,14 @@ export default function HeaderUserInfo() {
   const displayName = userData?.full_name || user?.user_metadata?.full_name || user?.email || 'Kullanıcı'
   const companyName = companyData?.name || (user?.user_metadata as any)?.company_name || null
 
-  if (userLoading || companyLoading) {
-    return (
-      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-        <div className="animate-pulse">Yükleniyor...</div>
-      </div>
-    )
-  }
+  // Yükleniyor durumunda bile tahmini değerleri göster (flicker'ı azalt)
+  // if (userLoading || companyLoading) {
+  //   return (
+  //     <div className="flex items-center gap-3 text-sm text-muted-foreground">
+  //       <div className="animate-pulse">Yükleniyor...</div>
+  //     </div>
+  //   )
+  // }
 
   return (
     <div className="flex items-center gap-4 text-sm">
