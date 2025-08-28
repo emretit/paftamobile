@@ -34,11 +34,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Supabase Auth üzerinde kullanıcıyı oluştur (SMTP bağımlılığını kaldırmak için email_confirm = true)
+    // Supabase Auth üzerinde kullanıcıyı oluştur (email_confirm = false, manual confirmation)
     const { data: createdUser, error: createUserError } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
+      email_confirm: false,
       user_metadata: { full_name, company_name }
     });
 
@@ -50,30 +50,37 @@ serve(async (req) => {
       );
     }
 
-    // Opsiyonel hoş geldiniz e-postası (Resend). Başarısız olursa kaydı bozmayız.
+    // Email onay linkini Resend ile gönder
     try {
       const resendApiKey = Deno.env.get('RESEND_API_KEY');
       if (resendApiKey) {
         const resend = new Resend(resendApiKey);
-        const signinLink = `https://pafta.app/signin`;
+        const confirmationLink = `https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/confirm-email?email=${encodeURIComponent(email)}&user_id=${createdUser?.user?.id}`;
         await resend.emails.send({
           from: 'PAFTA <noreply@pafta.app>',
           to: [email],
-          subject: 'PAFTA İş Yönetim Sistemi - Hoş Geldiniz!',
-          html: `Merhaba${full_name ? ` ${full_name}` : ''}, hesabınız oluşturuldu. Giriş için: <a href="${signinLink}">${signinLink}</a>`,
+          subject: 'PAFTA - E-posta Adresinizi Onaylayın',
+          html: `
+            <h2>Merhaba${full_name ? ` ${full_name}` : ''}!</h2>
+            <p>PAFTA İş Yönetim Sistemi'ne kaydolduğunuz için teşekkürler.</p>
+            <p>Hesabınızı aktif etmek için aşağıdaki linke tıklayın:</p>
+            <a href="${confirmationLink}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">E-posta Adresimi Onayla</a>
+            <p>Bu link 24 saat geçerlidir.</p>
+            <p>Eğer bu e-postayı siz istemediyseniz, lütfen dikkate almayın.</p>
+          `,
         });
       } else {
-        console.warn('RESEND_API_KEY yok, hoş geldiniz e-postası atlanıyor.');
+        console.warn('RESEND_API_KEY yok, onay e-postası atlanıyor.');
       }
     } catch (e) {
-      console.warn('Hoş geldiniz e-postası gönderilemedi:', e);
+      console.warn('Onay e-postası gönderilemedi:', e);
     }
 
     // Başarılı yanıt
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Kayıt başarılı. Giriş yapabilirsiniz.',
+        message: 'E-posta adresinizi kontrol edin ve hesabınızı onaylayın.',
         user: {
           id: createdUser?.user?.id,
           email: createdUser?.user?.email,
