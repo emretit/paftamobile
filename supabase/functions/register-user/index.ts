@@ -90,7 +90,8 @@ serve(async (req) => {
       }
     }
 
-    // Yeni proje oluştur
+    // Yeni proje oluştur (hata olursa devam et)
+    let projectId: string | null = null;
     const { data: newProject, error: projectError } = await supabase
       .from('projects')
       .insert({
@@ -98,33 +99,28 @@ serve(async (req) => {
         description: `${company_name} şirketi için otomatik oluşturulmuş proje`
       })
       .select('id')
-      .single();
+      .maybeSingle();
 
     if (projectError) {
-      console.error('Proje oluşturma hatası:', projectError);
-      return new Response(
-        JSON.stringify({ error: 'Proje oluşturulurken hata oluştu' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      console.error('Proje oluşturma hatası, projects tablosu yok veya ek alanlar gerekli olabilir:', projectError);
+    } else if (newProject?.id) {
+      projectId = newProject.id;
     }
-    
-    const projectId = newProject.id;
 
     // Kullanıcıyı ekle (admin rolü ile ama aktif değil)
+    const userInsert: any = {
+      email,
+      password_hash: hashedPassword,
+      full_name,
+      role: 'admin', // Admin olarak ekle
+      is_active: false, // Mail onayı bekliyor
+      company_name
+    };
+    if (projectId) userInsert.project_id = projectId;
+
     const { data: newUser, error } = await supabase
       .from('users')
-      .insert({
-        email,
-        password_hash: hashedPassword,
-        full_name,
-        role: 'admin', // Admin olarak ekle
-        is_active: false, // Mail onayı bekliyor
-        project_id: projectId,
-        company_name
-      })
+      .insert(userInsert)
       .select()
       .single();
 
@@ -140,16 +136,18 @@ serve(async (req) => {
     }
 
     // Email onay kaydı ekle
+    const confirmationInsert: any = {
+      user_id: newUser.id,
+      email,
+      token: confirmationToken,
+      type: 'signup',
+      expires_at: expiresAt.toISOString(),
+    };
+    if (projectId) confirmationInsert.project_id = projectId;
+
     const { error: confirmationError } = await supabase
       .from('user_email_confirmations')
-      .insert({
-        user_id: newUser.id,
-        email,
-        token: confirmationToken,
-        type: 'signup',
-        expires_at: expiresAt.toISOString(),
-        project_id: projectId
-      });
+      .insert(confirmationInsert);
 
     if (confirmationError) {
       console.error('Email onay kaydı hatası:', confirmationError);
