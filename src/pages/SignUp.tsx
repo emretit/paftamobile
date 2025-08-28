@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ErrorDisplay } from "@/components/auth/ErrorDisplay";
 import { ArrowRight, Mail, Lock, User, Building, Eye, EyeOff, Home } from "lucide-react";
 import { useAuth } from "@/auth/AuthContext";
@@ -73,7 +73,7 @@ const SignUp = () => {
       // Successful registration - redirect to sign in
       toast({
         title: "Kayıt Başarılı",
-        description: "Hesabınız oluşturuldu. Şimdi giriş yapabilirsiniz.",
+        description: "Hesabınız oluşturuldu! Artık giriş yapabilirsiniz.",
       });
 
       navigate("/signin");
