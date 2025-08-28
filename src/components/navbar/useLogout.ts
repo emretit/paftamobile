@@ -27,11 +27,21 @@ export const useLogout = () => {
       navigate("/signin");
     } catch (error: any) {
       console.error('Logout error:', error);
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Çıkış yapılırken bir sorun oluştu.",
-      });
+      
+      // Session errors are expected and should be treated as success
+      if (error.message?.includes('session_not_found') || error.message?.includes('Session not found')) {
+        toast({
+          title: "Başarılı",
+          description: "Başarıyla çıkış yapıldı.",
+        });
+        navigate("/signin");
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Çıkış yapılırken bir sorun oluştu.",
+        });
+      }
     } finally {
       setIsLoggingOut(false);
     }

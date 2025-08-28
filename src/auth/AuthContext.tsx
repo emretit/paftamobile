@@ -99,13 +99,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      console.error('SignOut error:', error)
-      throw error
+    try {
+      const { error } = await supabase.auth.signOut()
+      
+      // Always clear state regardless of error
+      setSession(null)
+      setUser(null)
+      
+      // Only throw error if it's not a session-related error
+      if (error && !error.message?.includes('session_not_found') && !error.message?.includes('Session not found')) {
+        console.error('SignOut error:', error)
+        throw error
+      }
+    } catch (error: any) {
+      // Clear state even on error
+      setSession(null)
+      setUser(null)
+      
+      // Only throw if it's not a session-related error
+      if (!error.message?.includes('session_not_found') && !error.message?.includes('Session not found')) {
+        console.error('SignOut error:', error)
+        throw error
+      }
     }
-    setSession(null)
-    setUser(null)
   }
 
   const resetPassword = async (email: string) => {

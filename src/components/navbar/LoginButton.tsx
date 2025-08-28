@@ -39,8 +39,11 @@ const LoginButton = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut({ scope: 'global' });
-    } catch (e) {
-      console.warn('Supabase signOut failed (ignored):', e);
+    } catch (e: any) {
+      // Only warn if it's not a session error
+      if (!e.message?.includes('session_not_found') && !e.message?.includes('Session not found')) {
+        console.warn('Supabase signOut failed:', e);
+      }
     }
     clearAuthTokens();
     setUser(null);
