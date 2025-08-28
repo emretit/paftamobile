@@ -104,7 +104,7 @@ serve(async (req) => {
                 }
                 .header {
                   background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
-                  color: white;
+                  color: #FFFFFF;
                   padding: 40px 30px;
                   text-align: center;
                   margin: 0;
