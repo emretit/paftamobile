@@ -22,6 +22,17 @@ const Index = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
+        // Eğer invite-setup sayfasına yönlendirme varsa (URL'de access_token), bekle
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const hasInviteToken = hashParams.get("access_token") && hashParams.get("type");
+        const isInviteSetupPath = window.location.pathname === '/invite-setup';
+        
+        if (hasInviteToken || isInviteSetupPath) {
+          console.log('Invite token detected or on invite-setup page, not redirecting to dashboard');
+          setLoading(false);
+          return;
+        }
+        
         if (session) {
           // Kullanıcı giriş yapmışsa dashboard'a yönlendir
           navigate("/dashboard");
@@ -39,8 +50,13 @@ const Index = () => {
     // Auth state değişikliklerini dinle
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          // Giriş yapıldığında dashboard'a yönlendir
+        // Invite setup sürecindeyse otomatik yönlendirmeyi engelle
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const hasInviteToken = hashParams.get("access_token");
+        const isInviteSetupPath = window.location.pathname === '/invite-setup';
+        
+        if (event === 'SIGNED_IN' && session && !hasInviteToken && !isInviteSetupPath) {
+          // Giriş yapıldığında dashboard'a yönlendir (invite setup değilse)
           navigate("/dashboard");
         } else if (event === 'SIGNED_OUT') {
           // Çıkış yapıldığında landing page'de kal
