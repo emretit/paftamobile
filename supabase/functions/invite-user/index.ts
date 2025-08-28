@@ -11,7 +11,7 @@ const corsHeaders = {
 
 // Uygulama URL'i (redirect için zorunlu)
 // Not: Lovable ortamında env değişkenleri kullanılamaz, bu nedenle sabit URL kullanıyoruz
-const APP_URL = "https://527a7790-65f5-4ba3-87eb-7299d2f3415a.sandbox.lovable.dev";
+const APP_URL = "https://pafta.app";
 
 serve(async (req) => {
   // CORS preflight
