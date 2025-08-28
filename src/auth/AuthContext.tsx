@@ -76,24 +76,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const _companyName = orgName || `${email} Company`;
       
-      // Sign up user with Supabase Auth - the trigger will handle company creation and profile setup
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: fullName,
-            company_name: _companyName,
-          }
+      // Use our custom register-user function instead of Supabase Auth
+      const { data, error } = await supabase.functions.invoke('register-user', {
+        body: {
+          email,
+          password,
+          full_name: fullName,
+          company_name: _companyName,
         }
-      })
+      });
 
       if (error) {
-        throw error
+        console.error('Signup function error:', error);
+        return { user: null, error };
       }
 
-      return { user: data.user, error }
+      if (data?.error) {
+        console.error('Register function error:', data.error);
+        return { user: null, error: { message: data.error } };
+      }
+
+      // Return success - user needs to confirm email
+      return { user: data?.user || null, error: null };
     } catch (error) {
       console.error('SignUp error:', error)
       return { user: null, error: error as any }
