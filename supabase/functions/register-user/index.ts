@@ -73,16 +73,156 @@ serve(async (req) => {
 
         const resend = new Resend(resendApiKey);
         await resend.emails.send({
-          from: 'PAFTA <noreply@pafta.app>',
+          from: 'PAFTA.APP <noreply@pafta.app>',
           to: [email],
-          subject: 'PAFTA - E-posta Adresinizi Onaylayın',
+          subject: 'PAFTA.APP - Hesap Onayınızı Tamamlayın',
           html: `
-            <h2>Merhaba${full_name ? ` ${full_name}` : ''}!</h2>
-            <p>PAFTA İş Yönetim Sistemi'ne kaydolduğunuz için teşekkürler.</p>
-            <p>Hesabınızı aktif etmek için aşağıdaki linke tıklayın:</p>
-            <a href="${actionLink}" style="background-color: #0ea5e9; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">E-posta Adresimi Onayla</a>
-            <p>Bu link 24 saat geçerlidir.</p>
-            <p>Eğer bu e-postayı siz istemediyseniz, lütfen dikkate almayın.</p>
+            <!DOCTYPE html>
+            <html lang="tr">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>PAFTA.APP - Hesap Onayı</title>
+              <style>
+                body { 
+                  margin: 0; 
+                  padding: 0; 
+                  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+                }
+                .container { 
+                  max-width: 600px; 
+                  margin: 0 auto; 
+                  padding: 20px;
+                }
+                .email-card {
+                  background: #ffffff;
+                  border-radius: 16px;
+                  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                  overflow: hidden;
+                  border: 1px solid rgba(211, 47, 47, 0.1);
+                }
+                .header {
+                  background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
+                  color: white;
+                  padding: 40px 30px;
+                  text-align: center;
+                }
+                .logo {
+                  font-size: 28px;
+                  font-weight: bold;
+                  letter-spacing: 2px;
+                  margin-bottom: 10px;
+                }
+                .header-subtitle {
+                  font-size: 16px;
+                  opacity: 0.9;
+                  margin: 0;
+                }
+                .content {
+                  padding: 40px 30px;
+                  text-align: center;
+                }
+                .welcome-text {
+                  font-size: 24px;
+                  color: #333;
+                  margin: 0 0 20px 0;
+                  font-weight: 600;
+                }
+                .description {
+                  font-size: 16px;
+                  color: #666;
+                  line-height: 1.6;
+                  margin: 0 0 30px 0;
+                }
+                .cta-button {
+                  display: inline-block;
+                  background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
+                  color: white;
+                  text-decoration: none;
+                  padding: 16px 32px;
+                  border-radius: 8px;
+                  font-weight: 600;
+                  font-size: 16px;
+                  box-shadow: 0 4px 16px rgba(211, 47, 47, 0.3);
+                  transition: all 0.3s ease;
+                  margin: 20px 0;
+                }
+                .cta-button:hover {
+                  box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+                  transform: translateY(-2px);
+                }
+                .footer {
+                  background: #f8f9fa;
+                  padding: 30px;
+                  text-align: center;
+                  border-top: 1px solid #e9ecef;
+                }
+                .footer-text {
+                  font-size: 14px;
+                  color: #6c757d;
+                  line-height: 1.5;
+                  margin: 0;
+                }
+                .security-note {
+                  background: #fff3cd;
+                  border: 1px solid #ffeaa7;
+                  border-radius: 8px;
+                  padding: 16px;
+                  margin: 20px 0;
+                  font-size: 14px;
+                  color: #856404;
+                }
+                @media (max-width: 600px) {
+                  .container { padding: 10px; }
+                  .content { padding: 30px 20px; }
+                  .header { padding: 30px 20px; }
+                  .logo { font-size: 24px; }
+                  .welcome-text { font-size: 20px; }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="email-card">
+                  <div class="header">
+                    <div class="logo">PAFTA.APP</div>
+                    <p class="header-subtitle">İş Yönetim Sistemi</p>
+                  </div>
+                  
+                  <div class="content">
+                    <h1 class="welcome-text">Merhaba${full_name ? ` ${full_name}` : ''}! 👋</h1>
+                    
+                    <p class="description">
+                      <strong>PAFTA.APP</strong> İş Yönetim Sistemi'ne hoş geldiniz! 
+                      Hesabınızı aktif etmek için aşağıdaki butona tıklayarak 
+                      e-posta adresinizi onaylayın.
+                    </p>
+                    
+                    <a href="${actionLink}" class="cta-button">
+                      ✅ E-posta Adresimi Onayla
+                    </a>
+                    
+                    <div class="security-note">
+                      <strong>🔒 Güvenlik Notu:</strong> Bu onay linki 24 saat geçerlidir. 
+                      Güvenliğiniz için link sadece bir kez kullanılabilir.
+                    </div>
+                  </div>
+                  
+                  <div class="footer">
+                    <p class="footer-text">
+                      Bu e-postayı siz istemediyseniz güvenle yok sayabilirsiniz.<br>
+                      Hesabınız oluşturulmayacak ve hiçbir işlem yapılmayacaktır.
+                    </p>
+                    <p class="footer-text" style="margin-top: 15px;">
+                      <strong>PAFTA.APP</strong> - Profesyonel İş Yönetimi<br>
+                      <span style="color: #D32F2F;">❤️</span> Türkiye'den sevgilerle
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </body>
+            </html>
           `,
         });
       } else {
