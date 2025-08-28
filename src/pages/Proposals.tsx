@@ -74,17 +74,24 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
     >
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold">Teklifler</h1>
-            <p className="text-muted-foreground">Tüm teklifleri görüntüleyin ve yönetin</p>
+        <div className="flex flex-col sm:flex-row justify-between gap-4 p-6 bg-gradient-to-r from-card to-muted/50 rounded-xl border border-border/30 shadow-lg backdrop-blur-sm">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+              Teklifler
+            </h1>
+            <p className="text-sm text-muted-foreground/80">
+              Müşterilerinize gönderdiğiniz teklifleri yönetin
+            </p>
           </div>
           <div className="flex gap-2">
             <ProposalsViewToggle 
               activeView={activeView} 
               setActiveView={setActiveView} 
             />
-            <Button onClick={() => navigate("/proposal/create")}>
+            <Button 
+              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg transition-all duration-300"
+              onClick={() => navigate("/proposal/create")}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Yeni Teklif
             </Button>
@@ -92,7 +99,7 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 p-4 bg-muted/30 rounded-lg">
+        <div className="flex flex-col sm:flex-row gap-4 p-6 bg-gradient-to-r from-card/80 to-muted/40 rounded-xl border border-border/30 shadow-lg backdrop-blur-sm">
           <div className="relative w-[400px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input

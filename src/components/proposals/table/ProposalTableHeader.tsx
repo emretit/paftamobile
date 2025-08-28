@@ -34,14 +34,24 @@ export const ProposalTableHeader = ({
             <TableHead 
               key={column.id}
               className={cn(
-                "h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap",
-                column.sortable ? 'cursor-pointer hover:bg-gray-100' : '',
+                "h-12 px-4 text-left align-middle font-bold text-foreground/80 whitespace-nowrap text-sm tracking-wide",
+                column.sortable ? 'cursor-pointer hover:bg-muted/50' : '',
                 column.id === 'actions' ? 'text-right' : ''
               )}
               onClick={column.sortable && onSort ? () => onSort(column.id) : undefined}
             >
               <div className={cn("flex items-center", column.id === 'actions' ? 'justify-end' : '')}>
-                <span>{column.label}</span>
+                <span>
+                  {column.id === 'number' && '📄 '}
+                  {column.id === 'customer' && '🏢 '}
+                  {column.id === 'status' && '📊 '}
+                  {column.id === 'employee' && '👤 '}
+                  {column.id === 'total_amount' && '💰 '}
+                  {column.id === 'created_at' && '📅 '}
+                  {column.id === 'valid_until' && '⏰ '}
+                  {column.id === 'actions' && '⚙️ '}
+                  {column.label}
+                </span>
                 {column.sortable && getSortIcon(column.id)}
               </div>
             </TableHead>
