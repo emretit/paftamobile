@@ -114,11 +114,12 @@ serve(async (req) => {
                   font-weight: bold;
                   letter-spacing: 2px;
                   margin-bottom: 10px;
+                  color: #8B0000;
                 }
                 .header-subtitle {
                   font-size: 16px;
-                  opacity: 0.9;
                   margin: 0;
+                  color: #8B0000;
                 }
                 .content {
                   padding: 40px 30px;
