@@ -11,5 +11,8 @@ max_rows = 1000
 [functions.register-user]
 verify_jwt = false
 
+[functions.invite-user]
+verify_jwt = false
+
 [functions.seed]
 verify_jwt = false

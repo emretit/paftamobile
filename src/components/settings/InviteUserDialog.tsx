@@ -12,21 +12,28 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export const InviteUserDialog = () => {
   const [newUserEmail, setNewUserEmail] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { userData } = useCurrentUser();
 
   const inviteUserMutation = useMutation({
     mutationFn: async (email: string) => {
-      // Updated to use the correct method
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: window.location.origin,
+      if (!userData?.company_id) {
+        throw new Error("Şirket bilgisi bulunamadı");
+      }
+
+      const { data, error } = await supabase.functions.invoke('invite-user', {
+        body: {
+          email,
+          inviting_company_id: userData.company_id
         }
       });
+
       if (error) throw error;
       return data;
     },
@@ -34,9 +41,10 @@ export const InviteUserDialog = () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast({
         title: "Başarılı",
-        description: "Kullanıcıya davet e-postası gönderildi",
+        description: "Şifre belirleme maili gönderildi",
       });
       setNewUserEmail("");
+      setIsOpen(false);
     },
     onError: (error: any) => {
       toast({
@@ -48,24 +56,34 @@ export const InviteUserDialog = () => {
   });
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>Yeni Kullanıcı Davet Et</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Kullanıcı Daveti Gönder</DialogTitle>
+          <DialogTitle>Şirkete Kullanıcı Davet Et</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <Input
-            placeholder="E-posta adresi"
-            type="email"
-            value={newUserEmail}
-            onChange={(e) => setNewUserEmail(e.target.value)}
-          />
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">
+              E-posta adresi
+            </label>
+            <Input
+              placeholder="kullanici@example.com"
+              type="email"
+              value={newUserEmail}
+              onChange={(e) => setNewUserEmail(e.target.value)}
+              disabled={inviteUserMutation.isPending}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Bu kullanıcıya şifre belirleme maili gönderilecek
+            </p>
+          </div>
           <Button 
             onClick={() => inviteUserMutation.mutate(newUserEmail)}
-            disabled={inviteUserMutation.isPending}
+            disabled={inviteUserMutation.isPending || !newUserEmail.trim()}
+            className="w-full"
           >
             {inviteUserMutation.isPending ? "Gönderiliyor..." : "Davet Gönder"}
           </Button>
