@@ -73,7 +73,7 @@ const SignUp = () => {
       // Successful registration - redirect to sign in
       toast({
         title: "Kayıt Başarılı",
-        description: "Hesabınız oluşturuldu! Artık giriş yapabilirsiniz.",
+        description: "E-posta adresinizi kontrol edin ve hesabınızı onaylayın.",
       });
 
       navigate("/signin");
