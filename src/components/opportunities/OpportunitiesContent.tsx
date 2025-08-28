@@ -35,15 +35,18 @@ const OpportunitiesContent = ({
 
   return (
     <div className="bg-gradient-to-br from-background to-muted/30 rounded-xl border border-border/50 shadow-xl backdrop-blur-sm">
-      <div className="p-8 bg-gradient-to-r from-card/80 to-card/60 backdrop-blur-md rounded-xl shadow-2xl border border-border/20">
-        <OpportunitiesTable
-          opportunities={opportunities}
-          isLoading={isLoading}
-          onSelectOpportunity={onSelectOpportunity}
-          searchQuery={searchQuery}
-          statusFilter={statusFilter}
-          priorityFilter={priorityFilter}
-        />
+      <div className="p-10 bg-gradient-to-br from-card via-muted/20 to-background rounded-2xl shadow-2xl border border-border/10 backdrop-blur-xl relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 opacity-50"></div>
+        <div className="relative z-10">
+          <OpportunitiesTable
+            opportunities={opportunities}
+            isLoading={isLoading}
+            onSelectOpportunity={onSelectOpportunity}
+            searchQuery={searchQuery}
+            statusFilter={statusFilter}
+            priorityFilter={priorityFilter}
+          />
+        </div>
       </div>
     </div>
   );

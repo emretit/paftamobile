@@ -85,15 +85,15 @@ const OpportunitiesTable = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Başlık</TableHead>
-            <TableHead>Müşteri</TableHead>
-            <TableHead>Durum</TableHead>
-            <TableHead>Değer</TableHead>
-            <TableHead>Para Birimi</TableHead>
-            <TableHead>Öncelik</TableHead>
-            <TableHead>Sorumlu</TableHead>
-            <TableHead>Beklenen Kapanış</TableHead>
-            <TableHead className="w-[50px]"></TableHead>
+            <TableHead className="font-bold text-foreground/80 text-sm tracking-wide">📋 Fırsat Başlığı</TableHead>
+            <TableHead className="font-bold text-foreground/80 text-sm tracking-wide">🏢 Müşteri Bilgileri</TableHead>
+            <TableHead className="font-bold text-foreground/80 text-sm tracking-wide">📊 Durum</TableHead>
+            <TableHead className="font-bold text-foreground/80 text-sm tracking-wide">💰 Değer</TableHead>
+            <TableHead className="font-bold text-foreground/80 text-sm tracking-wide">💱 Para Birimi</TableHead>
+            <TableHead className="font-bold text-foreground/80 text-sm tracking-wide">⚡ Öncelik</TableHead>
+            <TableHead className="font-bold text-foreground/80 text-sm tracking-wide">👤 Sorumlu Kişi</TableHead>
+            <TableHead className="font-bold text-foreground/80 text-sm tracking-wide">📅 Hedef Tarih</TableHead>
+            <TableHead className="w-[50px] font-bold text-foreground/80 text-sm tracking-wide">⚙️ İşlemler</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -119,15 +119,15 @@ const OpportunitiesTable = ({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[18%]">Başlık</TableHead>
-          <TableHead className="w-[25%]">Müşteri</TableHead>
-          <TableHead className="w-[8%]">Durum</TableHead>
-          <TableHead className="w-[8%]">Değer</TableHead>
-          <TableHead className="w-[6%]">Para Birimi</TableHead>
-          <TableHead className="w-[8%]">Öncelik</TableHead>
-          <TableHead className="w-[12%]">Sorumlu</TableHead>
-          <TableHead className="w-[9%]">Beklenen Kapanış</TableHead>
-          <TableHead className="w-[6%]"></TableHead>
+          <TableHead className="w-[18%] font-bold text-foreground/80 text-sm tracking-wide">📋 Fırsat Başlığı</TableHead>
+          <TableHead className="w-[25%] font-bold text-foreground/80 text-sm tracking-wide">🏢 Müşteri Bilgileri</TableHead>
+          <TableHead className="w-[8%] font-bold text-foreground/80 text-sm tracking-wide">📊 Durum</TableHead>
+          <TableHead className="w-[8%] font-bold text-foreground/80 text-sm tracking-wide">💰 Değer</TableHead>
+          <TableHead className="w-[6%] font-bold text-foreground/80 text-sm tracking-wide">💱 Para Birimi</TableHead>
+          <TableHead className="w-[8%] font-bold text-foreground/80 text-sm tracking-wide">⚡ Öncelik</TableHead>
+          <TableHead className="w-[12%] font-bold text-foreground/80 text-sm tracking-wide">👤 Sorumlu Kişi</TableHead>
+          <TableHead className="w-[9%] font-bold text-foreground/80 text-sm tracking-wide">📅 Hedef Tarih</TableHead>
+          <TableHead className="w-[6%] font-bold text-foreground/80 text-sm tracking-wide">⚙️ İşlemler</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
