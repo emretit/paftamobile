@@ -4364,10 +4364,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      current_project_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
       current_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string
