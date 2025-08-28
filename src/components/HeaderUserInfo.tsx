@@ -29,6 +29,8 @@ export default function HeaderUserInfo() {
       return data
     },
     enabled: !!userData?.company_id,
+    staleTime: 5 * 60 * 1000, // 5 dakika boyunca cache'te tut
+    gcTime: 10 * 60 * 1000, // 10 dakika sonra garbage collect
   })
 
   const displayName = userData?.full_name || user?.user_metadata?.full_name || user?.email || 'Kullanıcı'

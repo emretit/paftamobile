@@ -23,6 +23,26 @@ export const useCurrentUser = () => {
         return;
       }
 
+      // Cache kontrol et - eğer aynı user için data varsa ve son 5 dakikada alındıysa tekrar fetch etme
+      const cacheKey = `user_data_${user.id}`;
+      const cachedData = sessionStorage.getItem(cacheKey);
+      
+      if (cachedData) {
+        try {
+          const { data, timestamp } = JSON.parse(cachedData);
+          const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+          
+          if (timestamp > fiveMinutesAgo) {
+            setUserData(data);
+            setError(null);
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          // Cache parse hatası, devam et
+        }
+      }
+
       try {
         const { data, error } = await supabase
           .from('profiles')
@@ -33,6 +53,12 @@ export const useCurrentUser = () => {
         if (error) {
           throw error;
         }
+
+        // Cache'e kaydet
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          data,
+          timestamp: Date.now()
+        }));
 
         setUserData(data);
         setError(null);
