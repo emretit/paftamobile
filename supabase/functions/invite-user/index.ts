@@ -100,15 +100,156 @@ serve(async (req) => {
 
       const resetUrl = recoveryData.properties.action_link;
       const emailResponse = await resend.emails.send({
-        from: "Pafta <noreply@pafta.app>",
+        from: "PAFTA.APP <noreply@pafta.app>",
         to: [email],
         subject: `${companyName} şirketine davet edildiniz`,
         html: `
-          <h1>Merhaba!</h1>
-          <p>${companyName} şirketine davet edildiniz.</p>
-          <p>Hesabınız zaten bulunduğu için aşağıdaki bağlantı ile şifrenizi belirleyin:</p>
-          <a href="${resetUrl}" style="background-color:#0F62FE;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;display:inline-block">Şifremi Belirle</a>
-          <p>Bağlantı kısa süreliğine geçerlidir.</p>
+          <!DOCTYPE html>
+          <html lang="tr">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>PAFTA.APP - Şirket Daveti</title>
+            <style>
+              body { 
+                margin: 0; 
+                padding: 0; 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+              }
+              .container { 
+                max-width: 600px; 
+                margin: 0 auto; 
+                padding: 20px;
+              }
+              .email-card {
+                background: #ffffff;
+                border-radius: 16px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+                border: 1px solid rgba(211, 47, 47, 0.1);
+              }
+              .header {
+                background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
+                color: #FFFFFF;
+                padding: 40px 30px;
+                text-align: center;
+                margin: 0;
+              }
+              .logo {
+                font-size: 28px;
+                font-weight: bold;
+                letter-spacing: 2px;
+                margin-bottom: 10px;
+                color: #8B0000;
+              }
+              .header-subtitle {
+                font-size: 16px;
+                margin: 0;
+                color: #8B0000;
+              }
+              .content {
+                padding: 40px 30px;
+                text-align: center;
+              }
+              .welcome-text {
+                font-size: 24px;
+                color: #333;
+                margin: 0 0 20px 0;
+                font-weight: 600;
+              }
+              .description {
+                font-size: 16px;
+                color: #666;
+                line-height: 1.6;
+                margin: 0 0 30px 0;
+              }
+              .cta-button {
+                display: inline-block;
+                background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
+                color: white;
+                text-decoration: none;
+                padding: 16px 32px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 16px;
+                box-shadow: 0 4px 16px rgba(211, 47, 47, 0.3);
+                transition: all 0.3s ease;
+                margin: 20px 0;
+              }
+              .cta-button:hover {
+                box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+                transform: translateY(-2px);
+              }
+              .footer {
+                background: #f8f9fa;
+                padding: 30px;
+                text-align: center;
+                border-top: 1px solid #e9ecef;
+              }
+              .footer-text {
+                font-size: 14px;
+                color: #6c757d;
+                line-height: 1.5;
+                margin: 0;
+              }
+              .security-note {
+                background: #fff3cd;
+                border: 1px solid #ffeaa7;
+                border-radius: 8px;
+                padding: 16px;
+                margin: 20px 0;
+                font-size: 14px;
+                color: #856404;
+              }
+              @media (max-width: 600px) {
+                .container { padding: 10px; }
+                .content { padding: 30px 20px; }
+                .header { padding: 30px 20px; }
+                .logo { font-size: 24px; }
+                .welcome-text { font-size: 20px; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="email-card">
+                <div class="header">
+                  <div class="logo">PAFTA.APP</div>
+                  <p class="header-subtitle">İş Yönetim Sistemi</p>
+                </div>
+                
+                <div class="content">
+                  <h1 class="welcome-text">Merhaba! 👋</h1>
+                  
+                  <p class="description">
+                    <strong>${companyName}</strong> şirketine davet edildiniz! 
+                    Hesabınız zaten bulunduğu için aşağıdaki bağlantı ile şifrenizi belirleyin.
+                  </p>
+                  
+                  <a href="${resetUrl}" class="cta-button">
+                    🔐 Şifremi Belirle
+                  </a>
+                  
+                  <div class="security-note">
+                    <strong>🔒 Güvenlik Notu:</strong> Bu link kısa süreliğine geçerlidir. 
+                    Güvenliğiniz için link sadece bir kez kullanılabilir.
+                  </div>
+                </div>
+                
+                <div class="footer">
+                  <p class="footer-text">
+                    Bu e-postayı siz istemediyseniz güvenle yok sayabilirsiniz.<br>
+                    Hesabınız oluşturulmayacak ve hiçbir işlem yapılmayacaktır.
+                  </p>
+                  <p class="footer-text" style="margin-top: 15px;">
+                    <strong>PAFTA.APP</strong> - Profesyonel İş Yönetimi<br>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </body>
+          </html>
         `,
       });
 
@@ -147,15 +288,156 @@ serve(async (req) => {
 
       const inviteUrl = inviteData.properties.action_link;
       const emailResponse = await resend.emails.send({
-        from: "Pafta <noreply@pafta.app>",
+        from: "PAFTA.APP <noreply@pafta.app>",
         to: [email],
         subject: `${companyName} şirketine davet edildiniz`,
         html: `
-          <h1>Merhaba!</h1>
-          <p>${companyName} şirketine davet edildiniz.</p>
-          <p>Hesabınızı oluşturmak ve şifrenizi belirlemek için aşağıdaki bağlantıya tıklayın:</p>
-          <a href="${inviteUrl}" style="background-color:#0F62FE;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;display:inline-block">Hesabımı Kur</a>
-          <p>Bağlantı kısa süreliğine geçerlidir.</p>
+          <!DOCTYPE html>
+          <html lang="tr">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>PAFTA.APP - Şirket Daveti</title>
+            <style>
+              body { 
+                margin: 0; 
+                padding: 0; 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+              }
+              .container { 
+                max-width: 600px; 
+                margin: 0 auto; 
+                padding: 20px;
+              }
+              .email-card {
+                background: #ffffff;
+                border-radius: 16px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+                border: 1px solid rgba(211, 47, 47, 0.1);
+              }
+              .header {
+                background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
+                color: #FFFFFF;
+                padding: 40px 30px;
+                text-align: center;
+                margin: 0;
+              }
+              .logo {
+                font-size: 28px;
+                font-weight: bold;
+                letter-spacing: 2px;
+                margin-bottom: 10px;
+                color: #FFFFFF;
+              }
+              .header-subtitle {
+                font-size: 16px;
+                margin: 0;
+                color: #FFFFFF;
+              }
+              .content {
+                padding: 40px 30px;
+                text-align: center;
+              }
+              .welcome-text {
+                font-size: 24px;
+                color: #333;
+                margin: 0 0 20px 0;
+                font-weight: 600;
+              }
+              .description {
+                font-size: 16px;
+                color: #666;
+                line-height: 1.6;
+                margin: 0 0 30px 0;
+              }
+              .cta-button {
+                display: inline-block;
+                background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
+                color: white;
+                text-decoration: none;
+                padding: 16px 32px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 16px;
+                box-shadow: 0 4px 16px rgba(211, 47, 47, 0.3);
+                transition: all 0.3s ease;
+                margin: 20px 0;
+              }
+              .cta-button:hover {
+                box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+                transform: translateY(-2px);
+              }
+              .footer {
+                background: #f8f9fa;
+                padding: 30px;
+                text-align: center;
+                border-top: 1px solid #e9ecef;
+              }
+              .footer-text {
+                font-size: 14px;
+                color: #6c757d;
+                line-height: 1.5;
+                margin: 0;
+              }
+              .security-note {
+                background: #fff3cd;
+                border: 1px solid #ffeaa7;
+                border-radius: 8px;
+                padding: 16px;
+                margin: 20px 0;
+                font-size: 14px;
+                color: #856404;
+              }
+              @media (max-width: 600px) {
+                .container { padding: 10px; }
+                .content { padding: 30px 20px; }
+                .header { padding: 30px 20px; }
+                .logo { font-size: 24px; }
+                .welcome-text { font-size: 20px; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="email-card">
+                <div class="header">
+                  <div class="logo">PAFTA.APP</div>
+                  <p class="header-subtitle">İş Yönetim Sistemi</p>
+                </div>
+                
+                <div class="content">
+                  <h1 class="welcome-text">Merhaba! 👋</h1>
+                  
+                  <p class="description">
+                    <strong>${companyName}</strong> şirketine davet edildiniz! 
+                    Hesabınızı oluşturmak ve şifrenizi belirlemek için aşağıdaki bağlantıya tıklayın.
+                  </p>
+                  
+                  <a href="${inviteUrl}" class="cta-button">
+                    ✅ Hesabımı Kur
+                  </a>
+                  
+                  <div class="security-note">
+                    <strong>🔒 Güvenlik Notu:</strong> Bu link kısa süreliğine geçerlidir. 
+                    Güvenliğiniz için link sadece bir kez kullanılabilir.
+                  </div>
+                </div>
+                
+                <div class="footer">
+                  <p class="footer-text">
+                    Bu e-postayı siz istemediyseniz güvenle yok sayabilirsiniz.<br>
+                    Hesabınız oluşturulmayacak ve hiçbir işlem yapılmayacaktır.
+                  </p>
+                  <p class="footer-text" style="margin-top: 15px;">
+                    <strong>PAFTA.APP</strong> - Profesyonel İş Yönetimi<br>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </body>
+          </html>
         `,
       });
 
