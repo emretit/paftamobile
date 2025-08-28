@@ -50,13 +50,38 @@ serve(async (req) => {
     const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
     const appUrl = 'https://527a7790-65f5-4ba3-87eb-7299d2f3415a.sandbox.lovable.dev';
     
-    // Kullanıcının zaten var olup olmadığını kontrol et
-    const { data: existingUser } = await supabase.auth.admin.getUserByEmail(email);
-    
-    if (existingUser?.user) {
-      // Mevcut kullanıcı için şifre sıfırlama maili gönder
-      const resetPasswordUrl = `${appUrl}/reset-password?email=${encodeURIComponent(email)}`;
-      
+    // Kullanıcının zaten var olup olmadığını kontrol et - profiles tablosu üzerinden
+    const { data: existingProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error('Profil kontrol hatası:', profileError);
+      return new Response(
+        JSON.stringify({ error: 'Profil kontrolü sırasında hata oluştu' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (existingProfile) {
+      // Mevcut kullanıcı için şifre sıfırlama linki oluştur ve gönder
+      const { data: recoveryData, error: recoveryError } = await supabase.auth.admin.generateLink({
+        type: 'recovery',
+        email,
+        options: { redirectTo: `${appUrl}/reset-password` }
+      });
+
+      if (recoveryError || !recoveryData?.properties?.action_link) {
+        console.error('Recovery link hatası:', recoveryError);
+        return new Response(
+          JSON.stringify({ error: 'Şifre sıfırlama bağlantısı oluşturulamadı' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const resetPasswordUrl = recoveryData.properties.action_link;
       const emailResponse = await resend.emails.send({
         from: 'Pafta <noreply@pafta.app>',
         to: [email],
@@ -86,9 +111,28 @@ serve(async (req) => {
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else {
-      // Yeni kullanıcı için kayıt ol bağlantısı gönder
-      const signupUrl = `${appUrl}/signup?email=${encodeURIComponent(email)}&company_id=${inviting_company_id}&company_name=${encodeURIComponent(companyData.name)}`;
-      
+      // Yeni kullanıcı için signup linki oluştur ve gönder
+      const { data: signupData, error: signupError } = await supabase.auth.admin.generateLink({
+        type: 'signup',
+        email,
+        options: {
+          redirectTo: `${appUrl}/signup`,
+          data: {
+            invited_by_company_id: inviting_company_id,
+            company_name: companyData.name
+          }
+        }
+      });
+
+      if (signupError || !signupData?.properties?.action_link) {
+        console.error('Signup linki oluşturulamadı:', signupError);
+        return new Response(
+          JSON.stringify({ error: 'Kayıt bağlantısı oluşturulamadı' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const signupUrl = signupData.properties.action_link;
       const emailResponse = await resend.emails.send({
         from: 'Pafta <noreply@pafta.app>',
         to: [email],
