@@ -6,7 +6,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { ErrorDisplay } from "@/components/auth/ErrorDisplay";
 import { ArrowRight, Mail, Lock, Eye, EyeOff, Home } from "lucide-react";
 import { useAuth } from "@/auth/AuthContext";
-
+import { parseAuthParamsFromUrl, getAuthErrorMessage } from "@/utils/authHelpers";
+import { safeSignOut } from "@/lib/supabase-utils";
 const SignIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -16,16 +17,33 @@ const SignIn = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [blockAutoRedirect, setBlockAutoRedirect] = useState(false);
 
-  // Check if user is already logged in
+  // Check if user is already logged in (avoid redirect if coming from email confirm)
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && !blockAutoRedirect) {
       navigate("/dashboard");
     }
-  }, [user?.id, navigate]);
+  }, [user?.id, blockAutoRedirect, navigate]);
+  // Handle redirects from email links (signup confirmation, errors, etc.)
+  useEffect(() => {
+    const { accessToken, type, errorCode, errorDescription } = parseAuthParamsFromUrl();
 
+    if (errorCode) {
+      const msg = getAuthErrorMessage(errorCode, errorDescription);
+      if (msg) {
+        toast({ variant: "destructive", title: "Doğrulama Hatası", description: msg });
+      }
+    }
 
-
+    if (accessToken && type === "signup") {
+      setBlockAutoRedirect(true);
+      setTimeout(async () => {
+        await safeSignOut();
+        toast({ title: "E-posta doğrulandı", description: "Lütfen e-posta ve şifrenizle giriş yapın." });
+      }, 0);
+    }
+  }, []);
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
