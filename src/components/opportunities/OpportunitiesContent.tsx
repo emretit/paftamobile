@@ -34,8 +34,8 @@ const OpportunitiesContent = ({
   }
 
   return (
-    <div className="bg-white rounded-lg border shadow-sm">
-      <div className="p-6">
+    <div className="bg-gradient-to-br from-background to-muted/30 rounded-xl border border-border/50 shadow-xl backdrop-blur-sm">
+      <div className="p-8 bg-gradient-to-r from-card/80 to-card/60 backdrop-blur-md rounded-xl shadow-2xl border border-border/20">
         <OpportunitiesTable
           opportunities={opportunities}
           isLoading={isLoading}
