@@ -23,14 +23,16 @@ const InviteSetup = () => {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // Check for invite tokens in URL
-    const { accessToken, type } = parseAuthParamsFromUrl();
+    // Parse URL hash parameters directly
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get("access_token");
+    const type = hashParams.get("type");
+    const emailParam = hashParams.get("email") || searchParams.get('email');
+    
+    console.log('InviteSetup URL params:', { accessToken, type, emailParam });
     
     if (accessToken && type === 'invite') {
       setInviteToken(accessToken);
-      
-      // Try to extract email from URL params
-      const emailParam = searchParams.get('email');
       if (emailParam) {
         setEmail(emailParam);
       }
@@ -38,12 +40,7 @@ const InviteSetup = () => {
       // If no valid invite token, redirect to signup
       navigate("/signup");
     }
-
-    // If user is already logged in, redirect to dashboard
-    if (user?.id) {
-      navigate("/dashboard");
-    }
-  }, [user?.id, navigate, searchParams]);
+  }, [navigate, searchParams]);
 
   const handlePasswordSetup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,21 +53,21 @@ const InviteSetup = () => {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Şifre en az 6 karakter olmalıdır.");
+    if (password.length < 10) {
+      setError("Şifre en az 10 karakter olmalıdır.");
       setLoading(false);
       return;
     }
     
     try {
-      // Verify the invite token and set up the password
-      const { data, error } = await supabase.auth.verifyOtp({
-        token_hash: inviteToken!,
-        type: 'invite'
+      // Set the session using the access token from URL
+      const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+        access_token: inviteToken!,
+        refresh_token: ''
       });
 
-      if (error) {
-        throw error;
+      if (sessionError) {
+        throw sessionError;
       }
 
       // Update the user's password and profile
@@ -188,11 +185,11 @@ const InviteSetup = () => {
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder="Şifre (en az 6 karakter)"
+                  placeholder="Şifre (en az 10 karakter)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-12 pl-10 pr-12 text-base border-gray-300 focus:border-primary focus:ring-primary"
-                  minLength={6}
+                  minLength={10}
                   required
                 />
                 <button
