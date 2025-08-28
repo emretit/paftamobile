@@ -47,7 +47,7 @@ const OpportunityBulkActions = ({
   };
 
   return (
-    <div className="bg-gray-100 p-3 rounded-lg flex items-center justify-between">
+    <div className="bg-gradient-to-r from-accent/80 to-muted/60 p-4 rounded-xl border border-border/30 shadow-lg backdrop-blur-sm flex items-center justify-between">
       <div className="flex items-center gap-2">
         <span className="font-medium text-gray-700">
           {selectedOpportunities.length} fırsat seçildi
