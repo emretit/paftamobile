@@ -50,12 +50,28 @@ serve(async (req) => {
       );
     }
 
-    // Email onay linkini Resend ile gönder
+    // E-posta onayı için Supabase linkini üret ve gönder
     try {
       const resendApiKey = Deno.env.get('RESEND_API_KEY');
+
       if (resendApiKey) {
+        // Supabase'den "signup" onay linkini üret
+        const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+          type: 'signup',
+          email,
+          password,
+          options: {
+            data: { full_name, company_name },
+          },
+        } as any);
+
+        if (linkError) {
+          console.warn('Onay linki üretilemedi, Supabase email resend kullanılacak:', linkError);
+        }
+
+        const actionLink = (linkData as any)?.properties?.action_link || (linkData as any)?.action_link;
+
         const resend = new Resend(resendApiKey);
-        const confirmationLink = `https://vwhwufnckpqirxptwncw.supabase.co/functions/v1/confirm-email?email=${encodeURIComponent(email)}&user_id=${createdUser?.user?.id}`;
         await resend.emails.send({
           from: 'PAFTA <noreply@pafta.app>',
           to: [email],
@@ -64,16 +80,21 @@ serve(async (req) => {
             <h2>Merhaba${full_name ? ` ${full_name}` : ''}!</h2>
             <p>PAFTA İş Yönetim Sistemi'ne kaydolduğunuz için teşekkürler.</p>
             <p>Hesabınızı aktif etmek için aşağıdaki linke tıklayın:</p>
-            <a href="${confirmationLink}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">E-posta Adresimi Onayla</a>
+            <a href="${actionLink}" style="background-color: #0ea5e9; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">E-posta Adresimi Onayla</a>
             <p>Bu link 24 saat geçerlidir.</p>
             <p>Eğer bu e-postayı siz istemediyseniz, lütfen dikkate almayın.</p>
           `,
         });
       } else {
-        console.warn('RESEND_API_KEY yok, onay e-postası atlanıyor.');
+        // Resend yoksa Supabase kendi e-postasını göndersin
+        const { error: resendErr } = await (supabase as any).auth.resend({
+          type: 'signup',
+          email,
+        });
+        if (resendErr) console.warn('Supabase resend hata:', resendErr);
       }
     } catch (e) {
-      console.warn('Onay e-postası gönderilemedi:', e);
+      console.warn('Onay e-postası adımında hata:', e);
     }
 
     // Başarılı yanıt
