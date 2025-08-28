@@ -107,6 +107,7 @@ serve(async (req) => {
                   color: white;
                   padding: 40px 30px;
                   text-align: center;
+                  margin: 0;
                 }
                 .logo {
                   font-size: 28px;
