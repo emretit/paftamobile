@@ -26,11 +26,19 @@ const TasksTableHeader: React.FC<TasksTableHeaderProps> = ({
 
   const renderSortableHeader = (label: string, field: SortField) => (
     <TableHead 
-      className="cursor-pointer hover:bg-gray-100 h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
+      className="cursor-pointer hover:bg-muted/50 h-12 px-4 text-left align-middle font-bold text-foreground/80 whitespace-nowrap text-sm tracking-wide"
       onClick={() => handleSort(field)}
     >
       <div className="flex items-center">
-        {label}
+        <span>
+          {field === 'title' && '📋 '}
+          {field === 'due_date' && '📅 '}
+          {field === 'priority' && '⚡ '}
+          {field === 'assignee' && '👤 '}
+          {field === 'related_item' && '🔗 '}
+          {field === 'status' && '📊 '}
+          {label}
+        </span>
         {getSortIcon(field)}
       </div>
     </TableHead>
@@ -45,8 +53,8 @@ const TasksTableHeader: React.FC<TasksTableHeaderProps> = ({
         {renderSortableHeader("Sorumlu", "assignee")}
         {renderSortableHeader("İlişkili Öğe", "related_item")}
         {renderSortableHeader("Durum", "status")}
-        <TableHead className="text-right h-12 px-4 align-middle font-medium text-muted-foreground whitespace-nowrap">
-          İşlemler
+        <TableHead className="text-right h-12 px-4 align-middle font-bold text-foreground/80 whitespace-nowrap text-sm tracking-wide">
+          ⚙️ İşlemler
         </TableHead>
       </TableRow>
     </TableHeader>

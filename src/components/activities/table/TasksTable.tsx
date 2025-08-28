@@ -60,7 +60,7 @@ export const TasksTable = ({
   }
 
   return (
-    <div className="border rounded-md">
+    <div className="border rounded-md shadow-xl bg-gradient-to-br from-card/90 to-muted/30 backdrop-blur-sm">
       <Table>
         <TasksTableHeader 
           sortField={sortField} 
