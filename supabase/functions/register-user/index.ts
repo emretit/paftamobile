@@ -55,13 +55,11 @@ serve(async (req) => {
       const resendApiKey = Deno.env.get('RESEND_API_KEY');
 
       if (resendApiKey) {
-        // Supabase'den "signup" onay linkini üret
+        // Supabase'den e-posta onay linkini üret (otomatik giriş yapmayacak)
         const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-          type: 'signup',
+          type: 'email_confirm',
           email,
-          password,
           options: {
-            data: { full_name, company_name },
             redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.vercel.app') || 'http://localhost:3000'}/signin`
           },
         } as any);
