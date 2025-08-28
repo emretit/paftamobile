@@ -29,15 +29,17 @@ const InviteSetup = () => {
     const type = hashParams.get("type");
     const emailParam = hashParams.get("email") || searchParams.get('email');
     
-    console.log('InviteSetup URL params:', { accessToken, type, emailParam });
+    console.log('InviteSetup URL params:', { accessToken, type, emailParam, hashString: window.location.hash });
     
-    if (accessToken && type === 'invite') {
+    // Accept invite if we have access_token, regardless of type
+    if (accessToken) {
       setInviteToken(accessToken);
       if (emailParam) {
         setEmail(emailParam);
       }
     } else {
-      // If no valid invite token, redirect to signup
+      // If no access token, redirect to signup
+      console.log('No access token found, redirecting to signup');
       navigate("/signup");
     }
   }, [navigate, searchParams]);
