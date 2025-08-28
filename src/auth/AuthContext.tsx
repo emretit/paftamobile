@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import { clearAuthTokens } from "@/lib/supabase-utils"
 import { User, Session } from '@supabase/supabase-js'
 
 interface AuthContextType {
@@ -100,27 +101,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut()
-      
-      // Always clear state regardless of error
+      await supabase.auth.signOut({ scope: 'global' })
+    } catch (error) {
+      console.warn('SignOut warning:', error)
+    } finally {
+      // Always clear local auth state and tokens
       setSession(null)
       setUser(null)
-      
-      // Only throw error if it's not a session-related error
-      if (error && !error.message?.includes('session_not_found') && !error.message?.includes('Session not found')) {
-        console.error('SignOut error:', error)
-        throw error
-      }
-    } catch (error: any) {
-      // Clear state even on error
-      setSession(null)
-      setUser(null)
-      
-      // Only throw if it's not a session-related error
-      if (!error.message?.includes('session_not_found') && !error.message?.includes('Session not found')) {
-        console.error('SignOut error:', error)
-        throw error
-      }
+      try { clearAuthTokens() } catch {}
     }
   }
 

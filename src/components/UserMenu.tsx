@@ -4,14 +4,12 @@ import UserMenuAvatar from "@/components/navbar/UserMenuAvatar";
 import UserMenuContent from "@/components/navbar/UserMenuContent";
 import LoginButton from "@/components/navbar/LoginButton";
 import { useAuth } from "@/auth/AuthContext";
+import { useLogout } from "@/components/navbar/useLogout";
 
 const UserMenu = () => {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading } = useAuth();
+  const { handleLogout } = useLogout();
   const userInitials = user?.email ? user.email.slice(0, 2).toUpperCase() : "";
-
-  const handleLogout = async () => {
-    await signOut();
-  };
 
   if (loading) {
     return <UserMenuAvatar user={null} loading={true} userInitials="" />;
