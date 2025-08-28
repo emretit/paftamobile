@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,57 +46,78 @@ serve(async (req) => {
       );
     }
 
-    // Supabase davet maili (şifre belirleme) gönder
-    const appUrl = Deno.env.get('APP_URL') || 'https://pafta.app';
-    const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
-      email,
-      {
-        data: {
-          invited_by_company_id: inviting_company_id,
-          company_name: companyData.name,
-        },
-        redirectTo: appUrl,
-      } as any
-    );
+    // Resend ile e-posta gönder
+    const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+    const appUrl = 'https://527a7790-65f5-4ba3-87eb-7299d2f3415a.sandbox.lovable.dev';
+    
+    // Kullanıcının zaten var olup olmadığını kontrol et
+    const { data: existingUser } = await supabase.auth.admin.getUserByEmail(email);
+    
+    if (existingUser?.user) {
+      // Mevcut kullanıcı için şifre sıfırlama maili gönder
+      const resetPasswordUrl = `${appUrl}/reset-password?email=${encodeURIComponent(email)}`;
+      
+      const emailResponse = await resend.emails.send({
+        from: 'Pafta <noreply@pafta.app>',
+        to: [email],
+        subject: `${companyData.name} şirketine davet edildiniz`,
+        html: `
+          <h1>Merhaba!</h1>
+          <p>${companyData.name} şirketine davet edildiniz.</p>
+          <p>Zaten bir hesabınız olduğu için aşağıdaki bağlantıya tıklayarak şifrenizi sıfırlayabilirsiniz:</p>
+          <a href="${resetPasswordUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Şifremi Sıfırla</a>
+          <p>Bu bağlantı 24 saat geçerlidir.</p>
+        `,
+      });
 
-    if (inviteError) {
-      // Kullanıcı zaten mevcutsa kurtarma maili gönder
-      const alreadyExists = String(inviteError.message || '').toLowerCase().includes('already')
-        || String(inviteError.name || '').toLowerCase().includes('exists');
-
-      if (alreadyExists) {
-        const { error: resendErr } = await (supabase as any).auth.resend({
-          type: 'recovery',
-          email,
-          options: { redirectTo: appUrl }
-        });
-        if (resendErr) {
-          console.error('Recovery maili gönderilemedi:', resendErr);
-          return new Response(
-            JSON.stringify({ error: 'Mevcut kullanıcı için mail gönderilemedi', details: resendErr.message }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
+      if (emailResponse.error) {
+        console.error('Resend e-posta hatası:', emailResponse.error);
         return new Response(
-          JSON.stringify({ success: true, message: `${email} adresine şifre sıfırlama maili gönderildi` }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ error: 'E-posta gönderilemedi' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      console.error('Davet gönderme hatası:', inviteError);
       return new Response(
-        JSON.stringify({ error: 'Davet gönderilemedi', details: inviteError.message }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          success: true, 
+          message: `${email} adresine şifre sıfırlama maili gönderildi`
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } else {
+      // Yeni kullanıcı için kayıt ol bağlantısı gönder
+      const signupUrl = `${appUrl}/signup?email=${encodeURIComponent(email)}&company_id=${inviting_company_id}&company_name=${encodeURIComponent(companyData.name)}`;
+      
+      const emailResponse = await resend.emails.send({
+        from: 'Pafta <noreply@pafta.app>',
+        to: [email],
+        subject: `${companyData.name} şirketine davet edildiniz`,
+        html: `
+          <h1>Merhaba!</h1>
+          <p>${companyData.name} şirketine davet edildiniz.</p>
+          <p>Hesabınızı oluşturmak için aşağıdaki bağlantıya tıklayın:</p>
+          <a href="${signupUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Hesap Oluştur</a>
+          <p>Bu bağlantı 7 gün geçerlidir.</p>
+        `,
+      });
+
+      if (emailResponse.error) {
+        console.error('Resend e-posta hatası:', emailResponse.error);
+        return new Response(
+          JSON.stringify({ error: 'E-posta gönderilemedi' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: `${email} adresine davet e-postası gönderildi`
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    // Davet başarıyla gönderildi
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: `${email} adresine davet e-postası gönderildi`
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
 
   } catch (error) {
     console.error('Davet hatası:', error);
