@@ -116,7 +116,7 @@ serve(async (req) => {
         type: 'invite',
         email,
         options: {
-          redirectTo: `${appUrl}/signup`,
+          redirectTo: `${appUrl}/invite-setup`,
           data: {
             invited_by_company_id: inviting_company_id,
             company_name: companyData.name

@@ -20,104 +20,17 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [isInviteFlow, setIsInviteFlow] = useState(false);
-  const [inviteToken, setInviteToken] = useState<string | null>(null);
 
   // Only redirect if user was already logged in before accessing signup page
   // Don't redirect during signup process
   const [skipRedirect, setSkipRedirect] = useState(false);
 
   useEffect(() => {
-    // Check for invite tokens in URL
-    const { accessToken, type } = parseAuthParamsFromUrl();
-    
-    if (accessToken && type === 'invite') {
-      setIsInviteFlow(true);
-      setInviteToken(accessToken);
-      
-      // Try to extract email from token or URL params
-      const urlParams = new URLSearchParams(window.location.search);
-      const emailParam = urlParams.get('email');
-      if (emailParam) {
-        setEmail(emailParam);
-      }
-    }
-
     if (user?.id && !skipRedirect) {
       navigate("/dashboard");
     }
   }, [user?.id, navigate, skipRedirect]);
 
-  const handleInvitePasswordSetup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    
-    if (!password || !fullName) {
-      setError("Şifre ve ad soyad gereklidir.");
-      setLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Şifre en az 6 karakter olmalıdır.");
-      setLoading(false);
-      return;
-    }
-    
-    try {
-      // Verify the invite token and set up the password
-      const { data, error } = await supabase.auth.verifyOtp({
-        token_hash: inviteToken!,
-        type: 'invite'
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // Update the user's password and profile
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: password,
-        data: {
-          full_name: fullName.trim()
-        }
-      });
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      toast({
-        title: "Hesap Kuruldu",
-        description: "Şifreniz başarıyla oluşturuldu. Şimdi giriş yapabilirsiniz.",
-      });
-
-      navigate("/dashboard");
-
-    } catch (error: any) {
-      console.error("Invite setup error:", error);
-      const msg = String(error?.message || "");
-      let errorMessage = "Şifre kurulumu sırasında bir hata oluştu.";
-
-      if (msg.includes('Token has expired')) {
-        errorMessage = "Davet bağlantısının süresi dolmuş. Yeni bir davet isteyin.";
-      } else if (msg.includes('Invalid token')) {
-        errorMessage = "Geçersiz davet bağlantısı.";
-      } else if (msg) {
-        errorMessage = msg;
-      }
-
-      setError(errorMessage);
-      toast({
-        variant: "destructive",
-        title: "Kurulum Hatası",
-        description: errorMessage,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,15 +137,15 @@ const SignUp = () => {
               </button>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-3">
-              {isInviteFlow ? "Şifrenizi Belirleyin" : "Hesap Oluşturun"}
+              Hesap Oluşturun
             </h1>
             <p className="text-lg text-gray-600">
-              {isInviteFlow ? "Davet edildikten sonra şifrenizi oluşturun." : "Şirket adı girerseniz otomatik olarak sahibi olursunuz."}
+              Şirket adı girerseniz otomatik olarak sahibi olursunuz.
             </p>
           </div>
 
           {/* Kayıt formu */}
-          <form onSubmit={isInviteFlow ? handleInvitePasswordSetup : handleSignUp} className="space-y-6">
+          <form onSubmit={handleSignUp} className="space-y-6">
             <div className="space-y-4">
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -246,41 +159,27 @@ const SignUp = () => {
                 />
               </div>
 
-              {!isInviteFlow && (
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    type="email"
-                    placeholder="E-posta adresiniz"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 pl-10 text-base border-gray-300 focus:border-primary focus:ring-primary"
-                    required
-                  />
-                </div>
-              )}
-
-              {isInviteFlow && email && (
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    type="email"
-                    value={email}
-                    className="h-12 pl-10 text-base border-gray-300 bg-gray-50"
-                    disabled
-                  />
-                </div>
-              )}
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  type="email"
+                  placeholder="E-posta adresiniz"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-12 pl-10 text-base border-gray-300 focus:border-primary focus:ring-primary"
+                  required
+                />
+              </div>
               
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder={isInviteFlow ? "Şifre (en az 6 karakter)" : "Şifre (en az 10 karakter)"}
+                  placeholder="Şifre (en az 10 karakter)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-12 pl-10 pr-12 text-base border-gray-300 focus:border-primary focus:ring-primary"
-                  minLength={isInviteFlow ? 6 : 10}
+                  minLength={10}
                   required
                 />
                 <button
@@ -292,33 +191,31 @@ const SignUp = () => {
                 </button>
               </div>
 
-              {!isInviteFlow && (
-                <div className="relative">
-                  <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    type="text"
-                    placeholder="Şirket Adı (isteğe bağlı)"
-                    value={orgName}
-                    onChange={(e) => setOrgName(e.target.value)}
-                    className="h-12 pl-10 text-base border-gray-300 focus:border-primary focus:ring-primary"
-                  />
-                </div>
-              )}
+              <div className="relative">
+                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Şirket Adı (isteğe bağlı)"
+                  value={orgName}
+                  onChange={(e) => setOrgName(e.target.value)}
+                  className="h-12 pl-10 text-base border-gray-300 focus:border-primary focus:ring-primary"
+                />
+              </div>
             </div>
             
             <Button 
               type="submit" 
               className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-              disabled={!password || !fullName || (!isInviteFlow && !email) || loading}
+              disabled={!password || !fullName || !email || loading}
             >
               {loading ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  {isInviteFlow ? "Şifre Oluşturuluyor..." : "Hesap Oluşturuluyor..."}
+                  Hesap Oluşturuluyor...
                 </div>
               ) : (
                 <div className="flex items-center">
-                  {isInviteFlow ? "Şifremi Oluştur" : "Hesap Oluştur"}
+                  Hesap Oluştur
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </div>
               )}
