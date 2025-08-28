@@ -81,6 +81,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             full_name: fullName,
             company_name: _companyName,
