@@ -62,6 +62,7 @@ serve(async (req) => {
           password,
           options: {
             data: { full_name, company_name },
+            redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.vercel.app') || 'http://localhost:3000'}/signin`
           },
         } as any);
 
