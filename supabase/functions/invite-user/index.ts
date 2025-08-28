@@ -45,51 +45,54 @@ serve(async (req) => {
       );
     }
 
-    // Kullanıcıyı oluştur (email_confirm = false, şifre belirleme için)
-    const { data: createdUser, error: createUserError } = await supabase.auth.admin.createUser({
+    // Supabase davet maili (şifre belirleme) gönder
+    const appUrl = Deno.env.get('APP_URL') || 'https://pafta.app';
+    const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
       email,
-      email_confirm: false,
-      user_metadata: { 
-        invited_by_company_id: inviting_company_id,
-        company_name: companyData.name
-      }
-    });
+      {
+        data: {
+          invited_by_company_id: inviting_company_id,
+          company_name: companyData.name,
+        },
+        redirectTo: appUrl,
+      } as any
+    );
 
-    if (createUserError) {
-      console.error('Kullanıcı oluşturma hatası:', createUserError);
+    if (inviteError) {
+      // Kullanıcı zaten mevcutsa kurtarma maili gönder
+      const alreadyExists = String(inviteError.message || '').toLowerCase().includes('already')
+        || String(inviteError.name || '').toLowerCase().includes('exists');
+
+      if (alreadyExists) {
+        const { error: resendErr } = await (supabase as any).auth.resend({
+          type: 'recovery',
+          email,
+          options: { redirectTo: appUrl }
+        });
+        if (resendErr) {
+          console.error('Recovery maili gönderilemedi:', resendErr);
+          return new Response(
+            JSON.stringify({ error: 'Mevcut kullanıcı için mail gönderilemedi', details: resendErr.message }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        return new Response(
+          JSON.stringify({ success: true, message: `${email} adresine şifre sıfırlama maili gönderildi` }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.error('Davet gönderme hatası:', inviteError);
       return new Response(
-        JSON.stringify({ error: 'Kullanıcı oluşturulamadı', details: createUserError.message }),
+        JSON.stringify({ error: 'Davet gönderilemedi', details: inviteError.message }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // Şifre belirleme linki gönder
-    const { error: resetError } = await supabase.auth.admin.generateLink({
-      type: 'recovery',
-      email,
-      options: {
-        redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('/v1', '')}/auth/v1/verify?type=recovery&redirect_to=${encodeURIComponent('https://vwhwufnckpqirxptwncw.supabase.co')}`
-      }
-    });
-
-    if (resetError) {
-      console.error('Şifre belirleme linki hatası:', resetError);
-      // Kullanıcıyı sil çünkü email gönderilemedi
-      await supabase.auth.admin.deleteUser(createdUser.user.id);
-      return new Response(
-        JSON.stringify({ error: 'Davet maili gönderilemedi' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
+    // Davet başarıyla gönderildi
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `${email} adresine şifre belirleme maili gönderildi`,
-        user: {
-          id: createdUser?.user?.id,
-          email: createdUser?.user?.email
-        }
+        message: `${email} adresine davet e-postası gönderildi`
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

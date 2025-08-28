@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -63,6 +64,9 @@ export const InviteUserDialog = () => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Şirkete Kullanıcı Davet Et</DialogTitle>
+          <DialogDescription>
+            Davet edilen kullanıcıya Supabase üzerinden şifre belirleme e-postası gönderilir.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div>
