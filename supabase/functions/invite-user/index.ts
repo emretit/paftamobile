@@ -111,9 +111,9 @@ serve(async (req) => {
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else {
-      // Yeni kullanıcı için signup linki oluştur ve gönder
+      // Yeni kullanıcı için davet (invite) linki oluştur ve gönder
       const { data: signupData, error: signupError } = await supabase.auth.admin.generateLink({
-        type: 'signup',
+        type: 'invite',
         email,
         options: {
           redirectTo: `${appUrl}/signup`,
