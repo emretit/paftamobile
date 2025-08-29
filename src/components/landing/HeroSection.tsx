@@ -15,11 +15,11 @@ const HeroSection = () => {
           />
         </div>
         <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl md:text-6xl font-sans">
-          <span className="block">CRM & ERP Çözümünüzle</span>
-          <span className="block text-primary">İşinizi Daha Verimli Yönetin</span>
+          <span className="block">Gelişmiş İş Yönetim Sistemi</span>
+          <span className="block text-primary">İşletmenizi Dijital Çağa Taşıyın</span>
         </h1>
         <p className="mt-6 max-w-lg mx-auto text-lg text-muted-foreground md:text-xl md:max-w-3xl">
-          Tüm iş süreçlerinizi tek bir platformda yönetin ve büyümeye odaklanın.
+          CRM, ERP ve proje yönetimini tek platformda birleştiren kapsamlı iş yönetim çözümü.
         </p>
         <div className="mt-10 flex justify-center">
           <Link to="/signup">
