@@ -1,22 +1,44 @@
 
 import { Card } from "@/components/ui/card";
-import { formatPrice, calculateTax, calculateDiscount } from "../../utils/priceUtils";
+import { formatPrice, calculateTax } from "../../utils/priceUtils";
 
 interface PricePreviewCardProps {
   price: number;
-  discountPrice: number | null;
   taxRate: number;
   currency: string;
-  purchasePrice?: number | undefined;  // Add optional purchase price
+  priceIncludesVat?: boolean;
 }
 
 const PricePreviewCard = ({ 
   price, 
-  discountPrice, 
   taxRate, 
   currency,
-  purchasePrice 
+  priceIncludesVat = false
 }: PricePreviewCardProps) => {
+  // KDV dahil/hariç hesaplama mantığı
+  const calculatePrices = () => {
+    if (priceIncludesVat) {
+      // Girilen fiyat KDV dahil ise, KDV hariç fiyatı hesapla
+      const priceExcludingVat = price / (1 + taxRate / 100);
+      const vatAmount = price - priceExcludingVat;
+      return {
+        priceExcludingVat,
+        vatAmount,
+        priceIncludingVat: price
+      };
+    } else {
+      // Girilen fiyat KDV hariç ise, KDV dahil fiyatı hesapla
+      const vatAmount = calculateTax(price, taxRate);
+      return {
+        priceExcludingVat: price,
+        vatAmount,
+        priceIncludingVat: price + vatAmount
+      };
+    }
+  };
+
+  const { priceExcludingVat, vatAmount, priceIncludingVat } = calculatePrices();
+
   return (
     <Card className="p-6 bg-muted/50 flex flex-col justify-center space-y-6">
       <h3 className="text-lg font-semibold text-center mb-2">
@@ -24,49 +46,28 @@ const PricePreviewCard = ({
       </h3>
       
       <div className="space-y-4">
-        {purchasePrice !== undefined && (
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Alış Fiyatı:</span>
-            <span className="font-medium">{formatPrice(purchasePrice, currency)}</span>
-          </div>
-        )}
-        
         <div className="flex justify-between">
-          <span className="text-muted-foreground">Satış Fiyatı:</span>
-          <span className="font-medium">{formatPrice(price, currency)}</span>
+          <span className="text-muted-foreground">
+            {priceIncludesVat ? "KDV Hariç Fiyat:" : "Satış Fiyatı:"}
+          </span>
+          <span className="font-medium">
+            {formatPrice(priceExcludingVat, currency)}
+          </span>
         </div>
-        
-        {discountPrice !== null && (
-          <>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">İndirimli Fiyat:</span>
-              <span className="font-medium text-green-600">
-                {formatPrice(discountPrice, currency)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">İndirim Oranı:</span>
-              <span className="font-medium">
-                %{Math.round(calculateDiscount(price, discountPrice))}
-              </span>
-            </div>
-          </>
-        )}
         
         <div className="flex justify-between">
           <span className="text-muted-foreground">KDV Tutarı:</span>
           <span className="font-medium">
-            {formatPrice(calculateTax(discountPrice || price, taxRate), currency)}
+            {formatPrice(vatAmount, currency)}
           </span>
         </div>
         
         <div className="flex justify-between pt-2 border-t border-border">
-          <span className="font-medium">KDV Dahil Fiyat:</span>
+          <span className="font-medium">
+            {priceIncludesVat ? "Satış Fiyatı:" : "KDV Dahil Fiyat:"}
+          </span>
           <span className="font-bold">
-            {formatPrice(
-              (discountPrice || price) + calculateTax(discountPrice || price, taxRate),
-              currency
-            )}
+            {formatPrice(priceIncludingVat, currency)}
           </span>
         </div>
       </div>

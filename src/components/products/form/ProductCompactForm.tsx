@@ -38,10 +38,10 @@ const ProductCompactForm = ({ form }: ProductCompactFormProps) => {
   // Watch form values for real-time updates
   const watchedValues = useWatch({
     control: form.control,
-    name: ["stock_quantity", "stock_threshold", "min_stock_level", "price", "discount_price", "tax_rate", "currency", "purchase_price"]
+    name: ["stock_quantity", "stock_threshold", "min_stock_level", "price", "tax_rate", "currency", "purchase_price", "price_includes_vat"]
   });
 
-  const [stockQuantity, stockThreshold, minStockLevel, price, discountPrice, taxRate, currency, purchasePrice] = watchedValues;
+  const [stockQuantity, stockThreshold, minStockLevel, price, taxRate, currency, purchasePrice, priceIncludesVat] = watchedValues;
 
   // Fetch categories
   const { data: categories } = useQuery({
@@ -343,22 +343,19 @@ const ProductCompactForm = ({ form }: ProductCompactFormProps) => {
                   <TaxRateSelect form={form} />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <PriceInput 
                     form={form} 
                     name="price" 
                     label="Satış Fiyatı" 
                     isRequired
-                  />
-                  <PriceInput 
-                    form={form} 
-                    name="discount_price" 
-                    label="İndirimli Fiyat" 
+                    showVatToggle={true}
                   />
                   <PriceInput 
                     form={form} 
                     name="purchase_price" 
                     label="Alış Fiyatı" 
+                    showVatToggle={true}
                   />
                 </div>
               </div>
@@ -366,10 +363,9 @@ const ProductCompactForm = ({ form }: ProductCompactFormProps) => {
               <div className="lg:col-span-1">
                 <PricePreviewCard 
                   price={price || 0}
-                  discountPrice={discountPrice}
                   taxRate={taxRate || 18}
                   currency={currency || "TRY"}
-                  purchasePrice={purchasePrice}
+                  priceIncludesVat={priceIncludesVat || false}
                 />
               </div>
             </div>

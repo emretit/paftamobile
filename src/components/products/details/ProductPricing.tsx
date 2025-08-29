@@ -20,14 +20,12 @@ import { toast } from "sonner";
 
 interface ProductPricingProps {
   price: number;
-  discountPrice: number | null;
   currency: string;
   taxRate: number;
   purchasePrice?: number | null;
   exchangeRate?: number;
   onUpdate: (updates: {
     price?: number;
-    discount_price?: number | null;
     tax_rate?: number;
     currency?: string;
     exchange_rate?: number;
@@ -37,19 +35,17 @@ interface ProductPricingProps {
 
 const ProductPricing = ({ 
   price, 
-  discountPrice, 
   currency,
   taxRate,
   purchasePrice,
   exchangeRate,
-  onUpdate
+  onUpdate 
 }: ProductPricingProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [editValues, setEditValues] = useState({
     price,
-    discountPrice,
     taxRate,
     currency,
     purchasePrice: purchasePrice || null,
@@ -61,14 +57,13 @@ const ProductPricing = ({
     if (!isEditing) {
       setEditValues({
         price,
-        discountPrice,
         taxRate,
         currency,
         purchasePrice: purchasePrice || null,
         exchangeRate: exchangeRate
       });
     }
-  }, [price, discountPrice, taxRate, currency, purchasePrice, exchangeRate, isEditing]);
+  }, [price, taxRate, currency, purchasePrice, exchangeRate, isEditing]);
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat('tr-TR', { 
@@ -77,10 +72,7 @@ const ProductPricing = ({
     }).format(amount);
   };
 
-  const calculateDiscount = () => {
-    if (!discountPrice || price === 0) return 0;
-    return ((price - discountPrice) / price) * 100;
-  };
+
 
   const handleCurrencyChange = (newCurrency: string) => {
     setEditValues(prev => {
@@ -118,7 +110,6 @@ const ProductPricing = ({
     // If currency changed, calculate and include the exchange rate
     const updateData: any = {
       price: Number(editValues.price),
-      discount_price: editValues.discountPrice ? Number(editValues.discountPrice) : null,
       tax_rate: Number(editValues.taxRate),
       currency: editValues.currency,
       purchase_price: editValues.purchasePrice ? Number(editValues.purchasePrice) : null
@@ -189,31 +180,7 @@ const ProductPricing = ({
             )}
           </div>
 
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-500">İndirimli Fiyat</span>
-            {isEditing ? (
-              <Input
-                type="number"
-                value={editValues.discountPrice || ''}
-                onChange={(e) => setEditValues(prev => ({
-                  ...prev,
-                  discountPrice: e.target.value ? e.target.valueAsNumber : null
-                }))}
-                className="w-32 text-right"
-              />
-            ) : discountPrice ? (
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-medium text-green-600">
-                  {formatPrice(discountPrice)}
-                </span>
-                <Badge variant="secondary">
-                  %{Math.round(calculateDiscount())} İndirim
-                </Badge>
-              </div>
-            ) : (
-              <span>-</span>
-            )}
-          </div>
+
 
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-500">Alış Fiyatı</span>
@@ -305,7 +272,6 @@ const ProductPricing = ({
                 onClick={() => {
                   setEditValues({ 
                     price, 
-                    discountPrice, 
                     taxRate, 
                     currency,
                     purchasePrice: purchasePrice || null,

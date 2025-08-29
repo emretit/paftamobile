@@ -24,6 +24,8 @@ export const productSchema = z.object({
   category_id: z.string().uuid("Geçersiz kategori ID").nullable().optional(),
   supplier_id: z.string().uuid("Geçersiz tedarikçi ID").nullable().optional(),
   purchase_price: z.coerce.number().min(0, "Alış fiyatı 0'dan küçük olamaz").nullable().optional(),
+  price_includes_vat: z.boolean().optional().default(false),
+  purchase_price_includes_vat: z.boolean().optional().default(false),
 }).refine(data => {
   // Custom validation: discount_price should be less than price
   if (data.discount_price && data.price && data.discount_price >= data.price) {

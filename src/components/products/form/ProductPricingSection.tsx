@@ -17,11 +17,13 @@ const ProductPricingSection = ({ form }: ProductPricingSectionProps) => {
     defaultValue: 0,
   });
 
-  const discountPrice = useWatch({
+  const priceIncludesVat = useWatch({
     control: form.control,
-    name: "discount_price",
-    defaultValue: null,
+    name: "price_includes_vat",
+    defaultValue: false,
   });
+
+
 
   const taxRate = useWatch({
     control: form.control,
@@ -52,20 +54,17 @@ const ProductPricingSection = ({ form }: ProductPricingSectionProps) => {
             name="price" 
             label="Satış Fiyatı" 
             isRequired={true} 
+            showVatToggle={true}
           />
 
-          <PriceInput 
-            form={form} 
-            name="discount_price" 
-            label="İndirimli Fiyat" 
-            description="İndirim yoksa boş bırakabilirsiniz" 
-          />
+
           
           <PriceInput 
             form={form} 
             name="purchase_price" 
             label="Alış Fiyatı" 
             description="Ürünün alış fiyatı (isteğe bağlı)" 
+            showVatToggle={true}
           />
 
           <TaxRateSelect form={form} />
@@ -73,10 +72,9 @@ const ProductPricingSection = ({ form }: ProductPricingSectionProps) => {
 
         <PricePreviewCard 
           price={price} 
-          discountPrice={discountPrice} 
           taxRate={taxRate} 
           currency={currency}
-          purchasePrice={purchasePrice}
+          priceIncludesVat={priceIncludesVat}
         />
       </div>
     </div>
