@@ -29,7 +29,8 @@ const ProductPricingSection = ({ form }: ProductPricingSectionProps) => {
     control: form.control,
     name: "tax_rate",
 
-    defaultValue: 20,
+
+ +    defaultValue: 20,
   });
 
   const currency = useWatch({

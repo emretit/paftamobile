@@ -29,6 +29,7 @@ import SupplierSelect from "./supplier/SupplierSelect";
 import BarcodeInput from "./supplier/BarcodeInput";
 import ProductStatusSwitch from "./supplier/ProductStatusSwitch";
 import ImageUploader from "./supplier/ImageUploader";
+import CategorySelect from "./CategorySelect";
 
 interface ProductCompactFormProps {
   form: UseFormReturn<ProductFormSchema>;
@@ -43,19 +44,7 @@ const ProductCompactForm = ({ form }: ProductCompactFormProps) => {
 
   const [stockQuantity, stockThreshold, minStockLevel, price, taxRate, currency, purchasePrice, priceIncludesVat] = watchedValues;
 
-  // Fetch categories
-  const { data: categories } = useQuery({
-    queryKey: ["productCategories"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("product_categories")
-        .select("*")
-        .order("name");
-      
-      if (error) throw error;
-      return data || [];
-    },
-  });
+
 
   // Stock status calculation
   const getStockStatus = () => {
@@ -126,34 +115,7 @@ const ProductCompactForm = ({ form }: ProductCompactFormProps) => {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="category_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Kategori</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value || ""}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Kategori seçiniz" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">Kategorisiz</SelectItem>
-                        {categories?.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <CategorySelect form={form} />
             </div>
 
             <FormField
