@@ -71,8 +71,8 @@ const ProductFormWrapper = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="w-full">
+      <div className="w-full">
         <ProductFormHeader 
           isEditing={isEditing}
           isSubmitting={isSubmitting}
@@ -82,13 +82,13 @@ const ProductFormWrapper = () => {
           onDuplicate={handleDuplicate}
         />
 
-        <Card className="p-6">
+        <div className="p-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit((values) => handleSubmit(values, false))}>
               <ProductCompactForm form={form} />
             </form>
           </Form>
-        </Card>
+        </div>
       </div>
     </div>
   );

@@ -85,7 +85,7 @@ const ProductCompactForm = ({ form }: ProductCompactFormProps) => {
   const stockStatus = getStockStatus();
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 w-full">
       {/* Left Column */}
       <div className="space-y-6">
         {/* Basic Information Card */}
