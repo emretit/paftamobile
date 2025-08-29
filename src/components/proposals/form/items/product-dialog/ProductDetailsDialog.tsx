@@ -59,14 +59,14 @@ const ProductDetailsDialog: React.FC<ProductDetailsDialogProps> = ({
   const [originalCurrency, setOriginalCurrency] = React.useState("");
   const [currentCurrency, setCurrentCurrency] = React.useState(selectedCurrency);
   const [calculatedTotal, setCalculatedTotal] = React.useState(0);
-  const [taxRate, setTaxRate] = React.useState(18); // Default tax rate
+  const [taxRate, setTaxRate] = React.useState(20); // Default tax rate
   
   // Use the central exchange rates from the dashboard
   const { exchangeRates, loading: ratesLoading } = useExchangeRates();
 
   useEffect(() => {
     if (selectedProduct) {
-      setTaxRate(selectedProduct.tax_rate || 18);
+      setTaxRate(selectedProduct.tax_rate || 20);
     }
   }, [selectedProduct]);
 

@@ -255,7 +255,7 @@ export const STANDARD_FIELD_MAPPING: Record<keyof StandardProposalFields, {
           item.quantity?.toString() || '1',
           item.unit || 'adet',
           `${(item.unit_price || 0).toLocaleString('tr-TR')} ₺`,
-          `%${item.tax_rate || 18}`,
+          `%${item.tax_rate || 20}`,
           `${(item.total_price || 0).toLocaleString('tr-TR')} ₺`
         ]);
       });

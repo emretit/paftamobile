@@ -29,7 +29,7 @@ const TaxRateSelector: React.FC<TaxRateSelectorProps> = ({
           <SelectValue placeholder="KDV Oranı" />
         </SelectTrigger>
         <SelectContent position="popper" className="bg-white z-[100]">
-          {[0, 10, 18, 20].map((rate) => (
+          {[20, 18, 10, 0].map((rate) => (
             <SelectItem key={rate} value={`${rate}`}>
               {rate}%
             </SelectItem>

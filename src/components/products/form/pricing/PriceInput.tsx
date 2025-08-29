@@ -31,13 +31,13 @@ const PriceInput = ({ form, name, label, description, isRequired = false, showVa
   const vatToggleFieldName = getVatToggleFieldName();
 
   return (
-    <div className="space-y-3">
-      <FormField
-        control={form.control}
-        name={name}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{label}{isRequired && " *"}</FormLabel>
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}{isRequired && " *"}</FormLabel>
+          <div className="space-y-3">
             <FormControl>
               <Input 
                 type="number" 
@@ -54,37 +54,32 @@ const PriceInput = ({ form, name, label, description, isRequired = false, showVa
                 }}
               />
             </FormControl>
-            {description && <FormDescription>{description}</FormDescription>}
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
-      {showVatToggle && vatToggleFieldName && (
-        <FormField
-          control={form.control}
-          name={vatToggleFieldName as keyof ProductFormSchema}
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-              <div className="space-y-0.5">
-                <FormLabel className="text-sm font-medium">
-                  KDV Dahil Mi?
-                </FormLabel>
-                <FormDescription className="text-xs">
-                  Bu fiyat KDV dahil mi hariç mi?
-                </FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value || false}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+            
+            {showVatToggle && vatToggleFieldName && (
+              <FormField
+                control={form.control}
+                name={vatToggleFieldName as keyof ProductFormSchema}
+                render={({ field: toggleField }) => (
+                  <div className="flex flex-row items-center justify-between rounded-lg border p-3 bg-gray-50">
+                    <FormLabel className="text-sm font-medium">
+                      KDV Dahil Mi?
+                    </FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={toggleField.value || false}
+                        onCheckedChange={toggleField.onChange}
+                      />
+                    </FormControl>
+                  </div>
+                )}
+              />
+            )}
+          </div>
+          {description && <FormDescription>{description}</FormDescription>}
+          <FormMessage />
+        </FormItem>
       )}
-    </div>
+    />
   );
 };
 

@@ -310,11 +310,11 @@ const ProductDetailsModal = ({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0">KDV %0</SelectItem>
-                      <SelectItem value="1">KDV %1</SelectItem>
-                      <SelectItem value="8">KDV %8</SelectItem>
-                      <SelectItem value="18">KDV %18</SelectItem>
                       <SelectItem value="20">KDV %20</SelectItem>
+                      <SelectItem value="18">KDV %18</SelectItem>
+                      <SelectItem value="8">KDV %8</SelectItem>
+                      <SelectItem value="1">KDV %1</SelectItem>
+                      <SelectItem value="0">KDV %0</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

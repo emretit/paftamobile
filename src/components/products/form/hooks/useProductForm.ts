@@ -25,7 +25,7 @@ export const useProductForm = () => {
       stock_quantity: 0,
       min_stock_level: 0,
       stock_threshold: 0,
-      tax_rate: 18,
+      tax_rate: 20,
       unit: "piece",
       is_active: true,
       currency: "TRY",

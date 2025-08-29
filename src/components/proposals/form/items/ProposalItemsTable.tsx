@@ -244,7 +244,7 @@ const ProposalItemsTable: React.FC<ProposalItemsTableProps> = ({
                   
                   <TableCell className="py-3 px-4">
                     <Select
-                      value={String(item.tax_rate || 18)}
+                      value={String(item.tax_rate || 20)}
                       onValueChange={(value) => handleItemChange(index, "tax_rate", Number(value))}
                     >
                       <SelectTrigger className="h-9 w-full">

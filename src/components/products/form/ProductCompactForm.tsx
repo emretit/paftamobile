@@ -363,7 +363,7 @@ const ProductCompactForm = ({ form }: ProductCompactFormProps) => {
               <div className="lg:col-span-1">
                 <PricePreviewCard 
                   price={price || 0}
-                  taxRate={taxRate || 18}
+                  taxRate={taxRate || 20}
                   currency={currency || "TRY"}
                   priceIncludesVat={priceIncludesVat || false}
                 />
