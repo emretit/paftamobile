@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { useProductForm } from "./hooks/useProductForm";
 import { useProductFormActions } from "./hooks/useProductFormActions";
 import ProductFormHeader from "./ProductFormHeader";
-import ProductFormTabs from "./ProductFormTabs";
+import ProductCompactForm from "./ProductCompactForm";
+import { Form } from "@/components/ui/form";
 import { useEffect } from "react";
 import { showError, showWarning } from "@/utils/toastUtils";
 
@@ -82,10 +83,11 @@ const ProductFormWrapper = () => {
         />
 
         <Card className="p-6">
-          <ProductFormTabs 
-            form={form} 
-            onSubmit={handleSubmit} 
-          />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit((values) => handleSubmit(values, false))}>
+              <ProductCompactForm form={form} />
+            </form>
+          </Form>
         </Card>
       </div>
     </div>
