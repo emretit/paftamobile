@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { mockCrmService } from "@/services/mockCrm";
 
 interface OpportunityCount {
   status: string;
@@ -18,21 +18,21 @@ interface OpportunityStatusCount {
 
 const statusLabels: Record<string, string> = {
   new: "Yeni",
-  first_contact: "İlk Görüşme",
-  site_visit: "Ziyaret Yapıldı",
-  preparing_proposal: "Teklif Hazırlanıyor",
-  proposal_sent: "Teklif Gönderildi",
-  accepted: "Kazanıldı",
+  meeting_visit: "Görüşme ve Ziyaret",
+  proposal: "Teklif",
+  qualified: "Nitelikli",
+  negotiation: "Müzakere",
+  won: "Kazanıldı",
   lost: "Kaybedildi"
 };
 
 const statusColors: Record<string, string> = {
   new: "bg-blue-500",
-  first_contact: "bg-purple-500",
-  site_visit: "bg-yellow-500",
-  preparing_proposal: "bg-orange-500",
-  proposal_sent: "bg-indigo-500",
-  accepted: "bg-green-500",
+  meeting_visit: "bg-purple-500",
+  proposal: "bg-orange-500",
+  qualified: "bg-yellow-500",
+  negotiation: "bg-indigo-500",
+  won: "bg-green-500",
   lost: "bg-red-500"
 };
 
@@ -47,7 +47,12 @@ const OpportunitiesSummary = () => {
         setLoading(true);
         
         // Get all opportunities
-        const { data: opportunities } = await mockCrmService.getOpportunities();
+        const { data: opportunities, error } = await supabase
+          .from('opportunities')
+          .select('status');
+        
+        if (error) throw error;
+        
         const totalCount = opportunities?.length || 0;
         
         if (opportunities) {
