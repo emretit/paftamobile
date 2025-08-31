@@ -63,11 +63,11 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                 </div>
                 <Button 
                   size="sm" 
-                  variant="ghost"
-                  className="w-8 h-8 p-0 rounded-full hover:bg-muted"
+                  className="w-auto h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
                   onClick={() => setIsNewActivityDialogOpen(true)}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-4 w-4 mr-1" />
+                  <span className="text-xs font-medium">Yeni</span>
                 </Button>
               </div>
             </CardHeader>
@@ -91,11 +91,11 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                 </div>
                 <Button 
                   size="sm" 
-                  variant="ghost"
-                  className="w-8 h-8 p-0 rounded-full hover:bg-muted"
+                  className="w-auto h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
                   onClick={() => navigate("/opportunities")}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-4 w-4 mr-1" />
+                  <span className="text-xs font-medium">Yeni</span>
                 </Button>
               </div>
             </CardHeader>
@@ -119,11 +119,11 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                 </div>
                 <Button 
                   size="sm" 
-                  variant="ghost"
-                  className="w-8 h-8 p-0 rounded-full hover:bg-muted"
+                  className="w-auto h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
                   onClick={() => navigate("/proposals")}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-4 w-4 mr-1" />
+                  <span className="text-xs font-medium">Yeni</span>
                 </Button>
               </div>
             </CardHeader>
@@ -147,11 +147,11 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                 </div>
                 <Button 
                   size="sm" 
-                  variant="ghost"
-                  className="w-8 h-8 p-0 rounded-full hover:bg-muted"
+                  className="w-auto h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
                   onClick={() => navigate("/orders")}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-4 w-4 mr-1" />
+                  <span className="text-xs font-medium">Yeni</span>
                 </Button>
               </div>
             </CardHeader>
