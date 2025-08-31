@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
+import { BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -85,10 +86,13 @@ const OpportunitiesSummary = () => {
   
   if (loading) {
     return (
-      <div className="space-y-3 py-6">
-        <div className="h-6 bg-gray-200 animate-pulse rounded-md"></div>
-        <div className="h-20 bg-gray-200 animate-pulse rounded-md"></div>
-        <div className="h-6 bg-gray-200 animate-pulse rounded-md"></div>
+      <div className="space-y-4 py-6">
+        <div className="h-8 bg-gradient-to-r from-emerald-100 to-emerald-50 animate-pulse rounded-lg"></div>
+        <div className="space-y-3">
+          <div className="h-6 bg-gradient-to-r from-muted to-muted/50 animate-pulse rounded-md"></div>
+          <div className="h-4 bg-gradient-to-r from-muted to-muted/50 animate-pulse rounded-md"></div>
+          <div className="h-6 bg-gradient-to-r from-muted to-muted/50 animate-pulse rounded-md"></div>
+        </div>
       </div>
     );
   }
@@ -96,31 +100,36 @@ const OpportunitiesSummary = () => {
   // If no opportunities exist yet
   if (totalOpportunities === 0) {
     return (
-      <div className="text-center py-8">
+      <div className="text-center py-8 bg-gradient-to-br from-emerald-50/30 to-emerald-100/20 rounded-lg border border-emerald-200/30">
+        <BarChart3 className="h-12 w-12 text-emerald-400 mx-auto mb-3" />
         <p className="text-muted-foreground font-medium">Henüz fırsat bulunmuyor</p>
-        <p className="text-sm mt-2 text-gray-500">Fırsatlar sayfasından yeni fırsat ekleyebilirsiniz</p>
+        <p className="text-sm mt-2 text-emerald-600/70">İlk fırsatınızı oluşturun</p>
       </div>
     );
   }
   
   return (
-    <div className="space-y-5">
-      <div className="flex justify-between items-center bg-gray-50 p-3 rounded-md">
-        <span className="text-lg font-semibold">{totalOpportunities}</span>
-        <span className="text-sm text-muted-foreground">Toplam Fırsat</span>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center bg-gradient-to-r from-emerald-50 to-emerald-100/50 p-4 rounded-lg border border-emerald-200/50 shadow-sm">
+        <span className="text-2xl font-bold text-emerald-800">{totalOpportunities}</span>
+        <span className="text-sm font-medium text-emerald-600">Toplam Fırsat</span>
       </div>
       
       <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-foreground flex items-center">
+          <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
+          Durum Dağılımı
+        </h4>
         {opportunityStats.map((stat) => (
-          <div key={stat.status} className="space-y-1.5">
-            <div className="flex justify-between text-sm">
+          <div key={stat.status} className="space-y-2">
+            <div className="flex justify-between text-sm p-2 bg-gradient-to-r from-emerald-50/50 to-emerald-100/30 rounded-lg border border-emerald-200/30">
               <span className="font-medium">{stat.label}</span>
-              <span className="font-semibold">{stat.count}</span>
+              <span className="font-bold text-emerald-700">{stat.count}</span>
             </div>
             <Progress 
               value={(stat.count / totalOpportunities) * 100} 
-              className="h-2 w-full"
-              indicatorClassName={stat.color}
+              className="h-3 w-full bg-emerald-100/50 rounded-full"
+              indicatorClassName={`${stat.color} rounded-full transition-all duration-500`}
             />
           </div>
         ))}

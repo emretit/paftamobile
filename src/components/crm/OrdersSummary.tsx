@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingBag, Package, Clock, CheckCircle } from "lucide-react";
+import { ShoppingBag, Package, Clock, CheckCircle, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -82,10 +82,13 @@ const OrdersSummary = () => {
 
   if (loading) {
     return (
-      <div className="space-y-3 py-6">
-        <div className="h-6 bg-gray-200 animate-pulse rounded-md"></div>
-        <div className="h-20 bg-gray-200 animate-pulse rounded-md"></div>
-        <div className="h-6 bg-gray-200 animate-pulse rounded-md"></div>
+      <div className="space-y-4 py-6">
+        <div className="h-8 bg-gradient-to-r from-orange-100 to-orange-50 animate-pulse rounded-lg"></div>
+        <div className="space-y-3">
+          <div className="h-6 bg-gradient-to-r from-muted to-muted/50 animate-pulse rounded-md"></div>
+          <div className="h-4 bg-gradient-to-r from-muted to-muted/50 animate-pulse rounded-md"></div>
+          <div className="h-6 bg-gradient-to-r from-muted to-muted/50 animate-pulse rounded-md"></div>
+        </div>
       </div>
     );
   }
