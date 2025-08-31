@@ -49,7 +49,7 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
       <div className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Activities Column */}
-          <Card className="bg-gradient-to-br from-blue-50/50 via-card to-blue-50/30 border-blue-200/50 shadow-lg hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm">
+          <Card className="crm-activities-gradient shadow-lg hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-xl font-bold flex items-center">
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
@@ -75,7 +75,7 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
           </Card>
 
           {/* Opportunities Column */}
-          <Card className="bg-gradient-to-br from-emerald-50/50 via-card to-emerald-50/30 border-emerald-200/50 shadow-lg hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm">
+          <Card className="crm-opportunities-gradient shadow-lg hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-xl font-bold flex items-center">
                 <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center mr-3">
@@ -101,7 +101,7 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
           </Card>
 
           {/* Proposals Column */}
-          <Card className="bg-gradient-to-br from-purple-50/50 via-card to-purple-50/30 border-purple-200/50 shadow-lg hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm">
+          <Card className="crm-proposals-gradient shadow-lg hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-xl font-bold flex items-center">
                 <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
@@ -127,7 +127,7 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
           </Card>
 
           {/* Orders Column */}
-          <Card className="bg-gradient-to-br from-orange-50/50 via-card to-orange-50/30 border-orange-200/50 shadow-lg hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm">
+          <Card className="crm-orders-gradient shadow-lg hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-xl font-bold flex items-center">
                 <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-3">

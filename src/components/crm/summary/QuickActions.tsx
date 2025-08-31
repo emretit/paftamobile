@@ -28,36 +28,27 @@ const QuickActions = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Button 
             size="lg" 
-            className="w-full h-20 text-lg bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg hover:shadow-xl hover:shadow-emerald-500/25 transition-all duration-300 hover:scale-[1.02]"
+            className="w-full h-20 text-lg bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg hover:shadow-xl hover:shadow-emerald-500/25 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center"
             onClick={() => navigate("/opportunities")}
           >
             <BarChart3 className="h-6 w-6 mr-3" />
-            <div className="flex flex-col items-start">
-              <span className="font-semibold">Yeni Fırsat</span>
-              <span className="text-sm opacity-90">Oluştur</span>
-            </div>
+            <span className="font-semibold">Yeni Fırsat Oluştur</span>
           </Button>
           <Button 
             size="lg" 
-            className="w-full h-20 text-lg bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl hover:shadow-purple-500/25 transition-all duration-300 hover:scale-[1.02]"
+            className="w-full h-20 text-lg bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl hover:shadow-purple-500/25 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center"
             onClick={() => navigate("/proposals")}
           >
             <FileText className="h-6 w-6 mr-3" />
-            <div className="flex flex-col items-start">
-              <span className="font-semibold">Yeni Teklif</span>
-              <span className="text-sm opacity-90">Oluştur</span>
-            </div>
+            <span className="font-semibold">Yeni Teklif Oluştur</span>
           </Button>
           <Button 
             size="lg" 
-            className="w-full h-20 text-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 hover:scale-[1.02]"
+            className="w-full h-20 text-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center"
             onClick={() => setIsNewActivityDialogOpen(true)}
           >
             <Calendar className="h-6 w-6 mr-3" />
-            <div className="flex flex-col items-start">
-              <span className="font-semibold">Yeni Aktivite</span>
-              <span className="text-sm opacity-90">Oluştur</span>
-            </div>
+            <span className="font-semibold">Yeni Aktivite Oluştur</span>
           </Button>
         </div>
       </CardContent>
