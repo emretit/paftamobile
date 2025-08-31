@@ -50,146 +50,110 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
 
       <div className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Activities Column */}
-          <Card className="crm-activities-gradient shadow-lg hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-xl font-bold flex items-center">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                  <Calendar className="w-5 h-5 text-blue-600" />
+          {/* Activities Card */}
+          <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-blue-50/80 via-blue-100/50 to-blue-200/30 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <Calendar className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg font-bold text-blue-900">Aktiviteler</CardTitle>
+                    <p className="text-sm text-blue-700/70 font-medium">Günlük işlemler</p>
+                  </div>
                 </div>
-                <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                  Aktiviteler
-                </span>
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-sm flex items-center hover:bg-blue-100/50"
-                  onClick={() => navigate("/activities")}
-                >
-                  Tümünü Gör
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
                 <Button 
                   size="sm" 
-                  className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1"
+                  className="w-10 h-10 p-0 rounded-full bg-blue-500/20 hover:bg-blue-500 text-blue-700 hover:text-white border-0 shadow-md transition-all duration-200"
                   onClick={() => setIsNewActivityDialogOpen(true)}
                 >
                   <Plus className="h-4 w-4" />
-                  Yeni
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               <ActivitiesSummary />
             </CardContent>
           </Card>
 
-          {/* Opportunities Column */}
-          <Card className="crm-opportunities-gradient shadow-lg hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-xl font-bold flex items-center">
-                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center mr-3">
-                  <BarChart3 className="w-5 h-5 text-emerald-600" />
+          {/* Opportunities Card */}
+          <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-emerald-50/80 via-emerald-100/50 to-emerald-200/30 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <BarChart3 className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg font-bold text-emerald-900">Fırsatlar</CardTitle>
+                    <p className="text-sm text-emerald-700/70 font-medium">Satış fırsatları</p>
+                  </div>
                 </div>
-                <span className="bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent">
-                  Fırsatlar
-                </span>
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-sm flex items-center hover:bg-emerald-100/50"
-                  onClick={() => navigate("/opportunities")}
-                >
-                  Tümünü Gör
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
                 <Button 
                   size="sm" 
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white flex items-center gap-1"
+                  className="w-10 h-10 p-0 rounded-full bg-emerald-500/20 hover:bg-emerald-500 text-emerald-700 hover:text-white border-0 shadow-md transition-all duration-200"
                   onClick={() => navigate("/opportunities")}
                 >
                   <Plus className="h-4 w-4" />
-                  Yeni
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               <OpportunitiesSummary />
             </CardContent>
           </Card>
 
-          {/* Proposals Column */}
-          <Card className="crm-proposals-gradient shadow-lg hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-xl font-bold flex items-center">
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                  <FileText className="w-5 h-5 text-purple-600" />
+          {/* Proposals Card */}
+          <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-purple-50/80 via-purple-100/50 to-purple-200/30 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <FileText className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg font-bold text-purple-900">Teklifler</CardTitle>
+                    <p className="text-sm text-purple-700/70 font-medium">Müşteri teklifleri</p>
+                  </div>
                 </div>
-                <span className="bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
-                  Teklifler
-                </span>
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-sm flex items-center hover:bg-purple-100/50"
-                  onClick={() => navigate("/proposals")}
-                >
-                  Tümünü Gör
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
                 <Button 
                   size="sm" 
-                  className="bg-purple-500 hover:bg-purple-600 text-white flex items-center gap-1"
+                  className="w-10 h-10 p-0 rounded-full bg-purple-500/20 hover:bg-purple-500 text-purple-700 hover:text-white border-0 shadow-md transition-all duration-200"
                   onClick={() => navigate("/proposals")}
                 >
                   <Plus className="h-4 w-4" />
-                  Yeni
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               <ProposalsSummary />
             </CardContent>
           </Card>
 
-          {/* Orders Column */}
-          <Card className="crm-orders-gradient shadow-lg hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-xl font-bold flex items-center">
-                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-3">
-                  <ShoppingCart className="w-5 h-5 text-orange-600" />
+          {/* Orders Card */}
+          <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-orange-50/80 via-orange-100/50 to-orange-200/30 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <ShoppingCart className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg font-bold text-orange-900">Siparişler</CardTitle>
+                    <p className="text-sm text-orange-700/70 font-medium">Müşteri siparişleri</p>
+                  </div>
                 </div>
-                <span className="bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
-                  Siparişler
-                </span>
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-sm flex items-center hover:bg-orange-100/50"
-                  onClick={() => navigate("/orders")}
-                >
-                  Tümünü Gör
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
                 <Button 
                   size="sm" 
-                  className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-1"
+                  className="w-10 h-10 p-0 rounded-full bg-orange-500/20 hover:bg-orange-500 text-orange-700 hover:text-white border-0 shadow-md transition-all duration-200"
                   onClick={() => navigate("/orders")}
                 >
                   <Plus className="h-4 w-4" />
-                  Yeni
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               <OrdersSummary />
             </CardContent>
           </Card>

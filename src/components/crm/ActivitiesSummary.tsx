@@ -107,69 +107,59 @@ const ActivitiesSummary = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center bg-gradient-to-r from-blue-50 to-blue-100/50 p-4 rounded-lg border border-blue-200/50 shadow-sm">
-        <span className="text-2xl font-bold text-blue-800">{activityStats.total}</span>
-        <span className="text-sm font-medium text-blue-600">Toplam Aktivite</span>
+    <div className="space-y-4">
+      {/* Main Metric */}
+      <div className="text-center">
+        <div className="text-3xl font-bold text-blue-900 mb-1">{activityStats.total}</div>
+        <div className="text-sm text-blue-700/70 font-medium">Toplam Aktivite</div>
       </div>
       
-      <div className="space-y-5">
-        <div>
-          <h4 className="text-sm font-semibold mb-3 text-foreground flex items-center">
-            <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-            Türe Göre
-          </h4>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50/50 to-blue-100/30 rounded-lg border border-blue-200/30 hover:shadow-md transition-all duration-200">
-              <div className="flex items-center">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                  <Calendar className="h-4 w-4 text-blue-600" />
-                </div>
-                <span className="text-sm font-medium">Toplantı</span>
-              </div>
-              <span className="text-sm font-bold bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1.5 rounded-full shadow-sm">
-                {activityStats.meeting}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-gradient-to-r from-emerald-50/50 to-emerald-100/30 rounded-lg border border-emerald-200/30 hover:shadow-md transition-all duration-200">
-              <div className="flex items-center">
-                <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center mr-3">
-                  <PenTool className="h-4 w-4 text-emerald-600" />
-                </div>
-                <span className="text-sm font-medium">Analiz</span>
-              </div>
-              <span className="text-sm font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-3 py-1.5 rounded-full shadow-sm">
-                {activityStats.analysis}
-              </span>
-            </div>
+      {/* Mini Stats Grid */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white/40 backdrop-blur-sm rounded-lg p-3 border border-blue-200/30">
+          <div className="flex items-center space-x-2 mb-2">
+            <Calendar className="h-4 w-4 text-blue-600" />
+            <span className="text-xs font-medium text-blue-800">Toplantı</span>
           </div>
+          <div className="text-lg font-bold text-blue-900">{activityStats.meeting}</div>
         </div>
-
-        <div>
-          <h4 className="text-sm font-semibold mb-3 text-foreground flex items-center">
-            <div className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></div>
-            Duruma Göre
-          </h4>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-2.5 bg-gradient-to-r from-amber-50/50 to-amber-100/30 rounded-lg border border-amber-200/30">
-              <span className="text-sm font-medium">Yapılacak</span>
-              <span className="text-sm font-bold bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full">
-                {activityStats.todo}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-2.5 bg-gradient-to-r from-blue-50/50 to-blue-100/30 rounded-lg border border-blue-200/30">
-              <span className="text-sm font-medium">Devam Eden</span>
-              <span className="text-sm font-bold bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded-full">
-                {activityStats.in_progress}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-2.5 bg-gradient-to-r from-green-50/50 to-green-100/30 rounded-lg border border-green-200/30">
-              <span className="text-sm font-medium">Tamamlanan</span>
-              <span className="text-sm font-bold bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1 rounded-full">
-                {activityStats.completed}
-              </span>
-            </div>
+        
+        <div className="bg-white/40 backdrop-blur-sm rounded-lg p-3 border border-blue-200/30">
+          <div className="flex items-center space-x-2 mb-2">
+            <PenTool className="h-4 w-4 text-emerald-600" />
+            <span className="text-xs font-medium text-blue-800">Analiz</span>
           </div>
+          <div className="text-lg font-bold text-blue-900">{activityStats.analysis}</div>
+        </div>
+        
+        <div className="bg-white/40 backdrop-blur-sm rounded-lg p-3 border border-blue-200/30">
+          <div className="flex items-center space-x-2 mb-2">
+            <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
+            <span className="text-xs font-medium text-blue-800">Yapılacak</span>
+          </div>
+          <div className="text-lg font-bold text-blue-900">{activityStats.todo}</div>
+        </div>
+        
+        <div className="bg-white/40 backdrop-blur-sm rounded-lg p-3 border border-blue-200/30">
+          <div className="flex items-center space-x-2 mb-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span className="text-xs font-medium text-blue-800">Tamamlanan</span>
+          </div>
+          <div className="text-lg font-bold text-blue-900">{activityStats.completed}</div>
+        </div>
+      </div>
+      
+      {/* Progress Indicator */}
+      <div className="bg-white/40 backdrop-blur-sm rounded-lg p-3 border border-blue-200/30">
+        <div className="flex justify-between items-center text-xs text-blue-800 mb-2">
+          <span>Tamamlanma Oranı</span>
+          <span className="font-bold">{activityStats.total > 0 ? Math.round((activityStats.completed / activityStats.total) * 100) : 0}%</span>
+        </div>
+        <div className="w-full bg-blue-200/50 rounded-full h-2">
+          <div 
+            className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
+            style={{ width: `${activityStats.total > 0 ? (activityStats.completed / activityStats.total) * 100 : 0}%` }}
+          ></div>
         </div>
       </div>
     </div>
