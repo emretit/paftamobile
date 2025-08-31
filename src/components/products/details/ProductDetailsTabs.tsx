@@ -37,7 +37,6 @@ const ProductDetailsTabs = ({ product, onUpdate }: ProductDetailsTabsProps) => {
         <CustomTabsContent value="pricing" className="mt-6">
           <ProductPricing
             price={product.price}
-            discountPrice={product.discount_price}
             currency={product.currency}
             taxRate={product.tax_rate}
             purchasePrice={product.purchase_price}

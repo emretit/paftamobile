@@ -66,7 +66,7 @@ const PriceInput = ({ form, name, label, description, isRequired = false, showVa
                     </FormLabel>
                     <FormControl>
                       <Switch
-                        checked={toggleField.value || false}
+                        checked={Boolean(toggleField.value)}
                         onCheckedChange={toggleField.onChange}
                       />
                     </FormControl>

@@ -13,8 +13,8 @@ const SummaryCards = () => {
         title="Fırsatlar"
         description="Aktif fırsatlar ve durumları"
         icon={<PieChart />}
-        viewAllPath="/deals"
-        createPath="/deals/new"
+        viewAllPath="/opportunities"
+        createPath="/opportunities"
         iconBgColor="bg-blue-100"
         iconTextColor="text-blue-600"
       >
@@ -26,8 +26,8 @@ const SummaryCards = () => {
         title="Görevler"
         description="Görevler ve durumları"
         icon={<List />}
-        viewAllPath="/tasks"
-        createPath="/tasks/new"
+        viewAllPath="/activities"
+        createPath="/activities/new"
         iconBgColor="bg-green-100"
         iconTextColor="text-green-600"
       >
@@ -40,7 +40,7 @@ const SummaryCards = () => {
         description="Teklifler ve durumları"
         icon={<FileText />}
         viewAllPath="/proposals"
-        createPath="/proposal-form"
+        createPath="/proposals/create"
         iconBgColor="bg-purple-100"
         iconTextColor="text-purple-600"
       >

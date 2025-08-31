@@ -38,7 +38,7 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                 variant="ghost" 
                 size="sm" 
                 className="text-sm flex items-center"
-                onClick={() => navigate("/tasks")}
+                onClick={() => navigate("/activities")}
               >
                 Tümünü Gör
                 <ChevronRight className="ml-1 h-4 w-4" />
