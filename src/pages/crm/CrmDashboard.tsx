@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight, Calendar, FileText, BarChart3, ShoppingCart, Plus } from "lucide-react";
 import { useState } from "react";
 import NewActivityDialog from "@/components/activities/NewActivityDialog";
+import OpportunityForm from "@/components/opportunities/OpportunityForm";
 
 interface CrmDashboardProps {
   isCollapsed: boolean;
@@ -20,6 +21,7 @@ interface CrmDashboardProps {
 const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed }) => {
   const navigate = useNavigate();
   const [isNewActivityDialogOpen, setIsNewActivityDialogOpen] = useState(false);
+  const [isNewOpportunityDialogOpen, setIsNewOpportunityDialogOpen] = useState(false);
 
   return (
     <DefaultLayout
@@ -63,11 +65,11 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                 </div>
                 <Button 
                   size="sm" 
-                  className="w-auto h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                  className="w-auto h-8 px-3 rounded-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg transition-all duration-300"
                   onClick={() => setIsNewActivityDialogOpen(true)}
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  <span className="text-xs font-medium">Yeni</span>
+                  <span className="text-xs font-medium">Aktivite Ekle</span>
                 </Button>
               </div>
             </CardHeader>
@@ -91,11 +93,11 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                 </div>
                 <Button 
                   size="sm" 
-                  className="w-auto h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
-                  onClick={() => navigate("/opportunities")}
+                  className="w-auto h-8 px-3 rounded-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg transition-all duration-300"
+                  onClick={() => setIsNewOpportunityDialogOpen(true)}
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  <span className="text-xs font-medium">Yeni</span>
+                  <span className="text-xs font-medium">Fırsat Ekle</span>
                 </Button>
               </div>
             </CardHeader>
@@ -119,11 +121,11 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                 </div>
                 <Button 
                   size="sm" 
-                  className="w-auto h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
-                  onClick={() => navigate("/proposals")}
+                  className="w-auto h-8 px-3 rounded-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg transition-all duration-300"
+                  onClick={() => navigate("/proposal/create")}
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  <span className="text-xs font-medium">Yeni</span>
+                  <span className="text-xs font-medium">Teklif Ekle</span>
                 </Button>
               </div>
             </CardHeader>
@@ -147,11 +149,11 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                 </div>
                 <Button 
                   size="sm" 
-                  className="w-auto h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
-                  onClick={() => navigate("/orders")}
+                  className="w-auto h-8 px-3 rounded-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg transition-all duration-300"
+                  onClick={() => navigate("/orders/create")}
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  <span className="text-xs font-medium">Yeni</span>
+                  <span className="text-xs font-medium">Sipariş Ekle</span>
                 </Button>
               </div>
             </CardHeader>
@@ -168,6 +170,11 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
             // Aktivite başarıyla eklendiğinde yapılacak işlemler
             setIsNewActivityDialogOpen(false);
           }}
+        />
+        
+        <OpportunityForm
+          isOpen={isNewOpportunityDialogOpen}
+          onClose={() => setIsNewOpportunityDialogOpen(false)}
         />
       </div>
     </DefaultLayout>
