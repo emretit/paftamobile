@@ -69,7 +69,7 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                   onClick={() => setIsNewActivityDialogOpen(true)}
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  <span className="text-xs font-medium">Aktivite Ekle</span>
+                  <span className="text-xs font-medium">Yeni Aktivite Ekle</span>
                 </Button>
               </div>
             </CardHeader>
@@ -97,7 +97,7 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                   onClick={() => setIsNewOpportunityDialogOpen(true)}
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  <span className="text-xs font-medium">Fırsat Ekle</span>
+                  <span className="text-xs font-medium">Yeni Fırsat Ekle</span>
                 </Button>
               </div>
             </CardHeader>
@@ -125,7 +125,7 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                   onClick={() => navigate("/proposal/create")}
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  <span className="text-xs font-medium">Teklif Ekle</span>
+                  <span className="text-xs font-medium">Yeni Teklif Ekle</span>
                 </Button>
               </div>
             </CardHeader>
@@ -153,7 +153,7 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                   onClick={() => navigate("/orders/create")}
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  <span className="text-xs font-medium">Sipariş Ekle</span>
+                  <span className="text-xs font-medium">Yeni Sipariş Ekle</span>
                 </Button>
               </div>
             </CardHeader>
