@@ -108,78 +108,82 @@ const ProposalsSummary = () => {
   
   if (loading) {
     return (
-      <div className="space-y-4 py-6">
-        <div className="h-8 bg-gradient-to-r from-purple-100 to-purple-50 animate-pulse rounded-lg"></div>
-        <div className="space-y-3">
-          <div className="h-6 bg-gradient-to-r from-muted to-muted/50 animate-pulse rounded-md"></div>
-          <div className="h-4 bg-gradient-to-r from-muted to-muted/50 animate-pulse rounded-md"></div>
-          <div className="h-6 bg-gradient-to-r from-muted to-muted/50 animate-pulse rounded-md"></div>
+      <div className="space-y-3 py-4">
+        <div className="h-6 bg-muted animate-pulse rounded"></div>
+        <div className="space-y-2">
+          <div className="h-4 bg-muted/60 animate-pulse rounded"></div>
+          <div className="h-4 bg-muted/60 animate-pulse rounded"></div>
         </div>
       </div>
     );
   }
   
-  // If no proposals exist yet
   if (totalProposals === 0) {
     return (
-      <div className="text-center py-8 bg-gradient-to-br from-purple-50/30 to-purple-100/20 rounded-lg border border-purple-200/30">
-        <FileText className="h-12 w-12 text-purple-400 mx-auto mb-3" />
-        <p className="text-muted-foreground font-medium">Henüz teklif bulunmuyor</p>
-        <p className="text-sm mt-2 text-purple-600/70">İlk teklifinizi oluşturun</p>
+      <div className="text-center py-6">
+        <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+        <p className="text-sm text-muted-foreground">Henüz teklif yok</p>
       </div>
     );
   }
   
-  const topStats = proposalStats.slice(0, 3);
   const acceptedCount = proposalStats.find(s => s.status === 'accepted')?.count || 0;
   const sentCount = proposalStats.find(s => s.status === 'sent')?.count || 0;
+  const reviewCount = proposalStats.find(s => s.status === 'review')?.count || 0;
+  const draftCount = proposalStats.find(s => s.status === 'draft')?.count || 0;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Main Metric */}
       <div className="text-center">
-        <div className="text-3xl font-bold text-purple-900 mb-1">{totalProposals}</div>
-        <div className="text-sm text-purple-700/70 font-medium">Toplam Teklif</div>
+        <div className="text-2xl font-bold text-foreground">{totalProposals}</div>
+        <div className="text-xs text-muted-foreground">Toplam</div>
       </div>
       
       {/* Mini Stats Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white/40 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
-            <span className="text-xs font-medium text-purple-800">Gönderildi</span>
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="bg-muted/30 rounded p-2">
+          <div className="flex items-center gap-1 mb-1">
+            <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+            <span>Gönderildi</span>
           </div>
-          <div className="text-lg font-bold text-purple-900">{sentCount}</div>
+          <div className="font-semibold">{sentCount}</div>
         </div>
         
-        <div className="bg-white/40 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-            <span className="text-xs font-medium text-purple-800">Kabul Edildi</span>
+        <div className="bg-muted/30 rounded p-2">
+          <div className="flex items-center gap-1 mb-1">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span>Kabul</span>
           </div>
-          <div className="text-lg font-bold text-purple-900">{acceptedCount}</div>
+          <div className="font-semibold">{acceptedCount}</div>
         </div>
         
-        {topStats.slice(0, 2).map((stat) => (
-          <div key={stat.status} className="bg-white/40 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30">
-            <div className="flex items-center space-x-2 mb-2">
-              <div className={`w-3 h-3 rounded-full ${stat.color}`}></div>
-              <span className="text-xs font-medium text-purple-800 truncate">{stat.label}</span>
-            </div>
-            <div className="text-lg font-bold text-purple-900">{stat.count}</div>
+        <div className="bg-muted/30 rounded p-2">
+          <div className="flex items-center gap-1 mb-1">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <span>İnceleme</span>
           </div>
-        ))}
+          <div className="font-semibold">{reviewCount}</div>
+        </div>
+        
+        <div className="bg-muted/30 rounded p-2">
+          <div className="flex items-center gap-1 mb-1">
+            <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+            <span>Taslak</span>
+          </div>
+          <div className="font-semibold">{draftCount}</div>
+        </div>
       </div>
       
       {/* Conversion Rate */}
-      <div className="bg-white/40 backdrop-blur-sm rounded-lg p-3 border border-purple-200/30">
-        <div className="flex justify-between items-center text-xs text-purple-800 mb-2">
+      <div className="bg-muted/30 rounded p-2">
+        <div className="flex justify-between text-xs mb-1">
           <span>Kabul Oranı</span>
-          <span className="font-bold">{totalProposals > 0 ? Math.round((acceptedCount / totalProposals) * 100) : 0}%</span>
+          <span className="font-semibold">{totalProposals > 0 ? Math.round((acceptedCount / totalProposals) * 100) : 0}%</span>
         </div>
-        <div className="w-full bg-purple-200/50 rounded-full h-2">
+        <div className="w-full bg-muted rounded-full h-1.5">
           <div 
-            className="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full transition-all duration-500"
+            className="bg-primary h-1.5 rounded-full transition-all duration-500"
             style={{ width: `${totalProposals > 0 ? (acceptedCount / totalProposals) * 100 : 0}%` }}
           ></div>
         </div>

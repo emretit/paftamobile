@@ -82,68 +82,67 @@ const OrdersSummary = () => {
 
   if (loading) {
     return (
-      <div className="space-y-4 py-6">
-        <div className="h-8 bg-gradient-to-r from-orange-100 to-orange-50 animate-pulse rounded-lg"></div>
-        <div className="space-y-3">
-          <div className="h-6 bg-gradient-to-r from-muted to-muted/50 animate-pulse rounded-md"></div>
-          <div className="h-4 bg-gradient-to-r from-muted to-muted/50 animate-pulse rounded-md"></div>
-          <div className="h-6 bg-gradient-to-r from-muted to-muted/50 animate-pulse rounded-md"></div>
+      <div className="space-y-3 py-4">
+        <div className="h-6 bg-muted animate-pulse rounded"></div>
+        <div className="space-y-2">
+          <div className="h-4 bg-muted/60 animate-pulse rounded"></div>
+          <div className="h-4 bg-muted/60 animate-pulse rounded"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Main Metric */}
       <div className="text-center">
-        <div className="text-3xl font-bold text-orange-900 mb-1">{orderStats.total}</div>
-        <div className="text-sm text-orange-700/70 font-medium">Toplam Sipariş</div>
+        <div className="text-2xl font-bold text-foreground">{orderStats.total}</div>
+        <div className="text-xs text-muted-foreground">Toplam</div>
       </div>
       
       {/* Mini Stats Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white/40 backdrop-blur-sm rounded-lg p-3 border border-orange-200/30">
-          <div className="flex items-center space-x-2 mb-2">
-            <Clock className="h-4 w-4 text-amber-600" />
-            <span className="text-xs font-medium text-orange-800">Bekleyen</span>
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="bg-muted/30 rounded p-2">
+          <div className="flex items-center gap-1 mb-1">
+            <Clock className="h-3 w-3 text-amber-600" />
+            <span>Bekleyen</span>
           </div>
-          <div className="text-lg font-bold text-orange-900">{orderStats.pending}</div>
+          <div className="font-semibold">{orderStats.pending}</div>
         </div>
         
-        <div className="bg-white/40 backdrop-blur-sm rounded-lg p-3 border border-orange-200/30">
-          <div className="flex items-center space-x-2 mb-2">
-            <Package className="h-4 w-4 text-blue-600" />
-            <span className="text-xs font-medium text-orange-800">İşleniyor</span>
+        <div className="bg-muted/30 rounded p-2">
+          <div className="flex items-center gap-1 mb-1">
+            <Package className="h-3 w-3 text-blue-600" />
+            <span>İşleniyor</span>
           </div>
-          <div className="text-lg font-bold text-orange-900">{orderStats.processing}</div>
+          <div className="font-semibold">{orderStats.processing}</div>
         </div>
         
-        <div className="bg-white/40 backdrop-blur-sm rounded-lg p-3 border border-orange-200/30">
-          <div className="flex items-center space-x-2 mb-2">
-            <Truck className="h-4 w-4 text-purple-600" />
-            <span className="text-xs font-medium text-orange-800">Kargoda</span>
+        <div className="bg-muted/30 rounded p-2">
+          <div className="flex items-center gap-1 mb-1">
+            <Truck className="h-3 w-3 text-purple-600" />
+            <span>Kargoda</span>
           </div>
-          <div className="text-lg font-bold text-orange-900">{orderStats.shipped}</div>
+          <div className="font-semibold">{orderStats.shipped}</div>
         </div>
         
-        <div className="bg-white/40 backdrop-blur-sm rounded-lg p-3 border border-orange-200/30">
-          <div className="flex items-center space-x-2 mb-2">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <span className="text-xs font-medium text-orange-800">Tamamlandı</span>
+        <div className="bg-muted/30 rounded p-2">
+          <div className="flex items-center gap-1 mb-1">
+            <CheckCircle className="h-3 w-3 text-green-600" />
+            <span>Tamamlandı</span>
           </div>
-          <div className="text-lg font-bold text-orange-900">{orderStats.completed}</div>
+          <div className="font-semibold">{orderStats.completed}</div>
         </div>
       </div>
       
       {/* Performance Indicator */}
-      <div className="bg-white/40 backdrop-blur-sm rounded-lg p-3 border border-orange-200/30">
-        <div className="flex justify-between items-center text-xs text-orange-800 mb-2">
+      <div className="bg-muted/30 rounded p-2">
+        <div className="flex justify-between text-xs mb-1">
           <span>Bu Ay Yeni</span>
-          <span className="font-bold">+{orderStats.pending + orderStats.processing}</span>
+          <span className="font-semibold">+{orderStats.pending + orderStats.processing}</span>
         </div>
-        <div className="text-xs text-orange-700/70">
-          Tamamlanma oranı: {orderStats.total > 0 ? Math.round((orderStats.completed / orderStats.total) * 100) : 0}%
+        <div className="text-xs text-muted-foreground">
+          Tamamlanma: {orderStats.total > 0 ? Math.round((orderStats.completed / orderStats.total) * 100) : 0}%
         </div>
       </div>
     </div>
