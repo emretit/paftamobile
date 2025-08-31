@@ -7,9 +7,10 @@ import ActivitiesSummary from "@/components/crm/ActivitiesSummary";
 import ProposalsSummary from "@/components/crm/ProposalsSummary";
 import OpportunitiesSummary from "@/components/crm/OpportunitiesSummary";
 import OrdersSummary from "@/components/crm/OrdersSummary";
-import QuickActions from "@/components/crm/summary/QuickActions";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Calendar, FileText, BarChart3, ShoppingCart } from "lucide-react";
+import { ChevronRight, Calendar, FileText, BarChart3, ShoppingCart, Plus } from "lucide-react";
+import { useState } from "react";
+import NewActivityDialog from "@/components/activities/NewActivityDialog";
 
 interface CrmDashboardProps {
   isCollapsed: boolean;
@@ -18,6 +19,7 @@ interface CrmDashboardProps {
 
 const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed }) => {
   const navigate = useNavigate();
+  const [isNewActivityDialogOpen, setIsNewActivityDialogOpen] = useState(false);
 
   return (
     <DefaultLayout
@@ -59,15 +61,25 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                   Aktiviteler
                 </span>
               </CardTitle>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-sm flex items-center hover:bg-blue-100/50"
-                onClick={() => navigate("/activities")}
-              >
-                Tümünü Gör
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-sm flex items-center hover:bg-blue-100/50"
+                  onClick={() => navigate("/activities")}
+                >
+                  Tümünü Gör
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1"
+                  onClick={() => setIsNewActivityDialogOpen(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Yeni
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <ActivitiesSummary />
@@ -85,15 +97,25 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                   Fırsatlar
                 </span>
               </CardTitle>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-sm flex items-center hover:bg-emerald-100/50"
-                onClick={() => navigate("/opportunities")}
-              >
-                Tümünü Gör
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-sm flex items-center hover:bg-emerald-100/50"
+                  onClick={() => navigate("/opportunities")}
+                >
+                  Tümünü Gör
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white flex items-center gap-1"
+                  onClick={() => navigate("/opportunities")}
+                >
+                  <Plus className="h-4 w-4" />
+                  Yeni
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <OpportunitiesSummary />
@@ -111,15 +133,25 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                   Teklifler
                 </span>
               </CardTitle>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-sm flex items-center hover:bg-purple-100/50"
-                onClick={() => navigate("/proposals")}
-              >
-                Tümünü Gör
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-sm flex items-center hover:bg-purple-100/50"
+                  onClick={() => navigate("/proposals")}
+                >
+                  Tümünü Gör
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="bg-purple-500 hover:bg-purple-600 text-white flex items-center gap-1"
+                  onClick={() => navigate("/proposals")}
+                >
+                  <Plus className="h-4 w-4" />
+                  Yeni
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <ProposalsSummary />
@@ -137,15 +169,25 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
                   Siparişler
                 </span>
               </CardTitle>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-sm flex items-center hover:bg-orange-100/50"
-                onClick={() => navigate("/orders")}
-              >
-                Tümünü Gör
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-sm flex items-center hover:bg-orange-100/50"
+                  onClick={() => navigate("/orders")}
+                >
+                  Tümünü Gör
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-1"
+                  onClick={() => navigate("/orders")}
+                >
+                  <Plus className="h-4 w-4" />
+                  Yeni
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <OrdersSummary />
@@ -153,8 +195,14 @@ const CrmDashboard: React.FC<CrmDashboardProps> = ({ isCollapsed, setIsCollapsed
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <QuickActions />
+        <NewActivityDialog
+          isOpen={isNewActivityDialogOpen}
+          onClose={() => setIsNewActivityDialogOpen(false)}
+          onSuccess={() => {
+            // Aktivite başarıyla eklendiğinde yapılacak işlemler
+            setIsNewActivityDialogOpen(false);
+          }}
+        />
       </div>
     </DefaultLayout>
   );
