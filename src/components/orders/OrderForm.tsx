@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Proposal, ProposalItem } from "@/types/proposal";
 import { mockCrmService } from "@/services/mockCrm";
+import { useOrders } from "@/hooks/useOrders";
+import { CreateOrderData } from "@/types/orders";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Save, Send } from "lucide-react";
@@ -17,6 +19,7 @@ interface OrderFormProps {
 
 const OrderForm: React.FC<OrderFormProps> = ({ proposalId }) => {
   const { toast } = useToast();
+  const { createOrderMutation } = useOrders();
   const [loading, setLoading] = useState(false);
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [orderItems, setOrderItems] = useState<ProposalItem[]>([]);
@@ -69,19 +72,134 @@ const OrderForm: React.FC<OrderFormProps> = ({ proposalId }) => {
     fetchProposalData();
   }, [proposalId, toast]);
 
-  const handleCreateOrder = () => {
-    // In a real implementation, this would create an order
-    toast({
-      title: "Başarılı",
-      description: "Sipariş başarıyla oluşturuldu",
-    });
+  const handleCreateOrder = async () => {
+    if (!proposal) {
+      toast({
+        title: "Hata",
+        description: "Teklif bilgileri bulunamadı",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Create order data from proposal
+      const orderData: CreateOrderData = {
+        proposal_id: proposal.id,
+        customer_id: proposal.customer_id,
+        employee_id: proposal.employee_id,
+        title: proposal.title || `Sipariş - ${proposal.number}`,
+        description: proposal.description,
+        notes: proposal.notes,
+        status: 'pending',
+        currency: proposal.currency || 'TRY',
+        payment_terms: proposal.payment_terms,
+        delivery_terms: proposal.delivery_terms,
+        warranty_terms: proposal.warranty_terms,
+        price_terms: proposal.price_terms,
+        other_terms: proposal.other_terms,
+        items: orderItems.map(item => ({
+          product_id: item.product_id,
+          name: item.name,
+          description: item.description,
+          quantity: Number(item.quantity),
+          unit: item.unit || 'adet',
+          unit_price: Number(item.unit_price),
+          tax_rate: Number(item.tax_rate || 18),
+          discount_rate: Number(item.discount_rate || 0),
+          item_group: item.item_group || 'product',
+          stock_status: 'in_stock',
+          sort_order: item.sort_order || 0
+        }))
+      };
+
+      await createOrderMutation.mutateAsync(orderData);
+      
+      toast({
+        title: "Başarılı",
+        description: "Sipariş başarıyla oluşturuldu",
+      });
+      
+      // Redirect to orders list
+      window.location.href = '/orders/list';
+      
+    } catch (error) {
+      console.error("Error creating order:", error);
+      toast({
+        title: "Hata",
+        description: "Sipariş oluşturulurken hata oluştu",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
   
-  const handleSaveDraft = () => {
-    toast({
-      title: "Kaydedildi",
-      description: "Sipariş taslak olarak kaydedildi",
-    });
+  const handleSaveDraft = async () => {
+    if (!proposal) {
+      toast({
+        title: "Hata",
+        description: "Teklif bilgileri bulunamadı",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Create order data as draft
+      const orderData: CreateOrderData = {
+        proposal_id: proposal.id,
+        customer_id: proposal.customer_id,
+        employee_id: proposal.employee_id,
+        title: proposal.title || `Sipariş - ${proposal.number}`,
+        description: proposal.description,
+        notes: proposal.notes,
+        status: 'pending',
+        currency: proposal.currency || 'TRY',
+        payment_terms: proposal.payment_terms,
+        delivery_terms: proposal.delivery_terms,
+        warranty_terms: proposal.warranty_terms,
+        price_terms: proposal.price_terms,
+        other_terms: proposal.other_terms,
+        items: orderItems.map(item => ({
+          product_id: item.product_id,
+          name: item.name,
+          description: item.description,
+          quantity: Number(item.quantity),
+          unit: item.unit || 'adet',
+          unit_price: Number(item.unit_price),
+          tax_rate: Number(item.tax_rate || 18),
+          discount_rate: Number(item.discount_rate || 0),
+          item_group: item.item_group || 'product',
+          stock_status: 'in_stock',
+          sort_order: item.sort_order || 0
+        }))
+      };
+
+      await createOrderMutation.mutateAsync(orderData);
+      
+      toast({
+        title: "Kaydedildi",
+        description: "Sipariş taslak olarak kaydedildi",
+      });
+      
+      // Redirect to orders list
+      window.location.href = '/orders/list';
+      
+    } catch (error) {
+      console.error("Error saving draft order:", error);
+      toast({
+        title: "Hata",
+        description: "Sipariş taslağı kaydedilirken hata oluştu",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
   
   if (loading) {
@@ -119,13 +237,20 @@ const OrderForm: React.FC<OrderFormProps> = ({ proposalId }) => {
       <OrderSummary items={orderItems} currency={proposal?.currency || "TRY"} />
       
       <div className="flex justify-end space-x-3 mt-8">
-        <Button variant="outline" onClick={handleSaveDraft}>
+        <Button 
+          variant="outline" 
+          onClick={handleSaveDraft}
+          disabled={loading}
+        >
           <Save className="h-4 w-4 mr-2" />
-          Taslak Olarak Kaydet
+          {loading ? "Kaydediliyor..." : "Taslak Olarak Kaydet"}
         </Button>
-        <Button onClick={handleCreateOrder}>
+        <Button 
+          onClick={handleCreateOrder}
+          disabled={loading}
+        >
           <Send className="h-4 w-4 mr-2" />
-          Siparişi Oluştur
+          {loading ? "Oluşturuluyor..." : "Siparişi Oluştur"}
         </Button>
       </div>
     </div>

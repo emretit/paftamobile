@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter, User } from "lucide-react";
+import { OrderStatus } from "@/types/orders";
 
 interface OrdersFilterBarProps {
   searchQuery: string;
@@ -39,8 +40,10 @@ const OrdersFilterBar = ({
           <SelectItem value="all">Tüm Durumlar</SelectItem>
           <SelectItem value="pending">⏳ Beklemede</SelectItem>
           <SelectItem value="confirmed">✅ Onaylandı</SelectItem>
+          <SelectItem value="processing">⚙️ İşlemde</SelectItem>
           <SelectItem value="shipped">📦 Kargoda</SelectItem>
           <SelectItem value="delivered">🎯 Teslim Edildi</SelectItem>
+          <SelectItem value="completed">✅ Tamamlandı</SelectItem>
           <SelectItem value="cancelled">❌ İptal Edildi</SelectItem>
         </SelectContent>
       </Select>
@@ -51,7 +54,7 @@ const OrdersFilterBar = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Tüm Müşteriler</SelectItem>
-          {/* TODO: Add customer options */}
+          {/* TODO: Customer options will be populated from API */}
         </SelectContent>
       </Select>
     </div>

@@ -1,24 +1,18 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
 import SupplierListHeader from "@/components/suppliers/SupplierListHeader";
 import SupplierListFilters from "@/components/suppliers/SupplierListFilters";
 import SupplierList from "@/components/suppliers/SupplierList";
 import { Supplier } from "@/types/supplier";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import InfiniteScroll from "@/components/ui/infinite-scroll";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 interface SuppliersProps {
   isCollapsed: boolean;
@@ -30,51 +24,67 @@ const Suppliers = ({ isCollapsed, setIsCollapsed }: SuppliersProps) => {
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const pageSize = 20;
 
-  const { data: suppliers, isLoading } = useQuery({
-    queryKey: ['suppliers'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching suppliers:', error);
-        throw error;
-      }
-      
-      return data as Supplier[];
+  // Infinite scroll için query function
+  const fetchSuppliers = useCallback(async (page: number, pageSize: number) => {
+    let query = supabase
+      .from('suppliers')
+      .select('*', { count: 'exact' });
+
+    // Filtreleme uygula
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,company.ilike.%${search}%`);
     }
-  });
 
-  const filteredSuppliers = suppliers?.filter(supplier => {
-    const matchesSearch = !search || 
-      supplier.name.toLowerCase().includes(search.toLowerCase()) ||
-      supplier.email?.toLowerCase().includes(search.toLowerCase()) ||
-      supplier.company?.toLowerCase().includes(search.toLowerCase());
-
-    const matchesType = !typeFilter || supplier.type === typeFilter;
-    const matchesStatus = !statusFilter || supplier.status === statusFilter;
-
-    return matchesSearch && matchesType && matchesStatus;
-  });
-
-  const allSortedSuppliers = filteredSuppliers?.sort((a, b) => {
-    if (sortDirection === "asc") {
-      return a.balance - b.balance;
-    } else {
-      return b.balance - a.balance;
+    if (typeFilter) {
+      query = query.eq('type', typeFilter);
     }
-  });
 
-  // Pagination logic
-  const totalPages = Math.ceil((allSortedSuppliers?.length || 0) / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const sortedSuppliers = allSortedSuppliers?.slice(startIndex, endIndex);
+    if (statusFilter) {
+      query = query.eq('status', statusFilter);
+    }
+
+    // Range ile sayfa bazlı veri çek
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await query
+      .order('balance', { ascending: sortDirection === "asc" })
+      .range(from, to);
+
+    if (error) {
+      console.error('Error fetching suppliers:', error);
+      throw error;
+    }
+
+    return {
+      data: data as Supplier[],
+      totalCount: count || 0,
+      hasNextPage: data ? data.length === pageSize : false,
+    };
+  }, [search, typeFilter, statusFilter, sortDirection]);
+
+  // Infinite scroll hook'u kullan
+  const {
+    data: suppliers,
+    isLoading,
+    isLoadingMore,
+    hasNextPage,
+    error,
+    loadMore,
+    refresh,
+    totalCount,
+  } = useInfiniteScroll(
+    ["suppliers", search, typeFilter, statusFilter, sortDirection],
+    fetchSuppliers,
+    {
+      pageSize,
+      enabled: true,
+      staleTime: 5 * 60 * 1000, // 5 dakika
+      cacheTime: 10 * 60 * 1000, // 10 dakika
+    }
+  );
 
   return (
     <div className="min-h-screen bg-white flex relative">
@@ -103,125 +113,39 @@ const Suppliers = ({ isCollapsed, setIsCollapsed }: SuppliersProps) => {
             statusFilter={statusFilter}
             setStatusFilter={setStatusFilter}
           />
-          <SupplierList 
-            suppliers={sortedSuppliers}
-            isLoading={isLoading}
-            sortDirection={sortDirection}
-            onSortDirectionChange={setSortDirection}
-          />
-          
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-card rounded-lg border">
-              <div className="text-sm text-muted-foreground">
-                Toplam <span className="font-medium text-foreground">{allSortedSuppliers?.length || 0}</span> tedarikçi, 
-                <span className="font-medium text-foreground"> {startIndex + 1}-{Math.min(endIndex, allSortedSuppliers?.length || 0)}</span> arası gösteriliyor
+          {/* Infinite Scroll Content */}
+          <InfiniteScroll
+            hasNextPage={hasNextPage}
+            isLoadingMore={isLoadingMore}
+            onLoadMore={loadMore}
+            error={error}
+            onRetry={refresh}
+            isEmpty={suppliers.length === 0 && !isLoading}
+            emptyState={
+              <div className="flex flex-col items-center justify-center py-12">
+                <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+                  Tedarikçi bulunamadı
+                </h3>
+                <p className="text-muted-foreground text-center">
+                  Arama kriterlerinize uygun tedarikçi bulunamadı.
+                </p>
               </div>
-              <Pagination>
-                <PaginationContent className="gap-1">
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (currentPage > 1) setCurrentPage(currentPage - 1);
-                      }}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "hover:bg-accent"}
-                    />
-                  </PaginationItem>
-                  
-                  {/* Smart pagination with ellipsis */}
-                  {(() => {
-                    const pages = [];
-                    const showPages = 5;
-                    let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
-                    const endPage = Math.min(totalPages, startPage + showPages - 1);
-                    
-                    if (endPage - startPage < showPages - 1) {
-                      startPage = Math.max(1, endPage - showPages + 1);
-                    }
-                    
-                    if (startPage > 1) {
-                      pages.push(
-                        <PaginationItem key={1}>
-                          <PaginationLink
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setCurrentPage(1);
-                            }}
-                            className="hover:bg-accent"
-                          >
-                            1
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                      if (startPage > 2) {
-                        pages.push(
-                          <PaginationItem key="start-ellipsis">
-                            <span className="px-3 py-2 text-muted-foreground">...</span>
-                          </PaginationItem>
-                        );
-                      }
-                    }
-                    
-                    for (let i = startPage; i <= endPage; i++) {
-                      pages.push(
-                        <PaginationItem key={i}>
-                          <PaginationLink
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setCurrentPage(i);
-                            }}
-                            isActive={currentPage === i}
-                            className={currentPage === i ? "bg-primary text-primary-foreground" : "hover:bg-accent"}
-                          >
-                            {i}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    }
-                    
-                    if (endPage < totalPages) {
-                      if (endPage < totalPages - 1) {
-                        pages.push(
-                          <PaginationItem key="end-ellipsis">
-                            <span className="px-3 py-2 text-muted-foreground">...</span>
-                          </PaginationItem>
-                        );
-                      }
-                      pages.push(
-                        <PaginationItem key={totalPages}>
-                          <PaginationLink
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setCurrentPage(totalPages);
-                            }}
-                            className="hover:bg-accent"
-                          >
-                            {totalPages}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    }
-                    
-                    return pages;
-                  })()}
-                  
-                  <PaginationItem>
-                    <PaginationNext 
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-                      }}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "hover:bg-accent"}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+            }
+          >
+            <SupplierList
+              suppliers={suppliers}
+              isLoading={isLoading}
+              sortDirection={sortDirection}
+              onSortDirectionChange={setSortDirection}
+            />
+          </InfiniteScroll>
+
+          {/* Info Banner */}
+          {totalCount && totalCount > 0 && (
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              Toplam <span className="font-medium text-foreground">{totalCount}</span> tedarikçi,
+              <span className="font-medium text-foreground"> {suppliers.length}</span> adet yüklendi
             </div>
           )}
         </div>

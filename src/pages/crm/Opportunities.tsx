@@ -11,7 +11,7 @@ import OpportunityFilterBar from "@/components/opportunities/OpportunityFilterBa
 import { OpportunityDetailSheet } from "@/components/crm/OpportunityDetailSheet";
 import OpportunityBulkActions from "@/components/opportunities/OpportunityBulkActions";
 import OpportunitiesContent from "@/components/opportunities/OpportunitiesContent";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -137,31 +137,22 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
       subtitle="Tüm satış fırsatlarını yönetin"
     >
       <div className="space-y-6">
-        <OpportunitiesHeader />
+        <OpportunitiesHeader 
+          activeView={activeView} 
+          setActiveView={setActiveView} 
+        />
         
-        <div className="flex flex-col sm:flex-row gap-4 justify-between">
-          <OpportunityFilterBar 
-            filterKeyword={filterKeyword}
-            setFilterKeyword={setFilterKeyword}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            priorityFilter={priorityFilter}
-            setPriorityFilter={setPriorityFilter}
-            selectedEmployee={selectedEmployee}
-            setSelectedEmployee={setSelectedEmployee}
-            employees={employees}
-          />
-          <Tabs
-            value={activeView}
-            onValueChange={setActiveView}
-            className="w-fit"
-          >
-            <TabsList>
-              <TabsTrigger value="kanban">Kanban</TabsTrigger>
-              <TabsTrigger value="list">Liste</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+        <OpportunityFilterBar 
+          filterKeyword={filterKeyword}
+          setFilterKeyword={setFilterKeyword}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          priorityFilter={priorityFilter}
+          setPriorityFilter={setPriorityFilter}
+          selectedEmployee={selectedEmployee}
+          setSelectedEmployee={setSelectedEmployee}
+          employees={employees}
+        />
         
         {selectedOpportunities.length > 0 && (
           <OpportunityBulkActions 

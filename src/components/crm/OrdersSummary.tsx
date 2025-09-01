@@ -1,24 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { Badge } from "@/components/ui/badge";
-import { ShoppingBag, Package, Clock, CheckCircle, Truck } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-
-interface OrderStats {
-  pending: number;
-  processing: number;
-  shipped: number;
-  completed: number;
-  total: number;
-}
+import { OrderStats } from "@/types/orders";
 
 const OrdersSummary = () => {
   const [orderStats, setOrderStats] = useState<OrderStats>({
+    total: 0,
     pending: 0,
+    confirmed: 0,
     processing: 0,
     shipped: 0,
+    delivered: 0,
     completed: 0,
-    total: 0
+    cancelled: 0,
+    total_value: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -27,50 +21,63 @@ const OrdersSummary = () => {
       try {
         setLoading(true);
         
-        // Check if orders table exists and get data
+        // Orders tablosundan istatistikleri çek
         const { data: orders, error } = await supabase
           .from('orders')
-          .select('status');
+          .select('status, total_amount');
           
         if (error) {
-          // If orders table doesn't exist, use mock data
-          console.log('Orders table not found, using mock data');
+          console.error('Orders table error:', error);
+          // Fallback olarak mock data kullan
           setOrderStats({
-            pending: 5,
-            processing: 3,
-            shipped: 8,
-            completed: 12,
-            total: 28
+            total: 0,
+            pending: 0,
+            confirmed: 0,
+            processing: 0,
+            shipped: 0,
+            delivered: 0,
+            completed: 0,
+            cancelled: 0,
+            total_value: 0
           });
           return;
         }
         
         if (orders) {
           const stats: OrderStats = {
+            total: orders.length,
             pending: 0,
+            confirmed: 0,
             processing: 0,
             shipped: 0,
+            delivered: 0,
             completed: 0,
-            total: orders.length
+            cancelled: 0,
+            total_value: 0
           };
           
           orders.forEach(order => {
             if (stats.hasOwnProperty(order.status)) {
-              stats[order.status as keyof Omit<OrderStats, 'total'>]++;
+              stats[order.status as keyof Omit<OrderStats, 'total' | 'total_value'>]++;
             }
+            stats.total_value += Number(order.total_amount || 0);
           });
           
           setOrderStats(stats);
         }
       } catch (error) {
         console.error('Error fetching order stats:', error);
-        // Use mock data as fallback
+        // Error durumunda mock data kullan
         setOrderStats({
-          pending: 5,
-          processing: 3,
-          shipped: 8,
-          completed: 12,
-          total: 28
+          total: 0,
+          pending: 0,
+          confirmed: 0,
+          processing: 0,
+          shipped: 0,
+          delivered: 0,
+          completed: 0,
+          cancelled: 0,
+          total_value: 0
         });
       } finally {
         setLoading(false);
@@ -83,66 +90,58 @@ const OrdersSummary = () => {
   if (loading) {
     return (
       <div className="space-y-3 py-4">
-        <div className="h-6 bg-muted animate-pulse rounded"></div>
-        <div className="space-y-2">
-          <div className="h-4 bg-muted/60 animate-pulse rounded"></div>
-          <div className="h-4 bg-muted/60 animate-pulse rounded"></div>
+        <div className="flex items-center justify-between">
+          <div className="h-4 bg-muted rounded w-20 animate-pulse"></div>
+          <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
         </div>
+        <div className="h-3 bg-muted rounded w-24 animate-pulse"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      {/* Main Metric */}
-      <div className="text-center">
-        <div className="text-2xl font-bold text-foreground">{orderStats.total}</div>
-        <div className="text-xs text-muted-foreground">Toplam</div>
+    <div className="space-y-3 py-4">
+      <div className="flex items-center justify-between">
+        <span className="text-2xl font-bold">{orderStats.total}</span>
+        <span className="text-sm text-muted-foreground">Toplam Sipariş</span>
       </div>
       
-      {/* Mini Stats Grid */}
       <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="bg-muted/30 rounded p-2">
-          <div className="flex items-center gap-1 mb-1">
-            <Clock className="h-3 w-3 text-amber-600" />
-            <span>Bekleyen</span>
-          </div>
-          <div className="font-semibold">{orderStats.pending}</div>
+        <div className="flex items-center justify-between">
+          <span className="text-yellow-600">⏳</span>
+          <span>{orderStats.pending}</span>
         </div>
-        
-        <div className="bg-muted/30 rounded p-2">
-          <div className="flex items-center gap-1 mb-1">
-            <Package className="h-3 w-3 text-blue-600" />
-            <span>İşleniyor</span>
-          </div>
-          <div className="font-semibold">{orderStats.processing}</div>
+        <div className="flex items-center justify-between">
+          <span className="text-blue-600">✅</span>
+          <span>{orderStats.confirmed}</span>
         </div>
-        
-        <div className="bg-muted/30 rounded p-2">
-          <div className="flex items-center gap-1 mb-1">
-            <Truck className="h-3 w-3 text-purple-600" />
-            <span>Kargoda</span>
-          </div>
-          <div className="font-semibold">{orderStats.shipped}</div>
+        <div className="flex items-center justify-between">
+          <span className="text-purple-600">⚙️</span>
+          <span>{orderStats.processing}</span>
         </div>
-        
-        <div className="bg-muted/30 rounded p-2">
-          <div className="flex items-center gap-1 mb-1">
-            <CheckCircle className="h-3 w-3 text-green-600" />
-            <span>Tamamlandı</span>
-          </div>
-          <div className="font-semibold">{orderStats.completed}</div>
+        <div className="flex items-center justify-between">
+          <span className="text-indigo-600">📦</span>
+          <span>{orderStats.shipped}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-green-600">🎯</span>
+          <span>{orderStats.delivered}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-emerald-600">✅</span>
+          <span>{orderStats.completed}</span>
         </div>
       </div>
       
-      {/* Performance Indicator */}
-      <div className="bg-muted/30 rounded p-2">
-        <div className="flex justify-between text-xs mb-1">
-          <span>Bu Ay Yeni</span>
-          <span className="font-semibold">+{orderStats.pending + orderStats.processing}</span>
-        </div>
-        <div className="text-xs text-muted-foreground">
-          Tamamlanma: {orderStats.total > 0 ? Math.round((orderStats.completed / orderStats.total) * 100) : 0}%
+      <div className="pt-2 border-t">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Toplam Değer:</span>
+          <span className="font-semibold">
+            {new Intl.NumberFormat('tr-TR', {
+              style: 'currency',
+              currency: 'TRY'
+            }).format(orderStats.total_value)}
+          </span>
         </div>
       </div>
     </div>

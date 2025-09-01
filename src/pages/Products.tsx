@@ -1,8 +1,8 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Plus, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { Plus, LayoutGrid, Table as TableIcon, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProductFilters from "@/components/products/ProductFilters";
 import ProductGrid from "@/components/products/ProductGrid";
@@ -12,14 +12,8 @@ import { exportProductsToExcel, exportProductTemplateToExcel } from "@/utils/exc
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import InfiniteScroll from "@/components/ui/infinite-scroll";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 interface ProductsProps {
   isCollapsed: boolean;
@@ -34,8 +28,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [stockFilter, setStockFilter] = useState("all");
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const pageSize = 20;
 
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
@@ -49,95 +42,78 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
     },
   });
 
-  // Toplam ürün sayısını ayrı olarak çek
-  const { data: totalProductsCount = 0 } = useQuery({
-    queryKey: ["products-count", searchQuery, categoryFilter, stockFilter],
-    queryFn: async () => {
-      let countQuery = supabase
-        .from("products")
-        .select("*", { count: 'exact', head: true });
+  // Infinite scroll için query function
+  const fetchProducts = useCallback(async (page: number, pageSize: number) => {
+    let query = supabase
+      .from("products")
+      .select(`
+        *,
+        product_categories (
+          id,
+          name
+        )
+      `, { count: 'exact' });
 
-      if (searchQuery) {
-        countQuery = countQuery.ilike("name", `%${searchQuery}%`);
+    // Filtreleme uygula
+    if (searchQuery) {
+      query = query.ilike("name", `%${searchQuery}%`);
+    }
+
+    if (categoryFilter && categoryFilter !== "all") {
+      query = query.eq("category_id", categoryFilter);
+    }
+
+    if (stockFilter !== "all") {
+      switch (stockFilter) {
+        case "out_of_stock":
+          query = query.eq("stock_quantity", 0);
+          break;
+        case "low_stock":
+          query = query.gt("stock_quantity", 0).lte("stock_quantity", 5);
+          break;
+        case "in_stock":
+          query = query.gt("stock_quantity", 5);
+          break;
       }
+    }
 
-      if (categoryFilter && categoryFilter !== "all") {
-        countQuery = countQuery.eq("category_id", categoryFilter);
-      }
+    // Range ile sayfa bazlı veri çek
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
 
-      if (stockFilter !== "all") {
-        switch (stockFilter) {
-          case "out_of_stock":
-            countQuery = countQuery.eq("stock_quantity", 0);
-            break;
-          case "low_stock":
-            countQuery = countQuery.gt("stock_quantity", 0).lte("stock_quantity", 5);
-            break;
-          case "in_stock":
-            countQuery = countQuery.gt("stock_quantity", 5);
-            break;
-        }
-      }
+    const { data, error, count } = await query
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
-      const { count, error } = await countQuery;
-      if (error) throw error;
-      console.log('Total products count:', count);
-      return count || 0;
-    },
-  });
+    if (error) throw error;
 
-  const { data: allProducts = [], isLoading } = useQuery({
-    queryKey: ["products", searchQuery, categoryFilter, stockFilter],
-    staleTime: 0, // Cache'i hemen stale yap
-    gcTime: 0, // Cache'i hemen temizle
-    queryFn: async () => {
-      let query = supabase
-        .from("products")
-        .select(`
-          *,
-          product_categories (
-            id,
-            name
-          )
-        `);
+    return {
+      data: data || [],
+      totalCount: count || 0,
+      hasNextPage: data ? data.length === pageSize : false,
+    };
+  }, [searchQuery, categoryFilter, stockFilter]);
 
-      if (searchQuery) {
-        query = query.ilike("name", `%${searchQuery}%`);
-      }
-
-      if (categoryFilter && categoryFilter !== "all") {
-        query = query.eq("category_id", categoryFilter);
-      }
-
-      if (stockFilter !== "all") {
-        switch (stockFilter) {
-          case "out_of_stock":
-            query = query.eq("stock_quantity", 0);
-            break;
-          case "low_stock":
-            query = query.gt("stock_quantity", 0).lte("stock_quantity", 5);
-            break;
-          case "in_stock":
-            query = query.gt("stock_quantity", 5);
-            break;
-        }
-      }
-
-      // Tüm kayıtları çekmek için range kullanmadan direkt çek
-      const { data, error } = await query
-        .order("created_at", { ascending: false });
-        
-      if (error) throw error;
-      console.log('Total products fetched:', data?.length);
-      return data || [];
-    },
-  });
-
-  // Pagination logic
-  const totalPages = Math.ceil(allProducts.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const products = allProducts.slice(startIndex, endIndex);
+  // Infinite scroll hook'u kullan
+  const {
+    data: products,
+    isLoading,
+    isLoadingMore,
+    hasNextPage,
+    error,
+    loadMore,
+    refresh,
+    totalCount,
+  } = useInfiniteScroll(
+    ["products", searchQuery, categoryFilter, stockFilter],
+    fetchProducts,
+    {
+      pageSize,
+      enabled: true,
+      staleTime: 5 * 60 * 1000, // 5 dakika
+      cacheTime: 10 * 60 * 1000, // 10 dakika
+    }
+  );
 
   const handleBulkAction = async (action: string) => {
     console.log('Bulk action:', action);
@@ -145,7 +121,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
 
   const handleImportSuccess = () => {
     // Refresh products list after successful import
-    queryClient.invalidateQueries({ queryKey: ["products"] });
+    refresh();
   };
 
   const handleDownloadTemplate = () => {
@@ -175,7 +151,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
               stockFilter={stockFilter}
               setStockFilter={setStockFilter}
               categories={categories}
-              totalProducts={totalProductsCount}
+              totalProducts={totalCount || 0}
               onBulkAction={handleBulkAction}
               onDownloadTemplate={handleDownloadTemplate}
               onExportExcel={handleExportExcel}
@@ -210,130 +186,39 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
             </Button>
           </div>
 
-          <div className="mt-6 rounded-lg border bg-card">
-            {view === "grid" ? (
-              <ProductGrid products={products || []} isLoading={isLoading} />
-            ) : (
-              <ProductTable products={products || []} isLoading={isLoading} />
-            )}
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-card rounded-lg border">
-              <div className="text-sm text-muted-foreground">
-                Toplam <span className="font-medium text-foreground">{allProducts.length}</span> ürün, 
-                <span className="font-medium text-foreground"> {startIndex + 1}-{Math.min(endIndex, allProducts.length)}</span> arası gösteriliyor
+          {/* Infinite Scroll Content */}
+          <InfiniteScroll
+            hasNextPage={hasNextPage}
+            isLoadingMore={isLoadingMore}
+            onLoadMore={loadMore}
+            error={error}
+            onRetry={refresh}
+            isEmpty={products.length === 0 && !isLoading}
+            emptyState={
+              <div className="flex flex-col items-center justify-center py-12">
+                <Package className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+                  Ürün bulunamadı
+                </h3>
+                <p className="text-muted-foreground text-center">
+                  Arama kriterlerinize uygun ürün bulunamadı.
+                </p>
               </div>
-              <Pagination>
-                <PaginationContent className="gap-1">
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (currentPage > 1) setCurrentPage(currentPage - 1);
-                      }}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "hover:bg-accent"}
-                    />
-                  </PaginationItem>
-                  
-                  {/* Show page numbers with smart truncation */}
-                  {(() => {
-                    const pages = [];
-                    const showPages = 5; // Maximum pages to show
-                    let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
-                    const endPage = Math.min(totalPages, startPage + showPages - 1);
-                    
-                    // Adjust start if we're near the end
-                    if (endPage - startPage < showPages - 1) {
-                      startPage = Math.max(1, endPage - showPages + 1);
-                    }
-                    
-                    // Always show first page
-                    if (startPage > 1) {
-                      pages.push(
-                        <PaginationItem key={1}>
-                          <PaginationLink
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setCurrentPage(1);
-                            }}
-                            className="hover:bg-accent"
-                          >
-                            1
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                      if (startPage > 2) {
-                        pages.push(
-                          <PaginationItem key="start-ellipsis">
-                            <span className="px-3 py-2 text-muted-foreground">...</span>
-                          </PaginationItem>
-                        );
-                      }
-                    }
-                    
-                    // Show range of pages
-                    for (let i = startPage; i <= endPage; i++) {
-                      pages.push(
-                        <PaginationItem key={i}>
-                          <PaginationLink
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setCurrentPage(i);
-                            }}
-                            isActive={currentPage === i}
-                            className={currentPage === i ? "bg-primary text-primary-foreground" : "hover:bg-accent"}
-                          >
-                            {i}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    }
-                    
-                    // Always show last page
-                    if (endPage < totalPages) {
-                      if (endPage < totalPages - 1) {
-                        pages.push(
-                          <PaginationItem key="end-ellipsis">
-                            <span className="px-3 py-2 text-muted-foreground">...</span>
-                          </PaginationItem>
-                        );
-                      }
-                      pages.push(
-                        <PaginationItem key={totalPages}>
-                          <PaginationLink
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setCurrentPage(totalPages);
-                            }}
-                            className="hover:bg-accent"
-                          >
-                            {totalPages}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                    }
-                    
-                    return pages;
-                  })()}
-                  
-                  <PaginationItem>
-                    <PaginationNext 
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-                      }}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "hover:bg-accent"}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+            }
+            className="mt-6 rounded-lg border bg-card"
+          >
+            {view === "grid" ? (
+              <ProductGrid products={products} isLoading={isLoading} />
+            ) : (
+              <ProductTable products={products} isLoading={isLoading} />
+            )}
+          </InfiniteScroll>
+
+          {/* Info Banner */}
+          {totalCount && totalCount > 0 && (
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              Toplam <span className="font-medium text-foreground">{totalCount}</span> ürün,
+              <span className="font-medium text-foreground"> {products.length}</span> adet yüklendi
             </div>
           )}
         </div>

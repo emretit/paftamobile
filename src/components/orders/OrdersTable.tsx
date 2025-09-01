@@ -3,16 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, ShoppingCart } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-
-interface Order {
-  id: string;
-  order_number: string;
-  customer_name: string;
-  total_amount: number;
-  status: string;
-  created_at: string;
-  items_count: number;
-}
+import { Order, OrderStatus } from "@/types/orders";
 
 interface OrdersTableProps {
   orders: Order[];
@@ -31,16 +22,20 @@ const OrdersTable = ({
   selectedStatus,
   selectedCustomer
 }: OrdersTableProps) => {
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: OrderStatus) => {
     switch (status) {
       case "pending":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
       case "confirmed":
         return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "shipped":
+      case "processing":
         return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+      case "shipped":
+        return "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200";
       case "delivered":
         return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "completed":
+        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
       case "cancelled":
         return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
       default:
@@ -48,21 +43,39 @@ const OrdersTable = ({
     }
   };
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabel = (status: OrderStatus) => {
     switch (status) {
       case "pending":
         return "Beklemede";
       case "confirmed":
         return "Onaylandı";
+      case "processing":
+        return "İşlemde";
       case "shipped":
         return "Kargoda";
       case "delivered":
         return "Teslim Edildi";
+      case "completed":
+        return "Tamamlandı";
       case "cancelled":
         return "İptal Edildi";
       default:
         return status;
     }
+  };
+
+  const getCustomerDisplayName = (order: Order) => {
+    if (order.customer) {
+      return order.customer.company || order.customer.name;
+    }
+    return "Müşteri bilgisi yok";
+  };
+
+  const getItemsCount = (order: Order) => {
+    if (order.items && order.items.length > 0) {
+      return order.items.length;
+    }
+    return 0;
   };
 
   if (isLoading) {
@@ -93,6 +106,7 @@ const OrdersTable = ({
           <TableRow>
             <TableHead>Sipariş No</TableHead>
             <TableHead>Müşteri</TableHead>
+            <TableHead>Başlık</TableHead>
             <TableHead>Ürün Sayısı</TableHead>
             <TableHead>Toplam Tutar</TableHead>
             <TableHead>Durum</TableHead>
@@ -104,9 +118,12 @@ const OrdersTable = ({
           {orders.map((order) => (
             <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50">
               <TableCell className="font-medium">{order.order_number}</TableCell>
-              <TableCell>{order.customer_name}</TableCell>
-              <TableCell>{order.items_count} ürün</TableCell>
-              <TableCell>{formatCurrency(order.total_amount)}</TableCell>
+              <TableCell>{getCustomerDisplayName(order)}</TableCell>
+              <TableCell className="max-w-[200px] truncate" title={order.title}>
+                {order.title}
+              </TableCell>
+              <TableCell>{getItemsCount(order)} ürün</TableCell>
+              <TableCell>{formatCurrency(order.total_amount, order.currency)}</TableCell>
               <TableCell>
                 <Badge className={getStatusColor(order.status)}>
                   {getStatusLabel(order.status)}

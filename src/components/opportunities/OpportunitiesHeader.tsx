@@ -3,8 +3,16 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import OpportunityForm from "./OpportunityForm";
+import OpportunitiesViewToggle from "./OpportunitiesViewToggle";
 
-const OpportunitiesHeader = () => {
+type ViewType = "kanban" | "list";
+
+interface OpportunitiesHeaderProps {
+  activeView: ViewType;
+  setActiveView: (view: ViewType) => void;
+}
+
+const OpportunitiesHeader = ({ activeView, setActiveView }: OpportunitiesHeaderProps) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   return (
@@ -19,6 +27,10 @@ const OpportunitiesHeader = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <OpportunitiesViewToggle 
+            activeView={activeView} 
+            setActiveView={setActiveView} 
+          />
           <Button 
             className="flex items-center gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg transition-all duration-300" 
             onClick={() => setIsFormOpen(true)}

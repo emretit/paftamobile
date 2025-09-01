@@ -538,7 +538,7 @@ const ProposalEdit = ({ isCollapsed, setIsCollapsed }: ProposalEditProps) => {
   const handleConvertToOrder = () => {
     if (!proposal) return;
     
-    navigate(`/orders/purchase?proposalId=${proposal.id}`);
+    navigate(`/orders/create?proposalId=${proposal.id}`);
     toast.success("Sipariş oluşturma sayfasına yönlendiriliyorsunuz");
   };
 

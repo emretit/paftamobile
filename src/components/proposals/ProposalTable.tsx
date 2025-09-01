@@ -18,13 +18,12 @@ import { Button } from "@/components/ui/button";
 import { Download, FileText } from "lucide-react";
 
 interface ProposalTableProps {
-  filters: ProposalFilters;
+  proposals: Proposal[];
+  isLoading: boolean;
   onProposalSelect: (proposal: Proposal) => void;
 }
 
-const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
-  // Call useProposals with filters now
-  const { data, isLoading, error } = useProposals(filters);
+const ProposalTable = ({ proposals, isLoading, onProposalSelect }: ProposalTableProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [sortField, setSortField] = useState<string>("created_at");
@@ -152,21 +151,16 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
     return symbols[currency] || currency;
   };
 
-  if (isLoading) {
+  if (isLoading && proposals.length === 0) {
     return <ProposalTableSkeleton />;
   }
-  
-  if (error) {
-    console.error("Error loading proposals:", error);
-    return <div className="p-4 text-center text-red-500">Veri yüklenirken bir hata oluştu.</div>;
-  }
 
-  if (!data || data.length === 0) {
+  if (!proposals || proposals.length === 0) {
     return <div className="p-4 text-center text-gray-500">Henüz teklif bulunmamaktadır.</div>;
   }
 
   // Sort proposals based on the sort field and direction
-  const sortedProposals = [...data].sort((a, b) => {
+  const sortedProposals = [...proposals].sort((a, b) => {
     if (!a || !b) return 0;
     
     const fieldA = sortField === 'customer' 
@@ -197,14 +191,9 @@ const ProposalTable = ({ filters, onProposalSelect }: ProposalTableProps) => {
       : valueB.localeCompare(valueA);
   });
 
-  // Filter proposals based on search query from parent filters
-  const filteredProposals = filters.search.trim() === "" 
-    ? sortedProposals 
-    : sortedProposals.filter((proposal) => 
-        proposal.title?.toLowerCase().includes(filters.search.toLowerCase()) ||
-        proposal.number?.toString().includes(filters.search) ||
-        proposal.customer?.name?.toLowerCase().includes(filters.search.toLowerCase())
-      );
+  // Since we're now receiving proposals directly, no need for additional filtering
+  // The filtering is handled at the parent level with infinite scroll
+  const filteredProposals = sortedProposals;
 
   return (
     <div className="bg-gradient-to-br from-card via-muted/20 to-background rounded-2xl shadow-2xl border border-border/10 backdrop-blur-xl relative overflow-hidden">

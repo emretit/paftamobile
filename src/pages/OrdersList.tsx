@@ -6,6 +6,7 @@ import OrdersPageHeader from "@/components/orders/header/OrdersPageHeader";
 import OrdersFilterBar from "@/components/orders/filters/OrdersFilterBar";
 import OrdersContent from "@/components/orders/OrdersContent";
 import { ViewType } from "@/components/orders/header/OrdersViewToggle";
+import { Order } from "@/types/orders";
 
 interface OrdersListProps {
   isCollapsed: boolean;
@@ -23,9 +24,9 @@ const OrdersList = ({ isCollapsed, setIsCollapsed }: OrdersListProps) => {
     navigate("/orders/create");
   };
 
-  const handleSelectOrder = (order: any) => {
-    // TODO: Handle order selection
-    console.log("Selected order:", order);
+  const handleSelectOrder = (order: Order) => {
+    // TODO: Navigate to order detail page
+    navigate(`/orders/${order.id}`);
   };
 
   return (
