@@ -1,4 +1,5 @@
 
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
@@ -94,17 +95,18 @@ serve(async (req) => {
           IsArchive: 'false'
         });
         
-        // Add date filters - default to last 30 days if not provided
+        // Add date filters - default to current month if not provided (max 6 months per Nilvera API)
         const now = new Date();
-        const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
         
-        const startDate = filters?.startDate || thirtyDaysAgo.toISOString().split('T')[0] + 'T00:00:00.000Z';
-        const endDate = filters?.endDate || now.toISOString().split('T')[0] + 'T23:59:59.999Z';
+        const startDate = filters?.startDate || startOfMonth.toISOString().split('T')[0] + 'T00:00:00.000Z';
+        const endDate = filters?.endDate || endOfMonth.toISOString().split('T')[0] + 'T23:59:59.999Z';
         
         queryParams.append('StartDate', startDate);
         queryParams.append('EndDate', endDate);
         
-        console.log('📅 Date filter:', { startDate, endDate });
+        console.log('📅 Date filter (current month):', { startDate, endDate });
         
         const apiUrl = `https://apitest.nilvera.com/einvoice/Purchase?${queryParams.toString()}`;
         console.log('🌐 Endpoint:', apiUrl);
@@ -253,17 +255,18 @@ serve(async (req) => {
           SortType: 'DESC'
         });
         
-        // Add date filters - default to last 30 days if not provided
+        // Add date filters - default to current month if not provided (max 6 months per Nilvera API)
         const now = new Date();
-        const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
         
-        const startDate = filters?.startDate || thirtyDaysAgo.toISOString().split('T')[0] + 'T00:00:00.000Z';
-        const endDate = filters?.endDate || now.toISOString().split('T')[0] + 'T23:59:59.999Z';
+        const startDate = filters?.startDate || startOfMonth.toISOString().split('T')[0] + 'T00:00:00.000Z';
+        const endDate = filters?.endDate || endOfMonth.toISOString().split('T')[0] + 'T23:59:59.999Z';
         
         queryParams.append('StartDate', startDate);
         queryParams.append('EndDate', endDate);
         
-        console.log('📅 E-archive date filter:', { startDate, endDate });
+        console.log('📅 E-archive date filter (current month):', { startDate, endDate });
         
         const apiUrl = `https://apitest.nilvera.com/einvoice/Sale?${queryParams.toString()}`;
         console.log('🌐 E-archive Endpoint:', apiUrl);

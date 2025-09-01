@@ -26,9 +26,21 @@ import { useToast } from '@/hooks/use-toast';
 import EInvoiceProcessModal from './EInvoiceProcessModal';
 
 export default function EInvoiceList() {
-  // Date range filter states - Expand to get more invoices
-  const [startDate, setStartDate] = useState('2025-01-01');
-  const [endDate, setEndDate] = useState('2025-12-31');
+  // Date range filter states - Default to current month
+  const getCurrentMonthRange = () => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    
+    return {
+      start: startOfMonth.toISOString().split('T')[0],
+      end: endOfMonth.toISOString().split('T')[0]
+    };
+  };
+  
+  const currentMonth = getCurrentMonthRange();
+  const [startDate, setStartDate] = useState(currentMonth.start);
+  const [endDate, setEndDate] = useState(currentMonth.end);
   
   const { incomingInvoices, isLoading, refetch } = useIncomingInvoices({ startDate, endDate });
   const { toast } = useToast();
