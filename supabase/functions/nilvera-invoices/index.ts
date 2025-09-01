@@ -38,7 +38,7 @@ serve(async (req) => {
 
     const { action, filters } = await req.json();
 
-    // Check for Nilvera authentication data (optional for now)
+    // Get the user's Nilvera authentication data
     const { data: nilveraAuth, error: authError } = await supabase
       .from('nilvera_auth')
       .select('*')
@@ -46,26 +46,65 @@ serve(async (req) => {
       .eq('is_active', true)
       .single();
 
-    // If no auth, we'll use mock data for now
-    const useRealAPI = nilveraAuth && !authError;
+    if (authError || !nilveraAuth) {
+      throw new Error('Nilvera authentication not found. Please configure Nilvera settings first.');
+    }
 
     if (action === 'fetch_incoming') {
-      if (useRealAPI) {
-        // TODO: Make actual API calls to Nilvera to fetch incoming invoices
-        console.log('Using real Nilvera API...');
-      }
-      
-      // For now, check database first, then add some mock data if empty
-      const { data: invoices, error: invoicesError } = await supabase
-        .from('einvoices_received')
-        .select('*')
-        .order('created_at', { ascending: false });
+      try {
+        // Make actual API call to Nilvera to fetch incoming invoices
+        const nilveraResponse = await fetch('https://efaturatest.nilvera.com/api/v1/einvoice/incoming', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${nilveraAuth.api_key}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
 
-      let transformedInvoices = [];
-      
-      if (invoices && invoices.length > 0) {
-        // Transform database data to match expected format
-        transformedInvoices = invoices.map(invoice => ({
+        if (!nilveraResponse.ok) {
+          throw new Error(`Nilvera API error: ${nilveraResponse.status}`);
+        }
+
+        const nilveraData = await nilveraResponse.json();
+        console.log('Nilvera incoming invoices response:', nilveraData);
+
+        // Transform Nilvera data to our format
+        const transformedInvoices = (nilveraData.data || []).map((invoice: any) => ({
+          id: invoice.id || invoice.uuid,
+          invoiceNumber: invoice.invoiceNumber || invoice.invoiceId,
+          supplierName: invoice.supplierName || invoice.sender?.name,
+          supplierTaxNumber: invoice.supplierTaxNumber || invoice.sender?.taxNumber,
+          invoiceDate: invoice.issueDate || invoice.invoiceDate,
+          dueDate: invoice.dueDate,
+          totalAmount: parseFloat(invoice.totalAmount || invoice.amount || 0),
+          paidAmount: parseFloat(invoice.paidAmount || 0),
+          currency: invoice.currency || 'TRY',
+          taxAmount: parseFloat(invoice.taxAmount || invoice.vatAmount || 0),
+          status: invoice.status || 'pending',
+          responseStatus: invoice.responseStatus || 'pending',
+          isAnswered: invoice.isAnswered || false,
+          pdfUrl: invoice.pdfUrl,
+          xmlData: invoice.xmlContent || invoice.xmlData
+        }));
+
+        return new Response(JSON.stringify({ 
+          success: true,
+          invoices: transformedInvoices
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+
+      } catch (apiError) {
+        console.error('Nilvera API call failed:', apiError);
+        
+        // Fallback to database data if API fails
+        const { data: invoices } = await supabase
+          .from('einvoices_received')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        const transformedInvoices = (invoices || []).map(invoice => ({
           id: invoice.id,
           invoiceNumber: invoice.invoice_id || invoice.invoice_uuid,
           supplierName: invoice.supplier_name,
@@ -82,71 +121,79 @@ serve(async (req) => {
           pdfUrl: null,
           xmlData: invoice.xml_content ? JSON.parse(invoice.xml_content) : null
         }));
-      } else {
-        // Add some mock data for demonstration
-        transformedInvoices = [
-          {
-            id: 'mock-1',
-            invoiceNumber: 'ABC2024000001',
-            supplierName: 'Test Tedarikçi A.Ş.',
-            supplierTaxNumber: '1234567890',
-            invoiceDate: new Date().toISOString().split('T')[0],
-            dueDate: null,
-            totalAmount: 2500.00,
-            paidAmount: 0,
-            currency: 'TRY',
-            taxAmount: 450.00,
-            status: 'pending',
-            responseStatus: 'pending',
-            isAnswered: false,
-            pdfUrl: null,
-            xmlData: null
-          },
-          {
-            id: 'mock-2',
-            invoiceNumber: 'DEF2024000002',
-            supplierName: 'Örnek Firma Ltd.',
-            supplierTaxNumber: '0987654321',
-            invoiceDate: new Date(Date.now() - 86400000).toISOString().split('T')[0],
-            dueDate: null,
-            totalAmount: 1750.00,
-            paidAmount: 0,
-            currency: 'TRY',
-            taxAmount: 315.00,
-            status: 'approved',
-            responseStatus: 'sent',
-            isAnswered: true,
-            pdfUrl: null,
-            xmlData: null
-          }
-        ];
-      }
 
-      return new Response(JSON.stringify({ 
-        success: true,
-        invoices: transformedInvoices
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+        return new Response(JSON.stringify({ 
+          success: true,
+          invoices: transformedInvoices,
+          source: 'database_fallback',
+          apiError: apiError.message
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     if (action === 'fetch_earchive') {
-      if (useRealAPI) {
-        // TODO: Make actual API calls to Nilvera to fetch e-archive invoices
-        console.log('Using real Nilvera API...');
-      }
-      
-      // For now, check database first, then add some mock data if empty
-      const { data: invoices, error: invoicesError } = await supabase
-        .from('einvoices_sent')
-        .select('*')
-        .order('created_at', { ascending: false });
+      try {
+        // Make actual API call to Nilvera to fetch outgoing e-archive invoices
+        const nilveraResponse = await fetch('https://efaturatest.nilvera.com/api/v1/earchive/outgoing', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${nilveraAuth.api_key}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
 
-      let transformedInvoices = [];
-      
-      if (invoices && invoices.length > 0) {
-        // Transform database data to match expected format
-        transformedInvoices = invoices.map(invoice => ({
+        if (!nilveraResponse.ok) {
+          throw new Error(`Nilvera API error: ${nilveraResponse.status}`);
+        }
+
+        const nilveraData = await nilveraResponse.json();
+        console.log('Nilvera e-archive invoices response:', nilveraData);
+
+        // Transform Nilvera data to our format
+        const transformedInvoices = (nilveraData.data || []).map((invoice: any) => ({
+          id: invoice.id || invoice.uuid,
+          invoiceNumber: invoice.invoiceNumber || invoice.invoiceId,
+          customerName: invoice.customerName || invoice.receiver?.name,
+          customerTaxNumber: invoice.customerTaxNumber || invoice.receiver?.taxNumber,
+          invoiceDate: invoice.issueDate || invoice.invoiceDate,
+          dueDate: invoice.dueDate,
+          totalAmount: parseFloat(invoice.totalAmount || invoice.amount || 0),
+          paidAmount: parseFloat(invoice.paidAmount || 0),
+          currency: invoice.currency || 'TRY',
+          taxAmount: parseFloat(invoice.taxAmount || invoice.vatAmount || 0),
+          status: invoice.status || 'pending',
+          statusCode: invoice.statusCode?.toString() || '0',
+          sendType: invoice.sendType || 'electronic',
+          isCancel: invoice.isCancel || false,
+          isReport: invoice.isReport || false,
+          isRead: invoice.isRead || true,
+          isPrint: invoice.isPrint || false,
+          isInternet: invoice.isInternet || true,
+          isTransfer: invoice.isTransfer || false,
+          pdfUrl: invoice.pdfUrl,
+          xmlData: invoice.xmlContent || invoice.xmlData
+        }));
+
+        return new Response(JSON.stringify({ 
+          success: true,
+          invoices: transformedInvoices
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+
+      } catch (apiError) {
+        console.error('Nilvera API call failed:', apiError);
+        
+        // Fallback to database data if API fails
+        const { data: invoices } = await supabase
+          .from('einvoices_sent')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        const transformedInvoices = (invoices || []).map(invoice => ({
           id: invoice.id,
           invoiceNumber: invoice.invoice_id || invoice.invoice_uuid,
           customerName: invoice.customer_name,
@@ -169,64 +216,16 @@ serve(async (req) => {
           pdfUrl: null,
           xmlData: invoice.xml_content ? JSON.parse(invoice.xml_content) : null
         }));
-      } else {
-        // Add some mock data for demonstration
-        transformedInvoices = [
-          {
-            id: 'mock-sent-1',
-            invoiceNumber: 'SF2024000001',
-            customerName: 'ABC Müşteri Ltd.',
-            customerTaxNumber: '5555555555',
-            invoiceDate: new Date().toISOString().split('T')[0],
-            dueDate: null,
-            totalAmount: 3200.00,
-            paidAmount: 3200.00,
-            currency: 'TRY',
-            taxAmount: 576.00,
-            status: 'approved',
-            statusCode: '1',
-            sendType: 'electronic',
-            isCancel: false,
-            isReport: false,
-            isRead: true,
-            isPrint: false,
-            isInternet: true,
-            isTransfer: true,
-            pdfUrl: null,
-            xmlData: null
-          },
-          {
-            id: 'mock-sent-2',
-            invoiceNumber: 'SF2024000002',
-            customerName: 'XYZ Şirketi A.Ş.',
-            customerTaxNumber: '6666666666',
-            invoiceDate: new Date(Date.now() - 172800000).toISOString().split('T')[0],
-            dueDate: null,
-            totalAmount: 1850.00,
-            paidAmount: 0,
-            currency: 'TRY',
-            taxAmount: 333.00,
-            status: 'pending',
-            statusCode: '0',
-            sendType: 'electronic',
-            isCancel: false,
-            isReport: false,
-            isRead: true,
-            isPrint: false,
-            isInternet: true,
-            isTransfer: false,
-            pdfUrl: null,
-            xmlData: null
-          }
-        ];
-      }
 
-      return new Response(JSON.stringify({ 
-        success: true,
-        invoices: transformedInvoices
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+        return new Response(JSON.stringify({ 
+          success: true,
+          invoices: transformedInvoices,
+          source: 'database_fallback',
+          apiError: apiError.message
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     throw new Error('Invalid action');
