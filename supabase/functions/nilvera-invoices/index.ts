@@ -93,13 +93,17 @@ serve(async (req) => {
           IsArchive: 'false'
         });
         
-        // Add date filters if provided
-        if (filters?.startDate) {
-          queryParams.append('StartDate', filters.startDate);
-        }
-        if (filters?.endDate) {
-          queryParams.append('EndDate', filters.endDate);
-        }
+        // Add date filters - default to last 30 days if not provided
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+        
+        const startDate = filters?.startDate || thirtyDaysAgo.toISOString().split('T')[0] + 'T00:00:00.000Z';
+        const endDate = filters?.endDate || now.toISOString().split('T')[0] + 'T23:59:59.999Z';
+        
+        queryParams.append('StartDate', startDate);
+        queryParams.append('EndDate', endDate);
+        
+        console.log('📅 Date filter:', { startDate, endDate });
         
         const apiUrl = `https://apitest.nilvera.com/einvoice/Purchase?${queryParams.toString()}`;
         console.log('🌐 Endpoint:', apiUrl);
@@ -228,6 +232,18 @@ serve(async (req) => {
           SortColumn: 'IssueDate',
           SortType: 'DESC'
         });
+        
+        // Add date filters - default to last 30 days if not provided
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+        
+        const startDate = filters?.startDate || thirtyDaysAgo.toISOString().split('T')[0] + 'T00:00:00.000Z';
+        const endDate = filters?.endDate || now.toISOString().split('T')[0] + 'T23:59:59.999Z';
+        
+        queryParams.append('StartDate', startDate);
+        queryParams.append('EndDate', endDate);
+        
+        console.log('📅 E-archive date filter:', { startDate, endDate });
         
         const apiUrl = `https://apitest.nilvera.com/einvoice/Sale?${queryParams.toString()}`;
         console.log('🌐 E-archive Endpoint:', apiUrl);
