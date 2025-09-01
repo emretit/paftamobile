@@ -29,8 +29,20 @@ export const useIncomingInvoices = () => {
       setIsLoading(true);
       console.log('🔄 Starting fetchIncomingInvoices...');
       
+      // Default to 1 August - 1 September for testing (to match Nilvera portal filter)
+      const startDate = '2025-08-01T00:00:00.000Z';
+      const endDate = '2025-09-01T23:59:59.999Z';
+      
+      console.log('📅 Frontend sending date filters:', { startDate, endDate });
+      
       const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
-        body: { action: 'fetch_incoming' }
+        body: { 
+          action: 'fetch_incoming',
+          filters: {
+            startDate,
+            endDate
+          }
+        }
       });
 
       console.log('📡 Supabase function response:', { data, error });

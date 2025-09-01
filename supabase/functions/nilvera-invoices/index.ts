@@ -84,10 +84,10 @@ serve(async (req) => {
         console.log('🔄 Starting Nilvera API call for incoming invoices...');
         console.log('🔑 Using API key:', nilveraAuth.api_key ? `${nilveraAuth.api_key.substring(0, 8)}...` : 'MISSING');
         
-        // Build query parameters
+        // Build query parameters - increase PageSize to get more invoices
         const queryParams = new URLSearchParams({
           Page: '1',
-          PageSize: '50',
+          PageSize: '100', // Increased from 50 to 100
           SortColumn: 'IssueDate',
           SortType: 'DESC',
           IsArchive: 'false'
@@ -127,14 +127,19 @@ serve(async (req) => {
         }
 
                             const nilveraData = await nilveraResponse.json();
-                    console.log('✅ Nilvera API Response Data:', JSON.stringify(nilveraData, null, 2));
-                    console.log('📊 Data structure:', {
-                      hasData: !!nilveraData.data,
-                      dataType: typeof nilveraData.data,
-                      dataLength: Array.isArray(nilveraData.data) ? nilveraData.data.length : 'not array',
-                      firstItem: nilveraData.data?.[0] ? Object.keys(nilveraData.data[0]) : 'no items',
-                      fullResponseKeys: Object.keys(nilveraData)
+                    console.log('✅ Nilvera API Response received');
+                    console.log('📊 Pagination info:', {
+                      Page: nilveraData.Page,
+                      PageSize: nilveraData.PageSize,
+                      TotalCount: nilveraData.TotalCount,
+                      TotalPages: nilveraData.TotalPages,
+                      ContentLength: nilveraData.Content?.length || 0
                     });
+                    
+                    // Only log first invoice to avoid huge console output
+                    if (nilveraData.Content?.length > 0) {
+                      console.log('📄 First invoice sample:', nilveraData.Content[0]);
+                    }
 
         // Transform Nilvera data to our format
         // Nilvera API returns { Page, PageSize, TotalCount, TotalPages, Content: [...] }
