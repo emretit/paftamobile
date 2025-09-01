@@ -21,7 +21,7 @@ export interface IncomingInvoice {
   xmlData: any;
 }
 
-export const useIncomingInvoices = () => {
+export const useIncomingInvoices = (dateFilters?: { startDate?: string; endDate?: string }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchIncomingInvoices = async (): Promise<IncomingInvoice[]> => {
@@ -29,11 +29,11 @@ export const useIncomingInvoices = () => {
       setIsLoading(true);
       console.log('🔄 Starting fetchIncomingInvoices...');
       
-      // Default to 1 August - 1 September for testing (to match Nilvera portal filter)
-      const startDate = '2025-08-01T00:00:00.000Z';
-      const endDate = '2025-09-01T23:59:59.999Z';
+      // Use provided date filters or default to 1 August - 1 September
+      const startDate = dateFilters?.startDate ? `${dateFilters.startDate}T00:00:00.000Z` : '2025-08-01T00:00:00.000Z';
+      const endDate = dateFilters?.endDate ? `${dateFilters.endDate}T23:59:59.999Z` : '2025-09-01T23:59:59.999Z';
       
-      console.log('📅 Frontend sending date filters:', { startDate, endDate });
+      console.log('📅 Frontend sending date filters:', { startDate, endDate, fromProps: !!dateFilters });
       
       const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
         body: { 

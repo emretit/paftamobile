@@ -26,7 +26,11 @@ import { useToast } from '@/hooks/use-toast';
 import EInvoiceProcessModal from './EInvoiceProcessModal';
 
 export default function EInvoiceList() {
-  const { incomingInvoices, isLoading, refetch } = useIncomingInvoices();
+  // Date range filter states
+  const [startDate, setStartDate] = useState('2025-08-01');
+  const [endDate, setEndDate] = useState('2025-09-01');
+  
+  const { incomingInvoices, isLoading, refetch } = useIncomingInvoices({ startDate, endDate });
   const { toast } = useToast();
   
   // Filter states
@@ -35,6 +39,11 @@ export default function EInvoiceList() {
   const [dateFilter, setDateFilter] = useState('all');
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
+  
+  // Refetch when date filters change
+  useEffect(() => {
+    refetch();
+  }, [startDate, endDate, refetch]);
 
   // Filter unprocessed invoices only (not answered or processed)
   const unprocessedInvoices = incomingInvoices.filter(invoice => {
@@ -103,57 +112,81 @@ export default function EInvoiceList() {
                 Henüz işlenmemiş gelen e-faturaları görüntüleyin ve işleme alın
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                {filteredInvoices.length} Fatura
-              </Badge>
-              <Button 
-                onClick={handleRefresh} 
-                disabled={isLoading}
-                className="bg-orange-500 hover:bg-orange-600"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-                Yenile
-              </Button>
-            </div>
+            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+              {filteredInvoices.length} Fatura
+            </Badge>
           </div>
         </CardHeader>
         
         <CardContent>
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Fatura no, firma adı veya vergi no ile ara..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          <div className="flex flex-col gap-4 mb-6">
+            {/* Date Range Filter */}
+            <div className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Tarih Aralığı:</span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-muted-foreground">Başlangıç:</label>
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-[140px]"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-muted-foreground">Bitiş:</label>
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-[140px]"
+                  />
+                </div>
+                <Button 
+                  onClick={handleRefresh}
+                  disabled={isLoading}
+                  size="sm"
+                  className="bg-orange-500 hover:bg-orange-600"
+                >
+                  Filtrele
+                </Button>
               </div>
             </div>
             
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Durum filtresi" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tüm Durumlar</SelectItem>
-                <SelectItem value="unanswered">Cevaplanmamış</SelectItem>
-                <SelectItem value="pending">Beklemede</SelectItem>
-                <SelectItem value="overdue">Gecikmiş</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Search and Status Filters */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Fatura no, firma adı veya vergi no ile ara..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Durum filtresi" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tüm Durumlar</SelectItem>
+                  <SelectItem value="unanswered">Cevaplanmamış</SelectItem>
+                  <SelectItem value="pending">Beklemede</SelectItem>
+                  <SelectItem value="overdue">Gecikmiş</SelectItem>
+                </SelectContent>
+              </Select>
 
-            <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Tarih filtresi" />
-              </SelectTrigger>
+              <Select value={dateFilter} onValueChange={setDateFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Tarih filtresi" />
+                </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tüm Tarihler</SelectItem>
                 <SelectItem value="today">Bugün</SelectItem>
