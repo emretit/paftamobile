@@ -111,7 +111,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
       pageSize,
       enabled: true,
       staleTime: 5 * 60 * 1000, // 5 dakika
-      cacheTime: 10 * 60 * 1000, // 10 dakika
+      gcTime: 10 * 60 * 1000, // 10 dakika
     }
   );
 
@@ -129,7 +129,7 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
   };
 
   const handleExportExcel = () => {
-    exportProductsToExcel(allProducts);
+    exportProductsToExcel(products as any);
   };
 
   const handleImportExcel = () => {
@@ -208,9 +208,9 @@ const Products = ({ isCollapsed, setIsCollapsed }: ProductsProps) => {
             className="mt-6 rounded-lg border bg-card"
           >
             {view === "grid" ? (
-              <ProductGrid products={products} isLoading={isLoading} />
+              <ProductGrid products={products as any} isLoading={isLoading} />
             ) : (
-              <ProductTable products={products} isLoading={isLoading} />
+              <ProductTable products={products as any} isLoading={isLoading} />
             )}
           </InfiniteScroll>
 

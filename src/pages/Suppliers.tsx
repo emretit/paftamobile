@@ -82,7 +82,7 @@ const Suppliers = ({ isCollapsed, setIsCollapsed }: SuppliersProps) => {
       pageSize,
       enabled: true,
       staleTime: 5 * 60 * 1000, // 5 dakika
-      cacheTime: 10 * 60 * 1000, // 10 dakika
+      gcTime: 10 * 60 * 1000, // 10 dakika
     }
   );
 
