@@ -131,12 +131,8 @@ const ProposalFormContent: React.FC<ProposalFormContentProps> = ({
                   Geçerlilik Tarihi
                 </Label>
                 <DatePicker 
-                  selected={validUntilDate}
+                  date={validUntilDate}
                   onSelect={(date) => handleDateChange(date)}
-                  className={cn(
-                    "transition-all duration-200",
-                    formErrors.valid_until && "border-destructive ring-destructive/20"
-                  )}
                 />
                 {formErrors.valid_until && (
                   <p className="text-xs text-destructive flex items-center gap-1">

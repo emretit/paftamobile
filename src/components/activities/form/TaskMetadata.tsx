@@ -34,7 +34,7 @@ const TaskMetadata = ({ watch, setValue, errors }: TaskMetadataProps) => {
       <div className="grid gap-2">
         <Label htmlFor="due_date">Son Tarih</Label>
         <DatePicker 
-          selected={watch("due_date")} 
+          date={watch("due_date")} 
           onSelect={(date) => setValue("due_date", date)} 
           placeholder="Son tarih seçin" 
         />
