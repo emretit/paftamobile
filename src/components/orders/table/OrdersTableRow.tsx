@@ -3,11 +3,21 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Order, OrderStatus } from "@/types/orders";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Eye, Edit, MoreHorizontal, Trash2, ShoppingCart } from "lucide-react";
+import { 
+  Eye, 
+  Edit, 
+  MoreHorizontal, 
+  Trash2, 
+  ShoppingCart, 
+  FileText, 
+  Settings, 
+  Printer,
+  Receipt
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { formatCurrency } from "@/lib/utils";
 
 interface OrdersTableRowProps {
@@ -16,6 +26,9 @@ interface OrdersTableRowProps {
   onSelect: (order: Order) => void;
   onEdit?: (order: Order) => void;
   onDelete?: (orderId: string) => void;
+  onConvertToInvoice?: (order: Order) => void;
+  onConvertToService?: (order: Order) => void;
+  onPrint?: (order: Order) => void;
 }
 
 export const OrdersTableRow: React.FC<OrdersTableRowProps> = ({
@@ -23,7 +36,10 @@ export const OrdersTableRow: React.FC<OrdersTableRowProps> = ({
   index, 
   onSelect,
   onEdit,
-  onDelete
+  onDelete,
+  onConvertToInvoice,
+  onConvertToService,
+  onPrint
 }) => {
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
@@ -88,6 +104,21 @@ export const OrdersTableRow: React.FC<OrdersTableRowProps> = ({
     if (onDelete) onDelete(order.id);
   };
 
+  const handleConvertToInvoice = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onConvertToInvoice) onConvertToInvoice(order);
+  };
+
+  const handleConvertToService = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onConvertToService) onConvertToService(order);
+  };
+
+  const handlePrint = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onPrint) onPrint(order);
+  };
+
   return (
     <TableRow 
       className="cursor-pointer hover:bg-gray-50 transition-colors duration-200"
@@ -145,20 +176,42 @@ export const OrdersTableRow: React.FC<OrdersTableRowProps> = ({
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={handleEdit}>
                 <Edit className="h-4 w-4 mr-2" />
                 Düzenle
               </DropdownMenuItem>
               
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem onClick={handleConvertToInvoice}>
+                <Receipt className="h-4 w-4 mr-2" />
+                Faturaya Çevir
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem onClick={handleConvertToService}>
+                <Settings className="h-4 w-4 mr-2" />
+                Servise Çevir
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem onClick={handlePrint}>
+                <Printer className="h-4 w-4 mr-2" />
+                Yazdır
+              </DropdownMenuItem>
+              
               {onDelete && (
-                <DropdownMenuItem
-                  onClick={handleDelete}
-                  className="text-red-600"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Sil
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleDelete}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Sil
+                  </DropdownMenuItem>
+                </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>

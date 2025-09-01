@@ -18,6 +18,11 @@ interface OrdersTableProps {
   searchQuery: string;
   selectedStatus: string;
   selectedCustomer: string;
+  onEditOrder?: (order: Order) => void;
+  onDeleteOrder?: (orderId: string) => void;
+  onConvertToInvoice?: (order: Order) => void;
+  onConvertToService?: (order: Order) => void;
+  onPrintOrder?: (order: Order) => void;
 }
 
 const OrdersTable = ({
@@ -26,7 +31,12 @@ const OrdersTable = ({
   onSelectOrder,
   searchQuery,
   selectedStatus,
-  selectedCustomer
+  selectedCustomer,
+  onEditOrder,
+  onDeleteOrder,
+  onConvertToInvoice,
+  onConvertToService,
+  onPrintOrder
 }: OrdersTableProps) => {
   const [sortField, setSortField] = useState<string>("order_date");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -84,53 +94,45 @@ const OrdersTable = ({
 
   if (isLoading && orders.length === 0) {
     return (
-      <div className="bg-gradient-to-br from-card via-muted/20 to-background rounded-2xl shadow-2xl border border-border/10 backdrop-blur-xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 opacity-50"></div>
-        <div className="relative z-10 p-6">
-          <div className="flex items-center justify-center h-[400px]">
-            <div className="text-muted-foreground">Siparişler yükleniyor...</div>
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-[400px]">
+        <div className="text-muted-foreground">Siparişler yükleniyor...</div>
       </div>
     );
   }
 
   if (!orders || orders.length === 0) {
     return (
-      <div className="bg-gradient-to-br from-card via-muted/20 to-background rounded-2xl shadow-2xl border border-border/10 backdrop-blur-xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 opacity-50"></div>
-        <div className="relative z-10 p-6">
-          <div className="text-center text-muted-foreground">Henüz sipariş bulunmamaktadır.</div>
-        </div>
+      <div className="text-center text-muted-foreground py-8">
+        Henüz sipariş bulunmamaktadır.
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-card via-muted/20 to-background rounded-2xl shadow-2xl border border-border/10 backdrop-blur-xl relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 opacity-50"></div>
-      <div className="relative z-10 p-6">
-        <div className="overflow-x-auto">
-          <Table className="border-collapse">
-            <OrdersTableHeader 
-              columns={columns} 
-              sortField={sortField}
-              sortDirection={sortDirection}
-              onSort={handleSort}
+    <div className="overflow-x-auto">
+      <Table className="border-collapse">
+        <OrdersTableHeader 
+          columns={columns} 
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onSort={handleSort}
+        />
+        <TableBody>
+          {sortedOrders.map((order, index) => (
+            <OrdersTableRow
+              key={order.id}
+              order={order}
+              index={index}
+              onSelect={onSelectOrder}
+              onEdit={onEditOrder}
+              onDelete={onDeleteOrder}
+              onConvertToInvoice={onConvertToInvoice}
+              onConvertToService={onConvertToService}
+              onPrint={onPrintOrder}
             />
-            <TableBody>
-              {sortedOrders.map((order, index) => (
-                <OrdersTableRow
-                  key={order.id}
-                  order={order}
-                  index={index}
-                  onSelect={onSelectOrder}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };

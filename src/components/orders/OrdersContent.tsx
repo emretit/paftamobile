@@ -53,6 +53,31 @@ const OrdersContent = ({
     }
   };
 
+  const handleEditOrder = (order: Order) => {
+    // TODO: Navigate to edit page
+    console.log("Edit order:", order);
+  };
+
+  const handleDeleteOrder = (orderId: string) => {
+    // TODO: Show confirmation dialog and delete
+    console.log("Delete order:", orderId);
+  };
+
+  const handleConvertToInvoice = (order: Order) => {
+    // TODO: Navigate to invoice creation
+    console.log("Convert to invoice:", order);
+  };
+
+  const handleConvertToService = (order: Order) => {
+    // TODO: Navigate to service creation
+    console.log("Convert to service:", order);
+  };
+
+  const handlePrintOrder = (order: Order) => {
+    // TODO: Open print dialog/PDF
+    console.log("Print order:", order);
+  };
+
   if (error) {
     return (
       <div className="text-center p-8 text-red-600">
@@ -68,22 +93,30 @@ const OrdersContent = ({
   }
 
   return (
-    <>
-      {activeView === "table" ? (
-        <OrdersTable
-          orders={orders}
-          isLoading={isLoading}
-          onSelectOrder={handleSelectOrder}
-          searchQuery={searchQuery}
-          selectedStatus={selectedStatus}
-          selectedCustomer={selectedCustomer}
-        />
-      ) : (
-        <div className="text-center p-8 text-muted-foreground">
-          <p>Kart görünümü yakında eklenecek...</p>
-        </div>
-      )}
-    </>
+    <div className="bg-gradient-to-br from-card via-muted/20 to-background rounded-2xl shadow-2xl border border-border/10 backdrop-blur-xl relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 opacity-50"></div>
+      <div className="relative z-10 p-8">
+        {activeView === "table" ? (
+          <OrdersTable
+            orders={orders}
+            isLoading={isLoading}
+            onSelectOrder={handleSelectOrder}
+            searchQuery={searchQuery}
+            selectedStatus={selectedStatus}
+            selectedCustomer={selectedCustomer}
+            onEditOrder={handleEditOrder}
+            onDeleteOrder={handleDeleteOrder}
+            onConvertToInvoice={handleConvertToInvoice}
+            onConvertToService={handleConvertToService}
+            onPrintOrder={handlePrintOrder}
+          />
+        ) : (
+          <div className="text-center p-8 text-muted-foreground">
+            <p>Kart görünümü yakında eklenecek...</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
