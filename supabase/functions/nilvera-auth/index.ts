@@ -45,11 +45,23 @@ serve(async (req) => {
         throw new Error('Username, password, and API key are required');
       }
 
+      // Get user's company_id from profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profile?.company_id) {
+        throw new Error('User profile or company not found');
+      }
+
       // Store the encrypted credentials in the database
       const { error: insertError } = await supabase
         .from('nilvera_auth')
         .upsert({
           user_id: user.id,
+          company_id: profile.company_id,
           username: username,
           password: password, // In production, this should be encrypted
           api_key: apiKey,    // In production, this should be encrypted
@@ -57,7 +69,7 @@ serve(async (req) => {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }, {
-          onConflict: 'user_id'
+          onConflict: 'company_id'
         });
 
       if (insertError) {

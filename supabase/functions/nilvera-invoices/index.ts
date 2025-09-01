@@ -38,20 +38,35 @@ serve(async (req) => {
 
     const { action, filters } = await req.json();
 
-    // Get the user's Nilvera authentication data
+    // Get user's company_id from profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('company_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile?.company_id) {
+      throw new Error('User profile or company not found');
+    }
+
+    // Get the company's Nilvera authentication data
     const { data: nilveraAuth, error: authError } = await supabase
       .from('nilvera_auth')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('company_id', profile.company_id)
       .eq('is_active', true)
       .single();
 
     if (authError || !nilveraAuth) {
-      throw new Error('Nilvera authentication not found. Please configure Nilvera settings first.');
+      throw new Error('Nilvera authentication not found for this company. Please configure Nilvera settings first.');
     }
 
     if (action === 'fetch_incoming') {
       try {
+        console.log('🔄 Starting Nilvera API call for incoming invoices...');
+        console.log('🔑 Using API key:', nilveraAuth.api_key ? `${nilveraAuth.api_key.substring(0, 8)}...` : 'MISSING');
+        console.log('🌐 Endpoint:', 'https://efaturatest.nilvera.com/api/v1/einvoice/incoming');
+        
         // Make actual API call to Nilvera to fetch incoming invoices
         const nilveraResponse = await fetch('https://efaturatest.nilvera.com/api/v1/einvoice/incoming', {
           method: 'GET',
@@ -62,12 +77,23 @@ serve(async (req) => {
           }
         });
 
+        console.log('📡 API Response Status:', nilveraResponse.status);
+        console.log('📡 API Response Headers:', Object.fromEntries(nilveraResponse.headers.entries()));
+
         if (!nilveraResponse.ok) {
-          throw new Error(`Nilvera API error: ${nilveraResponse.status}`);
+          const errorText = await nilveraResponse.text();
+          console.error('❌ API Error Response:', errorText);
+          throw new Error(`Nilvera API error: ${nilveraResponse.status} - ${errorText}`);
         }
 
         const nilveraData = await nilveraResponse.json();
-        console.log('Nilvera incoming invoices response:', nilveraData);
+        console.log('✅ Nilvera API Response Data:', nilveraData);
+        console.log('📊 Data structure:', {
+          hasData: !!nilveraData.data,
+          dataType: typeof nilveraData.data,
+          dataLength: Array.isArray(nilveraData.data) ? nilveraData.data.length : 'not array',
+          firstItem: nilveraData.data?.[0] ? Object.keys(nilveraData.data[0]) : 'no items'
+        });
 
         // Transform Nilvera data to our format
         const transformedInvoices = (nilveraData.data || []).map((invoice: any) => ({

@@ -26,10 +26,24 @@ export const NilveraSettings = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
+      // Get user's company_id from profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError || !profile?.company_id) {
+        setIsConnected(false);
+        setConnectionStatus("Şirket profili bulunamadı");
+        return;
+      }
+
+      // Check if company has Nilvera auth
       const { data, error } = await supabase
         .from('nilvera_auth')
         .select('*')
-        .eq('user_id', session.user.id)
+        .eq('company_id', profile.company_id)
         .single();
 
       if (data && !error) {
@@ -106,10 +120,21 @@ export const NilveraSettings = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
+      // Get user's company_id from profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError || !profile?.company_id) {
+        throw new Error("Şirket profili bulunamadı");
+      }
+
       const { error } = await supabase
         .from('nilvera_auth')
         .delete()
-        .eq('user_id', session.user.id);
+        .eq('company_id', profile.company_id);
 
       if (error) throw error;
 
