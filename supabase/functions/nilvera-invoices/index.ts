@@ -83,10 +83,28 @@ serve(async (req) => {
       try {
         console.log('🔄 Starting Nilvera API call for incoming invoices...');
         console.log('🔑 Using API key:', nilveraAuth.api_key ? `${nilveraAuth.api_key.substring(0, 8)}...` : 'MISSING');
-        console.log('🌐 Endpoint:', 'https://efaturatest.nilvera.com/api/v1/einvoice/incoming');
         
-        // Make actual API call to Nilvera to fetch incoming invoices
-        const nilveraResponse = await fetch('https://efaturatest.nilvera.com/api/v1/einvoice/incoming', {
+        // Build query parameters
+        const queryParams = new URLSearchParams({
+          Page: '1',
+          PageSize: '50',
+          SortColumn: 'IssueDate',
+          SortType: 'DESC',
+          IsArchive: 'false'
+        });
+        
+        // Add date filters if provided
+        if (filters?.startDate) {
+          queryParams.append('StartDate', filters.startDate);
+        }
+        if (filters?.endDate) {
+          queryParams.append('EndDate', filters.endDate);
+        }
+        
+        const apiUrl = `https://apitest.nilvera.com/einvoice/Purchase?${queryParams.toString()}`;
+        console.log('🌐 Endpoint:', apiUrl);
+        
+        const nilveraResponse = await fetch(apiUrl, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${nilveraAuth.api_key}`,
@@ -104,32 +122,54 @@ serve(async (req) => {
           throw new Error(`Nilvera API error: ${nilveraResponse.status} - ${errorText}`);
         }
 
-        const nilveraData = await nilveraResponse.json();
-        console.log('✅ Nilvera API Response Data:', nilveraData);
-        console.log('📊 Data structure:', {
-          hasData: !!nilveraData.data,
-          dataType: typeof nilveraData.data,
-          dataLength: Array.isArray(nilveraData.data) ? nilveraData.data.length : 'not array',
-          firstItem: nilveraData.data?.[0] ? Object.keys(nilveraData.data[0]) : 'no items'
-        });
+                            const nilveraData = await nilveraResponse.json();
+                    console.log('✅ Nilvera API Response Data:', JSON.stringify(nilveraData, null, 2));
+                    console.log('📊 Data structure:', {
+                      hasData: !!nilveraData.data,
+                      dataType: typeof nilveraData.data,
+                      dataLength: Array.isArray(nilveraData.data) ? nilveraData.data.length : 'not array',
+                      firstItem: nilveraData.data?.[0] ? Object.keys(nilveraData.data[0]) : 'no items',
+                      fullResponseKeys: Object.keys(nilveraData)
+                    });
 
         // Transform Nilvera data to our format
-        const transformedInvoices = (nilveraData.data || []).map((invoice: any) => ({
-          id: invoice.id || invoice.uuid,
-          invoiceNumber: invoice.invoiceNumber || invoice.invoiceId,
-          supplierName: invoice.supplierName || invoice.sender?.name,
-          supplierTaxNumber: invoice.supplierTaxNumber || invoice.sender?.taxNumber,
-          invoiceDate: invoice.issueDate || invoice.invoiceDate,
-          dueDate: invoice.dueDate,
-          totalAmount: parseFloat(invoice.totalAmount || invoice.amount || 0),
-          paidAmount: parseFloat(invoice.paidAmount || 0),
-          currency: invoice.currency || 'TRY',
-          taxAmount: parseFloat(invoice.taxAmount || invoice.vatAmount || 0),
-          status: invoice.status || 'pending',
-          responseStatus: invoice.responseStatus || 'pending',
-          isAnswered: invoice.isAnswered || false,
-          pdfUrl: invoice.pdfUrl,
-          xmlData: invoice.xmlContent || invoice.xmlData
+        // Nilvera API returns { Page, PageSize, TotalCount, TotalPages, Content: [...] }
+        const invoices = nilveraData.Content || [];
+        console.log('📊 Raw invoices from API:', invoices.length);
+        
+        const transformedInvoices = invoices.map((invoice: any) => ({
+          id: invoice.UUID,
+          invoiceNumber: invoice.InvoiceNumber,
+          supplierName: invoice.SenderName,
+          supplierTaxNumber: invoice.SenderTaxNumber,
+          invoiceDate: invoice.IssueDate,
+          dueDate: null, // Nilvera API doesn't provide due date
+          totalAmount: parseFloat(invoice.PayableAmount || 0),
+          paidAmount: 0, // Not provided by Nilvera API
+          currency: invoice.CurrencyCode || 'TRY',
+          taxAmount: parseFloat(invoice.TaxTotalAmount || 0),
+          status: invoice.StatusCode || 'pending',
+          responseStatus: invoice.AnswerCode || 'pending',
+          isAnswered: invoice.AnswerCode ? true : false,
+          pdfUrl: null, // Would need separate API call
+          xmlData: null, // Would need separate API call
+          // Additional fields from Nilvera
+          taxNumber: invoice.TaxNumber,
+          invoiceProfile: invoice.InvoiceProfile,
+          invoiceType: invoice.InvoiceType,
+          taxExclusiveAmount: invoice.TaxExclusiveAmount,
+          envelopeUUID: invoice.EnvelopeUUID,
+          envelopeDate: invoice.EnvelopeDate,
+          isRead: invoice.IsRead,
+          isPrint: invoice.IsPrint,
+          isArchive: invoice.IsArchive,
+          isTransfer: invoice.IsTransfer,
+          statusDetail: invoice.StatusDetail,
+          createdDate: invoice.CreatedDate,
+          tags: invoice.Tags || [],
+          specialCode: invoice.SpecialCode,
+          zirveStatus: invoice.ZirveStatus,
+          luca: invoice.Luca
         }));
 
         return new Response(JSON.stringify({ 
@@ -179,8 +219,20 @@ serve(async (req) => {
 
     if (action === 'fetch_earchive') {
       try {
-        // Make actual API call to Nilvera to fetch outgoing e-archive invoices
-        const nilveraResponse = await fetch('https://efaturatest.nilvera.com/api/v1/earchive/outgoing', {
+        console.log('🔄 Starting Nilvera API call for e-archive invoices...');
+        
+        // Build query parameters for e-archive
+        const queryParams = new URLSearchParams({
+          Page: '1',
+          PageSize: '50',
+          SortColumn: 'IssueDate',
+          SortType: 'DESC'
+        });
+        
+        const apiUrl = `https://apitest.nilvera.com/einvoice/Sale?${queryParams.toString()}`;
+        console.log('🌐 E-archive Endpoint:', apiUrl);
+        
+        const nilveraResponse = await fetch(apiUrl, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${nilveraAuth.api_key}`,
