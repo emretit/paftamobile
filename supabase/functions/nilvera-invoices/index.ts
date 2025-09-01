@@ -108,6 +108,7 @@ serve(async (req) => {
         
         const apiUrl = `https://apitest.nilvera.com/einvoice/Purchase?${queryParams.toString()}`;
         console.log('🌐 Endpoint:', apiUrl);
+        console.log('🔑 Full API Key (first 10 chars):', nilveraAuth.api_key?.substring(0, 10) + '...');
         
         const nilveraResponse = await fetch(apiUrl, {
           method: 'GET',
@@ -117,7 +118,7 @@ serve(async (req) => {
             'Accept': 'application/json'
           }
         });
-
+        
         console.log('📡 API Response Status:', nilveraResponse.status);
         console.log('📡 API Response Headers:', Object.fromEntries(nilveraResponse.headers.entries()));
 
@@ -195,13 +196,21 @@ serve(async (req) => {
         });
 
       } catch (apiError) {
-        console.error('Nilvera API call failed:', apiError);
+        console.error('❌ Nilvera API call failed:', apiError);
+        console.error('❌ Error details:', {
+          message: apiError.message,
+          stack: apiError.stack,
+          name: apiError.name
+        });
         
         // Fallback to database data if API fails
+        console.log('🔄 Falling back to database data...');
         const { data: invoices } = await supabase
           .from('einvoices_received')
           .select('*')
           .order('created_at', { ascending: false });
+
+        console.log('📊 Database fallback invoices:', invoices?.length || 0);
 
         const transformedInvoices = (invoices || []).map(invoice => ({
           id: invoice.id,
