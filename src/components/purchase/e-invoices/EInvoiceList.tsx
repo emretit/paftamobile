@@ -26,9 +26,9 @@ import { useToast } from '@/hooks/use-toast';
 import EInvoiceProcessModal from './EInvoiceProcessModal';
 
 export default function EInvoiceList() {
-  // Date range filter states
-  const [startDate, setStartDate] = useState('2025-08-01');
-  const [endDate, setEndDate] = useState('2025-09-01');
+  // Date range filter states - Expand to get more invoices
+  const [startDate, setStartDate] = useState('2025-01-01');
+  const [endDate, setEndDate] = useState('2025-12-31');
   
   const { incomingInvoices, isLoading, refetch } = useIncomingInvoices({ startDate, endDate });
   const { toast } = useToast();
@@ -57,32 +57,30 @@ export default function EInvoiceList() {
     const matchesSearch = !searchTerm || 
       invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.supplierTaxNumber.includes(searchTerm);
+      invoice.supplierTaxNumber.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || 
       (statusFilter === 'unanswered' && !invoice.isAnswered) ||
       (statusFilter === 'pending' && invoice.status === 'pending') ||
-      (statusFilter === 'overdue' && new Date(invoice.dueDate || invoice.invoiceDate) < new Date());
+      (statusFilter === 'overdue' && invoice.status === 'overdue');
 
-    const matchesDate = dateFilter === 'all' ||
-      (dateFilter === 'today' && format(new Date(invoice.invoiceDate), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')) ||
-      (dateFilter === 'week' && new Date(invoice.invoiceDate) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) ||
-      (dateFilter === 'month' && new Date(invoice.invoiceDate) >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
-
-    return matchesSearch && matchesStatus && matchesDate;
+    return matchesSearch && matchesStatus;
   });
+
+  // Calculate summary statistics
+  const totalInvoices = filteredInvoices.length;
+  const unansweredInvoices = filteredInvoices.filter(inv => !inv.isAnswered).length;
+  const overdueInvoices = filteredInvoices.filter(inv => inv.status === 'overdue').length;
+  const totalAmount = filteredInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
 
   const getStatusBadge = (invoice: any) => {
     if (invoice.isAnswered) {
-      return <Badge variant="secondary" className="bg-green-100 text-green-800">Cevaplanmış</Badge>;
+      return <Badge className="bg-green-100 text-green-800">Cevaplanmış</Badge>;
+    } else if (invoice.status === 'overdue') {
+      return <Badge className="bg-red-100 text-red-800">Gecikmiş</Badge>;
+    } else {
+      return <Badge className="bg-orange-100 text-orange-800">Beklemede</Badge>;
     }
-    
-    const isOverdue = invoice.dueDate && new Date(invoice.dueDate) < new Date();
-    if (isOverdue) {
-      return <Badge variant="destructive">Gecikmiş</Badge>;
-    }
-
-    return <Badge variant="outline" className="bg-orange-100 text-orange-800">Cevaplanmadı</Badge>;
   };
 
   const handleProcessInvoice = (invoice: any) => {
@@ -187,60 +185,55 @@ export default function EInvoiceList() {
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="Tarih filtresi" />
                 </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tüm Tarihler</SelectItem>
-                <SelectItem value="today">Bugün</SelectItem>
-                <SelectItem value="week">Bu Hafta</SelectItem>
-                <SelectItem value="month">Bu Ay</SelectItem>
-              </SelectContent>
-            </Select>
+                <SelectContent>
+                  <SelectItem value="all">Tüm Tarihler</SelectItem>
+                  <SelectItem value="today">Bugün</SelectItem>
+                  <SelectItem value="week">Bu Hafta</SelectItem>
+                  <SelectItem value="month">Bu Ay</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          {/* Statistics Cards */}
+          {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+            <Card>
               <CardContent className="flex items-center p-4">
                 <FileText className="h-8 w-8 text-blue-600 mr-3" />
                 <div>
                   <p className="text-sm font-medium text-blue-600">Toplam</p>
-                  <p className="text-2xl font-bold text-blue-900">{unprocessedInvoices.length}</p>
+                  <p className="text-lg font-bold text-blue-900">{totalInvoices}</p>
                 </div>
               </CardContent>
             </Card>
-            
-            <Card className="bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200">
+
+            <Card>
               <CardContent className="flex items-center p-4">
                 <Clock className="h-8 w-8 text-orange-600 mr-3" />
                 <div>
                   <p className="text-sm font-medium text-orange-600">Cevaplanmamış</p>
-                  <p className="text-2xl font-bold text-orange-900">
-                    {unprocessedInvoices.filter(inv => !inv.isAnswered).length}
-                  </p>
+                  <p className="text-lg font-bold text-orange-900">{unansweredInvoices}</p>
                 </div>
               </CardContent>
             </Card>
-            
-            <Card className="bg-gradient-to-r from-red-50 to-red-100 border-red-200">
+
+            <Card>
               <CardContent className="flex items-center p-4">
                 <AlertTriangle className="h-8 w-8 text-red-600 mr-3" />
                 <div>
                   <p className="text-sm font-medium text-red-600">Gecikmiş</p>
-                  <p className="text-2xl font-bold text-red-900">
-                    {unprocessedInvoices.filter(inv => 
-                      inv.dueDate && new Date(inv.dueDate) < new Date()
-                    ).length}
-                  </p>
+                  <p className="text-lg font-bold text-red-900">{overdueInvoices}</p>
                 </div>
               </CardContent>
             </Card>
-            
-            <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
+
+            <Card>
               <CardContent className="flex items-center p-4">
                 <DollarSign className="h-8 w-8 text-green-600 mr-3" />
                 <div>
                   <p className="text-sm font-medium text-green-600">Toplam Tutar</p>
                   <p className="text-lg font-bold text-green-900">
-                    {filteredInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0).toLocaleString('tr-TR')} ₺
+                    {totalAmount.toLocaleString('tr-TR')} ₺
                   </p>
                 </div>
               </CardContent>
@@ -360,16 +353,20 @@ export default function EInvoiceList() {
       {/* Process Modal */}
       {selectedInvoice && (
         <EInvoiceProcessModal
-          invoice={selectedInvoice}
           isOpen={isProcessModalOpen}
           onClose={() => {
             setIsProcessModalOpen(false);
             setSelectedInvoice(null);
           }}
-          onProcessComplete={() => {
+          invoice={selectedInvoice}
+          onSuccess={() => {
+            refetch();
             setIsProcessModalOpen(false);
             setSelectedInvoice(null);
-            refetch(); // Refresh the list
+            toast({
+              title: "Başarılı",
+              description: "E-fatura başarıyla işlendi"
+            });
           }}
         />
       )}

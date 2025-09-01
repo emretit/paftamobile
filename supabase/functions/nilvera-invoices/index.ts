@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
@@ -135,6 +136,11 @@ serve(async (req) => {
                       TotalPages: nilveraData.TotalPages,
                       ContentLength: nilveraData.Content?.length || 0
                     });
+                    
+                    // Log all unique sender names to see variety
+                    const uniqueSenders = [...new Set(nilveraData.Content?.map(inv => inv.SenderName) || [])];
+                    console.log('🏢 Unique sender companies found:', uniqueSenders);
+                    console.log('📊 Total unique senders:', uniqueSenders.length);
                     
                     // Only log first invoice to avoid huge console output
                     if (nilveraData.Content?.length > 0) {
