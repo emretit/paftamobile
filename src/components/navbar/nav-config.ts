@@ -26,8 +26,7 @@ import {
   Calculator,
   Zap,
   Zap as ZapIcon,
-  FileEdit,
-  Database
+  FileEdit
 } from "lucide-react";
 
 export const navItems = [
@@ -150,23 +149,7 @@ export const navItems = [
       },
     ],
   },
-  {
-    category: "RLS Test",
-    icon: Database,
-    path: "/example-items",
-    items: [
-      {
-        path: "/example-items",
-        icon: Database,
-        label: "Example Items",
-      },
-      {
-        path: "/example-items/new",
-        icon: FileText,
-        label: "Yeni Kayıt",
-      },
-    ],
-  },
+
 ];
 
 export const settingsItem = {

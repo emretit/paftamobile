@@ -17,8 +17,7 @@ import { proposalRoutes } from "./proposalRoutes";
 import Deliveries from "@/pages/Deliveries";
 import Returns from "@/pages/Returns";
 import InvoiceManagement from "@/pages/InvoiceManagement";
-import ExampleItemsList from "@/pages/example-items/index";
-import NewExampleItem from "@/pages/example-items/new";
+
 
 
 export const appRoutes: RouteConfig[] = [
@@ -41,6 +40,5 @@ export const appRoutes: RouteConfig[] = [
   { path: "/deliveries", component: Deliveries, protected: true },
   { path: "/returns", component: Returns, protected: true },
   { path: "/invoices", component: InvoiceManagement, protected: true },
-  { path: "/example-items", component: ExampleItemsList, protected: true },
-  { path: "/example-items/new", component: NewExampleItem, protected: true },
+
 ];
