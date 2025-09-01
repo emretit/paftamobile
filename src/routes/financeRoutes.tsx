@@ -2,6 +2,7 @@
 import Cashflow from "@/pages/Cashflow";
 import PurchaseInvoices from "@/pages/PurchaseInvoices";
 import SalesInvoices from "@/pages/SalesInvoices";
+import CreateSalesInvoice from "@/pages/CreateSalesInvoice";
 import FinancialOverview from "@/pages/FinancialOverview";
 import { RouteConfig } from "./types";
 
@@ -22,4 +23,5 @@ export const financeRoutes: RouteConfig[] = [
   { path: "/financial-overview", component: FinancialOverview, protected: true },
   { path: "/purchase-invoices", component: PurchaseInvoices, protected: true },
   { path: "/sales-invoices", component: SalesInvoices, protected: true },
+  { path: "/sales-invoices/create", component: CreateSalesInvoice, protected: true },
 ];

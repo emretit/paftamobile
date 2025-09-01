@@ -7,27 +7,28 @@ import { toast } from "sonner";
 export interface SalesInvoice {
   id: string;
   fatura_no: string;
-  musteri_id: string;
-  document_type: 'fatura' | 'e_fatura' | 'e_arsiv' | 'irsaliye' | 'makbuz' | 'serbest_meslek_makbuzu';
+  customer_id: string;
+  order_id?: string;
+  employee_id?: string;
+  company_id?: string;
   fatura_tarihi: string;
-  vade_tarihi: string;
+  vade_tarihi?: string;
+  aciklama?: string;
+  notlar?: string;
+  para_birimi: string;
   ara_toplam: number;
-  kdv_toplami: number;
+  kdv_tutari: number;
+  indirim_tutari: number;
   toplam_tutar: number;
   odenen_tutar: number;
-  odeme_durumu: 'odenmedi' | 'kismi_odendi' | 'odendi' | 'gecikti' | 'iptal';
-  para_birimi: string;
-  notes?: string;
-  tevkifat_orani?: number;
-  tevkifat_tutari?: number;
-  teslim_sekli?: string;
-  odeme_yontemi?: string;
-  fiili_sevk_tarihi?: string;
-  irsaliye_no?: string;
-  vergi_dairesi?: string;
-  vergi_no?: string;
-  ettn?: string;
-  proposal_id?: string;
+  odeme_durumu: 'odendi' | 'kismi_odendi' | 'odenmedi' | 'gecikti' | 'iptal';
+  document_type?: 'e_fatura' | 'e_arsiv' | 'fatura' | 'irsaliye' | 'makbuz' | 'serbest_meslek_makbuzu';
+  durum: 'taslak' | 'gonderildi' | 'onaylandi' | 'iptal';
+  odeme_sekli?: string;
+  banka_bilgileri?: string;
+  pdf_url?: string;
+  xml_data?: any;
+  ek_belgeler?: any;
   customer?: {
     name: string;
     tax_number?: string;
@@ -39,16 +40,20 @@ export interface SalesInvoice {
 
 export interface SalesInvoiceItem {
   id: string;
-  fatura_id: string;
-  urun_id?: string;
-  aciklama: string;
+  sales_invoice_id: string;
+  product_id?: string;
+  company_id?: string;
+  urun_adi: string;
+  aciklama?: string;
   miktar: number;
   birim: string;
   birim_fiyat: number;
-  iskonto_orani?: number;
   kdv_orani: number;
-  tevkifat_kodu?: string;
-  toplam_tutar: number;
+  indirim_orani?: number;
+  satir_toplami: number;
+  kdv_tutari: number;
+  para_birimi: string;
+  sira_no?: number;
   product?: {
     name: string;
     sku?: string;
@@ -65,10 +70,10 @@ export const useSalesInvoices = () => {
 
   const fetchInvoices = async (): Promise<SalesInvoice[]> => {
     let query = supabase
-      .from("sales_invoices" as any)
+      .from("sales_invoices")
       .select(`
         *,
-        customer:musteri_id(name, tax_number, company)
+        customer:customers(name, tax_number, company)
       `)
       .order("created_at", { ascending: false });
 
@@ -100,10 +105,10 @@ export const useSalesInvoices = () => {
 
   const fetchInvoiceById = async (id: string): Promise<SalesInvoice> => {
     const { data, error } = await supabase
-      .from("sales_invoices" as any)
+      .from("sales_invoices")
       .select(`
         *,
-        customer:musteri_id(name, tax_number, company)
+        customer:customers(name, tax_number, company)
       `)
       .eq("id", id)
       .single();
@@ -118,12 +123,12 @@ export const useSalesInvoices = () => {
   
   const fetchInvoiceItems = async (invoiceId: string): Promise<SalesInvoiceItem[]> => {
     const { data, error } = await supabase
-      .from("sales_invoice_items" as any)
+      .from("sales_invoice_items")
       .select(`
         *,
-        product:urun_id(name, sku)
+        product:products(name, sku)
       `)
-      .eq("fatura_id", invoiceId);
+      .eq("sales_invoice_id", invoiceId);
 
     if (error) {
       toast.error("Fatura kalemleri yüklenirken hata oluştu");
@@ -134,10 +139,24 @@ export const useSalesInvoices = () => {
   };
 
   const createInvoice = async (invoiceData: Partial<SalesInvoice>, items: Partial<SalesInvoiceItem>[]) => {
+    // Get current user's company_id
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('company_id')
+      .eq('id', user?.id)
+      .single();
+
+    // Add company_id to invoice data
+    const invoiceWithCompany = {
+      ...invoiceData,
+      company_id: profile?.company_id
+    };
+
     // First create the invoice
     const { data: invoice, error: invoiceError } = await supabase
-      .from("sales_invoices" as any)
-      .insert([invoiceData])
+      .from("sales_invoices")
+      .insert([invoiceWithCompany])
       .select()
       .single();
 
@@ -150,11 +169,12 @@ export const useSalesInvoices = () => {
     if (items.length > 0) {
       const itemsWithInvoiceId = items.map(item => ({
         ...item,
-        fatura_id: (invoice as any).id
+        sales_invoice_id: (invoice as any).id,
+        company_id: profile?.company_id
       }));
 
       const { error: itemsError } = await supabase
-        .from("sales_invoice_items" as any)
+        .from("sales_invoice_items")
         .insert(itemsWithInvoiceId);
 
       if (itemsError) {
@@ -169,7 +189,7 @@ export const useSalesInvoices = () => {
 
   const updateInvoice = async ({ id, data }: { id: string, data: Partial<SalesInvoice> }) => {
     const { error } = await supabase
-      .from("sales_invoices" as any)
+      .from("sales_invoices")
       .update(data)
       .eq("id", id);
 
@@ -185,7 +205,7 @@ export const useSalesInvoices = () => {
   const recordPayment = async ({ id, amount }: { id: string, amount: number }) => {
     // Get current invoice
     const { data: invoice, error: fetchError } = await supabase
-      .from("sales_invoices" as any)
+      .from("sales_invoices")
       .select("*")
       .eq("id", id)
       .single();
@@ -197,8 +217,8 @@ export const useSalesInvoices = () => {
     
     // Calculate new paid amount and status
     const typedInvoice = invoice as unknown as SalesInvoice;
-    const newPaidAmount = parseFloat(String(typedInvoice.odenen_tutar)) + amount;
-    let newStatus = 'odenmedi';
+    const newPaidAmount = parseFloat(String(typedInvoice.odenen_tutar || 0)) + amount;
+    let newStatus: 'odendi' | 'kismi_odendi' | 'odenmedi' = 'odenmedi';
     
     if (newPaidAmount >= parseFloat(String(typedInvoice.toplam_tutar))) {
       newStatus = 'odendi';
@@ -208,11 +228,11 @@ export const useSalesInvoices = () => {
     
     // Update invoice
     const { error: updateError } = await supabase
-      .from("sales_invoices" as any)
+      .from("sales_invoices")
       .update({
         odenen_tutar: newPaidAmount,
         odeme_durumu: newStatus
-      } as any)
+      })
       .eq("id", id);
     
     if (updateError) {
@@ -226,7 +246,7 @@ export const useSalesInvoices = () => {
 
   const deleteInvoice = async (id: string) => {
     const { error } = await supabase
-      .from("sales_invoices" as any)
+      .from("sales_invoices")
       .delete()
       .eq("id", id);
 

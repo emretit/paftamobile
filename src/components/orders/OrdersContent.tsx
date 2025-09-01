@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import OrdersTable from "./OrdersTable";
 import { ViewType } from "./header/OrdersViewToggle";
 import { useOrders } from "@/hooks/useOrders";
@@ -19,6 +20,7 @@ const OrdersContent = ({
   onSelectOrder,
   activeView
 }: OrdersContentProps) => {
+  const navigate = useNavigate();
   const { orders, isLoading, error, filters, setFilters } = useOrders();
 
   // Local filters'ı hook filters ile senkronize et
@@ -64,8 +66,8 @@ const OrdersContent = ({
   };
 
   const handleConvertToInvoice = (order: Order) => {
-    // TODO: Navigate to invoice creation
-    console.log("Convert to invoice:", order);
+    // Navigate to invoice creation page with order data
+    navigate(`/sales-invoices/create?orderId=${order.id}`);
   };
 
   const handleConvertToService = (order: Order) => {

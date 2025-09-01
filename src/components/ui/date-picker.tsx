@@ -1,30 +1,25 @@
+import * as React from "react"
+import { format } from "date-fns"
+import { tr } from "date-fns/locale"
+import { Calendar as CalendarIcon } from "lucide-react"
 
-import * as React from "react";
-import { format } from "date-fns";
-import { tr } from "date-fns/locale";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@/components/ui/popover"
 
 interface DatePickerProps {
-  selected?: Date;
-  onSelect: (date: Date | undefined) => void;
-  placeholder?: string;
-  className?: string;
+  date: Date | null | undefined
+  onSelect: (date: Date | undefined) => void
+  placeholder?: string
+  disabled?: boolean
 }
 
-export function DatePicker({
-  selected,
-  onSelect,
-  placeholder = "Tarih seçin",
-  className,
-}: DatePickerProps) {
+export function DatePicker({ date, onSelect, placeholder = "Tarih seçin", disabled }: DatePickerProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -32,28 +27,23 @@ export function DatePicker({
           variant={"outline"}
           className={cn(
             "w-full justify-start text-left font-normal",
-            !selected && "text-muted-foreground",
-            className
+            !date && "text-muted-foreground"
           )}
+          disabled={disabled}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {selected ? (
-            format(selected, "PPP", { locale: tr })
-          ) : (
-            <span>{placeholder}</span>
-          )}
+          {date ? format(date, "dd.MM.yyyy", { locale: tr }) : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+      <PopoverContent className="w-auto p-0">
         <Calendar
           mode="single"
-          selected={selected}
+          selected={date || undefined}
           onSelect={onSelect}
           initialFocus
           locale={tr}
-          className="pointer-events-auto"
         />
       </PopoverContent>
     </Popover>
-  );
+  )
 }
