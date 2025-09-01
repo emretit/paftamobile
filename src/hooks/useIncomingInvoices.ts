@@ -27,21 +27,31 @@ export const useIncomingInvoices = () => {
   const fetchIncomingInvoices = async (): Promise<IncomingInvoice[]> => {
     try {
       setIsLoading(true);
+      console.log('🔄 Starting fetchIncomingInvoices...');
       
       const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
         body: { action: 'fetch_incoming' }
       });
 
+      console.log('📡 Supabase function response:', { data, error });
+
       if (error) {
-        console.error('Supabase function error:', error);
+        console.error('❌ Supabase function error:', error);
         throw new Error(error.message || 'Gelen faturalar alınamadı');
       }
 
+      if (!data) {
+        console.error('❌ No data received from function');
+        throw new Error('Function response is empty');
+      }
+
       if (!data.success) {
+        console.error('❌ Function returned error:', data.error);
         throw new Error(data.error || 'Gelen faturalar alınamadı');
       }
 
-      console.log('Fetched incoming invoices:', data.invoices?.length || 0);
+      console.log('✅ Fetched incoming invoices count:', data.invoices?.length || 0);
+      console.log('📊 First invoice sample:', data.invoices?.[0]);
       return data.invoices || [];
       
     } catch (error: any) {

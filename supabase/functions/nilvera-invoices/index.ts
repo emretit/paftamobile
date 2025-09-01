@@ -14,14 +14,18 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🚀 Nilvera edge function started');
+    
     const SUPABASE_URL = 'https://vwhwufnckpqirxptwncw.supabase.co';
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
     if (!SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('❌ SUPABASE_SERVICE_ROLE_KEY is not set');
       throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    console.log('✅ Supabase client created');
 
     // Get the user from the Authorization header
     const authHeader = req.headers.get('Authorization');
@@ -37,6 +41,8 @@ serve(async (req) => {
     }
 
     const { action, filters } = await req.json();
+    console.log('📨 Request body:', { action, filters });
+    console.log('👤 User ID:', user.id);
 
     // Get user's company_id from profile
     const { data: profile, error: profileError } = await supabase
@@ -45,9 +51,14 @@ serve(async (req) => {
       .eq('id', user.id)
       .single();
 
+    console.log('🏢 Profile query result:', { profile, profileError });
+
     if (profileError || !profile?.company_id) {
+      console.error('❌ User profile or company not found');
       throw new Error('User profile or company not found');
     }
+
+    console.log('🏢 Company ID:', profile.company_id);
 
     // Get the company's Nilvera authentication data
     const { data: nilveraAuth, error: authError } = await supabase
@@ -57,7 +68,14 @@ serve(async (req) => {
       .eq('is_active', true)
       .single();
 
+    console.log('🔐 Nilvera auth query result:', { 
+      hasAuth: !!nilveraAuth, 
+      authError, 
+      companyId: profile.company_id 
+    });
+
     if (authError || !nilveraAuth) {
+      console.error('❌ Nilvera authentication not found for company:', profile.company_id);
       throw new Error('Nilvera authentication not found for this company. Please configure Nilvera settings first.');
     }
 

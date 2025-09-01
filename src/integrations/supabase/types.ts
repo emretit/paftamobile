@@ -2504,77 +2504,11 @@ export type Database = {
           },
         ]
       }
-      nilvera_api_config: {
-        Row: {
-          api_key: string
-          auto_send_enabled: boolean | null
-          base_url: string
-          company_address: string | null
-          company_city: string | null
-          company_country: string | null
-          company_id: string | null
-          company_name: string
-          company_tax_number: string
-          created_at: string | null
-          default_currency: string | null
-          default_invoice_profile: string | null
-          environment: string
-          id: string
-          is_active: boolean | null
-          last_sync_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          api_key: string
-          auto_send_enabled?: boolean | null
-          base_url?: string
-          company_address?: string | null
-          company_city?: string | null
-          company_country?: string | null
-          company_id?: string | null
-          company_name: string
-          company_tax_number: string
-          created_at?: string | null
-          default_currency?: string | null
-          default_invoice_profile?: string | null
-          environment?: string
-          id?: string
-          is_active?: boolean | null
-          last_sync_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          api_key?: string
-          auto_send_enabled?: boolean | null
-          base_url?: string
-          company_address?: string | null
-          company_city?: string | null
-          company_country?: string | null
-          company_id?: string | null
-          company_name?: string
-          company_tax_number?: string
-          created_at?: string | null
-          default_currency?: string | null
-          default_invoice_profile?: string | null
-          environment?: string
-          id?: string
-          is_active?: boolean | null
-          last_sync_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "nilvera_api_config_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+
       nilvera_auth: {
         Row: {
           api_key: string
+          company_id: string
           created_at: string
           id: string
           is_active: boolean
@@ -2585,6 +2519,7 @@ export type Database = {
         }
         Insert: {
           api_key: string
+          company_id: string
           created_at?: string
           id?: string
           is_active?: boolean
@@ -2595,6 +2530,7 @@ export type Database = {
         }
         Update: {
           api_key?: string
+          company_id?: string
           created_at?: string
           id?: string
           is_active?: boolean

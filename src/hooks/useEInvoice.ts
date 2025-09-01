@@ -1,14 +1,41 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { eInvoiceService, EInvoiceStatusTracking } from "@/services/eInvoiceService";
+import { supabase } from "@/integrations/supabase/client";
+
+export interface EInvoiceStatusTracking {
+  id: string;
+  sales_invoice_id: string;
+  nilvera_invoice_id?: string;
+  nilvera_transfer_id?: string;
+  status: 'draft' | 'sending' | 'sent' | 'delivered' | 'accepted' | 'rejected' | 'cancelled' | 'error';
+  transfer_state: number;
+  invoice_state: number;
+  answer_type: number;
+  sent_at?: string;
+  delivered_at?: string;
+  responded_at?: string;
+  error_message?: string;
+  error_code?: string;
+  nilvera_response?: any;
+}
 
 export const useEInvoice = () => {
   const queryClient = useQueryClient();
 
   // Direkt fatura gönderme
   const sendInvoiceMutation = useMutation({
-    mutationFn: (salesInvoiceId: string) => eInvoiceService.sendInvoiceDirectly(salesInvoiceId),
+    mutationFn: async (salesInvoiceId: string) => {
+      const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
+        body: { 
+          action: 'send_invoice',
+          salesInvoiceId 
+        }
+      });
+      
+      if (error) throw error;
+      return data?.success || false;
+    },
     onSuccess: (success, salesInvoiceId) => {
       if (success) {
         toast.success("E-fatura başarıyla gönderildi");
@@ -25,7 +52,17 @@ export const useEInvoice = () => {
 
   // Manuel durum kontrolü
   const checkStatusMutation = useMutation({
-    mutationFn: (salesInvoiceId: string) => eInvoiceService.checkStatusManually(salesInvoiceId),
+    mutationFn: async (salesInvoiceId: string) => {
+      const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
+        body: { 
+          action: 'check_status',
+          salesInvoiceId 
+        }
+      });
+      
+      if (error) throw error;
+      return data?.success || false;
+    },
     onSuccess: (success, salesInvoiceId) => {
       if (success) {
         toast.success("Durum kontrolü tamamlandı");
@@ -67,8 +104,14 @@ export const useEInvoiceStatus = (salesInvoiceId?: string) => {
       setError(null);
       
       try {
-        const statusData = await eInvoiceService.getInvoiceStatus(salesInvoiceId);
-        setStatus(statusData);
+        const { data, error } = await supabase
+          .from('einvoice_status_tracking')
+          .select('*')
+          .eq('sales_invoice_id', salesInvoiceId)
+          .single();
+          
+        if (error) throw error;
+        setStatus(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
@@ -88,8 +131,14 @@ export const useEInvoiceStatus = (salesInvoiceId?: string) => {
     
     setIsLoading(true);
     try {
-      const statusData = await eInvoiceService.getInvoiceStatus(salesInvoiceId);
-      setStatus(statusData);
+      const { data, error } = await supabase
+        .from('einvoice_status_tracking')
+        .select('*')
+        .eq('sales_invoice_id', salesInvoiceId)
+        .single();
+        
+      if (error) throw error;
+      setStatus(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
