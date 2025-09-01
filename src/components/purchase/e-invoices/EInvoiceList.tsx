@@ -57,20 +57,12 @@ export default function EInvoiceList() {
     refetch();
   }, [startDate, endDate, refetch]);
 
-  // Debug: Show ALL invoices temporarily to see what's being filtered out
-  console.log('🔍 All incoming invoices from API:', incomingInvoices);
-  console.log('📊 Total invoices received:', incomingInvoices.length);
-  console.log('🏢 Unique suppliers:', [...new Set(incomingInvoices.map(inv => inv.supplierName))]);
-  
   // Filter unprocessed invoices only (not answered or processed)
   const unprocessedInvoices = incomingInvoices.filter(invoice => {
     // Only show invoices that haven't been answered with "ALINDI" 
     const isAnswered = invoice.responseStatus === 'ALINDI' || invoice.responseStatus === 'documentAnsweredAutomatically';
-    console.log(`📋 Invoice ${invoice.invoiceNumber} - Supplier: ${invoice.supplierName} - ResponseStatus: ${invoice.responseStatus} - IsAnswered: ${isAnswered}`);
     return !isAnswered;
   });
-  
-  console.log('🔗 Unprocessed invoices after filtering:', unprocessedInvoices.length);
 
   // Apply filters
   const filteredInvoices = unprocessedInvoices.filter(invoice => {
