@@ -170,7 +170,7 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
             onLoadMore={loadMore}
             error={error}
             onRetry={refresh}
-            isEmpty={proposals.length === 0 && !isLoading}
+            isEmpty={(proposals?.length || 0) === 0 && !isLoading}
             emptyState={
               <div className="flex flex-col items-center justify-center py-12">
                 <FileText className="h-12 w-12 text-muted-foreground mb-4" />
@@ -185,7 +185,7 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
             className="rounded-lg border bg-card"
           >
             <ProposalTable
-              proposals={proposals}
+              proposals={proposals as any[] || []}
               isLoading={isLoading}
               onProposalSelect={handleProposalSelect}
             />
@@ -212,7 +212,7 @@ const Proposals = ({ isCollapsed, setIsCollapsed }: ProposalsPageProps) => {
         {activeView === "list" && totalCount && totalCount > 0 && (
           <div className="mt-4 text-center text-sm text-muted-foreground">
             Toplam <span className="font-medium text-foreground">{totalCount}</span> teklif,
-            <span className="font-medium text-foreground"> {proposals.length}</span> adet yüklendi
+            <span className="font-medium text-foreground"> {proposals?.length || 0}</span> adet yüklendi
           </div>
         )}
       </div>

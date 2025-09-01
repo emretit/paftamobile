@@ -182,7 +182,7 @@ export const useProposalsInfiniteScroll = (filters?: ProposalFilters, pageSize: 
     refresh,
     totalCount,
   } = useInfiniteScroll(
-    ["proposals-infinite", filters, userData?.company_id],
+    ["proposals-infinite", JSON.stringify(filters), userData?.company_id],
     fetchProposals,
     {
       pageSize,

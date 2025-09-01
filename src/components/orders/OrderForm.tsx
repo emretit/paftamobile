@@ -109,9 +109,9 @@ const OrderForm: React.FC<OrderFormProps> = ({ proposalId }) => {
           unit_price: Number(item.unit_price),
           tax_rate: Number(item.tax_rate || 18),
           discount_rate: Number(item.discount_rate || 0),
-          item_group: item.item_group || 'product',
+          item_group: item.group || 'product',
           stock_status: 'in_stock',
-          sort_order: item.sort_order || 0
+          sort_order: 0
         }))
       };
 
@@ -174,9 +174,9 @@ const OrderForm: React.FC<OrderFormProps> = ({ proposalId }) => {
           unit_price: Number(item.unit_price),
           tax_rate: Number(item.tax_rate || 18),
           discount_rate: Number(item.discount_rate || 0),
-          item_group: item.item_group || 'product',
+          item_group: item.group || 'product',
           stock_status: 'in_stock',
-          sort_order: item.sort_order || 0
+          sort_order: 0
         }))
       };
 

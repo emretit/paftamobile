@@ -27,7 +27,7 @@ const Opportunities = ({ isCollapsed, setIsCollapsed }: OpportunitiesProps) => {
   const [statusFilter, setStatusFilter] = useState<OpportunityStatus | "all">("all");
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
   const [selectedEmployee, setSelectedEmployee] = useState<string>('all');
-  const [activeView, setActiveView] = useState("kanban");
+  const [activeView, setActiveView] = useState<"kanban" | "list">("kanban");
 
   // Fetch employees data
   const { data: employees = [] } = useQuery({

@@ -100,58 +100,63 @@ const OrdersTable = ({
   }
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Sipariş No</TableHead>
-            <TableHead>Müşteri</TableHead>
-            <TableHead>Başlık</TableHead>
-            <TableHead>Ürün Sayısı</TableHead>
-            <TableHead>Toplam Tutar</TableHead>
-            <TableHead>Durum</TableHead>
-            <TableHead>Tarih</TableHead>
-            <TableHead className="text-right">İşlemler</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {orders.map((order) => (
-            <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50">
-              <TableCell className="font-medium">{order.order_number}</TableCell>
-              <TableCell>{getCustomerDisplayName(order)}</TableCell>
-              <TableCell className="max-w-[200px] truncate" title={order.title}>
-                {order.title}
-              </TableCell>
-              <TableCell>{getItemsCount(order)} ürün</TableCell>
-              <TableCell>{formatCurrency(order.total_amount, order.currency)}</TableCell>
-              <TableCell>
-                <Badge className={getStatusColor(order.status)}>
-                  {getStatusLabel(order.status)}
-                </Badge>
-              </TableCell>
-              <TableCell>{new Date(order.created_at).toLocaleDateString("tr-TR")}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onSelectOrder(order)}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onSelectOrder(order)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="bg-gradient-to-br from-card via-muted/20 to-background rounded-2xl shadow-2xl border border-border/10 backdrop-blur-xl relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 opacity-50"></div>
+      <div className="relative z-10 p-6">
+        <div className="overflow-x-auto">
+          <Table className="border-collapse">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Sipariş No</TableHead>
+                <TableHead>Müşteri</TableHead>
+                <TableHead>Başlık</TableHead>
+                <TableHead>Ürün Sayısı</TableHead>
+                <TableHead>Toplam Tutar</TableHead>
+                <TableHead>Durum</TableHead>
+                <TableHead>Tarih</TableHead>
+                <TableHead className="text-right">İşlemler</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {orders.map((order) => (
+                <TableRow key={order.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableCell className="font-medium">{order.order_number}</TableCell>
+                  <TableCell>{getCustomerDisplayName(order)}</TableCell>
+                  <TableCell className="max-w-[200px] truncate" title={order.title}>
+                    {order.title}
+                  </TableCell>
+                  <TableCell>{getItemsCount(order)} ürün</TableCell>
+                  <TableCell>{formatCurrency(order.total_amount, order.currency)}</TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(order.status)}>
+                      {getStatusLabel(order.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{new Date(order.created_at).toLocaleDateString("tr-TR")}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onSelectOrder(order)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onSelectOrder(order)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
     </div>
   );
 };
