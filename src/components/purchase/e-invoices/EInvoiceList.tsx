@@ -57,15 +57,11 @@ export default function EInvoiceList() {
     refetch();
   }, [startDate, endDate, refetch]);
 
-  // Filter unprocessed invoices only (not answered or processed)
-  const unprocessedInvoices = incomingInvoices.filter(invoice => {
-    // Only show invoices that haven't been answered with "ALINDI" 
-    const isAnswered = invoice.responseStatus === 'ALINDI' || invoice.responseStatus === 'documentAnsweredAutomatically';
-    return !isAnswered;
-  });
-
+  // Show ALL invoices for now (removed unprocessed filter)
+  // TODO: Add filter toggle later for processed/unprocessed invoices
+  
   // Apply filters
-  const filteredInvoices = unprocessedInvoices.filter(invoice => {
+  const filteredInvoices = incomingInvoices.filter(invoice => {
     const matchesSearch = !searchTerm || 
       invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -116,10 +112,10 @@ export default function EInvoiceList() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <CardTitle className="text-2xl bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-orange-400">
-                İşlenmemiş E-Faturalar
+                Gelen E-Faturalar
               </CardTitle>
               <p className="text-muted-foreground mt-1">
-                Henüz işlenmemiş gelen e-faturaları görüntüleyin ve işleme alın
+                Tüm gelen e-faturaları görüntüleyin ve işleme alın
               </p>
             </div>
             <Badge variant="outline" className="bg-blue-50 text-blue-700">
@@ -265,9 +261,9 @@ export default function EInvoiceList() {
           ) : filteredInvoices.length === 0 ? (
             <div className="text-center py-12">
               <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">İşlenmemiş E-Fatura Bulunamadı</h3>
+              <h3 className="text-lg font-medium text-foreground mb-2">E-Fatura Bulunamadı</h3>
               <p className="text-muted-foreground">
-                Tüm e-faturalar işlenmiş durumda veya filtre kriterlerinize uygun fatura bulunmuyor.
+                Seçilen tarih aralığında e-fatura bulunmuyor veya filtre kriterlerinize uygun fatura yok.
               </p>
             </div>
           ) : (
