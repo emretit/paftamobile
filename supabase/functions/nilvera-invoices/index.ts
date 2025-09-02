@@ -107,7 +107,7 @@ serve(async (req) => {
         error: 'Nilvera kimlik doğrulama bilgileri bulunamadı. Lütfen ayarlar sayfasından Nilvera bilgilerinizi girin.',
         errorType: 'AuthError'
       }), {
-        status: 400,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -516,7 +516,7 @@ serve(async (req) => {
             error: 'Müşteri alias (etiket) bulunamadı. Lütfen Müşteri > E-Fatura Etiketi (CustomerAlias) bilgisini ekleyin.',
             errorType: 'CustomerAliasRequired'
           }), {
-            status: 400,
+            status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
@@ -626,7 +626,7 @@ serve(async (req) => {
           success: false,
           error: error.message
         }), {
-          status: 400,
+          status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
@@ -723,7 +723,7 @@ serve(async (req) => {
           success: false,
           error: error.message
         }), {
-          status: 400,
+          status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
