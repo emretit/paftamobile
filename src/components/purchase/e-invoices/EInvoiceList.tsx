@@ -367,7 +367,7 @@ export default function EInvoiceList() {
             setSelectedInvoice(null);
           }}
           invoice={selectedInvoice}
-          onSuccess={() => {
+          onProcessComplete={() => {
             refetch();
             setIsProcessModalOpen(false);
             setSelectedInvoice(null);

@@ -133,7 +133,7 @@ const EInvoiceStatusBadge: React.FC<EInvoiceStatusBadgeProps> = ({
       {/* Error message tooltip */}
       {status.error_message && (
         <div className="flex items-center">
-          <AlertCircle className="h-3 w-3 text-red-500" title={status.error_message} />
+          <AlertCircle className="h-3 w-3 text-red-500" />
         </div>
       )}
     </div>

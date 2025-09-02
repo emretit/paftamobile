@@ -101,9 +101,17 @@ serve(async (req) => {
     });
 
     if (authError || !nilveraAuth) {
-      console.error('❌ Nilvera authentication not found for company:', profile.company_id);
-      throw new Error('Nilvera authentication not found for this company. Please configure Nilvera settings first.');
+      console.error('❌ Nilvera auth bulunamadı:', authError);
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Nilvera kimlik doğrulama bilgileri bulunamadı. Lütfen ayarlar sayfasından Nilvera bilgilerinizi girin.',
+        errorType: 'AuthError'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
+
 
     if (action === 'fetch_incoming') {
       try {
