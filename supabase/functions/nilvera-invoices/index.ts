@@ -456,7 +456,7 @@ serve(async (req) => {
         })();
 
         // Create standard Nilvera invoice model
-        const nilveraInvoiceData = {
+        const nilveraInvoiceData: any = {
           EInvoice: {
             InvoiceInfo: {
               UUID: crypto.randomUUID ? crypto.randomUUID() : 'uuid-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
@@ -500,7 +500,7 @@ serve(async (req) => {
             })) || [],
             Notes: salesInvoice.notlar ? [salesInvoice.notlar] : []
           }
-          // CustomerAlias will be set below based on requirements
+          // CustomerAlias will be set below only for e-fatura mükellefi customers
         };
 
         // CustomerAlias is REQUIRED for e-fatura mükellefi customers
