@@ -6,6 +6,7 @@ import { CustomerFormData } from "@/types/customer";
 import { User, Mail, Phone, Building, FileText, MapPin, Users, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { getDigitsOnly, formatPhoneNumber } from "@/utils/phoneFormatter";
 import { useEinvoiceMukellefCheck } from "@/hooks/useEinvoiceMukellefCheck";
+import { useNilveraCompanyInfo } from "@/hooks/useNilveraCompanyInfo";
 import { useEffect } from "react";
 
 interface BasicInformationProps {
@@ -15,19 +16,22 @@ interface BasicInformationProps {
 
 const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
   const { checkEinvoiceMukellef, isChecking, result, clearResult } = useEinvoiceMukellefCheck();
+  const { searchMukellef, isLoading: isNilveraLoading, mukellefInfo, error: nilveraError } = useNilveraCompanyInfo();
 
   // Vergi numarası değiştiğinde otomatik kontrol yap
   useEffect(() => {
     if (formData.tax_number && formData.tax_number.length >= 10) {
       const timeoutId = setTimeout(() => {
+        // Hem eski hem yeni hook'u kullan
         checkEinvoiceMukellef(formData.tax_number);
+        searchMukellef(formData.tax_number);
       }, 1000); // 1 saniye bekle
 
       return () => clearTimeout(timeoutId);
     } else {
       clearResult();
     }
-  }, [formData.tax_number, checkEinvoiceMukellef, clearResult]);
+  }, [formData.tax_number, checkEinvoiceMukellef, searchMukellef, clearResult]);
 
   // E-fatura mükellefi bilgilerini form data'ya ekle
   useEffect(() => {
@@ -41,6 +45,19 @@ const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
       }));
     }
   }, [result, setFormData]);
+
+  // Nilvera'dan gelen mükellef bilgilerini form data'ya ekle
+  useEffect(() => {
+    if (mukellefInfo) {
+      setFormData(prev => ({
+        ...prev,
+        // Nilvera mükellef bilgilerini form data'ya ekle
+        company: prev.company || mukellefInfo.companyName || prev.company,
+        tax_office: prev.tax_office || mukellefInfo.taxOffice || prev.tax_office,
+        address: prev.address || mukellefInfo.address || prev.address,
+      }));
+    }
+  }, [mukellefInfo, setFormData]);
 
   return (
     <div className="space-y-6">
@@ -167,10 +184,10 @@ const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
                 {/* E-fatura mükellefi durumu göstergesi */}
                 {formData.tax_number && formData.tax_number.length >= 10 && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    {isChecking ? (
+                    {(isChecking || isNilveraLoading) ? (
                       <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-                    ) : result ? (
-                      result.isEinvoiceMukellef ? (
+                    ) : (result || mukellefInfo) ? (
+                      (result?.isEinvoiceMukellef || mukellefInfo) ? (
                         <div className="flex items-center gap-1">
                           <CheckCircle className="w-4 h-4 text-green-500" />
                           <span className="text-xs text-green-600 font-medium">E-Fatura Mükellefi</span>
@@ -186,18 +203,49 @@ const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
                 )}
               </div>
               {/* E-fatura mükellefi detay bilgileri */}
-              {result && result.isEinvoiceMukellef && result.data && (
+              {(result && result.isEinvoiceMukellef && result.data) || mukellefInfo ? (
                 <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle className="w-4 h-4 text-green-600" />
                     <span className="text-sm font-medium text-green-800">E-Fatura Mükellefi Bulundu</span>
                   </div>
                   <div className="space-y-1 text-xs text-green-700">
-                    <div><strong>Şirket:</strong> {result.data.companyName}</div>
-                    {result.data.aliasName && <div><strong>E-Fatura Alias:</strong> {result.data.aliasName}</div>}
-                    {result.data.taxOffice && <div><strong>Vergi Dairesi:</strong> {result.data.taxOffice}</div>}
-                    {result.data.address && <div><strong>Adres:</strong> {result.data.address}</div>}
-                    {result.data.city && <div><strong>Şehir:</strong> {result.data.city}</div>}
+                    {/* Eski hook'tan gelen veriler */}
+                    {result && result.data && (
+                      <>
+                        <div><strong>Şirket:</strong> {result.data.companyName}</div>
+                        {result.data.aliasName && <div><strong>E-Fatura Alias:</strong> {result.data.aliasName}</div>}
+                        {result.data.taxOffice && <div><strong>Vergi Dairesi:</strong> {result.data.taxOffice}</div>}
+                        {result.data.address && <div><strong>Adres:</strong> {result.data.address}</div>}
+                        {result.data.city && <div><strong>Şehir:</strong> {result.data.city}</div>}
+                      </>
+                    )}
+                    {/* Yeni Nilvera hook'undan gelen veriler */}
+                    {mukellefInfo && (
+                      <>
+                        <div><strong>Şirket:</strong> {mukellefInfo.companyName}</div>
+                        {mukellefInfo.aliasName && <div><strong>E-Fatura Alias:</strong> {mukellefInfo.aliasName}</div>}
+                        {mukellefInfo.taxOffice && <div><strong>Vergi Dairesi:</strong> {mukellefInfo.taxOffice}</div>}
+                        {mukellefInfo.address && <div><strong>Adres:</strong> {mukellefInfo.address}</div>}
+                        {mukellefInfo.city && <div><strong>Şehir:</strong> {mukellefInfo.city}</div>}
+                        {mukellefInfo.district && <div><strong>İlçe:</strong> {mukellefInfo.district}</div>}
+                        {mukellefInfo.mersisNo && <div><strong>Mersis No:</strong> {mukellefInfo.mersisNo}</div>}
+                        {mukellefInfo.sicilNo && <div><strong>Sicil No:</strong> {mukellefInfo.sicilNo}</div>}
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+              
+              {/* Hata durumu */}
+              {nilveraError && (
+                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <XCircle className="w-4 h-4 text-red-600" />
+                    <span className="text-sm font-medium text-red-800">Nilvera API Hatası</span>
+                  </div>
+                  <div className="text-xs text-red-700">
+                    {nilveraError}
                   </div>
                 </div>
               )}
