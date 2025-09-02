@@ -78,6 +78,7 @@ serve(async (req) => {
       });
     }
 
+
     const { action, taxNumber } = await req.json();
 
     if (action === 'get_company_info') {
@@ -250,11 +251,29 @@ serve(async (req) => {
         let formattedData = null;
 
         if (mukellefData && mukellefData.Content && Array.isArray(mukellefData.Content)) {
+          console.log('🔍 Content array uzunluğu:', mukellefData.Content.length);
+          console.log('🔍 Aranan vergi numarası:', taxNumber);
+          
           // Aradığımız vergi numarasına sahip mükellefi bul
           const foundMukellef = mukellefData.Content.find(item => item.TaxNumber === taxNumber);
           
+          console.log('🎯 Mükellef bulundu mu?', foundMukellef ? 'EVET' : 'HAYIR');
+          
           if (foundMukellef) {
-            console.log('🎯 Mükellef bulundu:', foundMukellef);
+            console.log('🎯 Bulunan mükellef detayları:', JSON.stringify(foundMukellef, null, 2));
+            console.log('🎯 Aliases var mı?', foundMukellef.Aliases ? 'EVET' : 'HAYIR');
+            console.log('🎯 Aliases uzunluğu:', foundMukellef.Aliases ? foundMukellef.Aliases.length : 0);
+            
+            if (foundMukellef.Aliases) {
+              foundMukellef.Aliases.forEach((alias, index) => {
+                console.log(`🎯 Alias ${index}:`, {
+                  Name: alias.Name,
+                  DeletionTime: alias.DeletionTime,
+                  startsWithUrnMail: alias.Name ? alias.Name.startsWith('urn:mail:') : false,
+                  isActive: alias.DeletionTime === null
+                });
+              });
+            }
             
             // Aliases array'inde e-fatura alias'ı var mı kontrol et
             const hasEinvoiceAlias = foundMukellef.Aliases && 
@@ -264,6 +283,8 @@ serve(async (req) => {
                 alias.DeletionTime === null
               );
             
+            console.log('🎯 E-fatura alias var mı?', hasEinvoiceAlias ? 'EVET' : 'HAYIR');
+            
             if (hasEinvoiceAlias) {
               isEinvoiceMukellef = true;
               const einvoiceAlias = foundMukellef.Aliases.find(alias => 
@@ -271,6 +292,8 @@ serve(async (req) => {
                 alias.Name.startsWith('urn:mail:') && 
                 alias.DeletionTime === null
               );
+              
+              console.log('🎯 E-fatura alias detayı:', einvoiceAlias);
               
               formattedData = {
                 aliasName: einvoiceAlias?.Name || '',
@@ -286,7 +309,14 @@ serve(async (req) => {
                 type: foundMukellef.Type || ''
               };
             }
+          } else {
+            console.log('❌ Mükellef bulunamadı. Mevcut vergi numaraları:');
+            mukellefData.Content.slice(0, 5).forEach((item, index) => {
+              console.log(`  ${index + 1}. ${item.TaxNumber} - ${item.Title}`);
+            });
           }
+        } else {
+          console.log('❌ Content array bulunamadı veya geçersiz format');
         }
 
         return new Response(JSON.stringify({ 
