@@ -409,15 +409,28 @@ serve(async (req) => {
           .single();
 
         if (invoiceError || !salesInvoice) {
-          throw new Error('Sales invoice not found');
+          console.error('❌ Sales invoice not found:', {
+            salesInvoiceId,
+            companyId: profile.company_id,
+            error: invoiceError
+          });
+          throw new Error(`Sales invoice not found: ${invoiceError?.message || 'Unknown error'}`);
         }
 
         console.log('📄 Sales invoice data:', {
           id: salesInvoice.id,
           fatura_no: salesInvoice.fatura_no,
           customer: salesInvoice.customers?.name,
-          items: salesInvoice.sales_invoice_items?.length
+          customer_tax_number: salesInvoice.customers?.tax_number,
+          items: salesInvoice.sales_invoice_items?.length,
+          company: salesInvoice.companies?.name
         });
+
+        // Validate required customer data
+        if (!salesInvoice.customers?.tax_number) {
+          console.error('❌ Customer tax number is missing');
+          throw new Error('Müşteri vergi numarası bulunamadı. Lütfen müşteri bilgilerini tamamlayın.');
+        }
 
         // Create standard Nilvera invoice model
         const nilveraInvoiceData = {
