@@ -102,14 +102,7 @@ serve(async (req) => {
 
     if (authError || !nilveraAuth) {
       console.error('❌ Nilvera auth bulunamadı:', authError);
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Nilvera kimlik doğrulama bilgileri bulunamadı. Lütfen ayarlar sayfasından Nilvera bilgilerinizi girin.',
-        errorType: 'AuthError'
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+             throw new Error('Nilvera kimlik doğrulama bilgileri bulunamadı. Lütfen ayarlar sayfasından Nilvera bilgilerinizi girin.');
     }
 
 
@@ -511,14 +504,7 @@ serve(async (req) => {
 
         if (!aliasRow?.alias_name) {
           console.error('❌ CustomerAlias missing for VKN:', salesInvoice.customers?.tax_number);
-          return new Response(JSON.stringify({
-            success: false,
-            error: 'Müşteri alias (etiket) bulunamadı. Lütfen Müşteri > E-Fatura Etiketi (CustomerAlias) bilgisini ekleyin.',
-            errorType: 'CustomerAliasRequired'
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
+                     throw new Error('Müşteri alias (etiket) bulunamadı. Lütfen Müşteri > E-Fatura Etiketi (CustomerAlias) bilgisini ekleyin.');
         }
 
         nilveraInvoiceData.CustomerAlias = aliasRow.alias_name;
@@ -626,7 +612,7 @@ serve(async (req) => {
           success: false,
           error: error.message
         }), {
-          status: 200,
+          status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
@@ -723,7 +709,7 @@ serve(async (req) => {
           success: false,
           error: error.message
         }), {
-          status: 200,
+          status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
