@@ -34,6 +34,9 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
     address: "",
     tax_number: "",
     tax_office: "",
+    city: "",
+    district: "",
+    einvoice_alias_name: "",
   });
 
   const mutation = useMutation({
