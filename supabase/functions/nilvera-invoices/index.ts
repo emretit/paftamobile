@@ -535,35 +535,39 @@ serve(async (req) => {
           throw new Error('Nilvera API ayarları bulunamadı. Lütfen önce API anahtarlarınızı ayarlayın.');
         }
 
-        // Check if customer is e-fatura mükellefi in Nilvera system
-        console.log('🔍 Checking customer e-fatura mükellefi status:', salesInvoice.customers?.tax_number);
-        const globalCompanyUrl = nilveraAuth.test_mode 
-          ? 'https://apitest.nilvera.com/general/GlobalCompany'
-          : 'https://api.nilvera.com/general/GlobalCompany';
+        // For test environment, try without CustomerAlias first
+        if (nilveraAuth.test_mode) {
+          console.log('🧪 Test mode: Trying without CustomerAlias first');
+          nilveraInvoiceData.CustomerAlias = null;
+        } else {
+          // Check if customer is e-fatura mükellefi in Nilvera system
+          console.log('🔍 Checking customer e-fatura mükellefi status:', salesInvoice.customers?.tax_number);
+          const globalCompanyUrl = 'https://api.nilvera.com/general/GlobalCompany';
 
-        try {
-          const globalCompanyResponse = await fetch(`${globalCompanyUrl}?VKN=${salesInvoice.customers?.tax_number}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${nilveraAuth.api_key}`,
-              'Content-Type': 'application/json'
-            }
-          });
+          try {
+            const globalCompanyResponse = await fetch(`${globalCompanyUrl}?VKN=${salesInvoice.customers?.tax_number}`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${nilveraAuth.api_key}`,
+                'Content-Type': 'application/json'
+              }
+            });
 
-          if (globalCompanyResponse.ok) {
-            const globalCompanyData = await globalCompanyResponse.json();
-            console.log('✅ Customer e-fatura mükellefi found:', globalCompanyData);
-            
-            // Use the alias from Nilvera system if available
-            if (globalCompanyData.AliasName) {
-              console.log('📝 Using Nilvera system alias:', globalCompanyData.AliasName);
-              nilveraInvoiceData.CustomerAlias = globalCompanyData.AliasName;
+            if (globalCompanyResponse.ok) {
+              const globalCompanyData = await globalCompanyResponse.json();
+              console.log('✅ Customer e-fatura mükellefi found:', globalCompanyData);
+              
+              // Use the alias from Nilvera system if available
+              if (globalCompanyData.AliasName) {
+                console.log('📝 Using Nilvera system alias:', globalCompanyData.AliasName);
+                nilveraInvoiceData.CustomerAlias = globalCompanyData.AliasName;
+              }
+            } else {
+              console.log('⚠️ Customer not found in Nilvera e-fatura mükellefi list');
             }
-          } else {
-            console.log('⚠️ Customer not found in Nilvera e-fatura mükellefi list');
+          } catch (globalCompanyError) {
+            console.log('⚠️ GlobalCompany check failed, using DB alias:', globalCompanyError.message);
           }
-        } catch (globalCompanyError) {
-          console.log('⚠️ GlobalCompany check failed, using DB alias:', globalCompanyError.message);
         }
 
         // Send to Nilvera API - using Model endpoint for standard format
