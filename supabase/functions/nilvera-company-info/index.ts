@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,20 +13,83 @@ serve(async (req) => {
   }
 
   try {
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get current user from Authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Authorization header gerekli'
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !user) {
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Geçersiz kullanıcı token'
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Get user profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('company_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Kullanıcı profili bulunamadı'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Get Nilvera auth settings
+    const { data: nilveraAuth, error: authError } = await supabase
+      .from('nilvera_auth')
+      .select('*')
+      .eq('company_id', profile.company_id)
+      .eq('is_active', true)
+      .single();
+
+    if (authError || !nilveraAuth) {
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Nilvera kimlik doğrulama bilgileri bulunamadı. Lütfen ayarlar sayfasından Nilvera bilgilerinizi girin.'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { action, taxNumber } = await req.json();
 
     if (action === 'get_company_info') {
       try {
         console.log('🔍 Nilvera API üzerinden kendi firma bilgileri getiriliyor...');
 
-        // Nilvera API anahtarını environment'tan al
-        const nilveraApiKey = Deno.env.get('NILVERA_API_KEY');
-        if (!nilveraApiKey) {
-          throw new Error('Nilvera API anahtarı bulunamadı');
-        }
+        console.log('🔑 Nilvera API key kontrolü:', nilveraAuth.api_key ? 'Mevcut' : 'Bulunamadı');
 
         // Nilvera API Company endpoint'i - kendi firma bilgileri
-        const nilveraApiUrl = 'https://apitest.nilvera.com/general/Company';
+        const nilveraApiUrl = nilveraAuth.test_mode 
+          ? 'https://apitest.nilvera.com/general/Company'
+          : 'https://api.nilvera.com/general/Company';
         
         console.log('📡 Nilvera API çağrısı yapılıyor...');
         console.log('📡 API URL:', nilveraApiUrl);
@@ -34,7 +98,7 @@ serve(async (req) => {
         const companyResponse = await fetch(nilveraApiUrl, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${nilveraApiKey}`,
+            'Authorization': `Bearer ${nilveraAuth.api_key}`,
             'Accept': '*/*',
             'Content-Type': 'application/json',
           }
@@ -118,28 +182,27 @@ serve(async (req) => {
       try {
         console.log('🔍 Nilvera API üzerinden mükellef sorgulama:', taxNumber);
 
-        const nilveraApiKey = Deno.env.get('NILVERA_API_KEY');
-        console.log('🔑 API Key kontrolü:', nilveraApiKey ? 'Mevcut' : 'Bulunamadı');
-        if (!nilveraApiKey) {
-          throw new Error('Nilvera API anahtarı bulunamadı - Environment variable NILVERA_API_KEY ayarlanmalı');
-        }
+        console.log('🔑 Nilvera API key kontrolü:', nilveraAuth.api_key ? 'Mevcut' : 'Bulunamadı');
 
         // Mükellef sorgulama endpoint'i - GlobalCompany kullanarak (VKN parametresi ile)
-        const mukellefApiUrl = `https://apitest.nilvera.com/general/GlobalCompany?VKN=${taxNumber}`;
+        const globalCompanyUrl = nilveraAuth.test_mode 
+          ? 'https://apitest.nilvera.com/general/GlobalCompany'
+          : 'https://api.nilvera.com/general/GlobalCompany';
+        const mukellefApiUrl = `${globalCompanyUrl}?VKN=${taxNumber}`;
         
         console.log('📡 Mükellef sorgulama API çağrısı yapılıyor...');
         console.log('📡 API URL:', mukellefApiUrl);
 
         console.log('📡 API çağrısı yapılıyor...');
         console.log('📡 Headers:', {
-          'Authorization': `Bearer ${nilveraApiKey.substring(0, 10)}...`,
+          'Authorization': `Bearer ${nilveraAuth.api_key.substring(0, 10)}...`,
           'Content-Type': 'application/json'
         });
 
         const mukellefResponse = await fetch(mukellefApiUrl, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${nilveraApiKey}`,
+            'Authorization': `Bearer ${nilveraAuth.api_key}`,
             'Accept': '*/*',
             'Content-Type': 'application/json',
           }
