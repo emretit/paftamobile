@@ -514,7 +514,55 @@ serve(async (req) => {
 
         if (aliasRow?.alias_name) {
           console.log('📝 Found customer alias in DB:', aliasRow.alias_name);
-          nilveraInvoiceData.CustomerAlias = aliasRow.alias_name;
+          // Verify alias is still valid in Nilvera system before using
+          console.log('🔍 Verifying alias validity in Nilvera system...');
+          const globalCompanyUrl = nilveraAuth.test_mode 
+            ? 'https://apitest.nilvera.com/general/GlobalCompany'
+            : 'https://api.nilvera.com/general/GlobalCompany';
+
+          try {
+            const globalCompanyResponse = await fetch(`${globalCompanyUrl}?VKN=${salesInvoice.customers?.tax_number}`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${nilveraAuth.api_key}`,
+                'Content-Type': 'application/json'
+              }
+            });
+
+            if (globalCompanyResponse.ok) {
+              const globalCompanyData = await globalCompanyResponse.json();
+              if (globalCompanyData.AliasName === aliasRow.alias_name) {
+                console.log('✅ DB alias is still valid in Nilvera system');
+                nilveraInvoiceData.CustomerAlias = aliasRow.alias_name;
+              } else {
+                console.log('⚠️ DB alias is outdated, using Nilvera system alias:', globalCompanyData.AliasName);
+                nilveraInvoiceData.CustomerAlias = globalCompanyData.AliasName;
+                
+                // Update DB with current alias
+                await supabase
+                  .from('customer_aliases')
+                  .update({
+                    alias_name: globalCompanyData.AliasName,
+                    company_name: salesInvoice.customers?.name,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('company_id', profile.company_id)
+                  .eq('vkn', salesInvoice.customers?.tax_number);
+              }
+            } else {
+              console.log('⚠️ Customer not found in Nilvera system, removing from DB');
+              await supabase
+                .from('customer_aliases')
+                .delete()
+                .eq('company_id', profile.company_id)
+                .eq('vkn', salesInvoice.customers?.tax_number);
+              delete nilveraInvoiceData.CustomerAlias;
+            }
+          } catch (globalCompanyError) {
+            console.error('❌ Alias verification failed:', globalCompanyError.message);
+            // If verification fails, don't use the alias
+            delete nilveraInvoiceData.CustomerAlias;
+          }
         } else {
           // Check if customer is e-fatura mükellefi and get their alias from Nilvera
           console.log('🔍 Checking customer e-fatura mükellefi status:', salesInvoice.customers?.tax_number);
