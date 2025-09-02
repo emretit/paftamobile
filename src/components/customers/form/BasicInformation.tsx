@@ -36,28 +36,28 @@ const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
   // E-fatura mükellefi bilgilerini form data'ya ekle
   useEffect(() => {
     if (result && result.isEinvoiceMukellef && result.data) {
-      setFormData(prev => ({
-        ...prev,
+      setFormData({
+        ...formData,
         // E-fatura mükellefi bilgilerini form data'ya ekle
-        company: prev.company || result.data?.companyName || prev.company,
-        tax_office: prev.tax_office || result.data?.taxOffice || prev.tax_office,
-        address: prev.address || result.data?.address || prev.address,
-      }));
+        company: formData.company || result.data?.companyName || formData.company,
+        tax_office: formData.tax_office || result.data?.taxOffice || formData.tax_office,
+        address: formData.address || result.data?.address || formData.address,
+      });
     }
-  }, [result, setFormData]);
+  }, [result]);
 
   // Nilvera'dan gelen mükellef bilgilerini form data'ya ekle
   useEffect(() => {
     if (mukellefInfo) {
-      setFormData(prev => ({
-        ...prev,
+      setFormData({
+        ...formData,
         // Nilvera mükellef bilgilerini form data'ya ekle
-        company: prev.company || mukellefInfo.companyName || prev.company,
-        tax_office: prev.tax_office || mukellefInfo.taxOffice || prev.tax_office,
-        address: prev.address || mukellefInfo.address || prev.address,
-      }));
+        company: formData.company || mukellefInfo.companyName || formData.company,
+        tax_office: formData.tax_office || mukellefInfo.taxOffice || formData.tax_office,
+        address: formData.address || mukellefInfo.address || formData.address,
+      });
     }
-  }, [mukellefInfo, setFormData]);
+  }, [mukellefInfo]);
 
   return (
     <div className="space-y-6">
