@@ -558,12 +558,13 @@ serve(async (req) => {
                 .delete()
                 .eq('company_id', profile.company_id)
                 .eq('vkn', salesInvoice.customers?.tax_number);
-              delete nilveraInvoiceData.CustomerAlias;
+              // Don't delete CustomerAlias, just don't set it for non-e-fatura customers
+              console.log('ℹ️ Customer is not e-fatura mükellefi, CustomerAlias will not be included');
             }
           } catch (globalCompanyError) {
             console.error('❌ Alias verification failed:', globalCompanyError.message);
-            // If verification fails, don't use the alias
-            delete nilveraInvoiceData.CustomerAlias;
+            // If verification fails, don't use the alias - but don't delete it either
+            console.log('ℹ️ Alias verification failed, CustomerAlias will not be included');
           }
         } else {
           // Check if customer is e-fatura mükellefi and get their alias from Nilvera
@@ -607,13 +608,13 @@ serve(async (req) => {
             } else {
               console.log('ℹ️ Customer not found in e-fatura mükellefi list - treating as paper invoice');
               // For non-e-fatura customers, CustomerAlias should be omitted from the request
-              // Remove the CustomerAlias field entirely
-              delete nilveraInvoiceData.CustomerAlias;
+              // Don't delete CustomerAlias, just don't set it
+              console.log('ℹ️ Customer is not e-fatura mükellefi, CustomerAlias will not be included');
             }
           } catch (globalCompanyError) {
             console.error('❌ GlobalCompany check failed:', globalCompanyError.message);
             // If we can't check, assume it's a paper invoice customer
-            delete nilveraInvoiceData.CustomerAlias;
+            console.log('ℹ️ GlobalCompany check failed, CustomerAlias will not be included');
           }
         }
 
