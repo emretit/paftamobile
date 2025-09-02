@@ -391,12 +391,15 @@ serve(async (req) => {
     if (action === 'send_invoice') {
       try {
         console.log('🚀 Starting e-invoice send process...');
+        console.log('📊 Request data:', { action, salesInvoiceId, companyId: profile.company_id });
         
         if (!salesInvoiceId) {
+          console.error('❌ salesInvoiceId is required');
           throw new Error('salesInvoiceId is required');
         }
 
         // Get sales invoice with items and company info
+        console.log('📋 Fetching sales invoice:', { salesInvoiceId, companyId: profile.company_id });
         const { data: salesInvoice, error: invoiceError } = await supabase
           .from('sales_invoices')
           .select(`
@@ -433,6 +436,12 @@ serve(async (req) => {
           throw new Error('Müşteri vergi numarası bulunamadı. Lütfen müşteri bilgilerini tamamlayın.');
         }
 
+        // Validate required company data
+        if (!salesInvoice.companies?.tax_number) {
+          console.error('❌ Company tax number is missing');
+          throw new Error('Şirket vergi numarası bulunamadı. Lütfen şirket bilgilerini tamamlayın.');
+        }
+
         // Derive valid InvoiceSerieOrNumber per Nilvera docs
         const invoiceSerieOrNumber = (() => {
           const raw = (salesInvoice.fatura_no || '').toString();
@@ -459,7 +468,7 @@ serve(async (req) => {
               InvoiceProfile: 'TICARIFATURA'
             },
             CompanyInfo: {
-              TaxNumber: salesInvoice.companies?.tax_number || '0000000000',
+              TaxNumber: salesInvoice.companies?.tax_number,
               Name: salesInvoice.companies?.name || 'Şirket Adı',
               Address: salesInvoice.companies?.address || 'Şirket Adresi',
               District: 'Merkez',
