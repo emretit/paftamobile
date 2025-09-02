@@ -2,12 +2,12 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CustomerFormData } from "@/types/customer";
-import BasicInformation from "./form/BasicInformation";
-import CustomerTypeAndStatus from "./form/CustomerTypeAndStatus";
+import CompanyBasicInfo from "./form/CompanyBasicInfo";
+import ContactInformation from "./form/ContactInformation";
 import CompanyInformation from "./form/CompanyInformation";
-import RepresentativeSelect from "./form/RepresentativeSelect";
-import { MapPin, DollarSign, FileText } from "lucide-react";
+import { MapPin, DollarSign, FileText, User, Building2, Users, CreditCard, Receipt } from "lucide-react";
 
 interface CustomerFormFieldsProps {
   formData: CustomerFormData;
@@ -16,112 +16,83 @@ interface CustomerFormFieldsProps {
 
 const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) => {
   return (
-    <div className="space-y-3">
-      {/* Basic Info Section */}
-      <div className="p-3 bg-card rounded-lg border border-border/50">
-        <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-          <div className="w-1 h-4 bg-primary rounded-full"></div>
-          Temel Bilgiler
-        </h3>
-        <BasicInformation formData={formData} setFormData={setFormData} />
-      </div>
+    <div className="space-y-8">
+      {/* Şirket ve Adres Bilgileri - Üst Kısım (Tam Genişlik) */}
+      <Card className="border border-gray-200 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <div className="p-1.5 bg-primary/10 rounded">
+              <Building2 className="w-4 h-4 text-primary" />
+            </div>
+            <span>Şirket ve Adres Bilgileri</span>
+            <div className="ml-auto text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+              Zorunlu
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <CompanyBasicInfo formData={formData} setFormData={setFormData} />
+        </CardContent>
+      </Card>
 
-      {/* Type and Status */}
-      <div className="p-3 bg-card rounded-lg border border-border/50">
-        <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-          <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
-          Tip ve Durum
-        </h3>
-        <CustomerTypeAndStatus formData={formData} setFormData={setFormData} />
-      </div>
+      {/* İletişim ve Ek Bilgiler - Orta Kısım */}
+      <Card className="border border-gray-200 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <div className="p-1.5 bg-blue-100 rounded">
+              <User className="w-4 h-4 text-blue-600" />
+            </div>
+            <span>İletişim ve Ek Bilgiler</span>
+            <div className="ml-auto text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+              Zorunlu/Opsiyonel
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <ContactInformation formData={formData} setFormData={setFormData} />
+        </CardContent>
+      </Card>
 
-      {/* Representative */}
-      <div className="p-3 bg-card rounded-lg border border-border/50">
-        <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-          <div className="w-1 h-4 bg-indigo-500 rounded-full"></div>
-          Temsilci
-        </h3>
-        <RepresentativeSelect formData={formData} setFormData={setFormData} />
-      </div>
-
-      {/* Address */}
-      <div className="p-3 bg-card rounded-lg border border-border/50">
-        <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-          <div className="w-1 h-4 bg-rose-500 rounded-full"></div>
-          Adres Bilgileri
-        </h3>
-        <div className="space-y-2">
-          <Label htmlFor="address" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-            <MapPin className="w-3 h-3 text-rose-500" />
-            <span>Tam Adres</span>
-          </Label>
-          <Textarea
-            id="address"
-            value={formData.address}
-            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            placeholder="Tam adres bilgisi"
-            rows={3}
-            className="resize-none"
-          />
-        </div>
-      </div>
-
-      {/* Company Information (only for corporate) */}
+      {/* Şirket Bilgileri - Orta Kısım (Sadece Kurumsal) */}
       <CompanyInformation formData={formData} setFormData={setFormData} />
 
-      {/* Financial Info */}
-      <div className="p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-200">
-        <h3 className="text-sm font-medium text-emerald-700 mb-3 flex items-center gap-2">
-          <div className="w-1 h-4 bg-emerald-500 rounded-full"></div>
-          Finansal Bilgiler
-        </h3>
-        <div className="space-y-2">
-          <Label htmlFor="balance" className="text-sm font-medium text-emerald-700 flex items-center gap-1">
-            <DollarSign className="w-3 h-3 text-emerald-600" />
-            <span>Başlangıç Bakiyesi</span>
-          </Label>
-          <Input
-            id="balance"
-            type="number"
-            step="0.01"
-            value={formData.balance}
-            onChange={(e) => setFormData({ ...formData, balance: parseFloat(e.target.value) || 0 })}
-            placeholder="0.00"
-            className="bg-white/70"
-          />
-        </div>
-      </div>
-
-      {/* E-Fatura Alias - En Altta */}
-      <div className="p-3 bg-card rounded-lg border border-border/50">
-        <h3 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
-          <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
-          E-Fatura Bilgileri
-        </h3>
-        
-        <div className="p-3 bg-muted/30 rounded-lg">
-          <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-            <FileText className="w-3 h-3 text-blue-500" />
-            E-Fatura Alias
-          </h4>
-          <div className="space-y-2">
-            <Label htmlFor="einvoice_alias_name" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-              <FileText className="w-3 h-3 text-blue-500" />
-              <span>E-Fatura Alias</span>
-            </Label>
-            <Input
-              id="einvoice_alias_name"
-              value={formData.einvoice_alias_name}
-              onChange={(e) => setFormData({ ...formData, einvoice_alias_name: e.target.value })}
-              placeholder="urn:mail:defaultpk-cgbilgi-4-6-2-c-2@mersel.io"
-              className="font-mono text-xs"
-            />
-            <p className="text-xs text-muted-foreground">
-              E-fatura gönderimlerinde kullanılacak alias adresi
-            </p>
+      {/* E-Fatura Bilgileri - Alt Kısım (Tam Genişlik) */}
+      <Card className="border border-gray-200 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <div className="p-1.5 bg-blue-100 rounded">
+              <Receipt className="w-4 h-4 text-blue-600" />
+            </div>
+            <span>E-Fatura Bilgileri</span>
+            <div className="ml-auto text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+              Opsiyonel
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="p-3 bg-blue-50 rounded border border-blue-200">
+            <div className="space-y-3">
+              <Label htmlFor="einvoice_alias_name" className="text-sm font-medium text-blue-700 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-blue-600" />
+                <span>E-Fatura Alias</span>
+              </Label>
+              <Input
+                id="einvoice_alias_name"
+                value={formData.einvoice_alias_name}
+                onChange={(e) => setFormData({ ...formData, einvoice_alias_name: e.target.value })}
+                placeholder="urn:mail:defaultpk-cgbilgi-4-6-2-c-2@mersel.io"
+                className="font-mono text-sm border-blue-200 focus:border-blue-400 bg-white"
+              />
+              <div className="flex items-start gap-2 p-2 bg-blue-100 rounded">
+                <div className="w-1 h-1 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  E-fatura gönderimlerinde kullanılacak alias adresi. VKN ile müşteri bilgileri çekildiğinde otomatik olarak doldurulur.
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

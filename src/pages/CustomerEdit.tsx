@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerFormData } from "@/types/customer";
 import Navbar from "@/components/Navbar";
+import TopBar from "@/components/TopBar";
 import CustomerFormHeader from "@/components/customers/CustomerFormHeader";
 import CustomerFormContent from "@/components/customers/CustomerFormContent";
 
@@ -134,10 +135,13 @@ const CustomerEdit = ({ isCollapsed, setIsCollapsed }: CustomerEditProps) => {
     return (
       <div className="min-h-screen bg-white flex relative">
         <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-        <main className={`flex-1 p-4 sm:p-8 transition-all duration-300 ${
+        <main className={`flex-1 transition-all duration-300 ${
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}>
-          <div className="text-center py-8">Yükleniyor...</div>
+          <TopBar />
+          <div className="p-4 sm:p-8">
+            <div className="text-center py-8">Yükleniyor...</div>
+          </div>
         </main>
       </div>
     );
@@ -147,20 +151,23 @@ const CustomerEdit = ({ isCollapsed, setIsCollapsed }: CustomerEditProps) => {
     <div className="min-h-screen bg-white flex relative">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main
-        className={`flex-1 p-4 sm:p-8 transition-all duration-300 ${
+        className={`flex-1 transition-all duration-300 ${
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}
       >
-        <CustomerFormHeader id={id} />
+        <TopBar />
+        <div className="p-4 sm:p-8">
+          <CustomerFormHeader id={id} />
 
-        <CustomerFormContent 
-          formData={formData}
-          setFormData={setFormData}
-          handleSubmit={handleSubmit}
-          isPending={mutation.isPending}
-          isEdit={true}
-          onCancel={() => navigate('/contacts')}
-        />
+          <CustomerFormContent 
+            formData={formData}
+            setFormData={setFormData}
+            handleSubmit={handleSubmit}
+            isPending={mutation.isPending}
+            isEdit={true}
+            onCancel={() => navigate('/contacts')}
+          />
+        </div>
       </main>
     </div>
   );
