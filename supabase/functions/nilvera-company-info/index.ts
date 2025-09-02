@@ -245,22 +245,48 @@ serve(async (req) => {
         const mukellefData = await mukellefResponse.json();
         console.log('✅ GlobalCompany API yanıtı alındı:', JSON.stringify(mukellefData, null, 2));
 
-        // GlobalCompany yanıtını işle - AliasName varsa e-fatura mükellefi
-        const isEinvoiceMukellef = mukellefData && mukellefData.AliasName;
+        // GlobalCompany yanıtını işle - Content array'inde arama yap
+        let isEinvoiceMukellef = false;
         let formattedData = null;
 
-        if (isEinvoiceMukellef) {
-          formattedData = {
-            aliasName: mukellefData.AliasName || '',
-            companyName: mukellefData.Name || mukellefData.Title || '',
-            taxNumber: mukellefData.VKN || '',
-            taxOffice: mukellefData.TaxOffice || '',
-            address: mukellefData.Address || '',
-            city: mukellefData.City || '',
-            district: mukellefData.District || '',
-            mersisNo: mukellefData.MersisNo || '',
-            sicilNo: mukellefData.SicilNo || ''
-          };
+        if (mukellefData && mukellefData.Content && Array.isArray(mukellefData.Content)) {
+          // Aradığımız vergi numarasına sahip mükellefi bul
+          const foundMukellef = mukellefData.Content.find(item => item.TaxNumber === taxNumber);
+          
+          if (foundMukellef) {
+            console.log('🎯 Mükellef bulundu:', foundMukellef);
+            
+            // Aliases array'inde e-fatura alias'ı var mı kontrol et
+            const hasEinvoiceAlias = foundMukellef.Aliases && 
+              foundMukellef.Aliases.some(alias => 
+                alias.Name && 
+                alias.Name.startsWith('urn:mail:') && 
+                alias.DeletionTime === null
+              );
+            
+            if (hasEinvoiceAlias) {
+              isEinvoiceMukellef = true;
+              const einvoiceAlias = foundMukellef.Aliases.find(alias => 
+                alias.Name && 
+                alias.Name.startsWith('urn:mail:') && 
+                alias.DeletionTime === null
+              );
+              
+              formattedData = {
+                aliasName: einvoiceAlias?.Name || '',
+                companyName: foundMukellef.Title || '',
+                taxNumber: foundMukellef.TaxNumber || '',
+                taxOffice: foundMukellef.TaxOffice || '',
+                address: foundMukellef.Address || '',
+                city: foundMukellef.City || '',
+                district: foundMukellef.District || '',
+                mersisNo: foundMukellef.MersisNo || '',
+                sicilNo: foundMukellef.SicilNo || '',
+                accountType: foundMukellef.AccountType || '',
+                type: foundMukellef.Type || ''
+              };
+            }
+          }
         }
 
         return new Response(JSON.stringify({ 
