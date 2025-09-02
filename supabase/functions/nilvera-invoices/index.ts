@@ -499,12 +499,12 @@ serve(async (req) => {
               LineTotal: parseFloat(item.satir_toplami)
             })) || [],
             Notes: salesInvoice.notlar ? [salesInvoice.notlar] : []
-          },
-          CustomerAlias: null // Müşteri takma adı eklenecek
+          }
+          // CustomerAlias will be set below based on requirements
         };
 
-        // CustomerAlias is optional according to Nilvera API docs
-        // Try to get alias from DB, but don't require it
+        // CustomerAlias is REQUIRED for e-fatura mükellefi customers
+        // First try to get alias from local DB
         const { data: aliasRow } = await supabase
           .from('customer_aliases')
           .select('alias_name')
@@ -516,35 +516,11 @@ serve(async (req) => {
           console.log('📝 Found customer alias in DB:', aliasRow.alias_name);
           nilveraInvoiceData.CustomerAlias = aliasRow.alias_name;
         } else {
-          console.log('📝 No customer alias found, using null (as per Nilvera API docs)');
-          nilveraInvoiceData.CustomerAlias = null;
-        }
-
-        console.log('📋 Nilvera invoice model created:', {
-          invoiceNumber: nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceSerieOrNumber,
-          customer: nilveraInvoiceData.EInvoice.CustomerInfo.Name,
-          total: salesInvoice.toplam_tutar
-        });
-
-        // Get Nilvera auth settings
-        const { data: nilveraAuth, error: authError } = await supabase
-          .from('nilvera_auth')
-          .select('*')
-          .eq('company_id', profile.company_id)
-          .single();
-
-        if (authError || !nilveraAuth) {
-          throw new Error('Nilvera API ayarları bulunamadı. Lütfen önce API anahtarlarınızı ayarlayın.');
-        }
-
-        // For test environment, try without CustomerAlias first
-        if (nilveraAuth.test_mode) {
-          console.log('🧪 Test mode: Trying without CustomerAlias first');
-          nilveraInvoiceData.CustomerAlias = null;
-        } else {
-          // Check if customer is e-fatura mükellefi in Nilvera system
+          // Check if customer is e-fatura mükellefi and get their alias from Nilvera
           console.log('🔍 Checking customer e-fatura mükellefi status:', salesInvoice.customers?.tax_number);
-          const globalCompanyUrl = 'https://api.nilvera.com/general/GlobalCompany';
+          const globalCompanyUrl = nilveraAuth.test_mode 
+            ? 'https://apitest.nilvera.com/general/GlobalCompany'
+            : 'https://api.nilvera.com/general/GlobalCompany';
 
           try {
             const globalCompanyResponse = await fetch(`${globalCompanyUrl}?VKN=${salesInvoice.customers?.tax_number}`, {
@@ -559,18 +535,43 @@ serve(async (req) => {
               const globalCompanyData = await globalCompanyResponse.json();
               console.log('✅ Customer e-fatura mükellefi found:', globalCompanyData);
               
-              // Use the alias from Nilvera system if available
               if (globalCompanyData.AliasName) {
                 console.log('📝 Using Nilvera system alias:', globalCompanyData.AliasName);
                 nilveraInvoiceData.CustomerAlias = globalCompanyData.AliasName;
+                
+                // Save alias to local DB for future use
+                await supabase
+                  .from('customer_aliases')
+                  .upsert({
+                    company_id: profile.company_id,
+                    vkn: salesInvoice.customers?.tax_number,
+                    alias_name: globalCompanyData.AliasName,
+                    company_name: salesInvoice.customers?.name,
+                    updated_at: new Date().toISOString()
+                  });
+              } else {
+                console.log('⚠️ Customer is e-fatura mükellefi but has no alias');
+                throw new Error(`Müşteri e-fatura mükellefi ancak takma adı bulunamadı. VKN: ${salesInvoice.customers?.tax_number}`);
               }
             } else {
-              console.log('⚠️ Customer not found in Nilvera e-fatura mükellefi list');
+              console.log('ℹ️ Customer not found in e-fatura mükellefi list - treating as paper invoice');
+              // For non-e-fatura customers, CustomerAlias should be omitted from the request
+              // Remove the CustomerAlias field entirely
+              delete nilveraInvoiceData.CustomerAlias;
             }
           } catch (globalCompanyError) {
-            console.log('⚠️ GlobalCompany check failed, using DB alias:', globalCompanyError.message);
+            console.error('❌ GlobalCompany check failed:', globalCompanyError.message);
+            // If we can't check, assume it's a paper invoice customer
+            delete nilveraInvoiceData.CustomerAlias;
           }
         }
+
+        console.log('📋 Nilvera invoice model created:', {
+          invoiceNumber: nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceSerieOrNumber,
+          customer: nilveraInvoiceData.EInvoice.CustomerInfo.Name,
+          customerAlias: nilveraInvoiceData.CustomerAlias || 'N/A',
+          total: salesInvoice.toplam_tutar
+        });
 
         // Send to Nilvera API - using Model endpoint for standard format
         const nilveraApiUrl = nilveraAuth.test_mode 
