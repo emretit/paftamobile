@@ -72,10 +72,11 @@ export const useNilveraCompanyInfo = () => {
         throw new Error('Kullanıcı oturumu bulunamadı');
       }
 
-      // Call Nilvera edge function
+      // Call Nilvera edge function - kendi firma bilgileri için taxNumber'a gerek yok
       const { data, error } = await supabase.functions.invoke('nilvera-company-info', {
         body: {
           action: 'get_company_info'
+          // taxNumber parametresini kaldırdık çünkü kendi firma bilgilerini getiriyoruz
         }
       });
 

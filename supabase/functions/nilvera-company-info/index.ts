@@ -15,19 +15,8 @@ serve(async (req) => {
     const { action, taxNumber } = await req.json();
 
     if (action === 'get_company_info') {
-      // Vergi numarası kontrolü
-      if (!taxNumber || taxNumber.length < 10) {
-        return new Response(JSON.stringify({ 
-          success: false,
-          error: 'Geçerli bir vergi numarası giriniz (10-11 haneli)'
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
       try {
-        console.log('🔍 Nilvera API üzerinden firma bilgileri getiriliyor:', taxNumber);
+        console.log('🔍 Nilvera API üzerinden kendi firma bilgileri getiriliyor...');
 
         // Nilvera API anahtarını environment'tan al
         const nilveraApiKey = Deno.env.get('NILVERA_API_KEY');
@@ -35,14 +24,13 @@ serve(async (req) => {
           throw new Error('Nilvera API anahtarı bulunamadı');
         }
 
-        // Nilvera API test URL'i - dokümantasyona göre
+        // Nilvera API Company endpoint'i - kendi firma bilgileri
         const nilveraApiUrl = 'https://apitest.nilvera.com/general/Company';
         
         console.log('📡 Nilvera API çağrısı yapılıyor...');
         console.log('📡 API URL:', nilveraApiUrl);
-        console.log('📡 Vergi No:', taxNumber);
 
-        // Nilvera API'dan firma bilgilerini çek
+        // Nilvera API'dan kendi firma bilgilerini çek
         const companyResponse = await fetch(nilveraApiUrl, {
           method: 'GET',
           headers: {
@@ -62,7 +50,7 @@ serve(async (req) => {
           } else if (companyResponse.status === 403) {
             throw new Error('Nilvera API erişim yetkisi yok');
           } else if (companyResponse.status === 404) {
-            throw new Error('Belirtilen firma bulunamadı');
+            throw new Error('Firma bilgileri bulunamadı');
           } else {
             throw new Error(`Nilvera API hatası: ${companyResponse.status} - ${errorText}`);
           }
