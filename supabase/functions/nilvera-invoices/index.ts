@@ -533,10 +533,12 @@ serve(async (req) => {
               const globalCompanyData = await globalCompanyResponse.json();
               if (globalCompanyData.AliasName === aliasRow.alias_name) {
                 console.log('✅ DB alias is still valid in Nilvera system');
-                nilveraInvoiceData.CustomerAlias = aliasRow.alias_name;
+                // CustomerAlias must be in URN format: "urn:mail:email@domain.com"
+                nilveraInvoiceData.CustomerAlias = `urn:mail:${salesInvoice.customers?.email || 'customer@example.com'}`;
               } else {
                 console.log('⚠️ DB alias is outdated, using Nilvera system alias:', globalCompanyData.AliasName);
-                nilveraInvoiceData.CustomerAlias = globalCompanyData.AliasName;
+                // CustomerAlias must be in URN format: "urn:mail:email@domain.com"
+                nilveraInvoiceData.CustomerAlias = `urn:mail:${salesInvoice.customers?.email || 'customer@example.com'}`;
                 
                 // Update DB with current alias
                 await supabase
@@ -585,7 +587,8 @@ serve(async (req) => {
               
               if (globalCompanyData.AliasName) {
                 console.log('📝 Using Nilvera system alias:', globalCompanyData.AliasName);
-                nilveraInvoiceData.CustomerAlias = globalCompanyData.AliasName;
+                // CustomerAlias must be in URN format: "urn:mail:email@domain.com"
+                nilveraInvoiceData.CustomerAlias = `urn:mail:${salesInvoice.customers?.email || 'customer@example.com'}`;
                 
                 // Save alias to local DB for future use
                 await supabase
