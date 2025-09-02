@@ -436,7 +436,7 @@ serve(async (req) => {
         const nilveraInvoiceData = {
           EInvoice: {
             InvoiceInfo: {
-              UUID: crypto.randomUUID(),
+              UUID: crypto.randomUUID ? crypto.randomUUID() : 'uuid-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
               InvoiceType: 'SATIS',
               InvoiceSerieOrNumber: salesInvoice.fatura_no,
               IssueDate: new Date(salesInvoice.fatura_tarihi).toISOString(),
@@ -687,10 +687,15 @@ serve(async (req) => {
     throw new Error('Invalid action');
 
   } catch (error) {
-    console.error('Error in nilvera-invoices function:', error);
+    console.error('❌ Error in nilvera-invoices function:', error);
+    console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error name:', error.name);
+    
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message || 'An unknown error occurred' 
+      error: error.message || 'An unknown error occurred',
+      errorType: error.name || 'UnknownError',
+      timestamp: new Date().toISOString()
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
