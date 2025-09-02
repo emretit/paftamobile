@@ -30,9 +30,6 @@ export const EditableCustomerDetails = ({
     address: customer.address || "",
     tax_number: customer.tax_number || "",
     tax_office: customer.tax_office || "",
-    city: (customer as any).city || "",
-    district: (customer as any).district || "",
-    einvoice_alias_name: (customer as any).einvoice_alias_name || "",
   });
 
   const { mutation } = useCustomerEdit(customer.id, onSuccess);

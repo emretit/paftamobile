@@ -15,7 +15,7 @@ export const useAutoMukellefCheck = ({
   apiKey,
   enabled = true
 }: UseAutoMukellefCheckProps) => {
-  const { checkEinvoiceMukellef } = useEinvoiceMukellefCheck();
+  const { updateCustomerMukellefStatus } = useEinvoiceMukellefCheck();
 
   useEffect(() => {
     if (!enabled || !customerId || !taxNumber || !apiKey) {
@@ -28,7 +28,7 @@ export const useAutoMukellefCheck = ({
         await new Promise(resolve => setTimeout(resolve, 1000));
         const isMukellef = Math.random() > 0.5; // Mock result
         
-        await checkEinvoiceMukellef(taxNumber);
+        await updateCustomerMukellefStatus(customerId, isMukellef);
         
         console.log(`Auto check completed for customer ${customerId}: ${isMukellef ? 'Mükellef' : 'Değil'}`);
       } catch (error) {
@@ -38,9 +38,9 @@ export const useAutoMukellefCheck = ({
 
     // VKN 10 haneli ve sadece rakam ise kontrol et
     if (taxNumber.length === 10 && /^\d+$/.test(taxNumber)) {
-    checkMukellef();
+      checkMukellef();
     }
-  }, [customerId, taxNumber, apiKey, enabled, checkEinvoiceMukellef]);
+  }, [customerId, taxNumber, apiKey, enabled, updateCustomerMukellefStatus]);
 
   return null;
 };
