@@ -78,7 +78,6 @@ serve(async (req) => {
       });
     }
 
-
     const { action, taxNumber } = await req.json();
 
     if (action === 'get_company_info') {
@@ -185,11 +184,11 @@ serve(async (req) => {
 
         console.log('🔑 Nilvera API key kontrolü:', nilveraAuth.api_key ? 'Mevcut' : 'Bulunamadı');
 
-        // Mükellef sorgulama endpoint'i - GİB resmi mükellef listesinden VKN ile sorgulama
-        const mukellefBaseUrl = nilveraAuth.test_mode 
-          ? 'https://apitest.nilvera.com/general/TaxPayers/SearchByVKN'
-          : 'https://api.nilvera.com/general/TaxPayers/SearchByVKN';
-        const mukellefApiUrl = `${mukellefBaseUrl}?vkn=${taxNumber}`;
+        // Mükellef sorgulama endpoint'i - GlobalCompany kullanarak (VKN parametresi ile)
+        const globalCompanyUrl = nilveraAuth.test_mode 
+          ? 'https://apitest.nilvera.com/general/GlobalCompany'
+          : 'https://api.nilvera.com/general/GlobalCompany';
+        const mukellefApiUrl = `${globalCompanyUrl}?VKN=${taxNumber}`;
         
         console.log('📡 Mükellef sorgulama API çağrısı yapılıyor...');
         console.log('📡 API URL:', mukellefApiUrl);
@@ -211,18 +210,6 @@ serve(async (req) => {
 
         console.log('📡 Mükellef API yanıt kodu:', mukellefResponse.status);
 
-        // 204 No Content - mükellef bulunamadı ama başarılı istek
-        if (mukellefResponse.status === 204) {
-          console.log('ℹ️ 204 No Content - Mükellef bulunamadı');
-          return new Response(JSON.stringify({ 
-            success: true,
-            isEinvoiceMukellef: false,
-            message: 'Bu vergi numarası e-fatura mükellefi değil'
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-
         if (!mukellefResponse.ok) {
           const errorText = await mukellefResponse.text();
           console.error('❌ Mükellef API hatası:', {
@@ -234,13 +221,11 @@ serve(async (req) => {
           });
           
           if (mukellefResponse.status === 404) {
-            console.log('ℹ️ Mükellef bulunamadı (404) - API endpoint bulunamadı veya vergi numarası yok');
-            console.log('ℹ️ API URL:', mukellefApiUrl);
-            console.log('ℹ️ Aranan vergi numarası:', taxNumber);
+            console.log('ℹ️ Mükellef bulunamadı (404) - e-fatura mükellefi değil');
             return new Response(JSON.stringify({ 
               success: true,
               isEinvoiceMukellef: false,
-              message: 'Bu vergi numarası e-fatura mükellefi değil veya bulunamadı'
+              message: 'Bu vergi numarası e-fatura mükellefi değil'
             }), {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
@@ -257,84 +242,51 @@ serve(async (req) => {
           }
         }
 
-        // Yanıtı önce text olarak al, sonra JSON parse et
-        const responseText = await mukellefResponse.text();
-        console.log('📡 Ham API yanıtı:', responseText);
-        console.log('📡 Yanıt uzunluğu:', responseText.length);
-        
-        let mukellefData = null;
-        try {
-          if (responseText && responseText.trim()) {
-            mukellefData = JSON.parse(responseText);
-            console.log('✅ JSON parse başarılı:', JSON.stringify(mukellefData, null, 2));
-          } else {
-            console.log('⚠️ Boş yanıt alındı');
-            console.log('⚠️ Ham yanıt detayları:', {
-              responseTextExists: !!responseText,
-              responseTextLength: responseText ? responseText.length : 0,
-              responseTextTrimmed: responseText ? responseText.trim() : '',
-              responseTextFirstChars: responseText ? responseText.substring(0, 100) : ''
-            });
-            
-            // Boş yanıt durumunda da "mükellef değil" olarak döndürelim
-            return new Response(JSON.stringify({ 
-              success: true,
-              isEinvoiceMukellef: false,
-              message: 'Bu vergi numarası e-fatura mükellefi değil (boş yanıt)'
-            }), {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            });
-          }
-        } catch (parseError) {
-          console.error('❌ JSON parse hatası:', parseError);
-          console.error('❌ Ham yanıt:', responseText);
-          throw new Error(`API yanıtı geçerli JSON formatında değil: ${parseError.message}`);
-        }
+        const mukellefData = await mukellefResponse.json();
+        console.log('✅ GlobalCompany API yanıtı alındı:', JSON.stringify(mukellefData, null, 2));
 
-        // SearchByVKN yanıtını işle - GİB resmi mükellef listesinden
+        // GlobalCompany yanıtını işle - Content array'inde arama yap
         let isEinvoiceMukellef = false;
         let formattedData = null;
 
-        console.log('🔍 GİB API yanıt formatı:', typeof mukellefData);
-        console.log('🔍 GİB API yanıt içeriği:', JSON.stringify(mukellefData, null, 2));
-
-        // SearchByVKN API'si array döndürür
-        if (mukellefData && Array.isArray(mukellefData) && mukellefData.length > 0) {
-          const taxpayer = mukellefData[0]; // İlk sonucu al
-          console.log('🎯 GİB mükellef bulundu:', taxpayer.VKN || taxpayer.TaxNumber);
-          console.log('🎯 GİB mükellef detayları:', JSON.stringify(taxpayer, null, 2));
+        if (mukellefData && mukellefData.Content && Array.isArray(mukellefData.Content)) {
+          // Aradığımız vergi numarasına sahip mükellefi bul
+          const foundMukellef = mukellefData.Content.find(item => item.TaxNumber === taxNumber);
           
-          // E-fatura mükellefi mi kontrol et
-          isEinvoiceMukellef = true; // GİB listesinde varsa e-fatura mükellefidir
-          
-          formattedData = {
-            aliasName: taxpayer.AliasName || '',
-            companyName: taxpayer.Title || taxpayer.Name || '',
-            taxNumber: taxpayer.VKN || taxpayer.TaxNumber || '',
-            taxOffice: taxpayer.TaxOffice || '',
-            address: taxpayer.Address || '',
-            city: taxpayer.City || '',
-            district: taxpayer.District || '',
-            mersisNo: taxpayer.MersisNo || '',
-            sicilNo: taxpayer.SicilNo || '',
-            accountType: taxpayer.AccountType || '',
-            type: taxpayer.Type || ''
-          };
-          
-          console.log('✅ E-fatura mükellefi onaylandı (GİB listesinde mevcut)');
-          
-        } else if (mukellefData && Array.isArray(mukellefData) && mukellefData.length === 0) {
-          console.log('ℹ️ GİB listesinde mükellef bulunamadı - e-fatura mükellefi değil');
-          isEinvoiceMukellef = false;
-        } else {
-          console.log('❌ GİB API yanıt formatı beklenmediği gibi');
-          console.log('❌ GİB API yanıtı detayları:', {
-            hasData: !!mukellefData,
-            dataType: typeof mukellefData,
-            isArray: Array.isArray(mukellefData),
-            length: mukellefData ? mukellefData.length : 'N/A',
-            fullResponse: mukellefData
-          });
+          if (foundMukellef) {
+            console.log('🎯 Mükellef bulundu:', foundMukellef);
+            
+            // Aliases array'inde e-fatura alias'ı var mı kontrol et
+            const hasEinvoiceAlias = foundMukellef.Aliases && 
+              foundMukellef.Aliases.some(alias => 
+                alias.Name && 
+                alias.Name.startsWith('urn:mail:') && 
+                alias.DeletionTime === null
+              );
+            
+            if (hasEinvoiceAlias) {
+              isEinvoiceMukellef = true;
+              const einvoiceAlias = foundMukellef.Aliases.find(alias => 
+                alias.Name && 
+                alias.Name.startsWith('urn:mail:') && 
+                alias.DeletionTime === null
+              );
+              
+              formattedData = {
+                aliasName: einvoiceAlias?.Name || '',
+                companyName: foundMukellef.Title || '',
+                taxNumber: foundMukellef.TaxNumber || '',
+                taxOffice: foundMukellef.TaxOffice || '',
+                address: foundMukellef.Address || '',
+                city: foundMukellef.City || '',
+                district: foundMukellef.District || '',
+                mersisNo: foundMukellef.MersisNo || '',
+                sicilNo: foundMukellef.SicilNo || '',
+                accountType: foundMukellef.AccountType || '',
+                type: foundMukellef.Type || ''
+              };
+            }
+          }
         }
 
         return new Response(JSON.stringify({ 
