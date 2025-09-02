@@ -185,11 +185,11 @@ serve(async (req) => {
 
         console.log('🔑 Nilvera API key kontrolü:', nilveraAuth.api_key ? 'Mevcut' : 'Bulunamadı');
 
-        // Mükellef sorgulama endpoint'i - VKN ile doğrudan sorgulama
-        const globalCompanyUrl = nilveraAuth.test_mode 
-          ? 'https://apitest.nilvera.com/general/GlobalCompany/GetGlobalCustomerInfo'
-          : 'https://api.nilvera.com/general/GlobalCompany/GetGlobalCustomerInfo';
-        const mukellefApiUrl = `${globalCompanyUrl}/${taxNumber}`;
+        // Mükellef sorgulama endpoint'i - GİB resmi mükellef listesinden VKN ile sorgulama
+        const mukellefBaseUrl = nilveraAuth.test_mode 
+          ? 'https://apitest.nilvera.com/general/TaxPayers/SearchByVKN'
+          : 'https://api.nilvera.com/general/TaxPayers/SearchByVKN';
+        const mukellefApiUrl = `${mukellefBaseUrl}?vkn=${taxNumber}`;
         
         console.log('📡 Mükellef sorgulama API çağrısı yapılıyor...');
         console.log('📡 API URL:', mukellefApiUrl);
@@ -210,6 +210,18 @@ serve(async (req) => {
         });
 
         console.log('📡 Mükellef API yanıt kodu:', mukellefResponse.status);
+
+        // 204 No Content - mükellef bulunamadı ama başarılı istek
+        if (mukellefResponse.status === 204) {
+          console.log('ℹ️ 204 No Content - Mükellef bulunamadı');
+          return new Response(JSON.stringify({ 
+            success: true,
+            isEinvoiceMukellef: false,
+            message: 'Bu vergi numarası e-fatura mükellefi değil'
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
 
         if (!mukellefResponse.ok) {
           const errorText = await mukellefResponse.text();
@@ -257,6 +269,21 @@ serve(async (req) => {
             console.log('✅ JSON parse başarılı:', JSON.stringify(mukellefData, null, 2));
           } else {
             console.log('⚠️ Boş yanıt alındı');
+            console.log('⚠️ Ham yanıt detayları:', {
+              responseTextExists: !!responseText,
+              responseTextLength: responseText ? responseText.length : 0,
+              responseTextTrimmed: responseText ? responseText.trim() : '',
+              responseTextFirstChars: responseText ? responseText.substring(0, 100) : ''
+            });
+            
+            // Boş yanıt durumunda da "mükellef değil" olarak döndürelim
+            return new Response(JSON.stringify({ 
+              success: true,
+              isEinvoiceMukellef: false,
+              message: 'Bu vergi numarası e-fatura mükellefi değil (boş yanıt)'
+            }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
           }
         } catch (parseError) {
           console.error('❌ JSON parse hatası:', parseError);
@@ -264,71 +291,48 @@ serve(async (req) => {
           throw new Error(`API yanıtı geçerli JSON formatında değil: ${parseError.message}`);
         }
 
-        // GetGlobalCustomerInfo yanıtını işle - tek mükellef döndürür
+        // SearchByVKN yanıtını işle - GİB resmi mükellef listesinden
         let isEinvoiceMukellef = false;
         let formattedData = null;
 
-        console.log('🔍 API yanıt formatı:', typeof mukellefData);
-        console.log('🔍 API yanıt içeriği:', JSON.stringify(mukellefData, null, 2));
+        console.log('🔍 GİB API yanıt formatı:', typeof mukellefData);
+        console.log('🔍 GİB API yanıt içeriği:', JSON.stringify(mukellefData, null, 2));
 
-        if (mukellefData && mukellefData.TaxNumber) {
-          console.log('🎯 Mükellef bulundu:', mukellefData.TaxNumber);
-          console.log('🎯 Mükellef detayları:', JSON.stringify(mukellefData, null, 2));
-          console.log('🎯 Aliases var mı?', mukellefData.Aliases ? 'EVET' : 'HAYIR');
-          console.log('🎯 Aliases uzunluğu:', mukellefData.Aliases ? mukellefData.Aliases.length : 0);
+        // SearchByVKN API'si array döndürür
+        if (mukellefData && Array.isArray(mukellefData) && mukellefData.length > 0) {
+          const taxpayer = mukellefData[0]; // İlk sonucu al
+          console.log('🎯 GİB mükellef bulundu:', taxpayer.VKN || taxpayer.TaxNumber);
+          console.log('🎯 GİB mükellef detayları:', JSON.stringify(taxpayer, null, 2));
           
-          if (mukellefData.Aliases) {
-            mukellefData.Aliases.forEach((alias, index) => {
-              console.log(`🎯 Alias ${index}:`, {
-                Name: alias.Name,
-                DeletionTime: alias.DeletionTime,
-                startsWithUrnMail: alias.Name ? alias.Name.startsWith('urn:mail:') : false,
-                isActive: alias.DeletionTime === null
-              });
-            });
-          }
+          // E-fatura mükellefi mi kontrol et
+          isEinvoiceMukellef = true; // GİB listesinde varsa e-fatura mükellefidir
           
-          // Aliases array'inde e-fatura alias'ı var mı kontrol et
-          const hasEinvoiceAlias = mukellefData.Aliases && 
-            mukellefData.Aliases.some(alias => 
-              alias.Name && 
-              alias.Name.startsWith('urn:mail:') && 
-              alias.DeletionTime === null
-            );
+          formattedData = {
+            aliasName: taxpayer.AliasName || '',
+            companyName: taxpayer.Title || taxpayer.Name || '',
+            taxNumber: taxpayer.VKN || taxpayer.TaxNumber || '',
+            taxOffice: taxpayer.TaxOffice || '',
+            address: taxpayer.Address || '',
+            city: taxpayer.City || '',
+            district: taxpayer.District || '',
+            mersisNo: taxpayer.MersisNo || '',
+            sicilNo: taxpayer.SicilNo || '',
+            accountType: taxpayer.AccountType || '',
+            type: taxpayer.Type || ''
+          };
           
-          console.log('🎯 E-fatura alias var mı?', hasEinvoiceAlias ? 'EVET' : 'HAYIR');
+          console.log('✅ E-fatura mükellefi onaylandı (GİB listesinde mevcut)');
           
-          if (hasEinvoiceAlias) {
-            isEinvoiceMukellef = true;
-            const einvoiceAlias = mukellefData.Aliases.find(alias => 
-              alias.Name && 
-              alias.Name.startsWith('urn:mail:') && 
-              alias.DeletionTime === null
-            );
-            
-            console.log('🎯 E-fatura alias detayı:', einvoiceAlias);
-            
-            formattedData = {
-              aliasName: einvoiceAlias?.Name || '',
-              companyName: mukellefData.Title || mukellefData.Name || '',
-              taxNumber: mukellefData.TaxNumber || '',
-              taxOffice: mukellefData.TaxOffice || '',
-              address: mukellefData.Address || '',
-              city: mukellefData.City || '',
-              district: mukellefData.District || '',
-              mersisNo: mukellefData.MersisNo || '',
-              sicilNo: mukellefData.SicilNo || '',
-              accountType: mukellefData.AccountType || '',
-              type: mukellefData.Type || ''
-            };
-          }
+        } else if (mukellefData && Array.isArray(mukellefData) && mukellefData.length === 0) {
+          console.log('ℹ️ GİB listesinde mükellef bulunamadı - e-fatura mükellefi değil');
+          isEinvoiceMukellef = false;
         } else {
-          console.log('❌ Mükellef bulunamadı veya geçersiz yanıt formatı');
-          console.log('❌ API yanıtı detayları:', {
+          console.log('❌ GİB API yanıt formatı beklenmediği gibi');
+          console.log('❌ GİB API yanıtı detayları:', {
             hasData: !!mukellefData,
             dataType: typeof mukellefData,
-            hasTaxNumber: mukellefData && mukellefData.TaxNumber,
-            taxNumberValue: mukellefData && mukellefData.TaxNumber,
+            isArray: Array.isArray(mukellefData),
+            length: mukellefData ? mukellefData.length : 'N/A',
             fullResponse: mukellefData
           });
         }
