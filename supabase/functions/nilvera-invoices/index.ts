@@ -602,8 +602,9 @@ serve(async (req) => {
                     updated_at: new Date().toISOString()
                   });
               } else {
-                console.log('⚠️ Customer is e-fatura mükellefi but has no alias');
-                throw new Error(`Müşteri e-fatura mükellefi ancak takma adı bulunamadı. VKN: ${salesInvoice.customers?.tax_number}`);
+                console.log('⚠️ Customer is e-fatura mükellefi but has no alias - treating as e-archive');
+                // If customer is e-fatura mükellefi but has no alias, treat as e-archive
+                console.log('ℹ️ Customer will be treated as e-archive (no CustomerAlias)');
               }
             } else {
               console.log('ℹ️ Customer not found in e-fatura mükellefi list - treating as paper invoice');
