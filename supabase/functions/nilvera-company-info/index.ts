@@ -35,6 +35,7 @@ serve(async (req) => {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${nilveraApiKey}`,
+            'Accept': '*/*',
             'Content-Type': 'application/json',
           }
         });
@@ -118,20 +119,28 @@ serve(async (req) => {
         console.log('🔍 Nilvera API üzerinden mükellef sorgulama:', taxNumber);
 
         const nilveraApiKey = Deno.env.get('NILVERA_API_KEY');
+        console.log('🔑 API Key kontrolü:', nilveraApiKey ? 'Mevcut' : 'Bulunamadı');
         if (!nilveraApiKey) {
-          throw new Error('Nilvera API anahtarı bulunamadı');
+          throw new Error('Nilvera API anahtarı bulunamadı - Environment variable NILVERA_API_KEY ayarlanmalı');
         }
 
-        // Mükellef sorgulama endpoint'i
-        const mukellefApiUrl = `https://apitest.nilvera.com/general/TaxPayers/SearchByVKN?vkn=${taxNumber}`;
+        // Mükellef sorgulama endpoint'i - GlobalCompany kullanarak (VKN parametresi ile)
+        const mukellefApiUrl = `https://apitest.nilvera.com/general/GlobalCompany?VKN=${taxNumber}`;
         
         console.log('📡 Mükellef sorgulama API çağrısı yapılıyor...');
         console.log('📡 API URL:', mukellefApiUrl);
+
+        console.log('📡 API çağrısı yapılıyor...');
+        console.log('📡 Headers:', {
+          'Authorization': `Bearer ${nilveraApiKey.substring(0, 10)}...`,
+          'Content-Type': 'application/json'
+        });
 
         const mukellefResponse = await fetch(mukellefApiUrl, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${nilveraApiKey}`,
+            'Accept': '*/*',
             'Content-Type': 'application/json',
           }
         });
@@ -140,9 +149,16 @@ serve(async (req) => {
 
         if (!mukellefResponse.ok) {
           const errorText = await mukellefResponse.text();
-          console.error('❌ Mükellef API hatası:', errorText);
+          console.error('❌ Mükellef API hatası:', {
+            status: mukellefResponse.status,
+            statusText: mukellefResponse.statusText,
+            errorText: errorText,
+            url: mukellefApiUrl,
+            taxNumber: taxNumber
+          });
           
           if (mukellefResponse.status === 404) {
+            console.log('ℹ️ Mükellef bulunamadı (404) - e-fatura mükellefi değil');
             return new Response(JSON.stringify({ 
               success: true,
               isEinvoiceMukellef: false,
@@ -152,28 +168,35 @@ serve(async (req) => {
             });
           }
           
-          throw new Error(`Mükellef API hatası: ${mukellefResponse.status} - ${errorText}`);
+          if (mukellefResponse.status === 401) {
+            throw new Error('Nilvera API anahtarı geçersiz veya süresi dolmuş');
+          } else if (mukellefResponse.status === 403) {
+            throw new Error('Nilvera API erişim yetkisi yok');
+          } else if (mukellefResponse.status === 429) {
+            throw new Error('Nilvera API rate limit aşıldı, lütfen daha sonra tekrar deneyin');
+          } else {
+            throw new Error(`Mükellef API hatası: ${mukellefResponse.status} - ${errorText}`);
+          }
         }
 
         const mukellefData = await mukellefResponse.json();
-        console.log('✅ Mükellef API yanıtı alındı:', JSON.stringify(mukellefData, null, 2));
+        console.log('✅ GlobalCompany API yanıtı alındı:', JSON.stringify(mukellefData, null, 2));
 
-        // Mükellef bilgilerini formatla
-        const isEinvoiceMukellef = mukellefData && mukellefData.length > 0;
+        // GlobalCompany yanıtını işle - AliasName varsa e-fatura mükellefi
+        const isEinvoiceMukellef = mukellefData && mukellefData.AliasName;
         let formattedData = null;
 
-        if (isEinvoiceMukellef && mukellefData[0]) {
-          const taxpayer = mukellefData[0];
+        if (isEinvoiceMukellef) {
           formattedData = {
-            aliasName: taxpayer.AliasName || '',
-            companyName: taxpayer.Title || taxpayer.Name || '',
-            taxNumber: taxpayer.VKN || '',
-            taxOffice: taxpayer.TaxOffice || '',
-            address: taxpayer.Address || '',
-            city: taxpayer.City || '',
-            district: taxpayer.District || '',
-            mersisNo: taxpayer.MersisNo || '',
-            sicilNo: taxpayer.SicilNo || ''
+            aliasName: mukellefData.AliasName || '',
+            companyName: mukellefData.Name || mukellefData.Title || '',
+            taxNumber: mukellefData.VKN || '',
+            taxOffice: mukellefData.TaxOffice || '',
+            address: mukellefData.Address || '',
+            city: mukellefData.City || '',
+            district: mukellefData.District || '',
+            mersisNo: mukellefData.MersisNo || '',
+            sicilNo: mukellefData.SicilNo || ''
           };
         }
 
