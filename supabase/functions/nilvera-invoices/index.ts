@@ -535,6 +535,40 @@ serve(async (req) => {
           throw new Error('Nilvera API ayarları bulunamadı. Lütfen önce API anahtarlarınızı ayarlayın.');
         }
 
+        // First, register the customer alias in Nilvera if not exists
+        console.log('📝 Registering customer alias in Nilvera:', aliasRow.alias_name);
+        const aliasApiUrl = nilveraAuth.test_mode 
+          ? 'https://apitest.nilvera.com/customer/alias'
+          : 'https://api.nilvera.com/customer/alias';
+
+        const aliasData = {
+          VKN: salesInvoice.customers?.tax_number,
+          AliasName: aliasRow.alias_name,
+          CompanyName: salesInvoice.customers?.name || salesInvoice.customers?.company
+        };
+
+        try {
+          const aliasResponse = await fetch(aliasApiUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${nilveraAuth.api_key}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(aliasData)
+          });
+
+          if (!aliasResponse.ok) {
+            const aliasError = await aliasResponse.text();
+            console.log('⚠️ Alias registration response:', aliasResponse.status, aliasError);
+            // Continue anyway - alias might already exist
+          } else {
+            console.log('✅ Customer alias registered successfully');
+          }
+        } catch (aliasError) {
+          console.log('⚠️ Alias registration failed, continuing:', aliasError.message);
+          // Continue anyway - alias might already exist
+        }
+
         // Send to Nilvera API - using Model endpoint for standard format
         const nilveraApiUrl = nilveraAuth.test_mode 
           ? 'https://apitest.nilvera.com/einvoice/Send/Model'
