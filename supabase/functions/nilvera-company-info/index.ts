@@ -222,11 +222,13 @@ serve(async (req) => {
           });
           
           if (mukellefResponse.status === 404) {
-            console.log('ℹ️ Mükellef bulunamadı (404) - e-fatura mükellefi değil');
+            console.log('ℹ️ Mükellef bulunamadı (404) - API endpoint bulunamadı veya vergi numarası yok');
+            console.log('ℹ️ API URL:', mukellefApiUrl);
+            console.log('ℹ️ Aranan vergi numarası:', taxNumber);
             return new Response(JSON.stringify({ 
               success: true,
               isEinvoiceMukellef: false,
-              message: 'Bu vergi numarası e-fatura mükellefi değil'
+              message: 'Bu vergi numarası e-fatura mükellefi değil veya bulunamadı'
             }), {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
@@ -322,6 +324,13 @@ serve(async (req) => {
           }
         } else {
           console.log('❌ Mükellef bulunamadı veya geçersiz yanıt formatı');
+          console.log('❌ API yanıtı detayları:', {
+            hasData: !!mukellefData,
+            dataType: typeof mukellefData,
+            hasTaxNumber: mukellefData && mukellefData.TaxNumber,
+            taxNumberValue: mukellefData && mukellefData.TaxNumber,
+            fullResponse: mukellefData
+          });
         }
 
         return new Response(JSON.stringify({ 
