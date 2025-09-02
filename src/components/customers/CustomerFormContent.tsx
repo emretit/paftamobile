@@ -22,11 +22,11 @@ const CustomerFormContent = ({
   onCancel
 }: CustomerFormContentProps) => {
   return (
-    <Card className="w-full max-w-7xl p-6 bg-gradient-to-br from-background to-muted/20 border shadow-sm">
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <Card className="w-full max-w-7xl p-3 bg-gradient-to-br from-background to-muted/20 border shadow-sm">
+      <form onSubmit={handleSubmit} className="space-y-2">
         <CustomerFormFields formData={formData} setFormData={setFormData} />
 
-        <div className="flex justify-end space-x-3 pt-6 border-t border-border/50">
+        <div className="flex justify-end space-x-3 pt-2 border-t border-border/50">
           <Button
             type="button"
             variant="outline"

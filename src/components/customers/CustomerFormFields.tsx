@@ -16,39 +16,39 @@ interface CustomerFormFieldsProps {
 
 const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) => {
   return (
-    <div className="space-y-8">
+    <div className="space-y-2">
       {/* Şirket ve Adres Bilgileri - Üst Kısım (Tam Genişlik) */}
       <Card className="border border-gray-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
+        <CardHeader className="pb-1">
+          <CardTitle className="flex items-center gap-2 text-base font-semibold">
             <div className="p-1.5 bg-primary/10 rounded">
               <Building2 className="w-4 h-4 text-primary" />
             </div>
-            <span>Şirket ve Adres Bilgileri</span>
+            <span>Müşteri Bilgileri</span>
             <div className="ml-auto text-xs bg-primary/10 text-primary px-2 py-1 rounded">
               Zorunlu
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-1">
           <CompanyBasicInfo formData={formData} setFormData={setFormData} />
         </CardContent>
       </Card>
 
       {/* İletişim ve Ek Bilgiler - Orta Kısım */}
       <Card className="border border-gray-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <div className="p-1.5 bg-blue-100 rounded">
-              <User className="w-4 h-4 text-blue-600" />
+        <CardHeader className="pb-1">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <div className="p-1 bg-blue-100 rounded">
+              <User className="w-3 h-3 text-blue-600" />
             </div>
             <span>İletişim ve Ek Bilgiler</span>
-            <div className="ml-auto text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+            <div className="ml-auto text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">
               Zorunlu/Opsiyonel
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-1">
           <ContactInformation formData={formData} setFormData={setFormData} />
         </CardContent>
       </Card>
@@ -58,20 +58,20 @@ const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) 
 
       {/* E-Fatura Bilgileri - Alt Kısım (Tam Genişlik) */}
       <Card className="border border-gray-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <div className="p-1.5 bg-blue-100 rounded">
-              <Receipt className="w-4 h-4 text-blue-600" />
+        <CardHeader className="pb-1">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <div className="p-1 bg-blue-100 rounded">
+              <Receipt className="w-3 h-3 text-blue-600" />
             </div>
             <span>E-Fatura Bilgileri</span>
-            <div className="ml-auto text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+            <div className="ml-auto text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">
               Opsiyonel
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-3 bg-blue-50 rounded border border-blue-200">
-            <div className="space-y-3">
+        <CardContent className="space-y-2">
+          <div className="p-2 bg-blue-50 rounded border border-blue-200">
+            <div className="space-y-1">
               <Label htmlFor="einvoice_alias_name" className="text-sm font-medium text-blue-700 flex items-center gap-2">
                 <FileText className="w-4 h-4 text-blue-600" />
                 <span>E-Fatura Alias</span>

@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { CustomerFormData } from "@/types/customer";
-import { Building, FileText, CheckCircle, XCircle, Loader2, UserPlus } from "lucide-react";
+import { Building, FileText, CheckCircle, XCircle, Loader2, UserPlus, MapPin } from "lucide-react";
 import CustomerTypeAndStatus from "./CustomerTypeAndStatus";
 import { useEinvoiceMukellefCheck } from "@/hooks/useEinvoiceMukellefCheck";
 import { useNilveraCompanyInfo } from "@/hooks/useNilveraCompanyInfo";
@@ -80,69 +80,90 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Vergi Kimlik Bilgileri */}
+    <div className="space-y-3">
+      {/* Şirket ve Vergi Bilgileri */}
       <div className="space-y-3">
-        <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-          <div className="w-0.5 h-3 bg-amber-500 rounded-full"></div>
-          Vergi Kimlik Bilgileri
-        </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="tax_number" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-              <FileText className="w-3 h-3 text-amber-500" />
-              <span>Vergi No / TC Kimlik *</span>
-            </Label>
-            <div className="relative">
-              <Input
-                id="tax_number"
-                value={formData.tax_number}
-                onChange={(e) => setFormData({ ...formData, tax_number: e.target.value })}
-                placeholder="1234567890 veya 12345678901"
-                className="pr-32"
-              />
-              {/* E-fatura mükellefi durumu göstergesi */}
-              {formData.tax_number && formData.tax_number.length >= 10 && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  {(isChecking || isNilveraLoading) ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-                  ) : (result || mukellefInfo) ? (
-                    (result?.isEinvoiceMukellef || mukellefInfo) ? (
-                      <div className="flex items-center gap-1">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span className="text-xs text-green-600 font-medium">E-Fatura Mükellefi</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1">
-                        <XCircle className="w-4 h-4 text-gray-400" />
-                        <span className="text-xs text-gray-500">E-Fatura Mükellefi Değil</span>
-                      </div>
-                    )
-                  ) : null}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="tax_office" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-              <Building className="w-3 h-3 text-amber-600" />
-              <span>Vergi Dairesi</span>
+        <div className="space-y-3">
+          {/* Şirket Adı - Üstte tam genişlik */}
+          <div className="space-y-1">
+            <Label htmlFor="company" className="text-sm font-medium text-foreground flex items-center gap-2">
+              <div className="p-1 bg-purple-100 rounded">
+                <Building className="w-3 h-3 text-purple-600" />
+              </div>
+              <span>Şirket Adı</span>
             </Label>
             <Input
-              id="tax_office"
-              value={formData.tax_office}
-              onChange={(e) => setFormData({ ...formData, tax_office: e.target.value })}
-              placeholder="Vergi dairesi adı"
+              id="company"
+              value={formData.company}
+              onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+              placeholder="Şirket adı giriniz"
+              className="h-10"
             />
+          </div>
+
+          {/* Vergi Bilgileri - Alt kısımda yan yana */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="tax_number" className="text-sm font-medium text-foreground flex items-center gap-2">
+                <div className="p-1 bg-amber-100 rounded">
+                  <FileText className="w-3 h-3 text-amber-600" />
+                </div>
+                <span>Vergi No / TC Kimlik *</span>
+              </Label>
+              <div className="relative">
+                <Input
+                  id="tax_number"
+                  value={formData.tax_number}
+                  onChange={(e) => setFormData({ ...formData, tax_number: e.target.value })}
+                  placeholder="1234567890"
+                  className="h-10 pr-32"
+                />
+                {/* E-fatura mükellefi durumu göstergesi */}
+                {formData.tax_number && formData.tax_number.length >= 10 && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {(isChecking || isNilveraLoading) ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                    ) : (result || mukellefInfo) ? (
+                      (result?.isEinvoiceMukellef || mukellefInfo) ? (
+                        <div className="flex items-center gap-1">
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <span className="text-xs text-green-600 font-medium">E-Fatura Mükellefi</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <XCircle className="w-4 h-4 text-gray-400" />
+                          <span className="text-xs text-gray-500">E-Fatura Mükellefi Değil</span>
+                        </div>
+                      )
+                    ) : null}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="tax_office" className="text-sm font-medium text-foreground flex items-center gap-2">
+                <div className="p-1 bg-amber-100 rounded">
+                  <Building className="w-3 h-3 text-amber-600" />
+                </div>
+                <span>Vergi Dairesi</span>
+              </Label>
+              <Input
+                id="tax_office"
+                value={formData.tax_office}
+                onChange={(e) => setFormData({ ...formData, tax_office: e.target.value })}
+                placeholder="Vergi dairesi"
+                className="h-10"
+              />
+            </div>
           </div>
         </div>
 
         {/* E-fatura mükellefi detay bilgileri ve otomatik doldurma önerisi */}
         {(result && result.isEinvoiceMukellef && result.data) || mukellefInfo ? (
-          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
+          <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-green-600" />
                 <span className="text-sm font-medium text-green-800">E-Fatura Mükellefi Bulundu</span>
@@ -167,7 +188,7 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
                 )}
               </Button>
             </div>
-            <div className="space-y-1 text-xs text-green-700 mb-3">
+            <div className="space-y-1 text-xs text-green-700 mb-2">
               {/* Eski hook'tan gelen veriler */}
               {result && result.data && (
                 <>
@@ -194,7 +215,7 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
             </div>
             
             {/* Otomatik doldurma önerisi */}
-            <div className="p-2 bg-blue-50 border border-blue-200 rounded">
+            <div className="p-1.5 bg-blue-50 border border-blue-200 rounded">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-3 h-3 text-blue-600" />
@@ -228,7 +249,7 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
         
         {/* Hata durumu */}
         {nilveraError && (
-          <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mt-1 p-2 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <XCircle className="w-4 h-4 text-red-600" />
               <span className="text-sm font-medium text-red-800">Nilvera API Hatası</span>
@@ -240,78 +261,68 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
         )}
       </div>
 
-      {/* Şirket ve Adres Bilgileri */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-          <div className="w-0.5 h-3 bg-purple-500 rounded-full"></div>
-          Şirket ve Adres Bilgileri
-        </h3>
+      {/* Adres Bilgileri */}
+      <div className="space-y-2">
         
         <div className="space-y-3">
-          {/* Şirket Adı */}
-          <div className="space-y-1">
-            <Label htmlFor="company" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-              <Building className="w-3 h-3 text-purple-500" />
-              <span>Şirket Adı</span>
-            </Label>
-            <Input
-              id="company"
-              value={formData.company}
-              onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-              placeholder="Şirket adı giriniz"
-              className="text-sm h-9"
-            />
-          </div>
-
-          {/* Adres Bilgileri - Kompakt Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* İl ve İlçe - Üst satır */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="city" className="text-xs font-medium text-muted-foreground">
-                İl
+              <Label htmlFor="city" className="text-sm font-medium text-foreground flex items-center gap-2">
+                <div className="p-1 bg-blue-100 rounded">
+                  <MapPin className="w-3 h-3 text-blue-600" />
+                </div>
+                <span>İl</span>
               </Label>
               <Input
                 id="city"
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 placeholder="İl seçiniz"
-                className="text-sm h-9"
+                className="h-10"
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="district" className="text-xs font-medium text-muted-foreground">
-                İlçe
+              <Label htmlFor="district" className="text-sm font-medium text-foreground flex items-center gap-2">
+                <div className="p-1 bg-blue-100 rounded">
+                  <MapPin className="w-3 h-3 text-blue-600" />
+                </div>
+                <span>İlçe</span>
               </Label>
               <Input
                 id="district"
                 value={formData.district}
                 onChange={(e) => setFormData({ ...formData, district: e.target.value })}
                 placeholder="İlçe seçiniz"
-                className="text-sm h-9"
+                className="h-10"
               />
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="address" className="text-xs font-medium text-muted-foreground">
-                Detaylı Adres
-              </Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Mahalle, sokak, bina no..."
-                className="text-sm h-9"
-              />
-            </div>
+          </div>
+
+          {/* Detaylı Adres - Alt satır tam genişlik */}
+          <div className="space-y-1">
+            <Label htmlFor="address" className="text-sm font-medium text-foreground flex items-center gap-2">
+              <div className="p-1 bg-blue-100 rounded">
+                <MapPin className="w-3 h-3 text-blue-600" />
+              </div>
+              <span>Detaylı Adres</span>
+            </Label>
+            <Input
+              id="address"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              placeholder="Mahalle, sokak, bina no..."
+              className="h-10"
+            />
           </div>
         </div>
       </div>
 
       {/* Müşteri Tipi ve Durumu */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-          <div className="w-0.5 h-3 bg-green-500 rounded-full"></div>
-          Müşteri Tipi ve Durumu
-        </h3>
-        <CustomerTypeAndStatus formData={formData} setFormData={setFormData} />
+      <div className="space-y-2">
+        <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+          <CustomerTypeAndStatus formData={formData} setFormData={setFormData} />
+        </div>
       </div>
     </div>
   );

@@ -139,7 +139,7 @@ const CustomerEdit = ({ isCollapsed, setIsCollapsed }: CustomerEditProps) => {
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}>
           <TopBar />
-          <div className="p-4 sm:p-8">
+          <div className="p-2 sm:p-4">
             <div className="text-center py-8">Yükleniyor...</div>
           </div>
         </main>
@@ -156,7 +156,7 @@ const CustomerEdit = ({ isCollapsed, setIsCollapsed }: CustomerEditProps) => {
         }`}
       >
         <TopBar />
-        <div className="p-4 sm:p-8">
+        <div className="p-2 sm:p-4">
           <CustomerFormHeader id={id} />
 
           <CustomerFormContent 

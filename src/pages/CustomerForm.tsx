@@ -35,7 +35,7 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
         }`}
       >
         <TopBar />
-        <div className="p-3 sm:p-6">
+        <div className="p-2 sm:p-4">
           <CustomerFormHeader id={id} />
 
           {isLoadingCustomer && id ? (

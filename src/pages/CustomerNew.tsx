@@ -114,7 +114,7 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
         }`}
       >
         <TopBar />
-        <div className="p-4 sm:p-8">
+        <div className="p-3 sm:p-6">
           <CustomerFormHeader />
 
           <CustomerFormContent 
