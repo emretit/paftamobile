@@ -42,8 +42,9 @@ serve(async (req) => {
       throw new Error('Invalid user token');
     }
 
-    const { action, filters } = await req.json();
-    console.log('📨 Request body:', { action, filters });
+    const requestBody = await req.json();
+    const { action, filters, salesInvoiceId } = requestBody;
+    console.log('📨 Request body:', { action, filters, salesInvoiceId });
     console.log('👤 User ID:', user.id);
 
     // Get user's company_id from profile
@@ -358,6 +359,268 @@ serve(async (req) => {
           source: 'database_fallback',
           apiError: apiError.message
         }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    if (action === 'send_invoice') {
+      try {
+        console.log('🚀 Starting e-invoice send process...');
+        
+        if (!salesInvoiceId) {
+          throw new Error('salesInvoiceId is required');
+        }
+
+        // Get sales invoice with items and company info
+        const { data: salesInvoice, error: invoiceError } = await supabase
+          .from('sales_invoices')
+          .select(`
+            *,
+            sales_invoice_items(*),
+            customers(*),
+            companies!sales_invoices_company_id_fkey(*)
+          `)
+          .eq('id', salesInvoiceId)
+          .eq('company_id', profile.company_id)
+          .single();
+
+        if (invoiceError || !salesInvoice) {
+          throw new Error('Sales invoice not found');
+        }
+
+        console.log('📄 Sales invoice data:', {
+          id: salesInvoice.id,
+          fatura_no: salesInvoice.fatura_no,
+          customer: salesInvoice.customers?.name,
+          items: salesInvoice.sales_invoice_items?.length
+        });
+
+        // Create standard Nilvera invoice model
+        const nilveraInvoiceData = {
+          EInvoice: {
+            InvoiceInfo: {
+              UUID: crypto.randomUUID(),
+              InvoiceType: 'SATIS',
+              InvoiceSerieOrNumber: salesInvoice.fatura_no,
+              IssueDate: new Date(salesInvoice.fatura_tarihi).toISOString(),
+              CurrencyCode: salesInvoice.para_birimi || 'TRY',
+              ExchangeRate: 1,
+              InvoiceProfile: 'TICARIFATURA'
+            },
+            CompanyInfo: {
+              TaxNumber: salesInvoice.companies?.tax_number || '0000000000',
+              Name: salesInvoice.companies?.name || 'Şirket Adı',
+              Address: salesInvoice.companies?.address || 'Şirket Adresi',
+              City: 'İstanbul', // Default şehir
+              Country: 'Türkiye',
+              Phone: salesInvoice.companies?.phone || '',
+              Mail: salesInvoice.companies?.email || ''
+            },
+            CustomerInfo: {
+              TaxNumber: salesInvoice.customers?.tax_number,
+              Name: salesInvoice.customers?.name || salesInvoice.customers?.company,
+              TaxOffice: salesInvoice.customers?.tax_office,
+              Address: salesInvoice.customers?.address,
+              City: salesInvoice.customers?.city,
+              Country: 'Türkiye',
+              Phone: salesInvoice.customers?.mobile_phone || salesInvoice.customers?.office_phone,
+              Mail: salesInvoice.customers?.email
+            },
+            InvoiceLines: salesInvoice.sales_invoice_items?.map((item: any) => ({
+              Name: item.urun_adi,
+              Description: item.aciklama || '',
+              Quantity: parseFloat(item.miktar),
+              UnitType: item.birim === 'adet' ? 'C62' : 'C62', // UBL-TR standart birim kodları
+              Price: parseFloat(item.birim_fiyat),
+              KDVPercent: parseFloat(item.kdv_orani),
+              DiscountPercent: parseFloat(item.indirim_orani || 0),
+              LineTotal: parseFloat(item.satir_toplami)
+            })) || [],
+            Notes: salesInvoice.notlar ? [salesInvoice.notlar] : []
+          },
+          CustomerAlias: null // Müşteri takma adı varsa buraya eklenebilir
+        };
+
+        console.log('📋 Nilvera invoice model created:', {
+          invoiceNumber: nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceSerieOrNumber,
+          customer: nilveraInvoiceData.EInvoice.CustomerInfo.Name,
+          total: salesInvoice.toplam_tutar
+        });
+
+        // Send to Nilvera API - using Model endpoint for standard format
+        const nilveraApiUrl = nilveraAuth.test_mode 
+          ? 'https://apitest.nilvera.com/einvoice/Send/Model'
+          : 'https://api.nilvera.com/einvoice/Send/Model';
+
+        console.log('🌐 Sending to Nilvera API:', nilveraApiUrl);
+
+        const nilveraResponse = await fetch(nilveraApiUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${nilveraAuth.api_key}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(nilveraInvoiceData)
+        });
+
+        console.log('📡 Nilvera API response status:', nilveraResponse.status);
+
+        if (!nilveraResponse.ok) {
+          const errorText = await nilveraResponse.text();
+          console.error('❌ Nilvera API error:', errorText);
+          throw new Error(`Nilvera API error: ${nilveraResponse.status} - ${errorText}`);
+        }
+
+        const nilveraResult = await nilveraResponse.json();
+        console.log('✅ Nilvera draft created:', nilveraResult);
+
+        // Save to tracking table
+        const { error: trackingError } = await supabase
+          .from('einvoice_status_tracking')
+          .insert({
+            company_id: profile.company_id,
+            sales_invoice_id: salesInvoiceId,
+            nilvera_invoice_id: nilveraResult.id || nilveraResult.uuid,
+            nilvera_transfer_id: nilveraResult.transferId,
+            status: 'sent',
+            transfer_state: nilveraResult.transferState || 0,
+            invoice_state: nilveraResult.invoiceState || 0,
+            sent_at: new Date().toISOString(),
+            nilvera_response: nilveraResult
+          });
+
+        if (trackingError) {
+          console.error('❌ Error saving tracking data:', trackingError);
+        }
+
+        // Update sales invoice status
+        const { error: updateError } = await supabase
+          .from('sales_invoices')
+          .update({ 
+            durum: 'gonderildi',
+            xml_data: nilveraResult
+          })
+          .eq('id', salesInvoiceId);
+
+        if (updateError) {
+          console.error('❌ Error updating sales invoice:', updateError);
+        }
+
+        return new Response(JSON.stringify({ 
+          success: true,
+          message: 'E-fatura başarıyla Nilvera\'ya gönderildi',
+          nilveraInvoiceId: nilveraResult.id || nilveraResult.uuid,
+          data: nilveraResult
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+
+      } catch (error) {
+        console.error('❌ Send invoice error:', error);
+        
+        // Log error to database
+        await supabase
+          .from('einvoice_status_tracking')
+          .insert({
+            company_id: profile.company_id,
+            sales_invoice_id: salesInvoiceId,
+            status: 'error',
+            error_message: error.message,
+            error_code: 'SEND_ERROR'
+          });
+
+        return new Response(JSON.stringify({ 
+          success: false,
+          error: error.message
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    if (action === 'check_status') {
+      try {
+        console.log('🔍 Checking invoice status...');
+        
+        if (!salesInvoiceId) {
+          throw new Error('salesInvoiceId is required');
+        }
+
+        // Get tracking record
+        const { data: tracking, error: trackingError } = await supabase
+          .from('einvoice_status_tracking')
+          .select('*')
+          .eq('sales_invoice_id', salesInvoiceId)
+          .eq('company_id', profile.company_id)
+          .single();
+
+        if (trackingError || !tracking) {
+          throw new Error('Tracking record not found');
+        }
+
+        if (!tracking.nilvera_invoice_id) {
+          throw new Error('Nilvera invoice ID not found');
+        }
+
+        // Check status from Nilvera API
+        const statusApiUrl = nilveraAuth.test_mode 
+          ? `https://apitest.nilvera.com/einvoice/Status/${tracking.nilvera_invoice_id}`
+          : `https://api.nilvera.com/einvoice/Status/${tracking.nilvera_invoice_id}`;
+
+        console.log('🌐 Checking status at:', statusApiUrl);
+
+        const statusResponse = await fetch(statusApiUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${nilveraAuth.api_key}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!statusResponse.ok) {
+          throw new Error(`Status check failed: ${statusResponse.status}`);
+        }
+
+        const statusData = await statusResponse.json();
+        console.log('📊 Status check result:', statusData);
+
+        // Update tracking record
+        const { error: updateError } = await supabase
+          .from('einvoice_status_tracking')
+          .update({
+            transfer_state: statusData.transferState,
+            invoice_state: statusData.invoiceState,
+            answer_type: statusData.answerType,
+            status: statusData.status || tracking.status,
+            delivered_at: statusData.deliveredAt ? new Date(statusData.deliveredAt).toISOString() : null,
+            responded_at: statusData.respondedAt ? new Date(statusData.respondedAt).toISOString() : null,
+            nilvera_response: statusData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', tracking.id);
+
+        if (updateError) {
+          console.error('❌ Error updating tracking:', updateError);
+        }
+
+        return new Response(JSON.stringify({ 
+          success: true,
+          status: statusData.status,
+          data: statusData
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+
+      } catch (error) {
+        console.error('❌ Status check error:', error);
+        
+        return new Response(JSON.stringify({ 
+          success: false,
+          error: error.message
+        }), {
+          status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
