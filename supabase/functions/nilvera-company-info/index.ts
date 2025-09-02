@@ -243,8 +243,24 @@ serve(async (req) => {
           }
         }
 
-        const mukellefData = await mukellefResponse.json();
-        console.log('✅ GlobalCompany API yanıtı alındı:', JSON.stringify(mukellefData, null, 2));
+        // Yanıtı önce text olarak al, sonra JSON parse et
+        const responseText = await mukellefResponse.text();
+        console.log('📡 Ham API yanıtı:', responseText);
+        console.log('📡 Yanıt uzunluğu:', responseText.length);
+        
+        let mukellefData = null;
+        try {
+          if (responseText && responseText.trim()) {
+            mukellefData = JSON.parse(responseText);
+            console.log('✅ JSON parse başarılı:', JSON.stringify(mukellefData, null, 2));
+          } else {
+            console.log('⚠️ Boş yanıt alındı');
+          }
+        } catch (parseError) {
+          console.error('❌ JSON parse hatası:', parseError);
+          console.error('❌ Ham yanıt:', responseText);
+          throw new Error(`API yanıtı geçerli JSON formatında değil: ${parseError.message}`);
+        }
 
         // GetGlobalCustomerInfo yanıtını işle - tek mükellef döndürür
         let isEinvoiceMukellef = false;
