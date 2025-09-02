@@ -840,14 +840,14 @@ serve(async (req) => {
           throw new Error('Nilvera kimlik doğrulama bilgileri bulunamadı. Lütfen ayarlar sayfasından Nilvera bilgilerinizi girin.');
         }
 
-        // Check if customer is e-fatura mükellefi using VKN ile Sorgular endpoint
-        const mukellefSorguUrl = nilveraAuth.test_mode 
-          ? 'https://apitest.nilvera.com/general/Mukellef/VKNSorgula'
-          : 'https://api.nilvera.com/general/Mukellef/VKNSorgula';
+        // Check if customer is e-fatura mükellefi using GlobalCompany endpoint (more reliable)
+        const globalCompanyUrl = nilveraAuth.test_mode 
+          ? 'https://apitest.nilvera.com/general/GlobalCompany'
+          : 'https://api.nilvera.com/general/GlobalCompany';
 
-        console.log('🌐 Checking e-fatura mükellefi at:', `${mukellefSorguUrl}?VKN=${taxNumber}`);
+        console.log('🌐 Checking e-fatura mükellefi at:', `${globalCompanyUrl}?VKN=${taxNumber}`);
 
-        const mukellefResponse = await fetch(`${mukellefSorguUrl}?VKN=${taxNumber}`, {
+        const globalCompanyResponse = await fetch(`${globalCompanyUrl}?VKN=${taxNumber}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${nilveraAuth.api_key}`,
@@ -855,44 +855,67 @@ serve(async (req) => {
           }
         });
 
-        console.log('📡 Mukellef API response status:', mukellefResponse.status);
+        console.log('📡 GlobalCompany API response status:', globalCompanyResponse.status);
+        console.log('📡 GlobalCompany API response headers:', Object.fromEntries(globalCompanyResponse.headers.entries()));
 
-        if (mukellefResponse.ok) {
-          const mukellefData = await mukellefResponse.json();
-          console.log('✅ E-fatura mükellefi found:', mukellefData);
+        if (globalCompanyResponse.ok) {
+          const globalCompanyData = await globalCompanyResponse.json();
+          console.log('✅ GlobalCompany API response data:', globalCompanyData);
           
-          // Save customer alias to local DB for future use
-          if (mukellefData.AliasName) {
+          // Check if customer has AliasName (indicates e-fatura mükellefi)
+          if (globalCompanyData.AliasName) {
+            console.log('✅ Customer is e-fatura mükellefi with alias:', globalCompanyData.AliasName);
+            
+            // Save customer alias to local DB for future use
             await supabase
               .from('customer_aliases')
               .upsert({
                 company_id: profile.company_id,
                 vkn: taxNumber,
-                alias_name: mukellefData.AliasName,
-                company_name: mukellefData.Name || mukellefData.Title,
+                alias_name: globalCompanyData.AliasName,
+                company_name: globalCompanyData.Name || globalCompanyData.Title,
                 updated_at: new Date().toISOString()
               });
-          }
 
-          return new Response(JSON.stringify({ 
-            success: true,
-            isEinvoiceMukellef: true,
-            data: {
-              aliasName: mukellefData.AliasName,
-              companyName: mukellefData.Name || mukellefData.Title,
-              taxNumber: mukellefData.VKN,
-              taxOffice: mukellefData.TaxOffice,
-              address: mukellefData.Address,
-              city: mukellefData.City,
-              district: mukellefData.District,
-              mersisNo: mukellefData.MersisNo,
-              sicilNo: mukellefData.SicilNo
-            }
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+            return new Response(JSON.stringify({ 
+              success: true,
+              isEinvoiceMukellef: true,
+              data: {
+                aliasName: globalCompanyData.AliasName,
+                companyName: globalCompanyData.Name || globalCompanyData.Title,
+                taxNumber: globalCompanyData.VKN,
+                taxOffice: globalCompanyData.TaxOffice,
+                address: globalCompanyData.Address,
+                city: globalCompanyData.City,
+                district: globalCompanyData.District,
+                mersisNo: globalCompanyData.MersisNo,
+                sicilNo: globalCompanyData.SicilNo
+              }
+            }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          } else {
+            console.log('ℹ️ Customer found in GlobalCompany but no AliasName - not e-fatura mükellefi');
+            
+            // Remove from customer_aliases if exists (customer is no longer e-fatura mükellefi)
+            await supabase
+              .from('customer_aliases')
+              .delete()
+              .eq('company_id', profile.company_id)
+              .eq('vkn', taxNumber);
+
+            return new Response(JSON.stringify({ 
+              success: true,
+              isEinvoiceMukellef: false,
+              message: 'Bu vergi numarası e-fatura mükellefi değil'
+            }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
         } else {
-          console.log('ℹ️ Customer not found in e-fatura mükellefi list');
+          console.log('ℹ️ Customer not found in GlobalCompany - not e-fatura mükellefi');
+          console.log('📡 Response status:', globalCompanyResponse.status);
+          console.log('📡 Response text:', await globalCompanyResponse.text());
           
           // Remove from customer_aliases if exists (customer is no longer e-fatura mükellefi)
           await supabase
