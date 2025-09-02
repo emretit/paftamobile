@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerFormData } from "@/types/customer";
 
-export const useCustomerForm = () => {
+export const useCustomerForm = (einvoiceMukellefData?: any) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -101,6 +101,17 @@ export const useCustomerForm = () => {
         address: data.address || null,
         tax_number: data.type === 'kurumsal' ? data.tax_number || null : null,
         tax_office: data.type === 'kurumsal' ? data.tax_office || null : null,
+        // E-fatura mükellefi bilgileri
+        is_einvoice_mukellef: einvoiceMukellefData?.isEinvoiceMukellef || false,
+        einvoice_alias_name: einvoiceMukellefData?.data?.aliasName || null,
+        einvoice_company_name: einvoiceMukellefData?.data?.companyName || null,
+        einvoice_tax_office: einvoiceMukellefData?.data?.taxOffice || null,
+        einvoice_address: einvoiceMukellefData?.data?.address || null,
+        einvoice_city: einvoiceMukellefData?.data?.city || null,
+        einvoice_district: einvoiceMukellefData?.data?.district || null,
+        einvoice_mersis_no: einvoiceMukellefData?.data?.mersisNo || null,
+        einvoice_sicil_no: einvoiceMukellefData?.data?.sicilNo || null,
+        einvoice_checked_at: einvoiceMukellefData?.isEinvoiceMukellef ? new Date().toISOString() : null,
       };
 
       if (id) {

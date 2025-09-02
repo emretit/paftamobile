@@ -3,8 +3,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { CustomerFormData } from "@/types/customer";
-import { User, Mail, Phone, Building, FileText, MapPin, Users } from "lucide-react";
+import { User, Mail, Phone, Building, FileText, MapPin, Users, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { getDigitsOnly, formatPhoneNumber } from "@/utils/phoneFormatter";
+import { useEinvoiceMukellefCheck } from "@/hooks/useEinvoiceMukellefCheck";
+import { useEffect } from "react";
 
 interface BasicInformationProps {
   formData: CustomerFormData;
@@ -12,6 +14,34 @@ interface BasicInformationProps {
 }
 
 const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
+  const { checkEinvoiceMukellef, isChecking, result, clearResult } = useEinvoiceMukellefCheck();
+
+  // Vergi numarası değiştiğinde otomatik kontrol yap
+  useEffect(() => {
+    if (formData.tax_number && formData.tax_number.length >= 10) {
+      const timeoutId = setTimeout(() => {
+        checkEinvoiceMukellef(formData.tax_number);
+      }, 1000); // 1 saniye bekle
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      clearResult();
+    }
+  }, [formData.tax_number, checkEinvoiceMukellef, clearResult]);
+
+  // E-fatura mükellefi bilgilerini form data'ya ekle
+  useEffect(() => {
+    if (result && result.isEinvoiceMukellef && result.data) {
+      setFormData(prev => ({
+        ...prev,
+        // E-fatura mükellefi bilgilerini form data'ya ekle
+        company: prev.company || result.data?.companyName || prev.company,
+        tax_office: prev.tax_office || result.data?.taxOffice || prev.tax_office,
+        address: prev.address || result.data?.address || prev.address,
+      }));
+    }
+  }, [result, setFormData]);
+
   return (
     <div className="space-y-6">
       {/* İletişim Bilgileri */}
@@ -127,12 +157,50 @@ const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
                 <FileText className="w-3 h-3 text-amber-500" />
                 <span>Vergi No / TC Kimlik</span>
               </Label>
-              <Input
-                id="tax_number"
-                value={formData.tax_number}
-                onChange={(e) => setFormData({ ...formData, tax_number: e.target.value })}
-                placeholder="1234567890 veya 12345678901"
-              />
+              <div className="relative">
+                <Input
+                  id="tax_number"
+                  value={formData.tax_number}
+                  onChange={(e) => setFormData({ ...formData, tax_number: e.target.value })}
+                  placeholder="1234567890 veya 12345678901"
+                />
+                {/* E-fatura mükellefi durumu göstergesi */}
+                {formData.tax_number && formData.tax_number.length >= 10 && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {isChecking ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                    ) : result ? (
+                      result.isEinvoiceMukellef ? (
+                        <div className="flex items-center gap-1">
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <span className="text-xs text-green-600 font-medium">E-Fatura Mükellefi</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <XCircle className="w-4 h-4 text-gray-400" />
+                          <span className="text-xs text-gray-500">E-Fatura Mükellefi Değil</span>
+                        </div>
+                      )
+                    ) : null}
+                  </div>
+                )}
+              </div>
+              {/* E-fatura mükellefi detay bilgileri */}
+              {result && result.isEinvoiceMukellef && result.data && (
+                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-800">E-Fatura Mükellefi Bulundu</span>
+                  </div>
+                  <div className="space-y-1 text-xs text-green-700">
+                    <div><strong>Şirket:</strong> {result.data.companyName}</div>
+                    {result.data.aliasName && <div><strong>E-Fatura Alias:</strong> {result.data.aliasName}</div>}
+                    {result.data.taxOffice && <div><strong>Vergi Dairesi:</strong> {result.data.taxOffice}</div>}
+                    {result.data.address && <div><strong>Adres:</strong> {result.data.address}</div>}
+                    {result.data.city && <div><strong>Şehir:</strong> {result.data.city}</div>}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

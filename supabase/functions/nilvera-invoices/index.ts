@@ -815,6 +815,114 @@ serve(async (req) => {
       }
     }
 
+    if (action === 'check_einvoice_mukellef') {
+      try {
+        console.log('🔍 Checking e-invoice mükellefi status...');
+        
+        const { taxNumber } = requestBody;
+        
+        if (!taxNumber) {
+          throw new Error('taxNumber is required');
+        }
+
+        console.log('📋 Checking tax number:', taxNumber);
+
+        // Get Nilvera auth settings
+        const { data: nilveraAuth, error: authError } = await supabase
+          .from('nilvera_auth')
+          .select('*')
+          .eq('company_id', profile.company_id)
+          .eq('is_active', true)
+          .single();
+
+        if (authError || !nilveraAuth) {
+          console.error('❌ Nilvera auth bulunamadı:', authError);
+          throw new Error('Nilvera kimlik doğrulama bilgileri bulunamadı. Lütfen ayarlar sayfasından Nilvera bilgilerinizi girin.');
+        }
+
+        // Check if customer is e-fatura mükellefi using VKN ile Sorgular endpoint
+        const mukellefSorguUrl = nilveraAuth.test_mode 
+          ? 'https://apitest.nilvera.com/general/Mukellef/VKNSorgula'
+          : 'https://api.nilvera.com/general/Mukellef/VKNSorgula';
+
+        console.log('🌐 Checking e-fatura mükellefi at:', `${mukellefSorguUrl}?VKN=${taxNumber}`);
+
+        const mukellefResponse = await fetch(`${mukellefSorguUrl}?VKN=${taxNumber}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${nilveraAuth.api_key}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        console.log('📡 Mukellef API response status:', mukellefResponse.status);
+
+        if (mukellefResponse.ok) {
+          const mukellefData = await mukellefResponse.json();
+          console.log('✅ E-fatura mükellefi found:', mukellefData);
+          
+          // Save customer alias to local DB for future use
+          if (mukellefData.AliasName) {
+            await supabase
+              .from('customer_aliases')
+              .upsert({
+                company_id: profile.company_id,
+                vkn: taxNumber,
+                alias_name: mukellefData.AliasName,
+                company_name: mukellefData.Name || mukellefData.Title,
+                updated_at: new Date().toISOString()
+              });
+          }
+
+          return new Response(JSON.stringify({ 
+            success: true,
+            isEinvoiceMukellef: true,
+            data: {
+              aliasName: mukellefData.AliasName,
+              companyName: mukellefData.Name || mukellefData.Title,
+              taxNumber: mukellefData.VKN,
+              taxOffice: mukellefData.TaxOffice,
+              address: mukellefData.Address,
+              city: mukellefData.City,
+              district: mukellefData.District,
+              mersisNo: mukellefData.MersisNo,
+              sicilNo: mukellefData.SicilNo
+            }
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } else {
+          console.log('ℹ️ Customer not found in e-fatura mükellefi list');
+          
+          // Remove from customer_aliases if exists (customer is no longer e-fatura mükellefi)
+          await supabase
+            .from('customer_aliases')
+            .delete()
+            .eq('company_id', profile.company_id)
+            .eq('vkn', taxNumber);
+
+          return new Response(JSON.stringify({ 
+            success: true,
+            isEinvoiceMukellef: false,
+            message: 'Bu vergi numarası e-fatura mükellefi değil'
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+      } catch (error) {
+        console.error('❌ E-fatura mükellefi check error:', error);
+        
+        return new Response(JSON.stringify({ 
+          success: false,
+          error: error.message
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     throw new Error('Invalid action');
 
   } catch (error) {

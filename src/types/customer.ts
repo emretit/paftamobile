@@ -13,6 +13,16 @@ export interface Customer {
   address: string | null;
   tax_number: string | null;
   tax_office: string | null;
+  is_einvoice_mukellef: boolean;
+  einvoice_alias_name: string | null;
+  einvoice_company_name: string | null;
+  einvoice_tax_office: string | null;
+  einvoice_address: string | null;
+  einvoice_city: string | null;
+  einvoice_district: string | null;
+  einvoice_mersis_no: string | null;
+  einvoice_sicil_no: string | null;
+  einvoice_checked_at: string | null;
   created_at: string;
   updated_at: string;
 }

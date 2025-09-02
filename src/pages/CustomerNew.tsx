@@ -8,6 +8,7 @@ import { CustomerFormData } from "@/types/customer";
 import Navbar from "@/components/Navbar";
 import CustomerFormHeader from "@/components/customers/CustomerFormHeader";
 import CustomerFormContent from "@/components/customers/CustomerFormContent";
+import { useEinvoiceMukellefCheck } from "@/hooks/useEinvoiceMukellefCheck";
 
 interface CustomerNewProps {
   isCollapsed: boolean;
@@ -18,6 +19,7 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { result: einvoiceResult } = useEinvoiceMukellefCheck();
   
   const [formData, setFormData] = useState<CustomerFormData>({
     name: "",
@@ -49,6 +51,17 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
         address: data.address || null,
         tax_number: data.type === 'kurumsal' ? data.tax_number || null : null,
         tax_office: data.type === 'kurumsal' ? data.tax_office || null : null,
+        // E-fatura mükellefi bilgileri
+        is_einvoice_mukellef: einvoiceResult?.isEinvoiceMukellef || false,
+        einvoice_alias_name: einvoiceResult?.data?.aliasName || null,
+        einvoice_company_name: einvoiceResult?.data?.companyName || null,
+        einvoice_tax_office: einvoiceResult?.data?.taxOffice || null,
+        einvoice_address: einvoiceResult?.data?.address || null,
+        einvoice_city: einvoiceResult?.data?.city || null,
+        einvoice_district: einvoiceResult?.data?.district || null,
+        einvoice_mersis_no: einvoiceResult?.data?.mersisNo || null,
+        einvoice_sicil_no: einvoiceResult?.data?.sicilNo || null,
+        einvoice_checked_at: einvoiceResult?.isEinvoiceMukellef ? new Date().toISOString() : null,
       };
 
       const { data: newCustomer, error } = await supabase
