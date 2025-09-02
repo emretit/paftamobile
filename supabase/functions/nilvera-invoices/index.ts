@@ -503,7 +503,8 @@ serve(async (req) => {
           CustomerAlias: null // Müşteri takma adı eklenecek
         };
 
-        // Fetch CustomerAlias from DB per Nilvera docs (required for e-Fatura)
+        // CustomerAlias is optional according to Nilvera API docs
+        // Try to get alias from DB, but don't require it
         const { data: aliasRow } = await supabase
           .from('customer_aliases')
           .select('alias_name')
@@ -511,12 +512,13 @@ serve(async (req) => {
           .eq('vkn', salesInvoice.customers?.tax_number)
           .maybeSingle();
 
-        if (!aliasRow?.alias_name) {
-          console.error('❌ CustomerAlias missing for VKN:', salesInvoice.customers?.tax_number);
-                     throw new Error('Müşteri alias (etiket) bulunamadı. Lütfen Müşteri > E-Fatura Etiketi (CustomerAlias) bilgisini ekleyin.');
+        if (aliasRow?.alias_name) {
+          console.log('📝 Found customer alias in DB:', aliasRow.alias_name);
+          nilveraInvoiceData.CustomerAlias = aliasRow.alias_name;
+        } else {
+          console.log('📝 No customer alias found, using null (as per Nilvera API docs)');
+          nilveraInvoiceData.CustomerAlias = null;
         }
-
-        nilveraInvoiceData.CustomerAlias = aliasRow.alias_name;
 
         console.log('📋 Nilvera invoice model created:', {
           invoiceNumber: nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceSerieOrNumber,
