@@ -7,7 +7,7 @@ import BasicInformation from "./form/BasicInformation";
 import CustomerTypeAndStatus from "./form/CustomerTypeAndStatus";
 import CompanyInformation from "./form/CompanyInformation";
 import RepresentativeSelect from "./form/RepresentativeSelect";
-import { MapPin, DollarSign } from "lucide-react";
+import { MapPin, DollarSign, FileText } from "lucide-react";
 
 interface CustomerFormFieldsProps {
   formData: CustomerFormData;
@@ -89,6 +89,37 @@ const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) 
             placeholder="0.00"
             className="bg-white/70"
           />
+        </div>
+      </div>
+
+      {/* E-Fatura Alias - En Altta */}
+      <div className="p-3 bg-card rounded-lg border border-border/50">
+        <h3 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+          <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
+          E-Fatura Bilgileri
+        </h3>
+        
+        <div className="p-3 bg-muted/30 rounded-lg">
+          <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+            <FileText className="w-3 h-3 text-blue-500" />
+            E-Fatura Alias
+          </h4>
+          <div className="space-y-2">
+            <Label htmlFor="einvoice_alias_name" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+              <FileText className="w-3 h-3 text-blue-500" />
+              <span>E-Fatura Alias</span>
+            </Label>
+            <Input
+              id="einvoice_alias_name"
+              value={formData.einvoice_alias_name}
+              onChange={(e) => setFormData({ ...formData, einvoice_alias_name: e.target.value })}
+              placeholder="urn:mail:defaultpk-cgbilgi-4-6-2-c-2@mersel.io"
+              className="font-mono text-xs"
+            />
+            <p className="text-xs text-muted-foreground">
+              E-fatura gönderimlerinde kullanılacak alias adresi
+            </p>
+          </div>
         </div>
       </div>
     </div>

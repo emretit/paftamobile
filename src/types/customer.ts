@@ -40,4 +40,7 @@ export interface CustomerFormData {
   address: string;
   tax_number: string;
   tax_office: string;
+  city: string;
+  district: string;
+  einvoice_alias_name: string;
 }

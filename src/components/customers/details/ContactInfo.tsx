@@ -639,6 +639,33 @@ export const ContactInfo = ({ customer, onUpdate }: ContactInfoProps) => {
             </div>
           </div>
         </div>
+
+        {/* E-Fatura Alias - En Altta */}
+        <div className="p-3 bg-card rounded-lg border border-border/50">
+          <h3 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+            <div className="w-0.5 h-3 bg-blue-500 rounded-full"></div>
+            E-Fatura Bilgileri
+          </h3>
+          
+          <div className="p-3 bg-muted/30 rounded-lg">
+            <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+              <FileText className="w-3 h-3 text-blue-500" />
+              E-Fatura Alias
+            </h4>
+            <EditableField
+              label="E-Fatura Alias"
+              value={customer.einvoice_alias_name || ""}
+              icon={<FileText className="w-2.5 h-2.5 text-blue-500" />}
+              onSave={(value) => updateCustomerField("einvoice_alias_name", value)}
+              placeholder="urn:mail:defaultpk-cgbilgi-4-6-2-c-2@mersel.io"
+            />
+            {customer.einvoice_alias_name && (
+              <p className="text-xs text-muted-foreground mt-1">
+                E-fatura gönderimlerinde kullanılacak alias adresi
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </Card>
   );

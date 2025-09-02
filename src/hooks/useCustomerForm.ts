@@ -25,6 +25,9 @@ export const useCustomerForm = (einvoiceMukellefData?: any) => {
     address: "",
     tax_number: "",
     tax_office: "",
+    city: "",
+    district: "",
+    einvoice_alias_name: "",
   });
 
   const { data: customer, isLoading: isLoadingCustomer, error: customerError } = useQuery({
@@ -71,6 +74,9 @@ export const useCustomerForm = (einvoiceMukellefData?: any) => {
         address: customer.address || "",
         tax_number: customer.tax_number || "",
         tax_office: customer.tax_office || "",
+        city: customer.city || "",
+        district: customer.district || "",
+        einvoice_alias_name: customer.einvoice_alias_name || "",
       });
     }
   }, [customer]);
