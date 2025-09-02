@@ -17,6 +17,8 @@ serve(async (req) => {
 
   try {
     console.log('🚀 Nilvera edge function started');
+    console.log('📋 Request method:', req.method);
+    console.log('📋 Request headers:', Object.fromEntries(req.headers.entries()));
     
     const SUPABASE_URL = 'https://vwhwufnckpqirxptwncw.supabase.co';
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -32,6 +34,7 @@ serve(async (req) => {
     // Get the user from the Authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('❌ Missing or invalid authorization header');
       throw new Error('Missing or invalid authorization header');
     }
     
@@ -39,13 +42,33 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !user) {
+      console.error('❌ Invalid user token:', userError);
       throw new Error('Invalid user token');
     }
 
+    console.log('📨 Parsing request body...');
     const requestBody = await req.json();
+    console.log('📨 Raw request body:', requestBody);
+    
     const { action, filters, salesInvoiceId } = requestBody;
-    console.log('📨 Request body:', { action, filters, salesInvoiceId });
+    console.log('📨 Parsed request body:', { action, filters, salesInvoiceId });
     console.log('👤 User ID:', user.id);
+
+    // Validate required fields
+    if (!action) {
+      console.error('❌ Action is required');
+      throw new Error('Action is required');
+    }
+
+    if (action === 'send_invoice' && !salesInvoiceId) {
+      console.error('❌ salesInvoiceId is required for send_invoice action');
+      throw new Error('salesInvoiceId is required for send_invoice action');
+    }
+
+    if (action === 'check_status' && !salesInvoiceId) {
+      console.error('❌ salesInvoiceId is required for check_status action');
+      throw new Error('salesInvoiceId is required for check_status action');
+    }
 
     // Get user's company_id from profile
     const { data: profile, error: profileError } = await supabase
