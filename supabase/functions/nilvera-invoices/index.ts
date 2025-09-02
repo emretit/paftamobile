@@ -448,6 +448,17 @@ serve(async (req) => {
           total: salesInvoice.toplam_tutar
         });
 
+        // Get Nilvera auth settings
+        const { data: nilveraAuth, error: authError } = await supabase
+          .from('nilvera_auth')
+          .select('*')
+          .eq('company_id', profile.company_id)
+          .single();
+
+        if (authError || !nilveraAuth) {
+          throw new Error('Nilvera API ayarları bulunamadı. Lütfen önce API anahtarlarınızı ayarlayın.');
+        }
+
         // Send to Nilvera API - using Model endpoint for standard format
         const nilveraApiUrl = nilveraAuth.test_mode 
           ? 'https://apitest.nilvera.com/einvoice/Send/Model'
@@ -562,6 +573,17 @@ serve(async (req) => {
 
         if (!tracking.nilvera_invoice_id) {
           throw new Error('Nilvera invoice ID not found');
+        }
+
+        // Get Nilvera auth settings
+        const { data: nilveraAuth, error: authError } = await supabase
+          .from('nilvera_auth')
+          .select('*')
+          .eq('company_id', profile.company_id)
+          .single();
+
+        if (authError || !nilveraAuth) {
+          throw new Error('Nilvera API ayarları bulunamadı. Lütfen önce API anahtarlarınızı ayarlayın.');
         }
 
         // Check status from Nilvera API
