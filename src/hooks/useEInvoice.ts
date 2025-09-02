@@ -108,7 +108,7 @@ export const useEInvoiceStatus = (salesInvoiceId?: string) => {
           .from('einvoice_status_tracking')
           .select('*')
           .eq('sales_invoice_id', salesInvoiceId)
-          .single();
+          .maybeSingle();
           
         if (error) throw error;
         setStatus(data);
@@ -135,7 +135,7 @@ export const useEInvoiceStatus = (salesInvoiceId?: string) => {
         .from('einvoice_status_tracking')
         .select('*')
         .eq('sales_invoice_id', salesInvoiceId)
-        .single();
+        .maybeSingle();
         
       if (error) throw error;
       setStatus(data);

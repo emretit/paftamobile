@@ -440,13 +440,26 @@ serve(async (req) => {
           throw new Error('Müşteri vergi numarası bulunamadı. Lütfen müşteri bilgilerini tamamlayın.');
         }
 
+        // Derive valid InvoiceSerieOrNumber per Nilvera docs
+        const invoiceSerieOrNumber = (() => {
+          const raw = (salesInvoice.fatura_no || '').toString();
+          const cleaned = raw.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+          // If 16-char number like EFT2022000000001
+          if (/^[A-Z]{3}[0-9]{13}$/.test(cleaned)) return cleaned;
+          // If only series provided (first 3 letters)
+          const letters = cleaned.replace(/[^A-Z]/g, '');
+          if (letters.length >= 3) return letters.slice(0, 3);
+          // Fallback default series
+          return 'EFT';
+        })();
+
         // Create standard Nilvera invoice model
         const nilveraInvoiceData = {
           EInvoice: {
             InvoiceInfo: {
               UUID: crypto.randomUUID ? crypto.randomUUID() : 'uuid-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
               InvoiceType: 'SATIS',
-              InvoiceSerieOrNumber: salesInvoice.fatura_no,
+              InvoiceSerieOrNumber: invoiceSerieOrNumber,
               IssueDate: new Date(salesInvoice.fatura_tarihi).toISOString(),
               CurrencyCode: salesInvoice.para_birimi || 'TRY',
               ExchangeRate: 1,
@@ -456,6 +469,7 @@ serve(async (req) => {
               TaxNumber: salesInvoice.companies?.tax_number || '0000000000',
               Name: salesInvoice.companies?.name || 'Şirket Adı',
               Address: salesInvoice.companies?.address || 'Şirket Adresi',
+              District: 'Merkez',
               City: 'İstanbul', // Default şehir
               Country: 'Türkiye',
               Phone: salesInvoice.companies?.phone || '',
@@ -465,11 +479,12 @@ serve(async (req) => {
               TaxNumber: salesInvoice.customers?.tax_number,
               Name: salesInvoice.customers?.name || salesInvoice.customers?.company,
               TaxOffice: salesInvoice.customers?.tax_office,
-              Address: salesInvoice.customers?.address,
-              City: salesInvoice.customers?.city,
+              Address: salesInvoice.customers?.address || '-',
+              District: salesInvoice.customers?.district || salesInvoice.customers?.city || 'Merkez',
+              City: salesInvoice.customers?.city || 'İstanbul',
               Country: 'Türkiye',
-              Phone: salesInvoice.customers?.mobile_phone || salesInvoice.customers?.office_phone,
-              Mail: salesInvoice.customers?.email
+              Phone: salesInvoice.customers?.mobile_phone || salesInvoice.customers?.office_phone || '',
+              Mail: salesInvoice.customers?.email || ''
             },
             InvoiceLines: salesInvoice.sales_invoice_items?.map((item: any) => ({
               Name: item.urun_adi,
@@ -483,8 +498,30 @@ serve(async (req) => {
             })) || [],
             Notes: salesInvoice.notlar ? [salesInvoice.notlar] : []
           },
-          CustomerAlias: null // Müşteri takma adı varsa buraya eklenebilir
+          CustomerAlias: null // Müşteri takma adı eklenecek
         };
+
+        // Fetch CustomerAlias from DB per Nilvera docs (required for e-Fatura)
+        const { data: aliasRow } = await supabase
+          .from('customer_aliases')
+          .select('alias_name')
+          .eq('company_id', profile.company_id)
+          .eq('vkn', salesInvoice.customers?.tax_number)
+          .maybeSingle();
+
+        if (!aliasRow?.alias_name) {
+          console.error('❌ CustomerAlias missing for VKN:', salesInvoice.customers?.tax_number);
+          return new Response(JSON.stringify({
+            success: false,
+            error: 'Müşteri alias (etiket) bulunamadı. Lütfen Müşteri > E-Fatura Etiketi (CustomerAlias) bilgisini ekleyin.',
+            errorType: 'CustomerAliasRequired'
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        nilveraInvoiceData.CustomerAlias = aliasRow.alias_name;
 
         console.log('📋 Nilvera invoice model created:', {
           invoiceNumber: nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceSerieOrNumber,
