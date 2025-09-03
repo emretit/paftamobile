@@ -139,14 +139,16 @@ const CustomerEdit = ({ isCollapsed, setIsCollapsed }: CustomerEditProps) => {
 
   if (isLoadingCustomer) {
     return (
-      <div className="min-h-screen bg-white flex relative">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex relative">
         <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
         <main className={`flex-1 transition-all duration-300 ${
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}>
           <TopBar />
-          <div className="p-2 sm:p-4">
-            <div className="text-center py-8">Yükleniyor...</div>
+          <div className="p-4 sm:p-8">
+            <div className="max-w-[1600px] mx-auto">
+              <div className="text-center py-8">Yükleniyor...</div>
+            </div>
           </div>
         </main>
       </div>
@@ -154,7 +156,7 @@ const CustomerEdit = ({ isCollapsed, setIsCollapsed }: CustomerEditProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-white flex relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex relative">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main
         className={`flex-1 transition-all duration-300 ${
@@ -162,17 +164,19 @@ const CustomerEdit = ({ isCollapsed, setIsCollapsed }: CustomerEditProps) => {
         }`}
       >
         <TopBar />
-        <div className="p-2 sm:p-4">
-          <CustomerFormHeader id={id} />
+        <div className="p-4 sm:p-8">
+          <div className="max-w-[1600px] mx-auto">
+            <CustomerFormHeader id={id} />
 
-          <CustomerFormContent 
-            formData={formData}
-            setFormData={setFormData}
-            handleSubmit={handleSubmit}
-            isPending={mutation.isPending}
-            isEdit={true}
-            onCancel={() => navigate('/contacts')}
-          />
+            <CustomerFormContent 
+              formData={formData}
+              setFormData={setFormData}
+              handleSubmit={handleSubmit}
+              isPending={mutation.isPending}
+              isEdit={true}
+              onCancel={() => navigate('/contacts')}
+            />
+          </div>
         </div>
       </main>
     </div>
