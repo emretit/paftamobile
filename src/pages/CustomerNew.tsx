@@ -109,7 +109,7 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex relative">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main
         className={`flex-1 transition-all duration-300 ${
@@ -117,17 +117,19 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
         }`}
       >
         <TopBar />
-        <div className="p-3 sm:p-6">
-          <CustomerFormHeader />
+        <div className="p-4 sm:p-8">
+          <div className="max-w-[1600px] mx-auto">
+            <CustomerFormHeader />
 
-          <CustomerFormContent 
-            formData={formData}
-            setFormData={setFormData}
-            handleSubmit={handleSubmit}
-            isPending={mutation.isPending}
-            isEdit={false}
-            onCancel={() => navigate('/contacts')}
-          />
+            <CustomerFormContent 
+              formData={formData}
+              setFormData={setFormData}
+              handleSubmit={handleSubmit}
+              isPending={mutation.isPending}
+              isEdit={false}
+              onCancel={() => navigate('/contacts')}
+            />
+          </div>
         </div>
       </main>
     </div>

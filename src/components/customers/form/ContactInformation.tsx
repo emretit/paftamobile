@@ -13,20 +13,20 @@ interface ContactInformationProps {
 
 const ContactInformation = ({ formData, setFormData }: ContactInformationProps) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       {/* İletişim Bilgileri */}
-      <div className="space-y-1">
+      <div className="space-y-3">
         <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-          <div className="w-0.5 h-3 bg-primary rounded-full"></div>
+          <div className="w-1 h-4 bg-primary rounded-full"></div>
           İletişim Bilgileri
         </h3>
         
-        <div className="space-y-1">
+        <div className="space-y-4">
           {/* First Row: Contact Person, Email */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <Label htmlFor="name" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                <User className="w-3 h-3 text-primary" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <User className="w-4 h-4 text-primary" />
                 <span>Yetkili Kişi *</span>
               </Label>
               <Input
@@ -35,12 +35,13 @@ const ContactInformation = ({ formData, setFormData }: ContactInformationProps) 
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Yetkili kişi adı giriniz"
+                className="h-11"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="email" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                <Mail className="w-3 h-3 text-blue-500" />
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Mail className="w-4 h-4 text-blue-500" />
                 <span>E-posta</span>
               </Label>
               <Input
@@ -49,15 +50,16 @@ const ContactInformation = ({ formData, setFormData }: ContactInformationProps) 
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="email@example.com"
+                className="h-11"
               />
             </div>
           </div>
           
           {/* Second Row: Phone Numbers & Representative */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <div className="space-y-1">
-              <Label htmlFor="mobile_phone" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                <Phone className="w-3 h-3 text-green-500" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="mobile_phone" className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Phone className="w-4 h-4 text-green-500" />
                 <span>Cep Telefonu</span>
               </Label>
               <PhoneInput
@@ -67,9 +69,9 @@ const ContactInformation = ({ formData, setFormData }: ContactInformationProps) 
               />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="office_phone" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                <Phone className="w-3 h-3 text-orange-500" />
+            <div className="space-y-2">
+              <Label htmlFor="office_phone" className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Phone className="w-4 h-4 text-orange-500" />
                 <span>İş Telefonu</span>
               </Label>
               <PhoneInput
@@ -79,9 +81,9 @@ const ContactInformation = ({ formData, setFormData }: ContactInformationProps) 
               />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="representative" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                <Users className="w-3 h-3 text-indigo-500" />
+            <div className="space-y-2">
+              <Label htmlFor="representative" className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Users className="w-4 h-4 text-indigo-500" />
                 <span>Temsilci</span>
               </Label>
               <Input
@@ -89,6 +91,7 @@ const ContactInformation = ({ formData, setFormData }: ContactInformationProps) 
                 value={formData.representative}
                 onChange={(e) => setFormData({ ...formData, representative: e.target.value })}
                 placeholder="Temsilci adı (opsiyonel)"
+                className="h-11"
               />
             </div>
           </div>
@@ -96,10 +99,10 @@ const ContactInformation = ({ formData, setFormData }: ContactInformationProps) 
       </div>
 
       {/* Temsilci ve Finansal Bilgiler */}
-      <div className="space-y-1 pt-1 border-t border-gray-100">
+      <div className="space-y-4 pt-4 border-t border-gray-100">
         <RepresentativeSelect formData={formData} setFormData={setFormData} />
         
-        <div className="space-y-1">
+        <div className="space-y-2">
           <Label htmlFor="balance" className="text-sm font-medium text-gray-700 flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-gray-600" />
             <span>Başlangıç Bakiyesi</span>
@@ -111,7 +114,7 @@ const ContactInformation = ({ formData, setFormData }: ContactInformationProps) 
             value={formData.balance}
             onChange={(e) => setFormData({ ...formData, balance: parseFloat(e.target.value) || 0 })}
             placeholder="0.00"
-            className="text-sm"
+            className="text-sm h-11"
           />
           <p className="text-xs text-gray-500">
             Pozitif: alacak, negatif: borç

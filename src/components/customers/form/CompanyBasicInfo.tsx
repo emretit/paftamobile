@@ -80,16 +80,16 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-6">
       {/* Şirket ve Vergi Bilgileri */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           {/* Şirket Adı - Üstte tam genişlik */}
-          <div className="space-y-1">
+          <div className="space-y-2">
             <Label htmlFor="company" className="text-sm font-medium text-foreground flex items-center gap-2">
-              <div className="p-1 bg-purple-100 rounded">
-                <Building className="w-3 h-3 text-purple-600" />
+              <div className="p-1.5 bg-purple-100 rounded-lg">
+                <Building className="w-4 h-4 text-purple-600" />
               </div>
               <span>Şirket Adı</span>
             </Label>
@@ -98,16 +98,16 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
               value={formData.company}
               onChange={(e) => setFormData({ ...formData, company: e.target.value })}
               placeholder="Şirket adı giriniz"
-              className="h-10"
+              className="h-11"
             />
           </div>
 
           {/* Vergi Bilgileri - Alt kısımda yan yana */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="tax_number" className="text-sm font-medium text-foreground flex items-center gap-2">
-                <div className="p-1 bg-amber-100 rounded">
-                  <FileText className="w-3 h-3 text-amber-600" />
+                <div className="p-1.5 bg-amber-100 rounded-lg">
+                  <FileText className="w-4 h-4 text-amber-600" />
                 </div>
                 <span>Vergi No / TC Kimlik *</span>
               </Label>
@@ -117,7 +117,7 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
                   value={formData.tax_number}
                   onChange={(e) => setFormData({ ...formData, tax_number: e.target.value })}
                   placeholder="1234567890"
-                  className="h-10 pr-32"
+                  className="h-11 pr-32"
                 />
                 {/* E-fatura mükellefi durumu göstergesi */}
                 {formData.tax_number && formData.tax_number.length >= 10 && (
@@ -142,10 +142,10 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
               </div>
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label htmlFor="tax_office" className="text-sm font-medium text-foreground flex items-center gap-2">
-                <div className="p-1 bg-amber-100 rounded">
-                  <Building className="w-3 h-3 text-amber-600" />
+                <div className="p-1.5 bg-amber-100 rounded-lg">
+                  <Building className="w-4 h-4 text-amber-600" />
                 </div>
                 <span>Vergi Dairesi</span>
               </Label>
@@ -154,7 +154,7 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
                 value={formData.tax_office}
                 onChange={(e) => setFormData({ ...formData, tax_office: e.target.value })}
                 placeholder="Vergi dairesi"
-                className="h-10"
+                className="h-11"
               />
             </div>
           </div>
@@ -262,15 +262,15 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
       </div>
 
       {/* Adres Bilgileri */}
-      <div className="space-y-2">
+      <div className="space-y-4">
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           {/* İl ve İlçe - Üst satır */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="city" className="text-sm font-medium text-foreground flex items-center gap-2">
-                <div className="p-1 bg-blue-100 rounded">
-                  <MapPin className="w-3 h-3 text-blue-600" />
+                <div className="p-1.5 bg-blue-100 rounded-lg">
+                  <MapPin className="w-4 h-4 text-blue-600" />
                 </div>
                 <span>İl</span>
               </Label>
@@ -279,13 +279,13 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 placeholder="İl seçiniz"
-                className="h-10"
+                className="h-11"
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label htmlFor="district" className="text-sm font-medium text-foreground flex items-center gap-2">
-                <div className="p-1 bg-blue-100 rounded">
-                  <MapPin className="w-3 h-3 text-blue-600" />
+                <div className="p-1.5 bg-blue-100 rounded-lg">
+                  <MapPin className="w-4 h-4 text-blue-600" />
                 </div>
                 <span>İlçe</span>
               </Label>
@@ -294,16 +294,16 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
                 value={formData.district}
                 onChange={(e) => setFormData({ ...formData, district: e.target.value })}
                 placeholder="İlçe seçiniz"
-                className="h-10"
+                className="h-11"
               />
             </div>
           </div>
 
           {/* Detaylı Adres - Alt satır tam genişlik */}
-          <div className="space-y-1">
+          <div className="space-y-2">
             <Label htmlFor="address" className="text-sm font-medium text-foreground flex items-center gap-2">
-              <div className="p-1 bg-blue-100 rounded">
-                <MapPin className="w-3 h-3 text-blue-600" />
+              <div className="p-1.5 bg-blue-100 rounded-lg">
+                <MapPin className="w-4 h-4 text-blue-600" />
               </div>
               <span>Detaylı Adres</span>
             </Label>
@@ -312,15 +312,15 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               placeholder="Mahalle, sokak, bina no..."
-              className="h-10"
+              className="h-11"
             />
           </div>
         </div>
       </div>
 
       {/* Müşteri Tipi ve Durumu */}
-      <div className="space-y-2">
-        <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+      <div className="space-y-3">
+        <div className="p-4 bg-green-50 rounded-lg border border-green-200">
           <CustomerTypeAndStatus formData={formData} setFormData={setFormData} />
         </div>
       </div>
