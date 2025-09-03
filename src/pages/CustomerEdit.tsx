@@ -34,9 +34,6 @@ const CustomerEdit = ({ isCollapsed, setIsCollapsed }: CustomerEditProps) => {
     address: "",
     tax_number: "",
     tax_office: "",
-    city: "",
-    district: "",
-    einvoice_alias_name: "",
   });
 
   const { data: customer, isLoading: isLoadingCustomer } = useQuery({
