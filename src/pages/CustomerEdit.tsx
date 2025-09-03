@@ -34,6 +34,9 @@ const CustomerEdit = ({ isCollapsed, setIsCollapsed }: CustomerEditProps) => {
     address: "",
     tax_number: "",
     tax_office: "",
+    city: "",
+    district: "",
+    einvoice_alias_name: "",
   });
 
   const { data: customer, isLoading: isLoadingCustomer } = useQuery({
@@ -71,6 +74,9 @@ const CustomerEdit = ({ isCollapsed, setIsCollapsed }: CustomerEditProps) => {
         address: customer.address || "",
         tax_number: customer.tax_number || "",
         tax_office: customer.tax_office || "",
+        city: customer.einvoice_city || "",
+        district: customer.einvoice_district || "",
+        einvoice_alias_name: customer.einvoice_alias_name || "",
       });
     }
   }, [customer]);
