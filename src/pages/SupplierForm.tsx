@@ -1,14 +1,14 @@
-
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
+import { TopBar } from "@/components/TopBar";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import SupplierFormHeader from "@/components/suppliers/SupplierFormHeader";
-import SupplierFormFields from "@/components/suppliers/SupplierFormFields";
+import SupplierFormContent from "@/components/suppliers/SupplierFormContent";
 import { SupplierFormData } from "@/types/supplier";
 
 interface SupplierFormProps {
@@ -35,6 +35,9 @@ const SupplierForm = ({ isCollapsed, setIsCollapsed }: SupplierFormProps) => {
     address: "",
     tax_number: "",
     tax_office: "",
+    city: "",
+    district: "",
+    einvoice_alias_name: "",
   });
 
   const { data: supplier, isLoading: isLoadingSupplier, error: supplierError } = useQuery({
@@ -77,6 +80,9 @@ const SupplierForm = ({ isCollapsed, setIsCollapsed }: SupplierFormProps) => {
         address: supplier.address || "",
         tax_number: supplier.tax_number || "",
         tax_office: supplier.tax_office || "",
+        city: supplier.city || "",
+        district: supplier.district || "",
+        einvoice_alias_name: "",
       });
     }
   }, [supplier]);
@@ -107,6 +113,8 @@ const SupplierForm = ({ isCollapsed, setIsCollapsed }: SupplierFormProps) => {
         address: data.address || null,
         tax_number: data.type === 'kurumsal' ? data.tax_number || null : null,
         tax_office: data.type === 'kurumsal' ? data.tax_office || null : null,
+        city: data.city || null,
+        district: data.district || null,
       };
 
       if (id) {
@@ -191,37 +199,32 @@ const SupplierForm = ({ isCollapsed, setIsCollapsed }: SupplierFormProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex relative">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main
-        className={`flex-1 p-4 sm:p-8 transition-all duration-300 ${
+        className={`flex-1 transition-all duration-300 ${
           isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
         }`}
       >
-        <SupplierFormHeader id={id} />
+        <TopBar />
+        <div className="p-4 sm:p-6 lg:p-8">
+          <div className="w-full">
+            <SupplierFormHeader id={id} />
 
-        {isLoadingSupplier && id ? (
-          <div className="text-center py-8">Yükleniyor...</div>
-        ) : (
-          <Card className="max-w-2xl p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <SupplierFormFields formData={formData} setFormData={setFormData} />
-
-              <div className="flex justify-end space-x-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate('/suppliers')}
-                >
-                  İptal
-                </Button>
-                <Button type="submit" disabled={mutation.isPending}>
-                  {mutation.isPending ? "Kaydediliyor..." : (id ? "Güncelle" : "Kaydet")}
-                </Button>
-              </div>
-            </form>
-          </Card>
-        )}
+            {isLoadingSupplier && id ? (
+              <div className="text-center py-8">Yükleniyor...</div>
+            ) : (
+              <SupplierFormContent 
+                formData={formData}
+                setFormData={setFormData}
+                handleSubmit={handleSubmit}
+                isPending={mutation.isPending}
+                isEdit={!!id}
+                onCancel={() => navigate('/suppliers')}
+              />
+            )}
+          </div>
+        </div>
       </main>
     </div>
   );

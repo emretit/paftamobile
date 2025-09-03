@@ -16,7 +16,7 @@ interface CustomerFormFieldsProps {
 
 const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) => {
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       {/* Şirket ve Adres Bilgileri - Üst Kısım (Tam Genişlik) */}
       <Card className="border border-border/50 shadow-md bg-white">
         <CardHeader className="pb-4">

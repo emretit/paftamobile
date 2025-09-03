@@ -74,8 +74,8 @@ const CustomerEdit = ({ isCollapsed, setIsCollapsed }: CustomerEditProps) => {
         address: customer.address || "",
         tax_number: customer.tax_number || "",
         tax_office: customer.tax_office || "",
-        city: customer.einvoice_city || "",
-        district: customer.einvoice_district || "",
+        city: customer.city || customer.einvoice_city || "",
+        district: customer.district || customer.einvoice_district || "",
         einvoice_alias_name: customer.einvoice_alias_name || "",
       });
     }
@@ -85,21 +85,27 @@ const CustomerEdit = ({ isCollapsed, setIsCollapsed }: CustomerEditProps) => {
     mutationFn: async (data: CustomerFormData) => {
       if (!id) throw new Error('Müşteri ID\'si bulunamadı');
 
+      const sanitizedData = {
+        name: data.name,
+        email: data.email || null,
+        mobile_phone: data.mobile_phone || null,
+        office_phone: data.office_phone || null,
+        company: data.company || null,
+        type: data.type,
+        status: data.status,
+        representative: data.representative || null,
+        balance: data.balance || 0,
+        address: data.address || null,
+        tax_number: data.type === 'kurumsal' ? data.tax_number || null : null,
+        tax_office: data.type === 'kurumsal' ? data.tax_office || null : null,
+        city: data.city || null,
+        district: data.district || null,
+        einvoice_alias_name: data.einvoice_alias_name || null,
+      };
+
       const { error } = await supabase
         .from('customers')
-        .update({
-          name: data.name,
-          email: data.email || null,
-          mobile_phone: data.mobile_phone || null,
-          office_phone: data.office_phone || null,
-          company: data.company || null,
-          type: data.type,
-          status: data.status,
-          representative: data.representative || null,
-          address: data.address || null,
-          tax_number: data.type === 'kurumsal' ? data.tax_number || null : null,
-          tax_office: data.type === 'kurumsal' ? data.tax_office || null : null,
-        })
+        .update(sanitizedData)
         .eq('id', id);
 
       if (error) {
@@ -147,7 +153,7 @@ const CustomerEdit = ({ isCollapsed, setIsCollapsed }: CustomerEditProps) => {
           <TopBar />
           <div className="p-4 sm:p-8">
             <div className="max-w-[1600px] mx-auto">
-              <div className="text-center py-8">Yükleniyor...</div>
+              <div className="text-center py-8">Müşteri bilgileri yükleniyor...</div>
             </div>
           </div>
         </main>

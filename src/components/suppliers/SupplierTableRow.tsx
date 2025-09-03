@@ -13,35 +13,37 @@ const SupplierTableRow = ({ supplier }: SupplierTableRowProps) => {
 
   return (
     <TableRow 
-      className="cursor-pointer hover:bg-gray-50"
+      className="cursor-pointer hover:bg-gray-50 transition-colors"
       onClick={() => navigate(`/suppliers/${supplier.id}`)}
     >
-      <TableCell className="font-medium">
+      <TableCell className="px-4 py-3 font-medium">
         {supplier.company || supplier.name}
       </TableCell>
-      <TableCell className="text-gray-500">
+      <TableCell className="px-4 py-3 text-gray-600">
         {supplier.name}
       </TableCell>
-      <TableCell>
+      <TableCell className="px-4 py-3">
         <div className="flex flex-col gap-1">
           {supplier.email && (
             <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-gray-500" />
-              <span className="text-sm">{supplier.email}</span>
+              <Mail className="h-3 w-3 text-gray-400" />
+              <span className="text-sm text-gray-600">{supplier.email}</span>
             </div>
           )}
           {supplier.mobile_phone && (
             <div className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-gray-500" />
-              <span className="text-sm">{supplier.mobile_phone}</span>
+              <Phone className="h-3 w-3 text-gray-400" />
+              <span className="text-sm text-gray-600">{supplier.mobile_phone}</span>
             </div>
           )}
         </div>
       </TableCell>
-      <TableCell>{supplier.type}</TableCell>
-      <TableCell>
+      <TableCell className="px-4 py-3">
+        <span className="text-sm text-gray-600 capitalize">{supplier.type}</span>
+      </TableCell>
+      <TableCell className="px-4 py-3">
         <span
-          className={`px-2 py-1 rounded-full text-xs ${
+          className={`px-2 py-1 rounded-full text-xs font-medium ${
             supplier.status === "aktif"
               ? "bg-green-100 text-green-800"
               : supplier.status === "pasif"
@@ -52,13 +54,15 @@ const SupplierTableRow = ({ supplier }: SupplierTableRowProps) => {
           {supplier.status}
         </span>
       </TableCell>
-      <TableCell>{supplier.representative}</TableCell>
-      <TableCell>
-        <span className={`font-medium ${supplier.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+      <TableCell className="px-4 py-3 text-gray-600">
+        {supplier.representative || '-'}
+      </TableCell>
+      <TableCell className="px-4 py-3">
+        <span className={`font-semibold ${supplier.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
           {supplier.balance.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
         </span>
       </TableCell>
-      <TableCell className="text-right">
+      <TableCell className="px-4 py-3 text-right">
         <div className="flex items-center justify-end gap-2">
           <button 
             className="p-1 hover:bg-gray-100 rounded"

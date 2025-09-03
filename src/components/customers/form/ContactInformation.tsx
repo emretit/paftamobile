@@ -23,7 +23,7 @@ const ContactInformation = ({ formData, setFormData }: ContactInformationProps) 
         
         <div className="space-y-4">
           {/* First Row: Contact Person, Email */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <User className="w-4 h-4 text-primary" />
@@ -56,7 +56,7 @@ const ContactInformation = ({ formData, setFormData }: ContactInformationProps) 
           </div>
           
           {/* Second Row: Phone Numbers & Representative */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="mobile_phone" className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Phone className="w-4 h-4 text-green-500" />

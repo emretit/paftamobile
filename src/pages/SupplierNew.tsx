@@ -1,28 +1,25 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { CustomerFormData } from "@/types/customer";
+import { SupplierFormData } from "@/types/supplier";
 import Navbar from "@/components/Navbar";
-import TopBar from "@/components/TopBar";
-import CustomerFormHeader from "@/components/customers/CustomerFormHeader";
-import CustomerFormContent from "@/components/customers/CustomerFormContent";
-import { useEinvoiceMukellefCheck } from "@/hooks/useEinvoiceMukellefCheck";
+import { TopBar } from "@/components/TopBar";
+import SupplierFormHeader from "@/components/suppliers/SupplierFormHeader";
+import SupplierFormContent from "@/components/suppliers/SupplierFormContent";
 
-interface CustomerNewProps {
+interface SupplierNewProps {
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
 }
 
-const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
+const SupplierNew = ({ isCollapsed, setIsCollapsed }: SupplierNewProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { result: einvoiceResult } = useEinvoiceMukellefCheck();
   
-  const [formData, setFormData] = useState<CustomerFormData>({
+  const [formData, setFormData] = useState<SupplierFormData>({
     name: "",
     email: "",
     mobile_phone: "",
@@ -41,7 +38,7 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: CustomerFormData) => {
+    mutationFn: async (data: SupplierFormData) => {
       const sanitizedData = {
         name: data.name,
         email: data.email || null,
@@ -55,45 +52,36 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
         address: data.address || null,
         tax_number: data.type === 'kurumsal' ? data.tax_number || null : null,
         tax_office: data.type === 'kurumsal' ? data.tax_office || null : null,
-        // E-fatura mükellefi bilgileri
-        is_einvoice_mukellef: einvoiceResult?.isEinvoiceMukellef || false,
-        einvoice_alias_name: einvoiceResult?.data?.aliasName || null,
-        einvoice_company_name: einvoiceResult?.data?.companyName || null,
-        einvoice_tax_office: einvoiceResult?.data?.taxOffice || null,
-        einvoice_address: einvoiceResult?.data?.address || null,
-        einvoice_city: einvoiceResult?.data?.city || null,
-        einvoice_district: einvoiceResult?.data?.district || null,
-        einvoice_mersis_no: einvoiceResult?.data?.mersisNo || null,
-        einvoice_sicil_no: einvoiceResult?.data?.sicilNo || null,
-        einvoice_checked_at: einvoiceResult?.isEinvoiceMukellef ? new Date().toISOString() : null,
+        city: data.city || null,
+        district: data.district || null,
       };
 
-      const { data: newCustomer, error } = await supabase
-        .from('customers')
+      const { data: newSupplier, error } = await supabase
+        .from('suppliers')
         .insert([sanitizedData])
         .select()
         .single();
 
       if (error) {
-        console.error('Customer add error:', error);
+        console.error('Supplier add error:', error);
         throw error;
       }
 
-      return newCustomer;
+      return newSupplier;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       toast({
         title: "Başarılı",
-        description: "Müşteri başarıyla eklendi.",
+        description: "Tedarikçi başarıyla eklendi.",
       });
-      navigate('/contacts');
+      navigate('/suppliers');
     },
     onError: (error) => {
       console.error('Form submission error:', error);
       toast({
         title: "Hata",
-        description: "Müşteri eklenirken bir hata oluştu. Lütfen tekrar deneyin.",
+        description: "Tedarikçi eklenirken bir hata oluştu. Lütfen tekrar deneyin.",
         variant: "destructive",
       });
     },
@@ -119,15 +107,15 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
         <TopBar />
         <div className="p-4 sm:p-6 lg:p-8">
           <div className="w-full">
-            <CustomerFormHeader />
+            <SupplierFormHeader />
 
-            <CustomerFormContent 
+            <SupplierFormContent 
               formData={formData}
               setFormData={setFormData}
               handleSubmit={handleSubmit}
               isPending={mutation.isPending}
               isEdit={false}
-              onCancel={() => navigate('/contacts')}
+              onCancel={() => navigate('/suppliers')}
             />
           </div>
         </div>
@@ -136,4 +124,4 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
   );
 };
 
-export default CustomerNew;
+export default SupplierNew;

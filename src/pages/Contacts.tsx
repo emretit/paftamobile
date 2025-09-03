@@ -103,7 +103,7 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex relative">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main
         className={`flex-1 transition-all duration-300 ${

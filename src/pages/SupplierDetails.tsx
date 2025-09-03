@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { TopBar } from "@/components/TopBar";
 import { useQuery } from "@tanstack/react-query";
@@ -17,6 +16,7 @@ interface SupplierDetailsProps {
 
 const SupplierDetails = ({ isCollapsed, setIsCollapsed }: SupplierDetailsProps) => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [supplier, setSupplier] = useState<Supplier | null>(null);
 
   const { data: fetchedSupplier, isLoading, refetch } = useQuery({
@@ -40,6 +40,10 @@ const SupplierDetails = ({ isCollapsed, setIsCollapsed }: SupplierDetailsProps) 
     enabled: !!id,
   });
 
+  const handleEdit = () => {
+    navigate(`/suppliers/${id}/edit`);
+  };
+
   const handleSupplierUpdate = (updatedSupplier: Supplier) => {
     setSupplier(updatedSupplier);
   };
@@ -48,15 +52,19 @@ const SupplierDetails = ({ isCollapsed, setIsCollapsed }: SupplierDetailsProps) 
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex relative">
         <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-        <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
+        <main className={`flex-1 transition-all duration-300 ${
+          isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
+        }`}>
           <TopBar />
-          <div className="p-8">
-            <div className="flex items-center justify-center h-64">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 border-4 border-t-blue-600 border-blue-200 rounded-full animate-spin"></div>
-                <span className="text-gray-600">Tedarikçi bilgileri yükleniyor...</span>
+          <div className="p-4 sm:p-8">
+            <div className="max-w-[1600px] mx-auto">
+              <div className="flex items-center justify-center h-64">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 border-4 border-t-blue-600 border-blue-200 rounded-full animate-spin"></div>
+                  <span className="text-gray-600">Tedarikçi bilgileri yükleniyor...</span>
+                </div>
               </div>
             </div>
           </div>
@@ -67,19 +75,23 @@ const SupplierDetails = ({ isCollapsed, setIsCollapsed }: SupplierDetailsProps) 
 
   if (!currentSupplier) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex relative">
         <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-        <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
+        <main className={`flex-1 transition-all duration-300 ${
+          isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
+        }`}>
           <TopBar />
-          <div className="p-8">
-            <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+          <div className="p-4 sm:p-8">
+            <div className="max-w-[1600px] mx-auto">
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">Tedarikçi bulunamadı</h2>
+                <p className="text-gray-600">Bu tedarikçi mevcut değil veya silinmiş olabilir.</p>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Tedarikçi bulunamadı</h2>
-              <p className="text-gray-600">Bu tedarikçi mevcut değil veya silinmiş olabilir.</p>
             </div>
           </div>
         </main>
@@ -88,25 +100,28 @@ const SupplierDetails = ({ isCollapsed, setIsCollapsed }: SupplierDetailsProps) 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex relative">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-      <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
+      <main className={`flex-1 transition-all duration-300 ${
+        isCollapsed ? "ml-[60px]" : "ml-[60px] sm:ml-64"
+      }`}>
         <TopBar />
         
         <ContactHeader 
           supplier={currentSupplier} 
           id={id || ''} 
+          onEdit={handleEdit}
           onUpdate={handleSupplierUpdate}
         />
-        <div className="p-1">
-          <div className="max-w-7xl mx-auto space-y-1">
-            {/* Ultra compact general information */}
+        <div className="p-4 sm:p-8">
+          <div className="max-w-[1600px] mx-auto space-y-4">
+            {/* General information */}
             <ContactInfo 
               supplier={currentSupplier} 
               onUpdate={handleSupplierUpdate} 
             />
             
-            {/* Tabs Section - More prominent */}
+            {/* Tabs Section */}
             <ContactTabs supplier={currentSupplier} />
           </div>
         </div>

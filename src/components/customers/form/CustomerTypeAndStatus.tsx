@@ -16,7 +16,7 @@ interface CustomerTypeAndStatusProps {
 
 const CustomerTypeAndStatus = ({ formData, setFormData }: CustomerTypeAndStatusProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
       <div className="space-y-2">
         <Label htmlFor="type" className="text-sm font-medium text-muted-foreground">Müşteri Tipi *</Label>
         <Select

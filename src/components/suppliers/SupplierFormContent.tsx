@@ -1,31 +1,30 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import CustomerFormFields from "./CustomerFormFields";
-import { CustomerFormData } from "@/types/customer";
+import SupplierFormFields from "./SupplierFormFields";
+import { SupplierFormData } from "@/types/supplier";
 
-interface CustomerFormContentProps {
-  formData: CustomerFormData;
-  setFormData: (data: CustomerFormData) => void;
+interface SupplierFormContentProps {
+  formData: SupplierFormData;
+  setFormData: (data: SupplierFormData) => void;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   isPending: boolean;
   isEdit: boolean;
   onCancel: () => void;
 }
 
-const CustomerFormContent = ({
+const SupplierFormContent = ({
   formData,
   setFormData,
   handleSubmit,
   isPending,
   isEdit,
   onCancel
-}: CustomerFormContentProps) => {
+}: SupplierFormContentProps) => {
   return (
     <div className="w-full">
       <Card className="w-full bg-gradient-to-br from-background to-muted/20 border-0 shadow-lg">
         <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6 sm:space-y-8">
-          <CustomerFormFields formData={formData} setFormData={setFormData} />
+          <SupplierFormFields formData={formData} setFormData={setFormData} />
 
           <div className="flex justify-end space-x-4 pt-6 border-t border-border/50">
             <Button
@@ -50,4 +49,4 @@ const CustomerFormContent = ({
   );
 };
 
-export default CustomerFormContent;
+export default SupplierFormContent;

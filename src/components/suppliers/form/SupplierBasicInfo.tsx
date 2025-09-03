@@ -1,19 +1,19 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { CustomerFormData } from "@/types/customer";
+import { SupplierFormData } from "@/types/supplier";
 import { Building, FileText, CheckCircle, XCircle, Loader2, UserPlus, MapPin } from "lucide-react";
-import CustomerTypeAndStatus from "./CustomerTypeAndStatus";
+import SupplierTypeAndStatus from "./SupplierTypeAndStatus";
 import { useNilveraCompanyInfo } from "@/hooks/useNilveraCompanyInfo";
 import { useVknToCustomer } from "@/hooks/useVknToCustomer";
 import { useEffect } from "react";
 
-interface CompanyBasicInfoProps {
-  formData: CustomerFormData;
-  setFormData: (value: CustomerFormData) => void;
+interface SupplierBasicInfoProps {
+  formData: SupplierFormData;
+  setFormData: (value: SupplierFormData) => void;
 }
 
-const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
+const SupplierBasicInfo = ({ formData, setFormData }: SupplierBasicInfoProps) => {
   const { searchMukellef, isLoading: isNilveraLoading, mukellefInfo, error: nilveraError } = useNilveraCompanyInfo();
   const { createCustomerFromVkn, isCreating } = useVknToCustomer();
 
@@ -43,8 +43,8 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
     }
   }, [mukellefInfo]);
 
-  // VKN bilgilerini müşteri olarak kaydet
-  const handleSaveAsCustomer = async () => {
+  // VKN bilgilerini tedarikçi olarak kaydet
+  const handleSaveAsSupplier = async () => {
     const vknData = {
       taxNumber: formData.tax_number,
       companyName: mukellefInfo?.companyName || result?.data?.companyName || formData.company || '',
@@ -147,7 +147,7 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={handleSaveAsCustomer}
+                onClick={handleSaveAsSupplier}
                 disabled={isCreating}
                 className="h-7 px-2 text-xs bg-white hover:bg-green-50 border-green-300 text-green-700 hover:text-green-800"
               >
@@ -159,7 +159,7 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
                 ) : (
                   <>
                     <UserPlus className="w-3 h-3 mr-1" />
-                    Müşteri Olarak Kaydet
+                    Tedarikçi Olarak Kaydet
                   </>
                 )}
               </Button>
@@ -194,7 +194,6 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
                         address: mukellefInfo.address || formData.address,
                         city: mukellefInfo.city || formData.city,
                         district: mukellefInfo.district || formData.district,
-                        einvoice_alias_name: mukellefInfo.aliasName || formData.einvoice_alias_name,
                       });
                     }
                   }}
@@ -278,14 +277,14 @@ const CompanyBasicInfo = ({ formData, setFormData }: CompanyBasicInfoProps) => {
         </div>
       </div>
 
-      {/* Müşteri Tipi ve Durumu */}
+      {/* Tedarikçi Tipi ve Durumu */}
       <div className="space-y-3">
         <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-          <CustomerTypeAndStatus formData={formData} setFormData={setFormData} />
+          <SupplierTypeAndStatus formData={formData} setFormData={setFormData} />
         </div>
       </div>
     </div>
   );
 };
 
-export default CompanyBasicInfo;
+export default SupplierBasicInfo;

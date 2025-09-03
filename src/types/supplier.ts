@@ -13,8 +13,11 @@ export interface Supplier {
   address: string | null;
   tax_number: string | null;
   tax_office: string | null;
+  city: string | null;
+  district: string | null;
   created_at: string;
   updated_at: string;
+  company_id: string | null;
 }
 
 export interface SupplierFormData {
@@ -30,4 +33,7 @@ export interface SupplierFormData {
   address: string;
   tax_number: string;
   tax_office: string;
+  city: string;
+  district: string;
+  einvoice_alias_name: string;
 }

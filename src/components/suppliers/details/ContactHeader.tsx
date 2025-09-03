@@ -13,10 +13,11 @@ import { formatPhoneNumber } from "@/utils/phoneFormatter";
 interface ContactHeaderProps {
   supplier: Supplier;
   id: string;
+  onEdit: () => void;
   onUpdate?: (updatedSupplier: Supplier) => void;
 }
 
-export const ContactHeader = ({ supplier, id, onUpdate }: ContactHeaderProps) => {
+export const ContactHeader = ({ supplier, id, onEdit, onUpdate }: ContactHeaderProps) => {
   const [isEditingStatus, setIsEditingStatus] = useState(false);
   const [isEditingType, setIsEditingType] = useState(false);
   const [statusValue, setStatusValue] = useState(supplier.status);
@@ -249,12 +250,10 @@ export const ContactHeader = ({ supplier, id, onUpdate }: ContactHeaderProps) =>
           </div>
 
           {/* Edit Button */}
-          <Link to={`/suppliers/${id}/edit`}>
-            <Button className="flex items-center gap-2">
-              <Pencil className="h-4 w-4" />
-              Düzenle
-            </Button>
-          </Link>
+          <Button onClick={onEdit} className="flex items-center gap-2">
+            <Pencil className="h-4 w-4" />
+            Düzenle
+          </Button>
         </div>
       </div>
     </div>
