@@ -1,15 +1,13 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerFormData } from "@/types/customer";
 import Navbar from "@/components/Navbar";
 import TopBar from "@/components/TopBar";
 import CustomerFormHeader from "@/components/customers/CustomerFormHeader";
 import CustomerFormContent from "@/components/customers/CustomerFormContent";
-import { useEinvoiceMukellefCheck } from "@/hooks/useEinvoiceMukellefCheck";
 
 interface CustomerNewProps {
   isCollapsed: boolean;
@@ -20,8 +18,7 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { result: einvoiceResult } = useEinvoiceMukellefCheck();
-  
+
   const [formData, setFormData] = useState<CustomerFormData>({
     name: "",
     email: "",
@@ -35,6 +32,9 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
     address: "",
     tax_number: "",
     tax_office: "",
+    city: "",
+    district: "",
+    einvoice_alias_name: "",
   });
 
   const mutation = useMutation({
@@ -52,31 +52,19 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
         address: data.address || null,
         tax_number: data.type === 'kurumsal' ? data.tax_number || null : null,
         tax_office: data.type === 'kurumsal' ? data.tax_office || null : null,
-        // E-fatura mükellefi bilgileri
-        is_einvoice_mukellef: einvoiceResult?.isEinvoiceMukellef || false,
-        einvoice_alias_name: einvoiceResult?.data?.aliasName || null,
-        einvoice_company_name: einvoiceResult?.data?.companyName || null,
-        einvoice_tax_office: einvoiceResult?.data?.taxOffice || null,
-        einvoice_address: einvoiceResult?.data?.address || null,
-        einvoice_city: einvoiceResult?.data?.city || null,
-        einvoice_district: einvoiceResult?.data?.district || null,
-        einvoice_mersis_no: einvoiceResult?.data?.mersisNo || null,
-        einvoice_sicil_no: einvoiceResult?.data?.sicilNo || null,
-        einvoice_checked_at: einvoiceResult?.isEinvoiceMukellef ? new Date().toISOString() : null,
+        einvoice_alias_name: data.einvoice_alias_name || null,
       };
 
-      const { data: newCustomer, error } = await supabase
+      const { error } = await supabase
         .from('customers')
-        .insert([sanitizedData])
-        .select()
-        .single();
+        .insert([sanitizedData]);
 
       if (error) {
-        console.error('Customer add error:', error);
+        console.error('Error creating customer:', error);
         throw error;
       }
 
-      return newCustomer;
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
@@ -87,10 +75,10 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
       navigate('/contacts');
     },
     onError: (error) => {
-      console.error('Form submission error:', error);
+      console.error('Mutation error:', error);
       toast({
         title: "Hata",
-        description: "Müşteri eklenirken bir hata oluştu. Lütfen tekrar deneyin.",
+        description: "Müşteri eklenirken bir hata oluştu.",
         variant: "destructive",
       });
     },
@@ -106,7 +94,7 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex relative">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main
         className={`flex-1 transition-all duration-300 ${
@@ -114,7 +102,7 @@ const CustomerNew = ({ isCollapsed, setIsCollapsed }: CustomerNewProps) => {
         }`}
       >
         <TopBar />
-        <div className="p-3 sm:p-6">
+        <div className="p-2 sm:p-4">
           <CustomerFormHeader />
 
           <CustomerFormContent 

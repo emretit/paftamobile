@@ -13,7 +13,7 @@ export const NilveraCompanyTest: React.FC = () => {
   const [testResult, setTestResult] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
 
-  const { data, isEinvoiceMukellef, loading, error, refetch, checkVknMukellef } = useNilveraCompanyInfo();
+  const { companyInfo, mukellefInfo, isLoading, error, getCompanyInfo, searchMukellef } = useNilveraCompanyInfo();
 
   const handleTestApiKey = async () => {
     if (!apiKey.trim()) {
@@ -37,9 +37,9 @@ export const NilveraCompanyTest: React.FC = () => {
   const handleFetchCompanyInfo = () => {
     if (apiKey.trim()) {
       if (vkn.trim()) {
-        checkVknMukellef(vkn, apiKey);
+        searchMukellef(vkn);
       } else {
-        refetch(apiKey);
+        getCompanyInfo();
       }
     }
   };
@@ -97,9 +97,9 @@ export const NilveraCompanyTest: React.FC = () => {
 
             <Button 
               onClick={handleFetchCompanyInfo} 
-              disabled={loading || !apiKey.trim()}
+              disabled={isLoading || !apiKey.trim()}
             >
-              {loading ? (
+              {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Yükleniyor...
@@ -123,7 +123,7 @@ export const NilveraCompanyTest: React.FC = () => {
             </Alert>
           )}
 
-          {data && (
+          {companyInfo && (
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
@@ -132,12 +132,12 @@ export const NilveraCompanyTest: React.FC = () => {
             </Alert>
           )}
 
-          {isEinvoiceMukellef !== null && vkn && (
+          {mukellefInfo && vkn && (
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
                 <strong>VKN: {vkn}</strong><br />
-                Mükellefiyet Durumu: {isEinvoiceMukellef ? 
+                Mükellefiyet Durumu: {mukellefInfo.isEinvoiceMukellef ? 
                   <span className="text-green-600 font-medium">E-Fatura Mükellfi ✓</span> : 
                   <span className="text-red-600 font-medium">E-Fatura Mükellfi Değil ✗</span>
                 }
@@ -147,14 +147,14 @@ export const NilveraCompanyTest: React.FC = () => {
         </CardContent>
       </Card>
 
-      {data && (
+      {companyInfo && (
         <Card>
           <CardHeader>
             <CardTitle>Firma Bilgileri</CardTitle>
           </CardHeader>
           <CardContent>
             <pre className="bg-gray-100 p-4 rounded-lg overflow-auto text-sm">
-              {JSON.stringify(data, null, 2)}
+              {JSON.stringify(companyInfo, null, 2)}
             </pre>
           </CardContent>
         </Card>

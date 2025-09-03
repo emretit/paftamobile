@@ -15,7 +15,7 @@ export const useAutoMukellefCheck = ({
   apiKey,
   enabled = true
 }: UseAutoMukellefCheckProps) => {
-  const { updateCustomerMukellefStatus } = useEinvoiceMukellefCheck();
+  const { checkEinvoiceMukellef } = useEinvoiceMukellefCheck();
 
   useEffect(() => {
     if (!enabled || !customerId || !taxNumber || !apiKey) {
@@ -28,7 +28,7 @@ export const useAutoMukellefCheck = ({
         await new Promise(resolve => setTimeout(resolve, 1000));
         const isMukellef = Math.random() > 0.5; // Mock result
         
-        await updateCustomerMukellefStatus(customerId, isMukellef);
+        await checkEinvoiceMukellef(taxNumber);
         
         console.log(`Auto check completed for customer ${customerId}: ${isMukellef ? 'Mükellef' : 'Değil'}`);
       } catch (error) {
@@ -40,7 +40,7 @@ export const useAutoMukellefCheck = ({
     if (taxNumber.length === 10 && /^\d+$/.test(taxNumber)) {
       checkMukellef();
     }
-  }, [customerId, taxNumber, apiKey, enabled, updateCustomerMukellefStatus]);
+  }, [customerId, taxNumber, apiKey, enabled, checkEinvoiceMukellef]);
 
   return null;
 };

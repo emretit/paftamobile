@@ -2,7 +2,7 @@
 import Navbar from "@/components/Navbar";
 import TopBar from "@/components/TopBar";
 import CustomerFormHeader from "@/components/customers/CustomerFormHeader";
-import CustomerFormContent from "@/components/customers/CustomerFormContent";
+import CustomerFormContentNew from "@/components/customers/CustomerFormContentNew";
 import { useCustomerForm } from "@/hooks/useCustomerForm";
 
 interface CustomerFormProps {
@@ -41,7 +41,7 @@ const CustomerForm = ({ isCollapsed, setIsCollapsed }: CustomerFormProps) => {
           {isLoadingCustomer && id ? (
             <div className="text-center py-8">Yükleniyor...</div>
           ) : (
-            <CustomerFormContent 
+            <CustomerFormContentNew 
               formData={formData}
               setFormData={setFormData}
               handleSubmit={handleSubmit}

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Customer, CustomerFormData } from "@/types/customer";
 import { Card } from "@/components/ui/card";
@@ -30,6 +29,9 @@ export const EditableCustomerDetails = ({
     address: customer.address || "",
     tax_number: customer.tax_number || "",
     tax_office: customer.tax_office || "",
+    city: "",
+    district: "",
+    einvoice_alias_name: customer.einvoice_alias_name || "",
   });
 
   const { mutation } = useCustomerEdit(customer.id, onSuccess);
