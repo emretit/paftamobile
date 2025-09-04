@@ -164,7 +164,7 @@ serve(async (req) => {
             IssueDate: new Date(salesInvoice.fatura_tarihi).toISOString(),
             CurrencyCode: salesInvoice.para_birimi || 'TRY',
             ExchangeRate: 1,
-                          InvoiceProfile: 'TEMEL' // Will be changed to TICARIFATURA if e-fatura mükellefi
+                          InvoiceProfile: 'TEMELFATURA' // Will be changed to TICARIFATURA if e-fatura mükellefi
           },
           CompanyInfo: {
             TaxNumber: salesInvoice.companies?.tax_number,
