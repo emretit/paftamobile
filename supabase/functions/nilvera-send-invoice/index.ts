@@ -1,300 +1,562 @@
-// deno-lint-ignore-file no-explicit-any
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.56.0";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
-  }
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   }
 
   try {
-    // ---- ENV & clients ----
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error("Missing Supabase env vars");
+    console.log('🚀 Nilvera send invoice function started');
+    console.log('📋 Request method:', req.method);
+    
+    const SUPABASE_URL = 'https://vwhwufnckpqirxptwncw.supabase.co';
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('❌ SUPABASE_SERVICE_ROLE_KEY is not set');
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
     }
 
-    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
-    });
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    console.log('✅ Supabase client created');
 
-    // ---- Auth ----
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) throw new Error("Missing or invalid Authorization");
-    const token = authHeader.replace("Bearer ", "");
-    const { data: authData, error: authErr } = await userClient.auth.getUser(token);
-    if (authErr || !authData?.user) throw new Error("Invalid user token");
-    const userId = authData.user.id;
+    // Get the user from the Authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('❌ Missing or invalid authorization header');
+      throw new Error('Missing or invalid authorization header');
+    }
+    
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !user) {
+      console.error('❌ Invalid user token:', userError);
+      throw new Error('Invalid user token');
+    }
 
-    // ---- Body ----
-    const { salesInvoiceId } = await req.json();
-    if (!salesInvoiceId) throw new Error("salesInvoiceId is required");
+    console.log('📨 Parsing request body...');
+    const requestBody = await req.json();
+    console.log('📨 Raw request body:', requestBody);
+    
+    const { salesInvoiceId } = requestBody;
+    console.log('📨 Parsed request body:', { salesInvoiceId });
+    console.log('👤 User ID:', user.id);
 
-    // ---- Profile & company ----
-    const { data: profile, error: pErr } = await admin
-      .from("profiles")
-      .select("company_id")
-      .eq("id", userId)
+    // Validate required fields
+    if (!salesInvoiceId) {
+      console.error('❌ salesInvoiceId is required');
+      throw new Error('salesInvoiceId is required');
+    }
+
+    // Get user's company_id from profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('company_id')
+      .eq('id', user.id)
       .single();
-    if (pErr || !profile?.company_id) throw new Error("User profile or company not found");
-    const companyId = profile.company_id as string;
 
-    // ---- Idempotent lock (sending) ----
-    // Requires a unique index on (company_id, sales_invoice_id)
-    const nowIso = new Date().toISOString();
-    // Upsert to set 'sending' if no active record, else read current status
-    const { data: existing, error: exErr } = await admin
-      .from("einvoice_status_tracking")
-      .select("id,status, nilvera_invoice_id, sent_at")
-      .eq("company_id", companyId)
-      .eq("sales_invoice_id", salesInvoiceId)
+    console.log('🏢 Profile query result:', { profile, profileError });
+
+    if (profileError || !profile?.company_id) {
+      console.error('❌ User profile or company not found');
+      throw new Error('User profile or company not found');
+    }
+
+    console.log('🏢 Company ID:', profile.company_id);
+
+    // 1. IDEMPOTENCY CONTROL - Check if invoice is already being processed or sent
+    console.log('🔍 Checking for duplicate invoice processing...');
+    const { data: existingTracking, error: trackingError } = await supabase
+      .from('einvoice_status_tracking')
+      .select('*')
+      .eq('sales_invoice_id', salesInvoiceId)
+      .eq('company_id', profile.company_id)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
-    if (exErr) throw new Error("Tracking check failed");
+    console.log('🔍 Existing tracking data:', { existingTracking, trackingError });
 
-    if (existing) {
-      if (["sending", "sent", "delivered", "accepted"].includes(existing.status)) {
-        const status = existing.status;
-        const payload: any = {
-          success: status !== "sending",
-          status,
-          nilvera_invoice_id: existing.nilvera_invoice_id ?? null,
-          sent_at: existing.sent_at ?? null,
-        };
-        return new Response(JSON.stringify(payload), {
-          status: status === "sending" ? 409 : 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+    if (existingTracking) {
+      const status = existingTracking.status;
+      console.log('📊 Current invoice status:', status);
+      
+      // Check if invoice is already in progress or completed
+      if (['sending', 'sent', 'delivered', 'accepted'].includes(status)) {
+        console.log('⚠️ Invoice already processed with status:', status);
+        
+        // Return appropriate response based on status
+        if (status === 'sending') {
+          return new Response(JSON.stringify({
+            success: false,
+            error: 'Fatura şu anda gönderiliyor. Lütfen birkaç dakika bekleyin.',
+            status: 'sending',
+            message: 'Invoice is currently being sent'
+          }), {
+            status: 409, // Conflict
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } else if (['sent', 'delivered', 'accepted'].includes(status)) {
+          return new Response(JSON.stringify({
+            success: true,
+            message: 'Fatura daha önce gönderilmiş',
+            status: status,
+            nilvera_invoice_id: existingTracking.nilvera_invoice_id,
+            sent_at: existingTracking.sent_at
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      } else if (status === 'error') {
+        console.log('🔄 Previous attempt failed, retrying...');
+        // Allow retry for failed invoices
       }
-      // set to sending
-      const { error: updErr } = await admin
-        .from("einvoice_status_tracking")
-        .update({
-          status: "sending",
-          transfer_state: 0,
-          invoice_state: 0,
-          sent_at: nowIso,
-          error_message: null,
-          error_code: null,
-        })
-        .eq("id", existing.id);
-      if (updErr) throw new Error("Failed to lock invoice (update)");
-    } else {
-      const { error: insErr } = await admin.from("einvoice_status_tracking").insert({
-        company_id: companyId,
+    }
+
+    // 2. LOCKING MECHANISM - Mark as 'sending' to prevent duplicate processing
+    console.log('🔒 Setting invoice status to sending (locking)...');
+    const { error: lockError } = await supabase
+      .from('einvoice_status_tracking')
+      .upsert({
+        company_id: profile.company_id,
         sales_invoice_id: salesInvoiceId,
-        status: "sending",
+        status: 'sending',
         transfer_state: 0,
         invoice_state: 0,
-        sent_at: nowIso,
-        error_message: null,
-        error_code: null,
-      });
-      if (insErr) throw new Error("Failed to lock invoice (insert)");
-    }
-
-    // ---- Nilvera auth ----
-    const { data: nilveraAuth, error: aErr } = await admin
-      .from("nilvera_auth")
-      .select("*")
-      .eq("company_id", companyId)
-      .eq("is_active", true)
-      .single();
-    if (aErr || !nilveraAuth?.api_key) throw new Error("Nilvera credentials not found");
-    const NILVERA_KEY = nilveraAuth.api_key as string;
-    const TEST_MODE = !!nilveraAuth.test_mode;
-    const BASE = TEST_MODE ? "https://apitest.nilvera.com" : "https://api.nilvera.com";
-
-    // ---- Load invoice + joins ----
-    const { data: invoice, error: invErr } = await admin
-      .from("sales_invoices")
-      .select(`
-        *,
-        customers:customers(*),
-        companies:companies(*),
-        items:sales_invoice_items(*)
-      `)
-      .eq("id", salesInvoiceId)
-      .eq("company_id", companyId)
-      .single();
-    if (invErr || !invoice) throw new Error("Sales invoice not found");
-
-    // ---- Validate minimal fields ----
-    if (!invoice?.customers?.tax_number) throw new Error("Customer tax number missing");
-    if (!invoice?.companies?.tax_number) throw new Error("Company tax number missing");
-
-    // ---- Alias (only if e-fatura mükellefi) ----
-    let customerAlias: string | null = null;
-    if (invoice.customers?.is_einvoice_mukellef) {
-      const dbAlias = (invoice.customers?.einvoice_alias_name ?? "").toString().trim();
-      if (dbAlias) customerAlias = dbAlias.startsWith("urn:mail:") ? dbAlias : `urn:mail:${dbAlias}`;
-      if (!customerAlias) {
-        // Alias yoksa burada "e-Arşiv"e yönlendirme ya da hata; biz hata veriyoruz:
-        throw new Error("E-fatura mükellefi için CustomerAlias zorunlu");
-      }
-    }
-
-    // ---- InvoiceSerieOrNumber ----
-    // Eğer kendi seri/numara sistemini yönetmiyorsan, bu alanı *boş bırak* ve Nilvera'nın atamasına izin ver.
-    const invoiceSerieOrNumber = invoice.fatura_no && /^[A-Z0-9\-]+$/.test(invoice.fatura_no)
-      ? invoice.fatura_no
-      : undefined;
-
-    // ---- Build Nilvera EInvoice model ----
-    const toNumber = (v: any, def = 0) => (v == null || v === "" ? def : Number(v));
-    const issueDate = (invoice.fatura_tarihi
-      ? new Date(invoice.fatura_tarihi)
-      : new Date()
-    ).toISOString().slice(0, 10); // YYYY-MM-DD
-
-    const EInvoicePayload: any = {
-      EInvoice: {
-        InvoiceInfo: {
-          UUID: crypto.randomUUID?.() ?? `uuid-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          InvoiceType: "SATIS",
-          CurrencyCode: invoice.para_birimi || "TRY",
-          ExchangeRate: 1,
-          InvoiceProfile: invoice.customers?.is_einvoice_mukellef ? "TICARIFATURA" : "TEMELFATURA",
-          IssueDate: issueDate,
-          ...(invoiceSerieOrNumber ? { InvoiceSerieOrNumber: invoiceSerieOrNumber } : {}),
-        },
-        CompanyInfo: {
-          TaxNumber: invoice.companies?.tax_number,
-          Name: invoice.companies?.name ?? "",
-          Address: invoice.companies?.address ?? "",
-          District: "Merkez",
-          City: "İstanbul",
-          Country: "Türkiye",
-          Phone: invoice.companies?.phone ?? "",
-          Mail: invoice.companies?.email ?? "",
-        },
-        CustomerInfo: {
-          TaxNumber: invoice.customers?.tax_number,
-          Name: invoice.customers?.name || invoice.customers?.company || "",
-          TaxOffice: invoice.customers?.tax_office ?? "",
-          Address: invoice.customers?.address ?? "-",
-          District: invoice.customers?.district || invoice.customers?.city || "Merkez",
-          City: invoice.customers?.city || "İstanbul",
-          Country: "Türkiye",
-          Phone: invoice.customers?.mobile_phone || invoice.customers?.office_phone || "",
-          Mail: invoice.customers?.email || "",
-        },
-        InvoiceLines: (invoice.items ?? []).map((it: any) => ({
-          Name: it.urun_adi,
-          Description: it.aciklama || "",
-          Quantity: toNumber(it.miktar, 1),
-          UnitType: "C62", // UBL-TR (adet)
-          Price: toNumber(it.birim_fiyat),
-          KDVPercent: toNumber(it.kdv_orani, 0),
-          DiscountPercent: toNumber(it.indirim_orani, 0),
-          LineTotal: toNumber(it.satir_toplami),
-        })),
-        Notes: invoice.notlar ? [invoice.notlar] : [],
-      },
-      ...(customerAlias ? { CustomerAlias: customerAlias } : {}),
-    };
-
-    // ---- Call Nilvera ----
-    const url = `${BASE}/einvoice/Send/Model`;
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${NILVERA_KEY}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(EInvoicePayload),
-    });
-
-    // If error, read text to log and return semantic status
-    if (!resp.ok) {
-      const text = await resp.text();
-      await admin
-        .from("einvoice_status_tracking")
-        .update({
-          status: "error",
-          error_message: text?.slice(0, 1000) ?? `HTTP ${resp.status}`,
-          error_code: `HTTP_${resp.status}`,
-          nilvera_response: null,
-        })
-        .eq("company_id", companyId)
-        .eq("sales_invoice_id", salesInvoiceId);
-
-      const status = [401, 403].includes(resp.status) ? 401
-        : resp.status === 404 ? 404
-        : resp.status === 409 ? 409
-        : 400;
-
-      return new Response(JSON.stringify({
-        success: false,
-        status: "error",
-        message: "Nilvera API error",
-        detail: text,
-      }), {
-        status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const result = await resp.json();
-
-    // ---- Persist success ----
-    await admin
-      .from("einvoice_status_tracking")
-      .update({
-        nilvera_invoice_id: result.id ?? result.uuid ?? null,
-        nilvera_transfer_id: result.transferId ?? null,
-        status: "sent",
-        transfer_state: result.transferState ?? 0,
-        invoice_state: result.invoiceState ?? 0,
         sent_at: new Date().toISOString(),
-        nilvera_response: result, // jsonb
         error_message: null,
-        error_code: null,
-      })
-      .eq("company_id", companyId)
-      .eq("sales_invoice_id", salesInvoiceId);
+        error_code: null
+      }, {
+        onConflict: 'sales_invoice_id,company_id'
+      });
 
-    // (opsiyonel) satış faturasında durum & fatura_no güncelle
-    const u: any = { durum: "gonderildi", xml_data: result };
-    if (result.invoiceNumber || result.invoice_number) {
-      u.fatura_no = result.invoiceNumber ?? result.invoice_number;
+    if (lockError) {
+      console.error('❌ Failed to set sending status:', lockError);
+      throw new Error('Fatura durumu güncellenemedi');
     }
-    await admin.from("sales_invoices").update(u).eq("id", salesInvoiceId).eq("company_id", companyId);
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: "E-fatura Nilvera'ya gönderildi",
-      nilveraInvoiceId: result.id ?? result.uuid ?? null,
-      data: result,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    console.log('✅ Invoice locked for processing');
+
+    // Get the company's Nilvera authentication data
+    const { data: nilveraAuth, error: authError } = await supabase
+      .from('nilvera_auth')
+      .select('*')
+      .eq('company_id', profile.company_id)
+      .eq('is_active', true)
+      .single();
+
+    console.log('🔐 Nilvera auth query result:', { 
+      hasAuth: !!nilveraAuth, 
+      authError, 
+      companyId: profile.company_id 
     });
 
-  } catch (err: any) {
-    // Genel hata
-    return new Response(JSON.stringify({
-      success: false,
-      error: err?.message ?? "Unexpected error",
+    if (authError || !nilveraAuth) {
+      console.error('❌ Nilvera auth bulunamadı:', authError);
+      throw new Error('Nilvera kimlik doğrulama bilgileri bulunamadı. Lütfen ayarlar sayfasından Nilvera bilgilerinizi girin.');
+    }
+
+    // Send invoice to Nilvera
+    try {
+      console.log('🚀 Starting e-invoice send process...');
+      console.log('📊 Request data:', { salesInvoiceId, companyId: profile.company_id });
+      
+      // Get sales invoice with items and company info
+      console.log('📋 Fetching sales invoice:', { salesInvoiceId, companyId: profile.company_id });
+      const { data: salesInvoice, error: invoiceError } = await supabase
+        .from('sales_invoices')
+        .select(`
+          *,
+          sales_invoice_items(*),
+          customers(*),
+          companies!sales_invoices_company_id_fkey(*)
+        `)
+        .eq('id', salesInvoiceId)
+        .eq('company_id', profile.company_id)
+        .single();
+
+      if (invoiceError || !salesInvoice) {
+        console.error('❌ Sales invoice not found:', {
+          salesInvoiceId,
+          companyId: profile.company_id,
+          error: invoiceError
+        });
+        throw new Error(`Sales invoice not found: ${invoiceError?.message || 'Unknown error'}`);
+      }
+
+      console.log('📄 Sales invoice data:', {
+        id: salesInvoice.id,
+        fatura_no: salesInvoice.fatura_no,
+        customer: salesInvoice.customers?.name,
+        customer_tax_number: salesInvoice.customers?.tax_number,
+        items: salesInvoice.sales_invoice_items?.length,
+        company: salesInvoice.companies?.name
+      });
+
+      // Validate required customer data
+      if (!salesInvoice.customers?.tax_number) {
+        console.error('❌ Customer tax number is missing');
+        throw new Error('Müşteri vergi numarası bulunamadı. Lütfen müşteri bilgilerini tamamlayın.');
+      }
+
+      // Validate required company data
+      if (!salesInvoice.companies?.tax_number) {
+        console.error('❌ Company tax number is missing');
+        throw new Error('Şirket vergi numarası bulunamadı. Lütfen şirket bilgilerini tamamlayın.');
+      }
+
+      // Derive valid InvoiceSerieOrNumber per Nilvera docs
+      // Format should be: ASD2025000000013 (3 letters + year + 8 digits)
+      const invoiceSerieOrNumber = (() => {
+        const raw = (salesInvoice.fatura_no || '').toString();
+        console.log('🔍 Raw fatura_no:', raw);
+        
+        // Extract series from fatura_no (e.g., "SF-TEST-001" -> "SFT")
+        const seriesMatch = raw.match(/^([A-Z]{2,3})/);
+        let series = 'EFT'; // Default series (3 letters required)
+        
+        if (seriesMatch) {
+          series = seriesMatch[1];
+          // Ensure 3 letters for Nilvera API
+          if (series.length === 2) {
+            series = series + 'T'; // Add 'T' to make it 3 letters
+          }
+          console.log('🔍 Extracted series:', series);
+        } else {
+          console.log('🔍 Using default series:', series);
+        }
+        
+        // For Nilvera API, use only the series (3 letters)
+        // Based on API documentation, InvoiceSerieOrNumber should be just the series
+        console.log('🔍 Using series only for InvoiceSerieOrNumber:', series);
+        return series;
+      })();
+
+      // Create standard Nilvera invoice model
+      const nilveraInvoiceData: any = {
+        EInvoice: {
+          InvoiceInfo: {
+            UUID: crypto.randomUUID ? crypto.randomUUID() : 'uuid-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+            InvoiceType: 'SATIS',
+            InvoiceSerieOrNumber: invoiceSerieOrNumber,
+            IssueDate: new Date(salesInvoice.fatura_tarihi).toISOString(),
+            CurrencyCode: salesInvoice.para_birimi || 'TRY',
+            ExchangeRate: 1,
+                          InvoiceProfile: 'TEMELFATURA' // Will be changed to TICARIFATURA if e-fatura mükellefi
+          },
+          CompanyInfo: {
+            TaxNumber: salesInvoice.companies?.tax_number,
+            Name: salesInvoice.companies?.name || 'Şirket Adı',
+            Address: salesInvoice.companies?.address || 'Şirket Adresi',
+            District: 'Merkez',
+            City: 'İstanbul', // Default şehir
+            Country: 'Türkiye',
+            Phone: salesInvoice.companies?.phone || '',
+            Mail: salesInvoice.companies?.email || ''
+          },
+          CustomerInfo: {
+            TaxNumber: salesInvoice.customers?.tax_number,
+            Name: salesInvoice.customers?.name || salesInvoice.customers?.company,
+            TaxOffice: salesInvoice.customers?.tax_office,
+            Address: salesInvoice.customers?.address || '-',
+            District: salesInvoice.customers?.district || salesInvoice.customers?.city || 'Merkez',
+            City: salesInvoice.customers?.city || 'İstanbul',
+            Country: 'Türkiye',
+            Phone: salesInvoice.customers?.mobile_phone || salesInvoice.customers?.office_phone || '',
+            Mail: salesInvoice.customers?.email || ''
+          },
+          InvoiceLines: salesInvoice.sales_invoice_items?.map((item: any) => ({
+            Name: item.urun_adi,
+            Description: item.aciklama || '',
+            Quantity: parseFloat(item.miktar),
+            UnitType: item.birim === 'adet' ? 'C62' : 'C62', // UBL-TR standart birim kodları
+            Price: parseFloat(item.birim_fiyat),
+            KDVPercent: parseFloat(item.kdv_orani),
+            DiscountPercent: parseFloat(item.indirim_orani || 0),
+            LineTotal: parseFloat(item.satir_toplami)
+          })) || [],
+          Notes: salesInvoice.notlar ? [salesInvoice.notlar] : []
+        }
+        // CustomerAlias will be set below only for e-fatura mükellefi customers
+      };
+
+              // CustomerAlias is REQUIRED for e-fatura mükellefi customers
+        // Only check for alias if customer is e-fatura mükellefi
+        let customerAlias = null;
+        
+        if (salesInvoice.customers?.is_einvoice_mukellef) {
+          customerAlias = salesInvoice.customers?.einvoice_alias_name;
+          
+          // Clean and validate alias from customer table
+          if (customerAlias) {
+            customerAlias = customerAlias.toString().trim();
+            if (customerAlias === 'undefined' || customerAlias === 'null' || customerAlias === '') {
+              customerAlias = null;
+            }
+          }
+        }
+
+      if (customerAlias && customerAlias !== 'undefined' && customerAlias.trim() !== '') {
+        console.log('📝 Found customer alias:', customerAlias);
+        // Verify alias is still valid in Nilvera system before using
+        console.log('🔍 Verifying alias validity in Nilvera system...');
+        const globalCompanyUrl = nilveraAuth.test_mode 
+          ? 'https://apitest.nilvera.com/general/GlobalCompany/GetGlobalCustomerInfo'
+          : 'https://api.nilvera.com/general/GlobalCompany/GetGlobalCustomerInfo';
+
+        try {
+          const globalCompanyResponse = await fetch(`${globalCompanyUrl}/${salesInvoice.customers?.tax_number}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${nilveraAuth.api_key}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (globalCompanyResponse.ok) {
+            const globalCompanyData = await globalCompanyResponse.json();
+            console.log('🔍 GlobalCompany API response:', JSON.stringify(globalCompanyData, null, 2));
+            console.log('🔍 GlobalCompany AliasName:', globalCompanyData.AliasName);
+            console.log('🔍 GlobalCompany Aliases:', globalCompanyData.Aliases);
+            
+            // Remove urn:mail: prefix from DB alias for comparison
+            const dbAliasWithoutPrefix = customerAlias?.replace('urn:mail:', '') || '';
+            console.log('🔍 DB alias without prefix:', dbAliasWithoutPrefix);
+            
+            // Check if GlobalCompany API has Aliases array (like GetGlobalCustomerInfo)
+            let nilveraAlias = null;
+            if (globalCompanyData.Aliases && globalCompanyData.Aliases.length > 0) {
+              // Use Aliases array (GetGlobalCustomerInfo format)
+              const einvoiceAlias = globalCompanyData.Aliases.find(alias => 
+                alias.Name && 
+                alias.Name.startsWith('urn:mail:') && 
+                alias.DeletionTime === null
+              );
+              nilveraAlias = einvoiceAlias?.Name || null;
+              console.log('🔍 Using Aliases array, found alias:', nilveraAlias);
+            } else if (globalCompanyData.AliasName) {
+              // Use AliasName field (GlobalCompany format)
+              nilveraAlias = `urn:mail:${globalCompanyData.AliasName}`;
+              console.log('🔍 Using AliasName field, created alias:', nilveraAlias);
+            }
+
+            if (nilveraAlias) {
+              // Remove urn:mail: prefix for comparison
+              const nilveraAliasWithoutPrefix = nilveraAlias.replace('urn:mail:', '');
+              
+              if (nilveraAliasWithoutPrefix === dbAliasWithoutPrefix) {
+                console.log('✅ DB alias is still valid in Nilvera system');
+                nilveraInvoiceData.CustomerAlias = nilveraAlias;
+                nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile = 'TICARIFATURA';
+                console.log('✅ Set InvoiceProfile to TICARIFATURA for e-fatura mükellefi');
+              } else {
+                console.log('⚠️ DB alias is outdated, using Nilvera system alias:', nilveraAlias);
+                nilveraInvoiceData.CustomerAlias = nilveraAlias;
+                nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile = 'TICARIFATURA';
+                console.log('✅ Set InvoiceProfile to TICARIFATURA for e-fatura mükellefi');
+                
+                // Update customer table with current alias (without urn:mail: prefix)
+                const aliasWithoutPrefix = nilveraAlias.replace('urn:mail:', '');
+                await supabase
+                  .from('customers')
+                  .update({
+                    einvoice_alias_name: aliasWithoutPrefix,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('id', salesInvoice.customers?.id);
+              }
+            } else {
+              console.log('❌ No valid alias found in Nilvera response');
+              throw new Error(`Müşteri ${salesInvoice.customers?.name} (VKN: ${salesInvoice.customers?.tax_number}) e-fatura mükellefi ancak Nilvera sisteminden geçerli bir alias bilgisi alınamadı. Lütfen müşteri bilgilerini kontrol edin.`);
+            }
+          } else {
+            console.log('ℹ️ Customer is not e-fatura mükellefi, CustomerAlias will not be included');
+          }
+        } catch (globalCompanyError) {
+          console.error('❌ Alias verification failed:', globalCompanyError.message);
+          // If verification fails, don't use the alias - but don't delete it either
+          console.log('ℹ️ Alias verification failed, CustomerAlias will not be included');
+        }
+      } else {
+        // Customer is not e-fatura mükellefi, no need to check alias
+        console.log('ℹ️ Customer is not e-fatura mükellefi, CustomerAlias will not be included');
+      }
+
+      // For e-fatura mükellefi customers, CustomerAlias is REQUIRED
+      if (salesInvoice.customers?.is_einvoice_mukellef && !nilveraInvoiceData.CustomerAlias) {
+        console.log('⚠️ E-fatura mükellefi customer but no CustomerAlias found, this will cause API error');
+        throw new Error(`Müşteri ${salesInvoice.customers?.name} (VKN: ${salesInvoice.customers?.tax_number}) e-fatura mükellefi ancak CustomerAlias bilgisi bulunamadı. Lütfen müşteri bilgilerini kontrol edin.`);
+      }
+
+      // Final check: only set CustomerAlias if it's valid
+      if (nilveraInvoiceData.CustomerAlias && nilveraInvoiceData.CustomerAlias.includes('undefined')) {
+        console.log('⚠️ Invalid CustomerAlias detected, removing it');
+        delete nilveraInvoiceData.CustomerAlias;
+      }
+
+      console.log('📋 Nilvera invoice model created:', {
+        invoiceNumber: nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceSerieOrNumber,
+        customer: nilveraInvoiceData.EInvoice.CustomerInfo.Name,
+        customerAlias: nilveraInvoiceData.CustomerAlias || 'N/A',
+        invoiceProfile: nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile,
+        isEInvoice: nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile === 'TICARIFATURA',
+        total: salesInvoice.toplam_tutar,
+        hasCustomerAlias: !!nilveraInvoiceData.CustomerAlias
+      });
+
+      // Log the full invoice data for debugging
+      console.log('📄 Full invoice data being sent:', JSON.stringify(nilveraInvoiceData, null, 2));
+
+      // Send to Nilvera API - using Model endpoint for standard format
+      const nilveraApiUrl = nilveraAuth.test_mode 
+        ? 'https://apitest.nilvera.com/einvoice/Send/Model'
+        : 'https://api.nilvera.com/einvoice/Send/Model';
+
+      console.log('🌐 Sending to Nilvera API:', nilveraApiUrl);
+
+      const nilveraResponse = await fetch(nilveraApiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${nilveraAuth.api_key}`,
+          'Content-Type': 'application/json-patch+json'
+        },
+        body: JSON.stringify(nilveraInvoiceData)
+      });
+
+      console.log('📡 Nilvera API response status:', nilveraResponse.status);
+
+      if (!nilveraResponse.ok) {
+        const errorText = await nilveraResponse.text();
+        console.error('❌ Nilvera API error:', errorText);
+        console.error('❌ Request data that caused error:', JSON.stringify(nilveraInvoiceData, null, 2));
+        throw new Error(`Nilvera API error: ${nilveraResponse.status} - ${errorText}`);
+      }
+
+      const nilveraResult = await nilveraResponse.json();
+      console.log('✅ Nilvera draft created:', nilveraResult);
+
+      // 3. SUCCESS FLOW - Update tracking table with 'sent' status
+      console.log('📝 Updating tracking status to sent...');
+      const { error: trackingError } = await supabase
+        .from('einvoice_status_tracking')
+        .update({
+          nilvera_invoice_id: nilveraResult.id || nilveraResult.uuid,
+          nilvera_transfer_id: nilveraResult.transferId,
+          status: 'sent',
+          transfer_state: nilveraResult.transferState || 0,
+          invoice_state: nilveraResult.invoiceState || 0,
+          sent_at: new Date().toISOString(),
+          nilvera_response: nilveraResult,
+          error_message: null,
+          error_code: null
+        })
+        .eq('sales_invoice_id', salesInvoiceId)
+        .eq('company_id', profile.company_id);
+
+      if (trackingError) {
+        console.error('❌ Error updating tracking data:', trackingError);
+        // Don't throw error here, continue with invoice update
+      } else {
+        console.log('✅ Tracking status updated to sent');
+      }
+
+      // Update sales invoice status and fatura_no if provided by Nilvera
+      const updateData: any = { 
+        durum: 'gonderildi',
+        xml_data: nilveraResult
+      };
+
+      // If Nilvera returned an invoice number, update it
+      if (nilveraResult.invoiceNumber || nilveraResult.invoice_number) {
+        const assignedInvoiceNumber = nilveraResult.invoiceNumber || nilveraResult.invoice_number;
+        updateData.fatura_no = assignedInvoiceNumber;
+        console.log('📝 Updating fatura_no with Nilvera assigned number:', assignedInvoiceNumber);
+      }
+
+      const { error: updateError } = await supabase
+        .from('sales_invoices')
+        .update(updateData)
+        .eq('id', salesInvoiceId);
+
+      if (updateError) {
+        console.error('❌ Error updating sales invoice:', updateError);
+      }
+
+      return new Response(JSON.stringify({ 
+        success: true,
+        message: 'E-fatura başarıyla Nilvera\'ya gönderildi',
+        nilveraInvoiceId: nilveraResult.id || nilveraResult.uuid,
+        data: nilveraResult
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+
+    } catch (error) {
+      console.error('❌ Send invoice error:', error);
+      
+      // 4. ERROR FLOW - Update tracking table with 'error' status
+      console.log('📝 Updating tracking status to error...');
+      const { error: errorTrackingError } = await supabase
+        .from('einvoice_status_tracking')
+        .update({
+          status: 'error',
+          error_message: error.message,
+          error_code: 'SEND_ERROR',
+          nilvera_response: null
+        })
+        .eq('sales_invoice_id', salesInvoiceId)
+        .eq('company_id', profile.company_id);
+
+      if (errorTrackingError) {
+        console.error('❌ Error updating tracking status to error:', errorTrackingError);
+      } else {
+        console.log('✅ Tracking status updated to error');
+      }
+
+      // Determine appropriate HTTP status code
+      let httpStatus = 400;
+      if (error.message.includes('duplicate') || error.message.includes('already exists')) {
+        httpStatus = 409; // Conflict
+      } else if (error.message.includes('unauthorized') || error.message.includes('forbidden')) {
+        httpStatus = 401; // Unauthorized
+      } else if (error.message.includes('not found')) {
+        httpStatus = 404; // Not Found
+      }
+
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: error.message,
+        status: 'error',
+        message: 'E-fatura gönderimi başarısız oldu'
+      }), {
+        status: httpStatus,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Error in nilvera-send-invoice function:', error);
+    console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error name:', error.name);
+    
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: error.message || 'An unknown error occurred',
+      errorType: error.name || 'UnknownError',
+      timestamp: new Date().toISOString()
     }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
