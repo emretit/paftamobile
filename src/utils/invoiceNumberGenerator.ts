@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Fatura seri numarası oluşturucu
- * Format: 3 harf + yıl + 4 haneli numara (örn: FAT20250001)
+ * Format: 3 harf + yıl + 4 haneli numara (örn: NGS20250001)
  */
 export async function generateInvoiceNumber(companyId: string): Promise<string> {
   try {
@@ -22,7 +22,7 @@ export async function generateInvoiceNumber(companyId: string): Promise<string> 
     }
 
     const currentYear = new Date().getFullYear().toString();
-    const prefix = 'FAT'; // 3 harf prefix
+    const prefix = 'NGS'; // 3 harf prefix
     const yearPrefix = `${prefix}${currentYear}`;
     
     let nextNumber = 1;
@@ -43,7 +43,7 @@ export async function generateInvoiceNumber(companyId: string): Promise<string> 
     console.error('Fatura numarası oluşturulurken hata:', error);
     // Hata durumunda varsayılan numara döndür
     const currentYear = new Date().getFullYear().toString();
-    return `FAT${currentYear}0001`;
+    return `NGS${currentYear}0001`;
   }
 }
 
@@ -67,7 +67,7 @@ function extractNumberFromInvoiceNumber(invoiceNumber: string, yearPrefix: strin
  * Fatura numarasının geçerli olup olmadığını kontrol eder
  */
 export function isValidInvoiceNumber(invoiceNumber: string): boolean {
-  const pattern = /^FAT\d{4}\d{4}$/; // FAT + 4 haneli yıl + 4 haneli numara
+  const pattern = /^NGS\d{4}\d{4}$/; // NGS + 4 haneli yıl + 4 haneli numara
   return pattern.test(invoiceNumber);
 }
 
@@ -76,7 +76,7 @@ export function isValidInvoiceNumber(invoiceNumber: string): boolean {
  */
 export function extractYearFromInvoiceNumber(invoiceNumber: string): number | null {
   try {
-    const match = invoiceNumber.match(/^FAT(\d{4})/);
+    const match = invoiceNumber.match(/^NGS(\d{4})/);
     return match ? parseInt(match[1], 10) : null;
   } catch {
     return null;

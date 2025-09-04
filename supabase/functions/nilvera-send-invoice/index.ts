@@ -162,7 +162,7 @@ serve(async (req) => {
     // ---- InvoiceSerieOrNumber ----
     // Nilvera kurallarına göre: 16 haneli tam numara VEYA 3 harfli seri
     // Biz 3 harfli seri kullanacağız, Nilvera kendi numaralandırmasını yapacak
-    const invoiceSerieOrNumber = 'FAT'; // 3 harfli seri - Nilvera otomatik numara üretecek
+    const invoiceSerieOrNumber = 'NGS'; // 3 harfli seri - Nilvera otomatik numara üretecek
 
     // ---- Build Nilvera EInvoice model ----
     const toNumber = (v: any, def = 0) => (v == null || v === "" ? def : Number(v));

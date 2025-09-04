@@ -463,11 +463,11 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
                     <p className="text-xs text-gray-500 mt-1">
                       {assignedInvoiceNumber 
                         ? `Fatura numarası: ${assignedInvoiceNumber}` 
-                        : "E-fatura gönderilirken Nilvera tarafından otomatik atanacak (Seri: FAT)"
+                        : "E-fatura gönderilirken Nilvera tarafından otomatik atanacak (Seri: NGS)"
                       }
                     </p>
                     <p className="text-xs text-amber-600 mt-1">
-                      ⚠️ Nilvera portalında "FAT" serisinin tanımlı olduğundan emin olun
+                      ⚠️ Nilvera portalında "NGS" serisinin tanımlı olduğundan emin olun
                     </p>
                   </div>
 
