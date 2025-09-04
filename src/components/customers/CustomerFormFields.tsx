@@ -1,13 +1,12 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CustomerFormData } from "@/types/customer";
 import CompanyBasicInfo from "./form/CompanyBasicInfo";
 import ContactInformation from "./form/ContactInformation";
 import CompanyInformation from "./form/CompanyInformation";
-import { MapPin, DollarSign, FileText, User, Building2, Users, CreditCard, Receipt } from "lucide-react";
+import { User, Building2, Receipt, FileText } from "lucide-react";
 
 interface CustomerFormFieldsProps {
   formData: CustomerFormData;
@@ -93,6 +92,7 @@ const CustomerFormFields = ({ formData, setFormData }: CustomerFormFieldsProps) 
           </div>
         </CardContent>
       </Card>
+
     </div>
   );
 };

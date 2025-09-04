@@ -203,16 +203,23 @@ serve(async (req) => {
       };
 
       // CustomerAlias is REQUIRED for e-fatura mükellefi customers
-      // First try to get alias from local DB
-      const { data: aliasRow } = await supabase
-        .from('customer_aliases')
-        .select('alias_name')
-        .eq('company_id', profile.company_id)
-        .eq('vkn', salesInvoice.customers?.tax_number)
-        .maybeSingle();
+      // First try to get alias from customer table
+      let customerAlias = salesInvoice.customers?.einvoice_alias_name;
+      
+      // If not found in customer table, try customer_aliases table
+      if (!customerAlias) {
+        const { data: aliasRow } = await supabase
+          .from('customer_aliases')
+          .select('alias_name')
+          .eq('company_id', profile.company_id)
+          .eq('vkn', salesInvoice.customers?.tax_number)
+          .maybeSingle();
+        
+        customerAlias = aliasRow?.alias_name;
+      }
 
-      if (aliasRow?.alias_name) {
-        console.log('📝 Found customer alias in DB:', aliasRow.alias_name);
+      if (customerAlias) {
+        console.log('📝 Found customer alias:', customerAlias);
         // Verify alias is still valid in Nilvera system before using
         console.log('🔍 Verifying alias validity in Nilvera system...');
         const globalCompanyUrl = nilveraAuth.test_mode 
@@ -230,7 +237,7 @@ serve(async (req) => {
 
           if (globalCompanyResponse.ok) {
             const globalCompanyData = await globalCompanyResponse.json();
-            if (globalCompanyData.AliasName === aliasRow.alias_name) {
+            if (globalCompanyData.AliasName === customerAlias) {
               console.log('✅ DB alias is still valid in Nilvera system');
               // Use the actual alias from Nilvera system, not customer email
               nilveraInvoiceData.CustomerAlias = `urn:mail:${globalCompanyData.AliasName}`;
@@ -239,16 +246,24 @@ serve(async (req) => {
               // Use the actual alias from Nilvera system, not customer email
               nilveraInvoiceData.CustomerAlias = `urn:mail:${globalCompanyData.AliasName}`;
               
-              // Update DB with current alias
+              // Update both customer table and customer_aliases table with current alias
+              await supabase
+                .from('customers')
+                .update({
+                  einvoice_alias_name: globalCompanyData.AliasName,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', salesInvoice.customers?.id);
+                
               await supabase
                 .from('customer_aliases')
-                .update({
+                .upsert({
+                  company_id: profile.company_id,
+                  vkn: salesInvoice.customers?.tax_number,
                   alias_name: globalCompanyData.AliasName,
                   company_name: salesInvoice.customers?.name,
                   updated_at: new Date().toISOString()
-                })
-                .eq('company_id', profile.company_id)
-                .eq('vkn', salesInvoice.customers?.tax_number);
+                });
             }
           } else {
             console.log('⚠️ Customer not found in Nilvera system, removing from DB');
@@ -290,7 +305,15 @@ serve(async (req) => {
               // Use the actual alias from Nilvera system, not customer email
               nilveraInvoiceData.CustomerAlias = `urn:mail:${globalCompanyData.AliasName}`;
               
-              // Save alias to local DB for future use
+              // Save alias to both customer table and customer_aliases table for future use
+              await supabase
+                .from('customers')
+                .update({
+                  einvoice_alias_name: globalCompanyData.AliasName,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', salesInvoice.customers?.id);
+                
               await supabase
                 .from('customer_aliases')
                 .upsert({
