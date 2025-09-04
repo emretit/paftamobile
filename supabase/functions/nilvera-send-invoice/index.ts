@@ -149,7 +149,7 @@ serve(async (req) => {
         
         // Extract series from fatura_no (e.g., "SF-TEST-001" -> "SFT")
         const seriesMatch = raw.match(/^([A-Z]{2,3})/);
-        let series = 'SFT'; // Default series (3 letters required)
+        let series = 'EFT'; // Default series (3 letters required)
         
         if (seriesMatch) {
           series = seriesMatch[1];
