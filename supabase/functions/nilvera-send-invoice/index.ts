@@ -218,7 +218,7 @@ serve(async (req) => {
         customerAlias = aliasRow?.alias_name;
       }
 
-      if (customerAlias) {
+      if (customerAlias && customerAlias !== 'undefined' && customerAlias.trim() !== '') {
         console.log('📝 Found customer alias:', customerAlias);
         // Verify alias is still valid in Nilvera system before using
         console.log('🔍 Verifying alias validity in Nilvera system...');
@@ -339,6 +339,12 @@ serve(async (req) => {
           // If we can't check, assume it's a paper invoice customer
           console.log('ℹ️ GlobalCompany check failed, CustomerAlias will not be included');
         }
+      }
+
+      // Final check: only set CustomerAlias if it's valid
+      if (nilveraInvoiceData.CustomerAlias && nilveraInvoiceData.CustomerAlias.includes('undefined')) {
+        console.log('⚠️ Invalid CustomerAlias detected, removing it');
+        delete nilveraInvoiceData.CustomerAlias;
       }
 
       console.log('📋 Nilvera invoice model created:', {
