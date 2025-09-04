@@ -237,8 +237,14 @@ serve(async (req) => {
 
           if (globalCompanyResponse.ok) {
             const globalCompanyData = await globalCompanyResponse.json();
+            console.log('🔍 GlobalCompany API response:', JSON.stringify(globalCompanyData, null, 2));
+            console.log('🔍 GlobalCompany AliasName:', globalCompanyData.AliasName);
+            console.log('🔍 GlobalCompany Aliases:', globalCompanyData.Aliases);
+            
             // Remove urn:mail: prefix from DB alias for comparison
             const dbAliasWithoutPrefix = customerAlias?.replace('urn:mail:', '') || '';
+            console.log('🔍 DB alias without prefix:', dbAliasWithoutPrefix);
+            
             if (globalCompanyData.AliasName === dbAliasWithoutPrefix) {
               console.log('✅ DB alias is still valid in Nilvera system');
               // Use the actual alias from Nilvera system, not customer email
