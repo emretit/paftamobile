@@ -223,11 +223,11 @@ serve(async (req) => {
         // Verify alias is still valid in Nilvera system before using
         console.log('🔍 Verifying alias validity in Nilvera system...');
         const globalCompanyUrl = nilveraAuth.test_mode 
-          ? 'https://apitest.nilvera.com/general/GlobalCompany'
-          : 'https://api.nilvera.com/general/GlobalCompany';
+          ? 'https://apitest.nilvera.com/general/GlobalCompany/GetGlobalCustomerInfo'
+          : 'https://api.nilvera.com/general/GlobalCompany/GetGlobalCustomerInfo';
 
         try {
-          const globalCompanyResponse = await fetch(`${globalCompanyUrl}?VKN=${salesInvoice.customers?.tax_number}`, {
+          const globalCompanyResponse = await fetch(`${globalCompanyUrl}/${salesInvoice.customers?.tax_number}`, {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${nilveraAuth.api_key}`,
