@@ -125,24 +125,57 @@ serve(async (req) => {
 
     // 2. LOCKING MECHANISM - Mark as 'sending' to prevent duplicate processing
     console.log('🔒 Setting invoice status to sending (locking)...');
-    const { error: lockError } = await supabase
+    
+    // Check if record exists
+    const { data: existingRecord, error: checkError } = await supabase
       .from('einvoice_status_tracking')
-      .upsert({
-        company_id: profile.company_id,
-        sales_invoice_id: salesInvoiceId,
-        status: 'sending',
-        transfer_state: 0,
-        invoice_state: 0,
-        sent_at: new Date().toISOString(),
-        error_message: null,
-        error_code: null
-      }, {
-        onConflict: 'sales_invoice_id,company_id'
-      });
+      .select('id')
+      .eq('sales_invoice_id', salesInvoiceId)
+      .eq('company_id', profile.company_id)
+      .maybeSingle();
 
-    if (lockError) {
-      console.error('❌ Failed to set sending status:', lockError);
-      throw new Error('Fatura durumu güncellenemedi');
+    if (checkError) {
+      console.error('❌ Error checking existing record:', checkError);
+      throw new Error('Fatura durumu kontrol edilemedi');
+    }
+
+    if (existingRecord) {
+      // Update existing record
+      const { error: updateError } = await supabase
+        .from('einvoice_status_tracking')
+        .update({
+          status: 'sending',
+          transfer_state: 0,
+          invoice_state: 0,
+          sent_at: new Date().toISOString(),
+          error_message: null,
+          error_code: null
+        })
+        .eq('id', existingRecord.id);
+
+      if (updateError) {
+        console.error('❌ Failed to update sending status:', updateError);
+        throw new Error('Fatura durumu güncellenemedi');
+      }
+    } else {
+      // Insert new record
+      const { error: insertError } = await supabase
+        .from('einvoice_status_tracking')
+        .insert({
+          company_id: profile.company_id,
+          sales_invoice_id: salesInvoiceId,
+          status: 'sending',
+          transfer_state: 0,
+          invoice_state: 0,
+          sent_at: new Date().toISOString(),
+          error_message: null,
+          error_code: null
+        });
+
+      if (insertError) {
+        console.error('❌ Failed to insert sending status:', insertError);
+        throw new Error('Fatura durumu kaydedilemedi');
+      }
     }
 
     console.log('✅ Invoice locked for processing');
