@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CustomerFormData } from "@/types/customer";
 import { User, Mail, Phone, Building, FileText, MapPin, Users, CheckCircle, XCircle, Loader2, UserPlus } from "lucide-react";
 import { getDigitsOnly, formatPhoneNumber } from "@/utils/phoneFormatter";
-import { useEinvoiceMukellefCheck } from "@/hooks/useEinvoiceMukellefCheck";
+// import { useEinvoiceMukellefCheck } from "@/hooks/useEinvoiceMukellefCheck";
 import { useNilveraCompanyInfo } from "@/hooks/useNilveraCompanyInfo";
 import { useVknToCustomer } from "@/hooks/useVknToCustomer";
 import { useEffect } from "react";
@@ -17,7 +17,7 @@ interface BasicInformationProps {
 }
 
 const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
-  const { checkEinvoiceMukellef, isChecking, result, clearResult } = useEinvoiceMukellefCheck();
+  // const { checkEinvoiceMukellef, isChecking, result, clearResult } = useEinvoiceMukellefCheck();
   const { searchMukellef, isLoading: isNilveraLoading, mukellefInfo, error: nilveraError } = useNilveraCompanyInfo();
   const { createCustomerFromVkn, isCreating } = useVknToCustomer();
 
@@ -25,29 +25,13 @@ const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
   useEffect(() => {
     if (formData.tax_number && formData.tax_number.length >= 10) {
       const timeoutId = setTimeout(() => {
-        // Hem eski hem yeni hook'u kullan
-        checkEinvoiceMukellef(formData.tax_number);
         searchMukellef(formData.tax_number);
       }, 1000); // 1 saniye bekle
 
       return () => clearTimeout(timeoutId);
-    } else {
-      clearResult();
     }
-  }, [formData.tax_number, checkEinvoiceMukellef, searchMukellef, clearResult]);
+  }, [formData.tax_number, searchMukellef]);
 
-  // E-fatura mükellefi bilgilerini form data'ya ekle
-  useEffect(() => {
-    if (result && result.isEinvoiceMukellef && result.data) {
-      setFormData({
-        ...formData,
-        // E-fatura mükellefi bilgilerini form data'ya ekle
-        company: formData.company || result.data?.companyName || formData.company,
-        tax_office: formData.tax_office || result.data?.taxOffice || formData.tax_office,
-        address: formData.address || result.data?.address || formData.address,
-      });
-    }
-  }, [result]);
 
   // Nilvera'dan gelen mükellef bilgilerini form data'ya ekle
   useEffect(() => {
@@ -66,14 +50,14 @@ const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
   const handleSaveAsCustomer = async () => {
     const vknData = {
       taxNumber: formData.tax_number,
-      companyName: mukellefInfo?.companyName || result?.data?.companyName || formData.company || '',
-      aliasName: mukellefInfo?.aliasName || result?.data?.aliasName,
-      taxOffice: mukellefInfo?.taxOffice || result?.data?.taxOffice || formData.tax_office,
-      address: mukellefInfo?.address || result?.data?.address || formData.address,
-      city: mukellefInfo?.city || result?.data?.city,
-      district: mukellefInfo?.district || result?.data?.district,
-      mersisNo: mukellefInfo?.mersisNo || result?.data?.mersisNo,
-      sicilNo: mukellefInfo?.sicilNo || result?.data?.sicilNo,
+      companyName: mukellefInfo?.companyName || formData.company || '',
+      aliasName: mukellefInfo?.aliasName,
+      taxOffice: mukellefInfo?.taxOffice || formData.tax_office,
+      address: mukellefInfo?.address || formData.address,
+      city: mukellefInfo?.city,
+      district: mukellefInfo?.district,
+      mersisNo: mukellefInfo?.mersisNo,
+      sicilNo: mukellefInfo?.sicilNo,
       email: formData.email,
       phone: formData.mobile_phone || formData.office_phone,
     };
@@ -107,20 +91,13 @@ const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
               {/* E-fatura mükellefi durumu göstergesi */}
               {formData.tax_number && formData.tax_number.length >= 10 && (
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  {(isChecking || isNilveraLoading) ? (
+                  {isNilveraLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-                  ) : (result || mukellefInfo) ? (
-                    (result?.isEinvoiceMukellef || mukellefInfo) ? (
-                      <div className="flex items-center gap-1">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span className="text-xs text-green-600 font-medium">E-Fatura Mükellefi</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1">
-                        <XCircle className="w-4 h-4 text-gray-400" />
-                        <span className="text-xs text-gray-500">E-Fatura Mükellefi Değil</span>
-                      </div>
-                    )
+                  ) : mukellefInfo ? (
+                    <div className="flex items-center gap-1">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="text-xs text-green-600 font-medium">E-Fatura Mükellefi</span>
+                    </div>
                   ) : null}
                 </div>
               )}
@@ -144,7 +121,7 @@ const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
 
 
         {/* E-fatura mükellefi detay bilgileri ve otomatik doldurma önerisi */}
-        {(result && result.isEinvoiceMukellef && result.data) || mukellefInfo ? (
+        {mukellefInfo ? (
           <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -172,29 +149,14 @@ const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
               </Button>
             </div>
             <div className="space-y-1 text-xs text-green-700 mb-3">
-              {/* Eski hook'tan gelen veriler */}
-              {result && result.data && (
-                <>
-                  <div><strong>Şirket:</strong> {result.data.companyName}</div>
-                  {result.data.aliasName && <div><strong>E-Fatura Alias:</strong> {result.data.aliasName}</div>}
-                  {result.data.taxOffice && <div><strong>Vergi Dairesi:</strong> {result.data.taxOffice}</div>}
-                  {result.data.address && <div><strong>Adres:</strong> {result.data.address}</div>}
-                  {result.data.city && <div><strong>Şehir:</strong> {result.data.city}</div>}
-                </>
-              )}
-              {/* Yeni Nilvera hook'undan gelen veriler */}
-              {mukellefInfo && (
-                <>
-                  <div><strong>Şirket:</strong> {mukellefInfo.companyName}</div>
-                  {mukellefInfo.aliasName && <div><strong>E-Fatura Alias:</strong> {mukellefInfo.aliasName}</div>}
-                  {mukellefInfo.taxOffice && <div><strong>Vergi Dairesi:</strong> {mukellefInfo.taxOffice}</div>}
-                  {mukellefInfo.address && <div><strong>Adres:</strong> {mukellefInfo.address}</div>}
-                  {mukellefInfo.city && <div><strong>Şehir:</strong> {mukellefInfo.city}</div>}
-                  {mukellefInfo.district && <div><strong>İlçe:</strong> {mukellefInfo.district}</div>}
-                  {mukellefInfo.mersisNo && <div><strong>Mersis No:</strong> {mukellefInfo.mersisNo}</div>}
-                  {mukellefInfo.sicilNo && <div><strong>Sicil No:</strong> {mukellefInfo.sicilNo}</div>}
-                </>
-              )}
+              <div><strong>Şirket:</strong> {mukellefInfo.companyName}</div>
+              {mukellefInfo.aliasName && <div><strong>E-Fatura Alias:</strong> {mukellefInfo.aliasName}</div>}
+              {mukellefInfo.taxOffice && <div><strong>Vergi Dairesi:</strong> {mukellefInfo.taxOffice}</div>}
+              {mukellefInfo.address && <div><strong>Adres:</strong> {mukellefInfo.address}</div>}
+              {mukellefInfo.city && <div><strong>Şehir:</strong> {mukellefInfo.city}</div>}
+              {mukellefInfo.district && <div><strong>İlçe:</strong> {mukellefInfo.district}</div>}
+              {mukellefInfo.mersisNo && <div><strong>Mersis No:</strong> {mukellefInfo.mersisNo}</div>}
+              {mukellefInfo.sicilNo && <div><strong>Sicil No:</strong> {mukellefInfo.sicilNo}</div>}
             </div>
             
             {/* Otomatik doldurma önerisi */}
@@ -208,16 +170,15 @@ const BasicInformation = ({ formData, setFormData }: BasicInformationProps) => {
                   size="sm"
                   variant="ghost"
                   onClick={() => {
-                    const vknData = mukellefInfo || result?.data;
-                    if (vknData) {
+                    if (mukellefInfo) {
                       setFormData({
                         ...formData,
-                        company: vknData.companyName || formData.company,
-                        tax_office: vknData.taxOffice || formData.tax_office,
-                        address: vknData.address || formData.address,
-                        city: vknData.city || formData.city,
-                        district: vknData.district || formData.district,
-                        einvoice_alias_name: vknData.aliasName || formData.einvoice_alias_name,
+                        company: mukellefInfo.companyName || formData.company,
+                        tax_office: mukellefInfo.taxOffice || formData.tax_office,
+                        address: mukellefInfo.address || formData.address,
+                        city: mukellefInfo.city || formData.city,
+                        district: mukellefInfo.district || formData.district,
+                        einvoice_alias_name: mukellefInfo.aliasName || formData.einvoice_alias_name,
                       });
                     }
                   }}

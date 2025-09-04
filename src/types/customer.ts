@@ -11,6 +11,8 @@ export interface Customer {
   representative: string | null;
   balance: number;
   address: string | null;
+  city: string | null;
+  district: string | null;
   tax_number: string | null;
   tax_office: string | null;
   is_einvoice_mukellef: boolean;

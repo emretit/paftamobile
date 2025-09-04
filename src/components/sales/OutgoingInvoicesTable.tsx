@@ -12,7 +12,20 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, FileText, RefreshCw } from "lucide-react";
-import { OutgoingInvoice } from "@/hooks/useOutgoingInvoices";
+
+interface OutgoingInvoice {
+  id: string;
+  invoiceNumber: string;
+  customerName: string;
+  customerTaxNumber?: string;
+  invoiceDate: string;
+  totalAmount: number;
+  taxAmount: number;
+  currency: string;
+  status: string;
+  answerCode: string;
+  isRead: boolean;
+}
 
 interface OutgoingInvoicesTableProps {
   invoices: OutgoingInvoice[];

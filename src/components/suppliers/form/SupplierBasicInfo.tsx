@@ -47,14 +47,14 @@ const SupplierBasicInfo = ({ formData, setFormData }: SupplierBasicInfoProps) =>
   const handleSaveAsSupplier = async () => {
     const vknData = {
       taxNumber: formData.tax_number,
-      companyName: mukellefInfo?.companyName || result?.data?.companyName || formData.company || '',
-      aliasName: mukellefInfo?.aliasName || result?.data?.aliasName,
-      taxOffice: mukellefInfo?.taxOffice || result?.data?.taxOffice || formData.tax_office,
-      address: mukellefInfo?.address || result?.data?.address || formData.address,
-      city: mukellefInfo?.city || result?.data?.city,
-      district: mukellefInfo?.district || result?.data?.district,
-      mersisNo: mukellefInfo?.mersisNo || result?.data?.mersisNo,
-      sicilNo: mukellefInfo?.sicilNo || result?.data?.sicilNo,
+      companyName: mukellefInfo?.companyName || formData.company || '',
+      aliasName: mukellefInfo?.aliasName,
+      taxOffice: mukellefInfo?.taxOffice || formData.tax_office,
+      address: mukellefInfo?.address || formData.address,
+      city: mukellefInfo?.city,
+      district: mukellefInfo?.district,
+      mersisNo: mukellefInfo?.mersisNo,
+      sicilNo: mukellefInfo?.sicilNo,
       email: formData.email,
       phone: formData.mobile_phone || formData.office_phone,
     };

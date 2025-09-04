@@ -314,9 +314,9 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                                   <DropdownMenuItem 
                                     onClick={() => {
                                       const invoiceType = invoice.document_type === 'e_fatura' ? 'e-fatura' : 'e-arşiv';
-                                      downloadAndOpenPdf(invoice.nilvera_invoice_id || invoice.id, invoiceType);
-                                    }}
-                                    disabled={isDownloading || !invoice.nilvera_invoice_id}
+                                     downloadAndOpenPdf(invoice.id, invoiceType);
+                                     }}
+                                     disabled={isDownloading}
                                   >
                                     <Download className="h-4 w-4 mr-2" />
                                     PDF Yazdır
