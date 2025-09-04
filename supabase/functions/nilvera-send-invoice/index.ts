@@ -21,10 +21,19 @@ serve(async (req) => {
   }
 
   try {
+    console.log("🚀 Edge function started");
+    
     // ---- ENV & clients ----
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    console.log("🔧 Environment check:", {
+      hasUrl: !!SUPABASE_URL,
+      hasAnonKey: !!SUPABASE_ANON_KEY,
+      hasServiceKey: !!SUPABASE_SERVICE_ROLE_KEY
+    });
+    
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error("Missing Supabase env vars");
     }
@@ -288,10 +297,17 @@ serve(async (req) => {
     });
 
   } catch (err: any) {
-    // Genel hata
+    // Genel hata - detaylı logging
+    console.error("❌ Edge function error:", err);
+    console.error("❌ Error stack:", err?.stack);
+    console.error("❌ Error name:", err?.name);
+    console.error("❌ Error message:", err?.message);
+    
     return new Response(JSON.stringify({
       success: false,
       error: err?.message ?? "Unexpected error",
+      errorType: err?.name ?? "UnknownError",
+      timestamp: new Date().toISOString()
     }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
