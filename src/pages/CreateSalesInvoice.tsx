@@ -44,6 +44,7 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
   const [loading, setLoading] = useState(false);
   const [orderData, setOrderData] = useState<any>(null);
   const [savedInvoiceId, setSavedInvoiceId] = useState<string | null>(null);
+  const [assignedInvoiceNumber, setAssignedInvoiceNumber] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     customer_id: "",
@@ -261,7 +262,7 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
       const invoiceData = {
         order_id: orderId || null,
         customer_id: formData.customer_id,
-        fatura_no: formData.fatura_no || "", // Boş bırakılacak, E-fatura gönderilirken otomatik atanacak
+        fatura_no: null, // NULL olarak kaydedilecek, E-fatura gönderilirken otomatik atanacak
         fatura_tarihi: format(formData.fatura_tarihi, "yyyy-MM-dd"),
         vade_tarihi: formData.vade_tarihi ? format(formData.vade_tarihi, "yyyy-MM-dd") : null,
         aciklama: formData.aciklama,
@@ -370,6 +371,19 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
     }
 
     sendInvoice(savedInvoiceId);
+    
+    // E-fatura gönderildikten sonra fatura numarasını kontrol et
+    setTimeout(async () => {
+      const { data: updatedInvoice } = await supabase
+        .from('sales_invoices')
+        .select('fatura_no')
+        .eq('id', savedInvoiceId)
+        .single();
+      
+      if (updatedInvoice?.fatura_no) {
+        setAssignedInvoiceNumber(updatedInvoice.fatura_no);
+      }
+    }, 3000); // 3 saniye bekle
   };
 
 
@@ -432,14 +446,16 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
                     <Label htmlFor="fatura_no">Fatura Numarası</Label>
                     <Input
                       id="fatura_no"
-                      value={formData.fatura_no}
-                      onChange={(e) => setFormData({ ...formData, fatura_no: e.target.value })}
+                      value={assignedInvoiceNumber || "Henüz atanmadı"}
                       placeholder="E-fatura gönderilirken otomatik atanacak"
                       disabled
-                      className="bg-gray-50"
+                      className={`bg-gray-50 ${assignedInvoiceNumber ? 'text-green-600 font-medium' : 'text-gray-500'}`}
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      E-fatura gönderilirken Nilvera tarafından otomatik atanacak
+                      {assignedInvoiceNumber 
+                        ? `Fatura numarası: ${assignedInvoiceNumber}` 
+                        : "E-fatura gönderilirken Nilvera tarafından otomatik atanacak"
+                      }
                     </p>
                   </div>
 

@@ -261,8 +261,8 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                       {allInvoices.map((invoice, index) => (
                         <tr key={invoice.id} className="border-b hover:bg-gray-50 transition-colors">
                           <td className="p-4">
-                            <span className="font-medium text-blue-600">
-                              {invoice.fatura_no}
+                            <span className={`font-medium ${invoice.fatura_no ? 'text-blue-600' : 'text-gray-400'}`}>
+                              {invoice.fatura_no || 'Henüz atanmadı'}
                             </span>
                           </td>
                           <td className="p-4">
