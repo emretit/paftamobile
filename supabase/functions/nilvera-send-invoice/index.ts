@@ -147,12 +147,16 @@ serve(async (req) => {
         const raw = (salesInvoice.fatura_no || '').toString();
         console.log('🔍 Raw fatura_no:', raw);
         
-        // Extract series from fatura_no (e.g., "SF-TEST-001" -> "SF")
+        // Extract series from fatura_no (e.g., "SF-TEST-001" -> "SFT")
         const seriesMatch = raw.match(/^([A-Z]{2,3})/);
-        let series = 'ASD'; // Default series
+        let series = 'SFT'; // Default series (3 letters required)
         
         if (seriesMatch) {
           series = seriesMatch[1];
+          // Ensure 3 letters for Nilvera API
+          if (series.length === 2) {
+            series = series + 'T'; // Add 'T' to make it 3 letters
+          }
           console.log('🔍 Extracted series:', series);
         } else {
           console.log('🔍 Using default series:', series);
