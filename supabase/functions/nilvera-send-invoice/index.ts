@@ -390,13 +390,22 @@ serve(async (req) => {
         console.error('❌ Error saving tracking data:', trackingError);
       }
 
-      // Update sales invoice status
+      // Update sales invoice status and fatura_no if provided by Nilvera
+      const updateData: any = { 
+        durum: 'gonderildi',
+        xml_data: nilveraResult
+      };
+
+      // If Nilvera returned an invoice number, update it
+      if (nilveraResult.invoiceNumber || nilveraResult.invoice_number) {
+        const assignedInvoiceNumber = nilveraResult.invoiceNumber || nilveraResult.invoice_number;
+        updateData.fatura_no = assignedInvoiceNumber;
+        console.log('📝 Updating fatura_no with Nilvera assigned number:', assignedInvoiceNumber);
+      }
+
       const { error: updateError } = await supabase
         .from('sales_invoices')
-        .update({ 
-          durum: 'gonderildi',
-          xml_data: nilveraResult
-        })
+        .update(updateData)
         .eq('id', salesInvoiceId);
 
       if (updateError) {

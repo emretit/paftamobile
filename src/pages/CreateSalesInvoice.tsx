@@ -47,6 +47,7 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
   
   const [formData, setFormData] = useState({
     customer_id: "",
+    fatura_no: "", // Boş bırakılacak, E-fatura gönderilirken otomatik atanacak
     fatura_tarihi: new Date(),
     vade_tarihi: null as Date | null,
     aciklama: "",
@@ -189,7 +190,10 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log("Form submit başladı", { formData, items });
+    
     if (!formData.customer_id) {
+      console.log("Müşteri seçilmedi");
       toast({
         title: "Hata",
         description: "Lütfen müşteri seçiniz",
@@ -198,7 +202,8 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
       return;
     }
 
-    if (items.length === 0 || items.every(item => !item.urun_adi)) {
+    if (items.length === 0) {
+      console.log("Fatura kalemi yok");
       toast({
         title: "Hata",
         description: "En az bir fatura kalemi ekleyiniz",
@@ -207,40 +212,92 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
       return;
     }
 
+    if (items.every(item => !item.urun_adi.trim())) {
+      console.log("Fatura kalemlerinde ürün adı yok");
+      toast({
+        title: "Hata",
+        description: "Tüm fatura kalemlerinde ürün/hizmet adı giriniz",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check for empty required fields in items
+    const emptyItems = items.filter(item => !item.urun_adi.trim() || item.miktar <= 0 || item.birim_fiyat <= 0);
+    if (emptyItems.length > 0) {
+      console.log("Eksik bilgili kalemler var:", emptyItems);
+      toast({
+        title: "Hata",
+        description: "Tüm kalemlerde ürün adı, miktar ve birim fiyat giriniz",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
+      console.log("Loading state true yapıldı");
+      
       const totals = calculateTotals();
+      console.log("Totals hesaplandı:", totals);
+
+      // Get current user and company ID
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log("User data:", user, "User error:", userError);
+      
+      if (userError) throw userError;
+      if (!user) throw new Error("Kullanıcı giriş yapmamış");
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
+      
+      console.log("Profile data:", profile, "Profile error:", profileError);
+      
+      if (profileError) throw profileError;
+
+      const invoiceData = {
+        order_id: orderId || null,
+        customer_id: formData.customer_id,
+        fatura_no: formData.fatura_no || "", // Boş bırakılacak, E-fatura gönderilirken otomatik atanacak
+        fatura_tarihi: format(formData.fatura_tarihi, "yyyy-MM-dd"),
+        vade_tarihi: formData.vade_tarihi ? format(formData.vade_tarihi, "yyyy-MM-dd") : null,
+        aciklama: formData.aciklama,
+        notlar: formData.notlar,
+        para_birimi: formData.para_birimi,
+        ara_toplam: totals.ara_toplam,
+        kdv_tutari: totals.kdv_tutari,
+        toplam_tutar: totals.toplam_tutar,
+        odeme_sekli: formData.odeme_sekli,
+        banka_bilgileri: formData.banka_bilgileri,
+        durum: "taslak",
+        odeme_durumu: "odenmedi",
+        company_id: profile?.company_id,
+      };
+
+      console.log("Invoice data hazırlandı:", invoiceData);
 
       // Create sales invoice
       const { data: invoice, error: invoiceError } = await supabase
         .from("sales_invoices")
-        .insert({
-          order_id: orderId || null,
-          customer_id: formData.customer_id,
-          fatura_tarihi: format(formData.fatura_tarihi, "yyyy-MM-dd"),
-          vade_tarihi: formData.vade_tarihi ? format(formData.vade_tarihi, "yyyy-MM-dd") : null,
-          aciklama: formData.aciklama,
-          notlar: formData.notlar,
-          para_birimi: formData.para_birimi,
-          ara_toplam: totals.ara_toplam,
-          kdv_tutari: totals.kdv_tutari,
-          toplam_tutar: totals.toplam_tutar,
-          odeme_sekli: formData.odeme_sekli,
-          banka_bilgileri: formData.banka_bilgileri,
-          durum: "taslak",
-          odeme_durumu: "odenmedi",
-          company_id: (await supabase.auth.getUser()).data.user?.id ? 
-            (await supabase.from('profiles').select('company_id').eq('id', (await supabase.auth.getUser()).data.user?.id).single()).data?.company_id : null,
-        })
+        .insert(invoiceData)
         .select()
         .single();
 
-      if (invoiceError) throw invoiceError;
+      console.log("Invoice insert sonucu:", { invoice, invoiceError });
+
+      if (invoiceError) {
+        console.error("Invoice insert hatası:", invoiceError);
+        throw invoiceError;
+      }
+
+      if (!invoice) {
+        throw new Error("Fatura oluşturulamadı");
+      }
 
       // Create invoice items
-      const companyId = (await supabase.auth.getUser()).data.user?.id ? 
-        (await supabase.from('profiles').select('company_id').eq('id', (await supabase.auth.getUser()).data.user?.id).single()).data?.company_id : null;
-        
       const invoiceItems = items.map(item => ({
         sales_invoice_id: invoice.id,
         urun_adi: item.urun_adi,
@@ -253,34 +310,49 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
         satir_toplami: item.satir_toplami,
         kdv_tutari: item.kdv_tutari,
         para_birimi: formData.para_birimi,
-        company_id: companyId,
+        company_id: profile?.company_id,
       }));
+
+      console.log("Invoice items hazırlandı:", invoiceItems);
 
       const { error: itemsError } = await supabase
         .from("sales_invoice_items")
         .insert(invoiceItems);
 
-      if (itemsError) throw itemsError;
+      console.log("Invoice items insert sonucu:", { itemsError });
+
+      if (itemsError) {
+        console.error("Invoice items insert hatası:", itemsError);
+        throw itemsError;
+      }
 
       // Save invoice ID for e-invoice operations
       setSavedInvoiceId(invoice.id);
+      console.log("Saved invoice ID:", invoice.id);
 
       toast({
         title: "Başarılı",
         description: "Fatura başarıyla oluşturuldu. E-fatura göndermek için aşağıdaki butonları kullanabilirsiniz.",
       });
 
+      console.log("Fatura başarıyla oluşturuldu");
       // Don't navigate immediately to allow e-invoice operations
       // navigate("/sales-invoices");
     } catch (error) {
       console.error("Error creating invoice:", error);
+      console.error("Error details:", {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        error
+      });
       toast({
         title: "Hata",
-        description: "Fatura oluşturulurken hata oluştu",
+        description: `Fatura oluşturulurken hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
+      console.log("Loading state false yapıldı");
     }
   };
 
@@ -354,6 +426,21 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="fatura_no">Fatura Numarası</Label>
+                    <Input
+                      id="fatura_no"
+                      value={formData.fatura_no}
+                      onChange={(e) => setFormData({ ...formData, fatura_no: e.target.value })}
+                      placeholder="E-fatura gönderilirken otomatik atanacak"
+                      disabled
+                      className="bg-gray-50"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      E-fatura gönderilirken Nilvera tarafından otomatik atanacak
+                    </p>
                   </div>
 
                   <div>
