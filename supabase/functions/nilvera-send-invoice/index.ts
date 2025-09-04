@@ -164,7 +164,7 @@ serve(async (req) => {
             IssueDate: new Date(salesInvoice.fatura_tarihi).toISOString(),
             CurrencyCode: salesInvoice.para_birimi || 'TRY',
             ExchangeRate: 1,
-            InvoiceProfile: 'TICARIFATURA'
+                          InvoiceProfile: 'TEMEL' // Will be changed to TICARIFATURA if e-fatura mükellefi
           },
           CompanyInfo: {
             TaxNumber: salesInvoice.companies?.tax_number,
@@ -255,12 +255,16 @@ serve(async (req) => {
               // Use the actual alias from Nilvera system, not customer email
               if (globalCompanyData.AliasName && globalCompanyData.AliasName !== 'undefined' && globalCompanyData.AliasName.trim() !== '') {
                 nilveraInvoiceData.CustomerAlias = `urn:mail:${globalCompanyData.AliasName}`;
+                nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile = 'TICARIFATURA';
+                console.log('✅ Set InvoiceProfile to TICARIFATURA for e-fatura mükellefi');
               }
             } else {
               console.log('⚠️ DB alias is outdated, using Nilvera system alias:', globalCompanyData.AliasName);
               // Use the actual alias from Nilvera system, not customer email
               if (globalCompanyData.AliasName && globalCompanyData.AliasName !== 'undefined' && globalCompanyData.AliasName.trim() !== '') {
                 nilveraInvoiceData.CustomerAlias = `urn:mail:${globalCompanyData.AliasName}`;
+                nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile = 'TICARIFATURA';
+                console.log('✅ Set InvoiceProfile to TICARIFATURA for e-fatura mükellefi');
               }
               
               // Update both customer table and customer_aliases table with current alias
@@ -323,6 +327,8 @@ serve(async (req) => {
               console.log('📝 Using Nilvera system alias:', globalCompanyData.AliasName);
               // Use the actual alias from Nilvera system, not customer email
               nilveraInvoiceData.CustomerAlias = `urn:mail:${globalCompanyData.AliasName}`;
+              nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile = 'TICARIFATURA';
+              console.log('✅ Set InvoiceProfile to TICARIFATURA for e-fatura mükellefi');
               
               // Save alias to both customer table and customer_aliases table for future use
               await supabase
@@ -370,6 +376,8 @@ serve(async (req) => {
         invoiceNumber: nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceSerieOrNumber,
         customer: nilveraInvoiceData.EInvoice.CustomerInfo.Name,
         customerAlias: nilveraInvoiceData.CustomerAlias || 'N/A',
+        invoiceProfile: nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile,
+        isEInvoice: nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile === 'TICARIFATURA',
         total: salesInvoice.toplam_tutar,
         hasCustomerAlias: !!nilveraInvoiceData.CustomerAlias
       });
