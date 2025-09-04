@@ -206,6 +206,14 @@ serve(async (req) => {
       // First try to get alias from customer table
       let customerAlias = salesInvoice.customers?.einvoice_alias_name;
       
+      // Clean and validate alias from customer table
+      if (customerAlias) {
+        customerAlias = customerAlias.toString().trim();
+        if (customerAlias === 'undefined' || customerAlias === 'null' || customerAlias === '') {
+          customerAlias = null;
+        }
+      }
+      
       // If not found in customer table, try customer_aliases table
       if (!customerAlias) {
         const { data: aliasRow } = await supabase
@@ -215,7 +223,12 @@ serve(async (req) => {
           .eq('vkn', salesInvoice.customers?.tax_number)
           .maybeSingle();
         
-        customerAlias = aliasRow?.alias_name;
+        if (aliasRow?.alias_name) {
+          customerAlias = aliasRow.alias_name.toString().trim();
+          if (customerAlias === 'undefined' || customerAlias === 'null' || customerAlias === '') {
+            customerAlias = null;
+          }
+        }
       }
 
       if (customerAlias && customerAlias !== 'undefined' && customerAlias.trim() !== '') {
@@ -240,30 +253,36 @@ serve(async (req) => {
             if (globalCompanyData.AliasName === customerAlias) {
               console.log('✅ DB alias is still valid in Nilvera system');
               // Use the actual alias from Nilvera system, not customer email
-              nilveraInvoiceData.CustomerAlias = `urn:mail:${globalCompanyData.AliasName}`;
+              if (globalCompanyData.AliasName && globalCompanyData.AliasName !== 'undefined' && globalCompanyData.AliasName.trim() !== '') {
+                nilveraInvoiceData.CustomerAlias = `urn:mail:${globalCompanyData.AliasName}`;
+              }
             } else {
               console.log('⚠️ DB alias is outdated, using Nilvera system alias:', globalCompanyData.AliasName);
               // Use the actual alias from Nilvera system, not customer email
-              nilveraInvoiceData.CustomerAlias = `urn:mail:${globalCompanyData.AliasName}`;
+              if (globalCompanyData.AliasName && globalCompanyData.AliasName !== 'undefined' && globalCompanyData.AliasName.trim() !== '') {
+                nilveraInvoiceData.CustomerAlias = `urn:mail:${globalCompanyData.AliasName}`;
+              }
               
               // Update both customer table and customer_aliases table with current alias
-              await supabase
-                .from('customers')
-                .update({
-                  einvoice_alias_name: globalCompanyData.AliasName,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', salesInvoice.customers?.id);
-                
-              await supabase
-                .from('customer_aliases')
-                .upsert({
-                  company_id: profile.company_id,
-                  vkn: salesInvoice.customers?.tax_number,
-                  alias_name: globalCompanyData.AliasName,
-                  company_name: salesInvoice.customers?.name,
-                  updated_at: new Date().toISOString()
-                });
+              if (globalCompanyData.AliasName && globalCompanyData.AliasName !== 'undefined' && globalCompanyData.AliasName.trim() !== '') {
+                await supabase
+                  .from('customers')
+                  .update({
+                    einvoice_alias_name: globalCompanyData.AliasName,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('id', salesInvoice.customers?.id);
+                  
+                await supabase
+                  .from('customer_aliases')
+                  .upsert({
+                    company_id: profile.company_id,
+                    vkn: salesInvoice.customers?.tax_number,
+                    alias_name: globalCompanyData.AliasName,
+                    company_name: salesInvoice.customers?.name,
+                    updated_at: new Date().toISOString()
+                  });
+              }
             }
           } else {
             console.log('⚠️ Customer not found in Nilvera system, removing from DB');
@@ -300,7 +319,7 @@ serve(async (req) => {
             const globalCompanyData = await globalCompanyResponse.json();
             console.log('✅ Customer e-fatura mükellefi found:', globalCompanyData);
             
-            if (globalCompanyData.AliasName) {
+            if (globalCompanyData.AliasName && globalCompanyData.AliasName !== 'undefined' && globalCompanyData.AliasName.trim() !== '') {
               console.log('📝 Using Nilvera system alias:', globalCompanyData.AliasName);
               // Use the actual alias from Nilvera system, not customer email
               nilveraInvoiceData.CustomerAlias = `urn:mail:${globalCompanyData.AliasName}`;
@@ -351,8 +370,12 @@ serve(async (req) => {
         invoiceNumber: nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceSerieOrNumber,
         customer: nilveraInvoiceData.EInvoice.CustomerInfo.Name,
         customerAlias: nilveraInvoiceData.CustomerAlias || 'N/A',
-        total: salesInvoice.toplam_tutar
+        total: salesInvoice.toplam_tutar,
+        hasCustomerAlias: !!nilveraInvoiceData.CustomerAlias
       });
+
+      // Log the full invoice data for debugging
+      console.log('📄 Full invoice data being sent:', JSON.stringify(nilveraInvoiceData, null, 2));
 
       // Send to Nilvera API - using Model endpoint for standard format
       const nilveraApiUrl = nilveraAuth.test_mode 
@@ -375,6 +398,7 @@ serve(async (req) => {
       if (!nilveraResponse.ok) {
         const errorText = await nilveraResponse.text();
         console.error('❌ Nilvera API error:', errorText);
+        console.error('❌ Request data that caused error:', JSON.stringify(nilveraInvoiceData, null, 2));
         throw new Error(`Nilvera API error: ${nilveraResponse.status} - ${errorText}`);
       }
 
