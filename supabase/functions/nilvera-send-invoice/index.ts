@@ -349,9 +349,9 @@ serve(async (req) => {
                   updated_at: new Date().toISOString()
                 });
             } else {
-              console.log('⚠️ Customer is e-fatura mükellefi but has no alias - treating as e-archive');
-              // If customer is e-fatura mükellefi but has no alias, treat as e-archive
-              console.log('ℹ️ Customer will be treated as e-archive (no CustomerAlias)');
+              console.log('⚠️ Customer is e-fatura mükellefi but has no alias');
+              // E-fatura mükellefi olan müşteriler için alias zorunlu
+              throw new Error(`Müşteri ${salesInvoice.customers?.name} (VKN: ${salesInvoice.customers?.tax_number}) e-fatura mükellefi ancak alias bilgisi bulunamadı. Lütfen müşteri bilgilerini kontrol edin.`);
             }
           } else {
             console.log('ℹ️ Customer not found in e-fatura mükellefi list - treating as paper invoice');
