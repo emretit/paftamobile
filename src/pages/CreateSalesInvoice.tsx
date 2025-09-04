@@ -48,7 +48,6 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
   
   const [formData, setFormData] = useState({
     customer_id: "",
-    fatura_no: "", // Boş bırakılacak, E-fatura gönderilirken otomatik atanacak
     fatura_tarihi: new Date(),
     vade_tarihi: null as Date | null,
     aciklama: "",
@@ -262,7 +261,7 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
       const invoiceData = {
         order_id: orderId || null,
         customer_id: formData.customer_id,
-        fatura_no: null, // NULL olarak kaydedilecek, E-fatura gönderilirken otomatik atanacak
+        fatura_no: null, // E-fatura gönderilirken Nilvera otomatik atayacak
         fatura_tarihi: format(formData.fatura_tarihi, "yyyy-MM-dd"),
         vade_tarihi: formData.vade_tarihi ? format(formData.vade_tarihi, "yyyy-MM-dd") : null,
         aciklama: formData.aciklama,
@@ -464,8 +463,11 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
                     <p className="text-xs text-gray-500 mt-1">
                       {assignedInvoiceNumber 
                         ? `Fatura numarası: ${assignedInvoiceNumber}` 
-                        : "E-fatura gönderilirken Nilvera tarafından otomatik atanacak"
+                        : "E-fatura gönderilirken Nilvera tarafından otomatik atanacak (Seri: FAT)"
                       }
+                    </p>
+                    <p className="text-xs text-amber-600 mt-1">
+                      ⚠️ Nilvera portalında "FAT" serisinin tanımlı olduğundan emin olun
                     </p>
                   </div>
 

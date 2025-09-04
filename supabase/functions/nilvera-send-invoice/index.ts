@@ -160,10 +160,9 @@ serve(async (req) => {
     }
 
     // ---- InvoiceSerieOrNumber ----
-    // Eğer kendi seri/numara sistemini yönetmiyorsan, bu alanı *boş bırak* ve Nilvera'nın atamasına izin ver.
-    const invoiceSerieOrNumber = invoice.fatura_no && /^[A-Z0-9\-]+$/.test(invoice.fatura_no)
-      ? invoice.fatura_no
-      : undefined;
+    // Nilvera kurallarına göre: 16 haneli tam numara VEYA 3 harfli seri
+    // Biz 3 harfli seri kullanacağız, Nilvera kendi numaralandırmasını yapacak
+    const invoiceSerieOrNumber = 'FAT'; // 3 harfli seri - Nilvera otomatik numara üretecek
 
     // ---- Build Nilvera EInvoice model ----
     const toNumber = (v: any, def = 0) => (v == null || v === "" ? def : Number(v));
