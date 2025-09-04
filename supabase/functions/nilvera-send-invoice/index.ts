@@ -142,29 +142,29 @@ serve(async (req) => {
       }
 
       // Derive valid InvoiceSerieOrNumber per Nilvera docs
+      // Format should be: ASD2025000000013 (3 letters + year + 8 digits)
       const invoiceSerieOrNumber = (() => {
         const raw = (salesInvoice.fatura_no || '').toString();
         console.log('🔍 Raw fatura_no:', raw);
         
         // Extract series from fatura_no (e.g., "SF-TEST-001" -> "SF")
         const seriesMatch = raw.match(/^([A-Z]{2,3})/);
+        let series = 'ASD'; // Default series
+        
         if (seriesMatch) {
-          const series = seriesMatch[1];
+          series = seriesMatch[1];
           console.log('🔍 Extracted series:', series);
-          return series;
+        } else {
+          console.log('🔍 Using default series:', series);
         }
         
-        // Fallback: try to extract from cleaned string
-        const cleaned = raw.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-        const letters = cleaned.replace(/[^A-Z]/g, '');
-        if (letters.length >= 2) {
-          console.log('🔍 Fallback series from letters:', letters.slice(0, 3));
-          return letters.slice(0, 3);
-        }
+        // Generate Nilvera format: SERIES + YEAR + 8 digits
+        const currentYear = new Date().getFullYear();
+        const randomDigits = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+        const nilveraFormat = `${series}${currentYear}${randomDigits}`;
         
-        // Final fallback - use a common series that should be defined
-        console.log('🔍 Using final fallback series: EFT');
-        return 'EFT';
+        console.log('🔍 Generated Nilvera format:', nilveraFormat);
+        return nilveraFormat;
       })();
 
       // Create standard Nilvera invoice model
