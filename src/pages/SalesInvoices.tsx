@@ -36,6 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { useNilveraPdf } from "@/hooks/useNilveraPdf";
 
 interface SalesInvoicesProps {
   isCollapsed: boolean;
@@ -51,6 +52,7 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
     setFilters,
   } = useSalesInvoices();
   const { sendInvoice } = useEInvoice();
+  const { downloadAndOpenPdf, isDownloading } = useNilveraPdf();
   
   const [dateOpen, setDateOpen] = useState(false);
 
@@ -98,8 +100,11 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
     }
   };
 
+  // All invoices (only sales invoices now)
+  const allInvoices = (invoices || []).map(inv => ({ ...inv, sourceType: 'sales' }));
+
   // Analytics calculation
-  const totalInvoices = invoices?.length || 0;
+  const totalInvoices = allInvoices?.length || 0;
   const totalPaid = invoices?.filter(i => i.odeme_durumu === 'odendi').length || 0;
   const totalUnpaid = invoices?.filter(i => i.odeme_durumu === 'odenmedi').length || 0;
   const totalOverdue = invoices?.filter(i => i.odeme_durumu === 'gecikti').length || 0;
@@ -185,12 +190,12 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
             <CardContent className="p-6">
               <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
-                  <h2 className="text-lg font-semibold">Kesilmiş Faturalar</h2>
-                  <Button variant="outline" size="sm">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Dışa Aktar
-                  </Button>
-                </div>
+                  <h2 className="text-lg font-semibold">Satış Faturaları</h2>
+                      <Button variant="outline" size="sm">
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Dışa Aktar
+                      </Button>
+                    </div>
                 <div className="flex gap-2">
                   <Select
                     value={filters.status}
@@ -237,7 +242,7 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                     </div>
                   ))}
                 </div>
-              ) : invoices && invoices.length > 0 ? (
+              ) : allInvoices && allInvoices.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-gray-50 border-b">
@@ -253,10 +258,12 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {invoices.map((invoice, index) => (
+                      {allInvoices.map((invoice, index) => (
                         <tr key={invoice.id} className="border-b hover:bg-gray-50 transition-colors">
                           <td className="p-4">
-                            <span className="font-medium text-blue-600">{invoice.fatura_no}</span>
+                            <span className="font-medium text-blue-600">
+                              {invoice.fatura_no}
+                            </span>
                           </td>
                           <td className="p-4">
                             <div>
@@ -303,10 +310,23 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                                   <Eye className="h-4 w-4 mr-2" />
                                   Görüntüle
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Download className="h-4 w-4 mr-2" />
-                                  PDF İndir
-                                </DropdownMenuItem>
+                                {(invoice.document_type === 'e_fatura' || invoice.document_type === 'e_arsiv') ? (
+                                  <DropdownMenuItem 
+                                    onClick={() => {
+                                      const invoiceType = invoice.document_type === 'e_fatura' ? 'e-fatura' : 'e-arşiv';
+                                      downloadAndOpenPdf(invoice.nilvera_invoice_id || invoice.id, invoiceType);
+                                    }}
+                                    disabled={isDownloading || !invoice.nilvera_invoice_id}
+                                  >
+                                    <Download className="h-4 w-4 mr-2" />
+                                    PDF Yazdır
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem>
+                                    <Download className="h-4 w-4 mr-2" />
+                                    PDF İndir
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem>
                                   <FileText className="h-4 w-4 mr-2" />
                                   Düzenle

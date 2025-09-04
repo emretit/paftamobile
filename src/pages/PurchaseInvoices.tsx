@@ -18,6 +18,7 @@ import {
 import { usePurchaseInvoices } from '@/hooks/usePurchaseInvoices';
 import { useIncomingInvoices } from '@/hooks/useIncomingInvoices';
 import { useEarchiveInvoices } from '@/hooks/useEarchiveInvoices';
+import { useNilveraPdf } from '@/hooks/useNilveraPdf';
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
@@ -43,6 +44,7 @@ const PurchaseInvoices = ({ isCollapsed, setIsCollapsed }: PurchaseInvoicesProps
   
   const { incomingInvoices, isLoading: isLoadingIncoming, refetch: refetchIncoming } = useIncomingInvoices();
   const { earchiveInvoices, isLoading: isLoadingEarchive, refetch: refetchEarchive } = useEarchiveInvoices();
+  const { downloadAndOpenPdf, isDownloading } = useNilveraPdf();
   
   const [dateOpen, setDateOpen] = useState(false);
 
@@ -332,9 +334,22 @@ const PurchaseInvoices = ({ isCollapsed, setIsCollapsed }: PurchaseInvoicesProps
                              )}
                            </td>
                            <td className="p-4 text-center">
-                             <Button variant="outline" size="sm">
-                               <Eye className="h-4 w-4" />
-                             </Button>
+                             <div className="flex gap-2 justify-center">
+                               <Button variant="outline" size="sm">
+                                 <Eye className="h-4 w-4" />
+                               </Button>
+                               {(invoice.sourceType === 'earchive_received') && (
+                                 <Button 
+                                   variant="outline" 
+                                   size="sm"
+                                   onClick={() => downloadAndOpenPdf(invoice.id, 'e-arşiv')}
+                                   disabled={isDownloading}
+                                   className="text-blue-600 hover:text-blue-700"
+                                 >
+                                   <Download className="h-4 w-4" />
+                                 </Button>
+                               )}
+                             </div>
                            </td>
                          </tr>
                        ))}

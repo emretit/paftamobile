@@ -35,9 +35,8 @@ export const useIncomingInvoices = (dateFilters?: { startDate?: string; endDate?
       
       console.log('📅 Frontend sending date filters:', { startDate, endDate, fromProps: !!dateFilters });
       
-      const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
+      const { data, error } = await supabase.functions.invoke('nilvera-incoming-invoices', {
         body: { 
-          action: 'fetch_incoming',
           filters: {
             startDate,
             endDate

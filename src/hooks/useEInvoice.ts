@@ -26,9 +26,8 @@ export const useEInvoice = () => {
   // Direkt fatura gönderme
   const sendInvoiceMutation = useMutation({
     mutationFn: async (salesInvoiceId: string) => {
-      const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
+      const { data, error } = await supabase.functions.invoke('nilvera-send-invoice', {
         body: { 
-          action: 'send_invoice',
           salesInvoiceId 
         }
       });
@@ -53,9 +52,8 @@ export const useEInvoice = () => {
   // Manuel durum kontrolü
   const checkStatusMutation = useMutation({
     mutationFn: async (salesInvoiceId: string) => {
-      const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
+      const { data, error } = await supabase.functions.invoke('nilvera-check-status', {
         body: { 
-          action: 'check_status',
           salesInvoiceId 
         }
       });

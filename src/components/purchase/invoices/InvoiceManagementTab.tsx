@@ -141,8 +141,8 @@ export default function InvoiceManagementTab() {
     try {
       console.log('🔄 Fatura listesi yükleniyor... (fetch_incoming)');
       
-      const { data, error } = await supabase.functions.invoke('nilvera-invoices', {
-        body: { action: 'fetch_incoming' }
+      const { data, error } = await supabase.functions.invoke('nilvera-incoming-invoices', {
+        body: { }
       });
 
       console.log('📥 Lista API Response:', data);
