@@ -280,6 +280,12 @@ serve(async (req) => {
         console.log('ℹ️ Customer is not e-fatura mükellefi, CustomerAlias will not be included');
       }
 
+      // For e-fatura mükellefi customers, CustomerAlias is REQUIRED
+      if (salesInvoice.customers?.is_einvoice_mukellef && !nilveraInvoiceData.CustomerAlias) {
+        console.log('⚠️ E-fatura mükellefi customer but no CustomerAlias found, this will cause API error');
+        throw new Error(`Müşteri ${salesInvoice.customers?.name} (VKN: ${salesInvoice.customers?.tax_number}) e-fatura mükellefi ancak CustomerAlias bilgisi bulunamadı. Lütfen müşteri bilgilerini kontrol edin.`);
+      }
+
       // Final check: only set CustomerAlias if it's valid
       if (nilveraInvoiceData.CustomerAlias && nilveraInvoiceData.CustomerAlias.includes('undefined')) {
         console.log('⚠️ Invalid CustomerAlias detected, removing it');
