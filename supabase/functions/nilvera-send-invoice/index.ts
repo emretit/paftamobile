@@ -162,13 +162,10 @@ serve(async (req) => {
           console.log('🔍 Using default series:', series);
         }
         
-        // Generate Nilvera format: SERIES + YEAR + 8 digits
-        const currentYear = new Date().getFullYear();
-        const randomDigits = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
-        const nilveraFormat = `${series}${currentYear}${randomDigits}`;
-        
-        console.log('🔍 Generated Nilvera format:', nilveraFormat);
-        return nilveraFormat;
+        // For Nilvera API, use only the series (3 letters)
+        // Based on API documentation, InvoiceSerieOrNumber should be just the series
+        console.log('🔍 Using series only for InvoiceSerieOrNumber:', series);
+        return series;
       })();
 
       // Create standard Nilvera invoice model
