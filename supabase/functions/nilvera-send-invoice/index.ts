@@ -274,56 +274,8 @@ serve(async (req) => {
           console.log('ℹ️ Alias verification failed, CustomerAlias will not be included');
         }
       } else {
-        // Check if customer is e-fatura mükellefi and get their alias from Nilvera
-        console.log('🔍 Checking customer e-fatura mükellefi status:', salesInvoice.customers?.tax_number);
-        const globalCompanyUrl = nilveraAuth.test_mode 
-          ? 'https://apitest.nilvera.com/general/GlobalCompany'
-          : 'https://api.nilvera.com/general/GlobalCompany';
-
-        try {
-          const globalCompanyResponse = await fetch(`${globalCompanyUrl}?VKN=${salesInvoice.customers?.tax_number}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${nilveraAuth.api_key}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          if (globalCompanyResponse.ok) {
-            const globalCompanyData = await globalCompanyResponse.json();
-            console.log('✅ Customer e-fatura mükellefi found:', globalCompanyData);
-            
-            if (globalCompanyData.AliasName && globalCompanyData.AliasName !== 'undefined' && globalCompanyData.AliasName.trim() !== '') {
-              console.log('📝 Using Nilvera system alias:', globalCompanyData.AliasName);
-              // Use the actual alias from Nilvera system, not customer email
-              nilveraInvoiceData.CustomerAlias = `urn:mail:${globalCompanyData.AliasName}`;
-              nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile = 'TICARIFATURA';
-              console.log('✅ Set InvoiceProfile to TICARIFATURA for e-fatura mükellefi');
-              
-              // Save alias to customer table for future use
-              await supabase
-                .from('customers')
-                .update({
-                  einvoice_alias_name: globalCompanyData.AliasName,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', salesInvoice.customers?.id);
-            } else {
-              console.log('⚠️ Customer is e-fatura mükellefi but has no alias');
-              // E-fatura mükellefi olan müşteriler için alias zorunlu
-              throw new Error(`Müşteri ${salesInvoice.customers?.name} (VKN: ${salesInvoice.customers?.tax_number}) e-fatura mükellefi ancak alias bilgisi bulunamadı. Lütfen müşteri bilgilerini kontrol edin.`);
-            }
-          } else {
-            console.log('ℹ️ Customer not found in e-fatura mükellefi list - treating as paper invoice');
-            // For non-e-fatura customers, CustomerAlias should be omitted from the request
-            // Don't delete CustomerAlias, just don't set it
-            console.log('ℹ️ Customer is not e-fatura mükellefi, CustomerAlias will not be included');
-          }
-        } catch (globalCompanyError) {
-          console.error('❌ GlobalCompany check failed:', globalCompanyError.message);
-          // If we can't check, assume it's a paper invoice customer
-          console.log('ℹ️ GlobalCompany check failed, CustomerAlias will not be included');
-        }
+        // Customer is not e-fatura mükellefi, no need to check alias
+        console.log('ℹ️ Customer is not e-fatura mükellefi, CustomerAlias will not be included');
       }
 
       // Final check: only set CustomerAlias if it's valid
