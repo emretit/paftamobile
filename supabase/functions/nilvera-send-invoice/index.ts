@@ -21,19 +21,10 @@ serve(async (req) => {
   }
 
   try {
-    console.log("🚀 Edge function started");
-    
     // ---- ENV & clients ----
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    
-    console.log("🔧 Environment check:", {
-      hasUrl: !!SUPABASE_URL,
-      hasAnonKey: !!SUPABASE_ANON_KEY,
-      hasServiceKey: !!SUPABASE_SERVICE_ROLE_KEY
-    });
-    
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error("Missing Supabase env vars");
     }
@@ -160,9 +151,10 @@ serve(async (req) => {
     }
 
     // ---- InvoiceSerieOrNumber ----
-    // Nilvera kurallarına göre: 16 haneli tam numara VEYA 3 harfli seri
-    // Biz 3 harfli seri kullanacağız, Nilvera kendi numaralandırmasını yapacak
-    const invoiceSerieOrNumber = 'NGS'; // 3 harfli seri - Nilvera otomatik numara üretecek
+    // Eğer kendi seri/numara sistemini yönetmiyorsan, bu alanı *boş bırak* ve Nilvera'nın atamasına izin ver.
+    const invoiceSerieOrNumber = invoice.fatura_no && /^[A-Z0-9\-]+$/.test(invoice.fatura_no)
+      ? invoice.fatura_no
+      : undefined;
 
     // ---- Build Nilvera EInvoice model ----
     const toNumber = (v: any, def = 0) => (v == null || v === "" ? def : Number(v));
@@ -296,17 +288,10 @@ serve(async (req) => {
     });
 
   } catch (err: any) {
-    // Genel hata - detaylı logging
-    console.error("❌ Edge function error:", err);
-    console.error("❌ Error stack:", err?.stack);
-    console.error("❌ Error name:", err?.name);
-    console.error("❌ Error message:", err?.message);
-    
+    // Genel hata
     return new Response(JSON.stringify({
       success: false,
       error: err?.message ?? "Unexpected error",
-      errorType: err?.name ?? "UnknownError",
-      timestamp: new Date().toISOString()
     }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
