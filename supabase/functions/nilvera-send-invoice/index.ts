@@ -203,14 +203,18 @@ serve(async (req) => {
       };
 
               // CustomerAlias is REQUIRED for e-fatura mükellefi customers
-        // Get alias from customer table
-        let customerAlias = salesInvoice.customers?.einvoice_alias_name;
+        // Only check for alias if customer is e-fatura mükellefi
+        let customerAlias = null;
         
-        // Clean and validate alias from customer table
-        if (customerAlias) {
-          customerAlias = customerAlias.toString().trim();
-          if (customerAlias === 'undefined' || customerAlias === 'null' || customerAlias === '') {
-            customerAlias = null;
+        if (salesInvoice.customers?.is_einvoice_mukellef) {
+          customerAlias = salesInvoice.customers?.einvoice_alias_name;
+          
+          // Clean and validate alias from customer table
+          if (customerAlias) {
+            customerAlias = customerAlias.toString().trim();
+            if (customerAlias === 'undefined' || customerAlias === 'null' || customerAlias === '') {
+              customerAlias = null;
+            }
           }
         }
 
