@@ -73,6 +73,80 @@ serve(async (req) => {
 
     console.log('🏢 Company ID:', profile.company_id);
 
+    // 1. IDEMPOTENCY CONTROL - Check if invoice is already being processed or sent
+    console.log('🔍 Checking for duplicate invoice processing...');
+    const { data: existingTracking, error: trackingError } = await supabase
+      .from('einvoice_status_tracking')
+      .select('*')
+      .eq('sales_invoice_id', salesInvoiceId)
+      .eq('company_id', profile.company_id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    console.log('🔍 Existing tracking data:', { existingTracking, trackingError });
+
+    if (existingTracking) {
+      const status = existingTracking.status;
+      console.log('📊 Current invoice status:', status);
+      
+      // Check if invoice is already in progress or completed
+      if (['sending', 'sent', 'delivered', 'accepted'].includes(status)) {
+        console.log('⚠️ Invoice already processed with status:', status);
+        
+        // Return appropriate response based on status
+        if (status === 'sending') {
+          return new Response(JSON.stringify({
+            success: false,
+            error: 'Fatura şu anda gönderiliyor. Lütfen birkaç dakika bekleyin.',
+            status: 'sending',
+            message: 'Invoice is currently being sent'
+          }), {
+            status: 409, // Conflict
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } else if (['sent', 'delivered', 'accepted'].includes(status)) {
+          return new Response(JSON.stringify({
+            success: true,
+            message: 'Fatura daha önce gönderilmiş',
+            status: status,
+            nilvera_invoice_id: existingTracking.nilvera_invoice_id,
+            sent_at: existingTracking.sent_at
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      } else if (status === 'error') {
+        console.log('🔄 Previous attempt failed, retrying...');
+        // Allow retry for failed invoices
+      }
+    }
+
+    // 2. LOCKING MECHANISM - Mark as 'sending' to prevent duplicate processing
+    console.log('🔒 Setting invoice status to sending (locking)...');
+    const { error: lockError } = await supabase
+      .from('einvoice_status_tracking')
+      .upsert({
+        company_id: profile.company_id,
+        sales_invoice_id: salesInvoiceId,
+        status: 'sending',
+        transfer_state: 0,
+        invoice_state: 0,
+        sent_at: new Date().toISOString(),
+        error_message: null,
+        error_code: null
+      }, {
+        onConflict: 'sales_invoice_id,company_id'
+      });
+
+    if (lockError) {
+      console.error('❌ Failed to set sending status:', lockError);
+      throw new Error('Fatura durumu güncellenemedi');
+    }
+
+    console.log('✅ Invoice locked for processing');
+
     // Get the company's Nilvera authentication data
     const { data: nilveraAuth, error: authError } = await supabase
       .from('nilvera_auth')
@@ -354,7 +428,7 @@ serve(async (req) => {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${nilveraAuth.api_key}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json-patch+json'
         },
         body: JSON.stringify(nilveraInvoiceData)
       });
@@ -371,23 +445,29 @@ serve(async (req) => {
       const nilveraResult = await nilveraResponse.json();
       console.log('✅ Nilvera draft created:', nilveraResult);
 
-      // Save to tracking table
+      // 3. SUCCESS FLOW - Update tracking table with 'sent' status
+      console.log('📝 Updating tracking status to sent...');
       const { error: trackingError } = await supabase
         .from('einvoice_status_tracking')
-        .insert({
-          company_id: profile.company_id,
-          sales_invoice_id: salesInvoiceId,
+        .update({
           nilvera_invoice_id: nilveraResult.id || nilveraResult.uuid,
           nilvera_transfer_id: nilveraResult.transferId,
           status: 'sent',
           transfer_state: nilveraResult.transferState || 0,
           invoice_state: nilveraResult.invoiceState || 0,
           sent_at: new Date().toISOString(),
-          nilvera_response: nilveraResult
-        });
+          nilvera_response: nilveraResult,
+          error_message: null,
+          error_code: null
+        })
+        .eq('sales_invoice_id', salesInvoiceId)
+        .eq('company_id', profile.company_id);
 
       if (trackingError) {
-        console.error('❌ Error saving tracking data:', trackingError);
+        console.error('❌ Error updating tracking data:', trackingError);
+        // Don't throw error here, continue with invoice update
+      } else {
+        console.log('✅ Tracking status updated to sent');
       }
 
       // Update sales invoice status and fatura_no if provided by Nilvera
@@ -424,22 +504,42 @@ serve(async (req) => {
     } catch (error) {
       console.error('❌ Send invoice error:', error);
       
-      // Log error to database
-      await supabase
+      // 4. ERROR FLOW - Update tracking table with 'error' status
+      console.log('📝 Updating tracking status to error...');
+      const { error: errorTrackingError } = await supabase
         .from('einvoice_status_tracking')
-        .insert({
-          company_id: profile.company_id,
-          sales_invoice_id: salesInvoiceId,
+        .update({
           status: 'error',
           error_message: error.message,
-          error_code: 'SEND_ERROR'
-        });
+          error_code: 'SEND_ERROR',
+          nilvera_response: null
+        })
+        .eq('sales_invoice_id', salesInvoiceId)
+        .eq('company_id', profile.company_id);
+
+      if (errorTrackingError) {
+        console.error('❌ Error updating tracking status to error:', errorTrackingError);
+      } else {
+        console.log('✅ Tracking status updated to error');
+      }
+
+      // Determine appropriate HTTP status code
+      let httpStatus = 400;
+      if (error.message.includes('duplicate') || error.message.includes('already exists')) {
+        httpStatus = 409; // Conflict
+      } else if (error.message.includes('unauthorized') || error.message.includes('forbidden')) {
+        httpStatus = 401; // Unauthorized
+      } else if (error.message.includes('not found')) {
+        httpStatus = 404; // Not Found
+      }
 
       return new Response(JSON.stringify({ 
         success: false,
-        error: error.message
+        error: error.message,
+        status: 'error',
+        message: 'E-fatura gönderimi başarısız oldu'
       }), {
-        status: 400,
+        status: httpStatus,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

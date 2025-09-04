@@ -32,20 +32,33 @@ export const useEInvoice = () => {
         }
       });
       
-      if (error) throw error;
-      return data?.success || false;
+      if (error) {
+        // Handle specific error cases
+        if (error.message?.includes('409')) {
+          throw new Error('Bu fatura zaten gönderiliyor veya gönderilmiş. Lütfen birkaç dakika bekleyin.');
+        } else if (error.message?.includes('401')) {
+          throw new Error('Nilvera kimlik doğrulama hatası. Lütfen ayarlarınızı kontrol edin.');
+        } else if (error.message?.includes('404')) {
+          throw new Error('Fatura bulunamadı.');
+        }
+        throw error;
+      }
+      
+      return data;
     },
-    onSuccess: (success, salesInvoiceId) => {
-      if (success) {
+    onSuccess: (data, salesInvoiceId) => {
+      if (data?.success) {
         toast.success("E-fatura başarıyla gönderildi");
         queryClient.invalidateQueries({ queryKey: ["einvoice-status", salesInvoiceId] });
+      } else if (data?.status === 'sending') {
+        toast.info("Fatura şu anda gönderiliyor. Lütfen birkaç dakika bekleyin.");
       } else {
-        toast.error("E-fatura gönderimi başarısız");
+        toast.error(data?.error || "E-fatura gönderimi başarısız");
       }
     },
     onError: (error) => {
       console.error("E-fatura gönderim hatası:", error);
-      toast.error("E-fatura gönderilirken bir hata oluştu");
+      toast.error(error.message || "E-fatura gönderilirken bir hata oluştu");
     },
   });
 

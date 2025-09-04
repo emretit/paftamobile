@@ -370,6 +370,16 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
       return;
     }
 
+    // Check if already sending
+    if (isSending) {
+      toast({
+        title: "Bilgi",
+        description: "E-fatura zaten gönderiliyor, lütfen bekleyin",
+        variant: "default",
+      });
+      return;
+    }
+
     sendInvoice(savedInvoiceId);
     
     // E-fatura gönderildikten sonra fatura numarasını kontrol et
@@ -706,8 +716,8 @@ const CreateSalesInvoice = ({ isCollapsed, setIsCollapsed }: CreateSalesInvoiceP
                   <div className="flex gap-4">
                                    <Button 
                  onClick={handleSendEInvoice}
-                 disabled={isSending}
-                 className="bg-green-600 hover:bg-green-700"
+                 disabled={isSending || !savedInvoiceId}
+                 className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400"
                >
                  <FileText className="h-4 w-4 mr-2" />
                  {isSending ? "Gönderiliyor..." : "E-Fatura Gönder"}
