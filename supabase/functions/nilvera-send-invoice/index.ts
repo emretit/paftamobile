@@ -202,34 +202,17 @@ serve(async (req) => {
         // CustomerAlias will be set below only for e-fatura mükellefi customers
       };
 
-      // CustomerAlias is REQUIRED for e-fatura mükellefi customers
-      // First try to get alias from customer table
-      let customerAlias = salesInvoice.customers?.einvoice_alias_name;
-      
-      // Clean and validate alias from customer table
-      if (customerAlias) {
-        customerAlias = customerAlias.toString().trim();
-        if (customerAlias === 'undefined' || customerAlias === 'null' || customerAlias === '') {
-          customerAlias = null;
-        }
-      }
-      
-      // If not found in customer table, try customer_aliases table
-      if (!customerAlias) {
-        const { data: aliasRow } = await supabase
-          .from('customer_aliases')
-          .select('alias_name')
-          .eq('company_id', profile.company_id)
-          .eq('vkn', salesInvoice.customers?.tax_number)
-          .maybeSingle();
+              // CustomerAlias is REQUIRED for e-fatura mükellefi customers
+        // Get alias from customer table
+        let customerAlias = salesInvoice.customers?.einvoice_alias_name;
         
-        if (aliasRow?.alias_name) {
-          customerAlias = aliasRow.alias_name.toString().trim();
+        // Clean and validate alias from customer table
+        if (customerAlias) {
+          customerAlias = customerAlias.toString().trim();
           if (customerAlias === 'undefined' || customerAlias === 'null' || customerAlias === '') {
             customerAlias = null;
           }
         }
-      }
 
       if (customerAlias && customerAlias !== 'undefined' && customerAlias.trim() !== '') {
         console.log('📝 Found customer alias:', customerAlias);
@@ -267,35 +250,18 @@ serve(async (req) => {
                 console.log('✅ Set InvoiceProfile to TICARIFATURA for e-fatura mükellefi');
               }
               
-              // Update both customer table and customer_aliases table with current alias
-              if (globalCompanyData.AliasName && globalCompanyData.AliasName !== 'undefined' && globalCompanyData.AliasName.trim() !== '') {
-                await supabase
-                  .from('customers')
-                  .update({
-                    einvoice_alias_name: globalCompanyData.AliasName,
-                    updated_at: new Date().toISOString()
-                  })
-                  .eq('id', salesInvoice.customers?.id);
-                  
-                await supabase
-                  .from('customer_aliases')
-                  .upsert({
-                    company_id: profile.company_id,
-                    vkn: salesInvoice.customers?.tax_number,
-                    alias_name: globalCompanyData.AliasName,
-                    company_name: salesInvoice.customers?.name,
-                    updated_at: new Date().toISOString()
-                  });
-              }
+                                  // Update customer table with current alias
+                    if (globalCompanyData.AliasName && globalCompanyData.AliasName !== 'undefined' && globalCompanyData.AliasName.trim() !== '') {
+                      await supabase
+                        .from('customers')
+                        .update({
+                          einvoice_alias_name: globalCompanyData.AliasName,
+                          updated_at: new Date().toISOString()
+                        })
+                        .eq('id', salesInvoice.customers?.id);
+                    }
             }
           } else {
-            console.log('⚠️ Customer not found in Nilvera system, removing from DB');
-            await supabase
-              .from('customer_aliases')
-              .delete()
-              .eq('company_id', profile.company_id)
-              .eq('vkn', salesInvoice.customers?.tax_number);
-            // Don't delete CustomerAlias, just don't set it for non-e-fatura customers
             console.log('ℹ️ Customer is not e-fatura mükellefi, CustomerAlias will not be included');
           }
         } catch (globalCompanyError) {
@@ -330,7 +296,7 @@ serve(async (req) => {
               nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile = 'TICARIFATURA';
               console.log('✅ Set InvoiceProfile to TICARIFATURA for e-fatura mükellefi');
               
-              // Save alias to both customer table and customer_aliases table for future use
+              // Save alias to customer table for future use
               await supabase
                 .from('customers')
                 .update({
@@ -338,16 +304,6 @@ serve(async (req) => {
                   updated_at: new Date().toISOString()
                 })
                 .eq('id', salesInvoice.customers?.id);
-                
-              await supabase
-                .from('customer_aliases')
-                .upsert({
-                  company_id: profile.company_id,
-                  vkn: salesInvoice.customers?.tax_number,
-                  alias_name: globalCompanyData.AliasName,
-                  company_name: salesInvoice.customers?.name,
-                  updated_at: new Date().toISOString()
-                });
             } else {
               console.log('⚠️ Customer is e-fatura mükellefi but has no alias');
               // E-fatura mükellefi olan müşteriler için alias zorunlu
