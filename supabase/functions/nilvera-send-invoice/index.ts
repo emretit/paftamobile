@@ -428,7 +428,7 @@ serve(async (req) => {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${nilveraAuth.api_key}`,
-          'Content-Type': 'application/json-patch+json'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(nilveraInvoiceData)
       });
@@ -559,4 +559,4 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-})sa
+});
