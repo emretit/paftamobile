@@ -1,21 +1,24 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Clock, CheckCircle, XCircle, AlertCircle, RefreshCw } from "lucide-react";
-import { useEInvoiceStatus, getStatusDisplay } from "@/hooks/useEInvoice";
+import { FileText, Clock, CheckCircle, XCircle, AlertCircle, RefreshCw, UserCheck } from "lucide-react";
+import { useEInvoiceStatus, getStatusDisplay, useEInvoice } from "@/hooks/useEInvoice";
 
 interface EInvoiceStatusBadgeProps {
   salesInvoiceId: string;
+  customerTaxNumber?: string;
   onSendClick?: () => void;
   onStatusRefresh?: () => void;
 }
 
 const EInvoiceStatusBadge: React.FC<EInvoiceStatusBadgeProps> = ({
   salesInvoiceId,
+  customerTaxNumber,
   onSendClick,
   onStatusRefresh
 }) => {
   const { status, isLoading, refreshStatus } = useEInvoiceStatus(salesInvoiceId);
+  const { updateCustomerAlias, isUpdatingAlias } = useEInvoice();
 
   const getStatusIcon = (statusValue?: string) => {
     switch (statusValue) {
@@ -127,6 +130,24 @@ const EInvoiceStatusBadge: React.FC<EInvoiceStatusBadgeProps> = ({
           className="h-6 px-2 text-xs"
         >
           {status.status === 'error' ? 'Yeniden Gönder' : 'Gönder'}
+        </Button>
+      )}
+
+      {/* Update Customer Alias button for error cases with CustomerAlias issue */}
+      {status.status === 'error' && status.error_message?.includes('CustomerAlias') && customerTaxNumber && (
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => updateCustomerAlias(customerTaxNumber)}
+          disabled={isUpdatingAlias}
+          className="h-6 px-2 text-xs"
+          title="Müşteri alias bilgilerini Nilvera'dan güncelle"
+        >
+          {isUpdatingAlias ? (
+            <RefreshCw className="h-3 w-3 animate-spin" />
+          ) : (
+            <UserCheck className="h-3 w-3" />
+          )}
         </Button>
       )}
 

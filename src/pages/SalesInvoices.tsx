@@ -293,6 +293,7 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                           <td className="p-4">
                             <EInvoiceStatusBadge 
                               salesInvoiceId={invoice.id}
+                              customerTaxNumber={invoice.customer?.tax_number}
                               onSendClick={() => sendInvoice(invoice.id)}
                             />
                           </td>

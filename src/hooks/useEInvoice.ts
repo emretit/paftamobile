@@ -88,16 +88,45 @@ export const useEInvoice = () => {
     },
   });
 
+  // Mükellef bilgilerini Nilvera'dan güncelleme
+  const updateCustomerAliasMutation = useMutation({
+    mutationFn: async (taxNumber: string) => {
+      const { data, error } = await supabase.functions.invoke('nilvera-company-info', {
+        body: { 
+          action: 'search_mukellef',
+          taxNumber 
+        }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data?.success && data?.isEinvoiceMukellef) {
+        toast.success("Müşteri alias bilgileri güncellendi");
+      } else if (data?.success && !data?.isEinvoiceMukellef) {
+        toast.info("Bu müşteri e-fatura mükellefi değil");
+      } else {
+        toast.error(data?.error || "Müşteri bilgileri güncellenemedi");
+      }
+    },
+    onError: (error) => {
+      console.error("Müşteri alias güncelleme hatası:", error);
+      toast.error("Müşteri bilgileri güncellenirken hata oluştu");
+    },
+  });
 
 
   return {
     // Actions
     sendInvoice: sendInvoiceMutation.mutate,
     checkStatus: checkStatusMutation.mutate,
+    updateCustomerAlias: updateCustomerAliasMutation.mutate,
 
     // States
     isSending: sendInvoiceMutation.isPending,
     isCheckingStatus: checkStatusMutation.isPending,
+    isUpdatingAlias: updateCustomerAliasMutation.isPending,
   };
 };
 
