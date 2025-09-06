@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileText, Clock, CheckCircle, XCircle, AlertCircle, RefreshCw, UserCheck } from "lucide-react";
@@ -9,16 +9,49 @@ interface EInvoiceStatusBadgeProps {
   customerTaxNumber?: string;
   onSendClick?: () => void;
   onStatusRefresh?: () => void;
+  // Optional: Direct invoice data to avoid extra API call
+  invoiceData?: {
+    einvoice_status?: string;
+    nilvera_invoice_id?: string;
+    einvoice_sent_at?: string;
+    einvoice_error_message?: string;
+  };
 }
 
 const EInvoiceStatusBadge: React.FC<EInvoiceStatusBadgeProps> = ({
   salesInvoiceId,
   customerTaxNumber,
   onSendClick,
-  onStatusRefresh
+  onStatusRefresh,
+  invoiceData
 }) => {
   const { status, isLoading, refreshStatus } = useEInvoiceStatus(salesInvoiceId);
   const { updateCustomerAlias, isUpdatingAlias } = useEInvoice();
+
+  // Use direct invoice data if available, otherwise use hook data
+  const displayStatus = invoiceData ? {
+    status: invoiceData.einvoice_status || 'draft',
+    nilvera_invoice_id: invoiceData.nilvera_invoice_id,
+    sent_at: invoiceData.einvoice_sent_at,
+    error_message: invoiceData.einvoice_error_message
+  } : status;
+
+  // Listen for einvoice status updates
+  useEffect(() => {
+    const handleStatusUpdate = (event: CustomEvent) => {
+      const { salesInvoiceId: updatedInvoiceId, status: newStatus } = event.detail;
+      if (updatedInvoiceId === salesInvoiceId) {
+        console.log("🔄 E-fatura durumu güncellendi, yeniden yükleniyor:", newStatus);
+        refreshStatus();
+      }
+    };
+
+    window.addEventListener('einvoice-status-updated', handleStatusUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('einvoice-status-updated', handleStatusUpdate as EventListener);
+    };
+  }, [salesInvoiceId, refreshStatus]);
 
   const getStatusIcon = (statusValue?: string) => {
     switch (statusValue) {
@@ -68,7 +101,7 @@ const EInvoiceStatusBadge: React.FC<EInvoiceStatusBadgeProps> = ({
     );
   }
 
-  if (!status) {
+  if (!displayStatus || !displayStatus.status) {
     return (
       <div className="flex items-center gap-2">
         <Badge variant="outline" className="flex items-center gap-1">
@@ -89,22 +122,22 @@ const EInvoiceStatusBadge: React.FC<EInvoiceStatusBadgeProps> = ({
     );
   }
 
-  const { text, color } = getStatusDisplay(status.status);
+  const { text, color } = getStatusDisplay(displayStatus.status);
 
   return (
     <div className="flex items-center gap-2">
       <Badge 
         variant="outline" 
-        className={`flex items-center gap-1 ${getStatusColor(status.status)}`}
+        className={`flex items-center gap-1 ${getStatusColor(displayStatus.status)}`}
       >
-        {getStatusIcon(status.status)}
+        {getStatusIcon(displayStatus.status)}
         {text}
       </Badge>
       
       {/* Nilvera ID */}
-      {status.nilvera_invoice_id && (
+      {displayStatus.nilvera_invoice_id && (
         <span className="text-xs text-gray-500 font-mono">
-          {status.nilvera_invoice_id.slice(0, 8)}...
+          {displayStatus.nilvera_invoice_id.slice(0, 8)}...
         </span>
       )}
 
@@ -122,19 +155,19 @@ const EInvoiceStatusBadge: React.FC<EInvoiceStatusBadgeProps> = ({
       </Button>
 
       {/* Send button for failed cases */}
-      {(status.status === 'error' || status.status === 'draft') && onSendClick && (
+      {(displayStatus.status === 'error' || displayStatus.status === 'draft') && onSendClick && (
         <Button
           size="sm"
           variant="outline"
           onClick={onSendClick}
           className="h-6 px-2 text-xs"
         >
-          {status.status === 'error' ? 'Yeniden Gönder' : 'Gönder'}
+          {displayStatus.status === 'error' ? 'Yeniden Gönder' : 'Gönder'}
         </Button>
       )}
 
       {/* Update Customer Alias button for error cases with CustomerAlias issue */}
-      {status.status === 'error' && status.error_message?.includes('CustomerAlias') && customerTaxNumber && (
+      {displayStatus.status === 'error' && displayStatus.error_message?.includes('CustomerAlias') && customerTaxNumber && (
         <Button
           size="sm"
           variant="ghost"
@@ -152,7 +185,7 @@ const EInvoiceStatusBadge: React.FC<EInvoiceStatusBadgeProps> = ({
       )}
 
       {/* Error message tooltip */}
-      {status.error_message && (
+      {displayStatus.error_message && (
         <div className="flex items-center">
           <AlertCircle className="h-3 w-3 text-red-500" />
         </div>

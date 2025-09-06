@@ -295,6 +295,12 @@ const SalesInvoices = ({ isCollapsed, setIsCollapsed }: SalesInvoicesProps) => {
                               salesInvoiceId={invoice.id}
                               customerTaxNumber={invoice.customer?.tax_number}
                               onSendClick={() => sendInvoice(invoice.id)}
+                              invoiceData={{
+                                einvoice_status: invoice.einvoice_status,
+                                nilvera_invoice_id: invoice.nilvera_invoice_id,
+                                einvoice_sent_at: invoice.einvoice_sent_at,
+                                einvoice_error_message: invoice.einvoice_error_message
+                              }}
                             />
                           </td>
                           <td className="p-4 text-center">

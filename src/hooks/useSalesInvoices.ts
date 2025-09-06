@@ -29,6 +29,11 @@ export interface SalesInvoice {
   pdf_url?: string;
   xml_data?: any;
   ek_belgeler?: any;
+  // E-fatura kolonları
+  einvoice_status?: 'draft' | 'sending' | 'sent' | 'delivered' | 'accepted' | 'rejected' | 'cancelled' | 'error';
+  nilvera_invoice_id?: string;
+  einvoice_sent_at?: string;
+  einvoice_error_message?: string;
   customer?: {
     name: string;
     tax_number?: string;
@@ -73,7 +78,11 @@ export const useSalesInvoices = () => {
       .from("sales_invoices")
       .select(`
         *,
-        customer:customers(name, tax_number, company)
+        customer:customers(name, tax_number, company),
+        einvoice_status,
+        nilvera_invoice_id,
+        einvoice_sent_at,
+        einvoice_error_message
       `)
       .order("created_at", { ascending: false });
 

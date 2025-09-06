@@ -47,13 +47,24 @@ export const useEInvoice = () => {
       return data;
     },
     onSuccess: (data, salesInvoiceId) => {
+      console.log("🎯 E-fatura gönderim cevabı:", data);
+      console.log("🎯 Data success:", data?.success);
+      console.log("🎯 Data status:", data?.status);
+      console.log("🎯 Data message:", data?.message);
+      
       if (data?.success) {
         toast.success("E-fatura başarıyla gönderildi");
         queryClient.invalidateQueries({ queryKey: ["einvoice-status", salesInvoiceId] });
+        
+        // Force refresh of EInvoiceStatus components
+        // Dispatch a custom event that EInvoiceStatusBadge can listen to
+        window.dispatchEvent(new CustomEvent('einvoice-status-updated', {
+          detail: { salesInvoiceId, status: data.status }
+        }));
       } else if (data?.status === 'sending') {
         toast.info("Fatura şu anda gönderiliyor. Lütfen birkaç dakika bekleyin.");
       } else {
-        toast.error(data?.error || "E-fatura gönderimi başarısız");
+        toast.error(data?.error || data?.message || "E-fatura gönderimi başarısız");
       }
     },
     onError: (error: any) => {
@@ -145,7 +156,7 @@ export const useEInvoice = () => {
   };
 };
 
-// Spesifik fatura durum takibi hook'u
+// Spesifik fatura durum takibi hook'u - Artık sales_invoices tablosundan çekiyor
 export const useEInvoiceStatus = (salesInvoiceId?: string) => {
   const [status, setStatus] = useState<EInvoiceStatusTracking | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -155,18 +166,57 @@ export const useEInvoiceStatus = (salesInvoiceId?: string) => {
     if (!salesInvoiceId) return;
 
     const fetchStatus = async () => {
+      console.log("🔄 E-fatura durumu çekiliyor:", salesInvoiceId);
       setIsLoading(true);
       setError(null);
       
       try {
         const { data, error } = await supabase
-          .from('einvoice_status_tracking')
-          .select('*')
-          .eq('sales_invoice_id', salesInvoiceId)
+          .from('sales_invoices')
+          .select(`
+            id,
+            einvoice_status,
+            nilvera_invoice_id,
+            nilvera_transfer_id,
+            einvoice_transfer_state,
+            einvoice_invoice_state,
+            einvoice_answer_type,
+            einvoice_sent_at,
+            einvoice_delivered_at,
+            einvoice_responded_at,
+            einvoice_error_message,
+            einvoice_error_code,
+            einvoice_nilvera_response,
+            einvoice_xml_content
+          `)
+          .eq('id', salesInvoiceId)
           .maybeSingle();
           
         if (error) throw error;
-        setStatus(data);
+        console.log("🔄 E-fatura durumu çekildi:", data);
+        
+        // Convert sales_invoices data to EInvoiceStatusTracking format
+        if (data) {
+          setStatus({
+            id: data.id,
+            sales_invoice_id: data.id,
+            nilvera_invoice_id: data.nilvera_invoice_id,
+            nilvera_transfer_id: data.nilvera_transfer_id,
+            status: data.einvoice_status || 'draft',
+            transfer_state: data.einvoice_transfer_state || 0,
+            invoice_state: data.einvoice_invoice_state || 0,
+            answer_type: data.einvoice_answer_type || 0,
+            sent_at: data.einvoice_sent_at,
+            delivered_at: data.einvoice_delivered_at,
+            responded_at: data.einvoice_responded_at,
+            error_message: data.einvoice_error_message,
+            error_code: data.einvoice_error_code,
+            nilvera_response: data.einvoice_nilvera_response,
+            xml_content: data.einvoice_xml_content
+          });
+        } else {
+          setStatus(null);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
@@ -184,16 +234,55 @@ export const useEInvoiceStatus = (salesInvoiceId?: string) => {
   const refreshStatus = async () => {
     if (!salesInvoiceId) return;
     
+    console.log("🔄 E-fatura durumu yenileniyor:", salesInvoiceId);
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('einvoice_status_tracking')
-        .select('*')
-        .eq('sales_invoice_id', salesInvoiceId)
+        .from('sales_invoices')
+        .select(`
+          id,
+          einvoice_status,
+          nilvera_invoice_id,
+          nilvera_transfer_id,
+          einvoice_transfer_state,
+          einvoice_invoice_state,
+          einvoice_answer_type,
+          einvoice_sent_at,
+          einvoice_delivered_at,
+          einvoice_responded_at,
+          einvoice_error_message,
+          einvoice_error_code,
+          einvoice_nilvera_response,
+          einvoice_xml_content
+        `)
+        .eq('id', salesInvoiceId)
         .maybeSingle();
         
       if (error) throw error;
-      setStatus(data);
+      console.log("🔄 E-fatura durumu güncellendi:", data);
+      
+      // Convert sales_invoices data to EInvoiceStatusTracking format
+      if (data) {
+        setStatus({
+          id: data.id,
+          sales_invoice_id: data.id,
+          nilvera_invoice_id: data.nilvera_invoice_id,
+          nilvera_transfer_id: data.nilvera_transfer_id,
+          status: data.einvoice_status || 'draft',
+          transfer_state: data.einvoice_transfer_state || 0,
+          invoice_state: data.einvoice_invoice_state || 0,
+          answer_type: data.einvoice_answer_type || 0,
+          sent_at: data.einvoice_sent_at,
+          delivered_at: data.einvoice_delivered_at,
+          responded_at: data.einvoice_responded_at,
+          error_message: data.einvoice_error_message,
+          error_code: data.einvoice_error_code,
+          nilvera_response: data.einvoice_nilvera_response,
+          xml_content: data.einvoice_xml_content
+        });
+      } else {
+        setStatus(null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
