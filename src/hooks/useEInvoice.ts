@@ -56,9 +56,24 @@ export const useEInvoice = () => {
         toast.error(data?.error || "E-fatura gönderimi başarısız");
       }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("E-fatura gönderim hatası:", error);
-      toast.error(error.message || "E-fatura gönderilirken bir hata oluştu");
+      
+      // Edge function'dan gelen detaylı hata mesajını göster
+      let errorMessage = "E-fatura gönderilirken bir hata oluştu";
+      
+      if (error?.message) {
+        // Edge function error mesajını parse et
+        if (error.message.includes("CustomerAlias bilgisi bulunamadı")) {
+          errorMessage = "❌ Müşteri e-fatura mükellefi ancak CustomerAlias bilgisi bulunamadı. Lütfen müşteri bilgilerini kontrol edin.";
+        } else if (error.message.includes("Nilvera API")) {
+          errorMessage = "❌ Nilvera API hatası: " + error.message;
+        } else {
+          errorMessage = "❌ " + error.message;
+        }
+      }
+      
+      toast.error(errorMessage);
     },
   });
 
