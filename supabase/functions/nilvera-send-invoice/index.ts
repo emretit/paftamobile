@@ -472,10 +472,23 @@ serve(async (req) => {
       console.log('📡 Nilvera API response status:', nilveraResponse.status);
 
       if (!nilveraResponse.ok) {
-        const errorText = await nilveraResponse.text();
-        console.error('❌ Nilvera API error:', errorText);
+        const ct = nilveraResponse.headers.get('content-type') || '';
+        let errorBody: any = null;
+        let rawText = '';
+        try {
+          if (ct.includes('application/json')) {
+            errorBody = await nilveraResponse.json();
+          } else {
+            rawText = await nilveraResponse.text();
+          }
+        } catch (_) {
+          try { rawText = await nilveraResponse.text(); } catch { /* ignore */ }
+        }
+        const statusText = (nilveraResponse as any).statusText || '';
+        console.error('❌ Nilvera API error:', { status: nilveraResponse.status, statusText, errorBody, rawText });
         console.error('❌ Request data that caused error:', JSON.stringify(nilveraInvoiceData, null, 2));
-        throw new Error(`Nilvera API error: ${nilveraResponse.status} - ${errorText}`);
+        const detailedMsg = errorBody?.Message || errorBody?.message || rawText || statusText || 'Bilinmeyen Nilvera hatası';
+        throw new Error(`Nilvera API error ${nilveraResponse.status}${statusText ? ' ' + statusText : ''}: ${detailedMsg}`);
       }
 
       const nilveraResult = await nilveraResponse.json();
