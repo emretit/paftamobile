@@ -290,113 +290,149 @@ serve(async (req) => {
         // CustomerAlias will be set below only for e-fatura mükellefi customers
       };
 
-              // CustomerAlias is REQUIRED for e-fatura mükellefi customers
-        // Only check for alias if customer is e-fatura mükellefi
-        let customerAlias = null;
+      // CustomerAlias is REQUIRED for e-fatura mükellefi customers
+      // Determine alias from customers table first
+      let customerAlias: string | null = null;
+      
+      if (salesInvoice.customers?.is_einvoice_mukellef) {
+        customerAlias = salesInvoice.customers?.einvoice_alias_name ?? null;
         
-        if (salesInvoice.customers?.is_einvoice_mukellef) {
-          customerAlias = salesInvoice.customers?.einvoice_alias_name;
-          
-          // Clean and validate alias from customer table
-          if (customerAlias) {
-            customerAlias = customerAlias.toString().trim();
-            if (customerAlias === 'undefined' || customerAlias === 'null' || customerAlias === '') {
-              customerAlias = null;
-            }
+        // Clean and validate alias from customer table
+        if (customerAlias) {
+          customerAlias = customerAlias.toString().trim();
+          if (customerAlias === 'undefined' || customerAlias === 'null' || customerAlias === '') {
+            customerAlias = null;
           }
         }
+      }
 
-      if (customerAlias && customerAlias !== 'undefined' && customerAlias.trim() !== '') {
-        console.log('📝 Found customer alias:', customerAlias);
-        // Verify alias is still valid in Nilvera system before using
-        console.log('🔍 Verifying alias validity in Nilvera system...');
-        const globalCompanyUrl = nilveraAuth.test_mode 
-          ? 'https://apitest.nilvera.com/general/GlobalCompany/GetGlobalCustomerInfo'
-          : 'https://api.nilvera.com/general/GlobalCompany/GetGlobalCustomerInfo';
+      const globalCompanyUrl = nilveraAuth.test_mode 
+        ? 'https://apitest.nilvera.com/general/GlobalCompany/GetGlobalCustomerInfo'
+        : 'https://api.nilvera.com/general/GlobalCompany/GetGlobalCustomerInfo';
 
-        try {
-          const globalCompanyResponse = await fetch(`${globalCompanyUrl}/${salesInvoice.customers?.tax_number}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${nilveraAuth.api_key}`,
-              'Content-Type': 'application/json'
-            }
-          });
+      // If customer is e-fatura mükellefi, ensure we have a valid alias
+      if (salesInvoice.customers?.is_einvoice_mukellef) {
+        if (customerAlias) {
+          console.log('📝 Found customer alias in DB:', customerAlias);
+          // Verify alias is still valid in Nilvera system before using
+          console.log('🔍 Verifying alias validity in Nilvera system...');
 
-          if (globalCompanyResponse.ok) {
-            const globalCompanyData = await globalCompanyResponse.json();
-            console.log('🔍 GlobalCompany API response:', JSON.stringify(globalCompanyData, null, 2));
-            console.log('🔍 GlobalCompany AliasName:', globalCompanyData.AliasName);
-            console.log('🔍 GlobalCompany Aliases:', globalCompanyData.Aliases);
-            
-            // Remove urn:mail: prefix from DB alias for comparison
-            const dbAliasWithoutPrefix = customerAlias?.replace('urn:mail:', '') || '';
-            console.log('🔍 DB alias without prefix:', dbAliasWithoutPrefix);
-            
-            // Check if GlobalCompany API has Aliases array (like GetGlobalCustomerInfo)
-            let nilveraAlias = null;
-            if (globalCompanyData.Aliases && globalCompanyData.Aliases.length > 0) {
-              // Use Aliases array (GetGlobalCustomerInfo format)
-              const einvoiceAlias = globalCompanyData.Aliases.find(alias => 
-                alias.Name && 
-                alias.Name.startsWith('urn:mail:') && 
-                alias.DeletionTime === null
-              );
-              nilveraAlias = einvoiceAlias?.Name || null;
-              console.log('🔍 Using Aliases array, found alias:', nilveraAlias);
-            } else if (globalCompanyData.AliasName) {
-              // Use AliasName field (GlobalCompany format)
-              nilveraAlias = `urn:mail:${globalCompanyData.AliasName}`;
-              console.log('🔍 Using AliasName field, created alias:', nilveraAlias);
-            }
+          try {
+            const globalCompanyResponse = await fetch(`${globalCompanyUrl}/${salesInvoice.customers?.tax_number}`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${nilveraAuth.api_key}`,
+                'Content-Type': 'application/json'
+              }
+            });
 
-            if (nilveraAlias) {
-              // Remove urn:mail: prefix for comparison
-              const nilveraAliasWithoutPrefix = nilveraAlias.replace('urn:mail:', '');
+            if (globalCompanyResponse.ok) {
+              const globalCompanyData = await globalCompanyResponse.json();
+              // Remove urn:mail: prefix from DB alias for comparison
+              const dbAliasWithoutPrefix = customerAlias?.replace('urn:mail:', '') || '';
               
-              if (nilveraAliasWithoutPrefix === dbAliasWithoutPrefix) {
-                console.log('✅ DB alias is still valid in Nilvera system');
+              // Extract alias from Nilvera response
+              let nilveraAlias: string | null = null;
+              if (globalCompanyData.Aliases && globalCompanyData.Aliases.length > 0) {
+                const einvoiceAlias = globalCompanyData.Aliases.find((alias: any) => 
+                  alias.Name && alias.Name.startsWith('urn:mail:') && alias.DeletionTime === null
+                );
+                nilveraAlias = einvoiceAlias?.Name || null;
+              } else if (globalCompanyData.AliasName) {
+                nilveraAlias = `urn:mail:${globalCompanyData.AliasName}`;
+              }
+
+              if (nilveraAlias) {
+                const nilveraAliasWithoutPrefix = nilveraAlias.replace('urn:mail:', '');
+                if (nilveraAliasWithoutPrefix !== dbAliasWithoutPrefix) {
+                  console.log('⚠️ DB alias is outdated, updating to Nilvera alias:', nilveraAlias);
+                  await supabase
+                    .from('customers')
+                    .update({
+                      einvoice_alias_name: nilveraAliasWithoutPrefix,
+                      updated_at: new Date().toISOString()
+                    })
+                    .eq('id', salesInvoice.customers?.id);
+                }
                 nilveraInvoiceData.CustomerAlias = nilveraAlias;
                 nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile = 'TICARIFATURA';
-                console.log('✅ Set InvoiceProfile to TICARIFATURA for e-fatura mükellefi');
               } else {
-                console.log('⚠️ DB alias is outdated, using Nilvera system alias:', nilveraAlias);
-                nilveraInvoiceData.CustomerAlias = nilveraAlias;
+                console.log('❌ No valid alias found in Nilvera response for verification');
+                // Use DB alias as-is if Nilvera lookup failed to return alias
+                nilveraInvoiceData.CustomerAlias = customerAlias.startsWith('urn:mail:') ? customerAlias : `urn:mail:${customerAlias}`;
                 nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile = 'TICARIFATURA';
-                console.log('✅ Set InvoiceProfile to TICARIFATURA for e-fatura mükellefi');
-                
-                // Update customer table with current alias (without urn:mail: prefix)
-                const aliasWithoutPrefix = nilveraAlias.replace('urn:mail:', '');
+              }
+            } else {
+              console.log('⚠️ Nilvera GlobalCompany lookup failed during verification, status:', globalCompanyResponse.status);
+              // Use DB alias as-is when verification not possible
+              nilveraInvoiceData.CustomerAlias = customerAlias.startsWith('urn:mail:') ? customerAlias : `urn:mail:${customerAlias}`;
+              nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile = 'TICARIFATURA';
+            }
+          } catch (globalCompanyError: any) {
+            console.error('❌ Alias verification request failed:', globalCompanyError?.message || globalCompanyError);
+            // Use DB alias as-is when verification throws
+            nilveraInvoiceData.CustomerAlias = customerAlias.startsWith('urn:mail:') ? customerAlias : `urn:mail:${customerAlias}`;
+            nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile = 'TICARIFATURA';
+          }
+        } else {
+          // No alias in DB: try to fetch from Nilvera and save
+          console.log('ℹ️ No CustomerAlias in DB, fetching from Nilvera...');
+          try {
+            const resp = await fetch(`${globalCompanyUrl}/${salesInvoice.customers?.tax_number}`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${nilveraAuth.api_key}`,
+                'Content-Type': 'application/json'
+              }
+            });
+
+            if (resp.ok) {
+              const data = await resp.json();
+              let fetchedAlias: string | null = null;
+              if (data.Aliases && data.Aliases.length > 0) {
+                const einvoiceAlias = data.Aliases.find((alias: any) => 
+                  alias.Name && alias.Name.startsWith('urn:mail:') && alias.DeletionTime === null
+                );
+                fetchedAlias = einvoiceAlias?.Name || null;
+              } else if (data.AliasName) {
+                fetchedAlias = `urn:mail:${data.AliasName}`;
+              }
+
+              if (fetchedAlias) {
+                const savedAlias = fetchedAlias.replace('urn:mail:', '');
                 await supabase
                   .from('customers')
                   .update({
-                    einvoice_alias_name: aliasWithoutPrefix,
+                    einvoice_alias_name: savedAlias,
                     updated_at: new Date().toISOString()
                   })
                   .eq('id', salesInvoice.customers?.id);
+
+                nilveraInvoiceData.CustomerAlias = fetchedAlias;
+                nilveraInvoiceData.EInvoice.InvoiceInfo.InvoiceProfile = 'TICARIFATURA';
+                console.log('✅ CustomerAlias fetched and saved:', fetchedAlias);
+              } else {
+                throw new Error(`Müşteri ${salesInvoice.customers?.name} (VKN: ${salesInvoice.customers?.tax_number}) için Nilvera'da aktif bir CustomerAlias bulunamadı.`);
               }
             } else {
-              console.log('❌ No valid alias found in Nilvera response');
-              throw new Error(`Müşteri ${salesInvoice.customers?.name} (VKN: ${salesInvoice.customers?.tax_number}) e-fatura mükellefi ancak Nilvera sisteminden geçerli bir alias bilgisi alınamadı. Lütfen müşteri bilgilerini kontrol edin.`);
+              throw new Error(`Nilvera GlobalCompany isteği başarısız (HTTP ${resp.status}). Lütfen Nilvera API anahtarını ve müşterinin mükellefiyetini kontrol edin.`);
             }
-          } else {
-            console.log('ℹ️ Customer is not e-fatura mükellefi, CustomerAlias will not be included');
+          } catch (e: any) {
+            console.error('❌ CustomerAlias fetch failed:', e?.message || e);
+            throw new Error(`Müşteri ${salesInvoice.customers?.name} (VKN: ${salesInvoice.customers?.tax_number}) e-fatura mükellefi ancak CustomerAlias bilgisi bulunamadı. ${e?.message ? 'Detay: ' + e.message : ''}`);
           }
-        } catch (globalCompanyError) {
-          console.error('❌ Alias verification failed:', globalCompanyError.message);
-          // If verification fails, don't use the alias - but don't delete it either
-          console.log('ℹ️ Alias verification failed, CustomerAlias will not be included');
         }
       } else {
-        // Customer is not e-fatura mükellefi, no need to check alias
-        console.log('ℹ️ Customer is not e-fatura mükellefi, CustomerAlias will not be included');
+        // Not an e-fatura mükellefi → no alias required
+        console.log('ℹ️ Customer is not e-fatura mükellefi. CustomerAlias not required.');
       }
 
-      // For e-fatura mükellefi customers, CustomerAlias is REQUIRED
+      // Final guard: if still mükellef and no alias, stop
       if (salesInvoice.customers?.is_einvoice_mukellef && !nilveraInvoiceData.CustomerAlias) {
-        console.log('⚠️ E-fatura mükellefi customer but no CustomerAlias found, this will cause API error');
+        console.log('⚠️ E-fatura mükellefi ancak CustomerAlias yok - aborting');
         throw new Error(`Müşteri ${salesInvoice.customers?.name} (VKN: ${salesInvoice.customers?.tax_number}) e-fatura mükellefi ancak CustomerAlias bilgisi bulunamadı. Lütfen müşteri bilgilerini kontrol edin.`);
       }
+
 
       // Final check: only set CustomerAlias if it's valid
       if (nilveraInvoiceData.CustomerAlias && nilveraInvoiceData.CustomerAlias.includes('undefined')) {
