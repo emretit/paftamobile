@@ -162,6 +162,41 @@ serve(async (req) => {
     });
 
     if (authError || !nilveraAuth) {
+      console.error('❌ Nilvera authentication not found:', authError);
+      
+      // Update tracking status to error
+      await supabase
+        .from('einvoice_status_tracking')
+        .update({
+          status: 'error',
+          error_message: 'Nilvera kimlik doğrulama bilgileri bulunamadı. Lütfen Nilvera ayarlarınızı kontrol edin.',
+          error_code: 'AUTH_NOT_FOUND',
+          updated_at: new Date().toISOString()
+        })
+        .eq('sales_invoice_id', salesInvoiceId);
+
+      throw new Error('Nilvera kimlik doğrulama bilgileri bulunamadı. Lütfen Nilvera ayarlarınızı kontrol edin.');
+    }
+
+    // Validate API key format
+    if (!nilveraAuth.api_key || nilveraAuth.api_key.trim() === '') {
+      console.error('❌ Invalid API key format');
+      
+      // Update tracking status to error
+      await supabase
+        .from('einvoice_status_tracking')
+        .update({
+          status: 'error',
+          error_message: 'Geçersiz API anahtarı formatı. Lütfen Nilvera ayarlarınızı kontrol edin.',
+          error_code: 'INVALID_API_KEY',
+          updated_at: new Date().toISOString()
+        })
+        .eq('sales_invoice_id', salesInvoiceId);
+
+      throw new Error('Geçersiz API anahtarı formatı. Lütfen Nilvera ayarlarınızı kontrol edin.');
+    }
+
+    if (authError || !nilveraAuth) {
       console.error('❌ Nilvera auth bulunamadı:', authError);
       throw new Error('Nilvera kimlik doğrulama bilgileri bulunamadı. Lütfen ayarlar sayfasından Nilvera bilgilerinizi girin.');
     }
@@ -488,7 +523,23 @@ serve(async (req) => {
         console.error('❌ Nilvera API error:', { status: nilveraResponse.status, statusText, errorBody, rawText });
         console.error('❌ Request data that caused error:', JSON.stringify(nilveraInvoiceData, null, 2));
         const detailedMsg = errorBody?.Message || errorBody?.message || rawText || statusText || 'Bilinmeyen Nilvera hatası';
-        throw new Error(`Nilvera API error ${nilveraResponse.status}${statusText ? ' ' + statusText : ''}: ${detailedMsg}`);
+        
+        // Update tracking with specific error details
+        const errorMessage = nilveraResponse.status === 401 
+          ? 'Nilvera API anahtarı geçersiz veya süresi dolmuş. Lütfen Nilvera ayarlarınızı kontrol edin ve API anahtarınızı yenileyin.'
+          : `Nilvera API hatası: ${detailedMsg}`;
+          
+        await supabase
+          .from('einvoice_status_tracking')
+          .update({
+            status: 'error',
+            error_message: errorMessage,
+            error_code: nilveraResponse.status === 401 ? 'INVALID_API_KEY' : 'SEND_ERROR',
+            updated_at: new Date().toISOString()
+          })
+          .eq('sales_invoice_id', salesInvoiceId);
+        
+        throw new Error(errorMessage);
       }
 
       const nilveraResult = await nilveraResponse.json();
