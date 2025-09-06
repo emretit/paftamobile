@@ -178,7 +178,7 @@ serve(async (req) => {
         .select(`
           *,
           sales_invoice_items(*),
-          customers(*),
+          customers(*, einvoice_alias_name),
           companies!sales_invoices_company_id_fkey(*)
         `)
         .eq('id', salesInvoiceId)
