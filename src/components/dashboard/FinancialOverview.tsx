@@ -1,313 +1,174 @@
-import { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { 
+  BarChart3, 
   TrendingUp, 
-  TrendingDown, 
   DollarSign, 
-  PieChart, 
-  Calculator,
-  Download,
-  Target,
-  Activity
+  CreditCard,
+  PieChart,
+  Calculator
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Cell, Pie } from 'recharts';
-import { useOpexMatrix } from "@/hooks/useOpexMatrix";
-import { useInvoiceAnalysis } from "@/hooks/useInvoiceAnalysis";
 
-const FinancialOverview = () => {
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const { data: opexData } = useOpexMatrix();
-  const { data: invoiceData } = useInvoiceAnalysis(selectedYear);
+interface FinancialMetricProps {
+  title: string;
+  amount: string;
+  percentage: number;
+  trend: "up" | "down" | "stable";
+  color: string;
+}
 
-  const MONTHS = [
-    'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+const FinancialMetric: React.FC<FinancialMetricProps> = ({
+  title,
+  amount,
+  percentage,
+  trend,
+  color
+}) => {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-gray-600">{title}</span>
+        <Badge 
+          variant={trend === "up" ? "default" : trend === "down" ? "destructive" : "secondary"}
+          className="text-xs"
+        >
+          {trend === "up" ? "↗" : trend === "down" ? "↘" : "→"} {percentage}%
+        </Badge>
+      </div>
+      <div className="text-xl font-bold text-gray-900">{amount}</div>
+      <Progress value={percentage} className={`h-2 ${color}`} />
+    </div>
+  );
+};
+
+export const FinancialOverview: React.FC = () => {
+  const financialData = [
+    {
+      title: "Aylık Gelir",
+      amount: "₺ 2,847,250",
+      percentage: 85,
+      trend: "up" as const,
+      color: "bg-green-500"
+    },
+    {
+      title: "Aylık Gider",
+      amount: "₺ 1,923,180",
+      percentage: 65,
+      trend: "down" as const,
+      color: "bg-red-500"
+    },
+    {
+      title: "Net Kâr",
+      amount: "₺ 924,070",
+      percentage: 75,
+      trend: "up" as const,
+      color: "bg-blue-500"
+    },
+    {
+      title: "Nakit Akışı",
+      amount: "₺ 1,456,320",
+      percentage: 90,
+      trend: "stable" as const,
+      color: "bg-purple-500"
+    }
   ];
 
-  const COLORS = {
-    primary: '#3B82F6',
-    success: '#10B981',
-    warning: '#F59E0B',
-    danger: '#EF4444',
-    info: '#6366F1',
-    secondary: '#8B5CF6'
-  };
+  const budgetComparison = [
+    { category: "Satış", budget: 3000000, actual: 2847250, variance: -5.1 },
+    { category: "Pazarlama", budget: 450000, actual: 523000, variance: 16.2 },
+    { category: "Operasyon", budget: 1800000, actual: 1654000, variance: -8.1 },
+    { category: "İK", budget: 650000, actual: 598000, variance: -8.0 }
+  ];
 
-  const PIE_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#6366F1', '#8B5CF6'];
-
-  // Calculate monthly financial data
-  const getMonthlyData = () => {
-    return MONTHS.map((month, index) => {
-      const monthNum = index + 1;
-      
-      // Get invoice data for this month
-      const invoiceMonth = invoiceData.find(d => d.month === monthNum);
-      
-      // Calculate OPEX for this month
-      const monthlyOpex = opexData
-        .filter(item => item.month === monthNum && item.year === selectedYear)
-        .reduce((sum, item) => sum + item.amount, 0);
-
-      const revenue = invoiceMonth?.sales_invoice || 0;
-      const purchases = invoiceMonth?.purchase_invoice || 0;
-      const grossProfit = revenue - purchases;
-      const netProfit = grossProfit - monthlyOpex;
-      const profitMargin = revenue > 0 ? ((netProfit / revenue) * 100) : 0;
-
-      return {
-        month,
-        revenue,
-        purchases,
-        grossProfit,
-        opex: monthlyOpex,
-        netProfit,
-        profitMargin,
-        vatDifference: invoiceMonth?.vat_difference || 0
-      };
-    });
-  };
-
-  const monthlyData = getMonthlyData();
-
-  // Calculate summary metrics
-  const totalRevenue = monthlyData.reduce((sum, item) => sum + item.revenue, 0);
-  const totalPurchases = monthlyData.reduce((sum, item) => sum + item.purchases, 0);
-  const totalOpex = monthlyData.reduce((sum, item) => sum + item.opex, 0);
-  const totalGrossProfit = totalRevenue - totalPurchases;
-  const totalNetProfit = totalGrossProfit - totalOpex;
-  const overallMargin = totalRevenue > 0 ? ((totalNetProfit / totalRevenue) * 100) : 0;
-
-  // OPEX breakdown data
-  const opexBreakdown = opexData
-    .filter(item => item.year === selectedYear)
-    .reduce((acc, item) => {
-      if (!acc[item.category]) {
-        acc[item.category] = 0;
-      }
-      acc[item.category] += item.amount;
-      return acc;
-    }, {} as Record<string, number>);
-
-  const opexPieData = Object.entries(opexBreakdown).map(([name, value]) => ({
-    name,
-    value
-  }));
-
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
-
-  // Format percentage
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`;
-  };
+  const cashflowData = [
+    { month: "Oca", income: 2100000, expense: 1800000 },
+    { month: "Şub", income: 2350000, expense: 1900000 },
+    { month: "Mar", income: 2600000, expense: 1950000 },
+    { month: "Nis", income: 2847250, expense: 1923180 }
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <PieChart className="h-6 w-6" />
-            Finansal Genel Bakış
-          </h2>
-          <p className="text-gray-600">Kapsamlı finansal analiz ve performans özeti</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
-                <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Rapor İndir
-          </Button>
-        </div>
-      </div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Financial Metrics */}
+      <Card className="lg:col-span-1">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-blue-600" />
+            Mali Durum
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {financialData.map((metric, index) => (
+            <FinancialMetric key={index} {...metric} />
+          ))}
+        </CardContent>
+      </Card>
 
-      {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-600">Toplam Ciro</p>
-                <p className="text-2xl font-bold text-blue-900">{formatCurrency(totalRevenue)}</p>
-                <p className="text-xs text-blue-600 mt-1">Bu yıl</p>
-              </div>
-              <div className="h-12 w-12 bg-blue-200 rounded-full flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-green-600">Brüt Kar</p>
-                <p className="text-2xl font-bold text-green-900">{formatCurrency(totalGrossProfit)}</p>
-                <p className="text-xs text-green-600 mt-1">
-                  {formatPercentage((totalGrossProfit / totalRevenue) * 100)}
-                </p>
-              </div>
-              <div className="h-12 w-12 bg-green-200 rounded-full flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-purple-600">Net Kar</p>
-                <p className="text-2xl font-bold text-purple-900">{formatCurrency(totalNetProfit)}</p>
-                <p className="text-xs text-purple-600 mt-1">
-                  {formatPercentage(overallMargin)}
-                </p>
-              </div>
-              <div className="h-12 w-12 bg-purple-200 rounded-full flex items-center justify-center">
-                <Target className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-orange-600">Toplam OPEX</p>
-                <p className="text-2xl font-bold text-orange-900">{formatCurrency(totalOpex)}</p>
-                <p className="text-xs text-orange-600 mt-1">
-                  {formatPercentage((totalOpex / totalRevenue) * 100)}
-                </p>
-              </div>
-              <div className="h-12 w-12 bg-orange-200 rounded-full flex items-center justify-center">
-                <Calculator className="h-6 w-6 text-orange-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Aylık Karlılık</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                  <Bar dataKey="grossProfit" fill={COLORS.success} name="Brüt Kar" />
-                  <Bar dataKey="netProfit" fill={COLORS.primary} name="Net Kar" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Finansal Özet</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-sm font-medium">Toplam Ciro</span>
-                  <span className="font-bold">{formatCurrency(totalRevenue)}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-sm font-medium">Toplam Alışlar</span>
-                  <span className="font-bold text-red-600">{formatCurrency(totalPurchases)}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-sm font-medium">Brüt Kar</span>
-                  <span className="font-bold text-green-600">{formatCurrency(totalGrossProfit)}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-sm font-medium">Toplam OPEX</span>
-                  <span className="font-bold text-orange-600">{formatCurrency(totalOpex)}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-sm font-medium">Net Kar</span>
-                  <span className="font-bold text-purple-600">{formatCurrency(totalNetProfit)}</span>
-                </div>
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm font-medium">Kar Marjı</span>
-                  <Badge variant={overallMargin > 0 ? "default" : "destructive"}>
-                    {formatPercentage(overallMargin)}
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Detailed Monthly Table */}
+      {/* Budget vs Actual */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Detaylı Aylık Analiz</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Calculator className="h-5 w-5 text-green-600" />
+            Bütçe vs Gerçekleşen
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="border p-3 text-left font-medium">Ay</th>
-                  <th className="border p-3 text-right font-medium">Ciro</th>
-                  <th className="border p-3 text-right font-medium">Alışlar</th>
-                  <th className="border p-3 text-right font-medium">Brüt Kar</th>
-                  <th className="border p-3 text-right font-medium">OPEX</th>
-                  <th className="border p-3 text-right font-medium">Net Kar</th>
-                  <th className="border p-3 text-right font-medium">Kar Marjı</th>
-                </tr>
-              </thead>
-              <tbody>
-                {monthlyData.map((row, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="border p-3 font-medium">{row.month}</td>
-                    <td className="border p-3 text-right">{formatCurrency(row.revenue)}</td>
-                    <td className="border p-3 text-right text-red-600">{formatCurrency(row.purchases)}</td>
-                    <td className="border p-3 text-right text-green-600">{formatCurrency(row.grossProfit)}</td>
-                    <td className="border p-3 text-right text-orange-600">{formatCurrency(row.opex)}</td>
-                    <td className="border p-3 text-right">
-                      <Badge variant={row.netProfit > 0 ? "default" : "destructive"}>
-                        {formatCurrency(row.netProfit)}
-                      </Badge>
-                    </td>
-                    <td className="border p-3 text-right">
-                      <Badge variant={row.profitMargin > 0 ? "default" : "destructive"}>
-                        {formatPercentage(row.profitMargin)}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-4">
+            {budgetComparison.map((item, index) => (
+              <div key={index} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{item.category}</span>
+                  <Badge 
+                    variant={item.variance > 0 ? "destructive" : "default"}
+                    className="text-xs"
+                  >
+                    {item.variance > 0 ? "+" : ""}{item.variance.toFixed(1)}%
+                  </Badge>
+                </div>
+                <div className="text-xs text-gray-600">
+                  Bütçe: ₺ {item.budget.toLocaleString()} / 
+                  Gerçekleşen: ₺ {item.actual.toLocaleString()}
+                </div>
+                <Progress 
+                  value={(item.actual / item.budget) * 100} 
+                  className="h-2"
+                />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Cash Flow Trend */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-purple-600" />
+            Nakit Akış Trendi
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {cashflowData.map((data, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <div className="font-medium">{data.month}</div>
+                  <div className="text-xs text-gray-600">
+                    Net: ₺ {(data.income - data.expense).toLocaleString()}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-green-600">
+                    +₺ {data.income.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-red-600">
+                    -₺ {data.expense.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
