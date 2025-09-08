@@ -131,7 +131,7 @@ export const ServiceRequestCalendar: React.FC<ServiceRequestCalendarProps> = ({
   }
 
   return (
-    <div className="modern-calendar p-6">
+    <div className="bg-white rounded-md border p-4 min-h-[600px] shadow-sm modern-calendar">
       <Calendar
         localizer={localizer}
         events={calendarEvents}
