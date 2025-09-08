@@ -1,21 +1,13 @@
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import TopBar from "@/components/TopBar";
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { ServiceRequestForm } from "@/components/service/ServiceRequestForm";
 import { useServiceRequests, ServiceRequest } from "@/hooks/useServiceRequests";
 import { ServiceRequestDetail } from "@/components/service/ServiceRequestDetail";
-import { ViewType } from "@/components/service/view/ServiceViewToggle";
-import { ServicePageHeader } from "@/components/service/header/ServicePageHeader";
-import { ServiceSummaryStats } from "@/components/service/stats/ServiceSummaryStats";
-import { ServiceFilters } from "@/components/service/filters/ServiceFilters";
-import { ServiceContentView } from "@/components/service/view/ServiceContentView";
+import { DispatcherGanttConsole } from "@/components/service/dispatcher/DispatcherGanttConsole";
+import { Button } from "@/components/ui/button";
+import { Plus, CalendarDays } from "lucide-react";
 
 interface ServicePageProps {
   isCollapsed: boolean;
@@ -23,15 +15,9 @@ interface ServicePageProps {
 }
 
 const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [activeView, setActiveView] = useState<ViewType>("table");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [technicianFilter, setTechnicianFilter] = useState<string>("all");
+  const navigate = useNavigate();
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  
-  const { data: serviceRequests } = useServiceRequests();
 
   const handleSelectRequest = (request: ServiceRequest) => {
     setSelectedRequest(request);
@@ -45,44 +31,26 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
         <TopBar />
         <div className="max-w-[1800px] mx-auto section-padding">
           <div className="space-y-6 animate-fade-in">
-            <ServicePageHeader 
-              activeView={activeView}
-              setActiveView={setActiveView}
-              onCreateRequest={() => setIsCreateModalOpen(true)}
-            />
-
-            <ServiceSummaryStats serviceRequests={serviceRequests} />
-
-            <div className="bg-card border rounded-lg p-6 shadow-sm">
-              <ServiceFilters 
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                statusFilter={statusFilter}
-                setStatusFilter={setStatusFilter}
-                technicianFilter={technicianFilter}
-                setTechnicianFilter={setTechnicianFilter}
-              />
+            {/* Basit Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CalendarDays className="h-8 w-8 text-blue-600" />
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Servis Yönetimi</h1>
+                  <p className="text-gray-600">Gantt Console ile servis taleplerini yönetin</p>
+                </div>
+              </div>
+              <Button onClick={() => navigate('/service/new')} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Yeni Servis Talebi
+              </Button>
             </div>
 
-            <div className="bg-card border rounded-lg shadow-sm overflow-hidden">
-              <ServiceContentView 
-                activeView={activeView}
-                searchQuery={searchQuery}
-                statusFilter={statusFilter}
-                technicianFilter={technicianFilter}
-                onSelectRequest={handleSelectRequest}
-              />
+            {/* Gantt Console - Full Width */}
+            <div className="h-[calc(100vh-200px)]">
+              <DispatcherGanttConsole onSelectRequest={handleSelectRequest} />
             </div>
           </div>
-          
-          <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Yeni Servis Talebi Oluştur</DialogTitle>
-              </DialogHeader>
-              <ServiceRequestForm onClose={() => setIsCreateModalOpen(false)} />
-            </DialogContent>
-          </Dialog>
 
           <ServiceRequestDetail 
             serviceRequest={selectedRequest}

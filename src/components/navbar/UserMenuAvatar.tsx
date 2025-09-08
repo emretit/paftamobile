@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -8,7 +9,7 @@ interface UserMenuAvatarProps {
   userInitials: string;
 }
 
-const UserMenuAvatar = ({ user, loading, userInitials }: UserMenuAvatarProps) => {
+const UserMenuAvatar = React.forwardRef<HTMLButtonElement, UserMenuAvatarProps>(({ user, loading, userInitials }, ref) => {
   if (loading) {
     return <Button variant="ghost" size="sm" disabled>Yükleniyor...</Button>;
   }
@@ -18,12 +19,15 @@ const UserMenuAvatar = ({ user, loading, userInitials }: UserMenuAvatarProps) =>
   }
 
   return (
-    <Button variant="ghost" className="relative rounded-full h-8 w-8 p-0">
+    <Button ref={ref} variant="ghost" className="relative rounded-full h-8 w-8 p-0">
       <Avatar className="h-8 w-8">
         <AvatarFallback>{userInitials}</AvatarFallback>
       </Avatar>
     </Button>
   );
-};
+});
 
+UserMenuAvatar.displayName = "UserMenuAvatar";
+
+export { UserMenuAvatar };
 export default UserMenuAvatar;
