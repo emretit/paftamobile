@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
+import TopBar from "@/components/TopBar";
 import { 
   Dialog,
   DialogContent,
@@ -41,6 +42,7 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
     <div className="min-h-screen bg-gray-50 font-sans">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
+        <TopBar />
         <div className="container mx-auto p-6">
           <ServicePageHeader 
             activeView={activeView}

@@ -138,16 +138,9 @@ export const navItems = [
     label: "Nakit Akış",
   },
   {
-    category: "Servis",
-    icon: Wrench,
     path: "/service",
-    items: [
-      {
-        path: "/service",
-        icon: Wrench,
-        label: "Servis Talepleri",
-      },
-    ],
+    icon: Wrench,
+    label: "Servis",
   },
 
 ];

@@ -2,16 +2,26 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ServiceRequest, ServiceQueriesResult } from "./types";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export const useServiceQueries = (): ServiceQueriesResult => {
+  const { userData } = useCurrentUser();
+  
   // Fetch all service requests
   const serviceRequestsQuery = useQuery({
-    queryKey: ['service-requests'],
+    queryKey: ['service-requests', userData?.company_id],
     queryFn: async (): Promise<ServiceRequest[]> => {
       console.log("Fetching service requests...");
+      
+      if (!userData?.company_id) {
+        console.log("No company_id found, returning empty array");
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from('service_requests')
         .select('*')
+        .eq('company_id', userData.company_id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -35,16 +45,23 @@ export const useServiceQueries = (): ServiceQueriesResult => {
         warranty_info: typeof item.warranty_info === 'object' ? item.warranty_info : undefined
       }));
     },
+    enabled: !!userData?.company_id,
     refetchOnWindowFocus: true,
     staleTime: 60000,
   });
 
   // Get a single service request
   const getServiceRequest = async (id: string): Promise<ServiceRequest | null> => {
+    if (!userData?.company_id) {
+      console.log("No company_id found for getServiceRequest");
+      return null;
+    }
+    
     const { data, error } = await supabase
       .from('service_requests')
       .select('*')
       .eq('id', id)
+      .eq('company_id', userData.company_id)
       .single();
 
     if (error) {
