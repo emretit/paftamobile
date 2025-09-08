@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarDays, Users, Clock, Filter, MapPin, Settings } from 'lucide-react';
+import { CalendarDays, Users, Clock, Filter, MapPin, Settings, CheckCircle } from 'lucide-react';
 import { useServiceRequests, ServiceRequest } from '@/hooks/useServiceRequests';
 import { useTechnicianNames } from '../hooks/useTechnicianNames';
 import { useQuery } from '@tanstack/react-query';
@@ -20,8 +20,8 @@ moment.locale('tr');
 
 interface Technician {
   id: string;
-  name: string;
-  surname: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone?: string;
   department: string;
@@ -80,7 +80,7 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
       const { data, error } = await supabase
         .from('employees')
         .select('*')
-        .eq('department', 'Teknik Servis')
+        .eq('department', 'Teknik')
         .eq('status', 'aktif');
       
       if (error) throw error;
@@ -223,11 +223,31 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
 
       if (error) {
         console.error('Görev atanamadı:', error);
+      } else {
+        // Başarılı atama sonrası sayfayı yenile
+        window.location.reload();
       }
     } catch (error) {
       console.error('Atama hatası:', error);
     }
   }, []);
+
+  // Drag over event handler
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  // Drop event handler for unassigned tasks
+  const handleUnassignedTaskDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const requestId = e.dataTransfer.getData('requestId');
+    const technicianId = e.currentTarget.getAttribute('data-technician-id');
+    
+    if (requestId && technicianId) {
+      assignTaskToTechnician(requestId, technicianId);
+    }
+  }, [assignTaskToTechnician]);
 
   // Filtreleri temizle
   const clearAllFilters = useCallback(() => {
@@ -321,35 +341,50 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
   }, []);
 
   return (
-    <div className="dispatcher-gantt-console h-full">
-      <Card className="p-6 h-full">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <CalendarDays className="h-6 w-6 text-blue-600" />
-            <h2 className="text-xl font-semibold">Dispatcher Console - Gantt Görünümü</h2>
-          </div>
-          
-          {/* Quick Stats */}
-          <div className="flex items-center gap-4">
-            <div className="bg-blue-100 px-3 py-1 rounded-lg">
-              <span className="text-sm font-medium text-blue-800">
-                Bugün: {(ganttTasks.tasks || []).filter(t => moment(t.start).isSame(moment(), 'day')).length}
-              </span>
+    <div className="dispatcher-gantt-console h-full bg-gray-50">
+      <div className="h-full space-y-4">
+        {/* Clean Header */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <CalendarDays className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Servis Planlama</h2>
+                <p className="text-sm text-gray-600">Teknisyen atamaları ve görev planlama</p>
+              </div>
             </div>
-            <div className="bg-orange-100 px-3 py-1 rounded-lg">
-              <span className="text-sm font-medium text-orange-800">
-                Atanmamış: {unassignedRequests.length}
-              </span>
+            
+            {/* Compact Stats */}
+            <div className="flex flex-wrap gap-2">
+              <div className="bg-blue-600 text-white px-3 py-2 rounded-lg text-center min-w-[80px]">
+                <div className="text-sm font-bold">
+                  {(ganttTasks.tasks || []).filter(t => 
+                    moment(t.start).isSame(moment(), 'day')).length}
+                </div>
+                <div className="text-xs opacity-90">Bugün</div>
+              </div>
+              <div className="bg-orange-500 text-white px-3 py-2 rounded-lg text-center min-w-[80px]">
+                <div className="text-sm font-bold">{unassignedRequests.length}</div>
+                <div className="text-xs opacity-90">Atanmamış</div>
+              </div>
+              <div className="bg-green-600 text-white px-3 py-2 rounded-lg text-center min-w-[80px]">
+                <div className="text-sm font-bold">
+                  {(ganttTasks.tasks || []).filter(t => t.status === 'completed').length}
+                </div>
+                <div className="text-xs opacity-90">Tamamlandı</div>
+              </div>
+              <Button
+                variant={showBulkActions ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowBulkActions(!showBulkActions)}
+                className={showBulkActions ? "bg-blue-600 hover:bg-blue-700" : ""}
+              >
+                <Users className="h-4 w-4 mr-1" />
+                Toplu İşlemler
+              </Button>
             </div>
-            <Button
-              variant={showBulkActions ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowBulkActions(!showBulkActions)}
-            >
-              <Users className="h-4 w-4 mr-1" />
-              Toplu İşlemler
-            </Button>
           </div>
         </div>
 
@@ -385,152 +420,207 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
           />
         )}
 
-        {/* Gantt View - No Tabs */}
-        <div className="space-y-4">
-            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-              
-              {/* Gantt Chart - Sol 3 kolon */}
-              <div className="xl:col-span-3">
-                {ganttTasks.tasks && ganttTasks.tasks.length > 0 || technicians ? (
-                  <SimpleGanttChart
-                    tasks={ganttTasks.tasks || []}
-                    technicians={technicians || []}
-                    onTaskSelect={handleTaskSelect}
-                    onTaskMove={handleTaskMove}
-                    selectedTasks={selectedTasks}
-                    onTaskToggle={handleTaskToggle}
-                    onSelectAll={handleSelectAll}
-                    showSelection={showBulkActions}
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-96 text-gray-500 bg-white border rounded-lg">
-                    <div className="text-center">
-                      <CalendarDays className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Henüz planlanmış görev bulunmuyor</p>
-                    </div>
-                  </div>
-                )}
+        {/* Main Gantt View with Unassigned Tasks Sidebar */}
+        <div className="flex flex-col xl:flex-row gap-4">
+          {/* Gantt Chart */}
+          <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            {ganttTasks.tasks && ganttTasks.tasks.length > 0 || technicians ? (
+              <SimpleGanttChart
+                tasks={ganttTasks.tasks || []}
+                technicians={technicians || []}
+                onTaskSelect={handleTaskSelect}
+                onTaskMove={handleTaskMove}
+                selectedTasks={selectedTasks}
+                onTaskToggle={handleTaskToggle}
+                onSelectAll={handleSelectAll}
+                showSelection={showBulkActions}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                <div className="text-center">
+                  <CalendarDays className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium">Henüz planlanmış görev bulunmuyor</p>
+                  <p className="text-sm text-gray-400 mt-2">Yeni servis talepleri oluşturun veya mevcut talepleri planlayın</p>
+                </div>
               </div>
-
-              {/* Sidebar - Sağ 1 kolon */}
-              <div className="xl:col-span-1 space-y-4">
-                {/* İstatistikler */}
-                <Card className="p-4">
-                  <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Bugün
-                  </h3>
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="text-center p-3 bg-blue-50 rounded">
-                      <div className="text-lg font-bold text-blue-600">
-                        {(ganttTasks.tasks || []).filter(t => 
-                          moment(t.start).isSame(moment(), 'day')).length}
+            )}
+          </div>
+          
+          {/* Unassigned Tasks Sidebar */}
+          <div className="w-full xl:w-80 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="p-4 border-b border-gray-200 bg-orange-50">
+              <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                <Users className="h-5 w-5 text-orange-600" />
+                Atanmamış Görevler
+                <Badge variant="secondary" className="ml-auto bg-orange-100 text-orange-800">
+                  {unassignedRequests.length}
+                </Badge>
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">Görevleri sürükleyip teknisyenlere atayın</p>
+            </div>
+            
+            <div className="p-4 space-y-3 max-h-[400px] xl:max-h-[600px] overflow-y-auto">
+              {unassignedRequests.map((request) => (
+                <div
+                  key={request.id}
+                  className="p-3 border border-dashed border-orange-200 rounded-lg cursor-move hover:border-orange-400 hover:bg-orange-50 transition-all group"
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('requestId', request.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                    // Drag image oluştur
+                    const dragImage = document.createElement('div');
+                    dragImage.innerHTML = `
+                      <div style="
+                        background: linear-gradient(135deg, ${priorityColors[request.priority as keyof typeof priorityColors]} 0%, ${priorityColors[request.priority as keyof typeof priorityColors]}dd 100%);
+                        color: white;
+                        padding: 8px 12px;
+                        border-radius: 6px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                        border: 2px solid ${statusColors[request.status as keyof typeof statusColors]};
+                        max-width: 200px;
+                      ">
+                        ${request.title}
                       </div>
-                      <div className="text-xs text-gray-600">Planlanan</div>
+                    `;
+                    document.body.appendChild(dragImage);
+                    e.dataTransfer.setDragImage(dragImage, 0, 0);
+                    setTimeout(() => document.body.removeChild(dragImage), 0);
+                  }}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-medium text-gray-900 truncate group-hover:text-orange-800">
+                        {request.title}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                        {request.location && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            <span className="truncate">{request.location}</span>
+                          </div>
+                        )}
+                        {request.due_date && (
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {moment(request.due_date).format('DD.MM HH:mm')}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-center p-3 bg-orange-50 rounded">
-                      <div className="text-lg font-bold text-orange-600">
-                        {unassignedRequests.length}
-                      </div>
-                      <div className="text-xs text-gray-600">Atanmamış</div>
-                    </div>
+                    <span 
+                      className="inline-block px-2 py-1 rounded text-xs font-medium ml-2 flex-shrink-0"
+                      style={{
+                        backgroundColor: `${priorityColors[request.priority as keyof typeof priorityColors]}20`,
+                        color: priorityColors[request.priority as keyof typeof priorityColors]
+                      }}
+                    >
+                      {request.priority}
+                    </span>
                   </div>
-                </Card>
+                </div>
+              ))}
+              
+              {unassignedRequests.length === 0 && (
+                <div className="text-center text-gray-500 py-8">
+                  <CheckCircle className="h-12 w-12 mx-auto mb-3 text-green-600" />
+                  <p className="text-sm font-medium">Tüm görevler atanmış!</p>
+                  <p className="text-xs text-gray-400 mt-1">Harika iş çıkarıyorsunuz</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
-                {/* Atanmamış Görevler */}
-                <Card className="p-4">
-                  <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Atanmamış Görevler
-                  </h3>
-                  
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {unassignedRequests.map((request) => (
-                      <div
-                        key={request.id}
-                        className="p-3 border rounded-lg cursor-move hover:bg-gray-50 transition-colors"
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('requestId', request.id);
-                        }}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h4 className="text-sm font-medium text-gray-900 truncate">
-                              {request.title}
-                            </h4>
-                            {request.location && (
-                              <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                                <MapPin className="h-3 w-3" />
-                                {request.location}
-                              </p>
-                            )}
-                            {request.due_date && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                {moment(request.due_date).format('DD.MM.YYYY HH:mm')}
-                              </p>
-                            )}
-                          </div>
-                          <Badge 
-                            variant="outline" 
-                            className="text-xs"
-                            style={{
-                              borderColor: priorityColors[request.priority as keyof typeof priorityColors],
-                              color: priorityColors[request.priority as keyof typeof priorityColors]
-                            }}
-                          >
-                            {request.priority}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {unassignedRequests.length === 0 && (
-                      <div className="text-center text-gray-500 py-4">
-                        <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">Tüm görevler atanmış</p>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-
-                {/* Teknisyen Durumu */}
-                <Card className="p-4">
-                  <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Teknisyen Durumu
-                  </h3>
-                  
-                  <div className="space-y-2">
-                    {technicians?.slice(0, 5).map((tech) => {
-                      const techTasks = (ganttTasks.tasks || []).filter(t => t.technicianId === tech.id);
-                      const completedTasks = techTasks.filter(t => t.status === 'completed').length;
-                      const totalTasks = techTasks.length;
-                      
-                      return (
-                        <div key={tech.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-gray-900">
-                              {tech.name} {tech.surname}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {completedTasks}/{totalTasks} tamamlandı
-                            </div>
-                          </div>
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-xs font-bold text-blue-600">
-                              {totalTasks}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </Card>
+        {/* Bottom Stats and Technician Status */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Quick Stats */}
+          <Card className="p-4 bg-white border border-gray-200 shadow-sm">
+            <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <Clock className="h-4 w-4 text-blue-600" />
+              Bugün Özeti
+            </h3>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center p-3 bg-blue-50 rounded-lg">
+                <div className="text-lg font-bold text-blue-600">
+                  {(ganttTasks.tasks || []).filter(t => 
+                    moment(t.start).isSame(moment(), 'day')).length}
+                </div>
+                <div className="text-sm text-blue-700">Planlanan</div>
+              </div>
+              <div className="text-center p-3 bg-orange-50 rounded-lg">
+                <div className="text-lg font-bold text-orange-600">
+                  {unassignedRequests.length}
+                </div>
+                <div className="text-sm text-orange-700">Atanmamış</div>
+              </div>
+              <div className="text-center p-3 bg-green-50 rounded-lg">
+                <div className="text-lg font-bold text-green-600">
+                  {(ganttTasks.tasks || []).filter(t => 
+                    t.status === 'completed' && moment(t.start).isSame(moment(), 'day')).length}
+                </div>
+                <div className="text-sm text-green-700">Tamamlandı</div>
               </div>
             </div>
+          </Card>
+
+          {/* Teknisyen Durumu */}
+          <Card className="p-4 bg-white border border-gray-200 shadow-sm">
+            <h3 className="font-semibold text-gray-800 mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-green-600" />
+                Teknisyen Durumu
+              </div>
+              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                {technicians?.length || 0}
+              </Badge>
+            </h3>
+                
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {technicians?.slice(0, 4).map((tech) => {
+                const techTasks = (ganttTasks.tasks || []).filter(t => t.technicianId === tech.id);
+                const completedTasks = techTasks.filter(t => t.status === 'completed').length;
+                const totalTasks = techTasks.length;
+                const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+                
+                return (
+                  <div key={tech.id} className="p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-sm font-medium text-gray-900">
+                        {tech.first_name} {tech.last_name}
+                      </div>
+                      <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
+                        <span className="text-xs font-bold text-white">
+                          {totalTasks}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                      <span>{completedTasks}/{totalTasks}</span>
+                      <span>%{Math.round(completionRate)}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1">
+                      <div 
+                        className="bg-green-600 h-1 rounded-full transition-all duration-300"
+                        style={{ width: `${completionRate}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {(!technicians || technicians.length === 0) && (
+                <div className="text-center text-gray-500 py-4">
+                  <Users className="h-6 w-6 mx-auto mb-1 opacity-50" />
+                  <p className="text-sm">Teknisyen bulunamadı</p>
+                </div>
+              )}
+            </div>
+          </Card>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

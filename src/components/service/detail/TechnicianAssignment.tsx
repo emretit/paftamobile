@@ -20,7 +20,7 @@ export const TechnicianAssignment: React.FC<TechnicianAssignmentProps> = ({
       const { data, error } = await supabase
         .from("employees")
         .select("id, first_name, last_name, department")
-        .eq("department", "Teknik Servis")
+        .eq("department", "Teknik")
         .order("first_name");
       
       if (error) throw error;

@@ -158,7 +158,7 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                 <SelectItem value="unassigned">Atanmamış</SelectItem>
                 {technicians?.map((tech) => (
                   <SelectItem key={tech.id} value={tech.id}>
-                    {tech.name} {tech.surname}
+                    {tech.first_name} {tech.last_name}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -43,7 +43,7 @@ export const ResourceView: React.FC<ResourceViewProps> = ({ onAssignTask, compac
       const { data, error } = await supabase
         .from('employees')
         .select('*')
-        .eq('department', 'Teknik Servis');
+        .eq('department', 'Teknik');
       
       if (error) throw error;
       return data as Technician[];

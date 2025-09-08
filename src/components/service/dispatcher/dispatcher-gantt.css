@@ -1,189 +1,231 @@
-/* Dispatcher Gantt Console Styles */
+/* Modern Gantt Chart Styles */
 .dispatcher-gantt-console {
   height: 100%;
   width: 100%;
-}
-
-/* Gantt Chart Custom Styles */
-.gantt-container {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background-color: #f8fafc;
 }
 
-/* Task styles */
+.gantt-container {
+  font-family: inherit;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Improved scrollbar */
+.gantt-body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.gantt-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.gantt-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.gantt-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Modern Task bars */
 .gantt-task-bar {
   border-radius: 4px;
   transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
 }
 
 .gantt-task-bar:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
 }
 
-/* Project (Technician) row styles */
-.gantt-task-bar[data-type="project"] {
-  background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 100%);
-  border: 1px solid #d1d5db;
-  font-weight: 600;
-  color: #374151;
+.gantt-task-bar:active {
+  transform: scale(0.98);
 }
 
-/* Task row styles based on priority */
+/* Priority styles - simplified */
 .gantt-task-bar[data-priority="urgent"] {
-  background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
-  color: white;
-  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+  background: #ef4444;
+  border-left: 3px solid #dc2626;
 }
 
 .gantt-task-bar[data-priority="high"] {
-  background: linear-gradient(90deg, #f97316 0%, #ea580c 100%);
-  color: white;
-  box-shadow: 0 2px 4px rgba(249, 115, 22, 0.3);
+  background: #f97316;
+  border-left: 3px solid #ea580c;
 }
 
 .gantt-task-bar[data-priority="medium"] {
-  background: linear-gradient(90deg, #eab308 0%, #ca8a04 100%);
-  color: white;
-  box-shadow: 0 2px 4px rgba(234, 179, 8, 0.3);
+  background: #eab308;
+  border-left: 3px solid #ca8a04;
 }
 
 .gantt-task-bar[data-priority="low"] {
-  background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
-  color: white;
-  box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
+  background: #22c55e;
+  border-left: 3px solid #16a34a;
 }
 
-/* Grid and timeline styles */
-.gantt-grid {
-  border-right: 1px solid #e5e7eb;
-}
-
-.gantt-grid-row {
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.gantt-grid-row:hover {
-  background-color: #f9fafb;
-}
-
-.gantt-timeline {
-  background-color: #ffffff;
+/* Clean Grid Layout */
+.gantt-container {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .gantt-timeline-header {
-  background-color: #f8fafc;
-  border-bottom: 2px solid #e5e7eb;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
   font-weight: 600;
   color: #374151;
 }
 
-/* Today indicator */
-.gantt-today-line {
-  stroke: #3b82f6;
-  stroke-width: 2;
-  stroke-dasharray: 4, 4;
+.gantt-technician-row {
+  background: #ffffff;
+  transition: background-color 0.2s ease;
 }
 
-/* Drag indicators */
+.gantt-technician-row:hover {
+  background: #f9fafb;
+}
+
+/* Clean Time Cells */
+.gantt-time-cell {
+  transition: background-color 0.2s ease;
+  background: #ffffff;
+  min-height: 48px;
+}
+
+.gantt-time-cell:hover {
+  background-color: #f3f4f6;
+}
+
+.gantt-day-header {
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  font-weight: 500;
+  color: #374151;
+}
+
+.gantt-day-header.today {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+/* Drag and Drop */
 .gantt-task-bar.dragging {
   opacity: 0.7;
   transform: scale(1.02);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Resize handles */
-.gantt-task-handle {
-  fill: rgba(255, 255, 255, 0.8);
-  stroke: rgba(0, 0, 0, 0.2);
-  stroke-width: 1;
-}
-
-.gantt-task-handle:hover {
-  fill: #ffffff;
-  stroke: #374151;
-  stroke-width: 2;
-}
-
-/* Progress bar within tasks */
-.gantt-task-progress {
-  fill: rgba(255, 255, 255, 0.3);
-  stroke: rgba(255, 255, 255, 0.5);
-  stroke-width: 1;
-}
-
-/* Tooltip styles */
-.gantt-tooltip {
-  background: #1f2937;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-}
-
-/* Unassigned tasks sidebar */
+/* Unassigned tasks */
 .unassigned-task-item {
-  border: 2px dashed #d1d5db;
+  border: 1px dashed #d1d5db;
   transition: all 0.2s ease;
+  background: #ffffff;
 }
 
 .unassigned-task-item:hover {
-  border-color: #6b7280;
-  background-color: #f9fafb;
+  border-color: #3b82f6;
+  background: #f0f9ff;
+  transform: translateY(-1px);
 }
 
 .unassigned-task-item.dragging {
-  opacity: 0.5;
-  transform: rotate(2deg);
+  opacity: 0.8;
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
 }
 
 /* Drop zones */
 .technician-drop-zone {
-  min-height: 40px;
   border: 2px dashed transparent;
   transition: all 0.2s ease;
+  border-radius: 6px;
+  position: relative;
+}
+
+.technician-drop-zone:hover {
+  border-color: #e5e7eb;
+  background: rgba(59, 130, 246, 0.05);
 }
 
 .technician-drop-zone.drag-over {
   border-color: #3b82f6;
-  background-color: rgba(59, 130, 246, 0.05);
+  background: rgba(59, 130, 246, 0.1);
+  transform: scale(1.02);
 }
 
-/* Resource panel */
-.resource-panel {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-left: 1px solid #e2e8f0;
+.technician-drop-zone.drag-over::before {
+  content: 'Görevleri buraya bırakın';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(59, 130, 246, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  z-index: 10;
+  pointer-events: none;
 }
 
-/* Statistics cards */
-.stat-card {
-  transition: all 0.2s ease;
+/* Utility classes */
+.scale-102 {
+  transform: scale(1.02);
 }
 
-.stat-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+/* Weekly View Optimization */
+.gantt-container .flex-1 {
+  min-width: 0; /* Allow flex items to shrink */
 }
 
-/* Mobile responsiveness */
-@media (max-width: 1280px) {
+/* Responsive Design */
+@media (max-width: 1024px) {
   .gantt-container {
-    font-size: 12px;
+    font-size: 14px;
   }
   
   .gantt-task-bar {
-    min-width: 20px;
-    height: 16px;
+    min-height: 20px;
+    font-size: 11px;
+  }
+  
+  /* Haftalık görünümde daha kompakt */
+  .gantt-container .flex-1 {
+    min-width: 100px;
   }
 }
 
 @media (max-width: 768px) {
   .dispatcher-gantt-console {
-    padding: 16px;
+    padding: 12px;
   }
   
   .gantt-container {
     overflow-x: auto;
+  }
+  
+  .gantt-task-bar {
+    min-height: 18px;
+    font-size: 10px;
+  }
+  
+  /* Mobilde daha küçük sütunlar */
+  .gantt-container .flex-1 {
+    min-width: 80px;
   }
 }
