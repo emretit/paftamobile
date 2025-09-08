@@ -108,32 +108,43 @@ export const ResourceView: React.FC<ResourceViewProps> = ({ onAssignTask, compac
   if (compact) {
     return (
       <div className="space-y-3">
+        {/* Header */}
+        <div className="text-sm font-semibold text-gray-700 mb-2">
+          Teknisyenler
+        </div>
+        <div className="text-xs text-gray-500 mb-3">
+          İş Saatleri: 08:00 - 18:00
+        </div>
+        
         {/* Compact Technician List */}
         <div className="space-y-2">
           {technicianWorkload.slice(0, 5).map((technician) => (
             <div key={technician.id} className="bg-white rounded-lg p-3 border">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    technician.status === 'available' ? 'bg-green-500' :
-                    technician.status === 'busy' ? 'bg-orange-500' :
-                    'bg-red-500'
-                  }`} />
-                  <span className="text-sm font-medium">
-                    {technician.first_name} {technician.last_name[0]}.
-                  </span>
+              <div className="flex items-center gap-3">
+                {/* Avatar */}
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                  {technician.first_name[0]}{technician.last_name[0]}
                 </div>
-                <div className="text-xs text-gray-500">
-                  {technician.assignedTasks.length} görev
+                
+                {/* Info */}
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-900">
+                    {technician.first_name} {technician.last_name}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {technician.assignedTasks.length} servis
+                    {technician.completedTasks.length > 0 && (
+                      <span> • {technician.completedTasks.length} tamamlandı</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="mt-1">
-                <div className="w-full bg-gray-200 rounded-full h-1">
-                  <div 
-                    className="bg-blue-600 h-1 rounded-full" 
-                    style={{ width: `${Math.min(technician.utilizationRate, 100)}%` }}
-                  />
-                </div>
+                
+                {/* Status indicator */}
+                <div className={`w-2 h-2 rounded-full ${
+                  technician.status === 'available' ? 'bg-green-500' :
+                  technician.status === 'busy' ? 'bg-orange-500' :
+                  'bg-red-500'
+                }`} />
               </div>
             </div>
           ))}

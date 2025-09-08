@@ -10,7 +10,7 @@ import 'moment/locale/tr';
 
 moment.locale('tr');
 
-interface GanttTask {
+interface GanttService {
   id: string;
   title: string;
   start: Date;
@@ -20,40 +20,43 @@ interface GanttTask {
   priority: string;
   status: string;
   technicianId?: string;
+  serviceType?: string;
+  location?: string;
+  isService?: boolean;
 }
 
 interface SimpleGanttChartProps {
-  tasks: GanttTask[];
+  services: GanttService[];
   technicians: any[];
-  onTaskSelect?: (task: GanttTask) => void;
-  onTaskMove?: (taskId: string, newStart: Date, technicianId: string) => void;
-  selectedTasks?: string[];
-  onTaskToggle?: (taskId: string) => void;
+  onServiceSelect?: (service: GanttService) => void;
+  onServiceMove?: (serviceId: string, newStart: Date, technicianId: string) => void;
+  selectedServices?: string[];
+  onServiceToggle?: (serviceId: string) => void;
   onSelectAll?: (selectAll: boolean) => void;
   showSelection?: boolean;
 }
 
 export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
-  tasks,
+  services,
   technicians,
-  onTaskSelect,
-  onTaskMove,
-  selectedTasks = [],
-  onTaskToggle,
+  onServiceSelect,
+  onServiceMove,
+  selectedServices = [],
+  onServiceToggle,
   onSelectAll,
   showSelection = false
 }) => {
   // Servis verilerini çek
   const { data: serviceRequests } = useServiceRequests();
   const [currentDate, setCurrentDate] = useState(moment().startOf('week'));
-  const [draggedTask, setDraggedTask] = useState<string | null>(null);
-  const [hoveredTask, setHoveredTask] = useState<string | null>(null);
+  const [draggedService, setDraggedService] = useState<string | null>(null);
+  const [hoveredService, setHoveredService] = useState<string | null>(null);
   const [showLegend, setShowLegend] = useState(true);
   const [viewMode, setViewMode] = useState<'week' | 'day' | 'month'>('week');
   const [showCompleted, setShowCompleted] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(1.2); // Haftalık görünüm için daha iyi başlangıç
   const [isDragging, setIsDragging] = useState(false);
-  const [dragPreview, setDragPreview] = useState<{ x: number; y: number; task: GanttTask | null }>({ x: 0, y: 0, task: null });
+  const [dragPreview, setDragPreview] = useState<{ x: number; y: number; service: GanttService | null }>({ x: 0, y: 0, service: null });
   const ganttRef = useRef<HTMLDivElement>(null);
 
   // Görünüm moduna göre günleri oluştur
@@ -101,8 +104,8 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
     return slots;
   }, []);
 
-  // Servis verilerini Gantt tasklerine dönüştür
-  const serviceTasks = useMemo(() => {
+  // Servis verilerini Gantt servislerine dönüştür
+  const serviceServices = useMemo(() => {
     if (!serviceRequests) return [];
     
     return serviceRequests.map(request => {
@@ -128,17 +131,17 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
     }).filter(Boolean);
   }, [serviceRequests, technicians]);
 
-  // Tüm görevleri birleştir (mevcut tasks + servis tasks)
-  const allTasks = useMemo(() => {
-    const serviceTasksWithId = serviceTasks.map(task => ({ ...task, id: `service-${task.id}` }));
-    return [...tasks, ...serviceTasksWithId];
-  }, [tasks, serviceTasks]);
+  // Tüm servisleri birleştir (mevcut services + servis services)
+  const allServices = useMemo(() => {
+    const serviceServicesWithId = serviceServices.map(service => ({ ...service, id: `service-${service.id}` }));
+    return [...services, ...serviceServicesWithId];
+  }, [services, serviceServices]);
 
-  // Filtrelenmiş görevler
-  const filteredTasks = useMemo(() => {
-    if (showCompleted) return allTasks;
-    return allTasks.filter(task => task.status !== 'completed');
-  }, [allTasks, showCompleted]);
+  // Filtrelenmiş servisler
+  const filteredServices = useMemo(() => {
+    if (showCompleted) return allServices;
+    return allServices.filter(service => service.status !== 'completed');
+  }, [allServices, showCompleted]);
 
   const priorityColors = {
     urgent: '#ef4444',
@@ -186,8 +189,7 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
       }
       
       if (e.key === 'Escape') {
-        setSelectedTasks([]);
-        setHoveredTask(null);
+        setHoveredService(null);
       }
     };
 
@@ -196,37 +198,37 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
   }, []);
 
   // Enhanced drag and drop
-  const handleDragStart = useCallback((e: React.DragEvent, taskId: string) => {
-    const task = filteredTasks.find(t => t.id === taskId);
-    if (task) {
-      setDraggedTask(taskId);
+  const handleDragStart = useCallback((e: React.DragEvent, serviceId: string) => {
+    const service = filteredServices.find(s => s.id === serviceId);
+    if (service) {
+      setDraggedService(serviceId);
       setIsDragging(true);
-      setDragPreview({ x: e.clientX, y: e.clientY, task });
-      e.dataTransfer.setData('text/plain', taskId);
+      setDragPreview({ x: e.clientX, y: e.clientY, service });
+      e.dataTransfer.setData('text/plain', serviceId);
       e.dataTransfer.effectAllowed = 'move';
       
       // Create custom drag image
       const dragImage = document.createElement('div');
       dragImage.innerHTML = `
         <div style="
-          background: linear-gradient(135deg, ${priorityColors[task.priority as keyof typeof priorityColors]} 0%, ${priorityColors[task.priority as keyof typeof priorityColors]}dd 100%);
+          background: linear-gradient(135deg, ${priorityColors[service.priority as keyof typeof priorityColors]} 0%, ${priorityColors[service.priority as keyof typeof priorityColors]}dd 100%);
           color: white;
           padding: 8px 12px;
           border-radius: 6px;
           font-size: 12px;
           font-weight: 600;
           box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-          border: 2px solid ${statusColors[task.status as keyof typeof statusColors]};
+          border: 2px solid ${statusColors[service.status as keyof typeof statusColors]};
           max-width: 200px;
         ">
-          ${task.title}
+          ${service.title}
         </div>
       `;
       document.body.appendChild(dragImage);
       e.dataTransfer.setDragImage(dragImage, 0, 0);
       setTimeout(() => document.body.removeChild(dragImage), 0);
     }
-  }, [filteredTasks, priorityColors, statusColors]);
+  }, [filteredServices, priorityColors, statusColors]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -235,32 +237,32 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
 
   const handleDrop = useCallback((e: React.DragEvent, day: moment.Moment, hour: number, technicianId: string) => {
     e.preventDefault();
-    const taskId = e.dataTransfer.getData('text/plain');
+    const serviceId = e.dataTransfer.getData('text/plain');
     
-    if (taskId && onTaskMove) {
-      // Atanmamış görevler için özel işlem
-      const isUnassignedTask = !filteredTasks.find(t => t.id === taskId);
+    if (serviceId && onServiceMove) {
+      // Atanmamış servisler için özel işlem
+      const isUnassignedService = !filteredServices.find(s => s.id === serviceId);
       
-      if (isUnassignedTask) {
-        // Atanmamış görev için sadece teknisyen ataması yap
+      if (isUnassignedService) {
+        // Atanmamış servis için sadece teknisyen ataması yap
         const newStart = moment(day).hour(hour).minute(0).toDate();
-        onTaskMove(taskId, newStart, technicianId);
+        onServiceMove(serviceId, newStart, technicianId);
       } else {
-        // Mevcut görev için normal işlem
+        // Mevcut servis için normal işlem
         const newStart = moment(day).hour(hour).minute(0).toDate();
-        onTaskMove(taskId, newStart, technicianId);
+        onServiceMove(serviceId, newStart, technicianId);
       }
     }
     
-    setDraggedTask(null);
+    setDraggedService(null);
     setIsDragging(false);
-    setDragPreview({ x: 0, y: 0, task: null });
-  }, [onTaskMove, filteredTasks]);
+    setDragPreview({ x: 0, y: 0, service: null });
+  }, [onServiceMove, filteredServices]);
 
   const handleDragEnd = useCallback(() => {
-    setDraggedTask(null);
+    setDraggedService(null);
     setIsDragging(false);
-    setDragPreview({ x: 0, y: 0, task: null });
+    setDragPreview({ x: 0, y: 0, service: null });
   }, []);
 
 
@@ -424,9 +426,9 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
           {showSelection && (
             <input
               type="checkbox"
-              checked={selectedTasks.length === tasks.length && tasks.length > 0}
+              checked={selectedServices.length === services.length && services.length > 0}
               ref={(el) => {
-                if (el) el.indeterminate = selectedTasks.length > 0 && selectedTasks.length < tasks.length;
+                if (el) el.indeterminate = selectedServices.length > 0 && selectedServices.length < services.length;
               }}
               onChange={(e) => onSelectAll?.(e.target.checked)}
               className="mr-2 h-3 w-3"
@@ -480,9 +482,9 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
         {/* Teknisyen Listesi - Fixed */}
         <div className="min-w-[240px] w-[240px] bg-white">
           {technicians.map((technician) => {
-            const techTasks = filteredTasks.filter(task => task.technicianId === technician.id);
-            const completedTasks = techTasks.filter(task => task.status === 'completed').length;
-            const totalTasks = techTasks.length;
+            const techServices = filteredServices.filter(service => service.technicianId === technician.id);
+            const completedServices = techServices.filter(service => service.status === 'completed').length;
+            const totalServices = techServices.length;
 
             return (
               <div key={technician.id} className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors h-[48px]">
@@ -495,11 +497,11 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
                       {technician.first_name} {technician.last_name}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span>{totalTasks} görev</span>
-                      {totalTasks > 0 && (
+                      <span>{totalServices} servis</span>
+                      {totalServices > 0 && (
                         <>
                           <span>•</span>
-                          <span className="text-green-600">{completedTasks} tamamlandı</span>
+                          <span className="text-green-600">{completedServices} tamamlandı</span>
                         </>
                       )}
               </div>
@@ -516,8 +518,8 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
             {displayDays.map((day) => (
               <div key={day.format('YYYY-MM-DD')} className="flex-1" style={{ minWidth: getMinWidth(120) }}>
                 {technicians.map((technician) => {
-                const techTasks = filteredTasks.filter(task => 
-                  task.technicianId === technician.id && moment(task.start).isSame(day, 'day')
+                const techServices = filteredServices.filter(service => 
+                  service.technicianId === technician.id && moment(service.start).isSame(day, 'day')
                 );
 
                 return (
@@ -529,36 +531,36 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
                     title={`${day.format('DD MMM')} - ${technician.first_name} ${technician.last_name} (Sürükle & Bırak)`}
                   >
                     <div className="space-y-1">
-                      {techTasks.length > 0 ? (
-                        techTasks.map((task) => (
-                          <TooltipProvider key={task.id}>
+                      {techServices.length > 0 ? (
+                        techServices.map((service) => (
+                          <TooltipProvider key={service.id}>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                     <div
                                       className={`relative rounded px-2 py-1 text-xs font-medium cursor-pointer transition-all duration-200 ${
-                                        selectedTasks.includes(task.id) ? 'ring-1 ring-blue-500' : ''
-                                      } ${hoveredTask === task.id ? 'scale-102 shadow-md' : ''} ${
-                                        task.status === 'completed' ? 'opacity-75' : ''
-                                      } ${task.isService ? 'border-2 border-dashed border-white' : ''}`}
+                                        selectedServices.includes(service.id) ? 'ring-1 ring-blue-500' : ''
+                                      } ${hoveredService === service.id ? 'scale-102 shadow-md' : ''} ${
+                                        service.status === 'completed' ? 'opacity-75' : ''
+                                      } ${service.isService ? 'border-2 border-dashed border-white' : ''}`}
                                       style={{
-                                        backgroundColor: task.isService 
-                                          ? `${priorityColors[task.priority as keyof typeof priorityColors]}dd`
-                                          : priorityColors[task.priority as keyof typeof priorityColors],
+                                        backgroundColor: service.isService 
+                                          ? `${priorityColors[service.priority as keyof typeof priorityColors]}dd`
+                                          : priorityColors[service.priority as keyof typeof priorityColors],
                                         color: 'white',
-                                        borderLeft: `3px solid ${statusColors[task.status as keyof typeof statusColors]}`,
-                                        boxShadow: task.isService ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
+                                        borderLeft: `3px solid ${statusColors[service.status as keyof typeof statusColors]}`,
+                                        boxShadow: service.isService ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
                                       }}
                         draggable
-                        onDragStart={(e) => handleDragStart(e, task.id)}
+                        onDragStart={(e) => handleDragStart(e, service.id)}
                         onDragEnd={handleDragEnd}
-                                  onMouseEnter={() => setHoveredTask(task.id)}
-                                  onMouseLeave={() => setHoveredTask(null)}
+                                  onMouseEnter={() => setHoveredService(service.id)}
+                                  onMouseLeave={() => setHoveredService(null)}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (showSelection && onTaskToggle) {
-                                      onTaskToggle(task.id);
+                                    if (showSelection && onServiceToggle) {
+                                      onServiceToggle(service.id);
                                     } else {
-                                      onTaskSelect?.(task);
+                                      onServiceSelect?.(service);
                                     }
                                   }}
                                 >
@@ -566,46 +568,46 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
                                     {showSelection && (
                                       <input
                                         type="checkbox"
-                                        checked={selectedTasks.includes(task.id)}
+                                        checked={selectedServices.includes(service.id)}
                                         onChange={(e) => {
                                           e.stopPropagation();
-                                          onTaskToggle?.(task.id);
+                                          onServiceToggle?.(service.id);
                                         }}
                                         className="mr-1 h-2 w-2"
                                       />
                                     )}
-                                    {task.status === 'completed' && <CheckCircle2 className="h-3 w-3 flex-shrink-0" />}
-                                    {task.status === 'in_progress' && <Play className="h-3 w-3 flex-shrink-0" />}
-                                    {task.status === 'on_hold' && <Pause className="h-3 w-3 flex-shrink-0" />}
-                                    {task.status === 'cancelled' && <XCircle className="h-3 w-3 flex-shrink-0" />}
-                                    <span className="truncate text-xs">{task.title}</span>
+                                    {service.status === 'completed' && <CheckCircle2 className="h-3 w-3 flex-shrink-0" />}
+                                    {service.status === 'in_progress' && <Play className="h-3 w-3 flex-shrink-0" />}
+                                    {service.status === 'on_hold' && <Pause className="h-3 w-3 flex-shrink-0" />}
+                                    {service.status === 'cancelled' && <XCircle className="h-3 w-3 flex-shrink-0" />}
+                                    <span className="truncate text-xs">{service.title}</span>
                                   </div>
                                   <div className="text-xs opacity-75 mt-1">
-                          {moment(task.start).format('HH:mm')}
+                          {moment(service.start).format('HH:mm')}
                                   </div>
                                 </div>
                               </TooltipTrigger>
                               <TooltipContent className="max-w-xs">
                                 <div className="space-y-1">
                                   <div className="font-semibold flex items-center gap-2">
-                                    {task.title}
-                                    {task.isService && (
+                                    {service.title}
+                                    {service.isService && (
                                       <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
                                         Servis
                                       </span>
                                     )}
                                   </div>
                                   <div className="text-sm text-gray-300">
-                                    <div>Teknisyen: {task.technician || 'Atanmamış'}</div>
-                                    <div>Öncelik: {task.priority}</div>
-                                    <div>Durum: {task.status}</div>
-                                    {task.isService && task.serviceType && (
-                                      <div>Servis Türü: {task.serviceType}</div>
+                                    <div>Teknisyen: {service.technician || 'Atanmamış'}</div>
+                                    <div>Öncelik: {service.priority}</div>
+                                    <div>Durum: {service.status}</div>
+                                    {service.isService && service.serviceType && (
+                                      <div>Servis Türü: {service.serviceType}</div>
                                     )}
-                                    {task.isService && task.location && (
-                                      <div>Konum: {task.location}</div>
+                                    {service.isService && service.location && (
+                                      <div>Konum: {service.location}</div>
                                     )}
-                                    <div>Saat: {moment(task.start).format('HH:mm')} - {moment(task.end).format('HH:mm')}</div>
+                                    <div>Saat: {moment(service.start).format('HH:mm')} - {moment(service.end).format('HH:mm')}</div>
                                   </div>
                                 </div>
                               </TooltipContent>
@@ -614,7 +616,7 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
                         ))
                       ) : (
                         <div className="text-center text-gray-400 text-xs py-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          Görevleri buraya sürükleyin
+                          Servisleri buraya sürükleyin
                         </div>
                       )}
                       </div>
@@ -669,7 +671,7 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-blue-600 rounded border-2 border-dashed border-white"></div>
-                <span className="text-xs text-gray-600">Servis Görevleri</span>
+                <span className="text-xs text-gray-600">Servis Talepleri</span>
               </div>
               <div className="text-xs text-gray-500">
                 Ctrl+C: Tamamlananları Gizle • Ctrl+H: Bu Açıklamayı Gizle • Sürükle-Bırak ile Ata

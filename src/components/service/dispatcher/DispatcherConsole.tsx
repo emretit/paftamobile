@@ -1,27 +1,23 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Calendar, Views, momentLocalizer, Event as CalendarEvent } from 'react-big-calendar';
-import moment from 'moment';
-import 'moment/locale/tr';
-import './dispatcher-console.css';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useServiceRequests, ServiceRequest } from '@/hooks/useServiceRequests';
 import { useTechnicianNames } from '../hooks/useTechnicianNames';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarDays, MapPin, Users, Clock, Filter } from 'lucide-react';
+import { CalendarDays, MapPin, Users, Clock, Filter, User, AlertCircle, CheckCircle } from 'lucide-react';
 import { ResourceView } from './ResourceView';
+import { format } from 'date-fns';
+import { tr } from 'date-fns/locale';
 
-// Türkçe moment lokali
-moment.locale('tr');
-const localizer = momentLocalizer(moment);
-
-interface ServiceEvent extends CalendarEvent {
+interface ServiceEvent {
   id: string;
   serviceRequest: ServiceRequest;
   technician?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   status: string;
+  due_date?: string;
+  title: string;
 }
 
 interface DispatcherConsoleProps {
@@ -48,84 +44,82 @@ export const DispatcherConsole: React.FC<DispatcherConsoleProps> = ({
   onSelectRequest 
 }) => {
   const [activeTab, setActiveTab] = useState<'schedule' | 'resources'>('schedule');
-  const [currentView, setCurrentView] = useState<'week' | 'day' | 'agenda'>('week');
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentView, setCurrentView] = useState<'today' | 'week' | 'all'>('today');
   const { data: serviceRequests } = useServiceRequests();
   const { getTechnicianName } = useTechnicianNames();
 
-  // Servis taleplerini kalendar eventlerine dönüştür
+  // Servis taleplerini eventlere dönüştür
   const events = useMemo(() => {
     if (!serviceRequests) return [];
 
     return serviceRequests
       .filter(request => request.due_date) // Sadece tarih belirtilmiş olanlar
-      .map(request => {
-        const startDate = new Date(request.due_date!);
-        const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // 2 saat varsayılan süre
-
-        return {
+      .map(request => ({
           id: request.id,
           title: request.title,
-          start: startDate,
-          end: endDate,
+        due_date: request.due_date,
           serviceRequest: request,
           technician: request.assigned_to ? getTechnicianName(request.assigned_to) : 'Atanmamış',
           priority: request.priority,
           status: request.status,
           resource: request.assigned_to || 'unassigned',
-        } as ServiceEvent;
-      });
+      } as ServiceEvent));
   }, [serviceRequests, getTechnicianName]);
-
-  // Event stil özelleştirmesi
-  const eventStyleGetter = useCallback((event: ServiceEvent) => {
-    const priority = event.priority;
-    const status = event.status;
-    
-    let backgroundColor = priorityColors[priority];
-    let borderColor = statusColors[status];
-    
-    // Tamamlanan işler için opacity azalt
-    if (status === 'completed') {
-      backgroundColor = statusColors[status];
-    }
-    
-    return {
-      style: {
-        backgroundColor,
-        borderColor,
-        borderWidth: '2px',
-        borderStyle: 'solid',
-        borderRadius: '4px',
-        opacity: status === 'completed' ? 0.7 : 1,
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: '12px',
-      },
-    };
-  }, []);
 
   // Event seçildiğinde
   const handleSelectEvent = useCallback((event: ServiceEvent) => {
     onSelectRequest?.(event.serviceRequest);
   }, [onSelectRequest]);
 
-  // Event sürüklenip bırakıldığında (TODO: implement drag & drop)
-  const handleEventDrop = useCallback((args: any) => {
-    console.log('Event dropped:', args);
-    // TODO: Update service request date in database
-  }, []);
+  // Filtrelenmiş eventleri al
+  const filteredEvents = useMemo(() => {
+    const today = new Date();
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay());
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
 
-  // Event boyutu değiştirildiğinde (TODO: implement resize)
-  const handleEventResize = useCallback((args: any) => {
-    console.log('Event resized:', args);
-    // TODO: Update service request duration in database
-  }, []);
+    switch (currentView) {
+      case 'today':
+        return events.filter(event => {
+          if (!event.due_date) return false;
+          const eventDate = new Date(event.due_date);
+          return eventDate.toDateString() === today.toDateString();
+        });
+      case 'week':
+        return events.filter(event => {
+          if (!event.due_date) return false;
+          const eventDate = new Date(event.due_date);
+          return eventDate >= weekStart && eventDate <= weekEnd;
+        });
+      case 'all':
+      default:
+        return events;
+    }
+  }, [events, currentView]);
 
-  const views = {
-    week: Views.WEEK,
-    day: Views.DAY,
-    agenda: Views.AGENDA,
+  // Get status badge variant
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'new': return 'default';
+      case 'assigned': return 'secondary';
+      case 'in_progress': return 'outline';
+      case 'completed': return 'default';
+      case 'cancelled': return 'destructive';
+      case 'on_hold': return 'secondary';
+      default: return 'outline';
+    }
+  };
+
+  // Get priority badge variant
+  const getPriorityBadgeVariant = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return 'destructive';
+      case 'high': return 'default';
+      case 'medium': return 'secondary';
+      case 'low': return 'outline';
+      default: return 'outline';
+    }
   };
 
   return (
@@ -155,26 +149,95 @@ export const DispatcherConsole: React.FC<DispatcherConsoleProps> = ({
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
           <TabsContent value="schedule" className="space-y-4">
-            {/* Split View: Calendar + Resources */}
-            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 h-[calc(100vh-300px)]">
+            {/* Chart and Unassigned Services Card */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {/* Chart Card */}
+              <Card className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <CalendarDays className="h-5 w-5 text-blue-600" />
+                  <h3 className="text-lg font-semibold">Gantt Chart</h3>
+                </div>
+                <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
+                  <div className="text-center text-gray-500">
+                    <CalendarDays className="h-12 w-12 mx-auto mb-2" />
+                    <p>Gantt Chart burada görünecek</p>
+                    <p className="text-sm">Servis talepleri zaman çizelgesi</p>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Unassigned Services Card */}
+              <Card className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <AlertCircle className="h-5 w-5 text-orange-600" />
+                  <h3 className="text-lg font-semibold">Atanmamış Servisler</h3>
+                </div>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {events.filter(e => e.resource === 'unassigned').length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                      <p>Tüm servisler atanmış</p>
+                    </div>
+                  ) : (
+                    events
+                      .filter(e => e.resource === 'unassigned')
+                      .slice(0, 5)
+                      .map((event) => (
+                        <div 
+                          key={event.id} 
+                          className="p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 cursor-pointer transition-colors"
+                          onClick={() => handleSelectEvent(event)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-gray-900 text-sm">{event.title}</h4>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant={getPriorityBadgeVariant(event.priority)} className="text-xs">
+                                  {event.priority}
+                                </Badge>
+                                {event.due_date && (
+                                  <span className="text-xs text-gray-500">
+                                    {format(new Date(event.due_date), 'dd MMM HH:mm', { locale: tr })}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <Button size="sm" variant="outline" className="text-xs h-6">
+                              Ata
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                  )}
+                  {events.filter(e => e.resource === 'unassigned').length > 5 && (
+                    <div className="text-center text-xs text-gray-500 py-2">
+                      +{events.filter(e => e.resource === 'unassigned').length - 5} servis daha...
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
+
+            {/* Split View: List + Resources */}
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 h-[calc(100vh-500px)]">
               
-              {/* Calendar Section - Sol 3 kolon */}
+              {/* List Section - Sol 3 kolon */}
               <div className="xl:col-span-3 space-y-4">
-                {/* Calendar View Controls */}
+                {/* View Controls */}
                 <div className="flex items-center justify-between">
                   <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as any)}>
                     <TabsList className="bg-gray-100">
-                      <TabsTrigger value="day" className="flex items-center gap-2">
+                      <TabsTrigger value="today" className="flex items-center gap-2">
                         <Clock className="h-4 w-4" />
-                        Günlük
+                        Bugün
                       </TabsTrigger>
                       <TabsTrigger value="week" className="flex items-center gap-2">
                         <CalendarDays className="h-4 w-4" />
-                        Haftalık
+                        Bu Hafta
                       </TabsTrigger>
-                      <TabsTrigger value="agenda" className="flex items-center gap-2">
+                      <TabsTrigger value="all" className="flex items-center gap-2">
                         <Users className="h-4 w-4" />
-                        Ajanda
+                        Tümü
                       </TabsTrigger>
                     </TabsList>
                   </Tabs>
@@ -213,61 +276,52 @@ export const DispatcherConsole: React.FC<DispatcherConsoleProps> = ({
                   </div>
                 </div>
 
-                {/* Calendar */}
-                <div className="calendar-container bg-white rounded-lg" style={{ height: '600px' }}>
-                  <Calendar
-                    localizer={localizer}
-                    events={events}
-                    startAccessor="start"
-                    endAccessor="end"
-                    titleAccessor="title"
-                    views={views}
-                    view={currentView}
-                    onView={setCurrentView}
-                    date={currentDate}
-                    onNavigate={setCurrentDate}
-                    onSelectEvent={handleSelectEvent}
-                    eventPropGetter={eventStyleGetter}
-                    // onEventDrop={handleEventDrop} // TODO: Enable when implementing drag & drop
-                    // onEventResize={handleEventResize} // TODO: Enable when implementing resize
-                    popup
-                    popupOffset={{ x: 30, y: 20 }}
-                    messages={{
-                      next: "Sonraki",
-                      previous: "Önceki", 
-                      today: "Bugün",
-                      month: "Ay",
-                      week: "Hafta",
-                      day: "Gün",
-                      agenda: "Ajanda",
-                      date: "Tarih",
-                      time: "Saat",
-                      event: "Etkinlik",
-                      noEventsInRange: "Bu tarih aralığında servis talebi bulunmuyor.",
-                      showMore: (total) => `+${total} daha fazla`,
-                    }}
-                    formats={{
-                      timeGutterFormat: 'HH:mm',
-                      eventTimeRangeFormat: ({ start, end }, culture, localizer) =>
-                        localizer?.format(start, 'HH:mm', culture) + ' - ' +
-                        localizer?.format(end, 'HH:mm', culture),
-                      agendaTimeFormat: 'HH:mm',
-                      agendaTimeRangeFormat: ({ start, end }, culture, localizer) =>
-                        localizer?.format(start, 'HH:mm', culture) + ' - ' +
-                        localizer?.format(end, 'HH:mm', culture),
-                    }}
-                    components={{
-                      event: ({ event }: { event: ServiceEvent }) => (
-                        <div className="custom-event">
-                          <div className="text-xs font-medium truncate">{event.title}</div>
-                          <div className="text-xs opacity-90 truncate">{event.technician}</div>
-                          <Badge variant="outline" className="text-xs px-1 py-0 bg-white/20">
+                {/* Service Requests List */}
+                <div className="bg-white rounded-lg border p-4 space-y-3 max-h-[500px] overflow-y-auto">
+                  {filteredEvents.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                      <p>Bu aralıkta servis talebi bulunmuyor.</p>
+                    </div>
+                  ) : (
+                    filteredEvents.map((event) => (
+                      <Card 
+                        key={event.id} 
+                        className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => handleSelectEvent(event)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-medium text-gray-900">{event.title}</h4>
+                              <Badge variant={getStatusBadgeVariant(event.status)}>
+                                {event.status}
+                              </Badge>
+                              <Badge variant={getPriorityBadgeVariant(event.priority)}>
                             {event.priority}
                           </Badge>
+                            </div>
+                            
+                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                              {event.due_date && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-4 w-4" />
+                                  <span>
+                                    {format(new Date(event.due_date), 'dd MMM yyyy HH:mm', { locale: tr })}
+                                  </span>
+                                </div>
+                              )}
+                              
+                              <div className="flex items-center gap-1">
+                                <User className="h-4 w-4" />
+                                <span>{event.technician}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      ),
-                    }}
-                  />
+                      </Card>
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -283,9 +337,11 @@ export const DispatcherConsole: React.FC<DispatcherConsoleProps> = ({
                   <div className="grid grid-cols-2 gap-2 text-center">
                     <div className="bg-white rounded p-2">
                       <div className="text-lg font-bold text-blue-600">
-                        {events.filter(e => moment(e.start).isSame(moment(), 'day')).length}
+                        {filteredEvents.length}
                       </div>
-                      <div className="text-xs text-gray-600">Bugün</div>
+                      <div className="text-xs text-gray-600">
+                        {currentView === 'today' ? 'Bugün' : currentView === 'week' ? 'Bu Hafta' : 'Toplam'}
+                      </div>
                     </div>
                     <div className="bg-white rounded p-2">
                       <div className="text-lg font-bold text-orange-600">

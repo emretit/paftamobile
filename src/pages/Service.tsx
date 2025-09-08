@@ -23,8 +23,7 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  const { data: serviceRequests } = useServiceRequests();
-
+  const { data: serviceRequests, isLoading, error } = useServiceRequests();
 
   const handleSelectRequest = (request: ServiceRequest) => {
     setSelectedRequest(request);
@@ -150,12 +149,9 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
 
 
             {/* Gantt Console - Full Width */}
-            <Card className="p-6 bg-white border border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Servis Talepleri - Gantt Görünümü</h2>
-              <div className="h-[calc(100vh-300px)] min-h-[600px]">
-                <DispatcherGanttConsole onSelectRequest={handleSelectRequest} />
-              </div>
-            </Card>
+            <div className="h-[calc(100vh-300px)] min-h-[600px]">
+              <DispatcherGanttConsole onSelectRequest={handleSelectRequest} />
+            </div>
           </div>
 
           <ServiceRequestDetail 

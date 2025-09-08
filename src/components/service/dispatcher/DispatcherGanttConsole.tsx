@@ -67,7 +67,7 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
   const [locationFilter, setLocationFilter] = useState('');
   
   // Bulk selection states
-  const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
   
   const { data: serviceRequests } = useServiceRequests();
@@ -139,11 +139,11 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
     });
   }, [serviceRequests, searchQuery, statusFilter, technicianFilter, priorityFilter, dateRange, locationFilter]);
 
-  // Servis taleplerini Gantt tasklerine dönüştür
-  const ganttTasks = useMemo(() => {
-    if (!filteredServiceRequests || !technicians) return { tasks: [], unassigned: [] };
+  // Servis taleplerini Gantt servislerine dönüştür
+  const ganttServices = useMemo(() => {
+    if (!filteredServiceRequests || !technicians) return { services: [], unassigned: [] };
 
-    const tasks: any[] = [];
+    const services: any[] = [];
     const unassigned: ServiceRequest[] = [];
 
     filteredServiceRequests.forEach(request => {
@@ -151,7 +151,7 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
         const startDate = moment(request.due_date).toDate();
         const endDate = moment(request.due_date).add(2, 'hours').toDate();
 
-        const task = {
+        const service = {
           id: request.id,
           title: request.title,
           start: startDate,
@@ -167,32 +167,32 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
         };
 
         if (request.assigned_to) {
-          tasks.push(task);
+          services.push(service);
         } else {
           unassigned.push(request);
         }
       }
     });
 
-    return { tasks, unassigned };
+    return { services, unassigned };
   }, [filteredServiceRequests, technicians, getTechnicianName]);
 
   // Unassigned requests'i ayrı useEffect ile güncelle
   useEffect(() => {
-    if (ganttTasks.unassigned) {
-      setUnassignedRequests(ganttTasks.unassigned);
+    if (ganttServices.unassigned) {
+      setUnassignedRequests(ganttServices.unassigned);
     }
-  }, [ganttTasks.unassigned]);
+  }, [ganttServices.unassigned]);
 
-  // Görev seçildiğinde
-  const handleTaskSelect = useCallback((task: any) => {
-    if (task.serviceRequest) {
-      onSelectRequest?.(task.serviceRequest);
+  // Servis seçildiğinde
+  const handleServiceSelect = useCallback((service: any) => {
+    if (service.serviceRequest) {
+      onSelectRequest?.(service.serviceRequest);
     }
   }, [onSelectRequest]);
 
-  // Görev tarih ve teknisyen değişikliği (drag & drop)
-  const handleTaskMove = useCallback(async (taskId: string, newStart: Date, technicianId: string) => {
+  // Servis tarih ve teknisyen değişikliği (drag & drop)
+  const handleServiceMove = useCallback(async (serviceId: string, newStart: Date, technicianId: string) => {
     try {
       const { error } = await supabase
         .from('service_requests')
@@ -202,18 +202,18 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
           status: 'assigned',
           updated_at: new Date().toISOString()
         })
-        .eq('id', taskId);
+        .eq('id', serviceId);
 
       if (error) {
-        console.error('Görev güncellenemedi:', error);
+        console.error('Servis güncellenemedi:', error);
       }
     } catch (error) {
       console.error('Güncelleme hatası:', error);
     }
   }, []);
 
-  // Atanmamış görevi teknisyene sürükle bırak
-  const assignTaskToTechnician = useCallback(async (requestId: string, technicianId: string) => {
+  // Atanmamış servisi teknisyene sürükle bırak
+  const assignServiceToTechnician = useCallback(async (requestId: string, technicianId: string) => {
     try {
       const { error } = await supabase
         .from('service_requests')
@@ -225,7 +225,7 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
         .eq('id', requestId);
 
       if (error) {
-        console.error('Görev atanamadı:', error);
+        console.error('Servis atanamadı:', error);
       } else {
         // Başarılı atama sonrası sayfayı yenile
         window.location.reload();
@@ -241,16 +241,16 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
     e.dataTransfer.dropEffect = 'move';
   }, []);
 
-  // Drop event handler for unassigned tasks
-  const handleUnassignedTaskDrop = useCallback((e: React.DragEvent) => {
+  // Drop event handler for unassigned services
+  const handleUnassignedServiceDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const requestId = e.dataTransfer.getData('text/plain');
     const technicianId = e.currentTarget.getAttribute('data-technician-id');
     
     if (requestId && technicianId) {
-      assignTaskToTechnician(requestId, technicianId);
+      assignServiceToTechnician(requestId, technicianId);
     }
-  }, [assignTaskToTechnician]);
+  }, [assignServiceToTechnician]);
 
   // Filtreleri temizle
   const clearAllFilters = useCallback(() => {
@@ -263,21 +263,21 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
   }, []);
 
   // Bulk actions handlers
-  const handleTaskToggle = useCallback((taskId: string) => {
-    setSelectedTasks(prev => 
-      prev.includes(taskId) 
-        ? prev.filter(id => id !== taskId)
-        : [...prev, taskId]
+  const handleServiceToggle = useCallback((serviceId: string) => {
+    setSelectedServices(prev => 
+      prev.includes(serviceId) 
+        ? prev.filter(id => id !== serviceId)
+        : [...prev, serviceId]
     );
   }, []);
 
   const handleSelectAll = useCallback((selectAll: boolean) => {
     if (selectAll) {
-      setSelectedTasks((ganttTasks.tasks || []).map(task => task.id));
+      setSelectedServices((ganttServices.services || []).map(service => service.id));
     } else {
-      setSelectedTasks([]);
+      setSelectedServices([]);
     }
-  }, [ganttTasks.tasks]);
+  }, [ganttServices.services]);
 
   const handleBulkAssign = useCallback(async (technicianId: string) => {
     try {
@@ -288,17 +288,17 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
           status: 'assigned',
           updated_at: new Date().toISOString()
         })
-        .in('id', selectedTasks);
+        .in('id', selectedServices);
 
       if (error) {
         console.error('Toplu atama hatası:', error);
       } else {
-        setSelectedTasks([]);
+        setSelectedServices([]);
       }
     } catch (error) {
       console.error('Toplu atama hatası:', error);
     }
-  }, [selectedTasks]);
+  }, [selectedServices]);
 
   const handleBulkStatusChange = useCallback(async (status: string) => {
     try {
@@ -308,39 +308,39 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
           status,
           updated_at: new Date().toISOString()
         })
-        .in('id', selectedTasks);
+        .in('id', selectedServices);
 
       if (error) {
         console.error('Toplu durum değiştirme hatası:', error);
       } else {
-        setSelectedTasks([]);
+        setSelectedServices([]);
       }
     } catch (error) {
       console.error('Toplu durum değiştirme hatası:', error);
     }
-  }, [selectedTasks]);
+  }, [selectedServices]);
 
   const handleBulkDelete = useCallback(async () => {
-    if (window.confirm('Seçili görevleri silmek istediğinizden emin misiniz?')) {
+    if (window.confirm('Seçili servisleri silmek istediğinizden emin misiniz?')) {
       try {
         const { error } = await supabase
           .from('service_requests')
           .delete()
-          .in('id', selectedTasks);
+          .in('id', selectedServices);
 
         if (error) {
           console.error('Toplu silme hatası:', error);
         } else {
-          setSelectedTasks([]);
+          setSelectedServices([]);
         }
       } catch (error) {
         console.error('Toplu silme hatası:', error);
       }
     }
-  }, [selectedTasks]);
+  }, [selectedServices]);
 
   const handleClearSelection = useCallback(() => {
-    setSelectedTasks([]);
+    setSelectedServices([]);
   }, []);
 
   return (
@@ -355,7 +355,7 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Servis Planlama</h2>
-                <p className="text-sm text-gray-600">Teknisyen atamaları ve görev planlama</p>
+                <p className="text-sm text-gray-600">Teknisyen atamaları ve servis planlama</p>
               </div>
             </div>
             
@@ -363,8 +363,8 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
             <div className="flex flex-wrap gap-2">
               <div className="bg-blue-600 text-white px-3 py-2 rounded-lg text-center min-w-[80px]">
                 <div className="text-sm font-bold">
-                  {(ganttTasks.tasks || []).filter(t => 
-                    moment(t.start).isSame(moment(), 'day')).length}
+                  {(ganttServices.services || []).filter(s => 
+                    moment(s.start).isSame(moment(), 'day')).length}
                 </div>
                 <div className="text-xs opacity-90">Bugün</div>
               </div>
@@ -374,7 +374,7 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
               </div>
               <div className="bg-green-600 text-white px-3 py-2 rounded-lg text-center min-w-[80px]">
                 <div className="text-sm font-bold">
-                  {(ganttTasks.tasks || []).filter(t => t.status === 'completed').length}
+                  {(ganttServices.services || []).filter(s => s.status === 'completed').length}
                 </div>
                 <div className="text-xs opacity-90">Tamamlandı</div>
               </div>
@@ -390,6 +390,7 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
             </div>
           </div>
         </div>
+
 
         {/* Advanced Filters */}
         <AdvancedFilters
@@ -412,29 +413,29 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
         {/* Bulk Actions */}
         {showBulkActions && (
           <BulkActions
-            selectedTasks={selectedTasks}
+            selectedServices={selectedServices}
             onSelectAll={handleSelectAll}
             onBulkAssign={handleBulkAssign}
             onBulkStatusChange={handleBulkStatusChange}
             onBulkDelete={handleBulkDelete}
             technicians={technicians || []}
-            totalTasks={(ganttTasks.tasks || []).length}
+            totalServices={(ganttServices.services || []).length}
             onClearSelection={handleClearSelection}
           />
         )}
 
-        {/* Main Gantt View with Unassigned Tasks Sidebar */}
+        {/* Main Gantt View with Unassigned Services Sidebar */}
         <div className="flex flex-col xl:flex-row gap-4">
           {/* Gantt Chart */}
           <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {ganttTasks.tasks && ganttTasks.tasks.length > 0 || technicians ? (
+            {ganttServices.services && ganttServices.services.length > 0 || technicians ? (
               <SimpleGanttChart
-                tasks={ganttTasks.tasks || []}
+                services={ganttServices.services || []}
                 technicians={technicians || []}
-                onTaskSelect={handleTaskSelect}
-                onTaskMove={handleTaskMove}
-                selectedTasks={selectedTasks}
-                onTaskToggle={handleTaskToggle}
+                onServiceSelect={handleServiceSelect}
+                onServiceMove={handleServiceMove}
+                selectedServices={selectedServices}
+                onServiceToggle={handleServiceToggle}
                 onSelectAll={handleSelectAll}
                 showSelection={showBulkActions}
               />
@@ -442,24 +443,24 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
               <div className="flex items-center justify-center h-64 text-gray-500">
                 <div className="text-center">
                   <CalendarDays className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium">Henüz planlanmış görev bulunmuyor</p>
+                  <p className="text-lg font-medium">Henüz planlanmış servis bulunmuyor</p>
                   <p className="text-sm text-gray-400 mt-2">Yeni servis talepleri oluşturun veya mevcut talepleri planlayın</p>
                 </div>
               </div>
             )}
           </div>
           
-          {/* Unassigned Tasks Sidebar */}
-          <div className="w-full xl:w-80 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          {/* Unassigned Services Sidebar */}
+          <div className="w-full xl:w-96 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="p-4 border-b border-gray-200 bg-orange-50">
               <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                <Users className="h-5 w-5 text-orange-600" />
-                Atanmamış Görevler
+                <CheckCircle className="h-5 w-5 text-orange-600" />
+                Atanmamış Servisler
                 <Badge variant="secondary" className="ml-auto bg-orange-100 text-orange-800">
                   {unassignedRequests.length}
                 </Badge>
               </h3>
-              <p className="text-sm text-gray-600 mt-1">Görevleri sürükleyip teknisyenlere atayın</p>
+              <p className="text-sm text-gray-600 mt-1">Servisleri sürükleyip teknisyenlere atayın</p>
             </div>
             
             <div className="p-4 space-y-3 max-h-[400px] xl:max-h-[600px] overflow-y-auto">
@@ -546,99 +547,12 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
               {unassignedRequests.length === 0 && (
                 <div className="text-center text-gray-500 py-8">
                   <CheckCircle className="h-12 w-12 mx-auto mb-3 text-green-600" />
-                  <p className="text-sm font-medium">Tüm görevler atanmış!</p>
+                  <p className="text-sm font-medium">Tüm servisler atanmış!</p>
                   <p className="text-xs text-gray-400 mt-1">Harika iş çıkarıyorsunuz</p>
                 </div>
               )}
             </div>
           </div>
-        </div>
-
-        {/* Bottom Stats and Technician Status */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Quick Stats */}
-          <Card className="p-4 bg-white border border-gray-200 shadow-sm">
-            <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-              <Clock className="h-4 w-4 text-blue-600" />
-              Bugün Özeti
-            </h3>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="text-center p-3 bg-blue-50 rounded-lg">
-                <div className="text-lg font-bold text-blue-600">
-                  {(ganttTasks.tasks || []).filter(t => 
-                    moment(t.start).isSame(moment(), 'day')).length}
-                </div>
-                <div className="text-sm text-blue-700">Planlanan</div>
-              </div>
-              <div className="text-center p-3 bg-orange-50 rounded-lg">
-                <div className="text-lg font-bold text-orange-600">
-                  {unassignedRequests.length}
-                </div>
-                <div className="text-sm text-orange-700">Atanmamış</div>
-              </div>
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <div className="text-lg font-bold text-green-600">
-                  {(ganttTasks.tasks || []).filter(t => 
-                    t.status === 'completed' && moment(t.start).isSame(moment(), 'day')).length}
-                </div>
-                <div className="text-sm text-green-700">Tamamlandı</div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Teknisyen Durumu */}
-          <Card className="p-4 bg-white border border-gray-200 shadow-sm">
-            <h3 className="font-semibold text-gray-800 mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-green-600" />
-                Teknisyen Durumu
-              </div>
-              <Badge variant="secondary" className="bg-green-100 text-green-800">
-                {technicians?.length || 0}
-              </Badge>
-            </h3>
-                
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {technicians?.slice(0, 4).map((tech) => {
-                const techTasks = (ganttTasks.tasks || []).filter(t => t.technicianId === tech.id);
-                const completedTasks = techTasks.filter(t => t.status === 'completed').length;
-                const totalTasks = techTasks.length;
-                const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-                
-                return (
-                  <div key={tech.id} className="p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="text-sm font-medium text-gray-900">
-                        {tech.first_name} {tech.last_name}
-                      </div>
-                      <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
-                        <span className="text-xs font-bold text-white">
-                          {totalTasks}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                      <span>{completedTasks}/{totalTasks}</span>
-                      <span>%{Math.round(completionRate)}</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-1">
-                      <div 
-                        className="bg-green-600 h-1 rounded-full transition-all duration-300"
-                        style={{ width: `${completionRate}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-              
-              {(!technicians || technicians.length === 0) && (
-                <div className="text-center text-gray-500 py-4">
-                  <Users className="h-6 w-6 mx-auto mb-1 opacity-50" />
-                  <p className="text-sm">Teknisyen bulunamadı</p>
-                </div>
-              )}
-            </div>
-          </Card>
         </div>
       </div>
     </div>

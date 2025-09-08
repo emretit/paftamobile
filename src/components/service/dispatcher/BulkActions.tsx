@@ -19,31 +19,31 @@ import {
 import { ServiceRequest } from '@/hooks/useServiceRequests';
 
 interface BulkActionsProps {
-  selectedTasks: string[];
+  selectedServices: string[];
   onSelectAll: (selectAll: boolean) => void;
   onBulkAssign: (technicianId: string) => void;
   onBulkStatusChange: (status: string) => void;
   onBulkDelete: () => void;
   technicians: any[];
-  totalTasks: number;
+  totalServices: number;
   onClearSelection: () => void;
 }
 
 export const BulkActions: React.FC<BulkActionsProps> = ({
-  selectedTasks,
+  selectedServices,
   onSelectAll,
   onBulkAssign,
   onBulkStatusChange,
   onBulkDelete,
   technicians,
-  totalTasks,
+  totalServices,
   onClearSelection
 }) => {
   const [selectedTechnician, setSelectedTechnician] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
 
-  const isAllSelected = selectedTasks.length === totalTasks && totalTasks > 0;
-  const isPartiallySelected = selectedTasks.length > 0 && selectedTasks.length < totalTasks;
+  const isAllSelected = selectedServices.length === totalServices && totalServices > 0;
+  const isPartiallySelected = selectedServices.length > 0 && selectedServices.length < totalServices;
 
   const statusOptions = [
     { value: 'assigned', label: 'Atanmış', icon: CheckCircle, color: 'text-blue-600' },
@@ -71,7 +71,7 @@ export const BulkActions: React.FC<BulkActionsProps> = ({
     }
   };
 
-  if (selectedTasks.length === 0) {
+  if (selectedServices.length === 0) {
     return (
       <Card className="p-4">
         <div className="flex items-center justify-between">
@@ -84,11 +84,11 @@ export const BulkActions: React.FC<BulkActionsProps> = ({
               onCheckedChange={handleSelectAll}
             />
             <span className="text-sm font-medium text-gray-700">
-              {isAllSelected ? 'Tümünü Kaldır' : 'Tümünü Seç'} ({totalTasks} görev)
+              {isAllSelected ? 'Tümünü Kaldır' : 'Tümünü Seç'} ({totalServices} servis)
             </span>
           </div>
           <div className="text-sm text-gray-500">
-            Toplu işlem yapmak için görevleri seçin
+            Toplu işlem yapmak için servisleri seçin
           </div>
         </div>
       </Card>
@@ -109,7 +109,7 @@ export const BulkActions: React.FC<BulkActionsProps> = ({
               onCheckedChange={handleSelectAll}
             />
             <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-              {selectedTasks.length} görev seçildi
+              {selectedServices.length} servis seçildi
             </Badge>
             <Button
               variant="ghost"

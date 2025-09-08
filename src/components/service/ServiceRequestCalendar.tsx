@@ -1,17 +1,12 @@
 
 import React, { useMemo } from "react";
-import { Calendar, momentLocalizer } from "react-big-calendar";
-import moment from "moment";
-import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useServiceRequests, ServiceRequest } from "@/hooks/useServiceRequests";
 import { useTechnicianNames } from "./hooks/useTechnicianNames";
 import { Card } from "@/components/ui/card";
-import { TECHNICIAN_COLORS } from "@/types/calendar";
-
-// Import additional components
-import "./calendar/calendar-styles.css";
-
-const localizer = momentLocalizer(moment);
+import { Badge } from "@/components/ui/badge";
+import { CalendarDays, Clock, User, MapPin } from "lucide-react";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
 
 interface ServiceRequestCalendarProps {
   searchQuery: string;
@@ -27,25 +22,7 @@ export const ServiceRequestCalendar: React.FC<ServiceRequestCalendarProps> = ({
   onSelectRequest
 }) => {
   const { data: serviceRequests } = useServiceRequests();
-  const { employees, getTechnicianName } = useTechnicianNames();
-
-  // Create an array of technician objects with IDs and colors
-  const technicians = useMemo(() => {
-    if (!employees) return [];
-    
-    return employees.map((employee, index) => ({
-      id: employee.id,
-      name: `${employee.first_name} ${employee.last_name}`,
-      color: TECHNICIAN_COLORS.colors[index % TECHNICIAN_COLORS.colors.length]
-    }));
-  }, [employees]);
-
-  // Get technician color based on ID
-  const getTechnicianColor = (technicianId: string | undefined) => {
-    if (!technicianId) return TECHNICIAN_COLORS.default;
-    const technician = technicians.find(t => t.id === technicianId);
-    return technician?.color || TECHNICIAN_COLORS.default;
-  };
+  const { getTechnicianName } = useTechnicianNames();
 
   // Filter service requests
   const filteredRequests = useMemo(() => {
@@ -67,50 +44,27 @@ export const ServiceRequestCalendar: React.FC<ServiceRequestCalendarProps> = ({
     });
   }, [serviceRequests, searchQuery, statusFilter, technicianFilter]);
 
-  // Convert service requests to calendar events
-  const calendarEvents = useMemo(() => {
-    return filteredRequests.map(request => {
-      // Get date from due_date or created_at
-      const eventDate = request.due_date 
-        ? new Date(request.due_date)
-        : (request.created_at ? new Date(request.created_at) : new Date());
-      
-      return {
-        id: request.id,
-        title: request.title,
-        start: eventDate,
-        end: new Date(eventDate.getTime() + 60 * 60 * 1000), // 1 hour duration
-        resource: request,
-        allDay: false,
-        technicianId: request.assigned_to,
-        status: request.status
-      };
-    });
-  }, [filteredRequests]);
-
-  // Custom event styling
-  const eventStyleGetter = (event: any) => {
-    const color = getTechnicianColor(event.technicianId);
-    const isNewRequest = event.status === "new";
-    
-    return {
-      style: {
-        backgroundColor: color,
-        borderRadius: '4px',
-        color: '#fff',
-        border: 'none',
-        display: 'block',
-        boxShadow: isNewRequest ? '0 0 0 2px #ff4081' : 'none',
-        borderLeft: isNewRequest ? '4px solid #ff4081' : 'none',
-        opacity: 0.9
-      }
-    };
+  // Get status badge variant
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'new': return 'default';
+      case 'assigned': return 'secondary';
+      case 'in_progress': return 'outline';
+      case 'completed': return 'default';
+      case 'cancelled': return 'destructive';
+      case 'on_hold': return 'secondary';
+      default: return 'outline';
+    }
   };
 
-  // Handle event click
-  const handleEventClick = (event: any) => {
-    if (event.resource) {
-      onSelectRequest(event.resource);
+  // Get priority badge variant
+  const getPriorityBadgeVariant = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return 'destructive';
+      case 'high': return 'default';
+      case 'medium': return 'secondary';
+      case 'low': return 'outline';
+      default: return 'outline';
     }
   };
 
@@ -131,30 +85,68 @@ export const ServiceRequestCalendar: React.FC<ServiceRequestCalendarProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-md border p-4 min-h-[600px] shadow-sm modern-calendar">
-      <Calendar
-        localizer={localizer}
-        events={calendarEvents}
-        startAccessor="start"
-        endAccessor="end"
-        style={{ height: 600 }}
-        onSelectEvent={handleEventClick}
-        eventPropGetter={eventStyleGetter}
-        views={['month', 'week', 'day']}
-        messages={{
-          month: 'Ay',
-          week: 'Hafta',
-          day: 'Gün',
-          today: 'Bugün',
-          previous: 'Önceki',
-          next: 'Sonraki',
-          agenda: 'Ajanda',
-          date: 'Tarih',
-          time: 'Saat',
-          event: 'Olay',
-          noEventsInRange: 'Bu aralıkta hiç servis talebi yok.'
-        }}
-      />
+    <div className="bg-white rounded-md border p-4 min-h-[600px] shadow-sm">
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 mb-4">
+          <CalendarDays className="h-5 w-5 text-blue-600" />
+          <h3 className="text-lg font-semibold">Servis Talepleri Listesi</h3>
+        </div>
+        
+        <div className="space-y-3">
+          {filteredRequests.map((request) => (
+            <Card 
+              key={request.id} 
+              className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => onSelectRequest(request)}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h4 className="font-medium text-gray-900">{request.title}</h4>
+                    <Badge variant={getStatusBadgeVariant(request.status)}>
+                      {request.status}
+                    </Badge>
+                    <Badge variant={getPriorityBadgeVariant(request.priority)}>
+                      {request.priority}
+                    </Badge>
+                  </div>
+                  
+                  {request.description && (
+                    <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                      {request.description}
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                    {request.due_date && (
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        <span>
+                          {format(new Date(request.due_date), 'dd MMM yyyy HH:mm', { locale: tr })}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {request.assigned_to && (
+                      <div className="flex items-center gap-1">
+                        <User className="h-4 w-4" />
+                        <span>{getTechnicianName(request.assigned_to)}</span>
+                      </div>
+                    )}
+                    
+                    {request.location && (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        <span>{request.location}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
