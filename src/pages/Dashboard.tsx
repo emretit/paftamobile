@@ -21,7 +21,8 @@ import {
   RefreshCw,
   Download,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  TrendingDown
 } from "lucide-react";
 
 interface DashboardProps {
@@ -90,82 +91,202 @@ const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
         </div>
 
         {/* Dashboard Summary Widgets */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Executive Summary Section */}
-          <ExecutiveSummary />
+          <div>
+            <ExecutiveSummary />
+          </div>
           
           {/* Summary Cards Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Financial Summary */}
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Card className="h-fit">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
                   <DollarSign className="h-5 w-5 text-blue-600" />
                   Finansal Özet
-                </h3>
-                <Button variant="ghost" size="sm">
-                  <TrendingUp className="h-4 w-4" />
-                </Button>
-              </div>
-              <FinancialOverview />
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-muted/20 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Nakit Akışı</span>
+                      <TrendingUp className="h-4 w-4 text-blue-500" />
+                    </div>
+                    <p className="text-xl font-bold text-blue-600">₺50,000</p>
+                    <span className="text-xs text-muted-foreground">Bu ay</span>
+                  </div>
+                  
+                  <div className="bg-muted/20 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Alacaklar</span>
+                      <TrendingUp className="h-4 w-4 text-green-500" />
+                    </div>
+                    <p className="text-xl font-bold text-green-600">₺125,000</p>
+                    <span className="text-xs text-muted-foreground">Toplam</span>
+                  </div>
+                  
+                  <div className="bg-muted/20 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Borçlar</span>
+                      <TrendingDown className="h-4 w-4 text-red-500" />
+                    </div>
+                    <p className="text-xl font-bold text-red-600">₺75,000</p>
+                    <span className="text-xs text-muted-foreground">Toplam</span>
+                  </div>
+                  
+                  <div className="bg-muted/20 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Net Durum</span>
+                      <BarChart3 className="h-4 w-4 text-purple-500" />
+                    </div>
+                    <p className="text-xl font-bold text-purple-600">₺100,000</p>
+                    <span className="text-xs text-muted-foreground">Genel Bakiye</span>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
 
             {/* Sales & CRM Summary */}
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Card className="h-fit">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
                   <Target className="h-5 w-5 text-green-600" />
                   Satış & CRM
-                </h3>
-                <Button variant="ghost" size="sm">
-                  <Target className="h-4 w-4" />
-                </Button>
-              </div>
-              <SalesCRMSection />
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-muted/20 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Fırsatlar</span>
+                      <BarChart3 className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <p className="text-xl font-bold">24</p>
+                    <span className="text-xs text-muted-foreground">Aktif</span>
+                  </div>
+                  
+                  <div className="bg-muted/20 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Görevler</span>
+                      <Calendar className="h-4 w-4 text-green-600" />
+                    </div>
+                    <p className="text-xl font-bold">18</p>
+                    <span className="text-xs text-muted-foreground">Bekleyen</span>
+                  </div>
+                  
+                  <div className="bg-muted/20 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Teklifler</span>
+                      <Target className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <p className="text-xl font-bold">12</p>
+                    <span className="text-xs text-muted-foreground">Hazırlanıyor</span>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
+          </div>
 
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* HR Summary */}
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Card className="h-fit">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
                   <Users className="h-5 w-5 text-purple-600" />
                   İnsan Kaynakları
-                </h3>
-                <Button variant="ghost" size="sm">
-                  <Users className="h-4 w-4" />
-                </Button>
-              </div>
-              <HRAnalytics />
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-muted/20 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Toplam Çalışan</span>
+                      <Users className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <p className="text-xl font-bold">127</p>
+                    <span className="text-xs text-muted-foreground">+3 bu ay</span>
+                  </div>
+                  
+                  <div className="bg-muted/20 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">İzinli Personel</span>
+                      <Calendar className="h-4 w-4 text-orange-600" />
+                    </div>
+                    <p className="text-xl font-bold">8</p>
+                    <span className="text-xs text-muted-foreground">Bu hafta</span>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
 
             {/* Operations Summary */}
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Card className="h-fit">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
                   <Settings className="h-5 w-5 text-orange-600" />
                   Operasyonlar
-                </h3>
-                <Button variant="ghost" size="sm">
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </div>
-              <OperationsOverview />
-            </Card>
-
-            {/* Activity Feed */}
-            <Card className="p-6 lg:col-span-2">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Bell className="h-5 w-5 text-red-600" />
-                  Son Aktiviteler
-                </h3>
-                <Button variant="ghost" size="sm">
-                  <Bell className="h-4 w-4" />
-                </Button>
-              </div>
-              <ActivityFeed />
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-muted/20 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Servis Talepleri</span>
+                      <Settings className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <p className="text-xl font-bold">45</p>
+                    <span className="text-xs text-muted-foreground">Aktif</span>
+                  </div>
+                  
+                  <div className="bg-muted/20 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Açık Projeler</span>
+                      <Target className="h-4 w-4 text-green-600" />
+                    </div>
+                    <p className="text-xl font-bold">12</p>
+                    <span className="text-xs text-muted-foreground">Devam ediyor</span>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
           </div>
+
+          {/* Activity Feed */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-red-600" />
+                Son Aktiviteler
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4 p-3 bg-muted/20 rounded-lg">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Yeni müşteri eklendi: ABC Şirketi</p>
+                    <p className="text-xs text-muted-foreground">2 saat önce</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 p-3 bg-muted/20 rounded-lg">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Fatura gönderildi: #2024-001</p>
+                    <p className="text-xs text-muted-foreground">4 saat önce</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 p-3 bg-muted/20 rounded-lg">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Yeni görev atandı: Proje analizi</p>
+                    <p className="text-xs text-muted-foreground">1 gün önce</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </DefaultLayout>
