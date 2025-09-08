@@ -161,6 +161,9 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
           priority: request.priority,
           status: request.status,
           technicianId: request.assigned_to,
+          serviceType: request.service_type,
+          location: request.location,
+          isService: true
         };
 
         if (request.assigned_to) {
@@ -241,7 +244,7 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
   // Drop event handler for unassigned tasks
   const handleUnassignedTaskDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    const requestId = e.dataTransfer.getData('requestId');
+    const requestId = e.dataTransfer.getData('text/plain');
     const technicianId = e.currentTarget.getAttribute('data-technician-id');
     
     if (requestId && technicianId) {
@@ -466,9 +469,10 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
                   className="p-3 border border-dashed border-orange-200 rounded-lg cursor-move hover:border-orange-400 hover:bg-orange-50 transition-all group"
                   draggable
                   onDragStart={(e) => {
-                    e.dataTransfer.setData('requestId', request.id);
+                    e.dataTransfer.setData('text/plain', request.id);
                     e.dataTransfer.effectAllowed = 'move';
-                    // Drag image oluştur
+                    
+                    // Atanmamış görev için özel drag image oluştur
                     const dragImage = document.createElement('div');
                     dragImage.innerHTML = `
                       <div style="
@@ -479,9 +483,25 @@ export const DispatcherGanttConsole: React.FC<DispatcherGanttConsoleProps> = ({
                         font-size: 12px;
                         font-weight: 600;
                         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                        border: 2px solid ${statusColors[request.status as keyof typeof statusColors]};
+                        border: 2px dashed #f59e0b;
                         max-width: 200px;
+                        position: relative;
                       ">
+                        <div style="
+                          position: absolute;
+                          top: -8px;
+                          right: -8px;
+                          background: #f59e0b;
+                          color: white;
+                          border-radius: 50%;
+                          width: 16px;
+                          height: 16px;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          font-size: 10px;
+                          font-weight: bold;
+                        ">!</div>
                         ${request.title}
                       </div>
                     `;

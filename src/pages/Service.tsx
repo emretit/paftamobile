@@ -25,20 +25,6 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
 
   const { data: serviceRequests } = useServiceRequests();
 
-  // Teknisyenleri getir
-  const { data: technicians } = useQuery({
-    queryKey: ['technicians-service'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('department', 'Teknik')
-        .eq('status', 'aktif');
-      
-      if (error) throw error;
-      return data || [];
-    },
-  });
 
   const handleSelectRequest = (request: ServiceRequest) => {
     setSelectedRequest(request);
@@ -60,7 +46,7 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
         <TopBar />
-        <div className="max-w-[1800px] mx-auto p-6">
+        <div className="w-full p-6">
           <div className="space-y-6">
             {/* Salesforce Style Header */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -162,42 +148,11 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
               </Card>
             </div>
 
-            {/* Teknisyenler Bölümü */}
-            <Card className="p-6 bg-white border border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">Aktif Teknisyenler</h2>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {technicians?.length || 0} Teknisyen
-                </Badge>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {technicians?.map((tech) => (
-                  <div key={tech.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold">
-                          {tech.first_name[0]}{tech.last_name[0]}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{tech.first_name} {tech.last_name}</p>
-                        <p className="text-sm text-gray-500">{tech.department}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {(!technicians || technicians.length === 0) && (
-                  <div className="col-span-full text-center py-8 text-gray-500">
-                    Teknisyen bulunamadı
-                  </div>
-                )}
-              </div>
-            </Card>
 
             {/* Gantt Console - Full Width */}
             <Card className="p-6 bg-white border border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Servis Talepleri - Gantt Görünümü</h2>
-              <div className="h-[600px]">
+              <div className="h-[calc(100vh-300px)] min-h-[600px]">
                 <DispatcherGanttConsole onSelectRequest={handleSelectRequest} />
               </div>
             </Card>

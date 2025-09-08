@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CalendarDays, Users, Clock, MapPin, ChevronLeft, ChevronRight, Calendar, Eye, EyeOff, Filter, MoreHorizontal, Play, Pause, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
-import { ServiceRequest } from '@/hooks/useServiceRequests';
+import { ServiceRequest, useServiceRequests } from '@/hooks/useServiceRequests';
 import moment from 'moment';
 import 'moment/locale/tr';
 
@@ -43,6 +43,8 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
   onSelectAll,
   showSelection = false
 }) => {
+  // Servis verilerini çek
+  const { data: serviceRequests } = useServiceRequests();
   const [currentDate, setCurrentDate] = useState(moment().startOf('week'));
   const [draggedTask, setDraggedTask] = useState<string | null>(null);
   const [hoveredTask, setHoveredTask] = useState<string | null>(null);
@@ -99,11 +101,44 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
     return slots;
   }, []);
 
+  // Servis verilerini Gantt tasklerine dönüştür
+  const serviceTasks = useMemo(() => {
+    if (!serviceRequests) return [];
+    
+    return serviceRequests.map(request => {
+      if (!request.due_date) return null;
+      
+      const startDate = moment(request.due_date).toDate();
+      const endDate = moment(request.due_date).add(2, 'hours').toDate();
+      
+      return {
+        id: request.id,
+        title: request.title,
+        start: startDate,
+        end: endDate,
+        serviceRequest: request,
+        technician: request.assigned_to ? technicians?.find(t => t.id === request.assigned_to)?.first_name + ' ' + technicians?.find(t => t.id === request.assigned_to)?.last_name : undefined,
+        priority: request.priority,
+        status: request.status,
+        technicianId: request.assigned_to,
+        serviceType: request.service_type,
+        location: request.location,
+        isService: true
+      };
+    }).filter(Boolean);
+  }, [serviceRequests, technicians]);
+
+  // Tüm görevleri birleştir (mevcut tasks + servis tasks)
+  const allTasks = useMemo(() => {
+    const serviceTasksWithId = serviceTasks.map(task => ({ ...task, id: `service-${task.id}` }));
+    return [...tasks, ...serviceTasksWithId];
+  }, [tasks, serviceTasks]);
+
   // Filtrelenmiş görevler
   const filteredTasks = useMemo(() => {
-    if (showCompleted) return tasks;
-    return tasks.filter(task => task.status !== 'completed');
-  }, [tasks, showCompleted]);
+    if (showCompleted) return allTasks;
+    return allTasks.filter(task => task.status !== 'completed');
+  }, [allTasks, showCompleted]);
 
   const priorityColors = {
     urgent: '#ef4444',
@@ -203,14 +238,24 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
     const taskId = e.dataTransfer.getData('text/plain');
     
     if (taskId && onTaskMove) {
-      const newStart = moment(day).hour(hour).minute(0).toDate();
-      onTaskMove(taskId, newStart, technicianId);
+      // Atanmamış görevler için özel işlem
+      const isUnassignedTask = !filteredTasks.find(t => t.id === taskId);
+      
+      if (isUnassignedTask) {
+        // Atanmamış görev için sadece teknisyen ataması yap
+        const newStart = moment(day).hour(hour).minute(0).toDate();
+        onTaskMove(taskId, newStart, technicianId);
+      } else {
+        // Mevcut görev için normal işlem
+        const newStart = moment(day).hour(hour).minute(0).toDate();
+        onTaskMove(taskId, newStart, technicianId);
+      }
     }
     
     setDraggedTask(null);
     setIsDragging(false);
     setDragPreview({ x: 0, y: 0, task: null });
-  }, [onTaskMove]);
+  }, [onTaskMove, filteredTasks]);
 
   const handleDragEnd = useCallback(() => {
     setDraggedTask(null);
@@ -218,267 +263,163 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
     setDragPreview({ x: 0, y: 0, task: null });
   }, []);
 
-  // Clean Teknisyen satırlarını render et
-  const renderTechnicianRow = (technician: any) => {
-    const techTasks = filteredTasks.filter(task => task.technicianId === technician.id);
-    const completedTasks = techTasks.filter(task => task.status === 'completed').length;
-    const totalTasks = techTasks.length;
-
-    return (
-      <div key={technician.id} className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors min-h-[48px]">
-        {/* Clean Teknisyen ismi */}
-        <div className="bg-white p-3 border-r border-gray-200 sticky left-0 z-10 flex items-center gap-2 min-w-[240px] w-[240px]">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
-            {technician.first_name?.[0]}{technician.last_name?.[0]}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="font-medium text-sm text-gray-900 truncate">
-              {technician.first_name} {technician.last_name}
-            </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span>{totalTasks} görev</span>
-              {totalTasks > 0 && (
-                <>
-                  <span>•</span>
-                  <span className="text-green-600">{completedTasks} tamamlandı</span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Clean Timeline Grid with Drop Zones */}
-        <div className="flex flex-1 overflow-x-auto">
-          {displayDays.map((day) => {
-            const dayTasks = techTasks.filter(task => 
-              moment(task.start).isSame(day, 'day')
-            );
-
-            return (
-              <div 
-                key={day.format('YYYY-MM-DD')} 
-                className="flex-1 border-r border-gray-100 p-2 relative min-h-[48px] hover:bg-blue-50 transition-colors cursor-pointer technician-drop-zone"
-                style={{ minWidth: getMinWidth(120) }}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, day, 9, technician.id)} // Default 9 AM
-                title={`${day.format('DD MMM')} - ${technician.first_name} ${technician.last_name} (Sürükle & Bırak)`}
-              >
-                <div className="space-y-1">
-                  {dayTasks.length > 0 ? (
-                    dayTasks.map((task) => (
-                      <TooltipProvider key={task.id}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div
-                              className={`relative rounded px-2 py-1 text-xs font-medium cursor-pointer transition-all duration-200 ${
-                                selectedTasks.includes(task.id) ? 'ring-1 ring-blue-500' : ''
-                              } ${hoveredTask === task.id ? 'scale-102 shadow-md' : ''} ${
-                                task.status === 'completed' ? 'opacity-75' : ''
-                              }`}
-                              style={{
-                                backgroundColor: priorityColors[task.priority as keyof typeof priorityColors],
-                                color: 'white',
-                                borderLeft: `3px solid ${statusColors[task.status as keyof typeof statusColors]}`,
-                              }}
-                              draggable
-                              onDragStart={(e) => handleDragStart(e, task.id)}
-                              onDragEnd={handleDragEnd}
-                              onMouseEnter={() => setHoveredTask(task.id)}
-                              onMouseLeave={() => setHoveredTask(null)}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (showSelection && onTaskToggle) {
-                                  onTaskToggle(task.id);
-                                } else {
-                                  onTaskSelect?.(task);
-                                }
-                              }}
-                            >
-                              <div className="flex items-center gap-1">
-                                {showSelection && (
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedTasks.includes(task.id)}
-                                    onChange={(e) => {
-                                      e.stopPropagation();
-                                      onTaskToggle?.(task.id);
-                                    }}
-                                    className="mr-1 h-2 w-2"
-                                  />
-                                )}
-                                {task.status === 'completed' && <CheckCircle2 className="h-3 w-3 flex-shrink-0" />}
-                                {task.status === 'in_progress' && <Play className="h-3 w-3 flex-shrink-0" />}
-                                {task.status === 'on_hold' && <Pause className="h-3 w-3 flex-shrink-0" />}
-                                {task.status === 'cancelled' && <XCircle className="h-3 w-3 flex-shrink-0" />}
-                                <span className="truncate text-xs">{task.title}</span>
-                              </div>
-                              <div className="text-xs opacity-75 mt-1">
-                                {moment(task.start).format('HH:mm')}
-                              </div>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            <div className="space-y-1">
-                              <div className="font-semibold">{task.title}</div>
-                              <div className="text-sm text-gray-300">
-                                <div>Teknisyen: {task.technician || 'Atanmamış'}</div>
-                                <div>Öncelik: {task.priority}</div>
-                                <div>Durum: {task.status}</div>
-                                <div>Saat: {moment(task.start).format('HH:mm')} - {moment(task.end).format('HH:mm')}</div>
-                              </div>
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ))
-                  ) : (
-                    <div className="text-center text-gray-400 text-xs py-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      Görevleri buraya sürükleyin
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="gantt-container" ref={ganttRef}>
       {/* Modern Gantt Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-4 bg-white border-b border-gray-200">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (viewMode === 'day') {
-                  setCurrentDate(moment(currentDate).subtract(1, 'day'));
-                } else if (viewMode === 'week') {
-                  setCurrentDate(moment(currentDate).subtract(1, 'week'));
-                } else {
-                  setCurrentDate(moment(currentDate).subtract(1, 'month'));
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
+        {/* Ana Başlık ve Tarih */}
+        <div className="px-4 py-3 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {viewMode === 'day' 
+                  ? currentDate.format('DD MMMM YYYY')
+                  : viewMode === 'week'
+                  ? `${currentDate.format('DD MMM')} - ${moment(currentDate).add(6, 'days').format('DD MMM YYYY')}`
+                  : currentDate.format('MMMM YYYY')
                 }
-              }}
-              className="hover:bg-blue-50"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
+              </h3>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (viewMode === 'day') {
+                      setCurrentDate(moment(currentDate).subtract(1, 'day'));
+                    } else if (viewMode === 'week') {
+                      setCurrentDate(moment(currentDate).subtract(1, 'week'));
+                    } else {
+                      setCurrentDate(moment(currentDate).subtract(1, 'month'));
+                    }
+                  }}
+                  className="h-8 w-8 p-0 hover:bg-blue-50"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (viewMode === 'day') {
+                      setCurrentDate(moment(currentDate).add(1, 'day'));
+                    } else if (viewMode === 'week') {
+                      setCurrentDate(moment(currentDate).add(1, 'week'));
+                    } else {
+                      setCurrentDate(moment(currentDate).add(1, 'month'));
+                    }
+                  }}
+                  className="h-8 w-8 p-0 hover:bg-blue-50"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
-              onClick={() => {
-                if (viewMode === 'day') {
-                  setCurrentDate(moment(currentDate).add(1, 'day'));
-                } else if (viewMode === 'week') {
-                  setCurrentDate(moment(currentDate).add(1, 'week'));
-                } else {
-                  setCurrentDate(moment(currentDate).add(1, 'month'));
-                }
-              }}
-              className="hover:bg-blue-50"
+              onClick={() => setCurrentDate(moment().startOf('week'))}
+              className="bg-blue-600 hover:bg-blue-700"
             >
-              <ChevronRight className="h-4 w-4" />
+              <Calendar className="h-4 w-4 mr-1" />
+              Bugün
             </Button>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <Button
-              variant={viewMode === 'day' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('day')}
-            >
-              Gün
-            </Button>
-            <Button
-              variant={viewMode === 'week' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('week')}
-            >
-              Hafta
-            </Button>
-            <Button
-              variant={viewMode === 'month' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('month')}
-            >
-              Ay
-            </Button>
-          </div>
-
-          <h3 className="font-semibold text-gray-800 ml-4">
-            {viewMode === 'day' 
-              ? currentDate.format('DD MMMM YYYY')
-              : viewMode === 'week'
-              ? `${currentDate.format('DD MMM')} - ${moment(currentDate).add(6, 'days').format('DD MMM YYYY')}`
-              : currentDate.format('MMMM YYYY')
-            }
-          </h3>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 bg-gray-50 rounded-lg p-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setZoomLevel(Math.max(0.5, zoomLevel - 0.1))}
-              disabled={zoomLevel <= 0.5}
-              className="h-8 w-8 p-0"
-            >
-              -
-            </Button>
-            <span className="text-xs text-gray-600 min-w-[3rem] text-center px-2">
-              {Math.round(zoomLevel * 100)}%
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setZoomLevel(Math.min(2, zoomLevel + 0.1))}
-              disabled={zoomLevel >= 2}
-              className="h-8 w-8 p-0"
-            >
-              +
-            </Button>
+        {/* Kontrol Butonları */}
+        <div className="px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            {/* Görünüm Modu */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Görünüm:</span>
+              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'day' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('day')}
+                  className="h-8 px-3"
+                >
+                  Gün
+                </Button>
+                <Button
+                  variant={viewMode === 'week' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('week')}
+                  className="h-8 px-3"
+                >
+                  Hafta
+                </Button>
+                <Button
+                  variant={viewMode === 'month' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('month')}
+                  className="h-8 px-3"
+                >
+                  Ay
+                </Button>
+              </div>
+            </div>
+
+            {/* Zoom Kontrolü */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Yakınlaştır:</span>
+              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setZoomLevel(Math.max(0.5, zoomLevel - 0.1))}
+                  disabled={zoomLevel <= 0.5}
+                  className="h-8 w-8 p-0"
+                >
+                  -
+                </Button>
+                <span className="text-xs text-gray-600 min-w-[3rem] text-center px-2">
+                  {Math.round(zoomLevel * 100)}%
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setZoomLevel(Math.min(2, zoomLevel + 0.1))}
+                  disabled={zoomLevel >= 2}
+                  className="h-8 w-8 p-0"
+                >
+                  +
+                </Button>
+              </div>
+            </div>
+
+            {/* Filtre Butonları */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCompleted(!showCompleted)}
+                className={`h-8 ${showCompleted ? 'bg-green-50 text-green-700 border-green-200' : ''}`}
+                title="Ctrl+C ile aç/kapat"
+              >
+                {showCompleted ? <Eye className="h-4 w-4 mr-1" /> : <EyeOff className="h-4 w-4 mr-1" />}
+                Tamamlanan
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowLegend(!showLegend)}
+                className="h-8"
+                title="Ctrl+H ile aç/kapat"
+              >
+                <Filter className="h-4 w-4 mr-1" />
+                {showLegend ? 'Gizle' : 'Göster'}
+              </Button>
+            </div>
           </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowCompleted(!showCompleted)}
-            className={showCompleted ? 'bg-green-50 text-green-700' : ''}
-            title="Ctrl+C ile aç/kapat"
-          >
-            {showCompleted ? <Eye className="h-4 w-4 mr-1" /> : <EyeOff className="h-4 w-4 mr-1" />}
-            Tamamlanan
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowLegend(!showLegend)}
-            title="Ctrl+H ile aç/kapat"
-          >
-            <Filter className="h-4 w-4 mr-1" />
-            {showLegend ? 'Gizle' : 'Göster'}
-          </Button>
-
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => setCurrentDate(moment().startOf('week'))}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Calendar className="h-4 w-4 mr-1" />
-            Bugün
-          </Button>
         </div>
       </div>
 
       {/* Clean Timeline Header */}
-      <div className="flex border-b border-gray-200 bg-gray-50">
+      <div className="flex border-b border-gray-200 bg-gray-50 sticky top-[120px] z-10">
         <div className="bg-white p-3 border-r border-gray-200 font-medium text-gray-700 flex items-center gap-2 min-w-[240px] w-[240px]">
           {showSelection && (
             <input
@@ -494,46 +435,196 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
           <Users className="h-4 w-4 text-blue-600" />
           <span className="text-sm font-semibold text-gray-700">Teknisyenler</span>
         </div>
-        <div className="flex flex-1 overflow-x-auto">
+        <div className="flex-1 overflow-x-auto">
+          <div className="flex" style={{ minWidth: `${displayDays.length * getMinWidth(120)}px` }}>
           {displayDays.map((day) => (
-            <div 
-              key={day.format('YYYY-MM-DD')} 
-              className={`flex-1 p-2 border-r border-gray-200 text-center ${day.isSame(moment(), 'day') ? 'bg-blue-50 border-blue-300' : 'bg-white'}`}
-              style={{ minWidth: getMinWidth(120) }}
-            >
-              <div className="text-xs font-medium text-gray-600">{day.format('ddd')}</div>
-              <div className="text-sm font-bold text-gray-900">{day.format('DD')}</div>
+              <div 
+                key={day.format('YYYY-MM-DD')} 
+                className="flex-1 p-2 border-r border-gray-200 text-center" 
+                style={{ minWidth: getMinWidth(120) }}
+              >
+                <div className={`text-xs font-medium ${day.isSame(moment(), 'day') ? 'text-blue-600' : 'text-gray-600'}`}>{day.format('ddd')}</div>
+                <div className={`text-sm font-bold ${day.isSame(moment(), 'day') ? 'text-blue-900' : 'text-gray-900'}`}>{day.format('DD')}</div>
               <div className="text-xs text-gray-500">{day.format('MMM')}</div>
               {day.isSame(moment(), 'day') && (
-                <div className="text-xs text-blue-600 font-bold mt-1">•</div>
+                  <div className="text-xs text-blue-600 font-bold mt-1">•</div>
               )}
             </div>
           ))}
+          </div>
         </div>
       </div>
 
       {/* Time Reference */}
-      <div className="flex border-b border-gray-100 bg-gray-50 text-xs text-gray-500">
+      <div className="flex border-b border-gray-100 bg-gray-50 text-xs text-gray-500 sticky top-[120px] z-10">
         <div className="min-w-[240px] w-[240px] p-2 border-r border-gray-200">
           <span className="font-medium">İş Saatleri: 08:00 - 18:00</span>
         </div>
-        <div className="flex flex-1 overflow-x-auto">
+        <div className="flex-1 overflow-x-auto">
+          <div className="flex" style={{ minWidth: `${displayDays.length * getMinWidth(120)}px` }}>
           {displayDays.map((day) => (
-            <div 
-              key={`time-${day.format('YYYY-MM-DD')}`} 
-              className="flex-1 border-r border-gray-100 text-center py-1"
-              style={{ minWidth: getMinWidth(120) }}
-            >
-              <span className="text-xs text-gray-400">08:00 - 18:00</span>
-            </div>
-          ))}
+              <div 
+                key={`time-${day.format('YYYY-MM-DD')}`} 
+                className="flex-1 border-r border-gray-100 text-center py-1"
+                style={{ minWidth: getMinWidth(120) }}
+              >
+                <span className="text-xs text-gray-400">08:00 - 18:00</span>
+                  </div>
+                ))}
+              </div>
         </div>
       </div>
 
-      {/* Gantt Body */}
-      <div className="gantt-body overflow-auto" style={{ maxHeight: '70vh', minHeight: '400px' }}>
-        {technicians.map(renderTechnicianRow)}
+      {/* Gantt Body - Scroll only on timeline */}
+      <div className="flex">
+        {/* Teknisyen Listesi - Fixed */}
+        <div className="min-w-[240px] w-[240px] bg-white">
+          {technicians.map((technician) => {
+            const techTasks = filteredTasks.filter(task => task.technicianId === technician.id);
+            const completedTasks = techTasks.filter(task => task.status === 'completed').length;
+            const totalTasks = techTasks.length;
+
+            return (
+              <div key={technician.id} className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors h-[48px]">
+                <div className="bg-white p-3 border-r border-gray-200 flex items-center gap-2 w-full h-full">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                    {technician.first_name?.[0]}{technician.last_name?.[0]}
+            </div>
+            <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm text-gray-900 truncate">
+                      {technician.first_name} {technician.last_name}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span>{totalTasks} görev</span>
+                      {totalTasks > 0 && (
+                        <>
+                          <span>•</span>
+                          <span className="text-green-600">{completedTasks} tamamlandı</span>
+                        </>
+                      )}
+              </div>
+              </div>
+            </div>
+          </div>
+            );
+          })}
+        </div>
         
+        {/* Timeline Grid - Scrollable */}
+        <div className="flex-1 overflow-x-auto" style={{ maxHeight: 'calc(70vh - 200px)', minHeight: '300px' }}>
+          <div className="flex" style={{ minWidth: `${displayDays.length * getMinWidth(120)}px` }}>
+            {displayDays.map((day) => (
+              <div key={day.format('YYYY-MM-DD')} className="flex-1" style={{ minWidth: getMinWidth(120) }}>
+                {technicians.map((technician) => {
+                const techTasks = filteredTasks.filter(task => 
+                  task.technicianId === technician.id && moment(task.start).isSame(day, 'day')
+                );
+
+                return (
+                  <div 
+                    key={`${technician.id}-${day.format('YYYY-MM-DD')}`}
+                    className="border-b border-gray-100 p-2 relative h-[48px] hover:bg-blue-50 transition-colors cursor-pointer technician-drop-zone"
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, day, 9, technician.id)}
+                    title={`${day.format('DD MMM')} - ${technician.first_name} ${technician.last_name} (Sürükle & Bırak)`}
+                  >
+                    <div className="space-y-1">
+                      {techTasks.length > 0 ? (
+                        techTasks.map((task) => (
+                          <TooltipProvider key={task.id}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                    <div
+                                      className={`relative rounded px-2 py-1 text-xs font-medium cursor-pointer transition-all duration-200 ${
+                                        selectedTasks.includes(task.id) ? 'ring-1 ring-blue-500' : ''
+                                      } ${hoveredTask === task.id ? 'scale-102 shadow-md' : ''} ${
+                                        task.status === 'completed' ? 'opacity-75' : ''
+                                      } ${task.isService ? 'border-2 border-dashed border-white' : ''}`}
+                                      style={{
+                                        backgroundColor: task.isService 
+                                          ? `${priorityColors[task.priority as keyof typeof priorityColors]}dd`
+                                          : priorityColors[task.priority as keyof typeof priorityColors],
+                                        color: 'white',
+                                        borderLeft: `3px solid ${statusColors[task.status as keyof typeof statusColors]}`,
+                                        boxShadow: task.isService ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
+                                      }}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, task.id)}
+                        onDragEnd={handleDragEnd}
+                                  onMouseEnter={() => setHoveredTask(task.id)}
+                                  onMouseLeave={() => setHoveredTask(null)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (showSelection && onTaskToggle) {
+                                      onTaskToggle(task.id);
+                                    } else {
+                                      onTaskSelect?.(task);
+                                    }
+                                  }}
+                                >
+                                  <div className="flex items-center gap-1">
+                                    {showSelection && (
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedTasks.includes(task.id)}
+                                        onChange={(e) => {
+                                          e.stopPropagation();
+                                          onTaskToggle?.(task.id);
+                                        }}
+                                        className="mr-1 h-2 w-2"
+                                      />
+                                    )}
+                                    {task.status === 'completed' && <CheckCircle2 className="h-3 w-3 flex-shrink-0" />}
+                                    {task.status === 'in_progress' && <Play className="h-3 w-3 flex-shrink-0" />}
+                                    {task.status === 'on_hold' && <Pause className="h-3 w-3 flex-shrink-0" />}
+                                    {task.status === 'cancelled' && <XCircle className="h-3 w-3 flex-shrink-0" />}
+                                    <span className="truncate text-xs">{task.title}</span>
+                                  </div>
+                                  <div className="text-xs opacity-75 mt-1">
+                          {moment(task.start).format('HH:mm')}
+                                  </div>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs">
+                                <div className="space-y-1">
+                                  <div className="font-semibold flex items-center gap-2">
+                                    {task.title}
+                                    {task.isService && (
+                                      <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
+                                        Servis
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-sm text-gray-300">
+                                    <div>Teknisyen: {task.technician || 'Atanmamış'}</div>
+                                    <div>Öncelik: {task.priority}</div>
+                                    <div>Durum: {task.status}</div>
+                                    {task.isService && task.serviceType && (
+                                      <div>Servis Türü: {task.serviceType}</div>
+                                    )}
+                                    {task.isService && task.location && (
+                                      <div>Konum: {task.location}</div>
+                                    )}
+                                    <div>Saat: {moment(task.start).format('HH:mm')} - {moment(task.end).format('HH:mm')}</div>
+                                  </div>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ))
+                      ) : (
+                        <div className="text-center text-gray-400 text-xs py-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          Görevleri buraya sürükleyin
+                        </div>
+                      )}
+                      </div>
+                </div>
+                );
+              })}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Simple Legend */}
@@ -544,18 +635,18 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-700">Öncelik:</span>
                 <div className="flex gap-2">
-                  {Object.entries(priorityColors).map(([priority, color]) => (
+                {Object.entries(priorityColors).map(([priority, color]) => (
                     <div key={priority} className="flex items-center gap-1">
-                      <div 
+                    <div 
                         className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: color }}
-                      />
+                      style={{ backgroundColor: color }}
+                    />
                       <span className="text-xs text-gray-600 capitalize">{priority}</span>
-                    </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-              
+            </div>
+            
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-700">Durum:</span>
                 <div className="flex gap-3">
@@ -570,13 +661,19 @@ export const SimpleGanttChart: React.FC<SimpleGanttChartProps> = ({
                   <div className="flex items-center gap-1">
                     <Pause className="h-3 w-3 text-yellow-600" />
                     <span className="text-xs text-gray-600">Beklemede</span>
-                  </div>
-                </div>
               </div>
             </div>
-            
-            <div className="text-xs text-gray-500">
-              <div>Ctrl+C: Tamamlananları Gizle • Ctrl+H: Bu Açıklamayı Gizle • Sürükle-Bırak ile Ata</div>
+            </div>
+          </div>
+          
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-600 rounded border-2 border-dashed border-white"></div>
+                <span className="text-xs text-gray-600">Servis Görevleri</span>
+              </div>
+              <div className="text-xs text-gray-500">
+                Ctrl+C: Tamamlananları Gizle • Ctrl+H: Bu Açıklamayı Gizle • Sürükle-Bırak ile Ata
+              </div>
             </div>
           </div>
         </div>
