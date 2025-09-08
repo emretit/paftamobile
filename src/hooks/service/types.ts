@@ -28,6 +28,7 @@ export interface ServiceRequest {
   warranty_info?: Record<string, any>;
   location?: string;
   due_date?: string;
+  reported_date?: string;
 }
 
 export interface ServiceRequestFormData {
@@ -39,7 +40,9 @@ export interface ServiceRequestFormData {
   service_type: string;
   location?: string;
   due_date?: Date;
+  reported_date?: Date;
   equipment_id?: string;
+  assigned_to?: string;
 }
 
 export interface ServiceQueriesResult {

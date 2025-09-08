@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, CalendarDays, Users, Clock, AlertCircle, CheckCircle, XCircle, Pause, ChevronLeft, ChevronRight, Eye, EyeOff, User, MapPin, Search, Filter, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, CalendarDays, Users, Clock, AlertCircle, CheckCircle, XCircle, Pause, ChevronLeft, ChevronRight, Eye, EyeOff, User, MapPin, Search, Filter, ChevronUp, ChevronDown, Calendar } from "lucide-react";
 import ServiceViewToggle from "@/components/service/ServiceViewToggle";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -785,7 +785,10 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
                           👤 Teknisyen
                         </TableHead>
                         <TableHead className="h-12 px-4 text-left align-middle font-bold text-foreground/80 whitespace-nowrap text-sm tracking-wide">
-                          📅 Tarih
+                          📅 Bildirilme
+                        </TableHead>
+                        <TableHead className="h-12 px-4 text-left align-middle font-bold text-foreground/80 whitespace-nowrap text-sm tracking-wide">
+                          ⏰ Teslim
                         </TableHead>
                         <TableHead className="h-12 px-4 text-left align-middle font-bold text-foreground/80 whitespace-nowrap text-sm tracking-wide">
                           ⚙️ İşlemler
@@ -795,13 +798,13 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
                     <TableBody>
                       {isLoading ? (
                         <TableRow>
-                          <TableCell colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                          <TableCell colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
                             Yükleniyor...
                           </TableCell>
                         </TableRow>
                       ) : sortedServices.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                          <TableCell colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
                             Servis talebi bulunamadı
                           </TableCell>
                         </TableRow>
@@ -871,6 +874,12 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
                               <TableCell className="px-4 py-4">
                                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                   <Clock className="h-4 w-4" />
+                                  {service.reported_date ? moment(service.reported_date).format('DD.MM.YYYY') : 'Bildirilmedi'}
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-4 py-4">
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <Calendar className="h-4 w-4" />
                                   {service.due_date ? moment(service.due_date).format('DD.MM.YYYY') : 'Tarih belirtilmemiş'}
                                 </div>
                               </TableCell>

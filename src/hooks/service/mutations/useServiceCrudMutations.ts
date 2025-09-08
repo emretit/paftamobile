@@ -17,7 +17,8 @@ export const useServiceCrudMutations = () => {
       const serviceRequestData = {
         ...formData,
         due_date: formData.due_date?.toISOString(),
-        status: 'new' as const,
+        reported_date: formData.reported_date?.toISOString(),
+        status: formData.assigned_to && formData.assigned_to !== 'unassigned' ? 'assigned' as const : 'new' as const,
         attachments: [],
       };
 
@@ -98,6 +99,8 @@ export const useServiceCrudMutations = () => {
       const updatePayload = {
         ...updateData,
         due_date: updateData.due_date ? updateData.due_date.toISOString() : currentRequest.due_date,
+        reported_date: updateData.reported_date ? updateData.reported_date.toISOString() : currentRequest.reported_date,
+        status: updateData.assigned_to && updateData.assigned_to !== 'unassigned' ? 'assigned' as const : currentRequest.status,
         attachments: attachmentsForDb
       };
 

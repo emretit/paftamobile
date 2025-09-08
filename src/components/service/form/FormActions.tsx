@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Eye, Edit } from "lucide-react";
+import { Loader2, Eye, Edit, X, Check, Plus } from "lucide-react";
 
 type FormActionsProps = {
   onClose: () => void;
@@ -19,8 +19,14 @@ export const FormActions: React.FC<FormActionsProps> = ({
   setShowPreview
 }) => {
   return (
-    <div className="flex justify-end space-x-3 pt-6">
-      <Button variant="outline" onClick={onClose} type="button" className="font-medium">
+    <div className="flex flex-col sm:flex-row justify-end gap-3 pt-8 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
+      <Button 
+        variant="outline" 
+        onClick={onClose} 
+        type="button" 
+        className="font-medium hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-all duration-200 flex items-center justify-center gap-2"
+      >
+        <X className="h-4 w-4" />
         İptal
       </Button>
       
@@ -29,25 +35,47 @@ export const FormActions: React.FC<FormActionsProps> = ({
           type="button" 
           variant="secondary" 
           onClick={() => setShowPreview(!showPreview)}
-          className="font-medium"
+          className="font-medium hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 flex items-center justify-center gap-2"
         >
           {showPreview ? (
             <>
-              <Edit className="mr-2 h-4 w-4" />
+              <Edit className="h-4 w-4" />
               Düzenle
             </>
           ) : (
             <>
-              <Eye className="mr-2 h-4 w-4" />
+              <Eye className="h-4 w-4" />
               Önizle
             </>
           )}
         </Button>
       )}
       
-      <Button type="submit" disabled={isSubmitting} className="font-medium">
-        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {isEditing ? "Güncelle" : "Oluştur"}
+      <Button 
+        type="submit" 
+        disabled={isSubmitting} 
+        className="font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 min-w-[120px]"
+      >
+        {isSubmitting ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Kaydediliyor...
+          </>
+        ) : (
+          <>
+            {isEditing ? (
+              <>
+                <Check className="h-4 w-4" />
+                Güncelle
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4" />
+                Oluştur
+              </>
+            )}
+          </>
+        )}
       </Button>
     </div>
   );

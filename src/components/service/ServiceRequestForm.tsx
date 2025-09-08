@@ -11,7 +11,9 @@ import {
   PriorityField, 
   ServiceTypeField, 
   LocationField, 
-  DueDateField 
+  DueDateField,
+  ReportedDateField,
+  TechnicianField
 } from "./form/FormFields";
 import { CustomerField } from "./form/CustomerField";
 import { FileUploadField } from "./form/FileUploadField";
@@ -28,8 +30,10 @@ const formSchema = z.object({
   service_type: z.string().min(1, { message: "Servis türü seçmelisiniz" }),
   location: z.string().optional(),
   due_date: z.date().optional(),
+  reported_date: z.date().optional(),
   customer_id: z.string().optional(),
   equipment_id: z.string().optional(),
+  assigned_to: z.string().optional(),
 });
 
 export interface ServiceRequestFormProps {
@@ -54,6 +58,8 @@ export function ServiceRequestForm({ onClose, initialData, isEditing = false }: 
       service_type: "",
       location: "",
       customer_id: undefined,
+      reported_date: new Date(),
+      assigned_to: undefined,
     },
   });
 
@@ -120,16 +126,51 @@ export function ServiceRequestForm({ onClose, initialData, isEditing = false }: 
             customerName={getCustomerName()}
           />
         ) : (
-          <>
-            <TitleField form={form} />
-            <DescriptionField form={form} />
-            <PriorityField form={form} />
-            <ServiceTypeField form={form} />
-            <CustomerField form={form} />
-            <LocationField form={form} />
-            <DueDateField form={form} />
-            <FileUploadField files={files} setFiles={setFiles} />
-          </>
+          <div className="space-y-6">
+            {/* Temel Bilgiler */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <h3 className="text-lg font-semibold text-gray-800">Temel Bilgiler</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <TitleField form={form} />
+                </div>
+                <div className="md:col-span-2">
+                  <DescriptionField form={form} />
+                </div>
+                <PriorityField form={form} />
+                <ServiceTypeField form={form} />
+                <CustomerField form={form} />
+                <LocationField form={form} />
+              </div>
+            </div>
+
+            {/* Tarihler */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <h3 className="text-lg font-semibold text-gray-800">Tarihler</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ReportedDateField form={form} />
+                <DueDateField form={form} />
+              </div>
+            </div>
+
+            {/* Atama ve Dosyalar */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                <h3 className="text-lg font-semibold text-gray-800">Atama ve Dosyalar</h3>
+              </div>
+              <div className="space-y-4">
+                <TechnicianField form={form} />
+                <FileUploadField files={files} setFiles={setFiles} />
+              </div>
+            </div>
+          </div>
         )}
         
         <FormActions 
