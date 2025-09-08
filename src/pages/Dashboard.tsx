@@ -89,60 +89,84 @@ const Dashboard = ({ isCollapsed, setIsCollapsed }: DashboardProps) => {
           </div>
         </div>
 
-        {/* Dashboard Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-6">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Genel Bakış
-            </TabsTrigger>
-            <TabsTrigger value="financial" className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              Finansal
-            </TabsTrigger>
-            <TabsTrigger value="sales" className="flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              Satış & CRM
-            </TabsTrigger>
-            <TabsTrigger value="hr" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              İnsan Kaynakları
-            </TabsTrigger>
-            <TabsTrigger value="operations" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Operasyonlar
-            </TabsTrigger>
-            <TabsTrigger value="activity" className="flex items-center gap-2">
-              <Bell className="h-4 w-4" />
-              Aktiviteler
-            </TabsTrigger>
-          </TabsList>
+        {/* Dashboard Summary Widgets */}
+        <div className="space-y-6">
+          {/* Executive Summary Section */}
+          <ExecutiveSummary />
+          
+          {/* Summary Cards Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {/* Financial Summary */}
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-blue-600" />
+                  Finansal Özet
+                </h3>
+                <Button variant="ghost" size="sm">
+                  <TrendingUp className="h-4 w-4" />
+                </Button>
+              </div>
+              <FinancialOverview />
+            </Card>
 
-          <TabsContent value="overview" className="space-y-6">
-            <ExecutiveSummary />
-            <FinancialOverview />
-          </TabsContent>
+            {/* Sales & CRM Summary */}
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Target className="h-5 w-5 text-green-600" />
+                  Satış & CRM
+                </h3>
+                <Button variant="ghost" size="sm">
+                  <Target className="h-4 w-4" />
+                </Button>
+              </div>
+              <SalesCRMSection />
+            </Card>
 
-          <TabsContent value="financial" className="space-y-6">
-            <FinancialOverview />
-          </TabsContent>
+            {/* HR Summary */}
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  İnsan Kaynakları
+                </h3>
+                <Button variant="ghost" size="sm">
+                  <Users className="h-4 w-4" />
+                </Button>
+              </div>
+              <HRAnalytics />
+            </Card>
 
-          <TabsContent value="sales" className="space-y-6">
-            <SalesCRMSection />
-          </TabsContent>
+            {/* Operations Summary */}
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Settings className="h-5 w-5 text-orange-600" />
+                  Operasyonlar
+                </h3>
+                <Button variant="ghost" size="sm">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </div>
+              <OperationsOverview />
+            </Card>
 
-          <TabsContent value="hr" className="space-y-6">
-            <HRAnalytics />
-          </TabsContent>
-
-          <TabsContent value="operations" className="space-y-6">
-            <OperationsOverview />
-          </TabsContent>
-
-          <TabsContent value="activity" className="space-y-6">
-            <ActivityFeed />
-          </TabsContent>
-        </Tabs>
+            {/* Activity Feed */}
+            <Card className="p-6 lg:col-span-2">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Bell className="h-5 w-5 text-red-600" />
+                  Son Aktiviteler
+                </h3>
+                <Button variant="ghost" size="sm">
+                  <Bell className="h-4 w-4" />
+                </Button>
+              </div>
+              <ActivityFeed />
+            </Card>
+          </div>
+        </div>
       </div>
     </DefaultLayout>
   );

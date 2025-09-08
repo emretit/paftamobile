@@ -211,8 +211,7 @@ export const useEInvoiceStatus = (salesInvoiceId?: string) => {
             responded_at: data.einvoice_responded_at,
             error_message: data.einvoice_error_message,
             error_code: data.einvoice_error_code,
-            nilvera_response: data.einvoice_nilvera_response,
-            xml_content: data.einvoice_xml_content
+            nilvera_response: data.einvoice_nilvera_response
           });
         } else {
           setStatus(null);
@@ -277,8 +276,7 @@ export const useEInvoiceStatus = (salesInvoiceId?: string) => {
           responded_at: data.einvoice_responded_at,
           error_message: data.einvoice_error_message,
           error_code: data.einvoice_error_code,
-          nilvera_response: data.einvoice_nilvera_response,
-          xml_content: data.einvoice_xml_content
+          nilvera_response: data.einvoice_nilvera_response
         });
       } else {
         setStatus(null);
