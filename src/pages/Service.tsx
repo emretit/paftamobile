@@ -39,35 +39,41 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-background">
       <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'}`}>
         <TopBar />
-        <div className="container mx-auto p-6">
-          <ServicePageHeader 
-            activeView={activeView}
-            setActiveView={setActiveView}
-            onCreateRequest={() => setIsCreateModalOpen(true)}
-          />
+        <div className="max-w-[1800px] mx-auto section-padding">
+          <div className="space-y-6 animate-fade-in">
+            <ServicePageHeader 
+              activeView={activeView}
+              setActiveView={setActiveView}
+              onCreateRequest={() => setIsCreateModalOpen(true)}
+            />
 
-          <ServiceSummaryStats serviceRequests={serviceRequests} />
+            <ServiceSummaryStats serviceRequests={serviceRequests} />
 
-          <ServiceFilters 
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            technicianFilter={technicianFilter}
-            setTechnicianFilter={setTechnicianFilter}
-          />
+            <div className="bg-card border rounded-lg p-6 shadow-sm">
+              <ServiceFilters 
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+                technicianFilter={technicianFilter}
+                setTechnicianFilter={setTechnicianFilter}
+              />
+            </div>
 
-          <ServiceContentView 
-            activeView={activeView}
-            searchQuery={searchQuery}
-            statusFilter={statusFilter}
-            technicianFilter={technicianFilter}
-            onSelectRequest={handleSelectRequest}
-          />
+            <div className="bg-card border rounded-lg shadow-sm overflow-hidden">
+              <ServiceContentView 
+                activeView={activeView}
+                searchQuery={searchQuery}
+                statusFilter={statusFilter}
+                technicianFilter={technicianFilter}
+                onSelectRequest={handleSelectRequest}
+              />
+            </div>
+          </div>
           
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogContent className="max-w-2xl">

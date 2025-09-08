@@ -15,12 +15,12 @@ export const ServiceViewToggle: React.FC<ServiceViewToggleProps> = ({
   setActiveView
 }) => {
   return (
-    <div className="bg-white border rounded-md p-1 flex items-center shadow-sm">
+    <div className="bg-card border rounded-lg p-1 flex items-center shadow-sm">
       <Button 
         variant={activeView === "table" ? "default" : "ghost"} 
         size="sm"
         onClick={() => setActiveView("table")}
-        className="px-3"
+        className="px-4 py-2"
       >
         <TableIcon className="h-4 w-4 mr-2" />
         Tablo
@@ -29,7 +29,7 @@ export const ServiceViewToggle: React.FC<ServiceViewToggleProps> = ({
         variant={activeView === "calendar" ? "default" : "ghost"} 
         size="sm"
         onClick={() => setActiveView("calendar")}
-        className="px-3"
+        className="px-4 py-2"
       >
         <Calendar className="h-4 w-4 mr-2" />
         Takvim
