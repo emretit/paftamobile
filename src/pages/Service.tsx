@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, CalendarDays, Users, Clock, AlertCircle, CheckCircle, XCircle, Pause, ChevronLeft, ChevronRight, Eye, EyeOff, User, MapPin } from "lucide-react";
+import ServiceViewToggle from "@/components/service/ServiceViewToggle";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar as BigCalendar, momentLocalizer, Views } from 'react-big-calendar';
@@ -46,6 +47,7 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
   const [showCompletedServices, setShowCompletedServices] = useState(true);
   const [showResourceView, setShowResourceView] = useState(true);
   const [assignedServices, setAssignedServices] = useState<Map<string, string>>(new Map());
+  const [activeView, setActiveView] = useState<"calendar" | "list">("calendar");
 
   const { data: serviceRequests, isLoading, error } = useServiceRequests();
 
@@ -244,14 +246,14 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => navigate("/service/list")}
-                    className="gap-2"
-                  >
-                    <Users className="h-4 w-4" />
-                    Liste Görünümü
-                  </Button>
+                  <ServiceViewToggle 
+                    activeView={activeView} 
+                    setActiveView={(view) => {
+                      if (view === 'list') {
+                        navigate("/service/list");
+                      }
+                    }} 
+                  />
                   <Button variant="outline" className="gap-2">
                     <Users className="h-4 w-4" />
                     Teknisyenler

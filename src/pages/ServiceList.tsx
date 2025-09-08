@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Search, Filter, User, Clock, MapPin, Users, CheckCircle, XCircle, Eye, CalendarDays, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
+import ServiceViewToggle from "@/components/service/ServiceViewToggle";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import moment from 'moment';
@@ -46,6 +47,7 @@ const ServiceListPage = ({ isCollapsed, setIsCollapsed }: ServiceListPageProps) 
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+  const [activeView, setActiveView] = useState<"calendar" | "list">("list");
 
   const { data: serviceRequests, isLoading, error } = useServiceRequests();
 
@@ -167,13 +169,14 @@ const ServiceListPage = ({ isCollapsed, setIsCollapsed }: ServiceListPageProps) 
               </p>
             </div>
             <div className="flex gap-2">
-              <Button 
-                variant="outline"
-                onClick={() => navigate("/service")}
-              >
-                <CalendarDays className="mr-2 h-4 w-4" />
-                Takvim Görünümü
-              </Button>
+              <ServiceViewToggle 
+                activeView={activeView} 
+                setActiveView={(view) => {
+                  if (view === 'calendar') {
+                    navigate("/service");
+                  }
+                }} 
+              />
               <Button 
                 className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg transition-all duration-300"
                 onClick={() => setIsNewRequestOpen(true)}
