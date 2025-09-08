@@ -5,12 +5,16 @@ import Navbar from "@/components/Navbar";
 import TopBar from "@/components/TopBar";
 import { useServiceRequests, ServiceRequest } from "@/hooks/useServiceRequests";
 import { ServiceRequestDetail } from "@/components/service/ServiceRequestDetail";
-import { ServiceRequestForm } from "@/components/service/ServiceRequestForm";
+import ServicePageHeader from "@/components/service/ServicePageHeader";
+import ServiceStatsCards from "@/components/service/ServiceStatsCards";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, CalendarDays, Users, Clock, AlertCircle, CheckCircle, XCircle, Pause, ChevronLeft, ChevronRight, Eye, EyeOff, User, MapPin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, CalendarDays, Users, Clock, AlertCircle, CheckCircle, XCircle, Pause, ChevronLeft, ChevronRight, Eye, EyeOff, User, MapPin, Search, Filter, ChevronUp, ChevronDown } from "lucide-react";
 import ServiceViewToggle from "@/components/service/ServiceViewToggle";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,7 +43,6 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
   const navigate = useNavigate();
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isNewRequestOpen, setIsNewRequestOpen] = useState(false);
 
   // Calendar state'leri
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -48,6 +51,13 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
   const [showResourceView, setShowResourceView] = useState(true);
   const [assignedServices, setAssignedServices] = useState<Map<string, string>>(new Map());
   const [activeView, setActiveView] = useState<"calendar" | "list">("calendar");
+  
+  // Liste görünümü için state'ler
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [sortField, setSortField] = useState<"title" | "priority" | "created_at">("created_at");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   const { data: serviceRequests, isLoading, error } = useServiceRequests();
 
@@ -94,6 +104,7 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
       status: 'in_progress',
       location: 'Ofis A',
       serviceType: 'Bakım',
+      description: 'Aylık rutin klima bakımı',
     },
     {
       id: '2',
@@ -105,6 +116,7 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
       status: 'assigned',
       location: 'Ofis B',
       serviceType: 'Kontrol',
+      description: 'Elektrik panosunda rutin kontrol',
     },
     {
       id: '3',
@@ -116,6 +128,7 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
       status: 'new',
       location: 'Yeni Ofis',
       serviceType: 'Kurulum',
+      description: 'Yeni ofis için network altyapısı kurulumu',
     }
   ];
 
@@ -136,19 +149,51 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
       const realEvents = serviceRequests.map(request => ({
         id: `real-${request.id}`,
         title: request.title || 'Servis Talebi',
-        start: request.scheduled_date ? new Date(request.scheduled_date) : new Date(),
-        end: request.scheduled_date ? new Date(new Date(request.scheduled_date).getTime() + 2 * 60 * 60 * 1000) : new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 saat sonra
-        resourceId: request.assigned_technician_id || 'unassigned',
+        start: request.due_date ? new Date(request.due_date) : new Date(),
+        end: request.due_date ? new Date(new Date(request.due_date).getTime() + 2 * 60 * 60 * 1000) : new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 saat sonra
+        resourceId: request.assigned_to || 'unassigned',
         priority: request.priority || 'medium',
         status: request.status || 'pending',
         location: request.location || 'Belirtilmemiş',
         serviceType: request.service_type || 'Genel',
+        description: request.description || '',
       }));
       allEvents.push(...realEvents);
     }
     
     return allEvents
-      .filter(event => showCompletedServices || event.status !== 'completed')
+      .filter(event => {
+        // Tamamlanan servisleri filtrele
+        if (!showCompletedServices && event.status === 'completed') {
+          return false;
+        }
+        
+        // Arama filtresi
+        if (searchQuery) {
+          const searchLower = searchQuery.toLowerCase();
+          const matchesSearch = 
+            event.title?.toLowerCase().includes(searchLower) ||
+            event.location?.toLowerCase().includes(searchLower) ||
+            event.description?.toLowerCase().includes(searchLower);
+          if (!matchesSearch) return false;
+        }
+        
+        // Durum filtresi
+        if (statusFilter !== 'all') {
+          if (statusFilter === 'new' && event.status !== 'new' && event.status !== 'assigned') {
+            return false;
+          } else if (statusFilter !== 'new' && event.status !== statusFilter) {
+            return false;
+          }
+        }
+        
+        // Öncelik filtresi
+        if (priorityFilter !== 'all' && event.priority !== priorityFilter) {
+          return false;
+        }
+        
+        return true;
+      })
       .map(event => {
         // Eğer bu servis atanmışsa, assignedServices state'inden resourceId'yi al
         const assignedResourceId = assignedServices.get(event.id);
@@ -175,7 +220,7 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
           }
         };
       });
-  }, [showCompletedServices, serviceRequests, assignedServices]);
+  }, [showCompletedServices, serviceRequests, assignedServices, searchQuery, statusFilter, priorityFilter]);
 
   // Resources'ları oluştur
   const resources = useMemo(() => {
@@ -216,6 +261,53 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
     };
   }, []);
 
+  // Liste görünümü için filtreleme
+  const filteredServices = serviceRequests?.filter(request => {
+    const matchesSearch = !searchQuery || 
+      request.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      request.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      request.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'new' && (request.status === 'new' || request.status === 'assigned')) ||
+      (statusFilter !== 'new' && request.status === statusFilter);
+    const matchesPriority = priorityFilter === 'all' || request.priority === priorityFilter;
+    
+    return matchesSearch && matchesStatus && matchesPriority;
+  }) || [];
+
+  // Sıralama
+  const sortedServices = [...filteredServices].sort((a, b) => {
+    let valueA, valueB;
+    
+    if (sortField === "title") {
+      valueA = (a.title || '').toLowerCase();
+      valueB = (b.title || '').toLowerCase();
+    } else if (sortField === "priority") {
+      const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+      valueA = priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
+      valueB = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
+    } else { // created_at
+      valueA = new Date(a.created_at || 0).getTime();
+      valueB = new Date(b.created_at || 0).getTime();
+    }
+    
+    if (sortDirection === "asc") {
+      return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+    } else {
+      return valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
+    }
+  });
+
+  const handleSort = (field: "title" | "priority" | "created_at") => {
+    if (field === sortField) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection(field === "created_at" ? "desc" : "asc");
+    }
+  };
+
   // İstatistikleri hesapla
   const stats = {
     total: serviceRequests?.length || 0,
@@ -233,117 +325,67 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
         <TopBar />
         <div className="w-full p-6">
           <div className="space-y-6">
-            {/* Salesforce Style Header */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-blue-100 rounded-lg">
-                    <CalendarDays className="h-8 w-8 text-blue-600" />
-                  </div>
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Servis Yönetimi</h1>
-                    <p className="text-gray-600 mt-1">Teknisyenlerinizi yönetin ve servis taleplerini takip edin</p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <ServiceViewToggle 
-                    activeView={activeView} 
-                    setActiveView={(view) => {
-                      if (view === 'list') {
-                        navigate("/service/list");
-                      }
-                    }} 
-                  />
-                  <Button variant="outline" className="gap-2">
-                    <Users className="h-4 w-4" />
-                    Teknisyenler
-                  </Button>
-                  <Button onClick={() => setIsNewRequestOpen(true)} className="gap-2 bg-blue-600 hover:bg-blue-700">
-                    <Plus className="h-4 w-4" />
-                    Yeni Servis Talebi
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <ServicePageHeader 
+              activeView={activeView} 
+              setActiveView={setActiveView}
+              onCreateRequest={() => {
+                // Header component'inde form açılacak
+              }}
+              onTechniciansClick={() => {
+                // TODO: Teknisyenler sayfasına yönlendir
+                console.log('Teknisyenler sayfasına yönlendir');
+              }}
+            />
 
-            {/* Stats Cards - Salesforce Style */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-              <Card className="p-4 bg-white border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Toplam Talep</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+            <ServiceStatsCards 
+              stats={stats} 
+              viewType={activeView} 
+            />
+
+            {/* Content based on view */}
+            {activeView === "calendar" ? (
+              /* React Big Calendar */
+              <>
+                {/* Filters for Calendar View */}
+                <div className="flex flex-col sm:flex-row gap-4 p-6 bg-gradient-to-r from-card/80 to-muted/40 rounded-xl border border-border/30 shadow-lg backdrop-blur-sm">
+                  <div className="relative w-[400px]">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      placeholder="Servis adı, lokasyon veya açıklama ile ara..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <CalendarDays className="h-5 w-5 text-blue-600" />
-                  </div>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <Filter className="mr-2 h-4 w-4" />
+                      <SelectValue placeholder="Durum" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tüm Durumlar</SelectItem>
+                      <SelectItem value="new">Yeni</SelectItem>
+                      <SelectItem value="in_progress">Devam Ediyor</SelectItem>
+                      <SelectItem value="completed">Tamamlandı</SelectItem>
+                      <SelectItem value="cancelled">İptal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <Filter className="mr-2 h-4 w-4" />
+                      <SelectValue placeholder="Öncelik" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tüm Öncelikler</SelectItem>
+                      <SelectItem value="urgent">Acil</SelectItem>
+                      <SelectItem value="high">Yüksek</SelectItem>
+                      <SelectItem value="medium">Orta</SelectItem>
+                      <SelectItem value="low">Düşük</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </Card>
 
-              <Card className="p-4 bg-white border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Yeni</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.new}</p>
-                  </div>
-                  <div className="p-2 bg-yellow-100 rounded-lg">
-                    <AlertCircle className="h-5 w-5 text-yellow-600" />
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-4 bg-white border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Devam Ediyor</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.inProgress}</p>
-                  </div>
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Clock className="h-5 w-5 text-blue-600" />
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-4 bg-white border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Tamamlandı</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.completed}</p>
-                  </div>
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-4 bg-white border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Acil</p>
-                    <p className="text-2xl font-bold text-red-600">{stats.urgent}</p>
-                  </div>
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <AlertCircle className="h-5 w-5 text-red-600" />
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-4 bg-white border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Atanmamış</p>
-                    <p className="text-2xl font-bold text-orange-600">{stats.unassigned}</p>
-                  </div>
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <XCircle className="h-5 w-5 text-orange-600" />
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-
-            {/* React Big Calendar */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -667,6 +709,213 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
                 </div>
               </div>
             </div>
+              </>
+            ) : (
+              /* Liste Görünümü */
+              <>
+                {/* Filters */}
+                <div className="flex flex-col sm:flex-row gap-4 p-6 bg-gradient-to-r from-card/80 to-muted/40 rounded-xl border border-border/30 shadow-lg backdrop-blur-sm">
+                  <div className="relative w-[400px]">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      placeholder="Servis adı, lokasyon veya açıklama ile ara..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <Filter className="mr-2 h-4 w-4" />
+                      <SelectValue placeholder="Durum" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tüm Durumlar</SelectItem>
+                      <SelectItem value="new">Yeni</SelectItem>
+                      <SelectItem value="in_progress">Devam Ediyor</SelectItem>
+                      <SelectItem value="completed">Tamamlandı</SelectItem>
+                      <SelectItem value="cancelled">İptal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <Filter className="mr-2 h-4 w-4" />
+                      <SelectValue placeholder="Öncelik" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tüm Öncelikler</SelectItem>
+                      <SelectItem value="urgent">Acil</SelectItem>
+                      <SelectItem value="high">Yüksek</SelectItem>
+                      <SelectItem value="medium">Orta</SelectItem>
+                      <SelectItem value="low">Düşük</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Table */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-gray-50 border-b">
+                        <TableHead 
+                          className="h-12 px-4 text-left align-middle font-bold text-foreground/80 whitespace-nowrap text-sm tracking-wide cursor-pointer hover:bg-muted/50"
+                          onClick={() => handleSort("title")}
+                        >
+                          <div className="flex items-center">
+                            <span>🔧 Servis Adı</span>
+                            {sortField === "title" && (
+                              sortDirection === "asc" ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />
+                            )}
+                          </div>
+                        </TableHead>
+                        <TableHead className="h-12 px-4 text-left align-middle font-bold text-foreground/80 whitespace-nowrap text-sm tracking-wide">
+                          📍 Lokasyon
+                        </TableHead>
+                        <TableHead 
+                          className="h-12 px-4 text-left align-middle font-bold text-foreground/80 whitespace-nowrap text-sm tracking-wide cursor-pointer hover:bg-muted/50"
+                          onClick={() => handleSort("priority")}
+                        >
+                          <div className="flex items-center">
+                            <span>⚡ Öncelik</span>
+                            {sortField === "priority" && (
+                              sortDirection === "asc" ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />
+                            )}
+                          </div>
+                        </TableHead>
+                        <TableHead className="h-12 px-4 text-left align-middle font-bold text-foreground/80 whitespace-nowrap text-sm tracking-wide">
+                          📊 Durum
+                        </TableHead>
+                        <TableHead className="h-12 px-4 text-left align-middle font-bold text-foreground/80 whitespace-nowrap text-sm tracking-wide">
+                          👤 Teknisyen
+                        </TableHead>
+                        <TableHead className="h-12 px-4 text-left align-middle font-bold text-foreground/80 whitespace-nowrap text-sm tracking-wide">
+                          📅 Tarih
+                        </TableHead>
+                        <TableHead className="h-12 px-4 text-left align-middle font-bold text-foreground/80 whitespace-nowrap text-sm tracking-wide">
+                          ⚙️ İşlemler
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                            Yükleniyor...
+                          </TableCell>
+                        </TableRow>
+                      ) : sortedServices.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                            Servis talebi bulunamadı
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        sortedServices.map((service) => {
+                          const technician = technicians?.find(tech => tech.id === service.assigned_to);
+                          return (
+                            <TableRow 
+                              key={service.id} 
+                              className="hover:bg-muted/50 cursor-pointer"
+                              onClick={() => handleSelectRequest(service)}
+                            >
+                              <TableCell className="px-4 py-4">
+                                <div className="space-y-1">
+                                  <p className="font-medium text-foreground">{service.title}</p>
+                                  {service.description && (
+                                    <p className="text-sm text-muted-foreground line-clamp-2">
+                                      {service.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-4 py-4">
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <MapPin className="h-4 w-4" />
+                                  {service.location || 'Belirtilmemiş'}
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-4 py-4">
+                                <Badge 
+                                  variant="outline" 
+                                  className={`${
+                                    service.priority === 'urgent' ? 'border-red-500 text-red-700 bg-red-50' :
+                                    service.priority === 'high' ? 'border-orange-500 text-orange-700 bg-orange-50' :
+                                    service.priority === 'medium' ? 'border-yellow-500 text-yellow-700 bg-yellow-50' :
+                                    'border-green-500 text-green-700 bg-green-50'
+                                  }`}
+                                >
+                                  {service.priority === 'urgent' ? 'Acil' :
+                                   service.priority === 'high' ? 'Yüksek' :
+                                   service.priority === 'medium' ? 'Orta' : 'Düşük'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="px-4 py-4">
+                                <Badge 
+                                  variant="outline"
+                                  className={`${
+                                    service.status === 'new' ? 'border-blue-500 text-blue-700 bg-blue-50' :
+                                    service.status === 'in_progress' ? 'border-yellow-500 text-yellow-700 bg-yellow-50' :
+                                    service.status === 'completed' ? 'border-green-500 text-green-700 bg-green-50' :
+                                    'border-gray-500 text-gray-700 bg-gray-50'
+                                  }`}
+                                >
+                                  {service.status === 'new' ? 'Yeni' :
+                                   service.status === 'in_progress' ? 'Devam Ediyor' :
+                                   service.status === 'completed' ? 'Tamamlandı' :
+                                   service.status === 'assigned' ? 'Atanmış' : 'Bilinmeyen'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="px-4 py-4">
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <User className="h-4 w-4" />
+                                  {technician ? `${technician.first_name} ${technician.last_name}` : 
+                                   service.assigned_to ? 'Bilinmeyen Teknisyen' : 'Atanmamış'}
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-4 py-4">
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <Clock className="h-4 w-4" />
+                                  {service.due_date ? moment(service.due_date).format('DD.MM.YYYY') : 'Tarih belirtilmemiş'}
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-4 py-4 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  {!service.assigned_to ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        // TODO: Teknisyen atama
+                                      }}
+                                    >
+                                      <User className="h-4 w-4 mr-1" />
+                                      Ata
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleSelectRequest(service);
+                                      }}
+                                    >
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      Detay
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            )}
           </div>
 
           <ServiceRequestDetail 
@@ -678,20 +927,6 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
             }}
           />
 
-          {/* New Service Request Dialog */}
-          <Dialog open={isNewRequestOpen} onOpenChange={setIsNewRequestOpen}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Plus className="h-5 w-5" />
-                  Yeni Servis Talebi
-                </DialogTitle>
-              </DialogHeader>
-              <ServiceRequestForm 
-                onClose={() => setIsNewRequestOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
         </div>
       </main>
     </div>
