@@ -331,10 +331,6 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
               onCreateRequest={() => {
                 // Header component'inde form açılacak
               }}
-              onTechniciansClick={() => {
-                // TODO: Teknisyenler sayfasına yönlendir
-                console.log('Teknisyenler sayfasına yönlendir');
-              }}
             />
 
             <ServiceStatsCards 
@@ -494,11 +490,11 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
                   {/* Gün Başlıkları */}
                   <div className="flex border-b border-gray-300">
                     {/* Sol boş alan - Teknisyen başlığı için */}
-                    <div className="w-48 bg-blue-600 text-white p-3 font-semibold text-sm border-r border-blue-700">
+                    <div className="w-36 bg-blue-600 text-white p-2 font-semibold text-sm border-r border-blue-700">
                       Teknisyenler / Günler
                     </div>
                     
-                    {/* Gün sütunları */}
+                    {/* Gün sütunları - Tam hafta (Pazartesi-Pazar) */}
                     {Array.from({ length: 7 }, (_, i) => {
                       const date = moment(currentDate).startOf('week').add(i, 'days');
                       const turkishDays = {
@@ -514,7 +510,7 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
                       const turkishDay = turkishDays[dayName as keyof typeof turkishDays] || dayName;
                       
                       return (
-                        <div key={i} className="w-40 bg-gray-100 border-r border-gray-300 p-4 text-center">
+                        <div key={i} className={`w-32 bg-gray-100 p-2 text-center ${i < 6 ? 'border-r border-gray-300' : ''}`}>
                           <div className="text-xs font-medium text-gray-700">{turkishDay}</div>
                           <div className="text-sm font-semibold text-gray-900 mt-1">{date.format('DD MMM')}</div>
                         </div>
@@ -527,17 +523,17 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
                     {resources.map((tech, techIndex) => (
                       <div key={tech.resourceId} className="flex border-b border-gray-200 hover:bg-gray-50">
                         {/* Teknisyen İsmi */}
-                        <div className="w-48 bg-gray-50 border-r border-gray-300 p-4 flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <User className="w-4 h-4 text-blue-600" />
+                        <div className="w-36 bg-gray-50 border-r border-gray-300 p-2 flex items-center gap-2">
+                          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                            <User className="w-3 h-3 text-blue-600" />
                           </div>
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">{tech.title}</p>
+                            <p className="text-xs font-medium text-gray-900 truncate">{tech.title}</p>
                             <p className="text-xs text-gray-500">Teknisyen</p>
                           </div>
                         </div>
                         
-                        {/* Gün hücreleri */}
+                        {/* Gün hücreleri - Tam hafta (Pazartesi-Pazar) */}
                         {Array.from({ length: 7 }, (_, i) => {
                           const date = moment(currentDate).startOf('week').add(i, 'days');
                           
@@ -550,7 +546,7 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
                           return (
                         <div 
                           key={i} 
-                          className="w-40 border-r border-gray-200 p-4 min-h-24 relative hover:bg-gray-50 transition-colors"
+                          className={`w-32 p-2 min-h-20 relative hover:bg-gray-50 transition-colors ${i < 6 ? 'border-r border-gray-200' : ''}`}
                           onDrop={(e) => {
                             e.preventDefault();
                             e.currentTarget.style.backgroundColor = '';
@@ -588,16 +584,16 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
                               {dayServices.map((service, serviceIndex) => (
                                 <div 
                                   key={serviceIndex}
-                                  className="mb-2 rounded px-3 py-2 text-xs text-white cursor-pointer"
+                                  className="mb-1 rounded px-2 py-1 text-xs text-white cursor-pointer"
                                   style={{ 
                                     backgroundColor: service.style?.backgroundColor || '#3b82f6',
-                                    fontSize: '10px',
-                                    lineHeight: '1.3'
+                                    fontSize: '9px',
+                                    lineHeight: '1.2'
                                   }}
                                   onClick={() => handleSelectEvent(service)}
                                 >
-                                  <div className="font-medium truncate">{service.title}</div>
-                                  <div className="opacity-80 truncate">{service.location}</div>
+                                  <div className="font-medium truncate text-xs">{service.title}</div>
+                                  <div className="opacity-80 truncate text-xs">{service.location}</div>
                                   <div className="opacity-70 text-xs">
                                     {moment(service.start).format('HH:mm')} - {moment(service.end).format('HH:mm')}
                                   </div>
@@ -612,8 +608,8 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
                 </div>
 
                 {/* Atanmamış Servisler Sidebar */}
-                <div className="w-80 bg-gray-50 flex flex-col">
-                  <div className="p-4 bg-orange-600 text-white border-b border-orange-700">
+                <div className="w-80 bg-gray-50 flex flex-col border-l border-gray-300">
+                  <div className="p-3 bg-orange-600 text-white border-b border-orange-700">
                     <h3 className="font-semibold text-sm flex items-center gap-2">
                       <XCircle className="h-4 w-4" />
                       Atanmamış Servisler
@@ -621,14 +617,14 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
                     <p className="text-xs opacity-90 mt-1">Teknisyenlere sürükleyip bırakın</p>
                   </div>
                   
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  <div className="flex-1 overflow-y-auto p-3 space-y-2">
                     {/* Atanmamış servisleri filtrele */}
                     {calendarEvents
                       .filter(event => !event.resourceId || event.resourceId === 'unassigned')
                       .map((service, index) => (
                         <div 
                           key={index}
-                          className="bg-white border border-gray-200 rounded-lg p-3 cursor-move hover:shadow-md transition-all duration-200 hover:scale-105 active:scale-95"
+                          className="bg-white border border-gray-200 rounded-lg p-2 cursor-move hover:shadow-md transition-all duration-200 hover:scale-105 active:scale-95"
                           draggable
                           onDragStart={(e) => {
                             e.dataTransfer.setData('text/plain', JSON.stringify(service));
@@ -642,16 +638,16 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <h4 className="font-medium text-gray-900 text-sm">{service.title}</h4>
+                              <h4 className="font-medium text-gray-900 text-xs truncate">{service.title}</h4>
                               {service.location && (
                                 <p className="text-xs text-gray-600 mt-1 flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
                                   {service.location}
                                 </p>
                               )}
-                              <div className="flex items-center gap-2 mt-2">
+                              <div className="flex items-center gap-2 mt-1">
                                 <span 
-                                  className="w-3 h-3 rounded-full"
+                                  className="w-2 h-2 rounded-full"
                                   style={{ backgroundColor: service.style?.backgroundColor || '#3b82f6' }}
                                 ></span>
                                 <span className="text-xs text-gray-500">
@@ -660,7 +656,7 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
                               </div>
                             </div>
                             <div className="ml-2">
-                              <User className="h-4 w-4 text-gray-400" />
+                              <User className="h-3 w-3 text-gray-400" />
                             </div>
                           </div>
                         </div>
@@ -678,8 +674,8 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
               </div>
 
               {/* Alt Bilgi Paneli */}
-              <div className="bg-gray-50 border-t border-gray-200 p-3">
-                <div className="flex items-center justify-between text-sm text-gray-600">
+              <div className="bg-gray-50 border-t border-gray-200 p-2">
+                <div className="flex items-center justify-between text-xs text-gray-600">
                   <div className="flex items-center gap-4">
                     <span>Servisleri sürükleyerek farklı teknisyenlere ve zamanlara atayabilirsiniz</span>
                   </div>
@@ -688,19 +684,19 @@ const ServicePage = ({ isCollapsed, setIsCollapsed }: ServicePageProps) => {
                       <span>Öncelik:</span>
                       <div className="flex gap-2">
                         <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                          <div className="w-2 h-2 rounded-full bg-red-500"></div>
                           <span>Acil</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                          <div className="w-2 h-2 rounded-full bg-orange-500"></div>
                           <span>Yüksek</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                          <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
                           <span>Orta</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
                           <span>Düşük</span>
                         </div>
                       </div>

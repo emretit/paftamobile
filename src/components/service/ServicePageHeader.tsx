@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, CalendarDays } from "lucide-react";
+import { Plus, CalendarDays } from "lucide-react";
 import ServiceViewToggle from "./ServiceViewToggle";
 import { ServiceRequestForm } from "./ServiceRequestForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,14 +11,12 @@ interface ServicePageHeaderProps {
   activeView: ViewType;
   setActiveView: (view: ViewType) => void;
   onCreateRequest: () => void;
-  onTechniciansClick?: () => void;
 }
 
 const ServicePageHeader = ({ 
   activeView, 
   setActiveView, 
-  onCreateRequest,
-  onTechniciansClick 
+  onCreateRequest
 }: ServicePageHeaderProps) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
@@ -38,14 +36,6 @@ const ServicePageHeader = ({
             activeView={activeView} 
             setActiveView={setActiveView} 
           />
-          <Button 
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={onTechniciansClick}
-          >
-            <Users className="h-4 w-4" />
-            <span>Teknisyenler</span>
-          </Button>
           <Button 
             className="flex items-center gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg transition-all duration-300" 
             onClick={() => setIsFormOpen(true)}
