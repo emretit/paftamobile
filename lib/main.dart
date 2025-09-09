@@ -1,47 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-
-import 'core/constants/app_constants.dart';
-import 'core/theme/app_theme.dart';
-import 'core/services/notification_service.dart';
-import 'features/auth/presentation/pages/splash_page.dart';
+import 'router/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Hive'ı başlat (local storage için)
-  await Hive.initFlutter();
-  
-  // Supabase'i başlat
   await Supabase.initialize(
-    url: AppConstants.supabaseUrl,
-    anonKey: AppConstants.supabaseAnonKey,
+    url: 'https://vwhwufnckpqirxptwncw.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aHd1Zm5ja3BxaXJ4cHR3bmN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkzODI5MjAsImV4cCI6MjA1NDk1ODkyMH0.Wjw8MAnsBrHxB6-J-bNGObgDQ4fl3zPYrgYI5tOrcKo',
   );
   
-  // Notification servisini başlat
-  await NotificationService().startRealtimeSubscription();
-  
-  runApp(
-    const ProviderScope(
-      child: PaftaMobileApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
-class PaftaMobileApp extends StatelessWidget {
-  const PaftaMobileApp({super.key});
+class MyApp extends ConsumerWidget {
+  const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Pafta Teknik Servis',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      debugShowCheckedModeBanner: false,
-      home: const SplashPage(),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(appRouterProvider);
+    
+    return MaterialApp.router(
+      title: 'PAFTA Field Service',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
+      routerConfig: router,
     );
   }
 }
