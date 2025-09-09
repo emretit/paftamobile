@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/service_request.dart';
@@ -46,21 +47,51 @@ class _ServiceRequestDetailPageState extends ConsumerState<ServiceRequestDetailP
     final priorityDisplayNames = ref.watch(serviceRequestPriorityDisplayNamesProvider);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF2F2F7),
       appBar: AppBar(
-        title: const Text('Servis Talebi Detayı'),
-        backgroundColor: Colors.blue[600],
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () => context.go('/service-requests/${widget.id}/edit'),
+        title: Text(
+          'Servis Talebi Detayı',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
           ),
+        ),
+        backgroundColor: const Color(0xFFF2F2F7),
+        foregroundColor: const Color(0xFF000000),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        actions: [
+          CupertinoButton(
+            onPressed: () => context.go('/service-requests/${widget.id}/edit'),
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFFB73D3D),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                CupertinoIcons.pencil,
+                color: Colors.white,
+                size: 18,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
         ],
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
+          labelColor: const Color(0xFFB73D3D),
+          unselectedLabelColor: const Color(0xFF8E8E93),
+          indicatorColor: const Color(0xFFB73D3D),
+          indicatorWeight: 3,
+          labelStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          unselectedLabelStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.normal,
+          ),
           tabs: const [
             Tab(text: 'Detaylar'),
             Tab(text: 'Aktiviteler'),

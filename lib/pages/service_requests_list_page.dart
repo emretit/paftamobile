@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/service_request.dart';
@@ -34,15 +35,38 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
     final priorityDisplayNames = ref.watch(serviceRequestPriorityDisplayNamesProvider);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF2F2F7),
       appBar: AppBar(
-        title: const Text('Servis Talepleri'),
-        backgroundColor: Colors.blue[600],
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => context.go('/service-requests/create'),
+        title: Text(
+          'Servis Talepleri',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
           ),
+        ),
+        backgroundColor: const Color(0xFFF2F2F7),
+        foregroundColor: const Color(0xFF000000),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        actions: [
+          CupertinoButton(
+            onPressed: () => context.go('/service-requests/create'),
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFFB73D3D),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                CupertinoIcons.add,
+                color: Colors.white,
+                size: 18,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
         ],
       ),
       body: Column(
@@ -50,35 +74,54 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
           // Filtre ve arama bölümü
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.grey[100],
+            color: Colors.white,
             child: Column(
               children: [
                 // Arama çubuğu
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Servis talebi ara...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              setState(() {
-                                _searchQuery = '';
-                                _searchController.clear();
-                              });
-                            },
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF2F2F7),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Servis talebi ara...',
+                      hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF8E8E93),
+                      ),
+                      prefixIcon: const Icon(
+                        CupertinoIcons.search,
+                        color: Color(0xFFB73D3D),
+                        size: 20,
+                      ),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? CupertinoButton(
+                              onPressed: () {
+                                setState(() {
+                                  _searchQuery = '';
+                                  _searchController.clear();
+                                });
+                              },
+                              child: const Icon(
+                                CupertinoIcons.clear_circled_solid,
+                                color: Color(0xFF8E8E93),
+                                size: 20,
+                              ),
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                  ),
                 ),
                 const SizedBox(height: 12),
                 // Durum filtresi
@@ -226,16 +269,27 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
   }
 
   Widget _buildStatusFilterChip(String label, String value, bool isSelected) {
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (selected) {
+    return CupertinoButton(
+      onPressed: () {
         setState(() {
-          _selectedStatus = selected ? value : 'all';
+          _selectedStatus = value;
         });
       },
-      selectedColor: Colors.blue[100],
-      checkmarkColor: Colors.blue[800],
+      padding: EdgeInsets.zero,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFB73D3D) : const Color(0xFFF2F2F7),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: isSelected ? Colors.white : const Color(0xFF8E8E93),
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+      ),
     );
   }
 
@@ -246,12 +300,22 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
     Map<String, String> statusDisplayNames,
     Map<String, String> priorityDisplayNames,
   ) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      child: InkWell(
-        onTap: () => context.go('/service-requests/${serviceRequest.id}'),
-        borderRadius: BorderRadius.circular(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: CupertinoButton(
+        onPressed: () => context.go('/service-requests/${serviceRequest.id}'),
+        padding: EdgeInsets.zero,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -266,18 +330,19 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
                       children: [
                         Text(
                           serviceRequest.title,
-                          style: const TextStyle(
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            color: const Color(0xFF000000),
                           ),
                         ),
                         const SizedBox(height: 4),
                         if (serviceRequest.serviceType != null)
                           Text(
                             'Tip: ${serviceRequest.serviceType}',
-                            style: TextStyle(
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: const Color(0xFF8E8E93),
                             ),
                           ),
                       ],
@@ -303,9 +368,9 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
                     serviceRequest.description!,
-                    style: TextStyle(
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontSize: 14,
-                      color: Colors.grey[700],
+                      color: const Color(0xFF8E8E93),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -317,14 +382,18 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Row(
                     children: [
-                      Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
+                      const Icon(
+                        CupertinoIcons.location,
+                        size: 16,
+                        color: Color(0xFF8E8E93),
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           serviceRequest.location!,
-                          style: TextStyle(
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontSize: 14,
-                            color: Colors.grey[700],
+                            color: const Color(0xFF8E8E93),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -336,24 +405,32 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
               // Tarih bilgileri
               Row(
                 children: [
-                  Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
+                  const Icon(
+                    CupertinoIcons.clock,
+                    size: 16,
+                    color: Color(0xFF8E8E93),
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'Oluşturulma: ${_formatDate(serviceRequest.createdAt)}',
-                    style: TextStyle(
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: const Color(0xFF8E8E93),
                     ),
                   ),
                   if (serviceRequest.dueDate != null) ...[
                     const SizedBox(width: 16),
-                    Icon(Icons.access_time, size: 16, color: Colors.orange[600]),
+                    const Icon(
+                      CupertinoIcons.time,
+                      size: 16,
+                      color: Color(0xFFFF9500),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Bitiş: ${_formatDate(serviceRequest.dueDate!)}',
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontSize: 12,
-                        color: Colors.orange[600],
+                        color: const Color(0xFFFF9500),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -365,13 +442,17 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.note, size: 16, color: Colors.blue[600]),
+                    const Icon(
+                      CupertinoIcons.doc_text,
+                      size: 16,
+                      color: Color(0xFFB73D3D),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${serviceRequest.notes!.length} not',
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontSize: 12,
-                        color: Colors.blue[600],
+                        color: const Color(0xFFB73D3D),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -383,13 +464,17 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.attach_file, size: 16, color: Colors.green[600]),
+                    const Icon(
+                      CupertinoIcons.paperclip,
+                      size: 16,
+                      color: Color(0xFF34C759),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${serviceRequest.attachments.length} dosya',
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontSize: 12,
-                        color: Colors.green[600],
+                        color: const Color(0xFF34C759),
                         fontWeight: FontWeight.w500,
                       ),
                     ),

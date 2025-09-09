@@ -151,7 +151,7 @@ class HomePage extends ConsumerWidget {
                 
                 // Statistics Cards
                 serviceRequestsAsync.when(
-                  data: (requests) => _buildStatisticsCards(requests),
+                  data: (requests) => _buildStatisticsCards(context, requests),
                   loading: () => _buildLoadingCards(),
                   error: (error, stack) => _buildErrorCard(),
                 ),
@@ -272,7 +272,7 @@ class HomePage extends ConsumerWidget {
     return months[month];
   }
 
-  Widget _buildStatisticsCards(List requests) {
+  Widget _buildStatisticsCards(BuildContext context, List requests) {
     final today = DateTime.now();
     final todayRequests = requests.where((request) {
       final createdAt = DateTime.parse(request.createdAt.toString());

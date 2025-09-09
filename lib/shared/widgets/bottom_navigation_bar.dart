@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
 class CustomBottomNavigationBar extends StatelessWidget {
@@ -13,38 +14,59 @@ class CustomBottomNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
+        color: const Color(0xFFF2F2F7),
+        border: Border(
+          top: BorderSide(
             color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
+            width: 0.5,
           ),
-        ],
+        ),
       ),
       child: BottomNavigationBar(
         currentIndex: currentIndex,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.blue[600],
-        unselectedItemColor: Colors.grey[600],
-        backgroundColor: Colors.white,
-        elevation: 0, // Container'da shadow kullandığımız için 0 yapıyoruz
+        selectedItemColor: const Color(0xFFB73D3D),
+        unselectedItemColor: const Color(0xFF8E8E93),
+        backgroundColor: const Color(0xFFF2F2F7),
+        elevation: 0,
         onTap: (index) => _onTap(context, index),
-        items: const [
+        selectedLabelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFFB73D3D),
+        ),
+        unselectedLabelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+          fontSize: 10,
+          fontWeight: FontWeight.normal,
+          color: const Color(0xFF8E8E93),
+        ),
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(
+              currentIndex == 0 ? CupertinoIcons.house_fill : CupertinoIcons.house,
+              size: 24,
+            ),
             label: 'Ana Sayfa',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.build),
+            icon: Icon(
+              currentIndex == 1 ? CupertinoIcons.wrench_fill : CupertinoIcons.wrench,
+              size: 24,
+            ),
             label: 'Servis Talepleri',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle),
+            icon: Icon(
+              currentIndex == 2 ? CupertinoIcons.plus_circle_fill : CupertinoIcons.plus_circle,
+              size: 24,
+            ),
             label: 'Yeni Talep',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(
+              currentIndex == 3 ? CupertinoIcons.person_fill : CupertinoIcons.person,
+              size: 24,
+            ),
             label: 'Profil',
           ),
         ],

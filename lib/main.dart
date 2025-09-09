@@ -107,13 +107,13 @@ class MyApp extends ConsumerWidget {
       ),
       
       // iOS benzeri card tema
-      cardTheme: CardTheme(
+      cardTheme: const CardThemeData(
         color: Colors.white,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       ),
       
       // PAFTA brand buton temaları

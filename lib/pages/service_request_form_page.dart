@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/service_request.dart';
@@ -75,9 +76,18 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.id == null ? 'Yeni Servis Talebi' : 'Servis Talebini Düzenle'),
-        backgroundColor: Colors.blue[600],
-        foregroundColor: Colors.white,
+        title: Text(
+          widget.id == null ? 'Yeni Servis Talebi' : 'Servis Talebini Düzenle',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: const Color(0xFFF2F2F7),
+        foregroundColor: const Color(0xFF000000),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         actions: [
           if (_isLoading)
             const Padding(
@@ -85,9 +95,8 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
               child: SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                child: CupertinoActivityIndicator(
+                  color: Color(0xFFB73D3D),
                 ),
               ),
             ),
