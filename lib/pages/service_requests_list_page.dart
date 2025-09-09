@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/service_request.dart';
 import '../providers/service_request_provider.dart';
-import '../shared/widgets/bottom_navigation_bar.dart';
 
 class ServiceRequestsListPage extends ConsumerStatefulWidget {
   const ServiceRequestsListPage({super.key});
@@ -26,7 +25,6 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
 
   @override
   Widget build(BuildContext context) {
-    final currentRoute = GoRouterState.of(context).uri.path;
     final serviceRequestsAsync = ref.watch(serviceRequestsProvider);
     final statuses = ref.watch(serviceRequestStatusesProvider);
     final statusColors = ref.watch(serviceRequestStatusColorsProvider);
@@ -261,9 +259,6 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        currentIndex: CustomBottomNavigationBar.getIndexForRoute(currentRoute),
       ),
     );
   }

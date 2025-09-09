@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../providers/service_request_provider.dart';
-import '../shared/widgets/bottom_navigation_bar.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -192,73 +191,6 @@ class HomePage extends ConsumerWidget {
               ],
             ),
           ),
-        ),
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF2F2F7),
-          border: Border(
-            top: BorderSide(
-              color: const Color(0xFFE5E5EA).withOpacity(0.5),
-              width: 0.5,
-            ),
-          ),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: 0,
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: const Color(0xFFB73D3D),
-          unselectedItemColor: const Color(0xFF8E8E93),
-          backgroundColor: const Color(0xFFF2F2F7),
-          elevation: 0,
-          selectedLabelStyle: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.06,
-          ),
-          unselectedLabelStyle: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w400,
-            letterSpacing: -0.06,
-          ),
-          onTap: (index) {
-            switch (index) {
-              case 0:
-                context.go('/home');
-                break;
-              case 1:
-                context.go('/service-requests');
-                break;
-              case 2:
-                context.go('/service-requests/create');
-                break;
-              case 3:
-                context.go('/profile');
-                break;
-            }
-          },
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.house),
-              activeIcon: Icon(CupertinoIcons.house_fill),
-              label: 'Ana Sayfa',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.wrench),
-              activeIcon: Icon(CupertinoIcons.wrench_fill),
-              label: 'Servis Talepleri',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.plus_circle),
-              activeIcon: Icon(CupertinoIcons.plus_circle_fill),
-              label: 'Yeni Talep',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.person),
-              activeIcon: Icon(CupertinoIcons.person_fill),
-              label: 'Profil',
-            ),
-          ],
         ),
       ),
     );

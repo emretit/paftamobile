@@ -4,8 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/service_request.dart';
 import '../providers/service_request_provider.dart';
-import '../services/service_request_service.dart';
-import '../shared/widgets/bottom_navigation_bar.dart';
 
 class ServiceRequestFormPage extends ConsumerStatefulWidget {
   final String? id; // null ise yeni oluşturma, dolu ise düzenleme
@@ -25,11 +23,14 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
   final _serviceTypeController = TextEditingController();
-  final _specialInstructionsController = TextEditingController();
+  final _notesController = TextEditingController();
 
   String _selectedPriority = 'medium';
   String _selectedStatus = 'new';
+  String? _selectedCustomerId;
+  String? _selectedEquipmentId;
   DateTime? _dueDate;
+  DateTime? _reportedDate;
   bool _isLoading = false;
 
   @override
@@ -46,7 +47,7 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
     _descriptionController.dispose();
     _locationController.dispose();
     _serviceTypeController.dispose();
-    _specialInstructionsController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -58,23 +59,26 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
         _descriptionController.text = serviceRequest.description ?? '';
         _locationController.text = serviceRequest.location ?? '';
         _serviceTypeController.text = serviceRequest.serviceType ?? '';
-        _specialInstructionsController.text = serviceRequest.specialInstructions ?? '';
+        _notesController.text = serviceRequest.notes?.join('\n') ?? '';
         _selectedPriority = serviceRequest.priority;
         _selectedStatus = serviceRequest.status;
+        _selectedCustomerId = serviceRequest.customerId;
+        _selectedEquipmentId = serviceRequest.equipmentId;
         _dueDate = serviceRequest.dueDate;
+        _reportedDate = serviceRequest.reportedDate;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentRoute = GoRouterState.of(context).uri.path;
     final priorities = ref.watch(serviceRequestPrioritiesProvider);
     final statuses = ref.watch(serviceRequestStatusesProvider);
     final priorityDisplayNames = ref.watch(serviceRequestPriorityDisplayNamesProvider);
     final statusDisplayNames = ref.watch(serviceRequestStatusDisplayNamesProvider);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF2F2F7),
       appBar: AppBar(
         title: Text(
           widget.id == null ? 'Yeni Servis Talebi' : 'Servis Talebini Düzenle',
@@ -110,239 +114,134 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Temel Bilgiler
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Temel Bilgiler',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Başlık
-                      TextFormField(
-                        controller: _titleController,
-                        decoration: const InputDecoration(
-                          labelText: 'Başlık *',
-                          border: OutlineInputBorder(),
-                          hintText: 'Servis talebi başlığını girin',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Başlık gereklidir';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      // Açıklama
-                      TextFormField(
-                        controller: _descriptionController,
-                        decoration: const InputDecoration(
-                          labelText: 'Açıklama',
-                          border: OutlineInputBorder(),
-                          hintText: 'Detaylı açıklama girin',
-                        ),
-                        maxLines: 3,
-                      ),
-                      const SizedBox(height: 16),
-                      // Servis Tipi
-                      TextFormField(
-                        controller: _serviceTypeController,
-                        decoration: const InputDecoration(
-                          labelText: 'Servis Tipi',
-                          border: OutlineInputBorder(),
-                          hintText: 'Örn: Bakım, Onarım, Kurulum',
-                        ),
-                      ),
-                    ],
+              _buildSection(
+                'Temel Bilgiler',
+                CupertinoIcons.doc_text,
+                [
+                  _buildTextField(
+                    controller: _titleController,
+                    label: 'Başlık *',
+                    hint: 'Servis talebi başlığını girin',
+                    icon: CupertinoIcons.textformat,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Başlık gereklidir';
+                      }
+                      return null;
+                    },
                   ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Konum ve Tarih
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Konum ve Tarih',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Konum
-                      TextFormField(
-                        controller: _locationController,
-                        decoration: const InputDecoration(
-                          labelText: 'Konum',
-                          border: OutlineInputBorder(),
-                          hintText: 'Servis yapılacak konum',
-                          prefixIcon: Icon(Icons.location_on),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Bitiş Tarihi
-                      InkWell(
-                        onTap: _selectDueDate,
-                        child: InputDecorator(
-                          decoration: const InputDecoration(
-                            labelText: 'Bitiş Tarihi',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.calendar_today),
-                          ),
-                          child: Text(
-                            _dueDate != null
-                                ? '${_dueDate!.day.toString().padLeft(2, '0')}.${_dueDate!.month.toString().padLeft(2, '0')}.${_dueDate!.year}'
-                                : 'Tarih seçin',
-                          ),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: _descriptionController,
+                    label: 'Açıklama',
+                    hint: 'Detaylı açıklama girin',
+                    icon: CupertinoIcons.text_alignleft,
+                    maxLines: 3,
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: _serviceTypeController,
+                    label: 'Servis Tipi',
+                    hint: 'Örn: Bakım, Onarım, Kurulum',
+                    icon: CupertinoIcons.wrench,
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
+              
+              // Konum ve Tarih Bilgileri
+              _buildSection(
+                'Konum ve Tarih',
+                CupertinoIcons.location,
+                [
+                  _buildTextField(
+                    controller: _locationController,
+                    label: 'Konum',
+                    hint: 'Servis yapılacak konum',
+                    icon: CupertinoIcons.location_solid,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDateSelector(
+                    label: 'Bitiş Tarihi',
+                    date: _dueDate,
+                    onTap: _selectDueDate,
+                    icon: CupertinoIcons.calendar,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDateSelector(
+                    label: 'Bildirim Tarihi',
+                    date: _reportedDate,
+                    onTap: _selectReportedDate,
+                    icon: CupertinoIcons.time,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              
               // Durum ve Öncelik
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              _buildSection(
+                'Durum ve Öncelik',
+                CupertinoIcons.slider_horizontal_3,
+                [
+                  Row(
                     children: [
-                      const Text(
-                        'Durum ve Öncelik',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: _buildDropdown(
+                          label: 'Öncelik',
+                          value: _selectedPriority,
+                          items: priorities,
+                          displayNames: priorityDisplayNames,
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedPriority = value!;
+                            });
+                          },
+                          icon: CupertinoIcons.exclamationmark_triangle,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          // Öncelik
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: _selectedPriority,
-                              decoration: const InputDecoration(
-                                labelText: 'Öncelik',
-                                border: OutlineInputBorder(),
-                              ),
-                              items: priorities.map((priority) {
-                                return DropdownMenuItem(
-                                  value: priority,
-                                  child: Text(priorityDisplayNames[priority] ?? priority),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedPriority = value!;
-                                });
-                              },
-                            ),
+                      const SizedBox(width: 16),
+                      if (widget.id != null)
+                        Expanded(
+                          child: _buildDropdown(
+                            label: 'Durum',
+                            value: _selectedStatus,
+                            items: statuses,
+                            displayNames: statusDisplayNames,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedStatus = value!;
+                              });
+                            },
+                            icon: CupertinoIcons.checkmark_circle,
                           ),
-                          const SizedBox(width: 16),
-                          // Durum (sadece düzenleme modunda)
-                          if (widget.id != null)
-                            Expanded(
-                              child: DropdownButtonFormField<String>(
-                                value: _selectedStatus,
-                                decoration: const InputDecoration(
-                                  labelText: 'Durum',
-                                  border: OutlineInputBorder(),
-                                ),
-                                items: statuses.map((status) {
-                                  return DropdownMenuItem(
-                                    value: status,
-                                    child: Text(statusDisplayNames[status] ?? status),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedStatus = value!;
-                                  });
-                                },
-                              ),
-                            ),
-                        ],
-                      ),
+                        ),
                     ],
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 16),
-              // Özel Talimatlar
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Özel Talimatlar',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _specialInstructionsController,
-                        decoration: const InputDecoration(
-                          labelText: 'Özel Talimatlar',
-                          border: OutlineInputBorder(),
-                          hintText: 'Özel talimatlar veya notlar',
-                        ),
-                        maxLines: 3,
-                      ),
-                    ],
+              const SizedBox(height: 20),
+              
+              // Notlar
+              _buildSection(
+                'Notlar',
+                CupertinoIcons.doc_plaintext,
+                [
+                  _buildTextField(
+                    controller: _notesController,
+                    label: 'Notlar',
+                    hint: 'Özel notlar veya talimatlar (her satır ayrı not)',
+                    icon: CupertinoIcons.text_alignleft,
+                    maxLines: 4,
                   ),
-                ),
+                ],
               ),
               const SizedBox(height: 32),
+              
               // Kaydet Butonu
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _saveServiceRequest,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[600],
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(
-                          widget.id == null ? 'Servis Talebini Oluştur' : 'Değişiklikleri Kaydet',
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                ),
-              ),
+              _buildSaveButton(),
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        currentIndex: CustomBottomNavigationBar.getIndexForRoute(currentRoute),
       ),
     );
   }
@@ -357,6 +256,20 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
     if (picked != null) {
       setState(() {
         _dueDate = picked;
+      });
+    }
+  }
+
+  Future<void> _selectReportedDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _reportedDate ?? DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 30)),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+    );
+    if (picked != null) {
+      setState(() {
+        _reportedDate = picked;
       });
     }
   }
@@ -383,8 +296,11 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
           location: _locationController.text.isEmpty ? null : _locationController.text,
           priority: _selectedPriority,
           status: _selectedStatus,
+          customerId: _selectedCustomerId,
+          equipmentId: _selectedEquipmentId,
           dueDate: _dueDate,
-          specialInstructions: _specialInstructionsController.text.isEmpty ? null : _specialInstructionsController.text,
+          reportedDate: _reportedDate ?? DateTime.now(),
+          notes: _notesController.text.isEmpty ? null : _notesController.text.split('\n').where((line) => line.trim().isNotEmpty).toList(),
           attachments: const [],
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
@@ -408,8 +324,11 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
           location: _locationController.text.isEmpty ? null : _locationController.text,
           priority: _selectedPriority,
           status: _selectedStatus,
+          customerId: _selectedCustomerId,
+          equipmentId: _selectedEquipmentId,
           dueDate: _dueDate,
-          specialInstructions: _specialInstructionsController.text.isEmpty ? null : _specialInstructionsController.text,
+          reportedDate: _reportedDate ?? DateTime.now(),
+          notes: _notesController.text.isEmpty ? null : _notesController.text.split('\n').where((line) => line.trim().isNotEmpty).toList(),
           attachments: const [],
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
@@ -443,5 +362,239 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
         });
       }
     }
+  }
+
+  Widget _buildSection(String title, IconData sectionIcon, List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            spreadRadius: 0,
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFB73D3D).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    sectionIcon,
+                    color: const Color(0xFFB73D3D),
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF000000),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF2F2F7),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        validator: validator,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          color: const Color(0xFF000000),
+          fontSize: 16,
+        ),
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: const Color(0xFF8E8E93),
+            fontSize: 14,
+          ),
+          hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: const Color(0xFF8E8E93),
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(
+            icon,
+            color: const Color(0xFFB73D3D),
+            size: 20,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdown({
+    required String label,
+    required String value,
+    required List<String> items,
+    required Map<String, String> displayNames,
+    required void Function(String?) onChanged,
+    required IconData icon,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF2F2F7),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        onChanged: onChanged,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          color: const Color(0xFF000000),
+          fontSize: 16,
+        ),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: const Color(0xFF8E8E93),
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(
+            icon,
+            color: const Color(0xFFB73D3D),
+            size: 20,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+        ),
+        items: items.map((item) {
+          return DropdownMenuItem(
+            value: item,
+            child: Text(
+              displayNames[item] ?? item,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: const Color(0xFF000000),
+                fontSize: 16,
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildDateSelector({
+    required String label,
+    required DateTime? date,
+    required VoidCallback onTap,
+    required IconData icon,
+  }) {
+    return CupertinoButton(
+      onPressed: onTap,
+      padding: EdgeInsets.zero,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF2F2F7),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: InputDecorator(
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF8E8E93),
+              fontSize: 14,
+            ),
+            prefixIcon: Icon(
+              icon,
+              color: const Color(0xFFB73D3D),
+              size: 20,
+            ),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+          ),
+          child: Text(
+            date != null
+                ? '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}'
+                : 'Tarih seçin',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: date != null ? const Color(0xFF000000) : const Color(0xFF8E8E93),
+              fontSize: 16,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: CupertinoButton(
+        onPressed: _isLoading ? null : _saveServiceRequest,
+        color: const Color(0xFFB73D3D),
+        borderRadius: BorderRadius.circular(16),
+        child: _isLoading
+            ? const CupertinoActivityIndicator(
+                color: Colors.white,
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    widget.id == null ? CupertinoIcons.add_circled : CupertinoIcons.check_mark_circled,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    widget.id == null ? 'Servis Talebini Oluştur' : 'Değişiklikleri Kaydet',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
   }
 }

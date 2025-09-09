@@ -2,11 +2,12 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../pages/login_page.dart';
-import '../pages/home_page.dart';
+import '../pages/home_page_new.dart';
 import '../pages/service_requests_list_page.dart';
 import '../pages/service_request_detail_page.dart';
 import '../pages/service_request_form_page.dart';
 import '../pages/profile_page.dart';
+import '../shared/layouts/main_layout.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -32,19 +33,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/login',
         builder: (context, state) => const LoginPage(),
       ),
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => const HomePage(),
+      // Ana sayfalar - Shell Route ile sabit bottom bar
+      ShellRoute(
+        builder: (context, state, child) => MainLayout(
+          currentRoute: state.uri.path,
+          child: child,
+        ),
+        routes: [
+          GoRoute(
+            path: '/home',
+            builder: (context, state) => const HomePageNew(),
+          ),
+          GoRoute(
+            path: '/service-requests',
+            builder: (context, state) => const ServiceRequestsListPage(),
+          ),
+          GoRoute(
+            path: '/service-requests/create',
+            builder: (context, state) => const ServiceRequestFormPage(),
+          ),
+          GoRoute(
+            path: '/profile',
+            builder: (context, state) => const ProfilePage(),
+          ),
+        ],
       ),
-      // Service Requests Routes
-      GoRoute(
-        path: '/service-requests',
-        builder: (context, state) => const ServiceRequestsListPage(),
-      ),
-      GoRoute(
-        path: '/service-requests/create',
-        builder: (context, state) => const ServiceRequestFormPage(),
-      ),
+      // Alt sayfalar - bottom bar olmadan
       GoRoute(
         path: '/service-requests/:id',
         builder: (context, state) {
@@ -58,10 +72,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return ServiceRequestFormPage(id: id);
         },
-      ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => const ProfilePage(),
       ),
     ],
   );
