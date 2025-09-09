@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'router/app_router.dart';
@@ -23,11 +25,215 @@ class MyApp extends ConsumerWidget {
     
     return MaterialApp.router(
       title: 'PAFTA Field Service',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
+      theme: _buildIOSTheme(),
       routerConfig: router,
+    );
+  }
+
+  ThemeData _buildIOSTheme() {
+    return ThemeData(
+      // PAFTA brand renk paleti
+      useMaterial3: true,
+      primarySwatch: Colors.red,
+      primaryColor: const Color(0xFFB73D3D), // PAFTA kırmızı
+      
+      // iOS benzeri fontlar
+      fontFamily: 'SF Pro Display',
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
+          fontSize: 34,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF000000),
+          letterSpacing: -0.41,
+        ),
+        headlineLarge: TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF000000),
+          letterSpacing: -0.36,
+        ),
+        headlineMedium: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF000000),
+          letterSpacing: -0.26,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF000000),
+          letterSpacing: -0.45,
+        ),
+        titleMedium: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF000000),
+          letterSpacing: -0.32,
+        ),
+        bodyLarge: TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w400,
+          color: Color(0xFF000000),
+          letterSpacing: -0.41,
+        ),
+        bodyMedium: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w400,
+          color: Color(0xFF000000),
+          letterSpacing: -0.24,
+        ),
+        labelLarge: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF8E8E93),
+          letterSpacing: -0.08,
+        ),
+      ),
+      
+      // iOS benzeri AppBar tema
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFFF2F2F7),
+        foregroundColor: Color(0xFF000000),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        titleTextStyle: TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF000000),
+          letterSpacing: -0.41,
+        ),
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+      ),
+      
+      // iOS benzeri card tema
+      cardTheme: CardTheme(
+        color: Colors.white,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      ),
+      
+      // PAFTA brand buton temaları
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFB73D3D),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.41,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+      ),
+      
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: const Color(0xFFB73D3D),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.41,
+          ),
+        ),
+      ),
+      
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: const Color(0xFFB73D3D),
+          textStyle: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w400,
+            letterSpacing: -0.41,
+          ),
+        ),
+      ),
+      
+      // iOS benzeri input tema
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xFFF2F2F7),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFB73D3D), width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        hintStyle: const TextStyle(
+          color: Color(0xFF8E8E93),
+          fontSize: 17,
+          fontWeight: FontWeight.w400,
+          letterSpacing: -0.41,
+        ),
+      ),
+      
+      // iOS benzeri scaffold tema
+      scaffoldBackgroundColor: const Color(0xFFF2F2F7),
+      
+      // iOS benzeri liste tema
+      listTileTheme: const ListTileThemeData(
+        tileColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      ),
+      
+      // iOS benzeri divider tema
+      dividerTheme: const DividerThemeData(
+        color: Color(0xFFE5E5EA),
+        thickness: 0.5,
+        space: 1,
+      ),
+      
+      // PAFTA brand navigasyon tema
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Color(0xFFF2F2F7),
+        selectedItemColor: Color(0xFFB73D3D),
+        unselectedItemColor: Color(0xFF8E8E93),
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+        selectedLabelStyle: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.06,
+        ),
+        unselectedLabelStyle: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w400,
+          letterSpacing: -0.06,
+        ),
+      ),
+      
+      // PAFTA brand renk şeması
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFFB73D3D),
+        secondary: Color(0xFFD17979),
+        surface: Colors.white,
+        background: Color(0xFFF2F2F7),
+        error: Color(0xFFFF3B30),
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: Color(0xFF000000),
+        onBackground: Color(0xFF000000),
+        onError: Colors.white,
+      ),
     );
   }
 }
