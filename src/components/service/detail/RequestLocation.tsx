@@ -9,9 +9,9 @@ export const RequestLocation: React.FC<RequestLocationProps> = ({ location }) =>
   if (!location) return null;
   
   return (
-    <div className="space-y-2">
-      <h3 className="text-lg font-semibold">Konum</h3>
-      <p className="text-muted-foreground">{location}</p>
+    <div className="bg-muted/20 p-3 rounded-lg">
+      <h3 className="text-xs font-medium text-muted-foreground mb-1">Konum</h3>
+      <p className="text-sm font-medium">{location}</p>
     </div>
   );
 };

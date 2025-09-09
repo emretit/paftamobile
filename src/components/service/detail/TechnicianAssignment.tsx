@@ -47,12 +47,12 @@ export const TechnicianAssignment: React.FC<TechnicianAssignmentProps> = ({
 
   return (
     <div className="space-y-1">
-      <label className="text-sm font-medium text-gray-700">Atanan Teknisyen</label>
+      <label className="text-xs font-medium text-gray-600">Teknisyen</label>
       <Select
         value={assignedTo || "unassigned"}
         onValueChange={(value) => setAssignedTo(value === "unassigned" ? undefined : value)}
       >
-        <SelectTrigger>
+        <SelectTrigger className="h-8 text-sm">
           <SelectValue placeholder="Teknisyen seçiniz" />
         </SelectTrigger>
         <SelectContent>

@@ -10,19 +10,19 @@ interface RequestMetadataProps {
 
 export const RequestMetadata: React.FC<RequestMetadataProps> = ({ priority, serviceType }) => {
   return (
-    <div className="grid grid-cols-2 gap-4">
-      <div className="bg-muted/40 p-4 rounded-lg">
-        <div className="text-sm font-medium text-muted-foreground mb-1">Öncelik</div>
+    <div className="bg-muted/20 p-3 rounded-lg space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-medium text-muted-foreground">Öncelik</div>
         <Badge 
           variant="secondary" 
-          className={`${getPriorityColor(priority)} border`}
+          className={`${getPriorityColor(priority)} border text-xs px-2 py-0.5`}
         >
           {getPriorityLabel(priority)}
         </Badge>
       </div>
-      <div className="bg-muted/40 p-4 rounded-lg">
-        <div className="text-sm font-medium text-muted-foreground mb-1">Servis Tipi</div>
-        <span className="text-base">{serviceType}</span>
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-medium text-muted-foreground">Servis Tipi</div>
+        <span className="text-sm font-medium">{serviceType}</span>
       </div>
     </div>
   );

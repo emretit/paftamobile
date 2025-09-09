@@ -1,7 +1,6 @@
-
 import React from "react";
-import { Tag } from "lucide-react";
-import { ServiceActivitiesList } from "../ServiceActivitiesList";
+import { Clock } from "lucide-react";
+import { ServiceHistory } from "../ServiceHistory";
 
 interface ServiceActivitiesSectionProps {
   serviceRequestId: string;
@@ -9,13 +8,13 @@ interface ServiceActivitiesSectionProps {
 
 export const ServiceActivitiesSection: React.FC<ServiceActivitiesSectionProps> = ({ serviceRequestId }) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <div className="flex items-center">
-        <Tag className="h-5 w-5 mr-2" />
-        <h3 className="text-lg font-semibold">Servis Aktiviteleri</h3>
+        <Clock className="h-4 w-4 mr-2 text-blue-600" />
+        <h3 className="text-sm font-semibold">Servis Geçmişi</h3>
       </div>
       
-      <ServiceActivitiesList serviceRequestId={serviceRequestId} />
+      <ServiceHistory serviceRequestId={serviceRequestId} />
     </div>
   );
 };

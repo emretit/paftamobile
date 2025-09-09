@@ -17,14 +17,14 @@ export const StatusPrioritySection: React.FC<StatusPrioritySectionProps> = ({
   setPriority
 }) => {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-2 gap-2">
       <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Durum</label>
+        <label className="text-xs font-medium text-gray-600">Durum</label>
         <Select
           value={status}
           onValueChange={(value) => setStatus(value as ServiceStatus)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="h-8 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -39,12 +39,12 @@ export const StatusPrioritySection: React.FC<StatusPrioritySectionProps> = ({
       </div>
 
       <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Öncelik</label>
+        <label className="text-xs font-medium text-gray-600">Öncelik</label>
         <Select
           value={priority}
           onValueChange={(value) => setPriority(value as ServicePriority)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="h-8 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

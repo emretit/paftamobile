@@ -35,24 +35,24 @@ export const CustomerInfo: React.FC<CustomerInfoProps> = ({ customerId }) => {
   if (!customerId) return null;
   
   return (
-    <div className="bg-muted/40 p-4 rounded-lg">
-      <div className="flex items-center">
-        <Building2 className="h-5 w-5 mr-2 text-muted-foreground" />
-        <h3 className="text-lg font-semibold">Müşteri</h3>
+    <div className="bg-muted/20 p-3 rounded-lg">
+      <div className="flex items-center mb-2">
+        <Building2 className="h-3 w-3 mr-1 text-muted-foreground" />
+        <h3 className="text-xs font-medium text-muted-foreground">Müşteri</h3>
       </div>
       
       {isLoading ? (
-        <p className="text-muted-foreground mt-1">Müşteri bilgileri yükleniyor...</p>
+        <p className="text-xs text-muted-foreground">Yükleniyor...</p>
       ) : customer ? (
-        <div className="mt-2 space-y-1">
-          <p className="font-medium">{customer.name} {customer.company ? `(${customer.company})` : ''}</p>
-          <p className="text-muted-foreground text-sm">{customer.email}</p>
+        <div className="space-y-1">
+          <p className="text-sm font-medium">{customer.name} {customer.company ? `(${customer.company})` : ''}</p>
+          <p className="text-xs text-muted-foreground">{customer.email}</p>
           {customer.mobile_phone && (
-            <p className="text-muted-foreground text-sm">Tel: {customer.mobile_phone}</p>
+            <p className="text-xs text-muted-foreground">Tel: {customer.mobile_phone}</p>
           )}
         </div>
       ) : (
-        <p className="text-muted-foreground mt-1">Müşteri ID: {customerId}</p>
+        <p className="text-xs text-muted-foreground">Müşteri ID: {customerId}</p>
       )}
     </div>
   );

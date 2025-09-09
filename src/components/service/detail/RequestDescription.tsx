@@ -9,9 +9,9 @@ export const RequestDescription: React.FC<RequestDescriptionProps> = ({ descript
   if (!description) return null;
   
   return (
-    <div className="space-y-2">
-      <h3 className="text-lg font-semibold">Açıklama</h3>
-      <p className="text-muted-foreground whitespace-pre-line">{description}</p>
+    <div className="space-y-1">
+      <h3 className="text-sm font-semibold">Açıklama</h3>
+      <p className="text-sm text-muted-foreground whitespace-pre-line bg-muted/20 p-3 rounded-lg">{description}</p>
     </div>
   );
 };

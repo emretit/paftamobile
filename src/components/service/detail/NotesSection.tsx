@@ -10,12 +10,12 @@ interface NotesSectionProps {
 export const NotesSection: React.FC<NotesSectionProps> = ({ notes, setNotes }) => {
   return (
     <div className="space-y-1">
-      <label className="text-sm font-medium text-gray-700">Notlar</label>
+      <label className="text-xs font-medium text-gray-600">Notlar</label>
       <Textarea
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         placeholder="Servis talebi ile ilgili notlar..."
-        className="h-24"
+        className="h-16 text-sm"
       />
     </div>
   );

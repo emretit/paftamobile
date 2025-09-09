@@ -11,15 +11,15 @@ interface RequestDatesProps {
 
 export const RequestDates: React.FC<RequestDatesProps> = ({ createdAt, dueDate }) => {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center space-x-2 text-muted-foreground">
-        <Calendar className="h-4 w-4" />
-        <span>Oluşturulma Tarihi: {createdAt && format(new Date(createdAt), 'dd MMMM yyyy', { locale: tr })}</span>
+    <div className="bg-muted/20 p-3 rounded-lg space-y-2">
+      <div className="flex items-center space-x-2 text-muted-foreground text-sm">
+        <Calendar className="h-3 w-3" />
+        <span>Oluşturulma Tarihi: {createdAt && format(new Date(createdAt), 'dd MMM yyyy', { locale: tr })}</span>
       </div>
       {dueDate && (
-        <div className="flex items-center space-x-2 text-muted-foreground">
-          <Calendar className="h-4 w-4" />
-          <span>Tercih Edilen Tarih: {format(new Date(dueDate), 'dd MMMM yyyy', { locale: tr })}</span>
+        <div className="flex items-center space-x-2 text-muted-foreground text-sm">
+          <Calendar className="h-3 w-3" />
+          <span>Tercih Edilen Tarih: {format(new Date(dueDate), 'dd MMM yyyy', { locale: tr })}</span>
         </div>
       )}
     </div>
