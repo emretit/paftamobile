@@ -28,15 +28,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _signIn() async {
     if (_formKey.currentState!.validate()) {
       final authNotifier = ref.read(authProvider.notifier);
-      final success = await authNotifier.signIn(
+      await authNotifier.signIn(
         _emailController.text.trim(),
         _passwordController.text,
       );
       
-      if (success && mounted) {
-        // Başarılı giriş - HomePage'e yönlendirilecek
-        // Bu işlem auth_provider'da otomatik olarak yapılacak
-      }
+      // Başarılı giriş kontrolü auth_provider'da otomatik olarak yapılacak
+      // Auth state değişikliği dinlenerek yönlendirme yapılacak
     }
   }
 
@@ -76,7 +74,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     boxShadow: [
                       BoxShadow(
                         color: AppTheme.primaryColor.withValues(alpha: 0.3),
-                        blurRadius: 20,
+                        blurRadius: 20.0,
                         offset: const Offset(0, 10),
                       ),
                     ],
@@ -197,6 +195,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                      width: 1.0,
                     ),
                   ),
                   child: const Row(

@@ -25,7 +25,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final technician = authState.technician;
+    final user = authState.user;
 
     return Scaffold(
       body: IndexedStack(
@@ -63,6 +63,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
                     'Pafta Teknik Servis',
@@ -71,13 +72,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  if (technician != null)
+                  if (user != null)
                     Text(
-                      'Hoş geldin, ${technician.firstName}',
+                      'Hoş geldin, ${user.email}',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.normal,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                 ],
               ),

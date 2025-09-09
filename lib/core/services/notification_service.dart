@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -95,6 +94,11 @@ class NotificationService {
         case PostgresChangeEvent.delete:
           title = 'Servis Talebi Silindi';
           body = 'Servis talebi silindi: ${oldRecord['title']}';
+          break;
+        case PostgresChangeEvent.all:
+          // Tüm değişiklikler için genel bildirim
+          title = 'Servis Talebi Değişikliği';
+          body = 'Servis talebinde değişiklik oldu';
           break;
       }
       

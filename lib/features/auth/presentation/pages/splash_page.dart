@@ -40,6 +40,14 @@ class _SplashPageState extends ConsumerState<SplashPage>
       curve: Curves.easeInOut,
     ));
     
+    // Animation değerini güvenli hale getir
+    _fadeAnimation.addListener(() {
+      if (_fadeAnimation.value.isNaN) {
+        _animationController.reset();
+        _animationController.forward();
+      }
+    });
+    
     _animationController.forward();
   }
 
@@ -76,7 +84,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
       backgroundColor: AppTheme.primaryColor,
       body: Center(
         child: FadeTransition(
-          opacity: _fadeAnimation,
+          opacity: _fadeAnimation.value.isNaN ? const AlwaysStoppedAnimation(1.0) : _fadeAnimation,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -90,7 +98,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 20,
+                      blurRadius: 20.0,
                       offset: const Offset(0, 10),
                     ),
                   ],
