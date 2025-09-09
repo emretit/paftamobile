@@ -1,114 +1,148 @@
-# PAFTA - İş Yönetim Sistemi
+# PAFTA Teknik Servis - Mobil Uygulama
 
-Vite + React + TypeScript + Tailwind + shadcn/ui + Supabase ile geliştirilmiş kapsamlı iş yönetim sistemi.
+PAFTA Teknik Servis için geliştirilmiş Flutter mobil uygulaması. Teknisyenlerin servis taleplerini yönetmesi ve takip etmesi için tasarlanmıştır.
 
-## PDF Export ve Şablon Sistemi
+## 🚀 Özellikler
 
-Bu proje React-PDF tabanlı quote/teklif export sistemi içerir.
+- **Teknisyen Girişi**: Supabase Auth ile güvenli giriş
+- **Servis Talepleri**: Atanan servis taleplerini görüntüleme
+- **Durum Güncelleme**: Servis durumunu güncelleme (yeni, atandı, devam ediyor, tamamlandı)
+- **Realtime Güncellemeler**: Supabase Realtime ile anlık güncellemeler
+- **Push Notifications**: Servis atamaları için bildirimler
+- **Offline Desteği**: Çevrimdışı çalışma desteği
+- **Fotoğraf/Video**: Servis ile ilgili medya yükleme
 
-### Gerekli Ortam Değişkenleri
+## 🛠️ Teknolojiler
 
-```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+- **Flutter**: Cross-platform mobil uygulama
+- **Supabase**: Backend ve veritabanı
+- **Riverpod**: State management
+- **Hive**: Local storage
+- **Supabase Realtime**: Anlık güncellemeler
+
+## 📱 Kurulum
+
+### Gereksinimler
+- Flutter SDK (3.0+)
+- Dart SDK (3.0+)
+- iOS 13.0+ / Android API 21+
+
+### Adımlar
+
+1. **Repository'yi klonlayın**
+```bash
+git clone <repository-url>
+cd paftamobile
 ```
 
-### Supabase Kurulumu
-
-1. **Storage Bucket**: `documents` adında public bir bucket oluşturun
-2. **Veritabanı**: `pdf_templates` tablosu otomatik olarak migration ile oluşturulur
-
-### PDF Şablonları
-
-#### İlk Şablon Oluşturma
-
-1. Uygulamaya giriş yapın
-2. **Satış Yönetimi > PDF Şablonları** menüsüne gidin
-3. Şablon düzenleyiciyi kullanarak özelleştirin
-4. "Kaydet" ve "Varsayılan Yap" butonlarını kullanın
-
-#### Şablon Ayarları
-
-- **Sayfa Ayarları**: A4, padding, font boyutu
-- **Header**: Logo, başlık, geçerlilik tarihi
-- **Müşteri Bloğu**: Gösterilecek alanları seçin
-- **Tablo Kolonları**: Her kolonu ayrı ayrı göster/gizle ve etiketleri düzenle
-- **Toplamlar**: Brüt, indirim, vergi, net toplamları göster/gizle
-- **Notlar**: Giriş ve alt notlar
-
-#### Kullanım
-
-1. **Teklifler** sayfasında bir teklif seçin
-2. Sağ panelde **PDF Şablonu** dropdown'undan şablon seçin
-3. **PDF İndir** ile dosyayı indirin
-4. **Storage'a Yükle** ile Supabase storage'a kaydedin
-
-### Project info
-
-**URL**: https://pafta.app
-
-## How can you edit this code?
-
-There are several ways of editing your application.
-
-**Use GPT Engineer**
-
-Simply visit the GPT Engineer project at [GPT Engineer](https://gptengineer.app/projects/7e753aa5-e867-4890-ab18-f97d53f001e8/improve) and start prompting.
-
-Changes made via gptengineer.app will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in the GPT Engineer UI.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+2. **Bağımlılıkları yükleyin**
+```bash
+flutter pub get
 ```
 
-**Edit a file directly in GitHub**
+3. **Supabase yapılandırması**
+```bash
+# Supabase CLI ile migration'ları uygulayın
+npx supabase db push
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+4. **Uygulamayı çalıştırın**
+```bash
+# iOS
+flutter run -d ios
 
-**Use GitHub Codespaces**
+# Android
+flutter run -d android
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🗄️ Veritabanı Yapısı
 
-## What technologies are used for this project?
+### Ana Tablolar
+- `service_requests`: Servis talepleri
+- `employees`: Teknisyen bilgileri
+- `customers`: Müşteri bilgileri
+- `user_tokens`: FCM token'ları (push notification için)
 
-This project is built with .
+### Servis Talebi Durumları
+- `new`: Yeni
+- `assigned`: Atandı
+- `in_progress`: Devam ediyor
+- `on_hold`: Beklemede
+- `completed`: Tamamlandı
+- `cancelled`: İptal edildi
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🔧 Geliştirme
 
-## How can I deploy this project?
+### Proje Yapısı
+```
+lib/
+├── core/                 # Temel yapılandırma
+│   ├── constants/        # Sabitler
+│   ├── services/         # Servisler
+│   └── theme/           # Tema ayarları
+├── features/            # Özellik modülleri
+│   ├── auth/            # Kimlik doğrulama
+│   ├── home/            # Ana sayfa
+│   ├── service_requests/ # Servis talepleri
+│   └── profile/         # Profil
+├── shared/              # Paylaşılan bileşenler
+│   ├── models/          # Veri modelleri
+│   └── widgets/         # Widget'lar
+└── main.dart           # Uygulama giriş noktası
+```
 
-All GPT Engineer projects can be deployed directly via the GPT Engineer app.
+### State Management
+- **Riverpod**: Ana state management
+- **StateNotifier**: Complex state yönetimi
+- **Provider**: Dependency injection
 
-Simply visit your project at [GPT Engineer](https://gptengineer.app/projects/7e753aa5-e867-4890-ab18-f97d53f001e8/improve) and click on Share -> Publish.
+## 📱 Ekran Görüntüleri
 
-## I want to use a custom domain - is that possible?
+### Giriş Ekranı
+- PAFTA logosu
+- Email/şifre girişi
+- Güvenli kimlik doğrulama
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.gptengineer.app/tips-tricks/custom-domain/)
+### Ana Sayfa
+- Teknisyen bilgileri
+- Servis talepleri listesi
+- Hızlı erişim menüsü
+
+### Servis Talepleri
+- Atanan servisler
+- Durum güncelleme
+- Detay görüntüleme
+
+## 🔐 Güvenlik
+
+- **Supabase Auth**: Güvenli kimlik doğrulama
+- **RLS**: Row Level Security
+- **JWT**: Token tabanlı yetkilendirme
+- **HTTPS**: Güvenli veri iletimi
+
+## 🚀 Deployment
+
+### iOS
+1. Xcode'da projeyi açın
+2. Signing & Capabilities ayarlayın
+3. Archive oluşturun
+4. App Store'a yükleyin
+
+### Android
+1. `android/app/build.gradle` ayarlayın
+2. APK/AAB oluşturun
+3. Google Play Store'a yükleyin
+
+## 📞 Destek
+
+Herhangi bir sorun veya öneri için:
+- **Email**: info@pafta.app
+- **Website**: https://pafta.app
+
+## 📄 Lisans
+
+Bu proje PAFTA Teknik Servis için geliştirilmiştir.
+
+---
+
+**PAFTA Teknik Servis** - Güvenilir teknik çözümler
