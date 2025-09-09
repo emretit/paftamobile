@@ -58,13 +58,20 @@ class CustomBottomNavigationBar extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(
               currentIndex == 2 ? CupertinoIcons.plus_circle_fill : CupertinoIcons.plus_circle,
-              size: 24,
+              size: 28,
             ),
             label: 'Yeni Talep',
           ),
           BottomNavigationBarItem(
             icon: Icon(
-              currentIndex == 3 ? CupertinoIcons.person_fill : CupertinoIcons.person,
+              currentIndex == 3 ? CupertinoIcons.person_2_fill : CupertinoIcons.person_2,
+              size: 24,
+            ),
+            label: 'Müşteriler',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              currentIndex == 4 ? CupertinoIcons.person_fill : CupertinoIcons.person,
               size: 24,
             ),
             label: 'Profil',
@@ -86,6 +93,9 @@ class CustomBottomNavigationBar extends StatelessWidget {
         context.go('/service-requests/create');
         break;
       case 3:
+        context.go('/customers');
+        break;
+      case 4:
         context.go('/profile');
         break;
     }
@@ -97,7 +107,9 @@ class CustomBottomNavigationBar extends StatelessWidget {
     if (route == '/service-requests/create') return 2;
     if (route.startsWith('/service-requests/') && route.contains('/edit')) return 2;
     if (route.startsWith('/service-requests/')) return 1; // Detail sayfası için servis talepleri tab'ını aktif tut
-    if (route == '/profile') return 3;
+    if (route == '/customers') return 3;
+    if (route == '/profile') return 4;
     return 0; // Default olarak ana sayfa
   }
 }
+

@@ -6,6 +6,7 @@ import '../pages/home_page_new.dart';
 import '../pages/service_requests_list_page.dart';
 import '../pages/service_request_detail_page.dart';
 import '../pages/service_request_form_page.dart';
+import '../pages/customers_page.dart';
 import '../pages/profile_page.dart';
 import '../shared/layouts/main_layout.dart';
 
@@ -51,6 +52,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/service-requests/create',
             builder: (context, state) => const ServiceRequestFormPage(),
+          ),
+          GoRoute(
+            path: '/customers',
+            builder: (context, state) => const CustomersPage(),
           ),
           GoRoute(
             path: '/profile',
