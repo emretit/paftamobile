@@ -6,6 +6,8 @@ import '../pages/home_page_new.dart';
 import '../pages/service_requests_list_page.dart';
 import '../pages/service_request_detail_page.dart';
 import '../pages/service_request_form_page.dart';
+import '../pages/service_slip_form_page.dart';
+import '../pages/service_slip_view_page.dart';
 import '../pages/customers_page.dart';
 import '../pages/profile_page.dart';
 import '../shared/layouts/main_layout.dart';
@@ -76,6 +78,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return ServiceRequestFormPage(id: id);
+        },
+      ),
+      GoRoute(
+        path: '/service-requests/:id/slip',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return ServiceSlipFormPage(serviceRequestId: id);
+        },
+      ),
+      GoRoute(
+        path: '/service-requests/:id/slip/view',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return ServiceSlipViewPage(serviceRequestId: id);
         },
       ),
     ],

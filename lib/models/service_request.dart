@@ -17,6 +17,17 @@ class ServiceRequest {
   final DateTime? reportedDate;
   final DateTime createdAt;
   final DateTime updatedAt;
+  // Servis fişi alanları
+  final String? slipNumber;
+  final DateTime? issueDate;
+  final DateTime? completionDate;
+  final String? technicianName;
+  final String? technicianSignature;
+  final Map<String, dynamic>? customerData;
+  final Map<String, dynamic>? equipmentData;
+  final Map<String, dynamic>? serviceDetails;
+  final String? slipStatus;
+  final String? serviceNumber;
 
   ServiceRequest({
     required this.id,
@@ -37,59 +48,132 @@ class ServiceRequest {
     this.reportedDate,
     required this.createdAt,
     required this.updatedAt,
+    // Servis fişi alanları
+    this.slipNumber,
+    this.issueDate,
+    this.completionDate,
+    this.technicianName,
+    this.technicianSignature,
+    this.customerData,
+    this.equipmentData,
+    this.serviceDetails,
+    this.slipStatus,
+    this.serviceNumber,
   });
 
   factory ServiceRequest.fromJson(Map<String, dynamic> json) {
     return ServiceRequest(
-      id: json['id'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'],
-      customerId: json['customer_id'],
-      priority: json['priority'] ?? 'medium',
-      status: json['status'] ?? 'new',
-      assignedTo: json['assigned_to'],
-      dueDate: json['due_date'] != null ? DateTime.parse(json['due_date']) : null,
-      location: json['location'],
-      serviceType: json['service_type'],
-      equipmentId: json['equipment_id'],
+      id: json['id']?.toString() ?? '',
+      title: json['service_title']?.toString() ?? json['title']?.toString() ?? '',
+      description: json['service_request_description']?.toString() ?? json['description']?.toString(),
+      customerId: json['customer_id']?.toString(),
+      priority: json['service_priority']?.toString() ?? json['priority']?.toString() ?? 'medium',
+      status: json['service_status']?.toString() ?? json['status']?.toString() ?? 'new',
+      assignedTo: json['assigned_technician']?.toString() ?? json['assigned_to']?.toString(),
+      dueDate: _parseDateTime(json['service_due_date'] ?? json['due_date']),
+      location: json['service_location']?.toString() ?? json['location']?.toString(),
+      serviceType: json['service_type']?.toString(),
+      equipmentId: json['equipment_id']?.toString(),
       warrantyInfo: json['warranty_info'] != null 
           ? Map<String, dynamic>.from(json['warranty_info']) 
           : null,
-      attachments: json['attachments'] != null 
-          ? List<dynamic>.from(json['attachments']) 
-          : [],
-      notes: json['notes'] != null 
-          ? List<String>.from(json['notes']) 
+      attachments: _parseAttachments(json['attachments']),
+      notes: _parseNotes(json['notes']),
+      specialInstructions: json['special_instructions']?.toString(),
+      reportedDate: _parseDateTime(json['service_reported_date'] ?? json['reported_date']),
+      createdAt: _parseDateTime(json['created_at']) ?? DateTime.now(),
+      updatedAt: _parseDateTime(json['updated_at']) ?? DateTime.now(),
+      // Servis fişi alanları
+      slipNumber: json['slip_number']?.toString(),
+      issueDate: _parseDateTime(json['issue_date']),
+      completionDate: _parseDateTime(json['completion_date']),
+      technicianName: json['technician_name']?.toString(),
+      technicianSignature: json['technician_signature']?.toString(),
+      customerData: json['customer_data'] != null 
+          ? Map<String, dynamic>.from(json['customer_data']) 
           : null,
-      specialInstructions: json['special_instructions'],
-      reportedDate: json['reported_date'] != null 
-          ? DateTime.parse(json['reported_date']) 
+      equipmentData: json['equipment_data'] != null 
+          ? Map<String, dynamic>.from(json['equipment_data']) 
           : null,
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(json['updated_at'] ?? DateTime.now().toIso8601String()),
+      serviceDetails: json['service_details'] != null 
+          ? Map<String, dynamic>.from(json['service_details']) 
+          : null,
+      slipStatus: json['slip_status']?.toString(),
+      serviceNumber: json['service_number']?.toString(),
     );
+  }
+
+  // Yardımcı metodlar
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    try {
+      if (value is String) {
+        return DateTime.parse(value);
+      }
+      return null;
+    } catch (e) {
+      print('DateTime parse hatası: $e, value: $value');
+      return null;
+    }
+  }
+
+  static List<dynamic> _parseAttachments(dynamic value) {
+    if (value == null) return [];
+    try {
+      if (value is List) {
+        return List<dynamic>.from(value);
+      }
+      return [];
+    } catch (e) {
+      print('Attachments parse hatası: $e, value: $value');
+      return [];
+    }
+  }
+
+  static List<String>? _parseNotes(dynamic value) {
+    if (value == null) return null;
+    try {
+      if (value is List) {
+        return value.map((e) => e.toString()).toList();
+      }
+      return null;
+    } catch (e) {
+      print('Notes parse hatası: $e, value: $value');
+      return null;
+    }
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'title': title,
-      'description': description,
+      'service_title': title,
+      'service_request_description': description,
       'customer_id': customerId,
-      'priority': priority,
-      'status': status,
-      'assigned_to': assignedTo,
-      'due_date': dueDate?.toIso8601String(),
-      'location': location,
+      'service_priority': priority,
+      'service_status': status,
+      'assigned_technician': assignedTo,
+      'service_due_date': dueDate?.toIso8601String(),
+      'service_location': location,
       'service_type': serviceType,
       'equipment_id': equipmentId,
       'warranty_info': warrantyInfo,
       'attachments': attachments,
       'notes': notes,
       'special_instructions': specialInstructions,
-      'reported_date': reportedDate?.toIso8601String(),
+      'service_reported_date': reportedDate?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      // Servis fişi alanları
+      'slip_number': slipNumber,
+      'issue_date': issueDate?.toIso8601String(),
+      'completion_date': completionDate?.toIso8601String(),
+      'technician_name': technicianName,
+      'technician_signature': technicianSignature,
+      'customer_data': customerData,
+      'equipment_data': equipmentData,
+      'service_details': serviceDetails,
+      'slip_status': slipStatus,
+      'service_number': serviceNumber,
     };
   }
 
@@ -112,6 +196,17 @@ class ServiceRequest {
     DateTime? reportedDate,
     DateTime? createdAt,
     DateTime? updatedAt,
+    // Servis fişi alanları
+    String? slipNumber,
+    DateTime? issueDate,
+    DateTime? completionDate,
+    String? technicianName,
+    String? technicianSignature,
+    Map<String, dynamic>? customerData,
+    Map<String, dynamic>? equipmentData,
+    Map<String, dynamic>? serviceDetails,
+    String? slipStatus,
+    String? serviceNumber,
   }) {
     return ServiceRequest(
       id: id ?? this.id,
@@ -132,6 +227,17 @@ class ServiceRequest {
       reportedDate: reportedDate ?? this.reportedDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      // Servis fişi alanları
+      slipNumber: slipNumber ?? this.slipNumber,
+      issueDate: issueDate ?? this.issueDate,
+      completionDate: completionDate ?? this.completionDate,
+      technicianName: technicianName ?? this.technicianName,
+      technicianSignature: technicianSignature ?? this.technicianSignature,
+      customerData: customerData ?? this.customerData,
+      equipmentData: equipmentData ?? this.equipmentData,
+      serviceDetails: serviceDetails ?? this.serviceDetails,
+      slipStatus: slipStatus ?? this.slipStatus,
+      serviceNumber: serviceNumber ?? this.serviceNumber,
     );
   }
 
@@ -182,6 +288,26 @@ class ServiceRequest {
         return 'Acil';
       default:
         return priority;
+    }
+  }
+
+  // Servis fişi kontrolü
+  bool get hasServiceSlip => slipNumber != null && slipNumber!.isNotEmpty;
+  bool get isSlipDraft => slipStatus == 'draft';
+  bool get isSlipCompleted => slipStatus == 'completed';
+  bool get isSlipSigned => slipStatus == 'signed';
+
+  // Servis fişi durum görüntüleme adı
+  String get slipStatusDisplayName {
+    switch (slipStatus) {
+      case 'draft':
+        return 'Taslak';
+      case 'completed':
+        return 'Tamamlandı';
+      case 'signed':
+        return 'İmzalandı';
+      default:
+        return slipStatus ?? 'Bilinmiyor';
     }
   }
 }

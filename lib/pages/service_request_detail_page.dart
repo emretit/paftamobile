@@ -328,6 +328,98 @@ class _ServiceRequestDetailPageState extends ConsumerState<ServiceRequestDetailP
             ),
           ),
           const SizedBox(height: 16),
+          // Servis işlemleri butonları
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Servis İşlemleri',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      if (serviceRequest.status == 'assigned' || serviceRequest.status == 'new')
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _startService(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            icon: const Icon(Icons.play_arrow),
+                            label: const Text('Servisi Başlat'),
+                          ),
+                        ),
+                      if (serviceRequest.status == 'in_progress')
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _completeService(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            icon: const Icon(Icons.stop),
+                            label: const Text('Servisi Bitir'),
+                          ),
+                        ),
+                      if (serviceRequest.status == 'completed') ...[
+                        if (!serviceRequest.hasServiceSlip) ...[
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => _createServiceSlip(),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFB73D3D),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                              icon: const Icon(Icons.receipt),
+                              label: const Text('Servis Fişi Oluştur'),
+                            ),
+                          ),
+                        ] else ...[
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => _viewServiceSlip(),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                              icon: const Icon(Icons.visibility),
+                              label: const Text('Servis Fişini Görüntüle'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => _createServiceSlip(),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFB73D3D),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                              icon: const Icon(Icons.edit),
+                              label: const Text('Düzenle'),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           // Durum değiştirme butonları
           Card(
             child: Padding(
@@ -719,6 +811,62 @@ class _ServiceRequestDetailPageState extends ConsumerState<ServiceRequestDetailP
       default:
         return actionType;
     }
+  }
+
+  void _startService() async {
+    try {
+      final service = ref.read(serviceRequestServiceProvider);
+      await service.updateServiceRequestStatus(widget.id, 'in_progress');
+      
+      // Provider'ı yenile
+      ref.invalidate(serviceRequestByIdProvider(widget.id));
+      ref.invalidate(serviceHistoryProvider(widget.id));
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Servis başlatıldı')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e')),
+        );
+      }
+    }
+  }
+
+  void _completeService() async {
+    try {
+      final service = ref.read(serviceRequestServiceProvider);
+      await service.updateServiceRequestStatus(widget.id, 'completed');
+      
+      // Provider'ı yenile
+      ref.invalidate(serviceRequestByIdProvider(widget.id));
+      ref.invalidate(serviceHistoryProvider(widget.id));
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Servis tamamlandı')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e')),
+        );
+      }
+    }
+  }
+
+  void _createServiceSlip() {
+    // Servis fişi oluşturma sayfasına yönlendir
+    context.go('/service-requests/${widget.id}/slip');
+  }
+
+  void _viewServiceSlip() {
+    // Servis fişi görüntüleme sayfasına yönlendir
+    context.go('/service-requests/${widget.id}/slip/view');
   }
 
   String _formatDateTime(DateTime dateTime) {

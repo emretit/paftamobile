@@ -19,13 +19,13 @@ class ServiceRequestService {
           .select('*');
 
       if (status != null) {
-        query = query.eq('status', status);
+        query = query.eq('service_status', status);
       }
       if (priority != null) {
-        query = query.eq('priority', priority);
+        query = query.eq('service_priority', priority);
       }
       if (assignedTo != null) {
-        query = query.eq('assigned_to', assignedTo);
+        query = query.eq('assigned_technician', assignedTo);
       }
       if (customerId != null) {
         query = query.eq('customer_id', customerId);
@@ -116,7 +116,7 @@ class ServiceRequestService {
       final response = await _supabase
           .from('service_requests')
           .select('*')
-          .or('title.ilike.%$searchQuery%,description.ilike.%$searchQuery%,location.ilike.%$searchQuery%')
+          .or('service_title.ilike.%$searchQuery%,service_request_description.ilike.%$searchQuery%,service_location.ilike.%$searchQuery%')
           .order('created_at', ascending: false);
 
       return (response as List).map((json) => ServiceRequest.fromJson(json)).toList();
@@ -148,7 +148,7 @@ class ServiceRequestService {
       final response = await _supabase
           .from('service_requests')
           .select('*')
-          .eq('assigned_to', assignedTo)
+          .eq('assigned_technician', assignedTo)
           .order('created_at', ascending: false);
 
       return (response as List).map((json) => ServiceRequest.fromJson(json)).toList();
@@ -163,7 +163,7 @@ class ServiceRequestService {
     try {
       final response = await _supabase
           .from('service_requests')
-          .update({'status': status, 'updated_at': DateTime.now().toIso8601String()})
+          .update({'service_status': status, 'updated_at': DateTime.now().toIso8601String()})
           .eq('id', id)
           .select()
           .single();
@@ -180,7 +180,7 @@ class ServiceRequestService {
     try {
       final response = await _supabase
           .from('service_requests')
-          .update({'priority': priority, 'updated_at': DateTime.now().toIso8601String()})
+          .update({'service_priority': priority, 'updated_at': DateTime.now().toIso8601String()})
           .eq('id', id)
           .select()
           .single();
@@ -198,8 +198,7 @@ class ServiceRequestService {
       final response = await _supabase
           .from('service_requests')
           .update({
-            'assigned_to': assignedTo,
-            'assigned_at': assignedTo != null ? DateTime.now().toIso8601String() : null,
+            'assigned_technician': assignedTo,
             'updated_at': DateTime.now().toIso8601String()
           })
           .eq('id', id)
@@ -311,11 +310,11 @@ class ServiceRequestService {
     try {
       final response = await _supabase
           .from('service_requests')
-          .select('status');
+          .select('service_status');
 
       final stats = <String, int>{};
       for (final item in response as List) {
-        final status = item['status'] as String;
+        final status = item['service_status'] as String;
         stats[status] = (stats[status] ?? 0) + 1;
       }
 
@@ -324,5 +323,174 @@ class ServiceRequestService {
       print('Servis talebi istatistikleri getirme hatası: $e');
       throw Exception('Servis talebi istatistikleri getirilemedi: $e');
     }
+  }
+
+  // Servis fişi oluştur
+  Future<ServiceRequest> createServiceSlip(String serviceRequestId, {
+    required String technicianName,
+    Map<String, dynamic>? customerData,
+    Map<String, dynamic>? equipmentData,
+    Map<String, dynamic>? serviceDetails,
+    String? technicianSignature,
+  }) async {
+    try {
+      // Benzersiz servis fişi numarası oluştur
+      final slipNumber = _generateSlipNumber();
+      
+      final response = await _supabase
+          .from('service_requests')
+          .update({
+            'slip_number': slipNumber,
+            'issue_date': DateTime.now().toIso8601String(),
+            'technician_name': technicianName,
+            'customer_data': customerData ?? {},
+            'equipment_data': equipmentData ?? {},
+            'service_details': serviceDetails ?? {},
+            'slip_status': 'draft',
+            'technician_signature': technicianSignature,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', serviceRequestId)
+          .select()
+          .single();
+
+      return ServiceRequest.fromJson(response);
+    } catch (e) {
+      print('Servis fişi oluşturma hatası: $e');
+      throw Exception('Servis fişi oluşturulamadı: $e');
+    }
+  }
+
+  // Servis fişi güncelle
+  Future<ServiceRequest> updateServiceSlip(String serviceRequestId, {
+    String? technicianName,
+    Map<String, dynamic>? customerData,
+    Map<String, dynamic>? equipmentData,
+    Map<String, dynamic>? serviceDetails,
+    String? technicianSignature,
+    String? slipStatus,
+  }) async {
+    try {
+      final updateData = <String, dynamic>{
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      if (technicianName != null) updateData['technician_name'] = technicianName;
+      if (customerData != null) updateData['customer_data'] = customerData;
+      if (equipmentData != null) updateData['equipment_data'] = equipmentData;
+      if (serviceDetails != null) updateData['service_details'] = serviceDetails;
+      if (technicianSignature != null) updateData['technician_signature'] = technicianSignature;
+      if (slipStatus != null) updateData['slip_status'] = slipStatus;
+
+      final response = await _supabase
+          .from('service_requests')
+          .update(updateData)
+          .eq('id', serviceRequestId)
+          .select()
+          .single();
+
+      return ServiceRequest.fromJson(response);
+    } catch (e) {
+      print('Servis fişi güncelleme hatası: $e');
+      throw Exception('Servis fişi güncellenemedi: $e');
+    }
+  }
+
+  // Servis fişi tamamla
+  Future<ServiceRequest> completeServiceSlip(String serviceRequestId, {
+    String? technicianSignature,
+  }) async {
+    try {
+      final updateData = {
+        'slip_status': 'completed',
+        'completion_date': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      if (technicianSignature != null) {
+        updateData['technician_signature'] = technicianSignature;
+      }
+
+      final response = await _supabase
+          .from('service_requests')
+          .update(updateData)
+          .eq('id', serviceRequestId)
+          .select()
+          .single();
+
+      return ServiceRequest.fromJson(response);
+    } catch (e) {
+      print('Servis fişi tamamlama hatası: $e');
+      throw Exception('Servis fişi tamamlanamadı: $e');
+    }
+  }
+
+  // Servis fişi imzala
+  Future<ServiceRequest> signServiceSlip(String serviceRequestId, String signature) async {
+    try {
+      final response = await _supabase
+          .from('service_requests')
+          .update({
+            'technician_signature': signature,
+            'slip_status': 'signed',
+            'completion_date': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', serviceRequestId)
+          .select()
+          .single();
+
+      return ServiceRequest.fromJson(response);
+    } catch (e) {
+      print('Servis fişi imzalama hatası: $e');
+      throw Exception('Servis fişi imzalanamadı: $e');
+    }
+  }
+
+  // Servis numarası oluştur  
+  Future<ServiceRequest> generateServiceNumber(String serviceRequestId) async {
+    try {
+      final serviceNumber = _generateServiceNumber();
+      
+      final response = await _supabase
+          .from('service_requests')
+          .update({
+            'service_number': serviceNumber,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', serviceRequestId)
+          .select()
+          .single();
+
+      return ServiceRequest.fromJson(response);
+    } catch (e) {
+      print('Servis numarası oluşturma hatası: $e');
+      throw Exception('Servis numarası oluşturulamadı: $e');
+    }
+  }
+
+  // Benzersiz fiş numarası oluştur
+  String _generateSlipNumber() {
+    final now = DateTime.now();
+    final year = now.year.toString().substring(2);
+    final month = now.month.toString().padLeft(2, '0');
+    final day = now.day.toString().padLeft(2, '0');
+    final hour = now.hour.toString().padLeft(2, '0');
+    final minute = now.minute.toString().padLeft(2, '0');
+    final second = now.second.toString().padLeft(2, '0');
+    
+    return 'SF$year$month$day$hour$minute$second';
+  }
+
+  // Benzersiz servis numarası oluştur
+  String _generateServiceNumber() {
+    final now = DateTime.now();
+    final year = now.year.toString();
+    final month = now.month.toString().padLeft(2, '0');
+    final day = now.day.toString().padLeft(2, '0');
+    final hour = now.hour.toString().padLeft(2, '0');
+    final minute = now.minute.toString().padLeft(2, '0');
+    
+    return 'SN$year$month$day$hour$minute';
   }
 }
