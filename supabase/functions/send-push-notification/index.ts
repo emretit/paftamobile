@@ -27,13 +27,13 @@ serve(async (req) => {
     const { user_id, title, body, data } = await req.json()
 
     // Kullanıcının FCM token'ını al
-    const { data: userToken, error: tokenError } = await supabaseClient
-      .from('user_tokens')
+    const { data: userProfile, error: tokenError } = await supabaseClient
+      .from('profiles')
       .select('fcm_token')
-      .eq('user_id', user_id)
+      .eq('id', user_id)
       .single()
 
-    if (tokenError || !userToken?.fcm_token) {
+    if (tokenError || !userProfile?.fcm_token) {
       throw new Error('FCM token bulunamadı')
     }
 
@@ -51,7 +51,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        to: userToken.fcm_token,
+        to: userProfile.fcm_token,
         notification: {
           title: title,
           body: body,

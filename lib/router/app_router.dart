@@ -10,6 +10,8 @@ import '../pages/service_slip_form_page.dart';
 import '../pages/service_slip_view_page.dart';
 import '../pages/customers_page.dart';
 import '../pages/profile_page.dart';
+import '../pages/notifications_page.dart';
+import '../pages/notification_settings_page.dart';
 import '../shared/layouts/main_layout.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -63,6 +65,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/profile',
             builder: (context, state) => const ProfilePage(),
           ),
+          GoRoute(
+            path: '/notifications',
+            builder: (context, state) => const NotificationsPage(),
+          ),
         ],
       ),
       // Alt sayfalar - bottom bar olmadan
@@ -93,6 +99,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return ServiceSlipViewPage(serviceRequestId: id);
         },
+      ),
+      GoRoute(
+        path: '/notification-settings',
+        builder: (context, state) => const NotificationSettingsPage(),
       ),
     ],
   );

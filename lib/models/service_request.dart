@@ -28,6 +28,7 @@ class ServiceRequest {
   final Map<String, dynamic>? serviceDetails;
   final String? slipStatus;
   final String? serviceNumber;
+  final String? customerName;
 
   ServiceRequest({
     required this.id,
@@ -59,6 +60,7 @@ class ServiceRequest {
     this.serviceDetails,
     this.slipStatus,
     this.serviceNumber,
+    this.customerName,
   });
 
   factory ServiceRequest.fromJson(Map<String, dynamic> json) {
@@ -100,8 +102,14 @@ class ServiceRequest {
           : null,
       slipStatus: json['slip_status']?.toString(),
       serviceNumber: json['service_number']?.toString(),
+      customerName: json['customer_name']?.toString(),
     );
   }
+
+  // Getter'lar
+  String get serviceStatus => status;
+  String get serviceTitle => title;
+  String? get assignedTechnician => assignedTo;
 
   // Yardımcı metodlar
   static DateTime? _parseDateTime(dynamic value) {

@@ -151,3 +151,8 @@ node_modules/
 # Temporary folders
 tmp/
 temp/
+
+# Firebase Service Account Keys (Güvenlik)
+*firebase-adminsdk*.json
+*service-account*.json
+*google-services*.json

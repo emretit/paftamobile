@@ -115,9 +115,7 @@ class ProfilePage extends ConsumerWidget {
               title: 'Bildirimler',
               subtitle: 'Bildirim ayarlarını yönet',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Bildirim ayarları yakında eklenecek')),
-                );
+                context.go('/notification-settings');
               },
             ),
             const SizedBox(height: 12),

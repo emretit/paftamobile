@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1006004552664",
+    "project_id": "pafta-b84ce",
+    "storage_bucket": "pafta-b84ce.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1006004552664:android:6d70f953fd627911b568ad",
+        "android_client_info": {
+          "package_name": "com.example.pafta_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBlQ1cWSNjGw7MqyxIrNTGnxMcimMTiLWE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

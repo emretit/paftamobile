@@ -3,15 +3,43 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'router/app_router.dart';
+import 'services/firebase_messaging_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  await Supabase.initialize(
-    url: 'https://vwhwufnckpqirxptwncw.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aHd1Zm5ja3BxaXJ4cHR3bmN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkzODI5MjAsImV4cCI6MjA1NDk1ODkyMH0.Wjw8MAnsBrHxB6-J-bNGObgDQ4fl3zPYrgYI5tOrcKo',
-  );
+  try {
+    // Firebase'i başlat
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('Firebase başarıyla başlatıldı');
+  } catch (e) {
+    print('Firebase başlatma hatası: $e');
+    // Firebase başlatılamadıysa uygulamayı durdurma, sadece log yaz
+  }
+  
+  try {
+    // Supabase'i başlat
+    await Supabase.initialize(
+      url: 'https://vwhwufnckpqirxptwncw.supabase.co',
+      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aHd1Zm5ja3BxaXJ4cHR3bmN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkzODI5MjAsImV4cCI6MjA1NDk1ODkyMH0.Wjw8MAnsBrHxB6-J-bNGObgDQ4fl3zPYrgYI5tOrcKo',
+    );
+    print('Supabase başarıyla başlatıldı');
+  } catch (e) {
+    print('Supabase başlatma hatası: $e');
+  }
+  
+  try {
+    // Firebase Messaging'i başlat
+    await FirebaseMessagingService.initialize();
+    print('Firebase Messaging başarıyla başlatıldı');
+  } catch (e) {
+    print('Firebase Messaging başlatma hatası: $e');
+  }
   
   runApp(const ProviderScope(child: MyApp()));
 }

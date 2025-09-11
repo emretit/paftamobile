@@ -1,8 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/service_request.dart';
+import 'push_notification_service.dart';
 
 class ServiceRequestService {
   final SupabaseClient _supabase = Supabase.instance.client;
+  final PushNotificationService _pushNotificationService = PushNotificationService();
 
   // Tüm servis taleplerini getir
   Future<List<ServiceRequest>> getServiceRequests({
@@ -161,6 +163,14 @@ class ServiceRequestService {
   // Durum güncelleme
   Future<ServiceRequest> updateServiceRequestStatus(String id, String status) async {
     try {
+      // Önce mevcut servis talebini al
+      final currentRequest = await getServiceRequestById(id);
+      if (currentRequest == null) {
+        throw Exception('Servis talebi bulunamadı');
+      }
+
+      final oldStatus = currentRequest.serviceStatus;
+
       final response = await _supabase
           .from('service_requests')
           .update({'service_status': status, 'updated_at': DateTime.now().toIso8601String()})
@@ -168,7 +178,28 @@ class ServiceRequestService {
           .select()
           .single();
 
-      return ServiceRequest.fromJson(response);
+      final updatedRequest = ServiceRequest.fromJson(response);
+
+      // Müşteriye durum güncelleme bildirimi gönder
+      if (currentRequest.customerId != null) {
+        await _pushNotificationService.sendStatusUpdateNotification(
+          customerId: currentRequest.customerId!,
+          serviceTitle: currentRequest.serviceTitle,
+          oldStatus: oldStatus,
+          newStatus: status,
+        );
+      }
+
+      // Servis tamamlandıysa özel bildirim gönder
+      if (status == 'completed' && currentRequest.assignedTechnician != null) {
+        await _pushNotificationService.sendServiceCompletedNotification(
+          customerId: currentRequest.customerId ?? '',
+          serviceTitle: currentRequest.serviceTitle,
+          technicianName: 'Teknisyen', // Burada gerçek teknisyen adı alınabilir
+        );
+      }
+
+      return updatedRequest;
     } catch (e) {
       print('Servis talebi durumu güncelleme hatası: $e');
       throw Exception('Servis talebi durumu güncellenemedi: $e');
@@ -195,6 +226,12 @@ class ServiceRequestService {
   // Atama güncelleme
   Future<ServiceRequest> updateServiceRequestAssignment(String id, String? assignedTo) async {
     try {
+      // Önce mevcut servis talebini al
+      final currentRequest = await getServiceRequestById(id);
+      if (currentRequest == null) {
+        throw Exception('Servis talebi bulunamadı');
+      }
+
       final response = await _supabase
           .from('service_requests')
           .update({
@@ -205,7 +242,19 @@ class ServiceRequestService {
           .select()
           .single();
 
-      return ServiceRequest.fromJson(response);
+      final updatedRequest = ServiceRequest.fromJson(response);
+
+      // Teknisyene bildirim gönder
+      if (assignedTo != null) {
+        await _pushNotificationService.sendServiceAssignmentNotification(
+          technicianId: assignedTo,
+          serviceRequestId: id,
+          customerName: currentRequest.customerName ?? 'Müşteri',
+          serviceTitle: currentRequest.serviceTitle,
+        );
+      }
+
+      return updatedRequest;
     } catch (e) {
       print('Servis talebi ataması güncelleme hatası: $e');
       throw Exception('Servis talebi ataması güncellenemedi: $e');

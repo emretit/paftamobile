@@ -1,8 +1,16 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user.dart' as app_models;
+import 'firebase_messaging_service.dart';
 
 class AuthService {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  SupabaseClient get _supabase {
+    try {
+      return Supabase.instance.client;
+    } catch (e) {
+      print('Supabase henüz başlatılmamış: $e');
+      throw Exception('Supabase başlatılmamış');
+    }
+  }
 
   app_models.User? get currentUser {
     final user = _supabase.auth.currentUser;
@@ -23,7 +31,13 @@ class AuthService {
         email: email,
         password: password,
       );
-      return response.user != null;
+      
+      if (response.user != null) {
+        // Kullanıcı giriş yaptığında FCM token'ını kaydet
+        await FirebaseMessagingService.saveTokenForCurrentUser();
+        return true;
+      }
+      return false;
     } catch (e) {
       print('Auth error: $e');
       return false;

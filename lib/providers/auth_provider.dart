@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/auth_service.dart';
+import '../services/firebase_messaging_service.dart';
 import '../models/user.dart' as app_models;
 
 final authServiceProvider = Provider<AuthService>((ref) {
@@ -65,6 +66,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isAuthenticated: true,
         user: user,
       );
+      
+      // FCM token'ı kaydet
+      if (user != null) {
+        await FirebaseMessagingService.saveTokenToSupabase(user.id);
+        FirebaseMessagingService.listenToTokenRefresh();
+      }
     } else {
       state = state.copyWith(
         isLoading: false,
