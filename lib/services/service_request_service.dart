@@ -15,39 +15,53 @@ class ServiceRequestService {
     int? limit,
     int? offset,
   }) async {
-    try {
-      dynamic query = _supabase
-          .from('service_requests')
-          .select('*');
+    int retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount < maxRetries) {
+      try {
+        dynamic query = _supabase
+            .from('service_requests')
+            .select('*');
 
-      if (status != null) {
-        query = query.eq('service_status', status);
-      }
-      if (priority != null) {
-        query = query.eq('service_priority', priority);
-      }
-      if (assignedTo != null) {
-        query = query.eq('assigned_technician', assignedTo);
-      }
-      if (customerId != null) {
-        query = query.eq('customer_id', customerId);
-      }
-      
-      query = query.order('created_at', ascending: false);
-      
-      if (limit != null) {
-        query = query.limit(limit);
-      }
-      if (offset != null) {
-        query = query.range(offset, offset + (limit ?? 10) - 1);
-      }
+        if (status != null) {
+          query = query.eq('service_status', status);
+        }
+        if (priority != null) {
+          query = query.eq('service_priority', priority);
+        }
+        if (assignedTo != null) {
+          query = query.eq('assigned_technician', assignedTo);
+        }
+        if (customerId != null) {
+          query = query.eq('customer_id', customerId);
+        }
+        
+        query = query.order('created_at', ascending: false);
+        
+        if (limit != null) {
+          query = query.limit(limit);
+        }
+        if (offset != null) {
+          query = query.range(offset, offset + (limit ?? 10) - 1);
+        }
 
-      final response = await query;
-      return (response as List).map((json) => ServiceRequest.fromJson(json)).toList();
-    } catch (e) {
-      print('Service requests getirme hatası: $e');
-      throw Exception('Servis talepleri getirilemedi: $e');
+        final response = await query;
+        return (response as List).map((json) => ServiceRequest.fromJson(json)).toList();
+      } catch (e) {
+        retryCount++;
+        print('Service requests getirme hatası (deneme $retryCount/$maxRetries): $e');
+        
+        if (retryCount >= maxRetries) {
+          throw Exception('Servis talepleri getirilemedi: $e');
+        }
+        
+        // Exponential backoff ile bekle
+        await Future.delayed(Duration(seconds: retryCount * 2));
+      }
     }
+    
+    throw Exception('Servis talepleri getirilemedi: Maksimum deneme sayısı aşıldı');
   }
 
   // ID'ye göre servis talebi getir

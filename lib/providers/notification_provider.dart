@@ -50,39 +50,54 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
   Future<void> _loadNotifications() async {
     state = state.copyWith(isLoading: true, error: null);
 
-    try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) {
+    int retryCount = 0;
+    const maxRetries = 3;
+
+    while (retryCount < maxRetries) {
+      try {
+        final user = _supabase.auth.currentUser;
+        if (user == null) {
+          state = state.copyWith(
+            isLoading: false,
+            error: 'Kullanıcı giriş yapmamış',
+          );
+          return;
+        }
+
+        final response = await _supabase
+            .from('notifications')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', ascending: false)
+            .limit(50);
+
+        final notifications = (response as List)
+            .map((json) => NotificationModel.fromJson(json))
+            .toList();
+
+        final unreadCount = notifications.where((n) => !n.isRead).length;
+
         state = state.copyWith(
+          notifications: notifications,
           isLoading: false,
-          error: 'Kullanıcı giriş yapmamış',
+          unreadCount: unreadCount,
         );
-        return;
+        return; // Başarılı olduğunda çık
+      } catch (e) {
+        retryCount++;
+        print('Bildirimler yükleme hatası (deneme $retryCount/$maxRetries): $e');
+        
+        if (retryCount >= maxRetries) {
+          state = state.copyWith(
+            isLoading: false,
+            error: 'Bildirimler yüklenemedi. Lütfen tekrar deneyin.',
+          );
+          return;
+        }
+        
+        // Exponential backoff ile bekle
+        await Future.delayed(Duration(seconds: retryCount * 2));
       }
-
-      final response = await _supabase
-          .from('notifications')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', ascending: false)
-          .limit(50);
-
-      final notifications = (response as List)
-          .map((json) => NotificationModel.fromJson(json))
-          .toList();
-
-      final unreadCount = notifications.where((n) => !n.isRead).length;
-
-      state = state.copyWith(
-        notifications: notifications,
-        isLoading: false,
-        unreadCount: unreadCount,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Bildirimler yüklenemedi: $e',
-      );
     }
   }
 
