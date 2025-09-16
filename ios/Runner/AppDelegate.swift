@@ -14,6 +14,10 @@ import UserNotifications
     FirebaseApp.configure()
     print("Firebase başlatıldı")
     
+    // Uygulama başlatıldığında badge'i temizle
+    application.applicationIconBadgeNumber = 0
+    print("Badge temizlendi (AppDelegate)")
+    
     // FCM delegate ayarla
     Messaging.messaging().delegate = self
     
@@ -67,7 +71,18 @@ import UserNotifications
   override func userNotificationCenter(_ center: UNUserNotificationCenter,
                                      didReceive response: UNNotificationResponse,
                                      withCompletionHandler completionHandler: @escaping () -> Void) {
+    // Bildirime tıklandığında badge'i temizle
+    UIApplication.shared.applicationIconBadgeNumber = 0
+    print("Badge temizlendi (notification tap)")
     completionHandler()
+  }
+  
+  // Uygulama aktif hale geldiğinde
+  override func applicationDidBecomeActive(_ application: UIApplication) {
+    super.applicationDidBecomeActive(application)
+    // Uygulama aktif olduğunda badge'i temizle
+    application.applicationIconBadgeNumber = 0
+    print("Badge temizlendi (app became active)")
   }
 }
 

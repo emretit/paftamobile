@@ -103,14 +103,17 @@ Deno.serve(async (req) => {
         android: {
           notification: {
             click_action: 'FLUTTER_NOTIFICATION_CLICK',
-            sound: 'default'
+            sound: 'default',
+            icon: 'ic_notification'
           }
         },
         apns: {
           payload: {
             aps: {
               category: 'FLUTTER_NOTIFICATION_CLICK',
-              sound: 'default'
+              sound: 'default',
+              badge: 1,
+              'content-available': 1
             }
           }
         }

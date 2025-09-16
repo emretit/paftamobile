@@ -172,6 +172,9 @@ class FirebaseMessagingService {
         return;
       }
       
+      // Uygulama başlatıldığında badge'i temizle
+      await clearBadge();
+      
       // Background message handler'ı ayarla
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
       
@@ -191,6 +194,8 @@ class FirebaseMessagingService {
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
         print('Uygulama açıldığında mesaj alındı: ${message.messageId}');
         _handleNotificationTap(message);
+        // Bildirime tıklandığında badge'i temizle
+        clearBadge();
       });
       
       // Uygulama kapalıyken gelen mesajları kontrol et
@@ -198,6 +203,8 @@ class FirebaseMessagingService {
       if (initialMessage != null) {
         print('Uygulama kapalıyken mesaj alındı: ${initialMessage.messageId}');
         _handleNotificationTap(initialMessage);
+        // Uygulama açıldığında badge'i temizle
+        clearBadge();
       }
       
       // Token refresh dinleyicisini başlat
@@ -255,6 +262,24 @@ class FirebaseMessagingService {
     if (action != null) {
       print('Bildirim action: $action');
       // Burada GoRouter ile yönlendirme yapılabilir
+    }
+  }
+
+  // Badge'i temizle
+  static Future<void> clearBadge() async {
+    try {
+      // Tüm bildirimleri iptal et (badge'i de temizler)
+      await _localNotifications.cancelAll();
+      
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        // iOS için ek izin kontrolü
+        await _localNotifications.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+            ?.requestPermissions(alert: true, badge: true, sound: true);
+      }
+      
+      print('Badge temizlendi');
+    } catch (e) {
+      print('Badge temizleme hatası: $e');
     }
   }
 

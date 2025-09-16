@@ -4,12 +4,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../providers/service_request_provider.dart';
+import '../services/firebase_messaging_service.dart';
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Sayfa açıldığında badge'i temizle
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FirebaseMessagingService.clearBadge();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
     final serviceRequestsAsync = ref.watch(serviceRequestsProvider);
     
