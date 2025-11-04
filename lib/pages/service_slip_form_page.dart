@@ -141,96 +141,152 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Servis Talebi Özeti
-                  Card(
-                    color: Colors.blue.shade50,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.assignment, color: Colors.blue.shade700),
-                              const SizedBox(width: 8),
-                              Expanded(
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          spreadRadius: 0,
+                          blurRadius: 12,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFB73D3D).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Icon(
+                                CupertinoIcons.doc_text_fill,
+                                color: Color(0xFFB73D3D),
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Servis Talebi Özeti',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF000000),
+                                ),
+                              ),
+                            ),
+                            if (serviceRequest.hasServiceSlip)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                                 child: Text(
-                                  'Servis Talebi Özeti',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.blue.shade700,
+                                  serviceRequest.slipStatusDisplayName,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF2F2F7),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildInfoRow('Başlık', serviceRequest.title),
+                              if (serviceRequest.description != null)
+                                _buildInfoRow('Açıklama', serviceRequest.description!),
+                              _buildInfoRow('Durum', serviceRequest.statusDisplayName),
+                              _buildInfoRow('Öncelik', serviceRequest.priorityDisplayName),
+                              if (serviceRequest.location != null)
+                                _buildInfoRow('Konum', serviceRequest.location!),
+                              if (serviceRequest.serviceType != null)
+                                _buildInfoRow('Servis Tipi', serviceRequest.serviceType!),
                               if (serviceRequest.hasServiceSlip)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    serviceRequest.slipStatusDisplayName,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
+                                _buildInfoRow('Fiş No', serviceRequest.slipNumber!),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.grey.shade200),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildInfoRow('Başlık', serviceRequest.title),
-                                if (serviceRequest.description != null)
-                                  _buildInfoRow('Açıklama', serviceRequest.description!),
-                                _buildInfoRow('Durum', serviceRequest.statusDisplayName),
-                                _buildInfoRow('Öncelik', serviceRequest.priorityDisplayName),
-                                if (serviceRequest.location != null)
-                                  _buildInfoRow('Konum', serviceRequest.location!),
-                                if (serviceRequest.serviceType != null)
-                                  _buildInfoRow('Servis Tipi', serviceRequest.serviceType!),
-                                if (serviceRequest.hasServiceSlip)
-                                  _buildInfoRow('Fiş No', serviceRequest.slipNumber!),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
                   
                   // Teknisyen bilgileri
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Teknisyen Bilgileri',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          spreadRadius: 0,
+                          blurRadius: 12,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Teknisyen Bilgileri',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF000000),
                           ),
-                          const SizedBox(height: 16),
-                          TextFormField(
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: TextFormField(
                             controller: _technicianNameController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Teknisyen Adı *',
-                              border: OutlineInputBorder(),
+                              labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF8E8E93),
+                              ),
+                              prefixIcon: const Icon(
+                                CupertinoIcons.person_fill,
+                                color: Color(0xFFB73D3D),
+                                size: 20,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -239,148 +295,406 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
                               return null;
                             },
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   // Müşteri bilgileri
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Müşteri Bilgileri',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          spreadRadius: 0,
+                          blurRadius: 12,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Müşteri Bilgileri',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF000000),
                           ),
-                          const SizedBox(height: 16),
-                          TextFormField(
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: TextFormField(
                             controller: _customerNameController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Müşteri Adı',
-                              border: OutlineInputBorder(),
+                              labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF8E8E93),
+                              ),
+                              prefixIcon: const Icon(
+                                CupertinoIcons.person_circle,
+                                color: Color(0xFFB73D3D),
+                                size: 20,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          TextFormField(
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: TextFormField(
                             controller: _customerPhoneController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Telefon',
-                              border: OutlineInputBorder(),
+                              labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF8E8E93),
+                              ),
+                              prefixIcon: const Icon(
+                                CupertinoIcons.phone_fill,
+                                color: Color(0xFFB73D3D),
+                                size: 20,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
                             ),
                             keyboardType: TextInputType.phone,
                           ),
-                          const SizedBox(height: 16),
-                          TextFormField(
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: TextFormField(
                             controller: _customerAddressController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Adres',
-                              border: OutlineInputBorder(),
+                              labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF8E8E93),
+                              ),
+                              prefixIcon: const Icon(
+                                CupertinoIcons.location_fill,
+                                color: Color(0xFFB73D3D),
+                                size: 20,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
                             ),
                             maxLines: 2,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   // Ekipman bilgileri
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Ekipman Bilgileri',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          spreadRadius: 0,
+                          blurRadius: 12,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Ekipman Bilgileri',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF000000),
                           ),
-                          const SizedBox(height: 16),
-                          TextFormField(
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: TextFormField(
                             controller: _equipmentBrandController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Marka',
-                              border: OutlineInputBorder(),
+                              labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF8E8E93),
+                              ),
+                              prefixIcon: const Icon(
+                                CupertinoIcons.bag_fill,
+                                color: Color(0xFFB73D3D),
+                                size: 20,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          TextFormField(
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: TextFormField(
                             controller: _equipmentModelController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Model',
-                              border: OutlineInputBorder(),
+                              labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF8E8E93),
+                              ),
+                              prefixIcon: const Icon(
+                                CupertinoIcons.device_phone_portrait,
+                                color: Color(0xFFB73D3D),
+                                size: 20,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          TextFormField(
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: TextFormField(
                             controller: _equipmentSerialController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Seri No',
-                              border: OutlineInputBorder(),
+                              labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF8E8E93),
+                              ),
+                              prefixIcon: const Icon(
+                                CupertinoIcons.barcode,
+                                color: Color(0xFFB73D3D),
+                                size: 20,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   // Servis detayları
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Servis Detayları',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          spreadRadius: 0,
+                          blurRadius: 12,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Servis Detayları',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF000000),
                           ),
-                          const SizedBox(height: 16),
-                          TextFormField(
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: TextFormField(
                             controller: _problemDescriptionController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Sorun Açıklaması',
-                              border: OutlineInputBorder(),
+                              labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF8E8E93),
+                              ),
+                              prefixIcon: const Icon(
+                                CupertinoIcons.exclamationmark_triangle_fill,
+                                color: Color(0xFFB73D3D),
+                                size: 20,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
                             ),
                             maxLines: 3,
                           ),
-                          const SizedBox(height: 16),
-                          TextFormField(
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: TextFormField(
                             controller: _servicePerformedController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Yapılan İşlemler',
-                              border: OutlineInputBorder(),
+                              labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF8E8E93),
+                              ),
+                              prefixIcon: const Icon(
+                                CupertinoIcons.wrench_fill,
+                                color: Color(0xFFB73D3D),
+                                size: 20,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
                             ),
                             maxLines: 3,
                           ),
-                          const SizedBox(height: 16),
-                          // Kullanılan ürünler listesi
-                          _buildUsedProductsSection(),
-                          const SizedBox(height: 16),
-                          TextFormField(
+                        ),
+                        const SizedBox(height: 16),
+                        // Kullanılan ürünler listesi
+                        _buildUsedProductsSection(),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: TextFormField(
                             controller: _notesController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Notlar',
-                              border: OutlineInputBorder(),
+                              labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF8E8E93),
+                              ),
+                              prefixIcon: const Icon(
+                                CupertinoIcons.note_text,
+                                color: Color(0xFFB73D3D),
+                                size: 20,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
                             ),
                             maxLines: 2,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -388,22 +702,19 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
                   // Kaydet butonu
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton(
+                    height: 50,
+                    child: CupertinoButton(
                       onPressed: _isLoading ? null : _saveServiceSlip,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFB73D3D),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
+                      color: const Color(0xFFB73D3D),
+                      borderRadius: BorderRadius.circular(12),
                       child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
+                          ? const CupertinoActivityIndicator(
+                              color: Colors.white,
+                            )
+                          : Text(
                               'Kaydet',
-                              style: TextStyle(
-                                fontSize: 16,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Colors.white,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -442,17 +753,18 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
 
   Widget _buildInfoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 80,
+            width: 90,
             child: Text(
               '$label:',
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w500,
-                color: Colors.grey,
+                color: Colors.grey[600],
+                fontSize: 14,
               ),
             ),
           ),
@@ -461,6 +773,8 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
               value,
               style: const TextStyle(
                 fontWeight: FontWeight.w500,
+                color: Color(0xFF000000),
+                fontSize: 14,
               ),
             ),
           ),
@@ -480,17 +794,30 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
               'Kullanılan Ürünler',
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF000000),
               ),
             ),
-            ElevatedButton.icon(
+            CupertinoButton(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              color: const Color(0xFFB73D3D),
+              borderRadius: BorderRadius.circular(8),
               onPressed: () => _showProductSelectionDialog(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFB73D3D),
-                foregroundColor: Colors.white,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(CupertinoIcons.add, color: Colors.white, size: 18),
+                  SizedBox(width: 4),
+                  Text(
+                    'Ürün Ekle',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
-              icon: const Icon(Icons.add),
-              label: const Text('Ürün Ekle'),
             ),
           ],
         ),
@@ -500,14 +827,15 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8),
+              color: const Color(0xFFF2F2F7),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: const Text(
               'Henüz ürün eklenmemiş',
               style: TextStyle(
-                color: Colors.grey,
+                color: Color(0xFF8E8E93),
                 fontStyle: FontStyle.italic,
+                fontSize: 14,
               ),
               textAlign: TextAlign.center,
             ),
@@ -516,48 +844,69 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
           ...(_usedProducts.asMap().entries.map((entry) {
             final index = entry.key;
             final product = entry.value;
-            return Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            product['name'] ?? 'Bilinmeyen Ürün',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    spreadRadius: 0,
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          product['name'] ?? 'Bilinmeyen Ürün',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            color: Color(0xFF000000),
                           ),
-                          if (product['description'] != null)
-                            Text(
+                        ),
+                        if (product['description'] != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
                               product['description'],
                               style: TextStyle(
                                 color: Colors.grey[600],
-                                fontSize: 12,
+                                fontSize: 13,
                               ),
                             ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Miktar: ${product['quantity']} ${product['unit'] ?? 'adet'}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
                           ),
-                        ],
-                      ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Miktar: ${product['quantity']} ${product['unit'] ?? 'adet'}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      onPressed: () => _removeProduct(index),
-                      icon: const Icon(Icons.remove_circle),
-                      color: Colors.red,
+                  ),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    minSize: 0,
+                    onPressed: () => _removeProduct(index),
+                    child: const Icon(
+                      CupertinoIcons.delete,
+                      color: Color(0xFFB73D3D),
+                      size: 24,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           }).toList()),
@@ -769,8 +1118,8 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
               decoration: BoxDecoration(
                 color: const Color(0xFFB73D3D),
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  topRight: Radius.circular(8),
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
                 ),
               ),
               child: Row(
@@ -781,13 +1130,19 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                  IconButton(
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    minSize: 0,
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    child: const Icon(
+                      CupertinoIcons.xmark_circle_fill,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
                 ],
               ),
@@ -796,12 +1151,36 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
             // Search
             Padding(
               padding: const EdgeInsets.all(16),
-              child: TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  labelText: 'Ürün ara...',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    labelText: 'Ürün ara...',
+                    labelStyle: TextStyle(
+                      color: Colors.grey[600],
+                    ),
+                    prefixIcon: const Icon(
+                      CupertinoIcons.search,
+                      color: Color(0xFFB73D3D),
+                      size: 20,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -817,20 +1196,57 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
                         final product = _filteredProducts[index];
                         final isSelected = _selectedProduct?['id'] == product['id'];
                         
-                        return Card(
-                          color: isSelected ? Colors.blue.shade50 : null,
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected ? const Color(0xFFB73D3D).withOpacity(0.1) : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: isSelected
+                                ? Border.all(color: const Color(0xFFB73D3D), width: 2)
+                                : Border.all(color: Colors.grey.shade200),
+                          ),
                           child: ListTile(
-                            title: Text(product['name']),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            title: Text(
+                              product['name'],
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: isSelected ? const Color(0xFFB73D3D) : const Color(0xFF000000),
+                              ),
+                            ),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (product['description'] != null)
-                                  Text(product['description']),
-                                Text('Fiyat: ${product['price']} TL'),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      product['description'],
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    'Fiyat: ${product['price']} TL',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey[700],
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                             trailing: isSelected
-                                ? const Icon(Icons.check_circle, color: Colors.blue)
+                                ? const Icon(
+                                    CupertinoIcons.checkmark_circle_fill,
+                                    color: Color(0xFFB73D3D),
+                                    size: 24,
+                                  )
                                 : null,
                             onTap: () {
                               setState(() {
@@ -848,32 +1264,66 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: Colors.grey.shade300)),
+                  color: const Color(0xFFF2F2F7),
+                  border: Border(top: BorderSide(color: Colors.grey.shade200)),
                 ),
                 child: Row(
                   children: [
                     Expanded(
-                      child: TextField(
-                        controller: _quantityController,
-                        decoration: InputDecoration(
-                          labelText: 'Miktar (${_selectedProduct!['unit']})',
-                          border: const OutlineInputBorder(),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                        keyboardType: TextInputType.number,
+                        child: TextField(
+                          controller: _quantityController,
+                          decoration: InputDecoration(
+                            labelText: 'Miktar (${_selectedProduct!['unit']})',
+                            labelStyle: TextStyle(
+                              color: Colors.grey[600],
+                            ),
+                            prefixIcon: const Icon(
+                              CupertinoIcons.number,
+                              color: Color(0xFFB73D3D),
+                              size: 20,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        final quantity = double.tryParse(_quantityController.text) ?? 1;
-                        widget.onProductSelected(_selectedProduct!, quantity);
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFB73D3D),
-                        foregroundColor: Colors.white,
+                    SizedBox(
+                      height: 50,
+                      child: CupertinoButton(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        color: const Color(0xFFB73D3D),
+                        borderRadius: BorderRadius.circular(12),
+                        onPressed: () {
+                          final quantity = double.tryParse(_quantityController.text) ?? 1;
+                          widget.onProductSelected(_selectedProduct!, quantity);
+                          Navigator.pop(context);
+                        },
+                        child: const Text(
+                          'Ekle',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-                      child: const Text('Ekle'),
                     ),
                   ],
                 ),
