@@ -4,7 +4,7 @@ import '../models/notification.dart';
 import '../services/push_notification_service.dart';
 
 // Notification provider
-final notificationProvider = StateNotifierProvider<NotificationNotifier, NotificationState>((ref) {
+final notificationProvider = NotifierProvider<NotificationNotifier, NotificationState>(() {
   return NotificationNotifier();
 });
 
@@ -38,12 +38,15 @@ class NotificationState {
 }
 
 // Notification notifier
-class NotificationNotifier extends StateNotifier<NotificationState> {
+class NotificationNotifier extends Notifier<NotificationState> {
   final SupabaseClient _supabase = Supabase.instance.client;
   final PushNotificationService _pushService = PushNotificationService();
 
-  NotificationNotifier() : super(NotificationState()) {
-    _loadNotifications();
+  @override
+  NotificationState build() {
+    // Initial state'i döndür ve bildirimleri yükle
+    Future.microtask(() => _loadNotifications());
+    return NotificationState();
   }
 
   // Bildirimleri yükle

@@ -27,7 +27,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
     
-    ref.listen(authStateProvider, (previous, next) {
+    ref.listen<AuthState>(authStateProvider, (previous, next) {
       if (next.isAuthenticated) {
         context.go('/home');
       }

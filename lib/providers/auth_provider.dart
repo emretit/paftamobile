@@ -7,8 +7,8 @@ final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService();
 });
 
-final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref.read(authServiceProvider));
+final authStateProvider = NotifierProvider<AuthNotifier, AuthState>(() {
+  return AuthNotifier();
 });
 
 class AuthState {
@@ -39,16 +39,14 @@ class AuthState {
   }
 }
 
-class AuthNotifier extends StateNotifier<AuthState> {
-  final AuthService _authService;
+class AuthNotifier extends Notifier<AuthState> {
+  late final AuthService _authService;
 
-  AuthNotifier(this._authService) : super(AuthState()) {
-    _init();
-  }
-
-  void _init() {
+  @override
+  AuthState build() {
+    _authService = ref.read(authServiceProvider);
     final user = _authService.currentUser;
-    state = state.copyWith(
+    return AuthState(
       isAuthenticated: user != null,
       user: user,
     );
