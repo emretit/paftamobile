@@ -28,7 +28,7 @@ class HomePageNew extends ConsumerWidget {
             child: Row(
               children: [
                 Text(
-                  'PAFTA Field Service',
+                  'PAFTA',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,

@@ -136,7 +136,7 @@ class _ServiceRequestDetailPageState extends ConsumerState<ServiceRequestDetailP
         ),
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
-        currentIndex: CustomBottomNavigationBar.getIndexForRoute(currentRoute),
+        currentRoute: currentRoute,
       ),
     );
   }

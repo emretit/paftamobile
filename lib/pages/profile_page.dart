@@ -155,14 +155,14 @@ class ProfilePage extends ConsumerWidget {
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: const Text('PAFTA Field Service'),
+                    title: const Text('PAFTA'),
                     content: const Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Versiyon: 1.0.0'),
                         SizedBox(height: 8),
-                        Text('PAFTA Field Service mobil uygulaması ile servis taleplerinizi kolayca yönetin.'),
+                        Text('PAFTA mobil uygulaması ile iş süreçlerinizi kolayca yönetin.'),
                       ],
                     ),
                     actions: [

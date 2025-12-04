@@ -67,7 +67,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const SizedBox(height: 24),
                 
                 Text(
-                  'PAFTA Field Service',
+                  'PAFTA',
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

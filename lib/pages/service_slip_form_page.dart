@@ -6,6 +6,7 @@ import '../models/service_request.dart';
 import '../providers/service_request_provider.dart';
 import '../services/service_request_service.dart';
 import '../shared/widgets/bottom_navigation_bar.dart';
+import '../providers/auth_provider.dart';
 
 class ServiceSlipFormPage extends ConsumerStatefulWidget {
   final String serviceRequestId;
@@ -35,6 +36,7 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
   
   bool _isLoading = false;
   bool _isInitialized = false;
+  String? _selectedTechnicianId;
   
   // Kullanılan ürünler listesi
   List<Map<String, dynamic>> _usedProducts = [];
@@ -258,43 +260,87 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final techniciansAsync = ref.watch(techniciansProvider);
+                            
+                            return techniciansAsync.when(
+                              data: (technicians) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: DropdownButtonFormField<String>(
+                                    value: _selectedTechnicianId,
+                                    decoration: InputDecoration(
+                                      labelText: 'Teknisyen *',
+                                      labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        color: const Color(0xFF8E8E93),
+                                      ),
+                                      prefixIcon: const Icon(
+                                        CupertinoIcons.person_fill,
+                                        color: Color(0xFFB73D3D),
+                                        size: 20,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 16,
+                                      ),
+                                    ),
+                                    items: technicians.map((technician) {
+                                      final fullName = '${technician['first_name'] ?? ''} ${technician['last_name'] ?? ''}'.trim();
+                                      return DropdownMenuItem<String>(
+                                        value: technician['id']?.toString(),
+                                        child: Text(fullName.isEmpty ? 'İsimsiz' : fullName),
+                                      );
+                                    }).toList(),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _selectedTechnicianId = value;
+                                        if (value != null) {
+                                          final selected = technicians.firstWhere(
+                                            (t) => t['id']?.toString() == value,
+                                            orElse: () => {},
+                                          );
+                                          if (selected.isNotEmpty) {
+                                            final fullName = '${selected['first_name'] ?? ''} ${selected['last_name'] ?? ''}'.trim();
+                                            _technicianNameController.text = fullName.isEmpty ? 'İsimsiz' : fullName;
+                                          }
+                                        }
+                                      });
+                                    },
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Teknisyen seçimi gereklidir';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                );
+                              },
+                              loading: () => const Center(child: CircularProgressIndicator()),
+                              error: (error, stack) => Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Teknisyen listesi yüklenemedi: $error',
+                                  style: const TextStyle(color: Colors.red),
+                                ),
                               ),
-                            ],
-                          ),
-                          child: TextFormField(
-                            controller: _technicianNameController,
-                            decoration: InputDecoration(
-                              labelText: 'Teknisyen Adı *',
-                              labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: const Color(0xFF8E8E93),
-                              ),
-                              prefixIcon: const Icon(
-                                CupertinoIcons.person_fill,
-                                color: Color(0xFFB73D3D),
-                                size: 20,
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Teknisyen adı gereklidir';
-                              }
-                              return null;
-                            },
-                          ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -746,7 +792,7 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
         ),
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
-        currentIndex: CustomBottomNavigationBar.getIndexForRoute(currentRoute),
+        currentRoute: currentRoute,
       ),
     );
   }

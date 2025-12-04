@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'router/app_router.dart';
 import 'services/firebase_messaging_service.dart';
+import 'services/session_activity_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +24,7 @@ void main() async {
   }
   
   try {
-    // Supabase'i başlat
+    // Supabase'i başlat - Web app'teki gibi yapılandırma
     await Supabase.initialize(
       url: 'https://vwhwufnckpqirxptwncw.supabase.co',
       anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aHd1Zm5ja3BxaXJ4cHR3bmN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkzODI5MjAsImV4cCI6MjA1NDk1ODkyMH0.Wjw8MAnsBrHxB6-J-bNGObgDQ4fl3zPYrgYI5tOrcKo',
@@ -32,13 +33,27 @@ void main() async {
         timeout: Duration(seconds: 30),
       ),
       authOptions: const FlutterAuthClientOptions(
-        autoRefreshToken: false, // Auto refresh'i kapat
+        autoRefreshToken: true, // Web app'teki gibi auto refresh açık
       ),
       storageOptions: const StorageClientOptions(
         retryAttempts: 5,
       ),
     );
     print('Supabase başarıyla başlatıldı');
+    
+    // Session expired kontrolü (web app'teki gibi)
+    final isExpired = await SessionActivityService.isSessionExpired();
+    if (isExpired) {
+      print('Session expired due to inactivity');
+      await Supabase.instance.client.auth.signOut();
+      await SessionActivityService.clearActivity();
+    } else {
+      // Session varsa activity'yi güncelle
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null) {
+        await SessionActivityService.updateActivity();
+      }
+    }
   } catch (e) {
     print('Supabase başlatma hatası: $e');
   }
@@ -62,7 +77,7 @@ class MyApp extends ConsumerWidget {
     final router = ref.watch(appRouterProvider);
     
     return MaterialApp.router(
-      title: 'PAFTA Field Service',
+      title: 'PAFTA',
       theme: _buildIOSTheme(),
       routerConfig: router,
     );
@@ -70,10 +85,10 @@ class MyApp extends ConsumerWidget {
 
   ThemeData _buildIOSTheme() {
     return ThemeData(
-      // PAFTA brand renk paleti
+      // PAFTA brand renk paleti - Web app ile uyumlu
       useMaterial3: true,
       primarySwatch: Colors.red,
-      primaryColor: const Color(0xFFB73D3D), // PAFTA kırmızı
+      primaryColor: const Color(0xFFD32F2F), // PAFTA Bright Red (web app primary)
       
       // iOS benzeri fontlar
       fontFamily: 'SF Pro Display',
@@ -154,10 +169,10 @@ class MyApp extends ConsumerWidget {
         margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       ),
       
-      // PAFTA brand buton temaları
+      // PAFTA brand buton temaları - Web app ile uyumlu
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFB73D3D),
+          backgroundColor: const Color(0xFFD32F2F), // Primary
           foregroundColor: Colors.white,
           elevation: 0,
           shadowColor: Colors.transparent,
@@ -175,7 +190,7 @@ class MyApp extends ConsumerWidget {
       
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFFB73D3D),
+          backgroundColor: const Color(0xFFD32F2F), // Primary
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
@@ -191,7 +206,7 @@ class MyApp extends ConsumerWidget {
       
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: const Color(0xFFB73D3D),
+          foregroundColor: const Color(0xFFD32F2F), // Primary
           textStyle: const TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w400,
@@ -210,7 +225,7 @@ class MyApp extends ConsumerWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFB73D3D), width: 2),
+          borderSide: const BorderSide(color: Color(0xFFD32F2F), width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         hintStyle: const TextStyle(
@@ -243,7 +258,7 @@ class MyApp extends ConsumerWidget {
       // PAFTA brand navigasyon tema
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: Color(0xFFF2F2F7),
-        selectedItemColor: Color(0xFFB73D3D),
+        selectedItemColor: Color(0xFFD32F2F), // Primary
         unselectedItemColor: Color(0xFF8E8E93),
         type: BottomNavigationBarType.fixed,
         elevation: 0,
@@ -259,15 +274,15 @@ class MyApp extends ConsumerWidget {
         ),
       ),
       
-      // PAFTA brand renk şeması
+      // PAFTA brand renk şeması - Web app ile uyumlu
       colorScheme: const ColorScheme.light(
-        primary: Color(0xFFB73D3D),
-        secondary: Color(0xFFD17979),
+        primary: Color(0xFFD32F2F), // PAFTA Bright Red (web app primary)
+        secondary: Colors.white, // Web app secondary
         surface: Colors.white,
         background: Color(0xFFF2F2F7),
-        error: Color(0xFFFF3B30),
+        error: Color(0xFFE53935), // Web app error
         onPrimary: Colors.white,
-        onSecondary: Colors.white,
+        onSecondary: Color(0xFF4A4A4A), // Web app secondary foreground
         onSurface: Color(0xFF000000),
         onBackground: Color(0xFF000000),
         onError: Colors.white,

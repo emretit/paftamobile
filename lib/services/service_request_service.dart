@@ -558,6 +558,29 @@ class ServiceRequestService {
     }
   }
 
+  // Teknisyen listesi getir (is_technical = true olan çalışanlar)
+  Future<List<Map<String, dynamic>>> getTechnicians({String? companyId}) async {
+    try {
+      dynamic query = _supabase
+          .from('employees')
+          .select('id, first_name, last_name, email, phone')
+          .eq('is_technical', true)
+          .eq('status', 'aktif')
+          .order('first_name');
+      
+      // Company_id filtresi - güvenlik için zorunlu
+      if (companyId != null) {
+        query = query.eq('company_id', companyId);
+      }
+
+      final response = await query;
+      return (response as List).cast<Map<String, dynamic>>();
+    } catch (e) {
+      print('Teknisyen listesi getirme hatası: $e');
+      throw Exception('Teknisyen listesi getirilemedi: $e');
+    }
+  }
+
   // Benzersiz fiş numarası oluştur
   String _generateSlipNumber() {
     final now = DateTime.now();

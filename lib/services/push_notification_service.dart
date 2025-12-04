@@ -102,7 +102,7 @@ class PushNotificationService {
       final response = await _supabase
           .from('employees')
           .select('id')
-          .eq('position', 'Technician');
+          .eq('is_technical', true);
 
       if (response.isEmpty) {
         print('Teknisyen bulunamadı');

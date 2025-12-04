@@ -446,7 +446,7 @@ class _ServiceSlipViewPageState extends ConsumerState<ServiceSlipViewPage> {
         ),
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
-        currentIndex: CustomBottomNavigationBar.getIndexForRoute(currentRoute),
+        currentRoute: currentRoute,
       ),
     );
   }

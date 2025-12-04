@@ -167,3 +167,15 @@ final serviceRequestPriorityDisplayNamesProvider = Provider<Map<String, String>>
     'urgent': 'Acil',
   };
 });
+
+// Teknisyen listesi (is_technical = true olan çalışanlar)
+final techniciansProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final service = ref.read(serviceRequestServiceProvider);
+  final companyId = await _getCurrentUserCompanyId();
+  
+  if (companyId == null) {
+    throw Exception('Kullanıcının company_id bilgisi bulunamadı');
+  }
+  
+  return await service.getTechnicians(companyId: companyId);
+});

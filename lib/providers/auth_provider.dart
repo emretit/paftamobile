@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/auth_service.dart';
 import '../services/firebase_messaging_service.dart';
+import '../services/session_activity_service.dart';
 import '../models/user.dart' as app_models;
 
 final authServiceProvider = Provider<AuthService>((ref) {
@@ -9,6 +10,13 @@ final authServiceProvider = Provider<AuthService>((ref) {
 
 final authStateProvider = NotifierProvider<AuthNotifier, AuthState>(() {
   return AuthNotifier();
+});
+
+// Kullanıcının is_technical bilgisini tutan provider
+final userIsTechnicalProvider = FutureProvider<bool>((ref) async {
+  final authService = ref.read(authServiceProvider);
+  final employeeInfo = await authService.getCurrentUserEmployeeInfo();
+  return employeeInfo?['is_technical'] ?? false;
 });
 
 class AuthState {
@@ -68,6 +76,9 @@ class AuthNotifier extends Notifier<AuthState> {
         user: user,
       );
       
+      // Session activity'yi güncelle (web app'teki gibi)
+      await SessionActivityService.updateActivity();
+      
       // FCM token'ı kaydet
       if (user != null) {
         await FirebaseMessagingService.saveTokenToSupabase(user.id);
@@ -83,6 +94,8 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> signOut() async {
     await _authService.signOut();
+    // Session activity'yi temizle (web app'teki gibi)
+    await SessionActivityService.clearActivity();
     state = AuthState();
   }
 }

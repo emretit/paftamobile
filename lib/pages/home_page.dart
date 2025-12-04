@@ -33,7 +33,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       backgroundColor: const Color(0xFFF2F2F7),
       appBar: AppBar(
         title: Text(
-          'PAFTA Field Service',
+          'PAFTA',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontSize: 17,
             fontWeight: FontWeight.w600,

@@ -53,6 +53,43 @@ class AuthService {
     }
   }
 
+  // Kullanıcının employee bilgisini ve is_technical değerini çek
+  Future<Map<String, dynamic>?> getCurrentUserEmployeeInfo() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return null;
+    
+    try {
+      // Profiles tablosundan employee_id'yi çek, sonra employees tablosundan is_technical değerini al
+      final profileResponse = await _supabase
+          .from('profiles')
+          .select('employee_id')
+          .eq('id', user.id)
+          .maybeSingle();
+      
+      if (profileResponse == null || profileResponse['employee_id'] == null) {
+        return {'is_technical': false};
+      }
+      
+      final employeeId = profileResponse['employee_id'];
+      
+      // Employees tablosundan is_technical değerini çek
+      final employeeResponse = await _supabase
+          .from('employees')
+          .select('is_technical, department')
+          .eq('id', employeeId)
+          .maybeSingle();
+      
+      return {
+        'is_technical': employeeResponse?['is_technical'] ?? false,
+        'department': employeeResponse?['department'],
+        'employee_id': employeeId,
+      };
+    } catch (e) {
+      print('Employee bilgisi getirme hatası: $e');
+      return {'is_technical': false};
+    }
+  }
+
   bool get isAuthenticated => currentUser != null;
 
   Future<bool> signInWithEmail(String email, String password) async {
