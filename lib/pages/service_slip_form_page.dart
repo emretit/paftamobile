@@ -681,7 +681,7 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
                                 color: const Color(0xFF8E8E93),
                               ),
                               prefixIcon: const Icon(
-                                CupertinoIcons.note_text,
+                                CupertinoIcons.doc_text,
                                 color: Color(0xFFB73D3D),
                                 size: 20,
                               ),

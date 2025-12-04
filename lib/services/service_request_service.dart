@@ -12,6 +12,7 @@ class ServiceRequestService {
     String? priority,
     String? assignedTo,
     String? customerId,
+    String? companyId,
     int? limit,
     int? offset,
   }) async {
@@ -23,6 +24,11 @@ class ServiceRequestService {
         dynamic query = _supabase
             .from('service_requests')
             .select('*');
+
+        // Company_id filtresi - güvenlik için zorunlu
+        if (companyId != null) {
+          query = query.eq('company_id', companyId);
+        }
 
         if (status != null) {
           query = query.eq('service_status', status);
@@ -65,13 +71,19 @@ class ServiceRequestService {
   }
 
   // ID'ye göre servis talebi getir
-  Future<ServiceRequest?> getServiceRequestById(String id) async {
+  Future<ServiceRequest?> getServiceRequestById(String id, {String? companyId}) async {
     try {
-      final response = await _supabase
+      dynamic query = _supabase
           .from('service_requests')
           .select('*')
-          .eq('id', id)
-          .single();
+          .eq('id', id);
+      
+      // Company_id filtresi - güvenlik için zorunlu
+      if (companyId != null) {
+        query = query.eq('company_id', companyId);
+      }
+      
+      final response = await query.single();
 
       return ServiceRequest.fromJson(response);
     } catch (e) {
@@ -127,14 +139,21 @@ class ServiceRequestService {
   }
 
   // Servis talebi arama
-  Future<List<ServiceRequest>> searchServiceRequests(String searchQuery) async {
+  Future<List<ServiceRequest>> searchServiceRequests(String searchQuery, {String? companyId}) async {
     try {
-      final response = await _supabase
+      dynamic query = _supabase
           .from('service_requests')
           .select('*')
-          .or('service_title.ilike.%$searchQuery%,service_request_description.ilike.%$searchQuery%,service_location.ilike.%$searchQuery%')
-          .order('created_at', ascending: false);
+          .or('service_title.ilike.%$searchQuery%,service_request_description.ilike.%$searchQuery%,service_location.ilike.%$searchQuery%');
+      
+      // Company_id filtresi - güvenlik için zorunlu
+      if (companyId != null) {
+        query = query.eq('company_id', companyId);
+      }
+      
+      query = query.order('created_at', ascending: false);
 
+      final response = await query;
       return (response as List).map((json) => ServiceRequest.fromJson(json)).toList();
     } catch (e) {
       print('Service request arama hatası: $e');
@@ -369,11 +388,18 @@ class ServiceRequestService {
   }
 
   // İstatistikler
-  Future<Map<String, int>> getServiceRequestStats() async {
+  Future<Map<String, int>> getServiceRequestStats({String? companyId}) async {
     try {
-      final response = await _supabase
+      dynamic query = _supabase
           .from('service_requests')
           .select('service_status');
+      
+      // Company_id filtresi - güvenlik için zorunlu
+      if (companyId != null) {
+        query = query.eq('company_id', companyId);
+      }
+
+      final response = await query;
 
       final stats = <String, int>{};
       for (final item in response as List) {

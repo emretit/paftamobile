@@ -45,6 +45,8 @@ class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
     _authService = ref.read(authServiceProvider);
+    // Build sırasında async işlem yapamayız, bu yüzden currentUser kullanıyoruz
+    // Company_id build sonrası signIn'de yüklenecek
     final user = _authService.currentUser;
     return AuthState(
       isAuthenticated: user != null,
@@ -58,7 +60,8 @@ class AuthNotifier extends Notifier<AuthState> {
     final success = await _authService.signInWithEmail(email, password);
     
     if (success) {
-      final user = _authService.currentUser;
+      // Company_id ile birlikte kullanıcı bilgilerini çek
+      final user = await _authService.getCurrentUserWithCompany();
       state = state.copyWith(
         isLoading: false,
         isAuthenticated: true,
