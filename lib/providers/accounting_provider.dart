@@ -13,7 +13,7 @@ final accountingServiceProvider = Provider<AccountingService>((ref) {
 Future<String?> _getCurrentUserCompanyId() async {
   final authService = AuthService();
   final user = await authService.getCurrentUserEmployeeInfo();
-  return user?.companyId;
+  return user?['companyId'];
 }
 
 final expensesProvider = FutureProvider<List<Expense>>((ref) async {

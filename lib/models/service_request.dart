@@ -3,6 +3,7 @@ class ServiceRequest {
   final String title;
   final String? description;
   final String? customerId;
+  final String? supplierId;
   final String priority;
   final String status;
   final String? assignedTo;
@@ -17,6 +18,12 @@ class ServiceRequest {
   final DateTime? reportedDate;
   final DateTime createdAt;
   final DateTime updatedAt;
+  // İletişim bilgileri
+  final String? contactPerson;
+  final String? contactPhone;
+  final String? contactEmail;
+  final String? receivedBy;
+  final String? serviceResult;
   // Servis fişi alanları
   final String? slipNumber;
   final DateTime? issueDate;
@@ -35,6 +42,7 @@ class ServiceRequest {
     required this.title,
     this.description,
     this.customerId,
+    this.supplierId,
     required this.priority,
     required this.status,
     this.assignedTo,
@@ -49,6 +57,12 @@ class ServiceRequest {
     this.reportedDate,
     required this.createdAt,
     required this.updatedAt,
+    // İletişim bilgileri
+    this.contactPerson,
+    this.contactPhone,
+    this.contactEmail,
+    this.receivedBy,
+    this.serviceResult,
     // Servis fişi alanları
     this.slipNumber,
     this.issueDate,
@@ -69,6 +83,7 @@ class ServiceRequest {
       title: json['service_title']?.toString() ?? json['title']?.toString() ?? '',
       description: json['service_request_description']?.toString() ?? json['description']?.toString(),
       customerId: json['customer_id']?.toString(),
+      supplierId: json['supplier_id']?.toString(),
       priority: json['service_priority']?.toString() ?? json['priority']?.toString() ?? 'medium',
       status: json['service_status']?.toString() ?? json['status']?.toString() ?? 'new',
       assignedTo: json['assigned_technician']?.toString() ?? json['assigned_to']?.toString(),
@@ -85,6 +100,12 @@ class ServiceRequest {
       reportedDate: _parseDateTime(json['service_reported_date'] ?? json['reported_date']),
       createdAt: _parseDateTime(json['created_at']) ?? DateTime.now(),
       updatedAt: _parseDateTime(json['updated_at']) ?? DateTime.now(),
+      // İletişim bilgileri
+      contactPerson: json['contact_person']?.toString(),
+      contactPhone: json['contact_phone']?.toString(),
+      contactEmail: json['contact_email']?.toString(),
+      receivedBy: json['received_by']?.toString(),
+      serviceResult: json['service_result']?.toString(),
       // Servis fişi alanları
       slipNumber: json['slip_number']?.toString(),
       issueDate: _parseDateTime(json['issue_date']),
@@ -157,6 +178,7 @@ class ServiceRequest {
       'service_title': title,
       'service_request_description': description,
       'customer_id': customerId,
+      'supplier_id': supplierId,
       'service_priority': priority,
       'service_status': status,
       'assigned_technician': assignedTo,
@@ -171,6 +193,12 @@ class ServiceRequest {
       'service_reported_date': reportedDate?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      // İletişim bilgileri
+      'contact_person': contactPerson,
+      'contact_phone': contactPhone,
+      'contact_email': contactEmail,
+      'received_by': receivedBy,
+      'service_result': serviceResult,
       // Servis fişi alanları
       'slip_number': slipNumber,
       'issue_date': issueDate?.toIso8601String(),
@@ -190,6 +218,7 @@ class ServiceRequest {
     String? title,
     String? description,
     String? customerId,
+    String? supplierId,
     String? priority,
     String? status,
     String? assignedTo,
@@ -204,6 +233,12 @@ class ServiceRequest {
     DateTime? reportedDate,
     DateTime? createdAt,
     DateTime? updatedAt,
+    // İletişim bilgileri
+    String? contactPerson,
+    String? contactPhone,
+    String? contactEmail,
+    String? receivedBy,
+    String? serviceResult,
     // Servis fişi alanları
     String? slipNumber,
     DateTime? issueDate,
@@ -221,6 +256,7 @@ class ServiceRequest {
       title: title ?? this.title,
       description: description ?? this.description,
       customerId: customerId ?? this.customerId,
+      supplierId: supplierId ?? this.supplierId,
       priority: priority ?? this.priority,
       status: status ?? this.status,
       assignedTo: assignedTo ?? this.assignedTo,
@@ -235,6 +271,12 @@ class ServiceRequest {
       reportedDate: reportedDate ?? this.reportedDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      // İletişim bilgileri
+      contactPerson: contactPerson ?? this.contactPerson,
+      contactPhone: contactPhone ?? this.contactPhone,
+      contactEmail: contactEmail ?? this.contactEmail,
+      receivedBy: receivedBy ?? this.receivedBy,
+      serviceResult: serviceResult ?? this.serviceResult,
       // Servis fişi alanları
       slipNumber: slipNumber ?? this.slipNumber,
       issueDate: issueDate ?? this.issueDate,

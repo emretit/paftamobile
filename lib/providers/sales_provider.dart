@@ -14,7 +14,7 @@ final salesServiceProvider = Provider<SalesService>((ref) {
 Future<String?> _getCurrentUserCompanyId() async {
   final authService = AuthService();
   final user = await authService.getCurrentUserEmployeeInfo();
-  return user?.companyId;
+  return user?['companyId'];
 }
 
 final salesOrdersProvider = FutureProvider<List<Order>>((ref) async {

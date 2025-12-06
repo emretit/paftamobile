@@ -89,8 +89,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               ),
               const SizedBox(height: 24),
 
-              // Hızlı erişim kartları
+              // Hızlı erişim kartları (Web app'e uygun)
               _buildQuickAccessCards(context),
+              const SizedBox(height: 24),
+
+              // CRM Özeti
+              _buildCrmSummaryCard(context, statsAsync),
               const SizedBox(height: 24),
 
               // Bugünkü aktiviteler
@@ -438,11 +442,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           children: [
             Expanded(
               child: _buildQuickActionCard(
-                'Servis Talepleri',
-                'Servis yönetimi',
-                CupertinoIcons.wrench_fill,
-                const Color(0xFFD32F2F),
-                () => context.go('/service/management'),
+                'Fırsatlar',
+                'Satış pipeline',
+                CupertinoIcons.star_fill,
+                const Color(0xFFFF9500),
+                () => context.go('/sales/opportunities'),
               ),
             ),
             const SizedBox(width: 12),
@@ -462,24 +466,141 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           children: [
             Expanded(
               child: _buildQuickActionCard(
-                'Bildirimler',
-                'Tüm bildirimler',
-                CupertinoIcons.bell_fill,
-                const Color(0xFFFF9500),
-                () => context.go('/notifications'),
+                'Teklifler',
+                'Satış teklifleri',
+                CupertinoIcons.doc_fill,
+                const Color(0xFF9333EA),
+                () => context.go('/sales/proposals'),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _buildQuickActionCard(
-                'Profil',
-                'Hesap ayarları',
-                CupertinoIcons.person_fill,
-                const Color(0xFFAF52DE),
-                () => context.go('/profile'),
+                'Nakit Akışı',
+                'Finansal durum',
+                CupertinoIcons.money_dollar_circle_fill,
+                const Color(0xFF22C55E),
+                () => context.go('/finance/cashflow'),
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCrmSummaryCard(BuildContext context, AsyncValue<Map<String, dynamic>> statsAsync) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  CupertinoIcons.chart_bar_alt_fill,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'CRM Özeti',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF000000),
+                  ),
+                ),
+              ),
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: () => context.go('/crm'),
+                child: const Row(
+                  children: [
+                    Text(
+                      'Tümünü Gör',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF3B82F6),
+                      ),
+                    ),
+                    Icon(
+                      CupertinoIcons.chevron_right,
+                      size: 14,
+                      color: Color(0xFF3B82F6),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          statsAsync.when(
+            data: (stats) => Row(
+              children: [
+                Expanded(
+                  child: _buildCrmStat('Aktif Fırsatlar', '${stats['activeOpportunities'] ?? 0}', const Color(0xFFFF9500)),
+                ),
+                Expanded(
+                  child: _buildCrmStat('Teklifler', '${stats['pendingProposals'] ?? 0}', const Color(0xFF9333EA)),
+                ),
+                Expanded(
+                  child: _buildCrmStat('Aktiviteler', '${stats['todayActivitiesCount'] ?? 0}', const Color(0xFF3B82F6)),
+                ),
+              ],
+            ),
+            loading: () => const Center(child: CupertinoActivityIndicator()),
+            error: (_, __) => const Text('Yüklenemedi'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCrmStat(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF8E8E93),
+          ),
+          textAlign: TextAlign.center,
         ),
       ],
     );
@@ -639,7 +760,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       ),
       child: InkWell(
         onTap: () {
-          // TODO: Aktivite detay sayfasına git
+          // Aktivite detay sayfasına git
+          context.go('/activities/${activity.id}/edit');
         },
         borderRadius: BorderRadius.circular(12),
         child: Column(
@@ -973,4 +1095,3 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     }
   }
 }
-

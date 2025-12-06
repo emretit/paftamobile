@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
 /// Tüm Modüller Sayfası
-/// Web app'teki Navbar gibi tüm sayfaları gösterir
+/// Web app'teki Navbar gibi tüm sayfaları gösterir (Servis hariç)
 class ModulesPage extends StatelessWidget {
   const ModulesPage({super.key});
 
@@ -30,17 +30,24 @@ class ModulesPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Ana Modüller
+            // CRM Modülü
             _buildModuleSection(
               context,
-              'Ana Modüller',
+              'CRM',
               [
                 _ModuleItem(
-                  title: 'Servis Yönetimi',
-                  subtitle: 'Servis talepleri ve yönetimi',
-                  icon: CupertinoIcons.wrench_fill,
+                  title: 'CRM Dashboard',
+                  subtitle: 'CRM özet ve fırsatlar',
+                  icon: CupertinoIcons.chart_pie_fill,
                   color: const Color(0xFFD32F2F),
-                  route: '/service/management',
+                  route: '/crm',
+                ),
+                _ModuleItem(
+                  title: 'Fırsatlar',
+                  subtitle: 'Satış fırsatları ve pipeline',
+                  icon: CupertinoIcons.star_fill,
+                  color: const Color(0xFFFF9500),
+                  route: '/sales/opportunities',
                 ),
                 _ModuleItem(
                   title: 'Müşteriler',
@@ -51,26 +58,27 @@ class ModulesPage extends StatelessWidget {
                 ),
                 _ModuleItem(
                   title: 'Aktiviteler',
-                  subtitle: 'Tüm aktiviteler ve işlemler',
+                  subtitle: 'Görevler ve aktiviteler',
                   icon: CupertinoIcons.list_bullet,
                   color: const Color(0xFF007AFF),
                   route: '/activities',
                 ),
-                _ModuleItem(
-                  title: 'Profil',
-                  subtitle: 'Hesap ayarları ve profil',
-                  icon: CupertinoIcons.person_fill,
-                  color: const Color(0xFFAF52DE),
-                  route: '/profile',
-                ),
               ],
             ),
             const SizedBox(height: 24),
+            
             // Satış Modülü
             _buildModuleSection(
               context,
               'Satış',
               [
+                _ModuleItem(
+                  title: 'Teklifler',
+                  subtitle: 'Satış teklifleri',
+                  icon: CupertinoIcons.doc_fill,
+                  color: const Color(0xFF9333EA),
+                  route: '/sales/proposals',
+                ),
                 _ModuleItem(
                   title: 'Siparişler',
                   subtitle: 'Satış siparişleri',
@@ -85,23 +93,47 @@ class ModulesPage extends StatelessWidget {
                   color: const Color(0xFF22C55E),
                   route: '/sales/invoices',
                 ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            
+            // Finans Modülü
+            _buildModuleSection(
+              context,
+              'Finans',
+              [
                 _ModuleItem(
-                  title: 'Teklifler',
-                  subtitle: 'Satış teklifleri',
-                  icon: CupertinoIcons.doc_fill,
-                  color: const Color(0xFF9333EA),
-                  route: '/sales/proposals',
+                  title: 'Finans Dashboard',
+                  subtitle: 'Finansal özet ve hesaplar',
+                  icon: CupertinoIcons.chart_bar_alt_fill,
+                  color: const Color(0xFF3B82F6),
+                  route: '/finance',
                 ),
                 _ModuleItem(
-                  title: 'Fırsatlar',
-                  subtitle: 'Satış fırsatları',
-                  icon: CupertinoIcons.star_fill,
-                  color: const Color(0xFFFF9500),
-                  route: '/sales/opportunities',
+                  title: 'Giderler',
+                  subtitle: 'Gider yönetimi',
+                  icon: CupertinoIcons.arrow_down_circle_fill,
+                  color: const Color(0xFFEF4444),
+                  route: '/accounting/expenses',
+                ),
+                _ModuleItem(
+                  title: 'Ödemeler',
+                  subtitle: 'Tahsilat ve ödemeler',
+                  icon: CupertinoIcons.creditcard_fill,
+                  color: const Color(0xFF22C55E),
+                  route: '/accounting/payments',
+                ),
+                _ModuleItem(
+                  title: 'Banka Hesapları',
+                  subtitle: 'Banka hesapları ve bakiyeler',
+                  icon: CupertinoIcons.building_2_fill,
+                  color: const Color(0xFF9333EA),
+                  route: '/accounting/accounts',
                 ),
               ],
             ),
             const SizedBox(height: 24),
+            
             // Satın Alma Modülü
             _buildModuleSection(
               context,
@@ -131,35 +163,7 @@ class ModulesPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-            // Muhasebe Modülü
-            _buildModuleSection(
-              context,
-              'Muhasebe',
-              [
-                _ModuleItem(
-                  title: 'Giderler',
-                  subtitle: 'Gider yönetimi',
-                  icon: CupertinoIcons.money_dollar_circle_fill,
-                  color: const Color(0xFFEF4444),
-                  route: '/accounting/expenses',
-                ),
-                _ModuleItem(
-                  title: 'Ödemeler',
-                  subtitle: 'Ödeme yönetimi',
-                  icon: CupertinoIcons.creditcard_fill,
-                  color: const Color(0xFF22C55E),
-                  route: '/accounting/payments',
-                ),
-                _ModuleItem(
-                  title: 'Banka Hesapları',
-                  subtitle: 'Banka hesap yönetimi',
-                  icon: CupertinoIcons.building_2_fill,
-                  color: const Color(0xFF3B82F6),
-                  route: '/accounting/accounts',
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
+            
             // Stok Modülü
             _buildModuleSection(
               context,
@@ -189,6 +193,7 @@ class ModulesPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
+            
             // İK Modülü
             _buildModuleSection(
               context,
@@ -218,26 +223,19 @@ class ModulesPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-            // Servis Alt Sayfaları
-            _buildModuleSection(
-              context,
-              'Servis Alt Sayfaları',
-              [
-                _ModuleItem(
-                  title: 'Yeni Servis Talebi',
-                  subtitle: 'Yeni servis talebi oluştur',
-                  icon: CupertinoIcons.plus_circle_fill,
-                  color: const Color(0xFFD32F2F),
-                  route: '/service/new',
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
+            
             // Ayarlar
             _buildModuleSection(
               context,
               'Ayarlar',
               [
+                _ModuleItem(
+                  title: 'Profil',
+                  subtitle: 'Hesap ayarları ve profil',
+                  icon: CupertinoIcons.person_fill,
+                  color: const Color(0xFFAF52DE),
+                  route: '/profile',
+                ),
                 _ModuleItem(
                   title: 'Bildirim Ayarları',
                   subtitle: 'Bildirim tercihleri',
@@ -426,4 +424,3 @@ class _ModuleItem {
     required this.route,
   });
 }
-

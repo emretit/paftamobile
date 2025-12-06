@@ -3,10 +3,16 @@ import '../../pages/sales/sales_orders_page.dart';
 import '../../pages/sales/sales_invoices_page.dart';
 import '../../pages/sales/proposals_page.dart';
 import '../../pages/sales/opportunities_page.dart';
+import '../../pages/crm_page.dart';
 
 /// Sales modülü route'ları
 /// Web app'teki orderRoutes.tsx ve proposalRoutes.tsx'e benzer yapı
 final List<RouteBase> salesRoutes = [
+  // CRM Dashboard
+  GoRoute(
+    path: '/crm',
+    builder: (context, state) => const CrmPage(),
+  ),
   GoRoute(
     path: '/sales',
     redirect: (context, state) => '/sales/orders',

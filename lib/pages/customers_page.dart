@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_router/go_router.dart';
+import '../providers/customer_provider.dart';
+import '../models/customer.dart';
 
 class CustomersPage extends ConsumerStatefulWidget {
   const CustomersPage({super.key});
@@ -14,6 +16,7 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _selectedFilter = 'Tümü';
+  String _selectedType = 'Tümü';
 
   @override
   void dispose() {
@@ -23,44 +26,36 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFFF2F2F7),
-      child: Column(
-        children: [
-          // Custom AppBar
-          Container(
-            color: const Color(0xFFF2F2F7),
-            padding: const EdgeInsets.only(
-              top: 44, // Status bar height
-              left: 16,
-              right: 16,
-              bottom: 8,
-            ),
-            child: Row(
-              children: [
-                Text(
-                  'Müşteriler',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-                CupertinoButton(
-                  onPressed: () {
-                    // Yeni müşteri ekleme sayfasına git
-                    // TODO: Implement add customer functionality
-                  },
-                  child: const Icon(
-                    CupertinoIcons.add_circled,
-                    color: Color(0xFFB73D3D),
-                    size: 24,
-                  ),
-                ),
-              ],
+    final customersAsync = ref.watch(customersProvider);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF2F2F7),
+      appBar: AppBar(
+        title: Text(
+          'Müşteriler',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: const Color(0xFFF2F2F7),
+        foregroundColor: const Color(0xFF000000),
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        actions: [
+          CupertinoButton(
+            padding: const EdgeInsets.all(8),
+            onPressed: () => context.go('/customers/new'),
+            child: const Icon(
+              CupertinoIcons.plus_circle_fill,
+              color: Color(0xFFD32F2F),
+              size: 24,
             ),
           ),
-          
+        ],
+      ),
+      body: Column(
+        children: [
           // Arama ve Filtre
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -81,18 +76,48 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
                 
                 const SizedBox(height: 12),
                 
-                // Filtre butonları
+                // Durum filtreleri
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildFilterChip('Tümü', _selectedFilter == 'Tümü'),
+                      _buildFilterChip('Tümü', _selectedFilter == 'Tümü', (v) {
+                        setState(() => _selectedFilter = v);
+                      }),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Aktif', _selectedFilter == 'Aktif'),
+                      _buildFilterChip('Aktif', _selectedFilter == 'Aktif', (v) {
+                        setState(() => _selectedFilter = v);
+                      }),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Pasif', _selectedFilter == 'Pasif'),
+                      _buildFilterChip('Pasif', _selectedFilter == 'Pasif', (v) {
+                        setState(() => _selectedFilter = v);
+                      }),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Potansiyel', _selectedFilter == 'Potansiyel'),
+                      _buildFilterChip('Potansiyel', _selectedFilter == 'Potansiyel', (v) {
+                        setState(() => _selectedFilter = v);
+                      }),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                // Tip filtreleri  
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildTypeChip('Tümü', _selectedType == 'Tümü', (v) {
+                        setState(() => _selectedType = v);
+                      }),
+                      const SizedBox(width: 8),
+                      _buildTypeChip('Bireysel', _selectedType == 'Bireysel', (v) {
+                        setState(() => _selectedType = v);
+                      }),
+                      const SizedBox(width: 8),
+                      _buildTypeChip('Kurumsal', _selectedType == 'Kurumsal', (v) {
+                        setState(() => _selectedType = v);
+                      }),
                     ],
                   ),
                 ),
@@ -102,28 +127,50 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
           
           // Müşteri listesi
           Expanded(
-            child: _buildCustomersList(),
+            child: RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(customersProvider);
+              },
+              color: const Color(0xFFD32F2F),
+              child: customersAsync.when(
+                data: (customers) {
+                  final filteredCustomers = _filterCustomers(customers);
+                  
+                  if (filteredCustomers.isEmpty) {
+                    return _buildEmptyState();
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredCustomers.length,
+                    itemBuilder: (context, index) {
+                      return _buildCustomerCard(filteredCustomers[index]);
+                    },
+                  );
+                },
+                loading: () => const Center(
+                  child: CupertinoActivityIndicator(color: Color(0xFFD32F2F)),
+                ),
+                error: (error, stack) => _buildErrorState(error.toString()),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFilterChip(String label, bool isSelected) {
+  Widget _buildFilterChip(String label, bool isSelected, Function(String) onTap) {
     return CupertinoButton(
-      onPressed: () {
-        setState(() {
-          _selectedFilter = label;
-        });
-      },
+      onPressed: () => onTap(label),
       padding: EdgeInsets.zero,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFB73D3D) : Colors.white,
+          color: isSelected ? const Color(0xFFD32F2F) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFFB73D3D) : const Color(0xFFE5E5EA),
+            color: isSelected ? const Color(0xFFD32F2F) : const Color(0xFFE5E5EA),
             width: 1,
           ),
         ),
@@ -139,300 +186,405 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
     );
   }
 
-  Widget _buildCustomersList() {
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _fetchCustomers(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CupertinoActivityIndicator(
-              color: Color(0xFFB73D3D),
-            ),
-          );
-        }
-
-        if (snapshot.hasError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  CupertinoIcons.exclamationmark_triangle,
-                  size: 48,
-                  color: Colors.red[400],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Hata oluştu',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.red[600],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Müşteriler yüklenemedi',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        final customers = snapshot.data ?? [];
-        final filteredCustomers = _filterCustomers(customers);
-
-        if (filteredCustomers.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  CupertinoIcons.person_2,
-                  size: 48,
-                  color: Colors.grey[400],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  _searchQuery.isNotEmpty ? 'Arama sonucu bulunamadı' : 'Henüz müşteri yok',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _searchQuery.isNotEmpty 
-                    ? 'Farklı bir arama terimi deneyin'
-                    : 'İlk müşterinizi ekleyin',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return RefreshIndicator(
-          onRefresh: () async {
-            setState(() {});
-          },
-          color: const Color(0xFFB73D3D),
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: filteredCustomers.length,
-            itemBuilder: (context, index) {
-              final customer = filteredCustomers[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: _buildCustomerCard(customer),
-              );
-            },
+  Widget _buildTypeChip(String label, bool isSelected, Function(String) onTap) {
+    return CupertinoButton(
+      onPressed: () => onTap(label),
+      padding: EdgeInsets.zero,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF3B82F6).withOpacity(0.1) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF3B82F6) : const Color(0xFFE5E5EA),
+            width: 1,
           ),
-        );
-      },
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              label == 'Kurumsal' 
+                ? CupertinoIcons.building_2_fill 
+                : label == 'Bireysel' 
+                  ? CupertinoIcons.person_fill
+                  : CupertinoIcons.list_bullet,
+              size: 14,
+              color: isSelected ? const Color(0xFF3B82F6) : const Color(0xFF8E8E93),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? const Color(0xFF3B82F6) : const Color(0xFF8E8E93),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildCustomerCard(Map<String, dynamic> customer) {
+  Widget _buildCustomerCard(Customer customer) {
+    final statusColor = _getStatusColor(customer.status);
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            spreadRadius: 0,
-            blurRadius: 12,
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              // Müşteri avatarı
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFB73D3D).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Icon(
-                  customer['type'] == 'kurumsal' 
-                    ? CupertinoIcons.building_2_fill
-                    : CupertinoIcons.person_fill,
-                  color: const Color(0xFFB73D3D),
-                  size: 24,
-                ),
-              ),
-              
-              const SizedBox(width: 12),
-              
-              // Müşteri bilgileri
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.go('/customers/${customer.id}'),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      customer['name'] ?? 'İsimsiz',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                    // Avatar
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            statusColor.withOpacity(0.2),
+                            statusColor.withOpacity(0.1),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        customer.type == 'kurumsal' 
+                          ? CupertinoIcons.building_2_fill
+                          : CupertinoIcons.person_fill,
+                        color: statusColor,
+                        size: 24,
                       ),
                     ),
-                    if (customer['company'] != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        customer['company'],
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF8E8E93),
+                    
+                    const SizedBox(width: 12),
+                    
+                    // Müşteri bilgileri
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            customer.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF000000),
+                            ),
+                          ),
+                          if (customer.company != null && customer.company!.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              customer.company!,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF8E8E93),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    
+                    // Durum badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _getStatusText(customer.status),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: statusColor,
                         ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // İletişim bilgileri
+                Row(
+                  children: [
+                    if (customer.email != null && customer.email!.isNotEmpty) ...[
+                      Expanded(
+                        child: Row(
+                          children: [
+                            const Icon(
+                              CupertinoIcons.mail,
+                              size: 14,
+                              color: Color(0xFF8E8E93),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                customer.email!,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF8E8E93),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (customer.mobilePhone != null && customer.mobilePhone!.isNotEmpty) ...[
+                      const SizedBox(width: 16),
+                      Row(
+                        children: [
+                          const Icon(
+                            CupertinoIcons.phone,
+                            size: 14,
+                            color: Color(0xFF8E8E93),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            customer.mobilePhone!,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF8E8E93),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ],
                 ),
-              ),
-              
-              // Durum etiketi
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(customer['status']).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  _getStatusText(customer['status']),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: _getStatusColor(customer['status']),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 12),
-          
-          // İletişim bilgileri
-          if (customer['email'] != null || customer['mobile_phone'] != null) ...[
-            Row(
-              children: [
-                if (customer['email'] != null) ...[
-                  Icon(
-                    CupertinoIcons.mail,
-                    size: 16,
-                    color: const Color(0xFF8E8E93),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      customer['email'],
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: const Color(0xFF8E8E93),
+                
+                // Bakiye ve segment bilgisi
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Bakiye
+                    Row(
+                      children: [
+                        const Icon(
+                          CupertinoIcons.money_dollar_circle,
+                          size: 16,
+                          color: Color(0xFF22C55E),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _formatCurrency(customer.balance),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF22C55E),
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    // Segment
+                    if (customer.customerSegment != null && customer.customerSegment!.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF9333EA).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          customer.customerSegment!,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF9333EA),
+                          ),
+                        ),
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-                if (customer['mobile_phone'] != null) ...[
-                  const SizedBox(width: 16),
-                  Icon(
-                    CupertinoIcons.phone,
-                    size: 16,
-                    color: const Color(0xFF8E8E93),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    customer['mobile_phone'],
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF8E8E93),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ],
-          
-          if (customer['address'] != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(
-                  CupertinoIcons.location,
-                  size: 16,
-                  color: const Color(0xFF8E8E93),
+                  ],
                 ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    customer['address'],
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF8E8E93),
+                
+                // Hızlı işlem butonları
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _buildQuickActionButton(
+                      CupertinoIcons.phone_fill,
+                      const Color(0xFF22C55E),
+                      () {
+                        // TODO: Telefon ara
+                      },
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                    const SizedBox(width: 8),
+                    _buildQuickActionButton(
+                      CupertinoIcons.mail_solid,
+                      const Color(0xFF3B82F6),
+                      () {
+                        // TODO: E-posta gönder
+                      },
+                    ),
+                    const Spacer(),
+                    _buildQuickActionButton(
+                      CupertinoIcons.chevron_right,
+                      const Color(0xFF8E8E93),
+                      () => context.go('/customers/${customer.id}'),
+                    ),
+                  ],
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionButton(IconData icon, Color color, VoidCallback onTap) {
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      onPressed: onTap,
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: color, size: 18),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: const Color(0xFFD32F2F).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(40),
+            ),
+            child: const Icon(
+              CupertinoIcons.person_2,
+              size: 40,
+              color: Color(0xFFD32F2F),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _searchQuery.isNotEmpty ? 'Arama sonucu bulunamadı' : 'Henüz müşteri yok',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF000000),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _searchQuery.isNotEmpty 
+              ? 'Farklı bir arama terimi deneyin'
+              : 'İlk müşterinizi ekleyin',
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF8E8E93),
+            ),
+          ),
+          if (_searchQuery.isEmpty) ...[
+            const SizedBox(height: 24),
+            CupertinoButton(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              color: const Color(0xFFD32F2F),
+              borderRadius: BorderRadius.circular(10),
+              onPressed: () => context.go('/customers/new'),
+              child: const Text(
+                'Müşteri Ekle',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
           ],
-          
-          const SizedBox(height: 12),
-          
-          // Alt bilgiler
-          Row(
-            children: [
-              Text(
-                'Bakiye: ${_formatCurrency(customer['balance'] ?? 0)}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: const Color(0xFF8E8E93),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                'Son görüşme: ${_formatDate(customer['last_interaction'])}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: const Color(0xFF8E8E93),
-                ),
-              ),
-            ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            CupertinoIcons.exclamationmark_triangle,
+            size: 48,
+            color: Color(0xFFEF4444),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Bir hata oluştu',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF000000),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            error,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF8E8E93),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          CupertinoButton(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            color: const Color(0xFFD32F2F),
+            borderRadius: BorderRadius.circular(10),
+            onPressed: () => ref.invalidate(customersProvider),
+            child: const Text(
+              'Tekrar Dene',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Future<List<Map<String, dynamic>>> _fetchCustomers() async {
-    try {
-      final response = await Supabase.instance.client
-          .from('customers')
-          .select('*')
-          .order('created_at', ascending: false);
-      
-      return List<Map<String, dynamic>>.from(response);
-    } catch (e) {
-      throw Exception('Müşteriler yüklenirken hata oluştu: $e');
-    }
-  }
-
-  List<Map<String, dynamic>> _filterCustomers(List<Map<String, dynamic>> customers) {
+  List<Customer> _filterCustomers(List<Customer> customers) {
     var filtered = customers;
 
     // Arama filtresi
     if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
       filtered = filtered.where((customer) {
-        final name = (customer['name'] ?? '').toString().toLowerCase();
-        final company = (customer['company'] ?? '').toString().toLowerCase();
-        final email = (customer['email'] ?? '').toString().toLowerCase();
-        final query = _searchQuery.toLowerCase();
-        
-        return name.contains(query) || 
-               company.contains(query) || 
-               email.contains(query);
+        return customer.name.toLowerCase().contains(query) ||
+               (customer.company?.toLowerCase().contains(query) ?? false) ||
+               (customer.email?.toLowerCase().contains(query) ?? false) ||
+               (customer.mobilePhone?.contains(query) ?? false);
       }).toList();
     }
 
@@ -454,9 +606,26 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
       }
       
       if (statusFilter.isNotEmpty) {
-        filtered = filtered.where((customer) {
-          return customer['status'] == statusFilter;
-        }).toList();
+        filtered = filtered.where((customer) => customer.status == statusFilter).toList();
+      }
+    }
+
+    // Tip filtresi
+    if (_selectedType != 'Tümü') {
+      String typeFilter;
+      switch (_selectedType) {
+        case 'Bireysel':
+          typeFilter = 'bireysel';
+          break;
+        case 'Kurumsal':
+          typeFilter = 'kurumsal';
+          break;
+        default:
+          typeFilter = '';
+      }
+      
+      if (typeFilter.isNotEmpty) {
+        filtered = filtered.where((customer) => customer.type == typeFilter).toList();
       }
     }
 
@@ -466,13 +635,13 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
   Color _getStatusColor(String? status) {
     switch (status) {
       case 'aktif':
-        return Colors.green;
+        return const Color(0xFF22C55E);
       case 'pasif':
-        return Colors.red;
+        return const Color(0xFFEF4444);
       case 'potansiyel':
-        return Colors.orange;
+        return const Color(0xFFFF9500);
       default:
-        return Colors.grey;
+        return const Color(0xFF8E8E93);
     }
   }
 
@@ -489,31 +658,8 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
     }
   }
 
-  String _formatCurrency(dynamic amount) {
+  String _formatCurrency(double? amount) {
     if (amount == null) return '₺0,00';
-    final num = double.tryParse(amount.toString()) ?? 0;
-    return '₺${num.toStringAsFixed(2).replaceAll('.', ',')}';
-  }
-
-  String _formatDate(dynamic date) {
-    if (date == null) return 'Bilinmiyor';
-    
-    try {
-      final dateTime = DateTime.parse(date.toString());
-      final now = DateTime.now();
-      final difference = now.difference(dateTime);
-      
-      if (difference.inDays == 0) {
-        return 'Bugün';
-      } else if (difference.inDays == 1) {
-        return 'Dün';
-      } else if (difference.inDays < 7) {
-        return '${difference.inDays} gün önce';
-      } else {
-        return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
-      }
-    } catch (e) {
-      return 'Bilinmiyor';
-    }
+    return '₺${amount.toStringAsFixed(2).replaceAll('.', ',')}';
   }
 }

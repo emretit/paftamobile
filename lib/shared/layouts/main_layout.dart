@@ -18,37 +18,19 @@ class MainLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notificationState = ref.watch(notificationProvider);
-    final isTechnicalAsync = ref.watch(userIsTechnicalProvider);
 
-    return isTechnicalAsync.when(
-      data: (isTechnical) => Scaffold(
-        body: child,
-        drawer: _buildDrawer(context, ref, isTechnical),
-        bottomNavigationBar: _buildBottomNavigationBar(
-          context,
-          ref,
-          notificationState,
-          isTechnical,
-        ),
-      ),
-      loading: () => Scaffold(
-        body: child,
-        bottomNavigationBar: const SizedBox.shrink(),
-      ),
-      error: (error, stack) => Scaffold(
-        body: child,
-        drawer: _buildDrawer(context, ref, false),
-        bottomNavigationBar: _buildBottomNavigationBar(
-          context,
-          ref,
-          notificationState,
-          false,
-        ),
+    return Scaffold(
+      body: child,
+      drawer: _buildDrawer(context, ref),
+      bottomNavigationBar: _buildBottomNavigationBar(
+        context,
+        ref,
+        notificationState,
       ),
     );
   }
 
-  Widget _buildDrawer(BuildContext context, WidgetRef ref, bool isTechnical) {
+  Widget _buildDrawer(BuildContext context, WidgetRef ref) {
     return Drawer(
       backgroundColor: Colors.white,
       child: SafeArea(
@@ -89,10 +71,10 @@ class MainLayout extends ConsumerWidget {
               ),
             ),
             
-            // Modüller
+            // Ana Modüller
             _buildDrawerSection(
               context,
-              'Modüller',
+              'Ana Modüller',
               [
                 _buildDrawerItem(
                   context,
@@ -102,27 +84,99 @@ class MainLayout extends ConsumerWidget {
                 ),
                 _buildDrawerItem(
                   context,
-                  'Servis',
-                  CupertinoIcons.wrench_fill,
-                  '/service/management',
+                  'CRM',
+                  CupertinoIcons.chart_bar_alt_fill,
+                  '/crm',
                 ),
                 _buildDrawerItem(
                   context,
-                  'Satış',
-                  CupertinoIcons.cart_fill,
-                  '/sales',
+                  'Müşteriler',
+                  CupertinoIcons.person_2_fill,
+                  '/customers',
                 ),
+              ],
+            ),
+            
+            const Divider(),
+            
+            // Satış
+            _buildDrawerSection(
+              context,
+              'Satış',
+              [
+                _buildDrawerItem(
+                  context,
+                  'Fırsatlar',
+                  CupertinoIcons.star_fill,
+                  '/sales/opportunities',
+                ),
+                _buildDrawerItem(
+                  context,
+                  'Teklifler',
+                  CupertinoIcons.doc_fill,
+                  '/sales/proposals',
+                ),
+                _buildDrawerItem(
+                  context,
+                  'Siparişler',
+                  CupertinoIcons.cart_fill,
+                  '/sales/orders',
+                ),
+                _buildDrawerItem(
+                  context,
+                  'Faturalar',
+                  CupertinoIcons.doc_text_fill,
+                  '/sales/invoices',
+                ),
+              ],
+            ),
+            
+            const Divider(),
+            
+            // Finans
+            _buildDrawerSection(
+              context,
+              'Finans',
+              [
+                _buildDrawerItem(
+                  context,
+                  'Finans Dashboard',
+                  CupertinoIcons.chart_bar_alt_fill,
+                  '/finance',
+                ),
+                _buildDrawerItem(
+                  context,
+                  'Giderler',
+                  CupertinoIcons.arrow_down_circle_fill,
+                  '/accounting/expenses',
+                ),
+                _buildDrawerItem(
+                  context,
+                  'Ödemeler',
+                  CupertinoIcons.creditcard_fill,
+                  '/accounting/payments',
+                ),
+                _buildDrawerItem(
+                  context,
+                  'Banka Hesapları',
+                  CupertinoIcons.building_2_fill,
+                  '/accounting/accounts',
+                ),
+              ],
+            ),
+            
+            const Divider(),
+            
+            // Diğer Modüller
+            _buildDrawerSection(
+              context,
+              'Diğer Modüller',
+              [
                 _buildDrawerItem(
                   context,
                   'Satın Alma',
                   CupertinoIcons.bag_fill,
                   '/purchasing',
-                ),
-                _buildDrawerItem(
-                  context,
-                  'Muhasebe',
-                  CupertinoIcons.money_dollar_circle_fill,
-                  '/accounting',
                 ),
                 _buildDrawerItem(
                   context,
@@ -133,7 +187,7 @@ class MainLayout extends ConsumerWidget {
                 _buildDrawerItem(
                   context,
                   'İnsan Kaynakları',
-                  CupertinoIcons.person_2_fill,
+                  CupertinoIcons.person_3_fill,
                   '/hr',
                 ),
               ],
@@ -141,17 +195,11 @@ class MainLayout extends ConsumerWidget {
             
             const Divider(),
             
-            // Diğer
+            // Ayarlar
             _buildDrawerSection(
               context,
-              'Diğer',
+              'Ayarlar',
               [
-                _buildDrawerItem(
-                  context,
-                  'Müşteriler',
-                  CupertinoIcons.person_2_fill,
-                  '/customers',
-                ),
                 _buildDrawerItem(
                   context,
                   'Bildirimler',
@@ -231,11 +279,9 @@ class MainLayout extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     dynamic notificationState,
-    bool isTechnical,
   ) {
-    // En çok kullanılan 5 modülü bottom bar'da göster
-    final items = _getBottomNavItems(notificationState, isTechnical);
-    final currentIndex = _getCurrentIndex(isTechnical);
+    final items = _getBottomNavItems(notificationState);
+    final currentIndex = _getCurrentIndex();
     
     return Container(
       decoration: BoxDecoration(
@@ -250,7 +296,7 @@ class MainLayout extends ConsumerWidget {
       child: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: currentIndex,
-        onTap: (index) => _onItemTapped(context, index, isTechnical),
+        onTap: (index) => _onItemTapped(context, index),
         selectedItemColor: const Color(0xFFD32F2F),
         unselectedItemColor: const Color(0xFF8E8E93),
         backgroundColor: const Color(0xFFF2F2F7),
@@ -270,9 +316,8 @@ class MainLayout extends ConsumerWidget {
 
   List<BottomNavigationBarItem> _getBottomNavItems(
     dynamic notificationState,
-    bool isTechnical,
   ) {
-    // Tüm kullanıcılar için aynı bottom bar - Modüller butonu eklendi
+    // Web app'e uyumlu bottom bar - Servis yerine CRM
     return [
       const BottomNavigationBarItem(
         icon: Icon(CupertinoIcons.house, size: 24),
@@ -280,77 +325,19 @@ class MainLayout extends ConsumerWidget {
         label: 'Dashboard',
       ),
       const BottomNavigationBarItem(
-        icon: Icon(CupertinoIcons.wrench, size: 24),
-        activeIcon: Icon(CupertinoIcons.wrench_fill, size: 24),
-        label: 'Servis',
+        icon: Icon(CupertinoIcons.chart_bar_alt_fill, size: 24),
+        activeIcon: Icon(CupertinoIcons.chart_bar_alt_fill, size: 24),
+        label: 'CRM',
+      ),
+      const BottomNavigationBarItem(
+        icon: Icon(CupertinoIcons.person_2, size: 24),
+        activeIcon: Icon(CupertinoIcons.person_2_fill, size: 24),
+        label: 'Müşteriler',
       ),
       const BottomNavigationBarItem(
         icon: Icon(CupertinoIcons.square_grid_2x2, size: 24),
         activeIcon: Icon(CupertinoIcons.square_grid_2x2_fill, size: 24),
         label: 'Modüller',
-      ),
-      BottomNavigationBarItem(
-        icon: Stack(
-          children: [
-            const Icon(CupertinoIcons.bell, size: 24),
-            if (notificationState.unreadCount > 0)
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: Text(
-                    '${notificationState.unreadCount}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        activeIcon: Stack(
-          children: [
-            const Icon(CupertinoIcons.bell_fill, size: 24),
-            if (notificationState.unreadCount > 0)
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: Text(
-                    '${notificationState.unreadCount}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        label: 'Bildirimler',
       ),
       const BottomNavigationBarItem(
         icon: Icon(CupertinoIcons.person, size: 24),
@@ -360,39 +347,41 @@ class MainLayout extends ConsumerWidget {
     ];
   }
 
-  int _getCurrentIndex(bool isTechnical) {
+  int _getCurrentIndex() {
     if (currentRoute == '/dashboard' || currentRoute == '/home') return 0;
-    if (currentRoute.startsWith('/service')) return 1;
-    if (currentRoute == '/modules') return 2;
-    if (currentRoute == '/notifications') return 3;
+    if (currentRoute == '/crm' || currentRoute.startsWith('/sales/opportunities')) return 1;
+    if (currentRoute == '/customers') return 2;
+    if (currentRoute == '/modules') return 3;
     if (currentRoute == '/profile') return 4;
     
     // Diğer route'lar için modüller sayfasını aktif göster
     if (currentRoute.startsWith('/sales') ||
-        currentRoute.startsWith('/purchasing') ||
+        currentRoute.startsWith('/finance') ||
         currentRoute.startsWith('/accounting') ||
+        currentRoute.startsWith('/purchasing') ||
         currentRoute.startsWith('/inventory') ||
         currentRoute.startsWith('/hr') ||
-        currentRoute == '/customers') {
-      return 2; // Modüller sayfası aktif
+        currentRoute.startsWith('/activities') ||
+        currentRoute.startsWith('/service')) {
+      return 3; // Modüller sayfası aktif
     }
     
     return 0;
   }
 
-  void _onItemTapped(BuildContext context, int index, bool isTechnical) {
+  void _onItemTapped(BuildContext context, int index) {
     switch (index) {
       case 0:
         context.go('/dashboard');
         break;
       case 1:
-        context.go('/service/management');
+        context.go('/crm');
         break;
       case 2:
-        context.go('/modules');
+        context.go('/customers');
         break;
       case 3:
-        context.go('/notifications');
+        context.go('/modules');
         break;
       case 4:
         context.go('/profile');
