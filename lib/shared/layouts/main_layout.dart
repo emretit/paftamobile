@@ -133,6 +133,28 @@ class MainLayout extends ConsumerWidget {
             
             const Divider(),
             
+            // Servis
+            _buildDrawerSection(
+              context,
+              'Servis',
+              [
+                _buildDrawerItem(
+                  context,
+                  'Servis Yönetimi',
+                  CupertinoIcons.wrench_fill,
+                  '/service/management',
+                ),
+                _buildDrawerItem(
+                  context,
+                  'Yeni Servis Talebi',
+                  CupertinoIcons.add_circled_solid,
+                  '/service/new',
+                ),
+              ],
+            ),
+            
+            const Divider(),
+            
             // Finans
             _buildDrawerSection(
               context,
@@ -317,7 +339,7 @@ class MainLayout extends ConsumerWidget {
   List<BottomNavigationBarItem> _getBottomNavItems(
     dynamic notificationState,
   ) {
-    // Web app'e uyumlu bottom bar - Servis yerine CRM
+    // Alt navigasyon çubuğu - 6 buton
     return [
       const BottomNavigationBarItem(
         icon: Icon(CupertinoIcons.house, size: 24),
@@ -333,6 +355,11 @@ class MainLayout extends ConsumerWidget {
         icon: Icon(CupertinoIcons.person_2, size: 24),
         activeIcon: Icon(CupertinoIcons.person_2_fill, size: 24),
         label: 'Müşteriler',
+      ),
+      const BottomNavigationBarItem(
+        icon: Icon(CupertinoIcons.wrench, size: 24),
+        activeIcon: Icon(CupertinoIcons.wrench_fill, size: 24),
+        label: 'Servis',
       ),
       const BottomNavigationBarItem(
         icon: Icon(CupertinoIcons.square_grid_2x2, size: 24),
@@ -351,8 +378,9 @@ class MainLayout extends ConsumerWidget {
     if (currentRoute == '/dashboard' || currentRoute == '/home') return 0;
     if (currentRoute == '/crm' || currentRoute.startsWith('/sales/opportunities')) return 1;
     if (currentRoute == '/customers') return 2;
-    if (currentRoute == '/modules') return 3;
-    if (currentRoute == '/profile') return 4;
+    if (currentRoute.startsWith('/service')) return 3; // Servis sayfaları
+    if (currentRoute == '/modules') return 4;
+    if (currentRoute == '/profile') return 5;
     
     // Diğer route'lar için modüller sayfasını aktif göster
     if (currentRoute.startsWith('/sales') ||
@@ -361,9 +389,8 @@ class MainLayout extends ConsumerWidget {
         currentRoute.startsWith('/purchasing') ||
         currentRoute.startsWith('/inventory') ||
         currentRoute.startsWith('/hr') ||
-        currentRoute.startsWith('/activities') ||
-        currentRoute.startsWith('/service')) {
-      return 3; // Modüller sayfası aktif
+        currentRoute.startsWith('/activities')) {
+      return 4; // Modüller sayfası aktif
     }
     
     return 0;
@@ -381,9 +408,12 @@ class MainLayout extends ConsumerWidget {
         context.go('/customers');
         break;
       case 3:
-        context.go('/modules');
+        context.go('/service/management');
         break;
       case 4:
+        context.go('/modules');
+        break;
+      case 5:
         context.go('/profile');
         break;
     }

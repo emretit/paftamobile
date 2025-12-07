@@ -1,11 +1,13 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/service_request.dart';
 import '../providers/service_request_provider.dart';
-import '../services/service_request_service.dart';
+import '../services/service_slip_pdf_service.dart';
 import '../shared/widgets/bottom_navigation_bar.dart';
+import 'signature_page.dart';
 
 class ServiceSlipViewPage extends ConsumerStatefulWidget {
   final String serviceRequestId;
@@ -44,7 +46,7 @@ class _ServiceSlipViewPageState extends ConsumerState<ServiceSlipViewPage> {
         surfaceTintColor: Colors.transparent,
         actions: [
           CupertinoButton(
-            onPressed: () => context.go('/service-requests/${widget.serviceRequestId}/slip'),
+            onPressed: () => context.go('/service/${widget.serviceRequestId}/slip'),
             child: Container(
               width: 32,
               height: 32,
@@ -80,7 +82,7 @@ class _ServiceSlipViewPageState extends ConsumerState<ServiceSlipViewPage> {
                   const Text('Henüz servis fişi oluşturulmamış'),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () => context.go('/service-requests/${widget.serviceRequestId}/slip'),
+                    onPressed: () => context.go('/service/${widget.serviceRequestId}/slip'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFB73D3D),
                       foregroundColor: Colors.white,
@@ -304,43 +306,112 @@ class _ServiceSlipViewPageState extends ConsumerState<ServiceSlipViewPage> {
                   ),
                 const SizedBox(height: 16),
 
-                // İmza alanı
-                if (serviceRequest.technicianSignature != null)
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Teknisyen İmzası',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            width: double.infinity,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey[300]!),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text(
-                                serviceRequest.technicianSignature!,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontStyle: FontStyle.italic,
+                // İmza alanları
+                Row(
+                  children: [
+                    // Teknisyen İmzası
+                    Expanded(
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Teknisyen İmzası',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ),
+                              const SizedBox(height: 12),
+                              Container(
+                                width: double.infinity,
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: serviceRequest.technicianSignature != null && serviceRequest.technicianSignature!.isNotEmpty
+                                    ? _buildSignatureImage(serviceRequest.technicianSignature!)
+                                    : const Center(
+                                        child: Text(
+                                          'İmza Yok',
+                                          style: TextStyle(
+                                            color: Colors.grey,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ),
+                              ),
+                              if (serviceRequest.technicianName != null) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  serviceRequest.technicianName!,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    // Müşteri İmzası
+                    Expanded(
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Müşteri İmzası',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                width: double.infinity,
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: serviceRequest.customerSignature != null && serviceRequest.customerSignature!.isNotEmpty
+                                    ? _buildSignatureImage(serviceRequest.customerSignature!)
+                                    : const Center(
+                                        child: Text(
+                                          'İmza Yok',
+                                          style: TextStyle(
+                                            color: Colors.grey,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ),
+                              ),
+                              if (serviceRequest.customerData != null && serviceRequest.customerData!['name'] != null) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  serviceRequest.customerData!['name'],
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 24),
 
                 // Eylem butonları
@@ -372,22 +443,53 @@ class _ServiceSlipViewPageState extends ConsumerState<ServiceSlipViewPage> {
                 ],
                 
                 if (serviceRequest.isSlipCompleted) ...[
+                  // Teknisyen İmzası
+                  if (serviceRequest.technicianSignature == null || serviceRequest.technicianSignature!.isEmpty)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _isLoading ? null : () => _signSlip(serviceRequest, isTechnician: true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: const Icon(Icons.edit),
+                        label: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text(
+                                'Teknisyen İmzası Al',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                    ),
+                  if (serviceRequest.technicianSignature == null || serviceRequest.technicianSignature!.isEmpty)
+                    const SizedBox(height: 12),
+                  
+                  // Müşteri İmzası
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : () => _signSlip(serviceRequest),
+                    child: ElevatedButton.icon(
+                      onPressed: _isLoading ? null : () => _signSlip(serviceRequest, isTechnician: false),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: const Color(0xFFB73D3D),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: _isLoading
+                      icon: const Icon(Icons.person),
+                      label: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
-                              'Fişi İmzala',
+                              'Müşteri İmzası Al',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -489,9 +591,9 @@ class _ServiceSlipViewPageState extends ConsumerState<ServiceSlipViewPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         label,
@@ -536,9 +638,20 @@ class _ServiceSlipViewPageState extends ConsumerState<ServiceSlipViewPage> {
     }
   }
 
-  void _signSlip(ServiceRequest serviceRequest) async {
-    // İmza dialog'u göster
-    final signature = await _showSignatureDialog();
+  void _signSlip(ServiceRequest serviceRequest, {required bool isTechnician}) async {
+    // İmza sayfasına yönlendir
+    final signature = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SignaturePage(
+          title: isTechnician ? 'Teknisyen İmzası' : 'Müşteri İmzası',
+          existingSignature: isTechnician 
+              ? serviceRequest.technicianSignature 
+              : serviceRequest.customerSignature,
+        ),
+      ),
+    );
+
     if (signature == null) return;
 
     setState(() {
@@ -547,20 +660,33 @@ class _ServiceSlipViewPageState extends ConsumerState<ServiceSlipViewPage> {
 
     try {
       final service = ref.read(serviceRequestServiceProvider);
-      await service.signServiceSlip(widget.serviceRequestId, signature);
+      
+      if (isTechnician) {
+        await service.signServiceSlip(widget.serviceRequestId, signature);
+      } else {
+        await service.signServiceSlipByCustomer(widget.serviceRequestId, signature);
+      }
 
       // Provider'ı yenile
       ref.invalidate(serviceRequestByIdProvider(widget.serviceRequestId));
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Servis fişi imzalandı')),
+          SnackBar(
+            content: Text(isTechnician 
+                ? 'Teknisyen imzası kaydedildi' 
+                : 'Müşteri imzası kaydedildi'),
+            backgroundColor: const Color(0xFF10B981),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e')),
+          SnackBar(
+            content: Text('Hata: $e'),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
         );
       }
     } finally {
@@ -572,43 +698,66 @@ class _ServiceSlipViewPageState extends ConsumerState<ServiceSlipViewPage> {
     }
   }
 
-  Future<String?> _showSignatureDialog() async {
-    final controller = TextEditingController();
-    
-    return showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('İmza'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            hintText: 'İmzanızı yazın...',
-            border: OutlineInputBorder(),
+  Widget _buildSignatureImage(String base64Signature) {
+    try {
+      final bytes = base64Decode(base64Signature);
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.memory(
+          bytes,
+          fit: BoxFit.contain,
+        ),
+      );
+    } catch (e) {
+      return const Center(
+        child: Text(
+          'İmza görüntülenemedi',
+          style: TextStyle(
+            color: Colors.grey,
+            fontStyle: FontStyle.italic,
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (controller.text.isNotEmpty) {
-                Navigator.pop(context, controller.text);
-              }
-            },
-            child: const Text('İmzala'),
-          ),
-        ],
-      ),
-    );
+      );
+    }
   }
 
-  void _sharePDF(ServiceRequest serviceRequest) {
-    // PDF oluşturma ve paylaşma işlemi
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('PDF paylaşma özelliği yakında eklenecek')),
-    );
+  void _sharePDF(ServiceRequest serviceRequest) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final pdfService = ServiceSlipPdfService();
+      final pdfBytes = await pdfService.generateServiceSlipPdf(serviceRequest);
+      
+      final fileName = 'Servis_Fisi_${serviceRequest.serviceNumber ?? serviceRequest.id}.pdf';
+      
+      await pdfService.previewAndShare(pdfBytes, fileName);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('PDF oluşturuldu'),
+            backgroundColor: Color(0xFF10B981),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('PDF oluşturma hatası: $e'),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   String _formatDateTime(DateTime dateTime) {

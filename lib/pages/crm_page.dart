@@ -6,8 +6,7 @@ import '../providers/crm_provider.dart';
 import '../providers/sales_provider.dart';
 import '../models/opportunity.dart';
 
-/// CRM Dashboard Sayfası
-/// Web app'teki CRM modülünün mobil versiyonu
+/// CRM Dashboard Sayfası - Dashboard ile aynı tasarım dili
 class CrmPage extends ConsumerStatefulWidget {
   const CrmPage({super.key});
 
@@ -38,33 +37,45 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F7),
       appBar: AppBar(
-        title: Text(
-          'CRM',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                CupertinoIcons.chart_bar_alt_fill,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text('CRM'),
+          ],
         ),
         backgroundColor: const Color(0xFFF2F2F7),
         foregroundColor: const Color(0xFF000000),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         actions: [
-          CupertinoButton(
-            padding: const EdgeInsets.all(8),
+          IconButton(
             onPressed: () => context.go('/sales/opportunities/new'),
-            child: const Icon(
-              CupertinoIcons.plus_circle_fill,
-              color: Color(0xFFD32F2F),
-              size: 24,
-            ),
+            icon: const Icon(CupertinoIcons.plus_circle_fill, size: 24),
+            color: const Color(0xFF3B82F6),
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
-          labelColor: const Color(0xFFD32F2F),
+          labelColor: const Color(0xFF3B82F6),
           unselectedLabelColor: const Color(0xFF8E8E93),
-          indicatorColor: const Color(0xFFD32F2F),
+          indicatorColor: const Color(0xFF3B82F6),
+          indicatorWeight: 3,
           tabs: const [
             Tab(text: 'Özet'),
             Tab(text: 'Fırsatlar'),
@@ -75,11 +86,8 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
       body: TabBarView(
         controller: _tabController,
         children: [
-          // Özet Tab
           _buildSummaryTab(context, crmStatsAsync, opportunitiesAsync),
-          // Fırsatlar Tab
           _buildOpportunitiesTab(context, opportunitiesAsync),
-          // Pipeline Tab
           _buildPipelineTab(context, opportunitiesAsync),
         ],
       ),
@@ -96,150 +104,135 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
         ref.invalidate(crmStatsProvider);
         ref.invalidate(opportunitiesProvider);
       },
-      color: const Color(0xFFD32F2F),
+      color: const Color(0xFF3B82F6),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // CRM İstatistikleri
-            crmStatsAsync.when(
-              data: (stats) => _buildStatsGrid(context, stats),
-              loading: () => _buildLoadingStats(),
-              error: (e, _) => _buildErrorCard('İstatistikler yüklenemedi'),
-            ),
-            const SizedBox(height: 24),
-
-            // Son Fırsatlar
-            Text(
-              'Son Fırsatlar',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF000000),
+            // Gradient Header - Dashboard gibi
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Stats Cards Compact
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                    child: crmStatsAsync.when(
+                      data: (stats) => _buildCompactStats(stats),
+                      loading: () => _buildLoadingStats(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            opportunitiesAsync.when(
-              data: (opportunities) => _buildRecentOpportunities(context, opportunities),
-              loading: () => const Center(child: CupertinoActivityIndicator()),
-              error: (e, _) => _buildErrorCard('Fırsatlar yüklenemedi'),
-            ),
-            const SizedBox(height: 24),
-
-            // Hızlı Erişim
-            Text(
-              'Hızlı Erişim',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF000000),
+            
+            // Main Content
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Son Fırsatlar
+                  _buildSectionHeader('Son Fırsatlar', () => context.go('/sales/opportunities')),
+                  const SizedBox(height: 12),
+                  opportunitiesAsync.when(
+                    data: (opportunities) => _buildRecentOpportunitiesCompact(opportunities),
+                    loading: () => _buildLoadingOpportunities(),
+                    error: (_, __) => _buildEmptyState('Fırsatlar yüklenemedi', CupertinoIcons.exclamationmark_triangle),
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  // Hızlı Erişim
+                  _buildSectionHeader('Hızlı Erişim', null),
+                  const SizedBox(height: 12),
+                  _buildQuickActionsCompact(context),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            _buildQuickActions(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatsGrid(BuildContext context, Map<String, dynamic> stats) {
-    return Column(
+  // Kompakt İstatistikler
+  Widget _buildCompactStats(Map<String, dynamic> stats) {
+    return Row(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                'Toplam Fırsat',
-                '${stats['totalOpportunities'] ?? 0}',
-                CupertinoIcons.star_fill,
-                const Color(0xFFFF9500),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                'Aktif',
-                '${stats['activeOpportunities'] ?? 0}',
-                CupertinoIcons.bolt_fill,
-                const Color(0xFF3B82F6),
-              ),
-            ),
-          ],
+        Expanded(
+          child: _buildStatBubble(
+            '${stats['totalOpportunities'] ?? 0}',
+            'Toplam',
+            CupertinoIcons.star_fill,
+          ),
         ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                'Kazanılan',
-                '${stats['wonOpportunities'] ?? 0}',
-                CupertinoIcons.checkmark_circle_fill,
-                const Color(0xFF22C55E),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                'Toplam Değer',
-                '₺${_formatNumber(stats['totalValue'] ?? 0)}',
-                CupertinoIcons.money_dollar_circle_fill,
-                const Color(0xFF9333EA),
-              ),
-            ),
-          ],
+        const SizedBox(width: 10),
+        Expanded(
+          child: _buildStatBubble(
+            '${stats['activeOpportunities'] ?? 0}',
+            'Aktif',
+            CupertinoIcons.bolt_fill,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _buildStatBubble(
+            '${stats['wonOpportunities'] ?? 0}',
+            'Kazanılan',
+            CupertinoIcons.checkmark_circle_fill,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _buildStatBubble(
+            '₺${_formatNumber(stats['totalValue'] ?? 0)}',
+            'Değer',
+            CupertinoIcons.money_dollar_circle_fill,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatBubble(String value, String label, IconData icon) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.3),
+          width: 1.5,
+        ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+          Icon(icon, color: Colors.white, size: 20),
+          const SizedBox(height: 6),
           Text(
-            title,
+            value,
             style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF8E8E93),
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -248,65 +241,75 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildRecentOpportunities(BuildContext context, List<Opportunity> opportunities) {
-    if (opportunities.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+  // Bölüm Başlığı
+  Widget _buildSectionHeader(String title, VoidCallback? onViewAll) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF000000),
+            letterSpacing: -0.5,
+          ),
         ),
-        child: Column(
-          children: [
-            const Icon(
-              CupertinoIcons.star,
-              size: 48,
-              color: Color(0xFF8E8E93),
+        if (onViewAll != null)
+          TextButton(
+            onPressed: onViewAll,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'Henüz fırsat bulunmuyor',
-              style: TextStyle(
-                fontSize: 16,
-                color: Color(0xFF8E8E93),
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Tümünü Gör',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF3B82F6),
+                  ),
+                ),
+                const SizedBox(width: 2),
+                const Icon(
+                  CupertinoIcons.chevron_right,
+                  size: 14,
+                  color: Color(0xFF3B82F6),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            CupertinoButton(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              color: const Color(0xFFD32F2F),
-              borderRadius: BorderRadius.circular(8),
-              onPressed: () => context.go('/sales/opportunities/new'),
-              child: const Text(
-                'Yeni Fırsat Ekle',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      children: opportunities.take(5).map((opp) => _buildOpportunityCard(context, opp)).toList(),
+          ),
+      ],
     );
   }
 
-  Widget _buildOpportunityCard(BuildContext context, Opportunity opportunity) {
+  // Kompakt Fırsatlar
+  Widget _buildRecentOpportunitiesCompact(List<Opportunity> opportunities) {
+    if (opportunities.isEmpty) {
+      return _buildEmptyState('Henüz fırsat bulunmuyor', CupertinoIcons.star);
+    }
+
+    return Column(
+      children: opportunities.take(4).map((opp) => _buildOpportunityItemCompact(opp)).toList(),
+    );
+  }
+
+  Widget _buildOpportunityItemCompact(Opportunity opportunity) {
     final statusColor = _getStatusColor(opportunity.status);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(
+          color: Colors.grey.withOpacity(0.1),
+          width: 1,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -314,201 +317,155 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
           onTap: () => context.go('/sales/opportunities/${opportunity.id}'),
           borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        opportunity.title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF000000),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        _getStatusText(opportunity.status),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: statusColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (opportunity.customerName != null) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(
-                        CupertinoIcons.person,
-                        size: 14,
-                        color: Color(0xFF8E8E93),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        opportunity.customerName!,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF8E8E93),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '₺${_formatNumber(opportunity.value ?? 0)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF22C55E),
-                      ),
-                    ),
-                    if (opportunity.expectedCloseDate != null)
-                      Row(
-                        children: [
-                          const Icon(
-                            CupertinoIcons.calendar,
-                            size: 14,
-                            color: Color(0xFF8E8E93),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _formatDate(opportunity.expectedCloseDate!),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF8E8E93),
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActions(BuildContext context) {
-    return Column(
-      children: [
-        _buildQuickActionCard(
-          context,
-          'Yeni Fırsat',
-          'Yeni satış fırsatı oluştur',
-          CupertinoIcons.plus_circle_fill,
-          const Color(0xFFFF9500),
-          () => context.go('/sales/opportunities/new'),
-        ),
-        const SizedBox(height: 12),
-        _buildQuickActionCard(
-          context,
-          'Müşteriler',
-          'Müşteri listesine git',
-          CupertinoIcons.person_2_fill,
-          const Color(0xFF3B82F6),
-          () => context.go('/customers'),
-        ),
-        const SizedBox(height: 12),
-        _buildQuickActionCard(
-          context,
-          'Teklifler',
-          'Teklif listesine git',
-          CupertinoIcons.doc_fill,
-          const Color(0xFF9333EA),
-          () => context.go('/sales/proposals'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickActionCard(
-    BuildContext context,
-    String title,
-    String subtitle,
-    IconData icon,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  width: 6,
+                  height: 40,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    color: statusColor,
+                    borderRadius: BorderRadius.circular(3),
                   ),
-                  child: Icon(icon, color: color, size: 24),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        title,
+                        opportunity.title,
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF000000),
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                      if (opportunity.customerName != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          opportunity.customerName!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '₺${_formatNumber(opportunity.value ?? 0)}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: statusColor,
+                      ),
+                    ),
+                    if (opportunity.expectedCloseDate != null) ...[
                       const SizedBox(height: 2),
                       Text(
-                        subtitle,
+                        _formatDate(opportunity.expectedCloseDate!),
                         style: const TextStyle(
-                          fontSize: 13,
+                          fontSize: 11,
                           color: Color(0xFF8E8E93),
                         ),
                       ),
                     ],
-                  ),
-                ),
-                const Icon(
-                  CupertinoIcons.chevron_right,
-                  color: Color(0xFF8E8E93),
-                  size: 16,
+                  ],
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Kompakt Hızlı Erişim
+  Widget _buildQuickActionsCompact(BuildContext context) {
+    final actions = [
+      _QuickAction('Yeni Fırsat', CupertinoIcons.plus_circle_fill, const Color(0xFFFF9500), '/sales/opportunities/new'),
+      _QuickAction('Müşteriler', CupertinoIcons.person_2_fill, const Color(0xFF10B981), '/customers'),
+      _QuickAction('Teklifler', CupertinoIcons.doc_fill, const Color(0xFF8B5CF6), '/sales/proposals'),
+    ];
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1.0,
+      ),
+      itemCount: actions.length,
+      itemBuilder: (context, index) {
+        final action = actions[index];
+        return _buildQuickActionCard(action);
+      },
+    );
+  }
+
+  Widget _buildQuickActionCard(_QuickAction action) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.go(action.route),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: action.color.withOpacity(0.15),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: action.color.withOpacity(0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      action.color.withOpacity(0.15),
+                      action.color.withOpacity(0.08),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(action.icon, color: action.color, size: 22),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                action.label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF000000),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
       ),
@@ -520,53 +477,23 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
       onRefresh: () async {
         ref.invalidate(opportunitiesProvider);
       },
-      color: const Color(0xFFD32F2F),
+      color: const Color(0xFF3B82F6),
       child: opportunitiesAsync.when(
         data: (opportunities) {
           if (opportunities.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    CupertinoIcons.star,
-                    size: 64,
-                    color: Color(0xFF8E8E93),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Henüz fırsat bulunmuyor',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Color(0xFF8E8E93),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  CupertinoButton(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    color: const Color(0xFFD32F2F),
-                    borderRadius: BorderRadius.circular(10),
-                    onPressed: () => context.go('/sales/opportunities/new'),
-                    child: const Text(
-                      'İlk Fırsatı Ekle',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            );
+            return _buildEmptyState('Henüz fırsat bulunmuyor', CupertinoIcons.star);
           }
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: opportunities.length,
             itemBuilder: (context, index) {
-              return _buildOpportunityCard(context, opportunities[index]);
+              return _buildOpportunityItemCompact(opportunities[index]);
             },
           );
         },
         loading: () => const Center(child: CupertinoActivityIndicator()),
-        error: (e, _) => Center(child: Text('Hata: $e')),
+        error: (e, _) => _buildEmptyState('Fırsatlar yüklenemedi', CupertinoIcons.exclamationmark_triangle),
       ),
     );
   }
@@ -576,10 +503,9 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
       onRefresh: () async {
         ref.invalidate(opportunitiesProvider);
       },
-      color: const Color(0xFFD32F2F),
+      color: const Color(0xFF3B82F6),
       child: opportunitiesAsync.when(
         data: (opportunities) {
-          // Pipeline aşamalarına göre grupla
           final stages = {
             'new': opportunities.where((o) => o.status == 'new').toList(),
             'qualified': opportunities.where((o) => o.status == 'qualified').toList(),
@@ -593,20 +519,20 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
             child: Column(
               children: [
                 _buildPipelineStage('Yeni', stages['new'] ?? [], const Color(0xFF3B82F6)),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 _buildPipelineStage('Nitelikli', stages['qualified'] ?? [], const Color(0xFFFF9500)),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 _buildPipelineStage('Teklif', stages['proposal'] ?? [], const Color(0xFF9333EA)),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 _buildPipelineStage('Müzakere', stages['negotiation'] ?? [], const Color(0xFFEF4444)),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 _buildPipelineStage('Kazanıldı', stages['won'] ?? [], const Color(0xFF22C55E)),
               ],
             ),
           );
         },
         loading: () => const Center(child: CupertinoActivityIndicator()),
-        error: (e, _) => Center(child: Text('Hata: $e')),
+        error: (e, _) => _buildEmptyState('Pipeline yüklenemedi', CupertinoIcons.exclamationmark_triangle),
       ),
     );
   }
@@ -623,7 +549,7 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: color.withOpacity(0.05),
               borderRadius: const BorderRadius.only(
@@ -648,7 +574,7 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: color,
                       ),
@@ -674,7 +600,7 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
                 Text(
                   '₺${_formatNumber(totalValue)}',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: color,
                   ),
@@ -690,7 +616,7 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
               child: Text(
                 '+${opportunities.length - 3} daha',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   color: color,
                   fontWeight: FontWeight.w500,
                 ),
@@ -718,7 +644,7 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
                 Text(
                   opportunity.title,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
                   maxLines: 1,
@@ -728,7 +654,7 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
                   Text(
                     opportunity.customerName!,
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       color: Color(0xFF8E8E93),
                     ),
                   ),
@@ -738,7 +664,7 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
           Text(
             '₺${_formatNumber(opportunity.value ?? 0)}',
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
               color: color,
             ),
@@ -750,42 +676,68 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
 
   Widget _buildLoadingStats() {
     return Row(
-      children: [
-        Expanded(child: _buildLoadingCard()),
-        const SizedBox(width: 12),
-        Expanded(child: _buildLoadingCard()),
-      ],
-    );
-  }
-
-  Widget _buildLoadingCard() {
-    return Container(
-      height: 100,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Center(child: CupertinoActivityIndicator()),
-    );
-  }
-
-  Widget _buildErrorCard(String message) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.red[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red[200]!),
-      ),
-      child: Row(
-        children: [
-          Icon(CupertinoIcons.exclamationmark_circle, color: Colors.red[600]),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(color: Colors.red[600]),
+      children: List.generate(
+        4,
+        (index) => Expanded(
+          child: Container(
+            margin: EdgeInsets.only(left: index > 0 ? 10 : 0),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 1.5,
+              ),
             ),
+            child: const Center(
+              child: CupertinoActivityIndicator(color: Colors.white),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingOpportunities() {
+    return Column(
+      children: List.generate(
+        3,
+        (index) => Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          height: 60,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.withOpacity(0.1)),
+          ),
+          child: const Center(
+            child: CupertinoActivityIndicator(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String message, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 40, color: Colors.grey[400]),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -811,25 +763,6 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
     }
   }
 
-  String _getStatusText(String status) {
-    switch (status) {
-      case 'new':
-        return 'Yeni';
-      case 'qualified':
-        return 'Nitelikli';
-      case 'proposal':
-        return 'Teklif';
-      case 'negotiation':
-        return 'Müzakere';
-      case 'won':
-        return 'Kazanıldı';
-      case 'lost':
-        return 'Kaybedildi';
-      default:
-        return status;
-    }
-  }
-
   String _formatNumber(num value) {
     if (value >= 1000000) {
       return '${(value / 1000000).toStringAsFixed(1)}M';
@@ -842,5 +775,14 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
   }
+}
+
+class _QuickAction {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final String route;
+
+  _QuickAction(this.label, this.icon, this.color, this.route);
 }
 

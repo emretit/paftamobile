@@ -13,7 +13,7 @@ final hrServiceProvider = Provider<HrService>((ref) {
 Future<String?> _getCurrentUserCompanyId() async {
   final authService = AuthService();
   final user = await authService.getCurrentUserEmployeeInfo();
-  return user?.companyId;
+  return user?['companyId'] as String?;
 }
 
 final employeesProvider = FutureProvider<List<Employee>>((ref) async {

@@ -13,7 +13,7 @@ final inventoryServiceProvider = Provider<InventoryService>((ref) {
 Future<String?> _getCurrentUserCompanyId() async {
   final authService = AuthService();
   final user = await authService.getCurrentUserEmployeeInfo();
-  return user?.companyId;
+  return user?['companyId'] as String?;
 }
 
 final productsProvider = FutureProvider<List<Product>>((ref) async {

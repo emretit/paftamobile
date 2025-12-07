@@ -7,6 +7,8 @@ import '../providers/service_request_provider.dart';
 import '../services/service_request_service.dart';
 import '../shared/widgets/bottom_navigation_bar.dart';
 import '../providers/auth_provider.dart';
+import '../providers/inventory_provider.dart';
+import '../models/product.dart';
 
 class ServiceSlipFormPage extends ConsumerStatefulWidget {
   final String serviceRequestId;
@@ -1074,7 +1076,7 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
   }
 }
 
-class _ProductSelectionDialog extends StatefulWidget {
+class _ProductSelectionDialog extends ConsumerStatefulWidget {
   final Function(Map<String, dynamic>, double) onProductSelected;
 
   const _ProductSelectionDialog({
@@ -1082,21 +1084,18 @@ class _ProductSelectionDialog extends StatefulWidget {
   });
 
   @override
-  State<_ProductSelectionDialog> createState() => _ProductSelectionDialogState();
+  ConsumerState<_ProductSelectionDialog> createState() => _ProductSelectionDialogState();
 }
 
-class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
+class _ProductSelectionDialogState extends ConsumerState<_ProductSelectionDialog> {
   final _searchController = TextEditingController();
   final _quantityController = TextEditingController(text: '1');
-  List<Map<String, dynamic>> _products = [];
-  List<Map<String, dynamic>> _filteredProducts = [];
-  Map<String, dynamic>? _selectedProduct;
-  bool _isLoading = true;
+  List<Product> _filteredProducts = [];
+  Product? _selectedProduct;
 
   @override
   void initState() {
     super.initState();
-    _loadProducts();
     _searchController.addListener(_filterProducts);
   }
 
@@ -1107,51 +1106,23 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
     super.dispose();
   }
 
-  void _loadProducts() async {
-    // TODO: Ürünleri API'den yükle
-    // Şimdilik örnek veri
-    await Future.delayed(const Duration(milliseconds: 500));
-    setState(() {
-      _products = [
-        {
-          'id': '1',
-          'name': 'Kamera Kablosu',
-          'description': 'Cat6 Ethernet kablosu, 20m',
-          'unit': 'metre',
-          'price': 15.0,
-        },
-        {
-          'id': '2',
-          'name': 'IP Kamera',
-          'description': '4MP Güvenlik Kamerası',
-          'unit': 'adet',
-          'price': 850.0,
-        },
-        {
-          'id': '3',
-          'name': 'Güç Adaptörü',
-          'description': '12V 2A Güç Kaynağı',
-          'unit': 'adet',
-          'price': 45.0,
-        },
-      ];
-      _filteredProducts = _products;
-      _isLoading = false;
-    });
-  }
-
   void _filterProducts() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredProducts = _products.where((product) {
-        return (product['name'] as String).toLowerCase().contains(query) ||
-               (product['description'] as String? ?? '').toLowerCase().contains(query);
-      }).toList();
+    final productsAsync = ref.read(productsProvider);
+    productsAsync.whenData((products) {
+      final query = _searchController.text.toLowerCase();
+      setState(() {
+        _filteredProducts = products.where((product) {
+          return product.name.toLowerCase().contains(query) ||
+                 (product.description?.toLowerCase().contains(query) ?? false);
+        }).toList();
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final productsAsync = ref.watch(productsProvider);
+    
     return Dialog(
       child: Container(
         height: 600,
@@ -1203,7 +1174,7 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
@@ -1233,76 +1204,114 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
             
             // Product List
             Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: _filteredProducts.length,
-                      itemBuilder: (context, index) {
-                        final product = _filteredProducts[index];
-                        final isSelected = _selectedProduct?['id'] == product['id'];
-                        
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFFB73D3D).withOpacity(0.1) : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: isSelected
-                                ? Border.all(color: const Color(0xFFB73D3D), width: 2)
-                                : Border.all(color: Colors.grey.shade200),
-                          ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            title: Text(
-                              product['name'],
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: isSelected ? const Color(0xFFB73D3D) : const Color(0xFF000000),
-                              ),
+              child: productsAsync.when(
+                data: (products) {
+                  if (_filteredProducts.isEmpty && _searchController.text.isEmpty) {
+                    _filteredProducts = products;
+                  }
+                  
+                  if (_filteredProducts.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'Ürün bulunamadı',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
+                        ),
+                      ),
+                    );
+                  }
+                  
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _filteredProducts.length,
+                    itemBuilder: (context, index) {
+                      final product = _filteredProducts[index];
+                      final isSelected = _selectedProduct?.id == product.id;
+                      
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected ? const Color(0xFFB73D3D).withValues(alpha: 0.1) : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: isSelected
+                              ? Border.all(color: const Color(0xFFB73D3D), width: 2)
+                              : Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          title: Text(
+                            product.name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: isSelected ? const Color(0xFFB73D3D) : const Color(0xFF000000),
                             ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (product['description'] != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 4),
-                                    child: Text(
-                                      product['description'],
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (product.description != null && product.description!.isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 4),
                                   child: Text(
-                                    'Fiyat: ${product['price']} TL',
+                                    product.description!,
                                     style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey[700],
+                                      color: Colors.grey[600],
                                       fontSize: 13,
                                     ),
                                   ),
                                 ),
-                              ],
-                            ),
-                            trailing: isSelected
-                                ? const Icon(
-                                    CupertinoIcons.checkmark_circle_fill,
-                                    color: Color(0xFFB73D3D),
-                                    size: 24,
-                                  )
-                                : null,
-                            onTap: () {
-                              setState(() {
-                                _selectedProduct = product;
-                              });
-                            },
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  'Fiyat: ${product.price} TL',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.grey[700],
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                    ),
+                          trailing: isSelected
+                              ? const Icon(
+                                  CupertinoIcons.checkmark_circle_fill,
+                                  color: Color(0xFFB73D3D),
+                                  size: 24,
+                                )
+                              : null,
+                          onTap: () {
+                            setState(() {
+                              _selectedProduct = product;
+                            });
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Ürünler yüklenemedi',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        error.toString(),
+                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
             
             // Quantity and Add Button
@@ -1322,7 +1331,7 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 2),
                             ),
@@ -1331,7 +1340,7 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
                         child: TextField(
                           controller: _quantityController,
                           decoration: InputDecoration(
-                            labelText: 'Miktar (${_selectedProduct!['unit']})',
+                            labelText: 'Miktar (${_selectedProduct!.unit ?? 'adet'})',
                             labelStyle: TextStyle(
                               color: Colors.grey[600],
                             ),
@@ -1359,7 +1368,13 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
                         borderRadius: BorderRadius.circular(12),
                         onPressed: () {
                           final quantity = double.tryParse(_quantityController.text) ?? 1;
-                          widget.onProductSelected(_selectedProduct!, quantity);
+                          widget.onProductSelected({
+                            'id': _selectedProduct!.id,
+                            'name': _selectedProduct!.name,
+                            'description': _selectedProduct!.description,
+                            'unit': _selectedProduct!.unit,
+                            'price': _selectedProduct!.price,
+                          }, quantity);
                           Navigator.pop(context);
                         },
                         child: const Text(

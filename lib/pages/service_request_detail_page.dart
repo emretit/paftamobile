@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../models/service_request.dart';
 import '../providers/service_request_provider.dart';
 import '../services/service_request_service.dart';
-import '../shared/widgets/bottom_navigation_bar.dart';
 
 class ServiceRequestDetailPage extends ConsumerStatefulWidget {
   final String id;
@@ -39,46 +38,49 @@ class _ServiceRequestDetailPageState extends ConsumerState<ServiceRequestDetailP
 
   @override
   Widget build(BuildContext context) {
-    final currentRoute = GoRouterState.of(context).uri.path;
     final serviceRequestAsync = ref.watch(serviceRequestByIdProvider(widget.id));
     final activitiesAsync = ref.watch(serviceActivitiesProvider(widget.id));
     final historyAsync = ref.watch(serviceHistoryProvider(widget.id));
     final statusDisplayNames = ref.watch(serviceRequestStatusDisplayNamesProvider);
     final priorityDisplayNames = ref.watch(serviceRequestPriorityDisplayNamesProvider);
+    final statusColors = ref.watch(serviceRequestStatusColorsProvider);
+    final priorityColors = ref.watch(serviceRequestPriorityColorsProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F7),
       appBar: AppBar(
-        title: Text(
-          'Servis Talebi Detayı',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFB73D3D), Color(0xFF8B2F2F)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                CupertinoIcons.wrench_fill,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text('Servis Detayı'),
+          ],
         ),
         backgroundColor: const Color(0xFFF2F2F7),
         foregroundColor: const Color(0xFF000000),
         elevation: 0,
-        scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         actions: [
-          CupertinoButton(
-            onPressed: () => context.go('/service-requests/${widget.id}/edit'),
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: const Color(0xFFB73D3D),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                CupertinoIcons.pencil,
-                color: Colors.white,
-                size: 18,
-              ),
-            ),
+          IconButton(
+            onPressed: () => context.go('/service/edit/${widget.id}'),
+            icon: const Icon(CupertinoIcons.pencil, size: 22),
+            color: const Color(0xFFB73D3D),
           ),
-          const SizedBox(width: 16),
         ],
         bottom: TabBar(
           controller: _tabController,
@@ -86,12 +88,6 @@ class _ServiceRequestDetailPageState extends ConsumerState<ServiceRequestDetailP
           unselectedLabelColor: const Color(0xFF8E8E93),
           indicatorColor: const Color(0xFFB73D3D),
           indicatorWeight: 3,
-          labelStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-          unselectedLabelStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.normal,
-          ),
           tabs: const [
             Tab(text: 'Detaylar'),
             Tab(text: 'Aktiviteler'),
@@ -102,41 +98,26 @@ class _ServiceRequestDetailPageState extends ConsumerState<ServiceRequestDetailP
       body: serviceRequestAsync.when(
         data: (serviceRequest) {
           if (serviceRequest == null) {
-            return const Center(
-              child: Text('Servis talebi bulunamadı'),
-            );
+            return _buildNotFoundState();
           }
 
           return TabBarView(
             controller: _tabController,
             children: [
-              _buildDetailsTab(serviceRequest, statusDisplayNames, priorityDisplayNames),
+              _buildDetailsTab(
+                serviceRequest,
+                statusDisplayNames,
+                priorityDisplayNames,
+                statusColors,
+                priorityColors,
+              ),
               _buildActivitiesTab(activitiesAsync),
               _buildHistoryTab(historyAsync),
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
-              const SizedBox(height: 16),
-              Text('Hata: $error'),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  ref.invalidate(serviceRequestByIdProvider(widget.id));
-                },
-                child: const Text('Tekrar Dene'),
-              ),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        currentRoute: currentRoute,
+        loading: () => const Center(child: CupertinoActivityIndicator()),
+        error: (error, stack) => _buildErrorState(error),
       ),
     );
   }
@@ -145,573 +126,977 @@ class _ServiceRequestDetailPageState extends ConsumerState<ServiceRequestDetailP
     ServiceRequest serviceRequest,
     Map<String, String> statusDisplayNames,
     Map<String, String> priorityDisplayNames,
+    Map<String, String> statusColors,
+    Map<String, String> priorityColors,
   ) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Başlık ve durum
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          serviceRequest.title,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      _buildStatusChip(
-                        statusDisplayNames[serviceRequest.status] ?? serviceRequest.status,
-                        serviceRequest.status,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildPriorityChip(
-                        priorityDisplayNames[serviceRequest.priority] ?? serviceRequest.priority,
-                        serviceRequest.priority,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // Temel bilgiler
-                  _buildInfoRow('Durum', statusDisplayNames[serviceRequest.status] ?? serviceRequest.status),
-                  _buildInfoRow('Öncelik', priorityDisplayNames[serviceRequest.priority] ?? serviceRequest.priority),
-                  if (serviceRequest.serviceType != null)
-                    _buildInfoRow('Servis Tipi', serviceRequest.serviceType!),
-                  if (serviceRequest.location != null)
-                    _buildInfoRow('Konum', serviceRequest.location!),
-                  _buildInfoRow('Oluşturulma Tarihi', _formatDateTime(serviceRequest.createdAt)),
-                  if (serviceRequest.dueDate != null)
-                    _buildInfoRow('Bitiş Tarihi', _formatDateTime(serviceRequest.dueDate!)),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Açıklama
-          if (serviceRequest.description != null && serviceRequest.description!.isNotEmpty)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Açıklama',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(serviceRequest.description!),
-                  ],
+    final statusColor = _getStatusColor(serviceRequest.status, statusColors);
+    final priorityColor = _getPriorityColor(serviceRequest.priority, priorityColors);
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(serviceRequestByIdProvider(widget.id));
+      },
+      color: const Color(0xFFB73D3D),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            // Gradient Header
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFB73D3D), Color(0xFF8B2F2F)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
-            ),
-          const SizedBox(height: 16),
-          // Notlar
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Text(
-                        'Notlar',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.add),
-                        onPressed: _showAddNoteDialog,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  if (serviceRequest.notes != null && serviceRequest.notes!.isNotEmpty)
-                    ...serviceRequest.notes!.map((note) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(note),
-                          ),
-                        ))
-                  else
-                    const Text(
-                      'Henüz not eklenmemiş',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Dosyalar
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Text(
-                        'Dosyalar',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.attach_file),
-                        onPressed: _showAddFileDialog,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  if (serviceRequest.attachments.isNotEmpty)
-                    ...serviceRequest.attachments.map((attachment) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.blue[50],
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.blue[200]!),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.attach_file, color: Colors.blue[600]),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    attachment['name'] ?? 'Dosya',
-                                    style: TextStyle(color: Colors.blue[800]),
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.download),
-                                  onPressed: () {
-                                    // Dosya indirme işlemi
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ))
-                  else
-                    const Text(
-                      'Henüz dosya eklenmemiş',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Servis işlemleri butonları
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Servis İşlemleri',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      if (serviceRequest.status == 'assigned' || serviceRequest.status == 'new')
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => _startService(),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                            icon: const Icon(Icons.play_arrow),
-                            label: const Text('Servisi Başlat'),
-                          ),
-                        ),
-                      if (serviceRequest.status == 'in_progress')
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => _completeService(),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                            icon: const Icon(Icons.stop),
-                            label: const Text('Servisi Bitir'),
-                          ),
-                        ),
-                      if (serviceRequest.status == 'completed') ...[
-                        if (!serviceRequest.hasServiceSlip) ...[
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => _createServiceSlip(),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFB73D3D),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                              icon: const Icon(Icons.receipt),
-                              label: const Text('Servis Fişi Oluştur'),
-                            ),
-                          ),
-                        ] else ...[
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => _viewServiceSlip(),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                              icon: const Icon(Icons.visibility),
-                              label: const Text('Servis Fişini Görüntüle'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => _createServiceSlip(),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFB73D3D),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                              icon: const Icon(Icons.edit),
-                              label: const Text('Düzenle'),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Durum değiştirme butonları
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Durum Değiştir',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      if (serviceRequest.status == 'new')
-                        _buildStatusButton('Atandı', 'assigned', Colors.orange),
-                      if (serviceRequest.status == 'assigned')
-                        _buildStatusButton('Devam Ediyor', 'in_progress', Colors.green),
-                      if (serviceRequest.status == 'in_progress')
-                        _buildStatusButton('Beklemede', 'on_hold', Colors.yellow),
-                      if (serviceRequest.status == 'on_hold')
-                        _buildStatusButton('Devam Ediyor', 'in_progress', Colors.green),
-                      if (serviceRequest.status == 'in_progress')
-                        _buildStatusButton('Tamamlandı', 'completed', Colors.green),
-                      if (serviceRequest.status != 'completed' && serviceRequest.status != 'cancelled')
-                        _buildStatusButton('İptal Et', 'cancelled', Colors.red),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActivitiesTab(AsyncValue<List<ServiceActivity>> activitiesAsync) {
-    return activitiesAsync.when(
-      data: (activities) {
-        if (activities.isEmpty) {
-          return const Center(
-            child: Text('Henüz aktivite bulunmuyor'),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: activities.length,
-          itemBuilder: (context, index) {
-            final activity = activities[index];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      activity.activityType,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (activity.description != null) ...[
-                      const SizedBox(height: 8),
-                      Text(activity.description!),
-                    ],
-                    const SizedBox(height: 8),
+                    // Başlık ve Durum
                     Row(
                       children: [
-                        Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Başlangıç: ${_formatDateTime(activity.startTime ?? activity.createdAt)}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
+                        Expanded(
+                          child: Text(
+                            serviceRequest.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.5,
+                            ),
                           ),
                         ),
-                        if (activity.endTime != null) ...[
-                          const SizedBox(width: 16),
-                          Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Bitiş: ${_formatDateTime(activity.endTime!)}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
                       ],
                     ),
-                    if (activity.laborHours != null) ...[
-                      const SizedBox(height: 4),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        _buildStatusBadge(
+                          statusDisplayNames[serviceRequest.status] ?? serviceRequest.status,
+                          statusColor,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildPriorityBadge(
+                          priorityDisplayNames[serviceRequest.priority] ?? serviceRequest.priority,
+                          priorityColor,
+                        ),
+                      ],
+                    ),
+                    if (serviceRequest.serviceType != null) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          serviceRequest.serviceType!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            
+            // Main Content
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Temel Bilgiler Kartı
+                  _buildInfoCard(
+                    'Temel Bilgiler',
+                    CupertinoIcons.info_circle,
+                    const Color(0xFF3B82F6),
+                    [
+                      if (serviceRequest.serviceNumber != null)
+                        _buildInfoRow('Servis No', serviceRequest.serviceNumber!, const Color(0xFF3B82F6)),
+                      _buildInfoRow('Durum', statusDisplayNames[serviceRequest.status] ?? serviceRequest.status, statusColor),
+                      _buildInfoRow('Öncelik', priorityDisplayNames[serviceRequest.priority] ?? serviceRequest.priority, priorityColor),
+                      if (serviceRequest.location != null)
+                        _buildInfoRow('Konum', serviceRequest.location!, const Color(0xFF8E8E93)),
+                      _buildInfoRow('Oluşturulma', _formatDate(serviceRequest.createdAt), const Color(0xFF8E8E93)),
+                      if (serviceRequest.dueDate != null)
+                        _buildInfoRow('Bitiş Tarihi', _formatDate(serviceRequest.dueDate!), 
+                          serviceRequest.dueDate!.isBefore(DateTime.now()) 
+                            ? const Color(0xFFEF4444) 
+                            : const Color(0xFF8E8E93)),
+                      if (serviceRequest.assignedTechnician != null)
+                        _buildInfoRow('Teknisyen', 'Atanmış', const Color(0xFF10B981)),
+                      if (serviceRequest.receivedBy != null)
+                        _buildInfoRow('Talebi Alan', 'Seçilmiş', const Color(0xFF8B5CF6)),
+                      if (serviceRequest.createdBy != null)
+                        _buildInfoRow('Oluşturan', 'Kullanıcı', const Color(0xFF8E8E93)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Açıklama Kartı
+                  if (serviceRequest.description != null && serviceRequest.description!.isNotEmpty)
+                    _buildInfoCard(
+                      'Açıklama',
+                      CupertinoIcons.text_alignleft,
+                      const Color(0xFF8B5CF6),
+                      [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            serviceRequest.description!,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF4A4A4A),
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (serviceRequest.description != null && serviceRequest.description!.isNotEmpty)
+                    const SizedBox(height: 16),
+                  
+                  // Notlar Kartı
+                  _buildInfoCard(
+                    'Notlar',
+                    CupertinoIcons.doc_text,
+                    const Color(0xFFFF9500),
+                    [
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(Icons.timer, size: 16, color: Colors.blue[600]),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${activity.laborHours} saat',
+                          const Text(
+                            'Şirket İçi Notlar',
                             style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.blue[600],
-                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF000000),
+                            ),
+                          ),
+                          CupertinoButton(
+                            padding: EdgeInsets.zero,
+                            onPressed: _showAddNoteDialog,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF9500).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                CupertinoIcons.add,
+                                size: 18,
+                                color: Color(0xFFFF9500),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ],
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Text('Hata: $error'),
-      ),
-    );
-  }
-
-  Widget _buildHistoryTab(AsyncValue<List<ServiceHistory>> historyAsync) {
-    return historyAsync.when(
-      data: (history) {
-        if (history.isEmpty) {
-          return const Center(
-            child: Text('Henüz geçmiş kaydı bulunmuyor'),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: history.length,
-          itemBuilder: (context, index) {
-            final historyItem = history[index];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _getActionDisplayName(historyItem.actionType),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (historyItem.description != null) ...[
                       const SizedBox(height: 8),
-                      Text(historyItem.description!),
+                      if (serviceRequest.notes != null && serviceRequest.notes!.isNotEmpty)
+                        ...serviceRequest.notes!.map((note) => _buildNoteItem(note))
+                      else
+                        _buildEmptyItem('Henüz not eklenmemiş'),
                     ],
-                    const SizedBox(height: 8),
-                    Text(
-                      _formatDateTime(historyItem.createdAt),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Dosyalar Kartı
+                  _buildInfoCard(
+                    'Dosyalar',
+                    CupertinoIcons.paperclip,
+                    const Color(0xFF10B981),
+                    [
+                      if (serviceRequest.attachments.isNotEmpty)
+                        ...serviceRequest.attachments.asMap().entries.map((entry) => 
+                          _buildAttachmentItem(entry.value, entry.key)
+                        )
+                      else
+                        _buildEmptyItem('Henüz dosya eklenmemiş'),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Servis İşlemleri
+                  if (serviceRequest.status == 'assigned' || serviceRequest.status == 'new')
+                    _buildActionButton(
+                      'Servisi Başlat',
+                      CupertinoIcons.play_circle,
+                      const Color(0xFF10B981),
+                      () => _startService(),
                     ),
+                  if (serviceRequest.status == 'in_progress')
+                    _buildActionButton(
+                      'Servisi Bitir',
+                      CupertinoIcons.checkmark_circle,
+                      const Color(0xFF3B82F6),
+                      () => _completeService(),
+                    ),
+                  if (serviceRequest.status == 'completed') ...[
+                    if (!serviceRequest.hasServiceSlip)
+                      _buildActionButton(
+                        'Servis Fişi Oluştur',
+                        CupertinoIcons.doc_text,
+                        const Color(0xFFB73D3D),
+                        () => _createServiceSlip(),
+                      )
+                    else ...[
+                      _buildActionButton(
+                        'Servis Fişini Görüntüle',
+                        CupertinoIcons.eye,
+                        const Color(0xFF10B981),
+                        () => _viewServiceSlip(),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildActionButton(
+                        'Servis Fişini Düzenle',
+                        CupertinoIcons.pencil,
+                        const Color(0xFFB73D3D),
+                        () => _createServiceSlip(),
+                      ),
+                    ],
                   ],
-                ),
+                  const SizedBox(height: 16),
+                  
+                  // Durum Değiştir
+                  if (serviceRequest.status != 'completed' && serviceRequest.status != 'cancelled')
+                    _buildStatusChangeSection(serviceRequest),
+                ],
               ),
-            );
-          },
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Text('Hata: $error'),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$label:',
-              style: const TextStyle(fontWeight: FontWeight.w500),
             ),
-          ),
-          Expanded(child: Text(value)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(String label, String status) {
-    Color color;
-    switch (status) {
-      case 'new':
-        color = Colors.blue;
-        break;
-      case 'assigned':
-        color = Colors.orange;
-        break;
-      case 'in_progress':
-        color = Colors.green;
-        break;
-      case 'on_hold':
-        color = Colors.yellow[700]!;
-        break;
-      case 'completed':
-        color = Colors.green;
-        break;
-      case 'cancelled':
-        color = Colors.red;
-        break;
-      default:
-        color = Colors.grey;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: color,
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildPriorityChip(String label, String priority) {
-    Color color;
-    switch (priority) {
-      case 'low':
-        color = Colors.green;
+  Widget _buildInfoCard(String title, IconData icon, Color iconColor, List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.grey.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: iconColor,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF000000),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, Color? valueColor) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              '$label:',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                color: valueColor ?? const Color(0xFF000000),
+                fontWeight: valueColor != null ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.3),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriorityBadge(String label, Color color) {
+    String emoji;
+    switch (label) {
+      case 'Acil':
+        emoji = '🔴';
         break;
-      case 'medium':
-        color = Colors.blue;
+      case 'Yüksek':
+        emoji = '🟠';
         break;
-      case 'high':
-        color = Colors.orange;
+      case 'Normal':
+        emoji = '🟡';
         break;
-      case 'urgent':
-        color = Colors.red;
+      case 'Düşük':
+        emoji = '🟢';
         break;
       default:
-        color = Colors.grey;
+        emoji = '⚪';
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.3),
+          width: 1.5,
+        ),
       ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoteItem(String note) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF2F2F7),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            CupertinoIcons.doc_text,
+            size: 16,
+            color: Colors.grey[600],
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              note,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF4A4A4A),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAttachmentItem(dynamic attachment, int index) {
+    final fileName = attachment is Map ? (attachment['name'] ?? 'Dosya') : 'Dosya';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF10B981).withOpacity(0.05),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: const Color(0xFF10B981).withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            CupertinoIcons.paperclip,
+            size: 16,
+            color: const Color(0xFF10B981),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              fileName,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF000000),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: () {
+              // TODO: Dosya indirme
+            },
+            icon: Icon(
+              CupertinoIcons.arrow_down_circle,
+              size: 18,
+              color: const Color(0xFF10B981),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyItem(String message) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
       child: Text(
-        label,
+        message,
         style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: color,
+          fontSize: 13,
+          color: Colors.grey[500],
+          fontStyle: FontStyle.italic,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) {
+    return SizedBox(
+      width: double.infinity,
+      child: CupertinoButton(
+        onPressed: onTap,
+        color: color,
+        borderRadius: BorderRadius.circular(16),
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChangeSection(ServiceRequest serviceRequest) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.grey.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFB73D3D).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    CupertinoIcons.arrow_2_squarepath,
+                    color: Color(0xFFB73D3D),
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Durum Değiştir',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF000000),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (serviceRequest.status == 'new')
+                  _buildStatusButton('Atandı', 'assigned', const Color(0xFFFF9500)),
+                if (serviceRequest.status == 'assigned')
+                  _buildStatusButton('Devam Ediyor', 'in_progress', const Color(0xFF10B981)),
+                if (serviceRequest.status == 'in_progress') ...[
+                  _buildStatusButton('Beklemede', 'on_hold', const Color(0xFFFF9500)),
+                  _buildStatusButton('Tamamlandı', 'completed', const Color(0xFF10B981)),
+                ],
+                if (serviceRequest.status == 'on_hold')
+                  _buildStatusButton('Devam Ediyor', 'in_progress', const Color(0xFF10B981)),
+                if (serviceRequest.status != 'completed' && serviceRequest.status != 'cancelled')
+                  _buildStatusButton('İptal Et', 'cancelled', const Color(0xFFEF4444)),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildStatusButton(String label, String status, Color color) {
-    return ElevatedButton(
+    return CupertinoButton(
       onPressed: () => _updateStatus(status),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      color: color,
+      borderRadius: BorderRadius.circular(10),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
       ),
-      child: Text(label),
+    );
+  }
+
+  Widget _buildActivitiesTab(AsyncValue<List<ServiceActivity>> activitiesAsync) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(serviceActivitiesProvider(widget.id));
+      },
+      color: const Color(0xFFB73D3D),
+      child: activitiesAsync.when(
+        data: (activities) {
+          if (activities.isEmpty) {
+            return _buildEmptyState('Henüz aktivite bulunmuyor', CupertinoIcons.list_bullet);
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: activities.length,
+            itemBuilder: (context, index) {
+              return _buildActivityItemCompact(activities[index]);
+            },
+          );
+        },
+        loading: () => const Center(child: CupertinoActivityIndicator()),
+        error: (error, stack) => _buildEmptyState('Aktiviteler yüklenemedi', CupertinoIcons.exclamationmark_triangle),
+      ),
+    );
+  }
+
+  Widget _buildActivityItemCompact(ServiceActivity activity) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 6,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3B82F6),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        activity.activityType,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF000000),
+                        ),
+                      ),
+                      if (activity.description != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          activity.description!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (activity.startTime != null || activity.laborHours != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  if (activity.startTime != null) ...[
+                    Icon(
+                      CupertinoIcons.clock,
+                      size: 12,
+                      color: Colors.grey[500],
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _formatDateTime(activity.startTime!),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                  if (activity.laborHours != null) ...[
+                    if (activity.startTime != null) const SizedBox(width: 12),
+                    Icon(
+                      CupertinoIcons.timer,
+                      size: 12,
+                      color: const Color(0xFF3B82F6),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${activity.laborHours} saat',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF3B82F6),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryTab(AsyncValue<List<ServiceHistory>> historyAsync) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(serviceHistoryProvider(widget.id));
+      },
+      color: const Color(0xFFB73D3D),
+      child: historyAsync.when(
+        data: (history) {
+          if (history.isEmpty) {
+            return _buildEmptyState('Henüz geçmiş kaydı bulunmuyor', CupertinoIcons.clock);
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: history.length,
+            itemBuilder: (context, index) {
+              return _buildHistoryItemCompact(history[index]);
+            },
+          );
+        },
+        loading: () => const Center(child: CupertinoActivityIndicator()),
+        error: (error, stack) => _buildEmptyState('Geçmiş yüklenemedi', CupertinoIcons.exclamationmark_triangle),
+      ),
+    );
+  }
+
+  Widget _buildHistoryItemCompact(ServiceHistory history) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Container(
+              width: 6,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFF8B5CF6),
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _getActionDisplayName(history.actionType),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF000000),
+                    ),
+                  ),
+                  if (history.description != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      history.description!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  const SizedBox(height: 4),
+                  Text(
+                    _formatDateTime(history.createdAt),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotFoundState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                CupertinoIcons.exclamationmark_triangle,
+                size: 48,
+                color: Colors.grey[400],
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Servis talebi bulunamadı',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF000000),
+              ),
+            ),
+            const SizedBox(height: 24),
+            CupertinoButton(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              color: const Color(0xFFB73D3D),
+              borderRadius: BorderRadius.circular(10),
+              onPressed: () => context.go('/service/management'),
+              child: const Text(
+                'Geri Dön',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(Object error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.red.shade50,
+                    Colors.red.shade100.withOpacity(0.5),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                CupertinoIcons.exclamationmark_triangle,
+                size: 48,
+                color: Colors.red[600],
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Bir hata oluştu',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF000000),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error.toString(),
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            CupertinoButton(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              color: const Color(0xFFB73D3D),
+              borderRadius: BorderRadius.circular(10),
+              onPressed: () {
+                ref.invalidate(serviceRequestByIdProvider(widget.id));
+              },
+              child: const Text(
+                'Tekrar Dene',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String message, IconData icon) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 48, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -720,13 +1105,12 @@ class _ServiceRequestDetailPageState extends ConsumerState<ServiceRequestDetailP
       final service = ref.read(serviceRequestServiceProvider);
       await service.updateServiceRequestStatus(widget.id, status);
       
-      // Provider'ı yenile
       ref.invalidate(serviceRequestByIdProvider(widget.id));
       ref.invalidate(serviceHistoryProvider(widget.id));
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Durum $status olarak güncellendi')),
+          SnackBar(content: Text('Durum güncellendi')),
         );
       }
     } catch (e) {
@@ -739,31 +1123,32 @@ class _ServiceRequestDetailPageState extends ConsumerState<ServiceRequestDetailP
   }
 
   void _showAddNoteDialog() {
-    showDialog(
+    showCupertinoDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => CupertinoAlertDialog(
         title: const Text('Not Ekle'),
-        content: TextField(
-          controller: _noteController,
-          decoration: const InputDecoration(
-            hintText: 'Notunuzu yazın...',
-            border: OutlineInputBorder(),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: CupertinoTextField(
+            controller: _noteController,
+            placeholder: 'Notunuzu yazın...',
+            maxLines: 3,
+            padding: const EdgeInsets.all(12),
           ),
-          maxLines: 3,
         ),
         actions: [
-          TextButton(
+          CupertinoDialogAction(
             onPressed: () => Navigator.pop(context),
             child: const Text('İptal'),
           ),
-          ElevatedButton(
+          CupertinoDialogAction(
+            isDefaultAction: true,
             onPressed: () async {
               if (_noteController.text.isNotEmpty) {
                 try {
                   final service = ref.read(serviceRequestServiceProvider);
                   await service.addNote(widget.id, _noteController.text);
                   
-                  // Provider'ı yenile
                   ref.invalidate(serviceRequestByIdProvider(widget.id));
                   ref.invalidate(serviceHistoryProvider(widget.id));
                   
@@ -791,34 +1176,11 @@ class _ServiceRequestDetailPageState extends ConsumerState<ServiceRequestDetailP
     );
   }
 
-  void _showAddFileDialog() {
-    // Dosya ekleme dialog'u
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Dosya ekleme özelliği yakında eklenecek')),
-    );
-  }
-
-  String _getActionDisplayName(String actionType) {
-    switch (actionType) {
-      case 'status_changed':
-        return 'Durum Değiştirildi';
-      case 'assigned':
-        return 'Atandı';
-      case 'note_added':
-        return 'Not Eklendi';
-      case 'attachment_added':
-        return 'Dosya Eklendi';
-      default:
-        return actionType;
-    }
-  }
-
   void _startService() async {
     try {
       final service = ref.read(serviceRequestServiceProvider);
       await service.updateServiceRequestStatus(widget.id, 'in_progress');
       
-      // Provider'ı yenile
       ref.invalidate(serviceRequestByIdProvider(widget.id));
       ref.invalidate(serviceHistoryProvider(widget.id));
       
@@ -841,7 +1203,6 @@ class _ServiceRequestDetailPageState extends ConsumerState<ServiceRequestDetailP
       final service = ref.read(serviceRequestServiceProvider);
       await service.updateServiceRequestStatus(widget.id, 'completed');
       
-      // Provider'ı yenile
       ref.invalidate(serviceRequestByIdProvider(widget.id));
       ref.invalidate(serviceHistoryProvider(widget.id));
       
@@ -860,13 +1221,69 @@ class _ServiceRequestDetailPageState extends ConsumerState<ServiceRequestDetailP
   }
 
   void _createServiceSlip() {
-    // Servis fişi oluşturma sayfasına yönlendir
-    context.go('/service-requests/${widget.id}/slip');
+    context.go('/service/${widget.id}/slip');
   }
 
   void _viewServiceSlip() {
-    // Servis fişi görüntüleme sayfasına yönlendir
-    context.go('/service-requests/${widget.id}/slip/view');
+    context.go('/service/${widget.id}/slip/view');
+  }
+
+  Color _getStatusColor(String status, Map<String, String> statusColors) {
+    final colorName = statusColors[status] ?? 'blue';
+    return _getColorFromName(colorName);
+  }
+
+  Color _getPriorityColor(String priority, Map<String, String> priorityColors) {
+    final colorName = priorityColors[priority] ?? 'blue';
+    return _getColorFromName(colorName);
+  }
+
+  Color _getColorFromName(String colorName) {
+    switch (colorName) {
+      case 'red':
+        return Colors.red;
+      case 'orange':
+        return Colors.orange;
+      case 'yellow':
+        return Colors.yellow[700]!;
+      case 'green':
+        return Colors.green;
+      case 'blue':
+        return Colors.blue;
+      case 'purple':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getActionDisplayName(String actionType) {
+    switch (actionType) {
+      case 'status_changed':
+        return 'Durum Değiştirildi';
+      case 'assigned':
+        return 'Atandı';
+      case 'note_added':
+        return 'Not Eklendi';
+      case 'attachment_added':
+        return 'Dosya Eklendi';
+      default:
+        return actionType;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final requestDate = DateTime(date.year, date.month, date.day);
+
+    if (requestDate == today) {
+      return 'Bugün ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    } else if (requestDate == today.add(const Duration(days: 1))) {
+      return 'Yarın ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    } else {
+      return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    }
   }
 
   String _formatDateTime(DateTime dateTime) {

@@ -20,11 +20,9 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
   String? _selectedTechnician;
   String _searchQuery = '';
 
-
   @override
   Widget build(BuildContext context) {
     final serviceRequestsAsync = ref.watch(serviceRequestsProvider);
-    final statuses = ref.watch(serviceRequestStatusesProvider);
     final statusColors = ref.watch(serviceRequestStatusColorsProvider);
     final priorityColors = ref.watch(serviceRequestPriorityColorsProvider);
     final statusDisplayNames = ref.watch(serviceRequestStatusDisplayNamesProvider);
@@ -32,188 +30,125 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F7),
-      // AppBar kaldırıldı - ServicePageHeader zaten başlık içeriyor
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(serviceRequestsProvider);
+            ref.invalidate(serviceRequestStatsProvider);
           },
+          color: const Color(0xFFB73D3D),
           child: CustomScrollView(
             slivers: [
-            // Service Page Header - Web app'teki gibi
-            SliverToBoxAdapter(
-              child: const ServicePageHeader(),
-            ),
-            
-            // Filter Bar - Web app'teki gibi gelişmiş filtreleme
-            SliverToBoxAdapter(
-              child: ServiceFilterBar(
-                searchQuery: _searchQuery,
-                onSearchChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
-                selectedStatus: _selectedStatus,
-                onStatusChanged: (value) {
-                  setState(() {
-                    _selectedStatus = value;
-                  });
-                },
-                selectedPriority: _selectedPriority,
-                onPriorityChanged: (value) {
-                  setState(() {
-                    _selectedPriority = value;
-                  });
-                },
-                selectedTechnician: _selectedTechnician,
-                onTechnicianChanged: (value) {
-                  setState(() {
-                    _selectedTechnician = value;
-                  });
-                },
+              // Service Page Header - Gradient
+              const SliverToBoxAdapter(
+                child: ServicePageHeader(),
               ),
-            ),
-            
-            // Servis talepleri listesi
-            serviceRequestsAsync.when(
-              data: (serviceRequests) {
-                List<ServiceRequest> filteredRequests = serviceRequests;
+              
+              // Filter Bar
+              SliverToBoxAdapter(
+                child: ServiceFilterBar(
+                  searchQuery: _searchQuery,
+                  onSearchChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                  selectedStatus: _selectedStatus,
+                  onStatusChanged: (value) {
+                    setState(() {
+                      _selectedStatus = value;
+                    });
+                  },
+                  selectedPriority: _selectedPriority,
+                  onPriorityChanged: (value) {
+                    setState(() {
+                      _selectedPriority = value;
+                    });
+                  },
+                  selectedTechnician: _selectedTechnician,
+                  onTechnicianChanged: (value) {
+                    setState(() {
+                      _selectedTechnician = value;
+                    });
+                  },
+                ),
+              ),
+              
+              // Service Requests List
+              serviceRequestsAsync.when(
+                data: (serviceRequests) {
+                  List<ServiceRequest> filteredRequests = serviceRequests;
 
-                // Durum filtresi
-                if (_selectedStatus != null) {
-                  filteredRequests = filteredRequests
-                      .where((request) => request.status == _selectedStatus)
-                      .toList();
-                }
+                  if (_selectedStatus != null) {
+                    filteredRequests = filteredRequests
+                        .where((request) => request.status == _selectedStatus)
+                        .toList();
+                  }
 
-                // Öncelik filtresi
-                if (_selectedPriority != null) {
-                  filteredRequests = filteredRequests
-                      .where((request) => request.priority == _selectedPriority)
-                      .toList();
-                }
+                  if (_selectedPriority != null) {
+                    filteredRequests = filteredRequests
+                        .where((request) => request.priority == _selectedPriority)
+                        .toList();
+                  }
 
-                // Teknisyen filtresi
-                if (_selectedTechnician != null) {
-                  filteredRequests = filteredRequests
-                      .where((request) => request.assignedTechnician == _selectedTechnician)
-                      .toList();
-                }
+                  if (_selectedTechnician != null) {
+                    filteredRequests = filteredRequests
+                        .where((request) => request.assignedTechnician == _selectedTechnician)
+                        .toList();
+                  }
 
-                // Arama filtresi
-                if (_searchQuery.isNotEmpty) {
-                  filteredRequests = filteredRequests
-                      .where((request) =>
-                          request.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                          (request.description?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-                          (request.location?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false))
-                      .toList();
-                }
+                  if (_searchQuery.isNotEmpty) {
+                    filteredRequests = filteredRequests
+                        .where((request) =>
+                            request.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                            (request.description?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+                            (request.location?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false))
+                        .toList();
+                  }
 
-                if (filteredRequests.isEmpty) {
-                  return SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[50],
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              CupertinoIcons.search,
-                              size: 48,
-                              color: Colors.grey[400],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            _hasActiveFilters()
-                                ? 'Arama kriterlerinize uygun servis talebi bulunamadı'
-                                : 'Henüz servis talebi bulunmuyor',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey[700],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          if (!_hasActiveFilters()) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              'İlk servis talebinizi oluşturarak başlayın',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 24),
-                            ElevatedButton.icon(
-                              onPressed: () => context.go('/service/new'),
-                              icon: const Icon(CupertinoIcons.add),
-                              label: const Text('İlk Servis Talebini Oluştur'),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 12,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
+                  if (filteredRequests.isEmpty) {
+                    return SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: _buildEmptyState(),
+                    );
+                  }
+
+                  return SliverPadding(
+                    padding: const EdgeInsets.all(16),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          return _buildServiceRequestCardCompact(
+                            filteredRequests[index],
+                            statusColors,
+                            priorityColors,
+                            statusDisplayNames,
+                            priorityDisplayNames,
+                          );
+                        },
+                        childCount: filteredRequests.length,
                       ),
                     ),
                   );
-                }
-
-                return SliverPadding(
-                  padding: const EdgeInsets.all(16),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final serviceRequest = filteredRequests[index];
-                        return _buildServiceRequestCard(
-                          serviceRequest,
-                          statusColors,
-                          priorityColors,
-                          statusDisplayNames,
-                          priorityDisplayNames,
-                        );
-                      },
-                      childCount: filteredRequests.length,
-                    ),
-                  ),
-                );
-              },
-              loading: () => SliverFillRemaining(
-                hasScrollBody: false,
-                child: _buildLoadingState(),
+                },
+                loading: () => SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _buildLoadingState(),
+                ),
+                error: (error, stack) => SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _buildErrorState(context, error, ref),
+                ),
               ),
-              error: (error, stack) => SliverFillRemaining(
-                hasScrollBody: false,
-                child: _buildErrorState(context, error, ref),
-              ),
-            ),
-          ],
+            ],
           ),
         ),
       ),
     );
   }
 
-  bool _hasActiveFilters() {
-    return _searchQuery.isNotEmpty ||
-        _selectedStatus != null ||
-        _selectedPriority != null ||
-        _selectedTechnician != null;
-  }
-
-  Widget _buildServiceRequestCard(
+  // Kompakt Servis Kartı
+  Widget _buildServiceRequestCardCompact(
     ServiceRequest serviceRequest,
     Map<String, String> statusColors,
     Map<String, String> priorityColors,
@@ -224,183 +159,141 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
     final priorityColor = _getPriorityColor(serviceRequest.priority, priorityColors);
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white,
-            statusColor.withOpacity(0.02),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: statusColor.withOpacity(0.1),
+          color: Colors.grey.withOpacity(0.1),
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: statusColor.withOpacity(0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-            spreadRadius: 0,
-          ),
-        ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () => context.go('/service/detail/${serviceRequest.id}'),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.all(12),
+            child: Row(
               children: [
-                // Başlık ve durum
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                Container(
+                  width: 6,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  serviceRequest.title,
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF000000),
-                                    letterSpacing: -0.41,
-                                  ),
-                                ),
+                          Expanded(
+                            child: Text(
+                              serviceRequest.title,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF000000),
                               ),
-                            ],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                          const SizedBox(height: 6),
-                          if (serviceRequest.serviceType != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF2F2F7),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                serviceRequest.serviceType!,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontSize: 11,
-                                  color: const Color(0xFF8E8E93),
-                                  fontWeight: FontWeight.w500,
-                                ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: statusColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              statusDisplayNames[serviceRequest.status] ?? serviceRequest.status,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: statusColor,
                               ),
                             ),
+                          ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        _buildStatusChipWidget(
-                          statusDisplayNames[serviceRequest.status] ?? serviceRequest.status,
-                          serviceRequest.status,
-                          statusColors,
-                        ),
-                        const SizedBox(height: 6),
-                        _buildPriorityChip(
-                          priorityDisplayNames[serviceRequest.priority] ?? serviceRequest.priority,
-                          serviceRequest.priority,
-                          priorityColors,
+                      if (serviceRequest.serviceType != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          serviceRequest.serviceType!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // Açıklama
-                if (serviceRequest.description != null && serviceRequest.description!.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF2F2F7),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      serviceRequest.description!,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: 14,
-                        color: const Color(0xFF4A4A4A),
-                        height: 1.4,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                // Bilgi satırları
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 8,
-                  children: [
-                    // Konum bilgisi
-                    if (serviceRequest.location != null)
-                      _buildInfoChip(
-                        CupertinoIcons.location,
-                        serviceRequest.location!,
-                        const Color(0xFF3B82F6),
-                      ),
-                    // Tarih bilgisi
-                    _buildInfoChip(
-                      CupertinoIcons.calendar,
-                      _formatDate(serviceRequest.createdAt),
-                      const Color(0xFF8E8E93),
-                    ),
-                    // Bitiş tarihi
-                    if (serviceRequest.dueDate != null)
-                      _buildInfoChip(
-                        CupertinoIcons.time,
-                        'Bitiş: ${_formatDate(serviceRequest.dueDate!)}',
-                        const Color(0xFFFF9500),
-                        isUrgent: serviceRequest.dueDate!.isBefore(DateTime.now()),
-                      ),
-                  ],
-                ),
-                // Alt bilgiler
-                if (serviceRequest.notes != null && serviceRequest.notes!.isNotEmpty ||
-                    serviceRequest.attachments.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  const Divider(height: 1),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      if (serviceRequest.notes != null && serviceRequest.notes!.isNotEmpty)
-                        _buildMetaChip(
-                          CupertinoIcons.doc_text,
-                          '${serviceRequest.notes!.length} not',
-                          const Color(0xFFD32F2F),
+                      if (serviceRequest.location != null) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              CupertinoIcons.location,
+                              size: 12,
+                              color: Colors.grey[500],
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                serviceRequest.location!,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey[600],
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
-                      if (serviceRequest.notes != null && serviceRequest.notes!.isNotEmpty &&
-                          serviceRequest.attachments.isNotEmpty)
-                        const SizedBox(width: 12),
-                      if (serviceRequest.attachments.isNotEmpty)
-                        _buildMetaChip(
-                          CupertinoIcons.paperclip,
-                          '${serviceRequest.attachments.length} dosya',
-                          const Color(0xFF34C759),
-                        ),
+                      ],
                     ],
                   ),
-                ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: priorityColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        priorityDisplayNames[serviceRequest.priority] ?? serviceRequest.priority,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: priorityColor,
+                        ),
+                      ),
+                    ),
+                    if (serviceRequest.dueDate != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatDate(serviceRequest.dueDate!),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: serviceRequest.dueDate!.isBefore(DateTime.now())
+                              ? const Color(0xFFEF4444)
+                              : const Color(0xFF8E8E93),
+                          fontWeight: serviceRequest.dueDate!.isBefore(DateTime.now())
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ],
             ),
           ),
@@ -409,235 +302,63 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
     );
   }
 
-  Widget _buildInfoChip(IconData icon, String text, Color color, {bool isUrgent = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: isUrgent
-            ? color.withOpacity(0.1)
-            : const Color(0xFFF2F2F7),
-        borderRadius: BorderRadius.circular(10),
-        border: isUrgent
-            ? Border.all(color: color.withOpacity(0.3), width: 1)
-            : null,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 14,
-            color: isUrgent ? color : const Color(0xFF8E8E93),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isUrgent ? FontWeight.w600 : FontWeight.normal,
-              color: isUrgent ? color : const Color(0xFF8E8E93),
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _hasActiveFilters() ? CupertinoIcons.search : CupertinoIcons.wrench,
+                size: 48,
+                color: Colors.grey[400],
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetaChip(IconData icon, String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: color,
+            const SizedBox(height: 24),
+            Text(
+              _hasActiveFilters()
+                  ? 'Arama kriterlerinize uygun servis talebi bulunamadı'
+                  : 'Henüz servis talebi bulunmuyor',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+              textAlign: TextAlign.center,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusChipWidget(String label, String status, Map<String, String> statusColors) {
-    final color = _getStatusColor(status, statusColors);
-    IconData icon;
-    switch (status) {
-      case 'new':
-        icon = CupertinoIcons.exclamationmark_circle;
-        break;
-      case 'assigned':
-        icon = CupertinoIcons.circle;
-        break;
-      case 'in_progress':
-        icon = CupertinoIcons.clock;
-        break;
-      case 'on_hold':
-        icon = CupertinoIcons.exclamationmark_triangle;
-        break;
-      case 'completed':
-        icon = CupertinoIcons.checkmark_circle;
-        break;
-      case 'cancelled':
-        icon = CupertinoIcons.xmark_circle;
-        break;
-      default:
-        icon = CupertinoIcons.circle;
-    }
-    
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            color.withOpacity(0.15),
-            color.withOpacity(0.08),
+            if (!_hasActiveFilters()) ...[
+              const SizedBox(height: 8),
+              Text(
+                'İlk servis talebinizi oluşturarak başlayın',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              CupertinoButton(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                color: const Color(0xFFB73D3D),
+                borderRadius: BorderRadius.circular(10),
+                onPressed: () => context.go('/service/new'),
+                child: const Text(
+                  'İlk Servis Talebini Oluştur',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: color,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ],
       ),
     );
-  }
-
-  Widget _buildPriorityChip(String label, String priority, Map<String, String> priorityColors) {
-    final color = _getPriorityColor(priority, priorityColors);
-    String emoji;
-    switch (priority) {
-      case 'urgent':
-        emoji = '🔴';
-        break;
-      case 'high':
-        emoji = '🟠';
-        break;
-      case 'medium':
-        emoji = '🟡';
-        break;
-      case 'low':
-        emoji = '🟢';
-        break;
-      default:
-        emoji = '⚪';
-    }
-    
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            color.withOpacity(0.15),
-            color.withOpacity(0.08),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            emoji,
-            style: const TextStyle(fontSize: 12),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: color,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _getStatusColor(String status, Map<String, String> statusColors) {
-    final colorName = statusColors[status] ?? 'blue';
-    return _getColorFromName(colorName);
-  }
-
-  Color _getPriorityColor(String priority, Map<String, String> priorityColors) {
-    final colorName = priorityColors[priority] ?? 'blue';
-    return _getColorFromName(colorName);
-  }
-
-  Color _getColorFromName(String colorName) {
-    switch (colorName) {
-      case 'red':
-        return Colors.red;
-      case 'orange':
-        return Colors.orange;
-      case 'yellow':
-        return Colors.yellow[700]!;
-      case 'green':
-        return Colors.green;
-      case 'blue':
-        return Colors.blue;
-      case 'purple':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
   }
 
   Widget _buildLoadingState() {
@@ -653,7 +374,7 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
             ),
             child: const CupertinoActivityIndicator(
               radius: 16,
-              color: Color(0xFFD32F2F),
+              color: Color(0xFFB73D3D),
             ),
           ),
           const SizedBox(height: 24),
@@ -697,12 +418,12 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
               ),
             ),
             const SizedBox(height: 24),
-            Text(
+            const Text(
               'Bir hata oluştu',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: Color(0xFF000000),
               ),
             ),
             const SizedBox(height: 8),
@@ -716,22 +437,73 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
+            CupertinoButton(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              color: const Color(0xFFB73D3D),
+              borderRadius: BorderRadius.circular(10),
               onPressed: () {
                 ref.invalidate(serviceRequestsProvider);
               },
-              icon: const Icon(CupertinoIcons.arrow_clockwise),
-              label: const Text('Tekrar Dene'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
+              child: const Text(
+                'Tekrar Dene',
+                style: TextStyle(color: Colors.white),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  bool _hasActiveFilters() {
+    return _searchQuery.isNotEmpty ||
+        _selectedStatus != null ||
+        _selectedPriority != null ||
+        _selectedTechnician != null;
+  }
+
+  Color _getStatusColor(String status, Map<String, String> statusColors) {
+    final colorName = statusColors[status] ?? 'blue';
+    return _getColorFromName(colorName);
+  }
+
+  Color _getPriorityColor(String priority, Map<String, String> priorityColors) {
+    final colorName = priorityColors[priority] ?? 'blue';
+    return _getColorFromName(colorName);
+  }
+
+  Color _getColorFromName(String colorName) {
+    switch (colorName) {
+      case 'red':
+        return Colors.red;
+      case 'orange':
+        return Colors.orange;
+      case 'yellow':
+        return Colors.yellow[700]!;
+      case 'green':
+        return Colors.green;
+      case 'blue':
+        return Colors.blue;
+      case 'purple':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final requestDate = DateTime(date.year, date.month, date.day);
+
+    if (requestDate == today) {
+      return 'Bugün';
+    } else if (requestDate == today.add(const Duration(days: 1))) {
+      return 'Yarın';
+    } else if (requestDate.isBefore(today)) {
+      return 'Gecikti';
+    } else {
+      return '${date.day}/${date.month}';
+    }
   }
 }

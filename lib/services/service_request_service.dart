@@ -95,9 +95,18 @@ class ServiceRequestService {
   // Yeni servis talebi oluştur
   Future<ServiceRequest> createServiceRequest(ServiceRequest serviceRequest) async {
     try {
+      // Eğer created_by yoksa, mevcut kullanıcıyı ekle
+      final jsonData = serviceRequest.toJson();
+      if (jsonData['created_by'] == null) {
+        final currentUser = _supabase.auth.currentUser;
+        if (currentUser != null) {
+          jsonData['created_by'] = currentUser.id;
+        }
+      }
+      
       final response = await _supabase
           .from('service_requests')
-          .insert(serviceRequest.toJson())
+          .insert(jsonData)
           .select()
           .single();
 
@@ -514,7 +523,7 @@ class ServiceRequestService {
     }
   }
 
-  // Servis fişi imzala
+  // Servis fişi imzala (teknisyen)
   Future<ServiceRequest> signServiceSlip(String serviceRequestId, String signature) async {
     try {
       final response = await _supabase
@@ -533,6 +542,26 @@ class ServiceRequestService {
     } catch (e) {
       print('Servis fişi imzalama hatası: $e');
       throw Exception('Servis fişi imzalanamadı: $e');
+    }
+  }
+
+  // Müşteri imzası kaydet
+  Future<ServiceRequest> signServiceSlipByCustomer(String serviceRequestId, String signature) async {
+    try {
+      final response = await _supabase
+          .from('service_requests')
+          .update({
+            'customer_signature': signature,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', serviceRequestId)
+          .select()
+          .single();
+
+      return ServiceRequest.fromJson(response);
+    } catch (e) {
+      print('Müşteri imzası kaydetme hatası: $e');
+      throw Exception('Müşteri imzası kaydedilemedi: $e');
     }
   }
 

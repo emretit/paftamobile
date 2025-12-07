@@ -30,12 +30,14 @@ class ServiceRequest {
   final DateTime? completionDate;
   final String? technicianName;
   final String? technicianSignature;
+  final String? customerSignature;
   final Map<String, dynamic>? customerData;
   final Map<String, dynamic>? equipmentData;
   final Map<String, dynamic>? serviceDetails;
   final String? slipStatus;
   final String? serviceNumber;
   final String? customerName;
+  final String? createdBy;
 
   ServiceRequest({
     required this.id,
@@ -69,12 +71,14 @@ class ServiceRequest {
     this.completionDate,
     this.technicianName,
     this.technicianSignature,
+    this.customerSignature,
     this.customerData,
     this.equipmentData,
     this.serviceDetails,
     this.slipStatus,
     this.serviceNumber,
     this.customerName,
+    this.createdBy,
   });
 
   factory ServiceRequest.fromJson(Map<String, dynamic> json) {
@@ -112,6 +116,7 @@ class ServiceRequest {
       completionDate: _parseDateTime(json['completion_date']),
       technicianName: json['technician_name']?.toString(),
       technicianSignature: json['technician_signature']?.toString(),
+      customerSignature: json['customer_signature']?.toString(),
       customerData: json['customer_data'] != null 
           ? Map<String, dynamic>.from(json['customer_data']) 
           : null,
@@ -124,6 +129,7 @@ class ServiceRequest {
       slipStatus: json['slip_status']?.toString(),
       serviceNumber: json['service_number']?.toString(),
       customerName: json['customer_name']?.toString(),
+      createdBy: json['created_by']?.toString(),
     );
   }
 
@@ -205,11 +211,13 @@ class ServiceRequest {
       'completion_date': completionDate?.toIso8601String(),
       'technician_name': technicianName,
       'technician_signature': technicianSignature,
+      'customer_signature': customerSignature,
       'customer_data': customerData,
       'equipment_data': equipmentData,
       'service_details': serviceDetails,
       'slip_status': slipStatus,
       'service_number': serviceNumber,
+      'created_by': createdBy,
     };
   }
 
@@ -245,11 +253,13 @@ class ServiceRequest {
     DateTime? completionDate,
     String? technicianName,
     String? technicianSignature,
+    String? customerSignature,
     Map<String, dynamic>? customerData,
     Map<String, dynamic>? equipmentData,
     Map<String, dynamic>? serviceDetails,
     String? slipStatus,
     String? serviceNumber,
+    String? createdBy,
   }) {
     return ServiceRequest(
       id: id ?? this.id,
@@ -283,11 +293,13 @@ class ServiceRequest {
       completionDate: completionDate ?? this.completionDate,
       technicianName: technicianName ?? this.technicianName,
       technicianSignature: technicianSignature ?? this.technicianSignature,
+      customerSignature: customerSignature ?? this.customerSignature,
       customerData: customerData ?? this.customerData,
       equipmentData: equipmentData ?? this.equipmentData,
       serviceDetails: serviceDetails ?? this.serviceDetails,
       slipStatus: slipStatus ?? this.slipStatus,
       serviceNumber: serviceNumber ?? this.serviceNumber,
+      createdBy: createdBy ?? this.createdBy,
     );
   }
 

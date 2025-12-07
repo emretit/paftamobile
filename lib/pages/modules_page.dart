@@ -67,6 +67,29 @@ class ModulesPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             
+            // Servis Modülü
+            _buildModuleSection(
+              context,
+              'Servis',
+              [
+                _ModuleItem(
+                  title: 'Servis Yönetimi',
+                  subtitle: 'Servis talepleri ve yönetimi',
+                  icon: CupertinoIcons.wrench_fill,
+                  color: const Color(0xFFB73D3D),
+                  route: '/service/management',
+                ),
+                _ModuleItem(
+                  title: 'Yeni Servis Talebi',
+                  subtitle: 'Yeni servis talebi oluştur',
+                  icon: CupertinoIcons.add_circled_solid,
+                  color: const Color(0xFFE74C3C),
+                  route: '/service/new',
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            
             // Satış Modülü
             _buildModuleSection(
               context,
