@@ -164,38 +164,38 @@ class ServicePageHeader extends ConsumerWidget {
       aspectRatio: 1.0,
       child: Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.3),
-            width: 1.5,
-          ),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.3),
+          width: 1.5,
         ),
-        child: Column(
+      ),
+      child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+        children: [
             Icon(icon, color: Colors.white, size: 16),
             const SizedBox(height: 4),
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
                 fontSize: 14,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
-              ),
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
                 fontSize: 9,
-                fontWeight: FontWeight.w500,
-              ),
+              fontWeight: FontWeight.w500,
             ),
-          ],
+          ),
+        ],
         ),
       ),
     );
@@ -208,18 +208,18 @@ class ServicePageHeader extends ConsumerWidget {
         (index) => Expanded(
           child: AspectRatio(
             aspectRatio: 1.0,
-            child: Container(
-              margin: EdgeInsets.only(left: index > 0 ? 10 : 0),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+          child: Container(
+            margin: EdgeInsets.only(left: index > 0 ? 10 : 0),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.3),
-                  width: 1.5,
-                ),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 1.5,
               ),
-              child: const Center(
-                child: CupertinoActivityIndicator(color: Colors.white),
+            ),
+            child: const Center(
+              child: CupertinoActivityIndicator(color: Colors.white),
               ),
             ),
           ),

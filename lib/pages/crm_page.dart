@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:typed_data';
 import '../providers/crm_provider.dart';
 import '../providers/sales_provider.dart';
 import '../providers/activity_provider.dart';
@@ -9,6 +10,7 @@ import '../models/opportunity.dart';
 import '../models/proposal.dart';
 import '../models/order.dart';
 import '../models/activity.dart';
+import '../services/proposal_pdf_service.dart';
 import 'package:intl/intl.dart';
 
 /// CRM Dashboard Sayfası - Servis yönetimi sayfasına benzer UI/UX
@@ -44,74 +46,74 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              title: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFB73D3D), Color(0xFF8B2F2F)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      CupertinoIcons.chart_bar_alt_fill,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text('CRM'),
-                ],
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFB73D3D), Color(0xFF8B2F2F)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(8),
               ),
-              backgroundColor: const Color(0xFFF2F2F7),
-              foregroundColor: const Color(0xFF000000),
-              elevation: 0,
-              surfaceTintColor: Colors.transparent,
+              child: const Icon(
+                CupertinoIcons.chart_bar_alt_fill,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text('CRM'),
+          ],
+        ),
+        backgroundColor: const Color(0xFFF2F2F7),
+        foregroundColor: const Color(0xFF000000),
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
               pinned: true,
               floating: false,
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(48),
                 child: Container(
-                  color: Colors.white,
-                  child: TabBar(
-                    controller: _tabController,
-                    labelColor: const Color(0xFF8B2F2F),
-                    unselectedLabelColor: const Color(0xFF8E8E93),
-                    indicatorColor: const Color(0xFF8B2F2F),
-                    indicatorWeight: 3,
+            color: Colors.white,
+            child: TabBar(
+              controller: _tabController,
+              labelColor: const Color(0xFF8B2F2F),
+              unselectedLabelColor: const Color(0xFF8E8E93),
+              indicatorColor: const Color(0xFF8B2F2F),
+              indicatorWeight: 3,
                     isScrollable: false,
-                    labelStyle: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    unselectedLabelStyle: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.normal,
-                    ),
-                    tabs: const [
-                      Tab(text: 'Aktiviteler'),
-                      Tab(text: 'Fırsatlar'),
-                      Tab(text: 'Teklifler'),
-                      Tab(text: 'Siparişler'),
-                    ],
-                  ),
-                ),
+              labelStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.normal,
+              ),
+              tabs: const [
+                Tab(text: 'Aktiviteler'),
+                Tab(text: 'Fırsatlar'),
+                Tab(text: 'Teklifler'),
+                Tab(text: 'Siparişler'),
+              ],
+            ),
+          ),
               ),
             ),
           ];
         },
         body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildActivitiesTab(context),
-            _buildOpportunitiesTab(context),
-            _buildProposalsTab(context),
-            _buildOrdersTab(context),
-          ],
-        ),
+              controller: _tabController,
+              children: [
+                _buildActivitiesTab(context),
+                _buildOpportunitiesTab(context),
+                _buildProposalsTab(context),
+                _buildOrdersTab(context),
+              ],
+            ),
       ),
     );
   }
@@ -945,12 +947,54 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
                     ],
                   ],
                 ),
+                const SizedBox(width: 8),
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  minSize: 0,
+                  onPressed: () => _shareProposalPDF(proposal),
+                  child: const Icon(
+                    CupertinoIcons.doc_text,
+                    color: Color(0xFF8B2F2F),
+                    size: 20,
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  void _shareProposalPDF(Proposal proposal) async {
+    try {
+      final pdfService = ProposalPdfService();
+      
+      // Web uygulamasındaki PDF renderer'ı kullan
+      final pdfBytes = await pdfService.generateProposalPdfFromWeb(proposal);
+      
+      final fileName = 'Teklif_${proposal.number}.pdf';
+      
+      await pdfService.previewAndShare(pdfBytes, fileName);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('PDF oluşturuldu'),
+            backgroundColor: Color(0xFF10B981),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('PDF oluşturma hatası: $e'),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
   }
 
   // Order Card
@@ -1140,40 +1184,40 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
       aspectRatio: 1.0,
       child: Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.3),
-            width: 1.5,
-          ),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.3),
+          width: 1.5,
         ),
-        child: Column(
+      ),
+      child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+        children: [
             Icon(icon, color: Colors.white, size: 16),
             const SizedBox(height: 4),
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
                 fontSize: 14,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
                 fontSize: 9,
-                fontWeight: FontWeight.w500,
-              ),
+              fontWeight: FontWeight.w500,
             ),
-          ],
+          ),
+        ],
         ),
       ),
     );
@@ -1186,18 +1230,18 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
         (index) => Expanded(
           child: AspectRatio(
             aspectRatio: 1.0,
-            child: Container(
-              margin: EdgeInsets.only(left: index > 0 ? 10 : 0),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+          child: Container(
+            margin: EdgeInsets.only(left: index > 0 ? 10 : 0),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.3),
-                  width: 1.5,
-                ),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 1.5,
               ),
-              child: const Center(
-                child: CupertinoActivityIndicator(color: Colors.white),
+            ),
+            child: const Center(
+              child: CupertinoActivityIndicator(color: Colors.white),
               ),
             ),
           ),

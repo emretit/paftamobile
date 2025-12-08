@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -723,7 +724,16 @@ class _ServiceSlipViewPageState extends ConsumerState<ServiceSlipViewPage> {
 
     try {
       final pdfService = ServiceSlipPdfService();
-      final pdfBytes = await pdfService.generateServiceSlipPdf(serviceRequest);
+      
+      // Önce web uygulamasındaki PDF renderer'ı dene
+      Uint8List pdfBytes;
+      try {
+        pdfBytes = await pdfService.generateServiceSlipPdfFromWeb(serviceRequest);
+      } catch (webError) {
+        // Web renderer başarısız olursa lokal renderer'ı kullan
+        print('Web PDF renderer failed, using local: $webError');
+        pdfBytes = await pdfService.generateServiceSlipPdf(serviceRequest);
+      }
       
       final fileName = 'Servis_Fisi_${serviceRequest.serviceNumber ?? serviceRequest.id}.pdf';
       

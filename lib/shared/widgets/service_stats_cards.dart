@@ -190,58 +190,58 @@ class ServiceStatsCards extends ConsumerWidget {
       aspectRatio: 1.0,
       child: Container(
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          gradient: gradient,
+      decoration: BoxDecoration(
+        gradient: gradient,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: iconColor.withOpacity(0.2),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
+        border: Border.all(
+          color: iconColor.withOpacity(0.2),
+          width: 1,
         ),
-        child: Column(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+              blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
+            children: [
+              Container(
               padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.5),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(6),
-              ),
-              child: Icon(
-                icon,
-                color: iconColor,
+                ),
+                child: Icon(
+                  icon,
+                  color: iconColor,
                 size: 16,
               ),
             ),
             const SizedBox(height: 6),
-            Text(
-              value,
-              style: TextStyle(
+              Text(
+                value,
+                style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: textColor,
-                letterSpacing: -0.5,
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                  letterSpacing: -0.5,
+                ),
               ),
-            ),
             const SizedBox(height: 4),
-            Text(
-              title,
+          Text(
+            title,
               textAlign: TextAlign.center,
-              style: TextStyle(
+            style: TextStyle(
                 fontSize: 10,
-                fontWeight: FontWeight.w500,
-                color: textColor.withOpacity(0.8),
-              ),
+              fontWeight: FontWeight.w500,
+              color: textColor.withOpacity(0.8),
             ),
-          ],
+          ),
+        ],
         ),
       ),
     );
@@ -254,14 +254,14 @@ class ServiceStatsCards extends ConsumerWidget {
         children: List.generate(3, (index) => Expanded(
           child: AspectRatio(
             aspectRatio: 1.0,
-            child: Container(
-              margin: EdgeInsets.only(right: index < 2 ? 12 : 0),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
+          child: Container(
+            margin: EdgeInsets.only(right: index < 2 ? 12 : 0),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Center(
-                child: CupertinoActivityIndicator(),
+            ),
+            child: const Center(
+              child: CupertinoActivityIndicator(),
               ),
             ),
           ),
