@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../models/service_request.dart';
 import '../providers/service_request_provider.dart';
 import '../services/service_request_service.dart';
-import '../shared/widgets/bottom_navigation_bar.dart';
 import '../providers/auth_provider.dart';
 import '../providers/inventory_provider.dart';
 import '../models/product.dart';
@@ -107,7 +106,6 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    final currentRoute = GoRouterState.of(context).uri.path;
     final serviceRequestAsync = ref.watch(serviceRequestByIdProvider(widget.serviceRequestId));
 
     return Scaffold(
@@ -792,9 +790,6 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        currentRoute: currentRoute,
       ),
     );
   }

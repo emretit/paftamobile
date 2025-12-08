@@ -36,32 +36,11 @@ class ModulesPage extends StatelessWidget {
               'CRM',
               [
                 _ModuleItem(
-                  title: 'CRM Dashboard',
-                  subtitle: 'CRM özet ve fırsatlar',
-                  icon: CupertinoIcons.chart_pie_fill,
-                  color: const Color(0xFFD32F2F),
-                  route: '/crm',
-                ),
-                _ModuleItem(
-                  title: 'Fırsatlar',
-                  subtitle: 'Satış fırsatları ve pipeline',
-                  icon: CupertinoIcons.star_fill,
-                  color: const Color(0xFFFF9500),
-                  route: '/sales/opportunities',
-                ),
-                _ModuleItem(
                   title: 'Müşteriler',
                   subtitle: 'Müşteri listesi ve yönetimi',
                   icon: CupertinoIcons.person_2_fill,
                   color: const Color(0xFF34C759),
                   route: '/customers',
-                ),
-                _ModuleItem(
-                  title: 'Aktiviteler',
-                  subtitle: 'Görevler ve aktiviteler',
-                  icon: CupertinoIcons.list_bullet,
-                  color: const Color(0xFF007AFF),
-                  route: '/activities',
                 ),
               ],
             ),

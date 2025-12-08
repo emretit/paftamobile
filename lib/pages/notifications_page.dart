@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/notification_provider.dart';
 import '../models/notification.dart';
 
@@ -159,16 +160,16 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
       case 'open_service_request':
         if (notification.serviceRequestId != null) {
           // Servis talebi detay sayfasına git
-          // Navigator.push(context, MaterialPageRoute(...));
+          context.go('/service/detail/${notification.serviceRequestId}');
         }
         break;
       case 'open_service_requests':
         // Servis talepleri listesine git
-        // Navigator.push(context, MaterialPageRoute(...));
+        context.go('/service/management');
         break;
       case 'open_emergency':
-        // Acil durum sayfasına git
-        // Navigator.push(context, MaterialPageRoute(...));
+        // Acil durum sayfasına git (şimdilik servis listesine)
+        context.go('/service/management');
         break;
       case 'open_notifications':
         // Bildirimler sayfasında kal

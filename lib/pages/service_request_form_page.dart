@@ -51,6 +51,11 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
   DateTime? _dueDate;
   TimeOfDay? _dueTime;
   DateTime _reportedDate = DateTime.now();
+  // Servis tarih bilgileri
+  DateTime? _serviceStartDate;
+  TimeOfDay? _serviceStartTime;
+  DateTime? _serviceEndDate;
+  TimeOfDay? _serviceEndTime;
   bool _isLoading = false;
   
   // Kullanılan ürünler listesi
@@ -116,6 +121,18 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
         // Saat bilgisini ayır
         if (serviceRequest.dueDate != null) {
           _dueTime = TimeOfDay.fromDateTime(serviceRequest.dueDate!);
+        }
+        
+        // Servis başlama tarihi ve saati
+        _serviceStartDate = serviceRequest.serviceStartDate;
+        if (serviceRequest.serviceStartDate != null) {
+          _serviceStartTime = TimeOfDay.fromDateTime(serviceRequest.serviceStartDate!);
+        }
+        
+        // Servis bitirme tarihi ve saati
+        _serviceEndDate = serviceRequest.serviceEndDate;
+        if (serviceRequest.serviceEndDate != null) {
+          _serviceEndTime = TimeOfDay.fromDateTime(serviceRequest.serviceEndDate!);
         }
         
         // Kullanılan ürünleri yükle (serviceDetails içinden)
@@ -220,7 +237,7 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
       'Tarih Bilgileri',
       CupertinoIcons.calendar,
       const Color(0xFF9B59B6),
-                [
+      [
         Row(
           children: [
             Expanded(
@@ -232,19 +249,19 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
               ),
             ),
           ],
-                  ),
-                  const SizedBox(height: 16),
+        ),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: _buildDateSelector(
                 label: 'Hedef Teslim Tarihi',
-                    date: _dueDate,
-                    onTap: _selectDueDate,
+                date: _dueDate,
+                onTap: _selectDueDate,
                 icon: CupertinoIcons.calendar_badge_plus,
                 isOptional: true,
               ),
-                  ),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: _buildTimeSelector(
@@ -254,9 +271,59 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
                 icon: CupertinoIcons.clock,
                 enabled: _dueDate != null,
               ),
-                  ),
-                ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Servis Başlama Tarihi ve Saati
+        Row(
+          children: [
+            Expanded(
+              child: _buildDateSelector(
+                label: 'Servis Başlama Tarihi',
+                date: _serviceStartDate,
+                onTap: _selectServiceStartDate,
+                icon: CupertinoIcons.play_circle,
+                isOptional: true,
               ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildTimeSelector(
+                label: 'Başlama Saati (Opsiyonel)',
+                time: _serviceStartTime,
+                onTap: _selectServiceStartTime,
+                icon: CupertinoIcons.clock,
+                enabled: _serviceStartDate != null,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Servis Bitirme Tarihi ve Saati
+        Row(
+          children: [
+            Expanded(
+              child: _buildDateSelector(
+                label: 'Servis Bitirme Tarihi',
+                date: _serviceEndDate,
+                onTap: _selectServiceEndDate,
+                icon: CupertinoIcons.stop_circle,
+                isOptional: true,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildTimeSelector(
+                label: 'Bitirme Saati (Opsiyonel)',
+                time: _serviceEndTime,
+                onTap: _selectServiceEndTime,
+                icon: CupertinoIcons.clock,
+                enabled: _serviceEndDate != null,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -1300,6 +1367,62 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
     }
   }
 
+  Future<void> _selectServiceStartDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _serviceStartDate ?? DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) {
+      setState(() {
+        _serviceStartDate = picked;
+      });
+    }
+  }
+
+  Future<void> _selectServiceStartTime() async {
+    if (_serviceStartDate == null) return;
+    
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _serviceStartTime ?? TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _serviceStartTime = picked;
+      });
+    }
+  }
+
+  Future<void> _selectServiceEndDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _serviceEndDate ?? DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) {
+      setState(() {
+        _serviceEndDate = picked;
+      });
+    }
+  }
+
+  Future<void> _selectServiceEndTime() async {
+    if (_serviceEndDate == null) return;
+    
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _serviceEndTime ?? TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _serviceEndTime = picked;
+      });
+    }
+  }
+
   Future<void> _saveServiceRequest() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -1324,6 +1447,30 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
         );
       }
 
+      // Servis başlama tarihi ve saati birleştir
+      DateTime? finalServiceStartDate = _serviceStartDate;
+      if (_serviceStartDate != null && _serviceStartTime != null) {
+        finalServiceStartDate = DateTime(
+          _serviceStartDate!.year,
+          _serviceStartDate!.month,
+          _serviceStartDate!.day,
+          _serviceStartTime!.hour,
+          _serviceStartTime!.minute,
+        );
+      }
+
+      // Servis bitirme tarihi ve saati birleştir
+      DateTime? finalServiceEndDate = _serviceEndDate;
+      if (_serviceEndDate != null && _serviceEndTime != null) {
+        finalServiceEndDate = DateTime(
+          _serviceEndDate!.year,
+          _serviceEndDate!.month,
+          _serviceEndDate!.day,
+          _serviceEndTime!.hour,
+          _serviceEndTime!.minute,
+        );
+      }
+
       // Mevcut kullanıcı ID'sini al
       final authService = AuthService();
       final currentUserInfo = await authService.getCurrentUserEmployeeInfo();
@@ -1344,6 +1491,8 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
           assignedTo: _selectedTechnicianId,
           dueDate: finalDueDate,
           reportedDate: _reportedDate,
+          serviceStartDate: finalServiceStartDate,
+          serviceEndDate: finalServiceEndDate,
           contactPerson: _contactPersonController.text.isEmpty ? null : _contactPersonController.text,
           contactPhone: _contactPhoneController.text.isEmpty ? null : _contactPhoneController.text,
           contactEmail: _contactEmailController.text.isEmpty ? null : _contactEmailController.text,
@@ -1367,7 +1516,7 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Servis talebi başarıyla oluşturuldu')),
           );
-          context.go('/service-requests');
+          context.go('/service/management');
         }
       } else {
         // Düzenleme - mevcut servis talebini al
@@ -1387,6 +1536,8 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
           assignedTo: _selectedTechnicianId,
           dueDate: finalDueDate,
           reportedDate: _reportedDate,
+          serviceStartDate: finalServiceStartDate,
+          serviceEndDate: finalServiceEndDate,
           contactPerson: _contactPersonController.text.isEmpty ? null : _contactPersonController.text,
           contactPhone: _contactPhoneController.text.isEmpty ? null : _contactPhoneController.text,
           contactEmail: _contactEmailController.text.isEmpty ? null : _contactEmailController.text,
@@ -1413,7 +1564,7 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Servis talebi başarıyla güncellendi')),
           );
-          context.go('/service-requests/${widget.id}');
+          context.go('/service/detail/${widget.id}');
         }
       }
 

@@ -38,6 +38,9 @@ class ServiceRequest {
   final String? serviceNumber;
   final String? customerName;
   final String? createdBy;
+  // Servis tarih bilgileri
+  final DateTime? serviceStartDate;
+  final DateTime? serviceEndDate;
 
   ServiceRequest({
     required this.id,
@@ -79,6 +82,9 @@ class ServiceRequest {
     this.serviceNumber,
     this.customerName,
     this.createdBy,
+    // Servis tarih bilgileri
+    this.serviceStartDate,
+    this.serviceEndDate,
   });
 
   factory ServiceRequest.fromJson(Map<String, dynamic> json) {
@@ -130,6 +136,9 @@ class ServiceRequest {
       serviceNumber: json['service_number']?.toString(),
       customerName: json['customer_name']?.toString(),
       createdBy: json['created_by']?.toString(),
+      // Servis tarih bilgileri
+      serviceStartDate: _parseDateTime(json['service_start_date']),
+      serviceEndDate: _parseDateTime(json['service_end_date']),
     );
   }
 
@@ -218,6 +227,9 @@ class ServiceRequest {
       'slip_status': slipStatus,
       'service_number': serviceNumber,
       'created_by': createdBy,
+      // Servis tarih bilgileri
+      'service_start_date': serviceStartDate?.toIso8601String(),
+      'service_end_date': serviceEndDate?.toIso8601String(),
     };
   }
 
@@ -260,6 +272,9 @@ class ServiceRequest {
     String? slipStatus,
     String? serviceNumber,
     String? createdBy,
+    // Servis tarih bilgileri
+    DateTime? serviceStartDate,
+    DateTime? serviceEndDate,
   }) {
     return ServiceRequest(
       id: id ?? this.id,
@@ -300,6 +315,9 @@ class ServiceRequest {
       slipStatus: slipStatus ?? this.slipStatus,
       serviceNumber: serviceNumber ?? this.serviceNumber,
       createdBy: createdBy ?? this.createdBy,
+      // Servis tarih bilgileri
+      serviceStartDate: serviceStartDate ?? this.serviceStartDate,
+      serviceEndDate: serviceEndDate ?? this.serviceEndDate,
     );
   }
 

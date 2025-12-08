@@ -13,32 +13,102 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Webhook'tan gelen veriyi al
-    const webhookPayload = await req.json();
-    console.log('📦 Webhook payload:', JSON.stringify(webhookPayload, null, 2));
+    // Gelen veriyi al
+    const payload = await req.json();
+    console.log('📦 Payload:', JSON.stringify(payload, null, 2));
     
     // Supabase client oluştur
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Service request bilgilerini al
-    const serviceRequest = webhookPayload.record;
-    console.log('🔧 Service Request:', JSON.stringify(serviceRequest, null, 2));
+    // İki farklı format destekle:
+    // 1. Mobil uygulamadan: { user_id, title, body, data }
+    // 2. Webhook'tan: { record: { ... } }
     
-    if (!serviceRequest.customer_id) {
-      console.log('❌ Customer ID bulunamadı');
-      return new Response(JSON.stringify({ error: 'Customer ID bulunamadı' }), {
+    let userId: string | null = null;
+    let notificationTitle: string;
+    let notificationBody: string;
+    let notificationData: Record<string, string> = {};
+    
+    if (payload.user_id) {
+      // Mobil uygulamadan gelen format
+      userId = payload.user_id;
+      notificationTitle = payload.title || 'Bildirim';
+      notificationBody = payload.body || '';
+      notificationData = payload.data || {};
+    } else if (payload.record) {
+      // Webhook'tan gelen format (service_requests tablosu güncellendiğinde)
+      const serviceRequest = payload.record;
+      
+      // assigned_technician değiştiyse teknisyene bildirim gönder
+      if (serviceRequest.assigned_technician) {
+        userId = serviceRequest.assigned_technician;
+        notificationTitle = 'Yeni Servis Talebi Atandı';
+        const customerName = serviceRequest.customer_name || 'Müşteri';
+        notificationBody = `${customerName} için "${serviceRequest.service_title || 'Servis talebi'}" atandı`;
+        notificationData = {
+          type: 'service_assignment',
+          service_request_id: serviceRequest.id,
+          action: 'open_service_request',
+        };
+      } else if (serviceRequest.customer_id) {
+        // Müşteriye durum güncelleme bildirimi
+        userId = serviceRequest.customer_id;
+        notificationTitle = 'Servis Talebi Güncellendi';
+        notificationBody = `${serviceRequest.service_title || 'Servis talebiniz'} durumu: ${serviceRequest.service_status}`;
+        
+        // Durum tabasında özel mesajlar
+        switch (serviceRequest.service_status) {
+          case 'assigned':
+            notificationTitle = 'Teknisyen Atandı';
+            notificationBody = `${serviceRequest.service_title} için teknisyen atandı`;
+            break;
+          case 'in_progress':
+            notificationTitle = 'Servis Başlatıldı';
+            notificationBody = `${serviceRequest.service_title} servisi başlatıldı`;
+            break;
+          case 'completed':
+            notificationTitle = 'Servis Tamamlandı';
+            notificationBody = `${serviceRequest.service_title} servisi tamamlandı`;
+            break;
+          case 'cancelled':
+            notificationTitle = 'Servis İptal Edildi';
+            notificationBody = `${serviceRequest.service_title} servisi iptal edildi`;
+            break;
+        }
+        
+        notificationData = {
+          service_request_id: serviceRequest.id,
+          status: serviceRequest.service_status,
+          type: 'service_request_update',
+          action: 'open_service_request',
+        };
+      } else {
+        return new Response(JSON.stringify({ error: 'user_id veya customer_id bulunamadı' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        });
+      }
+    } else {
+      return new Response(JSON.stringify({ error: 'Geçersiz payload formatı' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400
       });
     }
     
-    // Customer'ın FCM token'ını al
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'user_id bulunamadı' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
+      });
+    }
+    
+    // Kullanıcının FCM token'ını al
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('fcm_token')
-      .eq('id', serviceRequest.customer_id)
+      .eq('id', userId)
       .single();
       
     console.log('👤 Profile query sonucu:', { profile, profileError });
@@ -47,35 +117,11 @@ Deno.serve(async (req) => {
       console.log('❌ FCM token bulunamadı');
       return new Response(JSON.stringify({ 
         error: 'FCM token bulunamadı',
-        customer_id: serviceRequest.customer_id 
+        user_id: userId 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400
       });
-    }
-    
-    // Bildirim mesajını hazırla
-    let notificationTitle = 'Servis Talebi Güncellendi';
-    let notificationBody = `${serviceRequest.service_title || 'Servis talebiniz'} durumu: ${serviceRequest.service_status}`;
-    
-    // Durum tabasında özel mesajlar
-    switch (serviceRequest.service_status) {
-      case 'assigned':
-        notificationTitle = 'Teknisyen Atandı';
-        notificationBody = `${serviceRequest.service_title} için teknisyen atandı`;
-        break;
-      case 'in_progress':
-        notificationTitle = 'Servis Başlatıldı';
-        notificationBody = `${serviceRequest.service_title} servisi başlatıldı`;
-        break;
-      case 'completed':
-        notificationTitle = 'Servis Tamamlandı';
-        notificationBody = `${serviceRequest.service_title} servisi tamamlandı`;
-        break;
-      case 'cancelled':
-        notificationTitle = 'Servis İptal Edildi';
-        notificationBody = `${serviceRequest.service_title} servisi iptal edildi`;
-        break;
     }
     
     console.log('📨 Bildirim gönderiliyor:');
@@ -95,11 +141,7 @@ Deno.serve(async (req) => {
           title: notificationTitle,
           body: notificationBody
         },
-        data: {
-          service_request_id: serviceRequest.id,
-          status: serviceRequest.service_status,
-          type: 'service_request_update'
-        },
+        data: notificationData,
         android: {
           notification: {
             click_action: 'FLUTTER_NOTIFICATION_CLICK',
@@ -138,6 +180,32 @@ Deno.serve(async (req) => {
     const fcmResult = await fcmResponse.json();
     console.log('✅ FCM başarılı response:', fcmResult);
     
+    // Bildirimi veritabanına kaydet
+    try {
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: userId,
+          title: notificationTitle,
+          body: notificationBody,
+          type: notificationData.type || 'general',
+          data: notificationData,
+          action: notificationData.action || null,
+          service_request_id: notificationData.service_request_id || null,
+          technician_id: notificationData.type === 'service_assignment' ? userId : null,
+          customer_id: notificationData.type === 'service_request_update' ? userId : null,
+          is_read: false
+        });
+      
+      if (notificationError) {
+        console.error('❌ Bildirim veritabanına kaydedilemedi:', notificationError);
+      } else {
+        console.log('✅ Bildirim veritabanına kaydedildi');
+      }
+    } catch (dbError) {
+      console.error('❌ Bildirim kaydetme hatası:', dbError);
+    }
+    
     return new Response(JSON.stringify({
       success: true,
       message: 'Bildirim başarıyla gönderildi',
@@ -145,9 +213,8 @@ Deno.serve(async (req) => {
       data: {
         title: notificationTitle,
         body: notificationBody,
-        customer_id: serviceRequest.customer_id,
-        service_request_id: serviceRequest.id,
-        status: serviceRequest.service_status
+        user_id: userId,
+        ...notificationData
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

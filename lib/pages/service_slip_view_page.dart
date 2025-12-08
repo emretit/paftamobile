@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../models/service_request.dart';
 import '../providers/service_request_provider.dart';
 import '../services/service_slip_pdf_service.dart';
-import '../shared/widgets/bottom_navigation_bar.dart';
 import 'signature_page.dart';
 
 class ServiceSlipViewPage extends ConsumerStatefulWidget {
@@ -26,7 +25,6 @@ class _ServiceSlipViewPageState extends ConsumerState<ServiceSlipViewPage> {
 
   @override
   Widget build(BuildContext context) {
-    final currentRoute = GoRouterState.of(context).uri.path;
     final serviceRequestAsync = ref.watch(serviceRequestByIdProvider(widget.serviceRequestId));
 
     return Scaffold(
@@ -546,9 +544,6 @@ class _ServiceSlipViewPageState extends ConsumerState<ServiceSlipViewPage> {
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        currentRoute: currentRoute,
       ),
     );
   }

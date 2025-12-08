@@ -24,26 +24,26 @@ class ServicePageHeader extends ConsumerWidget {
         children: [
           // Header Content
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.25),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: Colors.white.withOpacity(0.3),
-                      width: 2,
+                      width: 1.5,
                     ),
                   ),
                   child: const Icon(
                     CupertinoIcons.wrench_fill,
                     color: Colors.white,
-                    size: 22,
+                    size: 18,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,17 +52,17 @@ class ServicePageHeader extends ConsumerWidget {
                         'Servis Yönetimi',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 20,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.5,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      SizedBox(height: 1),
                       Text(
                         'Tüm servis taleplerinizi yönetin',
                         style: const TextStyle(
                           color: Color(0xE6FFFFFF), // white.withOpacity(0.9)
-                          fontSize: 13,
+                          fontSize: 11,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -73,10 +73,10 @@ class ServicePageHeader extends ConsumerWidget {
                   onPressed: () => context.go('/service/new'),
                   padding: EdgeInsets.zero,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: Colors.white.withOpacity(0.3),
                         width: 1.5,
@@ -88,14 +88,14 @@ class ServicePageHeader extends ConsumerWidget {
                         Icon(
                           CupertinoIcons.add,
                           color: Colors.white,
-                          size: 18,
+                          size: 16,
                         ),
-                        SizedBox(width: 6),
+                        SizedBox(width: 4),
                         Text(
                           'Yeni',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 14,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -109,7 +109,7 @@ class ServicePageHeader extends ConsumerWidget {
           
           // Stats
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: statsAsync.when(
               data: (stats) => _buildCompactStats(stats),
               loading: () => _buildLoadingStats(),
@@ -160,39 +160,43 @@ class ServicePageHeader extends ConsumerWidget {
   }
 
   Widget _buildStatBubble(String value, String label, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.3),
-          width: 1.5,
+    return AspectRatio(
+      aspectRatio: 1.0,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.3),
+            width: 1.5,
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: Colors.white, size: 20),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 16),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -202,19 +206,21 @@ class ServicePageHeader extends ConsumerWidget {
       children: List.generate(
         4,
         (index) => Expanded(
-          child: Container(
-            margin: EdgeInsets.only(left: index > 0 ? 10 : 0),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.3),
-                width: 1.5,
+          child: AspectRatio(
+            aspectRatio: 1.0,
+            child: Container(
+              margin: EdgeInsets.only(left: index > 0 ? 10 : 0),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1.5,
+                ),
               ),
-            ),
-            child: const Center(
-              child: CupertinoActivityIndicator(color: Colors.white),
+              child: const Center(
+                child: CupertinoActivityIndicator(color: Colors.white),
+              ),
             ),
           ),
         ),

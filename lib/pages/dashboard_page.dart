@@ -89,27 +89,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   children: [
                     // Welcome Section
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
                       child: Row(
                         children: [
                           Container(
-                            width: 52,
-                            height: 52,
+                            padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.25),
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                 color: Colors.white.withOpacity(0.3),
-                                width: 2,
+                                width: 1.5,
                               ),
                             ),
                             child: const Icon(
                               CupertinoIcons.person_fill,
                               color: Colors.white,
-                              size: 26,
+                              size: 18,
                             ),
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,16 +117,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                   'Hoş geldiniz,',
                                   style: TextStyle(
                                     color: Colors.white.withOpacity(0.9),
-                                    fontSize: 13,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
+                                const SizedBox(height: 1),
                                 Text(
                                   authState.user?.fullName ?? authState.user?.email?.split('@')[0] ?? 'Kullanıcı',
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 20,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: -0.5,
                                   ),
@@ -142,7 +141,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                     
                     // Stats Cards Compact
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                       child: statsAsync.when(
                         data: (stats) => _buildCompactStats(stats),
                         loading: () => _buildLoadingStats(),
@@ -221,39 +220,43 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   Widget _buildStatBubble(String value, String label, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.3),
-          width: 1.5,
+    return AspectRatio(
+      aspectRatio: 1.0,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.3),
+            width: 1.5,
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: Colors.white, size: 20),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 16),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -541,19 +544,21 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       children: List.generate(
         4,
         (index) => Expanded(
-          child: Container(
-            margin: EdgeInsets.only(left: index > 0 ? 10 : 0),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.3),
-                width: 1.5,
+          child: AspectRatio(
+            aspectRatio: 1.0,
+            child: Container(
+              margin: EdgeInsets.only(left: index > 0 ? 10 : 0),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1.5,
+                ),
               ),
-            ),
-            child: const Center(
-              child: CupertinoActivityIndicator(color: Colors.white),
+              child: const Center(
+                child: CupertinoActivityIndicator(color: Colors.white),
+              ),
             ),
           ),
         ),

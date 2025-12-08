@@ -74,8 +74,24 @@ class NotificationNotifier extends Notifier<NotificationState> {
             .order('created_at', ascending: false)
             .limit(50);
 
+        print('📬 Bildirimler yüklendi: ${response.length} adet');
+        print('👤 Kullanıcı ID: ${user.id}');
+        
+        if (response.isEmpty) {
+          print('⚠️ Bildirim bulunamadı!');
+        } else {
+          print('✅ Bildirimler: ${response.map((n) => n['title']).toList()}');
+        }
+
         final notifications = (response as List)
-            .map((json) => NotificationModel.fromJson(json))
+            .map((json) {
+              try {
+                return NotificationModel.fromJson(json);
+              } catch (e) {
+                print('❌ Bildirim parse hatası: $e, json: $json');
+                rethrow;
+              }
+            })
             .toList();
 
         final unreadCount = notifications.where((n) => !n.isRead).length;

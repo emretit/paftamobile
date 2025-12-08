@@ -120,6 +120,44 @@ class ServiceRequestService {
   // Servis talebi güncelle
   Future<ServiceRequest> updateServiceRequest(String id, ServiceRequest serviceRequest) async {
     try {
+      // Önce mevcut servis talebini al
+      final currentRequest = await getServiceRequestById(id);
+      if (currentRequest == null) {
+        throw Exception('Servis talebi bulunamadı');
+      }
+
+      // Eğer assigned_technician değiştiyse, özel atama metodunu kullan
+      final oldAssignedTo = currentRequest.assignedTo;
+      final newAssignedTo = serviceRequest.assignedTo;
+      
+      print('🔍 Atama kontrolü:');
+      print('  - Eski: $oldAssignedTo');
+      print('  - Yeni: $newAssignedTo');
+      print('  - Değişti mi: ${oldAssignedTo != newAssignedTo}');
+      
+      if (oldAssignedTo != newAssignedTo) {
+        print('🔔 Atama değişti: $oldAssignedTo -> $newAssignedTo');
+        // Önce diğer alanları güncelle
+        final updateData = serviceRequest.toJson();
+        // assigned_technician'ı çıkar (updateServiceRequestAssignment bunu yapacak)
+        updateData.remove('assigned_technician');
+        
+        if (updateData.isNotEmpty) {
+          print('📝 Diğer alanlar güncelleniyor...');
+          await _supabase
+              .from('service_requests')
+              .update(updateData)
+              .eq('id', id);
+        }
+        
+        // Atama güncellemesini özel metodla yap (trigger ve bildirim için)
+        print('🎯 updateServiceRequestAssignment çağrılıyor...');
+        return await updateServiceRequestAssignment(id, serviceRequest.assignedTo);
+      } else {
+        print('ℹ️ Atama değişmedi, normal güncelleme yapılıyor');
+      }
+
+      // Atama değişmediyse normal güncelleme yap
       final response = await _supabase
           .from('service_requests')
           .update(serviceRequest.toJson())
@@ -212,10 +250,27 @@ class ServiceRequestService {
       }
 
       final oldStatus = currentRequest.serviceStatus;
+      final now = DateTime.now();
+
+      // Güncellenecek alanları hazırla
+      final updateData = <String, dynamic>{
+        'service_status': status,
+        'updated_at': now.toIso8601String(),
+      };
+
+      // Servis başlatıldığında başlama tarihini ayarla
+      if (status == 'in_progress' && currentRequest.serviceStartDate == null) {
+        updateData['service_start_date'] = now.toIso8601String();
+      }
+
+      // Servis tamamlandığında bitirme tarihini ayarla
+      if (status == 'completed' && currentRequest.serviceEndDate == null) {
+        updateData['service_end_date'] = now.toIso8601String();
+      }
 
       final response = await _supabase
           .from('service_requests')
-          .update({'service_status': status, 'updated_at': DateTime.now().toIso8601String()})
+          .update(updateData)
           .eq('id', id)
           .select()
           .single();
@@ -268,11 +323,19 @@ class ServiceRequestService {
   // Atama güncelleme
   Future<ServiceRequest> updateServiceRequestAssignment(String id, String? assignedTo) async {
     try {
+      print('🔔 updateServiceRequestAssignment çağrıldı:');
+      print('  - Service Request ID: $id');
+      print('  - Assigned To: $assignedTo');
+      
       // Önce mevcut servis talebini al
       final currentRequest = await getServiceRequestById(id);
       if (currentRequest == null) {
         throw Exception('Servis talebi bulunamadı');
       }
+
+      print('  - Mevcut assigned_technician: ${currentRequest.assignedTo}');
+      print('  - Yeni assigned_technician: $assignedTo');
+      print('  - Trigger tetiklenecek: ${currentRequest.assignedTo != assignedTo}');
 
       final response = await _supabase
           .from('service_requests')
@@ -284,10 +347,14 @@ class ServiceRequestService {
           .select()
           .single();
 
+      print('✅ Veritabanı güncellendi - trigger tetiklenmeli');
+
       final updatedRequest = ServiceRequest.fromJson(response);
 
-      // Teknisyene bildirim gönder
+      // Teknisyene bildirim gönder (mobil uygulamadan direkt çağrı için)
+      // NOT: Trigger zaten push notification gönderecek, bu sadece mobil uygulamadan çağrıldığında çalışır
       if (assignedTo != null) {
+        print('📤 Mobil uygulamadan bildirim gönderiliyor...');
         await _pushNotificationService.sendServiceAssignmentNotification(
           technicianId: assignedTo,
           serviceRequestId: id,
@@ -298,7 +365,8 @@ class ServiceRequestService {
 
       return updatedRequest;
     } catch (e) {
-      print('Servis talebi ataması güncelleme hatası: $e');
+      print('❌ Servis talebi ataması güncelleme hatası: $e');
+      print('   Stack trace: ${StackTrace.current}');
       throw Exception('Servis talebi ataması güncellenemedi: $e');
     }
   }

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class FirebaseMessagingService {
   static FirebaseMessaging? _firebaseMessaging;
@@ -257,12 +258,50 @@ class FirebaseMessagingService {
     // Bildirimi veritabanına kaydet
     _saveNotificationToDatabase(message);
     
-    // Action'a göre yönlendirme yapılabilir
+    // Action'a göre yönlendirme yap
     final action = message.data['action'];
+    final serviceRequestId = message.data['service_request_id'];
+    
     if (action != null) {
       print('Bildirim action: $action');
-      // Burada GoRouter ile yönlendirme yapılabilir
+      
+      // Global navigator key kullanarak yönlendirme yap
+      final navigatorKey = _navigatorKey;
+      if (navigatorKey?.currentContext != null) {
+        final context = navigatorKey!.currentContext!;
+        
+        switch (action) {
+          case 'open_service_request':
+            if (serviceRequestId != null) {
+              // Servis talebi detay sayfasına git
+              context.go('/service/detail/$serviceRequestId');
+            }
+            break;
+          case 'open_service_requests':
+            // Servis talepleri listesine git
+            context.go('/service/management');
+            break;
+          case 'open_emergency':
+            // Acil durum sayfasına git (şimdilik servis listesine)
+            context.go('/service/management');
+            break;
+          case 'open_notifications':
+            // Bildirimler sayfasına git
+            context.go('/notifications');
+            break;
+          default:
+            break;
+        }
+      }
     }
+  }
+  
+  // Global navigator key - main.dart'ta set edilecek
+  static GlobalKey<NavigatorState>? _navigatorKey;
+  
+  // Navigator key'i set et
+  static void setNavigatorKey(GlobalKey<NavigatorState> key) {
+    _navigatorKey = key;
   }
 
   // Badge'i temizle

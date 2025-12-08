@@ -11,6 +11,12 @@ class PushNotificationService {
     Map<String, dynamic>? data,
   }) async {
     try {
+      print('📤 Push notification gönderiliyor:');
+      print('  - User ID: $userId');
+      print('  - Title: $title');
+      print('  - Body: $body');
+      print('  - Data: $data');
+      
       final response = await _supabase.functions.invoke(
         'send-push-notification',
         body: {
@@ -21,15 +27,21 @@ class PushNotificationService {
         },
       );
 
+      print('📥 Edge function response:');
+      print('  - Status: ${response.status}');
+      print('  - Data: ${response.data}');
+
       if (response.status == 200) {
-        print('Bildirim başarıyla gönderildi');
+        print('✅ Bildirim başarıyla gönderildi');
         return true;
       } else {
-        print('Bildirim gönderme hatası: ${response.status}');
+        print('❌ Bildirim gönderme hatası: ${response.status}');
+        print('   Response: ${response.data}');
         return false;
       }
     } catch (e) {
-      print('Bildirim gönderme hatası: $e');
+      print('❌ Bildirim gönderme hatası: $e');
+      print('   Stack trace: ${StackTrace.current}');
       return false;
     }
   }

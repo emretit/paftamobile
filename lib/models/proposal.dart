@@ -90,9 +90,15 @@ class Proposal {
       terms: json['terms'],
       notes: json['notes'],
       employeeId: json['employee_id'],
-      items: json['items'] != null ? List<dynamic>.from(json['items']) : null,
+      items: json['items'] != null 
+          ? (json['items'] is List 
+              ? List<dynamic>.from(json['items']) 
+              : null)
+          : null,
       attachments: json['attachments'] != null
-          ? List<dynamic>.from(json['attachments'])
+          ? (json['attachments'] is List
+              ? List<dynamic>.from(json['attachments'])
+              : null)
           : null,
       paymentTerms: json['payment_terms'],
       deliveryTerms: json['delivery_terms'],
@@ -100,19 +106,29 @@ class Proposal {
       priceTerms: json['price_terms'],
       otherTerms: json['other_terms'],
       selectedPaymentTerms: json['selected_payment_terms'] != null
-          ? List<String>.from(json['selected_payment_terms'])
+          ? (json['selected_payment_terms'] is List
+              ? List<String>.from(json['selected_payment_terms'])
+              : null)
           : null,
       selectedDeliveryTerms: json['selected_delivery_terms'] != null
-          ? List<String>.from(json['selected_delivery_terms'])
+          ? (json['selected_delivery_terms'] is List
+              ? List<String>.from(json['selected_delivery_terms'])
+              : null)
           : null,
       selectedWarrantyTerms: json['selected_warranty_terms'] != null
-          ? List<String>.from(json['selected_warranty_terms'])
+          ? (json['selected_warranty_terms'] is List
+              ? List<String>.from(json['selected_warranty_terms'])
+              : null)
           : null,
       selectedPricingTerms: json['selected_pricing_terms'] != null
-          ? List<String>.from(json['selected_pricing_terms'])
+          ? (json['selected_pricing_terms'] is List
+              ? List<String>.from(json['selected_pricing_terms'])
+              : null)
           : null,
       selectedOtherTerms: json['selected_other_terms'] != null
-          ? List<String>.from(json['selected_other_terms'])
+          ? (json['selected_other_terms'] is List
+              ? List<String>.from(json['selected_other_terms'])
+              : null)
           : null,
       companyId: json['company_id'],
       subject: json['subject'],
@@ -120,7 +136,11 @@ class Proposal {
       offerDate: json['offer_date'] != null
           ? DateTime.parse(json['offer_date'])
           : null,
-      history: json['history'] != null ? List<dynamic>.from(json['history']) : null,
+      history: json['history'] != null
+          ? (json['history'] is List
+              ? List<dynamic>.from(json['history'])
+              : null)
+          : null,
       parentProposalId: json['parent_proposal_id'],
       revisionNumber: json['revision_number'],
     );

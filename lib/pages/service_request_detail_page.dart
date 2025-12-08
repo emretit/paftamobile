@@ -230,18 +230,34 @@ class _ServiceRequestDetailPageState extends ConsumerState<ServiceRequestDetailP
                       _buildInfoRow('Öncelik', priorityDisplayNames[serviceRequest.priority] ?? serviceRequest.priority, priorityColor),
                       if (serviceRequest.location != null)
                         _buildInfoRow('Konum', serviceRequest.location!, const Color(0xFF8E8E93)),
-                      _buildInfoRow('Oluşturulma', _formatDate(serviceRequest.createdAt), const Color(0xFF8E8E93)),
-                      if (serviceRequest.dueDate != null)
-                        _buildInfoRow('Bitiş Tarihi', _formatDate(serviceRequest.dueDate!), 
-                          serviceRequest.dueDate!.isBefore(DateTime.now()) 
-                            ? const Color(0xFFEF4444) 
-                            : const Color(0xFF8E8E93)),
                       if (serviceRequest.assignedTechnician != null)
                         _buildInfoRow('Teknisyen', 'Atanmış', const Color(0xFF10B981)),
                       if (serviceRequest.receivedBy != null)
                         _buildInfoRow('Talebi Alan', 'Seçilmiş', const Color(0xFF8B5CF6)),
                       if (serviceRequest.createdBy != null)
                         _buildInfoRow('Oluşturan', 'Kullanıcı', const Color(0xFF8E8E93)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Tarih Bilgileri Kartı
+                  _buildInfoCard(
+                    'Tarih Bilgileri',
+                    CupertinoIcons.calendar,
+                    const Color(0xFF9B59B6),
+                    [
+                      _buildInfoRow('Oluşturulma', _formatDateTime(serviceRequest.createdAt), const Color(0xFF8E8E93)),
+                      if (serviceRequest.reportedDate != null)
+                        _buildInfoRow('Bildirim Tarihi', _formatDateTime(serviceRequest.reportedDate!), const Color(0xFF8E8E93)),
+                      if (serviceRequest.dueDate != null)
+                        _buildInfoRow('Hedef Teslim Tarihi', _formatDateTime(serviceRequest.dueDate!), 
+                          serviceRequest.dueDate!.isBefore(DateTime.now()) 
+                            ? const Color(0xFFEF4444) 
+                            : const Color(0xFF8E8E93)),
+                      if (serviceRequest.serviceStartDate != null)
+                        _buildInfoRow('Servis Başlama Tarihi', _formatDateTime(serviceRequest.serviceStartDate!), const Color(0xFF10B981)),
+                      if (serviceRequest.serviceEndDate != null)
+                        _buildInfoRow('Servis Bitirme Tarihi', _formatDateTime(serviceRequest.serviceEndDate!), const Color(0xFF3B82F6)),
                     ],
                   ),
                   const SizedBox(height: 16),

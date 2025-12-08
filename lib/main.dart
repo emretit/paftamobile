@@ -76,10 +76,16 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     
+    // Navigator key'i Firebase Messaging Service'e set et
+    final navigatorKey = GlobalKey<NavigatorState>();
+    FirebaseMessagingService.setNavigatorKey(navigatorKey);
+    
     return MaterialApp.router(
       title: 'PAFTA',
       theme: _buildIOSTheme(),
       routerConfig: router,
+      // Navigator key'i ekle (GoRouter bunu kullanır)
+      restorationScopeId: 'app',
     );
   }
 
