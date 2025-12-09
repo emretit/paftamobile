@@ -188,23 +188,11 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Tarih Bilgileri Kartı
-              _buildDateInfoCard(),
-                  const SizedBox(height: 16),
-              
-              // 2. Müşteri/Tedarikçi ve İletişim Kartı
-              _buildCustomerInfoCard(customersAsync),
-                  const SizedBox(height: 16),
-              
-              // 2.5. Talebi Alan Kişi
-              _buildReceivedByCard(employeesAsync),
-              const SizedBox(height: 16),
-              
-              // 3. Temel Bilgiler Kartı
+              // 1. Temel Bilgiler ve Tarih (Birleştirilmiş)
               _buildBasicInfoCard(
                 priorities,
                 priorityDisplayNames,
@@ -212,15 +200,23 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
                 statusDisplayNames,
                 techniciansAsync,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               
-              // 4. Servis Sonucu ve Notlar Kartı
+              // 2. Müşteri, İletişim ve Talebi Alan (Birleştirilmiş)
+              _buildCustomerInfoCard(customersAsync, employeesAsync),
+              const SizedBox(height: 12),
+              
+              // 3. Tarih Bilgileri (Kompakt)
+              _buildDateInfoCard(),
+              const SizedBox(height: 12),
+              
+              // 4. Servis Sonucu ve Notlar (Birleştirilmiş)
               _buildNotesCard(),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               
-              // 5. Kullanılan Ürünler Kartı
+              // 5. Kullanılan Ürünler
               _buildUsedProductsCard(),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               
               // Kaydet Butonu
               _buildSaveButton(),
@@ -231,7 +227,7 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
     );
   }
 
-  // Tarih Bilgileri Kartı
+  // Tarih Bilgileri Kartı (Kompakt)
   Widget _buildDateInfoCard() {
     return _buildSection(
       'Tarih Bilgileri',
@@ -248,97 +244,75 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
                 icon: CupertinoIcons.calendar_today,
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
+            const SizedBox(width: 12),
             Expanded(
               child: _buildDateSelector(
-                label: 'Hedef Teslim Tarihi',
+                label: 'Hedef Teslim',
                 date: _dueDate,
                 onTap: _selectDueDate,
                 icon: CupertinoIcons.calendar_badge_plus,
                 isOptional: true,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildTimeSelector(
-                label: 'Saat (Opsiyonel)',
-                time: _dueTime,
-                onTap: _selectDueTime,
-                icon: CupertinoIcons.clock,
-                enabled: _dueDate != null,
-              ),
-            ),
           ],
         ),
-        const SizedBox(height: 16),
-        // Servis Başlama Tarihi ve Saati
-        Row(
-          children: [
-            Expanded(
-              child: _buildDateSelector(
-                label: 'Servis Başlama Tarihi',
-                date: _serviceStartDate,
-                onTap: _selectServiceStartDate,
-                icon: CupertinoIcons.play_circle,
-                isOptional: true,
+        if (_dueDate != null) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTimeSelector(
+                  label: 'Teslim Saati',
+                  time: _dueTime,
+                  onTap: _selectDueTime,
+                  icon: CupertinoIcons.clock,
+                  enabled: true,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildTimeSelector(
-                label: 'Başlama Saati (Opsiyonel)',
-                time: _serviceStartTime,
-                onTap: _selectServiceStartTime,
-                icon: CupertinoIcons.clock,
-                enabled: _serviceStartDate != null,
+            ],
+          ),
+        ],
+        if (widget.id != null) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildDateSelector(
+                  label: 'Başlama',
+                  date: _serviceStartDate,
+                  onTap: _selectServiceStartDate,
+                  icon: CupertinoIcons.play_circle,
+                  isOptional: true,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        // Servis Bitirme Tarihi ve Saati
-        Row(
-          children: [
-            Expanded(
-              child: _buildDateSelector(
-                label: 'Servis Bitirme Tarihi',
-                date: _serviceEndDate,
-                onTap: _selectServiceEndDate,
-                icon: CupertinoIcons.stop_circle,
-                isOptional: true,
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildDateSelector(
+                  label: 'Bitirme',
+                  date: _serviceEndDate,
+                  onTap: _selectServiceEndDate,
+                  icon: CupertinoIcons.stop_circle,
+                  isOptional: true,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildTimeSelector(
-                label: 'Bitirme Saati (Opsiyonel)',
-                time: _serviceEndTime,
-                onTap: _selectServiceEndTime,
-                icon: CupertinoIcons.clock,
-                enabled: _serviceEndDate != null,
-              ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ],
     );
   }
 
-  // Müşteri/Tedarikçi ve İletişim Kartı
-  Widget _buildCustomerInfoCard(AsyncValue<List<dynamic>> customersAsync) {
+  // Müşteri/Tedarikçi, İletişim ve Talebi Alan (Birleştirilmiş)
+  Widget _buildCustomerInfoCard(AsyncValue<List<dynamic>> customersAsync, AsyncValue<List<Employee>> employeesAsync) {
     return _buildSection(
-      'Müşteri / Tedarikçi ve İletişim',
+      'Müşteri ve İletişim',
       CupertinoIcons.person_2,
       const Color(0xFF27AE60),
       [
         // Müşteri Seçimi
         _buildCustomerSelector(customersAsync),
-        const SizedBox(height: 16),
-              
+        const SizedBox(height: 12),
+        
         // İletişim Kişisi
         _buildTextField(
           controller: _contactPersonController,
@@ -346,12 +320,12 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
           hint: 'Ad Soyad',
           icon: CupertinoIcons.person,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         
         // Telefon ve E-posta
-                  Row(
-                    children: [
-                      Expanded(
+        Row(
+          children: [
+            Expanded(
               child: _buildTextField(
                 controller: _contactPhoneController,
                 label: 'Telefon',
@@ -372,17 +346,9 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
             ),
           ],
         ),
-      ],
-    );
-  }
-
-  // Talebi Alan Kişi Kartı
-  Widget _buildReceivedByCard(AsyncValue<List<Employee>> employeesAsync) {
-    return _buildSection(
-      'Talebi Alan Kişi',
-      CupertinoIcons.person_badge_plus,
-      const Color(0xFFE74C3C),
-      [
+        const SizedBox(height: 12),
+        
+        // Talebi Alan Kişi
         _buildReceivedBySelector(employeesAsync),
       ],
     );
@@ -583,7 +549,7 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
     );
   }
 
-  // Temel Bilgiler Kartı
+  // Temel Bilgiler Kartı (Kompakt)
   Widget _buildBasicInfoCard(
     List<String> priorities,
     Map<String, String> priorityDisplayNames,
@@ -596,62 +562,20 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
       CupertinoIcons.doc_text,
       const Color(0xFF3498DB),
       [
-        // Servis Başlığı ve Fiş No
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: _buildTextField(
-                controller: _titleController,
-                label: 'Servis Başlığı *',
-                hint: 'Örn: Klima bakımı, Elektrik arızası...',
-                icon: CupertinoIcons.textformat,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Başlık gereklidir';
-                  }
-                  return null;
-                },
-                        ),
-                      ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildTextField(
-                controller: _slipNumberController,
-                label: 'Fiş No',
-                hint: 'Opsiyonel',
-                icon: CupertinoIcons.number,
-              ),
-            ),
-          ],
+        // Servis Başlığı
+        _buildTextField(
+          controller: _titleController,
+          label: 'Servis Başlığı *',
+          hint: 'Örn: Klima bakımı, Elektrik arızası...',
+          icon: CupertinoIcons.textformat,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Başlık gereklidir';
+            }
+            return null;
+          },
         ),
-        const SizedBox(height: 16),
-        
-        // Servis Türü ve Durum
-        Row(
-          children: [
-            Expanded(
-              child: _buildServiceTypeDropdown(),
-            ),
-            const SizedBox(width: 12),
-                      if (widget.id != null)
-                        Expanded(
-                          child: _buildDropdown(
-                            label: 'Durum',
-                            value: _selectedStatus,
-                            items: statuses,
-                            displayNames: statusDisplayNames,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedStatus = value!;
-                              });
-                            },
-                            icon: CupertinoIcons.checkmark_circle,
-                          ),
-                        ),
-                    ],
-        ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         
         // Açıklama
         _buildTextField(
@@ -667,38 +591,82 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
             return null;
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         
-        // Lokasyon
-        _buildTextField(
-          controller: _locationController,
-          label: 'Lokasyon',
-          hint: 'Servis yapılacak adres',
-          icon: CupertinoIcons.location,
-        ),
-        const SizedBox(height: 16),
-        
-        // Öncelik ve Teknisyen
+        // Servis Türü, Öncelik ve Durum
         Row(
           children: [
             Expanded(
-              child: _buildPriorityDropdown(priorities, priorityDisplayNames),
+              child: _buildServiceTypeDropdown(),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildTechnicianSelector(techniciansAsync),
-                  ),
-                ],
+              child: _buildPriorityDropdown(priorities, priorityDisplayNames),
+            ),
+          ],
+        ),
+        if (widget.id != null) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildDropdown(
+                  label: 'Durum',
+                  value: _selectedStatus,
+                  items: statuses,
+                  displayNames: statusDisplayNames,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedStatus = value!;
+                    });
+                  },
+                  icon: CupertinoIcons.checkmark_circle,
+                ),
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildTechnicianSelector(techniciansAsync),
+              ),
+            ],
+          ),
+        ] else ...[
+          const SizedBox(height: 12),
+          _buildTechnicianSelector(techniciansAsync),
+        ],
+        const SizedBox(height: 12),
+        
+        // Lokasyon ve Fiş No
+        Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: _buildTextField(
+                controller: _locationController,
+                label: 'Lokasyon',
+                hint: 'Servis yapılacak adres',
+                icon: CupertinoIcons.location,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildTextField(
+                controller: _slipNumberController,
+                label: 'Fiş No',
+                hint: 'Opsiyonel',
+                icon: CupertinoIcons.number,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
 
-  // Servis Sonucu ve Notlar Kartı
+  // Servis Sonucu ve Notlar Kartı (Kompakt)
   Widget _buildNotesCard() {
     return _buildSection(
-      'Servis Sonucu ve Notlar',
-                CupertinoIcons.doc_plaintext,
+      'Notlar ve Sonuç',
+      CupertinoIcons.doc_plaintext,
       const Color(0xFFF39C12),
       [
         // Servis Sonucu
@@ -707,19 +675,19 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
           label: 'Servis Sonucu',
           hint: 'Servis sonucu veya ön görüş (opsiyonel)',
           icon: CupertinoIcons.checkmark_seal,
-          maxLines: 3,
+          maxLines: 2,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         
         // Şirket İçi Notlar
-                  _buildTextField(
-                    controller: _notesController,
+        _buildTextField(
+          controller: _notesController,
           label: 'Şirket İçi Notlar',
           hint: 'Her satır ayrı bir not olarak kaydedilir',
-                    icon: CupertinoIcons.text_alignleft,
-                    maxLines: 4,
-                  ),
-                ],
+          icon: CupertinoIcons.text_alignleft,
+          maxLines: 3,
+        ),
+      ],
     );
   }
 
@@ -1603,15 +1571,15 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  width: 32,
-                  height: 32,
+                  width: 28,
+                  height: 28,
                   decoration: BoxDecoration(
                     color: iconColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -1619,21 +1587,21 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
                   child: Icon(
                     sectionIcon,
                     color: iconColor,
-                    size: 18,
+                    size: 16,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF000000),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 14),
             ...children,
           ],
         ),

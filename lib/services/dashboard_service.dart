@@ -12,13 +12,15 @@ class DashboardService {
       dynamic query = _supabase
           .from('activities')
           .select('*')
-          .eq('assignee_id', userId ?? _supabase.auth.currentUser!.id)
-          .order('due_date', ascending: true)
-          .order('created_at', ascending: false);
+          .eq('assignee_id', userId ?? _supabase.auth.currentUser!.id);
 
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
+
+      query = query
+          .order('due_date', ascending: true)
+          .order('created_at', ascending: false);
 
       final response = await query;
       return (response as List).map((json) => Activity.fromJson(json)).toList();

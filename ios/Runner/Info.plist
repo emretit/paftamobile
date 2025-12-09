@@ -63,5 +63,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Uygulama, servis adreslerini haritada göstermek ve rota planlaması yapmak için konum bilgisine ihtiyaç duymaktadır.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Uygulama, servis adreslerini haritada göstermek ve rota planlaması yapmak için konum bilgisine ihtiyaç duymaktadır.</string>
 </dict>
 </plist>

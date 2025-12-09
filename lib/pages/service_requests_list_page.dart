@@ -147,7 +147,7 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
     );
   }
 
-  // Kompakt Servis Kartı
+  // Kompakt Servis Kartı - Optimize edilmiş
   Widget _buildServiceRequestCardCompact(
     ServiceRequest serviceRequest,
     Map<String, String> statusColors,
@@ -159,7 +159,7 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
     final priorityColor = _getPriorityColor(serviceRequest.priority, priorityColors);
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 6),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -174,21 +174,22 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
           onTap: () => context.go('/service/detail/${serviceRequest.id}'),
           borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               children: [
                 Container(
-                  width: 6,
-                  height: 50,
+                  width: 4,
+                  height: 44,
                   decoration: BoxDecoration(
                     color: statusColor,
-                    borderRadius: BorderRadius.circular(3),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Row(
                         children: [
@@ -199,22 +200,23 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
                                 color: Color(0xFF000000),
+                                height: 1.2,
                               ),
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 6),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                             decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              color: statusColor.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               statusDisplayNames[serviceRequest.status] ?? serviceRequest.status,
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w600,
                                 color: statusColor,
                               ),
@@ -222,23 +224,51 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
                           ),
                         ],
                       ),
-                      if (serviceRequest.serviceType != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          serviceRequest.serviceType!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                      if (serviceRequest.location != null) ...[
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          if (serviceRequest.serviceType != null) ...[
+                            Icon(
+                              CupertinoIcons.wrench,
+                              size: 11,
+                              color: Colors.grey[500],
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              serviceRequest.serviceType!,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey[600],
+                                height: 1.2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (serviceRequest.location != null) ...[
+                              const SizedBox(width: 8),
+                              Icon(
+                                CupertinoIcons.location,
+                                size: 11,
+                                color: Colors.grey[500],
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  serviceRequest.location!,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey[600],
+                                    height: 1.2,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ] else if (serviceRequest.location != null) ...[
                             Icon(
                               CupertinoIcons.location,
-                              size: 12,
+                              size: 11,
                               color: Colors.grey[500],
                             ),
                             const SizedBox(width: 4),
@@ -248,24 +278,27 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Colors.grey[600],
+                                  height: 1.2,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
-                        ),
-                      ],
+                        ],
+                      ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                       decoration: BoxDecoration(
-                        color: priorityColor.withOpacity(0.1),
+                        color: priorityColor.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -278,18 +311,31 @@ class _ServiceRequestsListPageState extends ConsumerState<ServiceRequestsListPag
                       ),
                     ),
                     if (serviceRequest.dueDate != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatDate(serviceRequest.dueDate!),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: serviceRequest.dueDate!.isBefore(DateTime.now())
-                              ? const Color(0xFFEF4444)
-                              : const Color(0xFF8E8E93),
-                          fontWeight: serviceRequest.dueDate!.isBefore(DateTime.now())
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                        ),
+                      const SizedBox(height: 5),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            CupertinoIcons.calendar,
+                            size: 10,
+                            color: serviceRequest.dueDate!.isBefore(DateTime.now())
+                                ? const Color(0xFFEF4444)
+                                : Colors.grey[500],
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            _formatDate(serviceRequest.dueDate!),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: serviceRequest.dueDate!.isBefore(DateTime.now())
+                                  ? const Color(0xFFEF4444)
+                                  : const Color(0xFF8E8E93),
+                              fontWeight: serviceRequest.dueDate!.isBefore(DateTime.now())
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ],

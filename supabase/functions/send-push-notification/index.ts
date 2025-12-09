@@ -111,13 +111,45 @@ Deno.serve(async (req) => {
       .eq('id', userId)
       .single();
       
-    console.log('👤 Profile query sonucu:', { profile, profileError });
+    console.log('👤 Profile query sonucu:', { 
+      hasProfile: !!profile, 
+      hasToken: !!profile?.fcm_token,
+      tokenLength: profile?.fcm_token?.length,
+      error: profileError 
+    });
     
-    if (profileError || !profile?.fcm_token) {
-      console.log('❌ FCM token bulunamadı');
+    if (profileError) {
+      console.error('❌ Profile query hatası:', profileError);
+      return new Response(JSON.stringify({ 
+        error: 'Kullanıcı profili bulunamadı',
+        user_id: userId,
+        details: profileError.message
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
+      });
+    }
+    
+    if (!profile?.fcm_token) {
+      console.log('❌ FCM token bulunamadı - kullanıcı ID:', userId);
       return new Response(JSON.stringify({ 
         error: 'FCM token bulunamadı',
-        user_id: userId 
+        user_id: userId,
+        hasProfile: !!profile
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
+      });
+    }
+    
+    // FCM token validasyonu
+    const fcmToken = profile.fcm_token.trim();
+    if (fcmToken.length < 50) {
+      console.error('❌ FCM token çok kısa:', fcmToken.length);
+      return new Response(JSON.stringify({ 
+        error: 'FCM token geçersiz (çok kısa)',
+        user_id: userId,
+        token_length: fcmToken.length
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400
@@ -127,21 +159,32 @@ Deno.serve(async (req) => {
     console.log('📨 Bildirim gönderiliyor:');
     console.log('- Title:', notificationTitle);
     console.log('- Body:', notificationBody);
-    console.log('- FCM Token:', profile.fcm_token.substring(0, 20) + '...');
+    console.log('- User ID:', userId);
+    console.log('- FCM Token (ilk 30 karakter):', fcmToken.substring(0, 30) + '...');
+    console.log('- FCM Token uzunluğu:', fcmToken.length);
     
     // OAuth 2.0 Access Token al
-    const accessToken = await getAccessToken();
-    console.log('🔑 Access token alındı');
+    console.log('🔑 Access token alınıyor...');
+    let accessToken;
+    try {
+      accessToken = await getAccessToken();
+      console.log('🔑 Access token başarıyla alındı (uzunluk:', accessToken.length, ')');
+    } catch (tokenError) {
+      console.error('❌ Access token alma hatası:', tokenError);
+      throw new Error(`Access token alınamadı: ${tokenError.message}`);
+    }
     
     // FCM v1 API ile bildirim gönder
     const message = {
       message: {
-        token: profile.fcm_token,
+        token: fcmToken,
         notification: {
           title: notificationTitle,
           body: notificationBody
         },
-        data: notificationData,
+        data: Object.fromEntries(
+          Object.entries(notificationData).map(([k, v]) => [k, String(v)])
+        ),
         android: {
           notification: {
             click_action: 'FLUTTER_NOTIFICATION_CLICK',
@@ -162,6 +205,15 @@ Deno.serve(async (req) => {
       }
     };
     
+    console.log('📤 FCM mesajı hazırlandı, gönderiliyor...');
+    console.log('- Message structure:', JSON.stringify({
+      hasToken: !!message.message.token,
+      tokenLength: message.message.token.length,
+      title: message.message.notification.title,
+      body: message.message.notification.body,
+      dataKeys: Object.keys(message.message.data)
+    }));
+    
     const fcmResponse = await fetch(`https://fcm.googleapis.com/v1/projects/pafta-b84ce/messages:send`, {
       method: 'POST',
       headers: {
@@ -171,14 +223,29 @@ Deno.serve(async (req) => {
       body: JSON.stringify(message)
     });
     
+    const responseText = await fcmResponse.text();
+    console.log('📥 FCM Response:', {
+      status: fcmResponse.status,
+      statusText: fcmResponse.statusText,
+      body: responseText.substring(0, 500) // İlk 500 karakter
+    });
+    
     if (!fcmResponse.ok) {
-      const errorText = await fcmResponse.text();
-      console.error('❌ FCM API hatası:', fcmResponse.status, errorText);
-      throw new Error(`FCM API hatası: ${fcmResponse.status} - ${errorText}`);
+      console.error('❌ FCM API hatası:', fcmResponse.status, responseText);
+      throw new Error(`FCM API hatası: ${fcmResponse.status} - ${responseText.substring(0, 200)}`);
     }
     
-    const fcmResult = await fcmResponse.json();
-    console.log('✅ FCM başarılı response:', fcmResult);
+    let fcmResult;
+    try {
+      fcmResult = JSON.parse(responseText);
+      console.log('✅ FCM başarılı response:', {
+        messageId: fcmResult.name,
+        success: true
+      });
+    } catch (parseError) {
+      console.error('❌ FCM response parse hatası:', parseError);
+      throw new Error(`FCM response parse edilemedi: ${responseText.substring(0, 200)}`);
+    }
     
     // Bildirimi veritabanına kaydet
     try {
@@ -222,9 +289,14 @@ Deno.serve(async (req) => {
     });
     
   } catch (error) {
-    console.error('❌ Edge Function hatası:', error);
+    console.error('❌ Edge Function hatası:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return new Response(JSON.stringify({
-      error: error.message,
+      error: error.message || 'Bilinmeyen hata',
+      error_type: error.name,
       stack: error.stack
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -308,7 +380,7 @@ async function signWithRSA256(data: string, privateKeyPem: string) {
       hash: 'SHA-256'
     },
     false,
-    ['sign']
+    { usages: ['sign'] }
   );
   
   // Veriyi imzala

@@ -78,7 +78,7 @@ class NotificationNotifier extends Notifier<NotificationState> {
         print('👤 Kullanıcı ID: ${user.id}');
         
         if (response.isEmpty) {
-          print('⚠️ Bildirim bulunamadı!');
+          print('ℹ️ Kullanıcının henüz bildirimi yok (bu normal bir durum)');
         } else {
           print('✅ Bildirimler: ${response.map((n) => n['title']).toList()}');
         }

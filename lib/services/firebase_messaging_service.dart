@@ -67,32 +67,45 @@ class FirebaseMessagingService {
 
   // FCM token'ı Supabase'e kaydet
   static Future<void> saveTokenToSupabase(String userId) async {
-    try {
-      final token = await getToken();
-      if (token == null) return;
+    int retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount < maxRetries) {
+      try {
+        final token = await getToken();
+        if (token == null) return;
 
-      final supabase = Supabase.instance.client;
-      
-      // Platform detection
-      String platform = 'android';
-      if (defaultTargetPlatform == TargetPlatform.iOS) {
-        platform = 'ios';
-      } else if (defaultTargetPlatform == TargetPlatform.macOS) {
-        platform = 'web';
+        final supabase = Supabase.instance.client;
+        
+        // Platform detection
+        String platform = 'android';
+        if (defaultTargetPlatform == TargetPlatform.iOS) {
+          platform = 'ios';
+        } else if (defaultTargetPlatform == TargetPlatform.macOS) {
+          platform = 'web';
+        }
+        
+        // Profiles tablosunda FCM token güncelle
+        await supabase.from('profiles').update({
+          'fcm_token': token,
+          'device_id': 'device_${DateTime.now().millisecondsSinceEpoch}', // Unique device ID
+          'platform': platform,
+          'notification_enabled': true,
+          'last_token_updated': DateTime.now().toIso8601String(),
+        }).eq('id', userId);
+        
+        print('FCM token başarıyla kaydedildi/güncellendi: $platform');
+        return; // Başarılı olursa çık
+      } catch (e) {
+        retryCount++;
+        if (retryCount >= maxRetries) {
+          print('FCM token kaydetme hatası (${maxRetries} deneme sonrası): $e');
+          return;
+        }
+        // Exponential backoff: 1s, 2s, 4s
+        await Future.delayed(Duration(seconds: retryCount));
+        print('FCM token kaydetme hatası (deneme $retryCount/$maxRetries): $e');
       }
-      
-      // Profiles tablosunda FCM token güncelle
-      await supabase.from('profiles').update({
-        'fcm_token': token,
-        'device_id': 'device_${DateTime.now().millisecondsSinceEpoch}', // Unique device ID
-        'platform': platform,
-        'notification_enabled': true,
-        'last_token_updated': DateTime.now().toIso8601String(),
-      }).eq('id', userId);
-      
-      print('FCM token başarıyla kaydedildi/güncellendi: $platform');
-    } catch (e) {
-      print('FCM token kaydetme hatası: $e');
     }
   }
 
@@ -374,7 +387,7 @@ class FirebaseMessagingService {
         print('FCM token mevcut kullanıcı için kaydedildi');
       }
     } catch (e) {
-      print('FCM token kaydetme hatası: $e');
+      print('FCM token kaydetme hatası (saveTokenForCurrentUser): $e');
     }
   }
 }
